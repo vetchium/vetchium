@@ -9,6 +9,7 @@ import {
   siderStyle,
 } from "./Styles";
 import Router from "./components/Router";
+import t from "./i18n/i18n";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -26,7 +27,7 @@ function App() {
                 navigate(item.key);
               }}
             >
-              <Menu.Item key="/openings">Openings</Menu.Item>
+              <Menu.Item key="/openings">{t("openings")}</Menu.Item>
               <Menu.Item key="/org-settings">Org Settings</Menu.Item>
               <Menu.Item key="/account-settings" icon={<SettingFilled />}>
                 Account Settings
