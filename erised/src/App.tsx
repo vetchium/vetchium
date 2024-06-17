@@ -1,25 +1,48 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { LogoutOutlined, SettingFilled } from "@ant-design/icons";
+import { Flex, Layout, Menu } from "antd";
+import { useNavigate } from "react-router-dom";
+import {
+  contentStyle,
+  footerStyle,
+  headerStyle,
+  layoutStyle,
+  siderStyle,
+} from "./Styles";
+import Router from "./components/Router";
+
+const { Header, Footer, Sider, Content } = Layout;
 
 function App() {
+  const navigate = useNavigate();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Flex gap="middle" wrap>
+      <Layout style={layoutStyle}>
+        <Header style={headerStyle}>Header</Header>
+        <Layout>
+          <Sider width="15%" style={siderStyle}>
+            <Menu
+              onClick={(item) => {
+                navigate(item.key);
+              }}
+            >
+              <Menu.Item key="/one">One</Menu.Item>
+              <Menu.Item key="/two">Two</Menu.Item>
+              <Menu.Item key="/three" icon={<SettingFilled />}>
+                Three
+              </Menu.Item>
+              <Menu.Item key="/signout" icon={<LogoutOutlined />}>
+                Sign Out
+              </Menu.Item>
+            </Menu>
+          </Sider>
+          <Content style={contentStyle}>
+            <Router />
+          </Content>
+        </Layout>
+        <Footer style={footerStyle}>Footer</Footer>
+      </Layout>
+    </Flex>
   );
 }
 
