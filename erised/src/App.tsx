@@ -26,10 +26,10 @@ function App() {
                 navigate(item.key);
               }}
             >
-              <Menu.Item key="/one">One</Menu.Item>
-              <Menu.Item key="/two">Two</Menu.Item>
-              <Menu.Item key="/three" icon={<SettingFilled />}>
-                Three
+              <Menu.Item key="/openings">Openings</Menu.Item>
+              <Menu.Item key="/org-settings">Org Settings</Menu.Item>
+              <Menu.Item key="/account-settings" icon={<SettingFilled />}>
+                Account Settings
               </Menu.Item>
               <Menu.Item key="/signout" icon={<LogoutOutlined />}>
                 Sign Out

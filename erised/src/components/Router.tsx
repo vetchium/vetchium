@@ -1,11 +1,12 @@
 import { Route, Routes } from "react-router-dom";
+import Openings from "../pages/Openings";
 
 function Router() {
   return (
     <Routes>
-      <Route path="/one" element={<div>One</div>} />
-      <Route path="/two" element={<div>Two</div>} />
-      <Route path="/three" element={<div>Three</div>} />
+      <Route path="/openings" element={<Openings />} />
+      <Route path="/org-settings" element={<div>Org Settings</div>} />
+      <Route path="/account-settings" element={<div>Account Settings</div>} />
     </Routes>
   );
 }
