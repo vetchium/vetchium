@@ -1,15 +1,16 @@
 import { Flex, Layout } from "antd";
-import { contentStyle, footerStyle, headerStyle, layoutStyle } from "../Styles";
+import { contentStyle, footerStyle, layoutStyle } from "../Styles";
+import VetchiHeader from "../components/Header";
 import Router from "../components/Router";
 import Sidebar from "../components/Sidebar";
 
-const { Header, Footer, Content } = Layout;
+const { Footer, Content } = Layout;
 
 function Home() {
   return (
     <Flex gap="middle" wrap>
       <Layout style={layoutStyle}>
-        <Header style={headerStyle}>Header</Header>
+        <VetchiHeader />
         <Layout>
           <Sidebar />
           <Content style={contentStyle}>

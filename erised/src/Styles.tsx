@@ -5,6 +5,10 @@ export const headerStyle = {
   backgroundColor: "#1677ff",
 };
 
+export const headerLogo = {
+  fontSize: "40px",
+};
+
 export const contentStyle = {
   textAlign: "center" as const,
   minHeight: "80%",
