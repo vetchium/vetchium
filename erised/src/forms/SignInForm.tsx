@@ -1,15 +1,12 @@
 import { Button, Form, Input } from "antd";
-import { useNavigate } from "react-router-dom";
 import Router from "../components/Router";
 import t from "../i18n/i18n";
 import { formStyle } from "../Styles";
 
-function SignInForm() {
-  const navigate = useNavigate();
-
+function SignInForm({ onSignIn }: { onSignIn: () => void }) {
   function onFinish(values: any) {
     console.log("Received values:", values);
-    navigate("/openings");
+    onSignIn();
   }
 
   function validateDomain(rule: any, value: string) {

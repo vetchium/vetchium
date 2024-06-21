@@ -6,13 +6,13 @@ import Sidebar from "../components/Sidebar";
 
 const { Footer, Content } = Layout;
 
-function Home() {
+function Home({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Flex gap="middle" wrap>
       <Layout style={layoutStyle}>
         <VetchiHeader />
         <Layout>
-          <Sidebar />
+          <Sidebar onSignOut={onSignOut} />
           <Content style={contentStyle}>
             <Router />
           </Content>

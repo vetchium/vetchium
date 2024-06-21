@@ -6,14 +6,18 @@ import { siderStyle } from "../Styles";
 
 const { Sider } = Layout;
 
-function Sidebar() {
+function Sidebar({ onSignOut }: { onSignOut: () => void }) {
   const navigate = useNavigate();
 
   return (
     <Sider width="15%" style={siderStyle}>
       <Menu
         onClick={(item) => {
-          navigate(item.key);
+          if (item.key === "/signout") {
+            onSignOut();
+          } else {
+            navigate(item.key);
+          }
         }}
       >
         <Menu.Item key="/openings">{t("openings")}</Menu.Item>
