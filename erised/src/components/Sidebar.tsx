@@ -1,5 +1,6 @@
 import { LogoutOutlined, SettingFilled } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import t from "../i18n/i18n";
 import { siderStyle } from "../Styles";
@@ -8,6 +9,12 @@ const { Sider } = Layout;
 
 function Sidebar({ onSignOut }: { onSignOut: () => void }) {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (window.location.pathname === "/") {
+      navigate("/openings");
+    }
+  }, []);
 
   return (
     <Sider width="15%" style={siderStyle}>
@@ -19,6 +26,7 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
             navigate(item.key);
           }
         }}
+        defaultSelectedKeys={["/openings"]}
       >
         <Menu.Item key="/openings">{t("openings")}</Menu.Item>
         <Menu.Item key="/org-settings">Org Settings</Menu.Item>
