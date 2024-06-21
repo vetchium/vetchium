@@ -1,9 +1,15 @@
-import { Form, Input, Button } from "antd";
+import { Button, Form, Input } from "antd";
+import { useNavigate } from "react-router-dom";
+import Router from "../components/Router";
 import t from "../i18n/i18n";
+import { formStyle } from "../Styles";
 
 function SignInForm() {
+  const navigate = useNavigate();
+
   function onFinish(values: any) {
     console.log("Received values:", values);
+    navigate("/openings");
   }
 
   function validateDomain(rule: any, value: string) {
@@ -46,34 +52,41 @@ function SignInForm() {
   }
 
   return (
-    <Form onFinish={onFinish} onFinishFailed={onFinishFailed}>
-      <Form.Item
-        label={t("company_domain")}
-        name="domain"
-        rules={[{ required: true, validator: validateDomain }]}
+    <>
+      <Router />
+      <Form
+        onFinish={onFinish}
+        onFinishFailed={onFinishFailed}
+        style={formStyle}
       >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label={t("email_address")}
-        name="email"
-        rules={[{ required: true, validator: validateEmail, type: "email" }]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label={t("password")}
-        name="password"
-        rules={[{ required: true, validator: validatePassword }]}
-      >
-        <Input.Password />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          {t("sign_in")}
-        </Button>
-      </Form.Item>
-    </Form>
+        <Form.Item
+          label={t("company_domain")}
+          name="domain"
+          rules={[{ required: true, validator: validateDomain }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label={t("email_address")}
+          name="email"
+          rules={[{ required: true, validator: validateEmail, type: "email" }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label={t("password")}
+          name="password"
+          rules={[{ required: true, validator: validatePassword }]}
+        >
+          <Input.Password />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            {t("sign_in")}
+          </Button>
+        </Form.Item>
+      </Form>
+    </>
   );
 }
 
