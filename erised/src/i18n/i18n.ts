@@ -13,7 +13,7 @@ i18n.use(initReactI18next).init({
       translation: ta,
     },
   },
-  lng: "ta", // default language to use.
+  lng: "en", // default language to use.
   interpolation: {
     escapeValue: false,
   },
