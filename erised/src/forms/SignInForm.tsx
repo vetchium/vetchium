@@ -4,8 +4,7 @@ import t from "../i18n/i18n";
 import { formStyle } from "../Styles";
 
 function SignInForm({ onSignIn }: { onSignIn: () => void }) {
-  function onFinish(values: any) {
-    console.log("Received values:", values);
+  function onFinish() {
     onSignIn();
   }
 
@@ -55,6 +54,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
           label={t("company_domain")}
           name="domain"
           rules={[{ required: true, validator: validateDomain }]}
+          initialValue="example.com"
         >
           <Input />
         </Form.Item>
@@ -62,6 +62,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
           label={t("email_address")}
           name="email"
           rules={[{ required: true, validator: validateEmail, type: "email" }]}
+          initialValue="master@example.com"
         >
           <Input />
         </Form.Item>
@@ -69,6 +70,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
           label={t("password")}
           name="password"
           rules={[{ required: true, validator: validatePassword }]}
+          initialValue="Password123$"
         >
           <Input.Password />
         </Form.Item>
