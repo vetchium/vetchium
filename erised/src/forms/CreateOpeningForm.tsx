@@ -32,7 +32,25 @@ function CreateOpeningForm() {
     });
   }
 
-  function validateDepartment(rule: any, value: string) {
+  function validatePositions(rule: any, value: number) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateJD(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateLocations(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateYOE(rule: any, value: number) {
     return new Promise<void>((resolve, reject) => {
       resolve();
     });
@@ -44,19 +62,32 @@ function CreateOpeningForm() {
     });
   }
 
-  function validatePositions(rule: any, value: number) {
+  function validateCurrency(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateSalaryMin(rule: any, value: number) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateSalaryMax(rule: any, value: number) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
+  function validateDepartment(rule: any, value: string) {
     return new Promise<void>((resolve, reject) => {
       resolve();
     });
   }
 
   return (
-    <Form
-      labelWrap={true}
-      onFinish={onFinish}
-      onFinishFailed={onFinishFailed}
-      style={formStyle}
-    >
+    <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
       <Form.Item
         label={t("job_title")}
         name="title"
@@ -77,12 +108,15 @@ function CreateOpeningForm() {
       <Form.Item
         label={t("jd")}
         name="jd"
-        rules={[{ required: true, validator: validateHiringManager }]}
+        rules={[{ required: true, validator: validateJD }]}
       >
         <TextArea placeholder="Job Description" rows={10} />
       </Form.Item>
 
-      <Form.Item label={t("locations")} rules={[{ required: true }]}>
+      <Form.Item
+        label={t("locations")}
+        rules={[{ required: true, validator: validateLocations }]}
+      >
         <Select
           mode="tags"
           placeholder={t("locations")}
@@ -100,7 +134,11 @@ function CreateOpeningForm() {
 
       <Divider>{t("optional_fields")}</Divider>
 
-      <Form.Item label={t("yoe")} name="yoe">
+      <Form.Item
+        label={t("yoe")}
+        name="yoe"
+        rules={[{ validator: validateYOE }]}
+      >
         <Slider
           min={0}
           max={80}
@@ -130,7 +168,11 @@ function CreateOpeningForm() {
         <Input />
       </Form.Item>
 
-      <Form.Item label={t("currency")} name="currency">
+      <Form.Item
+        label={t("currency")}
+        name="currency"
+        rules={[{ validator: validateCurrency }]}
+      >
         {/* Should fetch from API based on the job location */}
         <Select>
           <Select.Option value="USD">USD</Select.Option>
@@ -139,11 +181,19 @@ function CreateOpeningForm() {
         </Select>
       </Form.Item>
 
-      <Form.Item label={t("salary_min")} name="salarymin">
+      <Form.Item
+        label={t("salary_min")}
+        name="salarymin"
+        rules={[{ validator: validateSalaryMin }]}
+      >
         <InputNumber></InputNumber>
       </Form.Item>
 
-      <Form.Item label={t("salary_max")} name="salarymax">
+      <Form.Item
+        label={t("salary_max")}
+        name="salarymax"
+        rules={[{ validator: validateSalaryMax }]}
+      >
         <InputNumber></InputNumber>
       </Form.Item>
 
