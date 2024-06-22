@@ -10,37 +10,32 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
   }
 
   function validateDomain(rule: any, value: string) {
-    // Add your domain validation logic here
-    // Example: Check if the domain is valid
     return new Promise<void>((resolve, reject) => {
       if (!value || value !== "example.com") {
-        reject(t("Invalid domain"));
-      } else {
-        resolve();
+        reject(t("invalid_field"));
       }
+
+      resolve();
     });
   }
 
   function validateEmail(rule: any, value: string) {
-    // Add your email validation logic here
     return new Promise<void>((resolve, reject) => {
       if (!value || !value.includes("@")) {
-        reject(t("Invalid email"));
-      } else {
-        resolve();
+        reject(t("invalid_field"));
       }
+
+      resolve();
     });
   }
 
   function validatePassword(rule: any, value: string) {
-    // Add your password validation logic here
-    // Example: Check if the password meets certain criteria
     return new Promise<void>((resolve, reject) => {
       if (!value || value.length < 8) {
         reject(t("Password must be at least 8 characters long"));
-      } else {
-        resolve();
       }
+
+      resolve();
     });
   }
 

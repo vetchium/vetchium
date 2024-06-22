@@ -1,8 +1,7 @@
-import { Button, Flex, Form, Input, InputNumber } from "antd";
 import { PlusCircleTwoTone, SaveTwoTone } from "@ant-design/icons";
+import { Button, Flex, Form, Input, InputNumber } from "antd";
 import t from "../i18n/i18n";
 import { formStyle } from "../Styles";
-import { resolve } from "path";
 
 function CreateOpeningForm() {
   function onFinish(values: any) {
@@ -14,18 +13,32 @@ function CreateOpeningForm() {
   }
 
   function validateTitle(rule: any, value: string) {
-    if (!value || value.length < 3) {
-      return Promise.reject(t("invalid_field"));
-    }
+    return new Promise<void>((resolve, reject) => {
+      if (!value || value.length < 3) {
+        reject(t("invalid_field"));
+      }
 
-    return Promise.resolve();
+      resolve();
+    });
   }
 
-  function validateDepartment(rule: any, value: string) {}
+  function validateDepartment(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
 
-  function validateHiringManager(rule: any, value: string) {}
+  function validateHiringManager(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
 
-  function validatePositions(rule: any, value: number) {}
+  function validatePositions(rule: any, value: number) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
 
   return (
     <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
