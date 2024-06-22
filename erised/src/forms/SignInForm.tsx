@@ -1,5 +1,4 @@
 import { Button, Form, Input } from "antd";
-import Router from "../components/Router";
 import t from "../i18n/i18n";
 import { formStyle } from "../Styles";
 
@@ -43,44 +42,37 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
   }
 
   return (
-    <>
-      <Router />
-      <Form
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        style={formStyle}
+    <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
+      <Form.Item
+        label={t("company_domain")}
+        name="domain"
+        rules={[{ required: true, validator: validateDomain }]}
+        initialValue="example.com"
       >
-        <Form.Item
-          label={t("company_domain")}
-          name="domain"
-          rules={[{ required: true, validator: validateDomain }]}
-          initialValue="example.com"
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label={t("email_address")}
-          name="email"
-          rules={[{ required: true, validator: validateEmail, type: "email" }]}
-          initialValue="master@example.com"
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label={t("password")}
-          name="password"
-          rules={[{ required: true, validator: validatePassword }]}
-          initialValue="Password123$"
-        >
-          <Input.Password />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            {t("sign_in")}
-          </Button>
-        </Form.Item>
-      </Form>
-    </>
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label={t("email_address")}
+        name="email"
+        rules={[{ required: true, validator: validateEmail, type: "email" }]}
+        initialValue="master@example.com"
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label={t("password")}
+        name="password"
+        rules={[{ required: true, validator: validatePassword }]}
+        initialValue="Password123$"
+      >
+        <Input.Password />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          {t("sign_in")}
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }
 
