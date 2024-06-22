@@ -1,5 +1,15 @@
 import { PlusCircleTwoTone, SaveTwoTone } from "@ant-design/icons";
-import { Button, Flex, Form, Input, InputNumber } from "antd";
+import {
+  Button,
+  Divider,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Slider,
+} from "antd";
+import TextArea from "antd/es/input/TextArea";
 import t from "../i18n/i18n";
 import { formStyle } from "../Styles";
 
@@ -41,7 +51,12 @@ function CreateOpeningForm() {
   }
 
   return (
-    <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
+    <Form
+      labelWrap={true}
+      onFinish={onFinish}
+      onFinishFailed={onFinishFailed}
+      style={formStyle}
+    >
       <Form.Item
         label={t("job_title")}
         name="title"
@@ -49,20 +64,7 @@ function CreateOpeningForm() {
       >
         <Input />
       </Form.Item>
-      <Form.Item
-        label={t("department")}
-        name="department"
-        rules={[{ validator: validateDepartment }]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label={t("hiring_manager")}
-        name="hiringManager"
-        rules={[{ validator: validateHiringManager }]}
-      >
-        <Input />
-      </Form.Item>
+
       <Form.Item
         label={t("positions")}
         name="positions"
@@ -71,6 +73,76 @@ function CreateOpeningForm() {
       >
         <InputNumber min={1} max={25} />
       </Form.Item>
+
+      <Form.Item
+        label={t("jd")}
+        name="jd"
+        rules={[{ required: true, validator: validateHiringManager }]}
+      >
+        <TextArea placeholder="Job Description" rows={10} />
+      </Form.Item>
+
+      <Form.Item label={t("yoe")} name="yoe">
+        <Slider
+          min={0}
+          max={80}
+          step={5}
+          range={true}
+          defaultValue={[0, 10]}
+          style={{ minWidth: "300px" }}
+          marks={{
+            0: "0",
+            10: "10",
+            20: "20",
+            30: "30",
+            40: "40",
+            50: "50",
+            60: "60",
+            70: "70",
+            80: "80",
+          }}
+        />
+      </Form.Item>
+
+      <Form.Item label={t("locations")}>
+        <Select
+          mode="tags"
+          placeholder={t("locations")}
+          style={{ minWidth: "120px" }}
+        >
+          <Select.Option value="global">Global</Select.Option>
+          <Select.Option value="bangalore">Bangalore</Select.Option>
+          <Select.Option value="chennai">Chennai</Select.Option>
+          <Select.Option value="san francisco">San Francisco</Select.Option>
+          <Select.Option value="germany">Germany</Select.Option>
+          <Select.Option value="europe remote">Europe Remote</Select.Option>
+        </Select>
+      </Form.Item>
+
+      <Form.Item
+        label={t("hiring_manager")}
+        name="hiringManager"
+        rules={[{ validator: validateHiringManager }]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Divider>Private Data (Not shared with Applicants)</Divider>
+
+      <Form.Item
+        label={t("department")}
+        name="department"
+        rules={[{ validator: validateDepartment }]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item label={t("notes")} name="notes">
+        <TextArea />
+      </Form.Item>
+
+      <Divider />
+
       <Flex gap="middle">
         <Form.Item>
           <Button type="primary" icon={<PlusCircleTwoTone />} htmlType="submit">

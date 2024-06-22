@@ -33,5 +33,4 @@ export const formStyle = {
   flexDirection: "column" as const,
   justifyContent: "center", // Center vertically in the container
   alignItems: "center", // Center horizontally in the container
-  height: "100vh", // Take up full viewport height
 };

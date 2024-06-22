@@ -17,7 +17,11 @@ export default {
   // CreateOpeningForm
   department: "Department",
   hiring_manager: "Hiring Manager",
+  jd: "Job Description",
   job_title: "Job Title",
+  locations: "Locations",
+  notes: "Notes",
   positions: "Positions",
   save_draft: "Save Draft",
+  yoe: "Years of Experience",
 };
