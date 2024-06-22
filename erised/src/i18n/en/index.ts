@@ -1,4 +1,7 @@
 export default {
+  // generic
+  cancel: "Cancel",
+
   // SignInForm
   company_domain: "Company Domain",
   email_address: "Email Address",

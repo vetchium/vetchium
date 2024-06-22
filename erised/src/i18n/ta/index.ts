@@ -1,4 +1,7 @@
 export default {
+  // generic
+  cancel: "விடுவிடு",
+
   // SignInForm
   company_domain: "நிறுவனத்தின் இணையதளம்",
   email_address: "மின்னஞ்சல்",
@@ -14,7 +17,7 @@ export default {
   // CreateOpeningForm
   department: "துறை",
   hiring_manager: "ஆளெடுக்கும் மேலாளர்",
-  job_title: "வேலை பெயர்",
-  positions: "இடங்கள்",
-  save_draft: "வரைவு சேமி",
+  job_title: "வேலையின் பெயர்",
+  positions: "எண்ணிக்கை",
+  save_draft: "வரைவில் சேமி",
 };
