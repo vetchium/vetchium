@@ -82,6 +82,24 @@ function CreateOpeningForm() {
         <TextArea placeholder="Job Description" rows={10} />
       </Form.Item>
 
+      <Form.Item label={t("locations")} rules={[{ required: true }]}>
+        <Select
+          mode="tags"
+          placeholder={t("locations")}
+          style={{ minWidth: "120px" }}
+        >
+          {/* Should fetch from API based on the company */}
+          <Select.Option value="global">Global</Select.Option>
+          <Select.Option value="bangalore">Bangalore</Select.Option>
+          <Select.Option value="chennai">Chennai</Select.Option>
+          <Select.Option value="san francisco">San Francisco</Select.Option>
+          <Select.Option value="germany">Germany</Select.Option>
+          <Select.Option value="europe remote">Europe Remote</Select.Option>
+        </Select>
+      </Form.Item>
+
+      <Divider>{t("optional_fields")}</Divider>
+
       <Form.Item label={t("yoe")} name="yoe">
         <Slider
           min={0}
@@ -104,21 +122,6 @@ function CreateOpeningForm() {
         />
       </Form.Item>
 
-      <Form.Item label={t("locations")}>
-        <Select
-          mode="tags"
-          placeholder={t("locations")}
-          style={{ minWidth: "120px" }}
-        >
-          <Select.Option value="global">Global</Select.Option>
-          <Select.Option value="bangalore">Bangalore</Select.Option>
-          <Select.Option value="chennai">Chennai</Select.Option>
-          <Select.Option value="san francisco">San Francisco</Select.Option>
-          <Select.Option value="germany">Germany</Select.Option>
-          <Select.Option value="europe remote">Europe Remote</Select.Option>
-        </Select>
-      </Form.Item>
-
       <Form.Item
         label={t("hiring_manager")}
         name="hiringManager"
@@ -127,7 +130,24 @@ function CreateOpeningForm() {
         <Input />
       </Form.Item>
 
-      <Divider>Private Data (Not shared with Applicants)</Divider>
+      <Form.Item label={t("currency")} name="currency">
+        {/* Should fetch from API based on the job location */}
+        <Select>
+          <Select.Option value="USD">USD</Select.Option>
+          <Select.Option value="INR">INR</Select.Option>
+          <Select.Option value="EUR">EUR</Select.Option>
+        </Select>
+      </Form.Item>
+
+      <Form.Item label={t("salary_min")} name="salarymin">
+        <InputNumber></InputNumber>
+      </Form.Item>
+
+      <Form.Item label={t("salary_max")} name="salarymax">
+        <InputNumber></InputNumber>
+      </Form.Item>
+
+      <Divider>{t("private_fields")}</Divider>
 
       <Form.Item
         label={t("department")}
