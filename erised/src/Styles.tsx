@@ -1,8 +1,7 @@
 export const headerStyle = {
   textAlign: "center" as const,
   color: "#fff",
-  paddingInline: 48,
-  backgroundColor: "#1677ff",
+  backgroundColor: "lightblue",
 };
 
 export const headerLogo = {

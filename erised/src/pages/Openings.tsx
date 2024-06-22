@@ -1,6 +1,11 @@
-import { Table } from "antd";
+import { PlusCircleTwoTone } from "@ant-design/icons";
+import { Button, Flex, Table } from "antd";
+import { useNavigate } from "react-router-dom";
+import t from "../i18n/i18n";
 
 function Openings() {
+  const navigate = useNavigate();
+
   const dataSource = [
     {
       key: "1",
@@ -64,7 +69,22 @@ function Openings() {
     { title: "Edit", dataIndex: "editLink", key: "editLink" },
   ];
 
-  return <Table dataSource={dataSource} columns={columns} />;
+  return (
+    <Flex wrap vertical>
+      <Flex justify="flex-end">
+        <Button
+          type="primary"
+          icon={<PlusCircleTwoTone />}
+          onClick={() => navigate("/create-opening")}
+        >
+          {t("create_opening")}
+        </Button>
+      </Flex>
+      <Flex>
+        <Table dataSource={dataSource} columns={columns} />
+      </Flex>
+    </Flex>
+  );
 }
 
 export default Openings;

@@ -5,7 +5,7 @@ import SignIn from "./pages/SignIn";
 function App() {
   const [signedIn, setSignedIn] = useState(false);
 
-  return signedIn ? (
+  return !signedIn ? (
     <Home
       onSignOut={() => {
         setSignedIn(false);
