@@ -31,6 +31,7 @@ export const footerStyle = {
 export const layoutStyle = {
   borderRadius: 8,
   overflow: "hidden",
+  minHeight: "100vh",
 };
 
 export const formStyle = {
