@@ -1,5 +1,5 @@
 import { PlusCircleTwoTone } from "@ant-design/icons";
-import { Button, Flex, Table } from "antd";
+import { Button, Divider, Flex, Table } from "antd";
 import { useNavigate } from "react-router-dom";
 import t from "../i18n/i18n";
 
@@ -71,18 +71,20 @@ function Openings() {
 
   return (
     <Flex wrap vertical>
-      <Flex justify="flex-end">
-        <Button
-          type="primary"
-          icon={<PlusCircleTwoTone />}
-          onClick={() => navigate("/create-opening")}
-        >
-          {t("create_opening")}
-        </Button>
-      </Flex>
-      <Flex>
-        <Table dataSource={dataSource} columns={columns} />
-      </Flex>
+      <Button
+        type="primary"
+        icon={<PlusCircleTwoTone />}
+        onClick={() => navigate("/create-opening")}
+        style={{ marginTop: "1rem", marginLeft: "2rem", width: "fit-content" }}
+      >
+        {t("create_opening")}
+      </Button>
+
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        style={{ margin: "2rem" }}
+      />
     </Flex>
   );
 }
