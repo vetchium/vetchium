@@ -6,6 +6,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Radio,
   Select,
   Slider,
 } from "antd";
@@ -132,6 +133,16 @@ function CreateOpeningForm() {
         </Select>
       </Form.Item>
 
+      <Form.Item label={t("job_type")} name="jobType">
+        <Radio.Group defaultValue={"full_time"} buttonStyle="solid">
+          <Radio.Button value="full_time">{t("full_time")}</Radio.Button>
+          <Radio.Button value="part_time">{t("part_time")}</Radio.Button>
+          <Radio.Button value="contract">{t("contract")}</Radio.Button>
+          <Radio.Button value="internship">{t("internship")}</Radio.Button>
+          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
+        </Radio.Group>
+      </Form.Item>
+
       <Divider>{t("optional_fields")}</Divider>
 
       <Form.Item
@@ -158,6 +169,21 @@ function CreateOpeningForm() {
             80: "80",
           }}
         />
+      </Form.Item>
+
+      <Form.Item
+        label={t("educational_qualification")}
+        name="educationalQualification"
+      >
+        <Radio.Group defaultValue="unspecified" buttonStyle="solid">
+          <Radio.Button value="bachelors">{t("bachelors")}</Radio.Button>
+          <Radio.Button value="masters">{t("masters")}</Radio.Button>
+          <Radio.Button value="phd">{t("phd")}</Radio.Button>
+          <Radio.Button value="doesnt_matter">
+            {t("doesnt_matter")}
+          </Radio.Button>
+          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
+        </Radio.Group>
       </Form.Item>
 
       <Form.Item

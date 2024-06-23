@@ -1,5 +1,5 @@
 import { LogoutOutlined, SettingFilled } from "@ant-design/icons";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, MenuProps } from "antd";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import t from "../i18n/i18n";
@@ -16,8 +16,40 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
     }
   }, []);
 
+  type MenuItem = Required<MenuProps>["items"][number];
+  const items: MenuItem[] = [
+    {
+      key: "/openings",
+      label: t("openings"),
+    },
+    {
+      key: "org-settings",
+      label: "Org Settings",
+      children: [
+        {
+          key: "/org-settings/users",
+          label: "Users",
+        },
+        {
+          key: "/org-settings/locations",
+          label: "Locations",
+        },
+      ],
+    },
+    {
+      key: "/account-settings",
+      label: "Account Settings",
+      icon: <SettingFilled />,
+    },
+    {
+      key: "/signout",
+      label: "Sign Out",
+      icon: <LogoutOutlined />,
+    },
+  ];
+
   return (
-    <Sider width="15%" style={siderStyle}>
+    <Sider width="25%" style={siderStyle}>
       <Menu
         onClick={(item) => {
           if (item.key === "/signout") {
@@ -27,16 +59,12 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
           }
         }}
         defaultSelectedKeys={["/openings"]}
-      >
-        <Menu.Item key="/openings">{t("openings")}</Menu.Item>
-        <Menu.Item key="/org-settings">Org Settings</Menu.Item>
-        <Menu.Item key="/account-settings" icon={<SettingFilled />}>
-          Account Settings
-        </Menu.Item>
-        <Menu.Item key="/signout" icon={<LogoutOutlined />}>
-          Sign Out
-        </Menu.Item>
-      </Menu>
+        defaultOpenKeys={["org-settings"]}
+        mode="inline"
+        inlineCollapsed={false}
+        theme="dark"
+        items={items}
+      />
     </Sider>
   );
 }
