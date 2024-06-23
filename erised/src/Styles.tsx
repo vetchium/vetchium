@@ -1,11 +1,15 @@
 export const headerStyle = {
   textAlign: "center" as const,
   color: "#fff",
-  backgroundColor: "lightblue",
+  backgroundColor: "cornflowerblue",
 };
 
 export const headerLogo = {
   fontSize: "40px",
+};
+
+export const headerMenuIcon = {
+  fontSize: "24px",
 };
 
 export const contentStyle = {
@@ -16,6 +20,7 @@ export const contentStyle = {
 export const siderStyle = {
   textAlign: "center" as const,
   color: "#fff",
+  backgroundColor: "cornflowerblue",
 };
 
 export const footerStyle = {

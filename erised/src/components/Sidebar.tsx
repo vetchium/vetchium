@@ -49,7 +49,7 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
   ];
 
   return (
-    <Sider width="25%" style={siderStyle}>
+    <Sider width="20%" style={siderStyle}>
       <Menu
         onClick={(item) => {
           if (item.key === "/signout") {
@@ -62,8 +62,8 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
         defaultOpenKeys={["org-settings"]}
         mode="inline"
         inlineCollapsed={false}
-        theme="dark"
         items={items}
+        style={{ height: "100%" }}
       />
     </Sider>
   );
