@@ -1,15 +1,22 @@
 import React from "react";
 import { Table, Button, Flex, Divider } from "antd";
+import { DeleteTwoTone } from "@ant-design/icons"; // Import the DeleteOutlined icon
 import LocationCreator from "../components/LocationCreator";
 import { tableStyle } from "../Styles";
 import t from "../i18n/i18n";
+import { stat } from "fs";
 
 const Locations: React.FC = () => {
   // Sample data for the table
   const data = [
-    { id: 1, country: "USA", state: "California", city: "Los Angeles" },
-    { id: 2, country: "USA", state: "New York", city: "New York City" },
-    { id: 3, country: "Canada", state: "Ontario", city: "Toronto" },
+    { id: 1, country: "China", state: "Beijing", city: "Beijing" },
+    { id: 2, country: "China", state: "Shanghai", city: "Shanghai" },
+    { id: 3, country: "Germany", state: "Bavaria", city: "Nürnberg" },
+    { id: 4, country: "India", state: "Karnataka", city: "Bangalore" },
+    { id: 5, country: "India", state: "Tamil Nadu", city: "Chennai" },
+    { id: 6, country: "Russia", state: "Moscow", city: "Moscow" },
+    { id: 7, country: "USA", state: "California", city: "Palo Alto" },
+    { id: 8, country: "USA", state: "Utah", city: "Provo" },
   ];
 
   // Columns configuration for the table
@@ -22,8 +29,7 @@ const Locations: React.FC = () => {
       key: "actions",
       render: (text: string, record: any) => (
         <span>
-          <Button type="link">Edit</Button>
-          <Button type="link">Delete</Button>
+          <Button icon={<DeleteTwoTone />} />
         </span>
       ),
     },
@@ -31,10 +37,10 @@ const Locations: React.FC = () => {
 
   return (
     <Flex wrap vertical>
-      <Table dataSource={data} columns={columns} style={tableStyle} />
-
       <Divider>{t("add_location")}</Divider>
       <LocationCreator />
+      <Divider />
+      <Table dataSource={data} columns={columns} style={tableStyle} />
     </Flex>
   );
 };

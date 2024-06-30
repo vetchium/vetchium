@@ -50,65 +50,61 @@ const LocationCreator: React.FC = () => {
   }, [selectedState, states]);
 
   return (
-    <Flex wrap vertical style={{ alignItems: "center" }}>
-      <Flex>
-        <Select
-          showSearch
-          style={{ width: 200, marginRight: 8 }}
-          placeholder="Select Country"
-          onChange={(value) => setSelectedCountry(value)}
-          value={selectedCountry}
-          filterOption={(input, option) =>
-            option?.value
-              ? option.value
-                  .toString()
-                  .toLowerCase()
-                  .indexOf(input.toLowerCase()) >= 0
-              : false
-          }
-        >
-          {countriesStatesCities.map((country) => (
-            <Option key={country.name} value={country.name}>
-              {country.name}
-            </Option>
-          ))}
-        </Select>
-        <Select
-          showSearch
-          style={{ width: 200, marginRight: 8 }}
-          placeholder="Select State"
-          onChange={(value) => setSelectedState(value)}
-          value={selectedState}
-          disabled={!selectedCountry}
-        >
-          {states.map((state) => (
-            <Option key={state.name} value={state.name}>
-              {state.name}
-            </Option>
-          ))}
-        </Select>
-        <Select
-          showSearch
-          style={{ width: 200 }}
-          placeholder="Select City"
-          disabled={!selectedState}
-        >
-          {cities.map((city) => (
-            <Option key={city.name} value={city.name}>
-              {city.name}
-            </Option>
-          ))}
-        </Select>
-      </Flex>
-      <Flex style={{ marginTop: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusCircleTwoTone />}
-          style={{ marginLeft: 8 }}
-        >
-          Add Location
-        </Button>
-      </Flex>
+    <Flex wrap justify="center">
+      <Select
+        showSearch
+        style={{ width: 200, marginRight: 8 }}
+        placeholder="Select Country"
+        onChange={(value) => setSelectedCountry(value)}
+        value={selectedCountry}
+        filterOption={(input, option) =>
+          option?.value
+            ? option.value
+                .toString()
+                .toLowerCase()
+                .indexOf(input.toLowerCase()) >= 0
+            : false
+        }
+      >
+        {countriesStatesCities.map((country) => (
+          <Option key={country.name} value={country.name}>
+            {country.name}
+          </Option>
+        ))}
+      </Select>
+      <Select
+        showSearch
+        style={{ width: 200, marginRight: 8 }}
+        placeholder="Select State"
+        onChange={(value) => setSelectedState(value)}
+        value={selectedState}
+        disabled={!selectedCountry}
+      >
+        {states.map((state) => (
+          <Option key={state.name} value={state.name}>
+            {state.name}
+          </Option>
+        ))}
+      </Select>
+      <Select
+        showSearch
+        style={{ width: 200 }}
+        placeholder="Select City"
+        disabled={!selectedState}
+      >
+        {cities.map((city) => (
+          <Option key={city.name} value={city.name}>
+            {city.name}
+          </Option>
+        ))}
+      </Select>
+      <Button
+        type="primary"
+        icon={<PlusCircleTwoTone />}
+        style={{ marginLeft: 8 }}
+      >
+        Add Location
+      </Button>
     </Flex>
   );
 };
