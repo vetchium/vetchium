@@ -2,6 +2,8 @@ import { PlusCircleTwoTone } from "@ant-design/icons";
 import { Button, Divider, Flex, Table } from "antd";
 import { useNavigate } from "react-router-dom";
 import t from "../i18n/i18n";
+import { table } from "console";
+import { tableStyle } from "../Styles";
 
 function Openings() {
   const navigate = useNavigate();
@@ -80,11 +82,7 @@ function Openings() {
         {t("create_opening")}
       </Button>
 
-      <Table
-        dataSource={dataSource}
-        columns={columns}
-        style={{ margin: "2rem" }}
-      />
+      <Table dataSource={dataSource} columns={columns} style={tableStyle} />
     </Flex>
   );
 }

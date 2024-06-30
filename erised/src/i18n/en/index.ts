@@ -44,4 +44,7 @@ export default {
   phd: "PhD",
   doesnt_matter: "Doesn't Matter",
   unspecified: "Unspecified",
+
+  // locations
+  add_location: "Add Location",
 };

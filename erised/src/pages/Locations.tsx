@@ -1,104 +1,42 @@
-import React, { useState, useEffect } from "react";
-import { Select } from "antd";
-import countriesStatesCitiesData from "../static/countries-states-cities.json";
+import React from "react";
+import { Table, Button, Flex, Divider } from "antd";
+import LocationCreator from "../components/LocationCreator";
+import { tableStyle } from "../Styles";
+import t from "../i18n/i18n";
 
-const { Option } = Select;
+const Locations: React.FC = () => {
+  // Sample data for the table
+  const data = [
+    { id: 1, country: "USA", state: "California", city: "Los Angeles" },
+    { id: 2, country: "USA", state: "New York", city: "New York City" },
+    { id: 3, country: "Canada", state: "Ontario", city: "Toronto" },
+  ];
 
-interface City {
-  name: string;
-}
-
-interface State {
-  name: string;
-  cities: City[];
-}
-
-interface Country {
-  name: string;
-  states: State[];
-}
-
-const countriesStatesCities: Country[] = countriesStatesCitiesData as Country[];
-
-const LocationSelector: React.FC = () => {
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedState, setSelectedState] = useState<string>("");
-  const [states, setStates] = useState<State[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-
-  useEffect(() => {
-    const country = countriesStatesCities.find(
-      (c) => c.name === selectedCountry
-    );
-    if (country) {
-      setStates(country.states);
-    } else {
-      setStates([]);
-    }
-    setSelectedState("");
-    setCities([]);
-  }, [selectedCountry]);
-
-  useEffect(() => {
-    const state = states.find((s) => s.name === selectedState);
-    if (state) {
-      setCities(state.cities);
-    } else {
-      setCities([]);
-    }
-  }, [selectedState, states]);
+  // Columns configuration for the table
+  const columns = [
+    { title: "Country", dataIndex: "country", key: "country" },
+    { title: "State", dataIndex: "state", key: "state" },
+    { title: "City", dataIndex: "city", key: "city" },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (text: string, record: any) => (
+        <span>
+          <Button type="link">Edit</Button>
+          <Button type="link">Delete</Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      <Select
-        showSearch
-        style={{ width: 200, marginRight: 8 }}
-        placeholder="Select Country"
-        onChange={(value) => setSelectedCountry(value)}
-        value={selectedCountry}
-        filterOption={(input, option) =>
-          option?.value
-            ? option.value
-                .toString()
-                .toLowerCase()
-                .indexOf(input.toLowerCase()) >= 0
-            : false
-        }
-      >
-        {countriesStatesCities.map((country) => (
-          <Option key={country.name} value={country.name}>
-            {country.name}
-          </Option>
-        ))}
-      </Select>
-      <Select
-        showSearch
-        style={{ width: 200, marginRight: 8 }}
-        placeholder="Select State"
-        onChange={(value) => setSelectedState(value)}
-        value={selectedState}
-        disabled={!selectedCountry}
-      >
-        {states.map((state) => (
-          <Option key={state.name} value={state.name}>
-            {state.name}
-          </Option>
-        ))}
-      </Select>
-      <Select
-        showSearch
-        style={{ width: 200 }}
-        placeholder="Select City"
-        disabled={!selectedState}
-      >
-        {cities.map((city) => (
-          <Option key={city.name} value={city.name}>
-            {city.name}
-          </Option>
-        ))}
-      </Select>
-    </div>
+    <Flex wrap vertical>
+      <Table dataSource={data} columns={columns} style={tableStyle} />
+
+      <Divider>{t("add_location")}</Divider>
+      <LocationCreator />
+    </Flex>
   );
 };
 
-export default LocationSelector;
+export default Locations;

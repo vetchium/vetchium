@@ -40,3 +40,7 @@ export const formStyle = {
   justifyContent: "center", // Center vertically in the container
   alignItems: "center", // Center horizontally in the container
 };
+
+export const tableStyle = {
+  margin: "1rem",
+};
