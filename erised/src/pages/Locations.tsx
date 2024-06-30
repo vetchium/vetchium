@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Select } from "antd";
 import countriesStatesCitiesData from "../static/countries-states-cities.json";
 
@@ -26,59 +26,72 @@ const LocationSelector: React.FC = () => {
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
 
-  const handleCountryChange = (value: string) => {
+  useEffect(() => {
     const country = countriesStatesCities.find(
-      (country: Country) => country.name === value
+      (c) => c.name === selectedCountry
     );
-    setSelectedCountry(value);
     if (country) {
       setStates(country.states);
-      setCities([]);
-      setSelectedState("");
+    } else {
+      setStates([]);
     }
-  };
+    setSelectedState("");
+    setCities([]);
+  }, [selectedCountry]);
 
-  const handleStateChange = (value: string) => {
-    const state = states.find((state: State) => state.name === value);
-    setSelectedState(value);
+  useEffect(() => {
+    const state = states.find((s) => s.name === selectedState);
     if (state) {
       setCities(state.cities);
+    } else {
+      setCities([]);
     }
-  };
+  }, [selectedState, states]);
 
   return (
     <div>
       <Select
+        showSearch
         style={{ width: 200, marginRight: 8 }}
         placeholder="Select Country"
-        onChange={handleCountryChange}
+        onChange={(value) => setSelectedCountry(value)}
         value={selectedCountry}
+        filterOption={(input, option) =>
+          option?.value
+            ? option.value
+                .toString()
+                .toLowerCase()
+                .indexOf(input.toLowerCase()) >= 0
+            : false
+        }
       >
-        {countriesStatesCities.map((country: Country) => (
+        {countriesStatesCities.map((country) => (
           <Option key={country.name} value={country.name}>
             {country.name}
           </Option>
         ))}
       </Select>
       <Select
+        showSearch
         style={{ width: 200, marginRight: 8 }}
         placeholder="Select State"
-        onChange={handleStateChange}
+        onChange={(value) => setSelectedState(value)}
         value={selectedState}
-        disabled={!states.length}
+        disabled={!selectedCountry}
       >
-        {states.map((state: State) => (
+        {states.map((state) => (
           <Option key={state.name} value={state.name}>
             {state.name}
           </Option>
         ))}
       </Select>
       <Select
+        showSearch
         style={{ width: 200 }}
         placeholder="Select City"
-        disabled={!cities.length}
+        disabled={!selectedState}
       >
-        {cities.map((city: City) => (
+        {cities.map((city) => (
           <Option key={city.name} value={city.name}>
             {city.name}
           </Option>
