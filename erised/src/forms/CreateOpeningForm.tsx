@@ -12,7 +12,7 @@ import {
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import t from "../i18n/i18n";
-import { formStyle } from "../Styles";
+import { formInputStyle, formStyle } from "../Styles";
 
 function CreateOpeningForm() {
   function onFinish(values: any) {
@@ -94,7 +94,7 @@ function CreateOpeningForm() {
         name="title"
         rules={[{ required: true, validator: validateTitle }]}
       >
-        <Input />
+        <Input style={formInputStyle} />
       </Form.Item>
 
       <Form.Item
@@ -103,7 +103,7 @@ function CreateOpeningForm() {
         initialValue={1}
         rules={[{ required: true, validator: validatePositions }]}
       >
-        <InputNumber min={1} max={25} />
+        <InputNumber min={1} max={25} style={formInputStyle} />
       </Form.Item>
 
       <Form.Item
@@ -111,18 +111,18 @@ function CreateOpeningForm() {
         name="jd"
         rules={[{ required: true, validator: validateJD }]}
       >
-        <TextArea placeholder="Job Description" rows={10} />
+        <TextArea
+          placeholder="Job Description"
+          rows={10}
+          style={formInputStyle}
+        />
       </Form.Item>
 
       <Form.Item
         label={t("locations")}
         rules={[{ required: true, validator: validateLocations }]}
       >
-        <Select
-          mode="tags"
-          placeholder={t("locations")}
-          style={{ minWidth: "120px" }}
-        >
+        <Select mode="tags" placeholder={t("locations")} style={formInputStyle}>
           {/* Should fetch from API based on the company */}
           <Select.Option value="global">Global</Select.Option>
           <Select.Option value="bangalore">Bangalore</Select.Option>
@@ -191,7 +191,7 @@ function CreateOpeningForm() {
         name="hiringManager"
         rules={[{ validator: validateHiringManager }]}
       >
-        <Input />
+        <Input style={formInputStyle} />
       </Form.Item>
 
       <Form.Item
@@ -212,7 +212,7 @@ function CreateOpeningForm() {
         name="salarymin"
         rules={[{ validator: validateSalaryMin }]}
       >
-        <InputNumber></InputNumber>
+        <InputNumber style={formInputStyle} />
       </Form.Item>
 
       <Form.Item
@@ -220,7 +220,7 @@ function CreateOpeningForm() {
         name="salarymax"
         rules={[{ validator: validateSalaryMax }]}
       >
-        <InputNumber></InputNumber>
+        <InputNumber style={formInputStyle} />
       </Form.Item>
 
       <Divider>{t("private_fields")}</Divider>
@@ -230,11 +230,11 @@ function CreateOpeningForm() {
         name="department"
         rules={[{ validator: validateDepartment }]}
       >
-        <Input />
+        <Input style={formInputStyle} />
       </Form.Item>
 
       <Form.Item label={t("notes")} name="notes">
-        <TextArea />
+        <TextArea style={formInputStyle} />
       </Form.Item>
 
       <Divider />

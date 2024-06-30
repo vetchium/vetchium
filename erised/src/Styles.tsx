@@ -37,8 +37,13 @@ export const layoutStyle = {
 export const formStyle = {
   display: "flex",
   flexDirection: "column" as const,
-  justifyContent: "center", // Center vertically in the container
-  alignItems: "center", // Center horizontally in the container
+  justifyContent: "left",
+  alignItems: "center",
+  marginTop: "1rem",
+};
+
+export const formInputStyle = {
+  minWidth: "250px",
 };
 
 export const tableStyle = {
