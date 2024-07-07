@@ -16,7 +16,12 @@ import React, { useState } from "react";
 import t from "../i18n/i18n";
 import countriesData from "../static/countries-states-cities.json";
 import { timezones } from "../static/timezones";
-import { createOpeningFormStyle, formInputStyle } from "../Styles";
+import {
+  createOpeningFormStyle,
+  formInputStyle,
+  formItemStyle,
+  formSelectStyle,
+} from "../Styles";
 
 function CreateOpeningForm() {
   const [isTimezoneSwitchOn, setIsTimezoneSwitchOn] = useState(false);
@@ -104,6 +109,7 @@ function CreateOpeningForm() {
         label={t("job_title")}
         name="title"
         rules={[{ required: true, validator: validateTitle }]}
+        style={formItemStyle}
       >
         <Input style={formInputStyle} />
       </Form.Item>
@@ -112,6 +118,7 @@ function CreateOpeningForm() {
         name="positions"
         initialValue={1}
         rules={[{ required: true, validator: validatePositions }]}
+        style={formItemStyle}
       >
         <InputNumber min={1} max={25} style={formInputStyle} />
       </Form.Item>
@@ -119,6 +126,7 @@ function CreateOpeningForm() {
         label={t("jd")}
         name="jd"
         rules={[{ required: true, validator: validateJD }]}
+        style={formItemStyle}
       >
         <TextArea
           placeholder="Job Description"
@@ -127,7 +135,7 @@ function CreateOpeningForm() {
         />
       </Form.Item>
 
-      <Form.Item label={t("job_type")} name="jobType">
+      <Form.Item label={t("job_type")} name="jobType" style={formItemStyle}>
         <Radio.Group defaultValue={"full_time"} buttonStyle="solid">
           <Radio.Button value="full_time">{t("full_time")}</Radio.Button>
           <Radio.Button value="part_time">{t("part_time")}</Radio.Button>
@@ -142,8 +150,13 @@ function CreateOpeningForm() {
       <Form.Item
         label={t("onsite_locations")}
         rules={[{ required: true, validator: validateOnSiteLocations }]}
+        style={formItemStyle}
       >
-        <Select mode="tags" placeholder={t("locations")} style={formInputStyle}>
+        <Select
+          mode="tags"
+          placeholder={t("locations")}
+          style={formSelectStyle}
+        >
           {/* Should fetch from API based on the company */}
           <Select.Option value="global">Global</Select.Option>
           <Select.Option value="bangalore">Bangalore</Select.Option>
@@ -157,6 +170,7 @@ function CreateOpeningForm() {
       <Form.Item
         label={t("remote_locations_countries")}
         name="remoteLocationsCountries"
+        style={formItemStyle}
       >
         <Flex gap="small" vertical>
           <Switch
@@ -167,7 +181,7 @@ function CreateOpeningForm() {
           <Select
             mode="tags"
             placeholder={t("remote_locations_countries")}
-            style={formInputStyle}
+            style={formSelectStyle}
             disabled={!isCountrySwitchOn}
           >
             {Array.isArray(countriesData) &&
@@ -184,6 +198,7 @@ function CreateOpeningForm() {
       <Form.Item
         label={t("remote_locations_timezones")}
         name="remoteLocationsTimezones"
+        style={formItemStyle}
       >
         <Flex gap="small" vertical>
           <Switch
@@ -194,7 +209,7 @@ function CreateOpeningForm() {
           <Select
             mode="tags"
             placeholder={t("remote_locations_timezones")}
-            style={formInputStyle}
+            style={formSelectStyle}
             disabled={!isTimezoneSwitchOn}
           >
             {timezones.map((timezone) => (
@@ -212,13 +227,14 @@ function CreateOpeningForm() {
         label={t("yoe")}
         name="yoe"
         rules={[{ validator: validateYOE }]}
+        style={formItemStyle}
       >
         <Slider
           min={0}
           max={80}
           step={5}
           range={true}
-          defaultValue={[0, 10]}
+          defaultValue={[0, 80]}
           style={{ minWidth: "300px" }}
           marks={{
             0: "0",
@@ -236,6 +252,7 @@ function CreateOpeningForm() {
       <Form.Item
         label={t("educational_qualification")}
         name="educationalQualification"
+        style={formItemStyle}
       >
         <Radio.Group defaultValue="unspecified" buttonStyle="solid">
           <Radio.Button value="bachelors">{t("bachelors")}</Radio.Button>
@@ -251,6 +268,7 @@ function CreateOpeningForm() {
         label={t("hiring_manager")}
         name="hiringManager"
         rules={[{ validator: validateHiringManager }]}
+        style={formItemStyle}
       >
         <Input style={formInputStyle} />
       </Form.Item>
@@ -258,9 +276,10 @@ function CreateOpeningForm() {
         label={t("currency")}
         name="currency"
         rules={[{ validator: validateCurrency }]}
+        style={formItemStyle}
       >
         {/* Should fetch from API based on the job location */}
-        <Select>
+        <Select style={formSelectStyle}>
           <Select.Option value="USD">USD</Select.Option>
           <Select.Option value="INR">INR</Select.Option>
           <Select.Option value="EUR">EUR</Select.Option>
@@ -270,6 +289,7 @@ function CreateOpeningForm() {
         label={t("salary_min")}
         name="salarymin"
         rules={[{ validator: validateSalaryMin }]}
+        style={formItemStyle}
       >
         <InputNumber style={formInputStyle} />
       </Form.Item>
@@ -277,6 +297,7 @@ function CreateOpeningForm() {
         label={t("salary_max")}
         name="salarymax"
         rules={[{ validator: validateSalaryMax }]}
+        style={formItemStyle}
       >
         <InputNumber style={formInputStyle} />
       </Form.Item>
@@ -285,10 +306,11 @@ function CreateOpeningForm() {
         label={t("department")}
         name="department"
         rules={[{ validator: validateDepartment }]}
+        style={formItemStyle}
       >
         <Input style={formInputStyle} />
       </Form.Item>
-      <Form.Item label={t("notes")} name="notes">
+      <Form.Item label={t("notes")} name="notes" style={formItemStyle}>
         <TextArea style={formInputStyle} />
       </Form.Item>
       <Divider />
