@@ -71,3 +71,5 @@ export const createOpeningFormStyle = {
 export const tableStyle = {
   margin: "1rem",
 };
+
+export const formSwitchStyle = { maxWidth: "40px" };

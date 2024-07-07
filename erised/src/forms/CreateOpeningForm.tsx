@@ -21,6 +21,7 @@ import {
   formInputStyle,
   formItemStyle,
   formSelectStyle,
+  formSwitchStyle,
 } from "../Styles";
 
 function CreateOpeningForm() {
@@ -174,7 +175,7 @@ function CreateOpeningForm() {
       >
         <Flex gap="small" vertical>
           <Switch
-            style={{ maxWidth: "40px" }}
+            style={formSwitchStyle}
             checked={isCountrySwitchOn}
             onChange={(checked) => setIsCountrySwitchOn(checked)}
           />
@@ -202,7 +203,7 @@ function CreateOpeningForm() {
       >
         <Flex gap="small" vertical>
           <Switch
-            style={{ maxWidth: "40px" }}
+            style={formSwitchStyle}
             checked={isTimezoneSwitchOn}
             onChange={(checked) => setIsTimezoneSwitchOn(checked)}
           />
