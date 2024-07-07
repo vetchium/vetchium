@@ -47,4 +47,10 @@ export default {
 
   // locations
   add_location: "Add Location",
+  onsite_locations: "Onsite Locations",
+  remote_locations_timezones: "Remote Locations restricted to Timezones",
+  remote_locations_countries: "Remote Locations restricted to Countries",
+
+  // positions
+  add_position: "Add Position",
 };

@@ -9,12 +9,19 @@ import {
   Radio,
   Select,
   Slider,
+  Switch,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
+import React, { useState } from "react";
 import t from "../i18n/i18n";
-import { formInputStyle, formStyle } from "../Styles";
+import countriesData from "../static/countries-states-cities.json";
+import { timezones } from "../static/timezones";
+import { createOpeningFormStyle, formInputStyle } from "../Styles";
 
 function CreateOpeningForm() {
+  const [isTimezoneSwitchOn, setIsTimezoneSwitchOn] = useState(false);
+  const [isCountrySwitchOn, setIsCountrySwitchOn] = useState(false);
+
   function onFinish(values: any) {
     console.log("Received values:", values);
   }
@@ -45,7 +52,7 @@ function CreateOpeningForm() {
     });
   }
 
-  function validateLocations(rule: any, value: string) {
+  function validateOnSiteLocations(rule: any, value: string) {
     return new Promise<void>((resolve, reject) => {
       resolve();
     });
@@ -88,7 +95,11 @@ function CreateOpeningForm() {
   }
 
   return (
-    <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
+    <Form
+      onFinish={onFinish}
+      onFinishFailed={onFinishFailed}
+      style={createOpeningFormStyle}
+    >
       <Form.Item
         label={t("job_title")}
         name="title"
@@ -96,7 +107,6 @@ function CreateOpeningForm() {
       >
         <Input style={formInputStyle} />
       </Form.Item>
-
       <Form.Item
         label={t("positions")}
         name="positions"
@@ -105,7 +115,6 @@ function CreateOpeningForm() {
       >
         <InputNumber min={1} max={25} style={formInputStyle} />
       </Form.Item>
-
       <Form.Item
         label={t("jd")}
         name="jd"
@@ -118,9 +127,21 @@ function CreateOpeningForm() {
         />
       </Form.Item>
 
+      <Form.Item label={t("job_type")} name="jobType">
+        <Radio.Group defaultValue={"full_time"} buttonStyle="solid">
+          <Radio.Button value="full_time">{t("full_time")}</Radio.Button>
+          <Radio.Button value="part_time">{t("part_time")}</Radio.Button>
+          <Radio.Button value="contract">{t("contract")}</Radio.Button>
+          <Radio.Button value="internship">{t("internship")}</Radio.Button>
+          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
+        </Radio.Group>
+      </Form.Item>
+
+      {/* <!--------- Location Fields ---------!> */}
+      <Divider>{t("locations")}</Divider>
       <Form.Item
-        label={t("locations")}
-        rules={[{ required: true, validator: validateLocations }]}
+        label={t("onsite_locations")}
+        rules={[{ required: true, validator: validateOnSiteLocations }]}
       >
         <Select mode="tags" placeholder={t("locations")} style={formInputStyle}>
           {/* Should fetch from API based on the company */}
@@ -133,18 +154,60 @@ function CreateOpeningForm() {
         </Select>
       </Form.Item>
 
-      <Form.Item label={t("job_type")} name="jobType">
-        <Radio.Group defaultValue={"full_time"} buttonStyle="solid">
-          <Radio.Button value="full_time">{t("full_time")}</Radio.Button>
-          <Radio.Button value="part_time">{t("part_time")}</Radio.Button>
-          <Radio.Button value="contract">{t("contract")}</Radio.Button>
-          <Radio.Button value="internship">{t("internship")}</Radio.Button>
-          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
-        </Radio.Group>
+      <Form.Item
+        label={t("remote_locations_countries")}
+        name="remoteLocationsCountries"
+      >
+        <Flex gap="small" vertical>
+          <Switch
+            style={{ maxWidth: "40px" }}
+            checked={isCountrySwitchOn}
+            onChange={(checked) => setIsCountrySwitchOn(checked)}
+          />
+          <Select
+            mode="tags"
+            placeholder={t("remote_locations_countries")}
+            style={formInputStyle}
+            disabled={!isCountrySwitchOn}
+          >
+            {Array.isArray(countriesData) &&
+              countriesData.map((country: any) => (
+                <Select.Option key={country.name} value={country.name}>
+                  {country.name}{" "}
+                  {country.native === country.name ? "" : `(${country.native})`}
+                </Select.Option>
+              ))}
+          </Select>
+        </Flex>
       </Form.Item>
 
-      <Divider>{t("optional_fields")}</Divider>
+      <Form.Item
+        label={t("remote_locations_timezones")}
+        name="remoteLocationsTimezones"
+      >
+        <Flex gap="small" vertical>
+          <Switch
+            style={{ maxWidth: "40px" }}
+            checked={isTimezoneSwitchOn}
+            onChange={(checked) => setIsTimezoneSwitchOn(checked)}
+          />
+          <Select
+            mode="tags"
+            placeholder={t("remote_locations_timezones")}
+            style={formInputStyle}
+            disabled={!isTimezoneSwitchOn}
+          >
+            {timezones.map((timezone) => (
+              <Select.Option key={timezone} value={timezone}>
+                {timezone}
+              </Select.Option>
+            ))}
+          </Select>
+        </Flex>
+      </Form.Item>
 
+      {/* <!--------- Optional Fields ---------!> */}
+      <Divider>{t("optional_fields")}</Divider>
       <Form.Item
         label={t("yoe")}
         name="yoe"
@@ -170,7 +233,6 @@ function CreateOpeningForm() {
           }}
         />
       </Form.Item>
-
       <Form.Item
         label={t("educational_qualification")}
         name="educationalQualification"
@@ -185,7 +247,6 @@ function CreateOpeningForm() {
           <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
         </Radio.Group>
       </Form.Item>
-
       <Form.Item
         label={t("hiring_manager")}
         name="hiringManager"
@@ -193,7 +254,6 @@ function CreateOpeningForm() {
       >
         <Input style={formInputStyle} />
       </Form.Item>
-
       <Form.Item
         label={t("currency")}
         name="currency"
@@ -206,7 +266,6 @@ function CreateOpeningForm() {
           <Select.Option value="EUR">EUR</Select.Option>
         </Select>
       </Form.Item>
-
       <Form.Item
         label={t("salary_min")}
         name="salarymin"
@@ -214,7 +273,6 @@ function CreateOpeningForm() {
       >
         <InputNumber style={formInputStyle} />
       </Form.Item>
-
       <Form.Item
         label={t("salary_max")}
         name="salarymax"
@@ -222,9 +280,7 @@ function CreateOpeningForm() {
       >
         <InputNumber style={formInputStyle} />
       </Form.Item>
-
       <Divider>{t("private_fields")}</Divider>
-
       <Form.Item
         label={t("department")}
         name="department"
@@ -232,13 +288,10 @@ function CreateOpeningForm() {
       >
         <Input style={formInputStyle} />
       </Form.Item>
-
       <Form.Item label={t("notes")} name="notes">
         <TextArea style={formInputStyle} />
       </Form.Item>
-
       <Divider />
-
       <Flex gap="middle">
         <Form.Item>
           <Button type="primary" icon={<PlusCircleTwoTone />} htmlType="submit">

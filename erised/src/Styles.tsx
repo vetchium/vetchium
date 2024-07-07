@@ -42,8 +42,18 @@ export const formStyle = {
   marginTop: "1rem",
 };
 
+export const createOpeningFormStyle = {
+  display: "flex",
+  flexDirection: "column" as const,
+  justifyContent: "left",
+  alignItems: "left",
+  marginLeft: "5rem",
+  marginTop: "2rem",
+};
+
 export const formInputStyle = {
   minWidth: "250px",
+  maxWidth: "300px",
 };
 
 export const tableStyle = {
