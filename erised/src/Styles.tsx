@@ -39,7 +39,10 @@ export const formStyle = {
   flexDirection: "column" as const,
   justifyContent: "left",
   alignItems: "center",
-  marginTop: "1rem",
+  backgroundColor: "white",
+  margin: "1rem",
+  padding: "1rem",
+  borderRadius: "8px",
 };
 
 export const formInputStyle = {

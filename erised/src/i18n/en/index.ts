@@ -66,4 +66,16 @@ export default {
   department_notes: "Notes",
   reset: "Reset",
   notes_too_long: "Notes cannot be longer than 500 characters",
+
+  // users
+  role_descriptions: "Role Descriptions",
+  admin: "Admin",
+  admin_description: "Admin can add/remove users and do whatever Recruiters can do",
+  recruiter: "Recruiter",
+  recruiter_description: "Recruiter can add/edit Openings and do whatever Panelists do",
+  panelist: "Panelist",
+  panelist_description: "Panelists can Shortlist candidates, submit interview feedback",
+  add_user: "Add User",
+  email: "Email",
+  role: "Role",
 };
