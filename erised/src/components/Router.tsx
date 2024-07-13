@@ -1,7 +1,9 @@
 import { Route, Routes } from "react-router-dom";
-import Openings from "../pages/Openings";
 import CreateOpening from "../pages/CreateOpening";
+import Departments from "../pages/Departments";
 import LocationSelector from "../pages/Locations";
+import Openings from "../pages/Openings";
+import Users from "../pages/Users";
 
 function Router() {
   return (
@@ -10,6 +12,8 @@ function Router() {
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />
       <Route path="/org-settings/locations" element={<LocationSelector />} />
+      <Route path="/org-settings/departments" element={<Departments />} />
+      <Route path="/org-settings/users" element={<Users />} />
       <Route path="/account-settings" element={<div>Account Settings</div>} />
     </Routes>
   );

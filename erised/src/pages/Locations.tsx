@@ -1,10 +1,9 @@
+import { DeleteTwoTone } from "@ant-design/icons";
+import { Button, Divider, Flex, Table } from "antd";
 import React from "react";
-import { Table, Button, Flex, Divider } from "antd";
-import { DeleteTwoTone } from "@ant-design/icons"; // Import the DeleteOutlined icon
-import LocationCreator from "../components/LocationCreator";
 import { tableStyle } from "../Styles";
+import LocationCreator from "../components/LocationCreator";
 import t from "../i18n/i18n";
-import { stat } from "fs";
 
 const Locations: React.FC = () => {
   // Sample data for the table

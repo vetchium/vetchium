@@ -10,9 +10,16 @@ export default {
 
   // Sidebar
   openings: "Openings",
+  org_settings: "Org Settings",
+  account_settings: "Account Settings",
+  departments: "Departments",
+  users: "Users",
+  sign_out: "Sign Out",
 
   // Sidebar, Openings and CreateOpeningForm
   create_opening: "Create Opening",
+  locations: "Locations",
+  actions: "Actions",
 
   // CreateOpeningForm
   currency: "Currency",
@@ -20,7 +27,6 @@ export default {
   hiring_manager: "Hiring Manager",
   jd: "Job Description",
   job_title: "Job Title",
-  locations: "Locations",
   notes: "Notes",
   optional_fields: "Optional Fields",
   private_fields: "Private Fields (Not shared with Applicants)",
@@ -53,4 +59,11 @@ export default {
 
   // positions
   add_position: "Add Position",
+
+  // departments
+  add_department: "Add Department",
+  department_name: "Department/CostCenter Name",
+  department_notes: "Notes",
+  reset: "Reset",
+  notes_too_long: "Notes cannot be longer than 500 characters",
 };

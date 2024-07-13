@@ -24,26 +24,30 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
     },
     {
       key: "org-settings",
-      label: "Org Settings",
+      label: t("org_settings"),
       children: [
         {
           key: "/org-settings/users",
-          label: "Users",
+          label: t("users"),
         },
         {
           key: "/org-settings/locations",
-          label: "Locations",
+          label: t("locations"),
+        },
+        {
+          key: "/org-settings/departments",
+          label: t("departments"),
         },
       ],
     },
     {
       key: "/account-settings",
-      label: "Account Settings",
+      label: t("account_settings"),
       icon: <SettingFilled />,
     },
     {
       key: "/signout",
-      label: "Sign Out",
+      label: t("sign_out"),
       icon: <LogoutOutlined />,
     },
   ];

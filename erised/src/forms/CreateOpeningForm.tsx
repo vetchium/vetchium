@@ -12,10 +12,7 @@ import {
   Switch,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import React, { useState } from "react";
-import t from "../i18n/i18n";
-import countriesData from "../static/countries-states-cities.json";
-import { timezones } from "../static/timezones";
+import { useState } from "react";
 import {
   createOpeningFormStyle,
   formInputStyle,
@@ -23,6 +20,9 @@ import {
   formSelectStyle,
   formSwitchStyle,
 } from "../Styles";
+import t from "../i18n/i18n";
+import countriesData from "../static/countries-states-cities.json";
+import { timezones } from "../static/timezones";
 
 function CreateOpeningForm() {
   const [isTimezoneSwitchOn, setIsTimezoneSwitchOn] = useState(false);
