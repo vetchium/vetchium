@@ -105,6 +105,7 @@ function CreateOpeningForm() {
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
       style={createOpeningFormStyle}
+      layout="vertical"
     >
       <Form.Item
         label={t("job_title")}

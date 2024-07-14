@@ -38,37 +38,28 @@ export const formStyle = {
   display: "flex",
   flexDirection: "column" as const,
   justifyContent: "left",
-  alignItems: "center",
   backgroundColor: "white",
-  margin: "1rem",
+  margin: "3rem",
   padding: "1rem",
   borderRadius: "8px",
 };
 
 export const formInputStyle = {
-  minWidth: "250px",
-  maxWidth: "300px",
+  width: "100%",
 };
 
-export const formSelectStyle = {
-  minWidth: "250px",
-  maxWidth: "600px",
+export const formSelectStyle = {};
+
+export const createOpeningFormStyle = {
+  backgroundColor: "white",
+  margin: "3rem",
+  borderRadius: "8px",
+  padding: "1rem",
+  textAlign: "left" as const,
 };
 
 export const formItemStyle = {
-  minWidth: "250px",
-  maxWidth: "600px",
-};
-
-export const createOpeningFormStyle = {
-  display: "flex",
-  flexDirection: "column" as const,
-  marginLeft: "5rem",
-  marginTop: "2rem",
-  marginRight: "5rem",
-  width: "100%",
-  maxWidth: "600px",
-  minWidth: "400px",
+  marginBottom: "3rem",
 };
 
 export const tableStyle = {
