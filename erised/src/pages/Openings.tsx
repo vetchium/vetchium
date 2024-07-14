@@ -10,39 +10,36 @@ function Openings() {
 
   const dataSource = [
     {
-      key: "1",
-      id: "1",
+      key: "JAN14-1",
+      id: "JAN14-1",
       status: "DRAFT",
       title: "Software Engineer",
       department: "Engineering",
       hiringManager: "John Doe",
       unfilledPositions: 3,
       filledPositions: 2,
-      createdAt: "2022-01-01",
       editLink: <a href="#">Edit</a>,
     },
     {
-      key: "2",
-      id: "2",
+      key: "JAN14-2",
+      id: "JAN14-2",
       status: "ACTIVE",
       title: "Product Manager",
       department: "Product",
       hiringManager: "Jane Smith",
       unfilledPositions: 1,
       filledPositions: 4,
-      createdAt: "2022-01-02",
       editLink: <a href="#">Edit</a>,
     },
     {
-      key: "3",
-      id: "3",
+      key: "FEB14-1",
+      id: "FEB14-1",
       status: "CLOSED",
       title: "Sales Representative",
       department: "Sales",
       hiringManager: "Bob Johnson",
       unfilledPositions: 0,
       filledPositions: 5,
-      createdAt: "2022-01-03",
       editLink: <a href="#">Edit</a>,
     },
   ];
@@ -67,7 +64,6 @@ function Openings() {
       dataIndex: "filledPositions",
       key: "filledPositions",
     },
-    { title: "Created At", dataIndex: "createdAt", key: "createdAt" },
     { title: "Edit", dataIndex: "editLink", key: "editLink" },
   ];
 
