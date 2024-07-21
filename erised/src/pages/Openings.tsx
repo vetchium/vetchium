@@ -1,9 +1,8 @@
 import { PlusCircleTwoTone } from "@ant-design/icons";
-import { Button, Divider, Flex, Table } from "antd";
+import { Button, Flex, Table } from "antd";
 import { useNavigate } from "react-router-dom";
-import t from "../i18n/i18n";
-import { table } from "console";
 import { tableStyle } from "../Styles";
+import t from "../i18n/i18n";
 
 function Openings() {
   const navigate = useNavigate();
@@ -19,6 +18,14 @@ function Openings() {
       unfilledPositions: 3,
       filledPositions: 2,
       editLink: <a href="#">Edit</a>,
+      applicationsLink: (
+        <a
+          href={`/openings/JAN14-1/applications`}
+          onClick={() => navigate(`/openings/JAN14-1/applications`)}
+        >
+          Applications
+        </a>
+      ),
     },
     {
       key: "JAN14-2",
@@ -30,6 +37,14 @@ function Openings() {
       unfilledPositions: 1,
       filledPositions: 4,
       editLink: <a href="#">Edit</a>,
+      applicationsLink: (
+        <a
+          href={`/openings/JAN14-2/applications`}
+          onClick={() => navigate(`/openings/JAN14-2/applications`)}
+        >
+          Applications
+        </a>
+      ),
     },
     {
       key: "FEB14-1",
@@ -41,6 +56,14 @@ function Openings() {
       unfilledPositions: 0,
       filledPositions: 5,
       editLink: <a href="#">Edit</a>,
+      applicationsLink: (
+        <a
+          href={`/openings/FEB14-1/applications`}
+          onClick={() => navigate(`/openings/FEB14-1/applications`)}
+        >
+          Applications
+        </a>
+      ),
     },
   ];
 
@@ -65,6 +88,11 @@ function Openings() {
       key: "filledPositions",
     },
     { title: "Edit", dataIndex: "editLink", key: "editLink" },
+    {
+      title: "Applications",
+      dataIndex: "applicationsLink",
+      key: "applicationsLink",
+    },
   ];
 
   return (

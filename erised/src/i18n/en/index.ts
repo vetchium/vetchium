@@ -78,4 +78,13 @@ export default {
   add_user: "Add User",
   email: "Email",
   role: "Role",
+
+  applications: {
+    vouched_by: "Vouched By",
+    referred_by: "Referred By",
+    resume: "Resume",
+    add_tags: "Add tags for filtering",
+    schedule_interview: "Schedule Interview",
+    reject: "Reject",
+  },
 };

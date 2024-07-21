@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import Applications from "../pages/Applications";
 import CreateOpening from "../pages/CreateOpening";
 import Departments from "../pages/Departments";
 import LocationSelector from "../pages/Locations";
@@ -8,6 +9,10 @@ import Users from "../pages/Users";
 function Router() {
   return (
     <Routes>
+      <Route
+        path="/openings/:opening_id/applications"
+        element={<Applications />}
+      />
       <Route path="/openings" element={<Openings />} />
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />

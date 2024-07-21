@@ -5,10 +5,9 @@ import {
   Flex,
   Form,
   Input,
-  Select,
+  Radio,
   Table,
   Typography,
-  Radio, // Added this import
 } from "antd";
 import React, { useState } from "react";
 import { formItemStyle, formStyle, tableStyle } from "../Styles";

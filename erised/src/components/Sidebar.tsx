@@ -65,7 +65,6 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
         defaultSelectedKeys={["/openings"]}
         defaultOpenKeys={["org-settings"]}
         mode="inline"
-        inlineCollapsed={false}
         items={items}
         style={{ height: "100%" }}
       />
