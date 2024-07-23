@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/vetchi/erised/static/css/main.e6c13ad2.css",
+    "main.js": "/vetchi/erised/static/js/main.8233fa28.js",
+    "static/js/453.22921fcd.chunk.js": "/vetchi/erised/static/js/453.22921fcd.chunk.js",
+    "index.html": "/vetchi/erised/index.html",
+    "main.e6c13ad2.css.map": "/vetchi/erised/static/css/main.e6c13ad2.css.map",
+    "main.8233fa28.js.map": "/vetchi/erised/static/js/main.8233fa28.js.map",
+    "453.22921fcd.chunk.js.map": "/vetchi/erised/static/js/453.22921fcd.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.8233fa28.js"
+  ]
+}
