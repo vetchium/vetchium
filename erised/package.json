@@ -1,7 +1,7 @@
 {
   "name": "erised",
   "version": "0.1.0",
-  "homepage": "https://psankar.github.io/vetchi/erised",
+  "homepage": "https://psankar.github.io/vetchi/",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
