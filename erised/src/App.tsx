@@ -9,7 +9,7 @@ function App() {
     <Home
       onSignOut={() => {
         setSignedIn(false);
-        window.location.href = "/";
+        window.location.href = "/vetchi";
       }}
     />
   ) : (
