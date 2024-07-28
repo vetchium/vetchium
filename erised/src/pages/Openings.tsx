@@ -20,8 +20,8 @@ function Openings() {
       editLink: <a href="#">Edit</a>,
       applicationsLink: (
         <a
-          href={`/vetchi/openings/JAN14-1/applications`}
-          onClick={() => navigate(`/vetchi/openings/JAN14-1/applications`)}
+          href={`/openings/JAN14-1/applications`}
+          onClick={() => navigate(`/openings/JAN14-1/applications`)}
         >
           Applications
         </a>
@@ -39,8 +39,8 @@ function Openings() {
       editLink: <a href="#">Edit</a>,
       applicationsLink: (
         <a
-          href={`/vetchi/openings/JAN14-2/applications`}
-          onClick={() => navigate(`/vetchi/openings/JAN14-2/applications`)}
+          href={`/openings/JAN14-2/applications`}
+          onClick={() => navigate(`/openings/JAN14-2/applications`)}
         >
           Applications
         </a>
@@ -58,8 +58,8 @@ function Openings() {
       editLink: <a href="#">Edit</a>,
       applicationsLink: (
         <a
-          href={`/vetchi/openings/FEB14-1/applications`}
-          onClick={() => navigate(`/vetchi/openings/FEB14-1/applications`)}
+          href={`/openings/FEB14-1/applications`}
+          onClick={() => navigate(`/openings/FEB14-1/applications`)}
         >
           Applications
         </a>

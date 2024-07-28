@@ -17,7 +17,7 @@ function App() {
       onSignOut={() => {
         setSignedIn(false);
         Cookies.remove("signedIn"); // Clear the cookie on sign out
-        window.location.href = "/vetchi";
+        window.location.href = "/";
       }}
     />
   ) : (
