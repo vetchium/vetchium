@@ -21,7 +21,10 @@ function Openings() {
       applicationsLink: (
         <a
           href={`/openings/JAN14-1/applications`}
-          onClick={() => navigate(`/openings/JAN14-1/applications`)}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/openings/JAN14-1/applications`);
+          }}
         >
           Applications
         </a>
@@ -40,7 +43,10 @@ function Openings() {
       applicationsLink: (
         <a
           href={`/openings/JAN14-2/applications`}
-          onClick={() => navigate(`/openings/JAN14-2/applications`)}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/openings/JAN14-2/applications`);
+          }}
         >
           Applications
         </a>
@@ -59,7 +65,10 @@ function Openings() {
       applicationsLink: (
         <a
           href={`/openings/FEB14-1/applications`}
-          onClick={() => navigate(`/openings/FEB14-1/applications`)}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/openings/FEB14-1/applications`);
+          }}
         >
           Applications
         </a>
