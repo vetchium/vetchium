@@ -46,9 +46,12 @@ export const formStyle = {
 
 export const formInputStyle = {
   width: "100%",
+  borderRadius: "8px",
 };
 
-export const formSelectStyle = {};
+export const formSelectStyle = {
+  width: "100%",
+};
 
 export const createOpeningFormStyle = {
   backgroundColor: "white",

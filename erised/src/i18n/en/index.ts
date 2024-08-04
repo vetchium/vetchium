@@ -86,5 +86,6 @@ export default {
     add_tags: "Add tags for filtering",
     schedule_interview: "Schedule Interview",
     reject: "Reject",
+    filter_by_name_or_employer: "Filter by Applicant Name or Current Employer",
   },
 };
