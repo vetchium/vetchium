@@ -8,7 +8,8 @@ const { Text, Link } = Typography;
 const data = [
   {
     name: "John Doe",
-    lastPosition: "Software Engineer, Company A",
+    lastPosition: "Software Engineer",
+    lastCompany: "Company A",
     vouchedBy: [
       { name: "Jane Smith", position: "Manager", company: "Company A" },
       { name: "Bob Johnson", position: "Team Lead", company: "Company X" },
@@ -17,7 +18,8 @@ const data = [
   },
   {
     name: "Alice Brown",
-    lastPosition: "Product Manager, Company B",
+    lastPosition: "Product Manager",
+    lastCompany: "Company B",
     vouchedBy: [
       { name: "Charlie Davis", position: "Director", company: "Company B" },
       { name: "Eve White", position: "CEO", company: "Company Y" },
@@ -25,7 +27,8 @@ const data = [
   },
   {
     name: "Michael Green",
-    lastPosition: "Data Scientist, Company C",
+    lastPosition: "Data Scientist",
+    lastCompany: "Company C",
     vouchedBy: [
       { name: "Fiona Black", position: "CTO", company: "Company C" },
       {
@@ -37,7 +40,8 @@ const data = [
   },
   {
     name: "Sankarasivasubramanian Pasupathilingam",
-    lastPosition: "UX Designer, Company D",
+    lastPosition: "UX Designer",
+    lastCompany: "Company D",
     vouchedBy: [
       { name: "Hannah Red", position: "Head of Design", company: "Company D" },
       { name: "Ian Yellow", position: "Senior Designer", company: "Company W" },
@@ -155,7 +159,9 @@ export default function Applications() {
                   <Typography.Title level={3} style={{ margin: 0 }}>
                     {item.name}
                   </Typography.Title>
-                  <Text>{item.lastPosition}</Text>
+                  <Text>
+                    {item.lastPosition}, {item.lastCompany}
+                  </Text>
                 </Flex>
 
                 <Flex vertical gap="small">
