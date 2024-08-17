@@ -8,7 +8,7 @@ const { Text, Link } = Typography;
 const data = [
   {
     name: "John Doe",
-    currentPosition: "Software Engineer, Company A",
+    lastPosition: "Software Engineer, Company A",
     vouchedBy: [
       { name: "Jane Smith", position: "Manager", company: "Company A" },
       { name: "Bob Johnson", position: "Team Lead", company: "Company X" },
@@ -17,7 +17,7 @@ const data = [
   },
   {
     name: "Alice Brown",
-    currentPosition: "Product Manager, Company B",
+    lastPosition: "Product Manager, Company B",
     vouchedBy: [
       { name: "Charlie Davis", position: "Director", company: "Company B" },
       { name: "Eve White", position: "CEO", company: "Company Y" },
@@ -25,7 +25,7 @@ const data = [
   },
   {
     name: "Michael Green",
-    currentPosition: "Data Scientist, Company C",
+    lastPosition: "Data Scientist, Company C",
     vouchedBy: [
       { name: "Fiona Black", position: "CTO", company: "Company C" },
       {
@@ -37,7 +37,7 @@ const data = [
   },
   {
     name: "Sankarasivasubramanian Pasupathilingam",
-    currentPosition: "UX Designer, Company D",
+    lastPosition: "UX Designer, Company D",
     vouchedBy: [
       { name: "Hannah Red", position: "Head of Design", company: "Company D" },
       { name: "Ian Yellow", position: "Senior Designer", company: "Company W" },
@@ -52,8 +52,8 @@ export default function Applications() {
   const filteredData = data.filter((item) => {
     const matchesText =
       item.name.toLowerCase().includes(filterText.toLowerCase()) ||
-      (item.currentPosition &&
-        item.currentPosition.toLowerCase().includes(filterText.toLowerCase()));
+      (item.lastPosition &&
+        item.lastPosition.toLowerCase().includes(filterText.toLowerCase()));
     const matchesColor =
       filterColor.length === 0 ||
       filterColor.some((color) =>
@@ -155,7 +155,7 @@ export default function Applications() {
                   <Typography.Title level={3} style={{ margin: 0 }}>
                     {item.name}
                   </Typography.Title>
-                  <Text>{item.currentPosition}</Text>
+                  <Text>{item.lastPosition}</Text>
                 </Flex>
 
                 <Flex vertical gap="small">
@@ -240,9 +240,7 @@ export default function Applications() {
                       triggerNode.parentElement
                     }
                   />
-                  <Button type="primary">
-                    {t("applications.schedule_interview")}
-                  </Button>
+                  <Button type="primary">{t("applications.shortlist")}</Button>
                 </Flex>
               </Flex>
               <Flex>

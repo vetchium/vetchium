@@ -23,6 +23,10 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
       label: t("openings"),
     },
     {
+      key: "/candidates",
+      label: t("candidates"),
+    },
+    {
       key: "org-settings",
       label: t("org_settings"),
       children: [

@@ -10,6 +10,7 @@ export default {
 
   // Sidebar
   openings: "Openings",
+  candidates: "Candidates",
   org_settings: "Org Settings",
   account_settings: "Account Settings",
   departments: "Departments",
@@ -83,9 +84,9 @@ export default {
     vouched_by: "Vouched By",
     referred_by: "Referred By",
     resume: "Resume",
-    add_tags: "Add tags for filtering",
-    schedule_interview: "Schedule Interview",
+    add_tags: "Add Tags",
     reject: "Reject",
+    shortlist: "Shortlist",
     filter_by_name_or_employer: "Filter by Applicant Name or Current Employer",
   },
 };
