@@ -137,6 +137,11 @@ export default function Candidates() {
       key: "lastCompany",
     },
     {
+      title: "Shortlisted Openings",
+      dataIndex: "shortlistedOpenings",
+      key: "shortlistedOpenings",
+    },
+    {
       title: "Candidacy",
       key: "candidacy",
       render: (record: { id: string }) => (
@@ -148,6 +153,21 @@ export default function Candidates() {
   const dataSource = data.map((candidate, index) => ({
     key: index,
     ...candidate,
+    shortlistedOpenings: (
+      <Table
+        columns={[
+          { title: "Title", dataIndex: "title", key: "title" },
+          {
+            title: "Hiring Manager",
+            dataIndex: "hiringManager",
+            key: "hiringManager",
+          },
+        ]}
+        dataSource={candidate.shortlistedOpenings}
+        pagination={false}
+        size="small"
+      />
+    ),
   }));
 
   return <Table columns={columns} dataSource={dataSource} />;
