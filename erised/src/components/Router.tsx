@@ -6,6 +6,7 @@ import LocationSelector from "../pages/Locations";
 import Openings from "../pages/Openings";
 import Users from "../pages/Users";
 import Candidates from "../pages/Candidates";
+import Candidacy from "../pages/Candidacy";
 
 function Router() {
   return (
@@ -15,6 +16,7 @@ function Router() {
         element={<Applications />}
       />
       <Route path="/openings" element={<Openings />} />
+      <Route path="/candidacy/:candidacy_id" element={<Candidacy />} />
       <Route path="/candidates" element={<Candidates />} />
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />

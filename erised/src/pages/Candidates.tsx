@@ -1,9 +1,9 @@
-import { Flex, List, Modal, Table, Typography } from "antd";
-
-const { Text, Link } = Typography;
+import { Table } from "antd";
+import { Link } from "react-router-dom";
 
 const data = [
   {
+    id: "cand0123123",
     name: "Jeff Dean",
     lastPosition: "Senior Fellow",
     lastCompany: "Google",
@@ -24,164 +24,131 @@ const data = [
         title: "Senior Fellow",
       },
     ],
-    interviews: [
+  },
+  {
+    id: "cand1263561",
+    name: "Sanjay Ghemawat",
+    lastPosition: "Senior Fellow",
+    lastCompany: "Google",
+    shortlistedOpenings: [
       {
-        id: "9m4e2mr0ui3e8a215n200",
-        status: "CANCELLED",
+        id: "JAN14-1",
+        hiringManager: "a@example.com",
+        title: "Distinguished Engineer",
       },
       {
-        id: "9m4e2mr0ui3e8a215n000",
-        status: "COMPLETED",
-        interviewers: ["A <a@example.com>", "B <b@example.com>"],
-        at: "2024-03-14T10:00:00Z",
-        evaluation_status: "EVALUATION_PENDING",
+        id: "JAN14-2",
+        hiringManager: "b@example.com",
+        title: "Fellow",
       },
       {
-        id: "9m4e2mr0ui3e8a215n000",
-        status: "COMPLETED",
-        interviewers: ["C <c@example.com>"],
-        at: "2024-03-14T10:00:00Z",
-        evaluation_status: "EVALUATION_COMPLETED",
-        evaluation: {
-          positives: "everything",
-          negatives: "none",
-          result: "STRONG_YES",
-          summary: `will be a good fit
-          
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-          `,
-          feedback: "keep doing the good work",
-        },
+        id: "JAN14-3",
+        hiringManager: "c@example.com",
+        title: "Senior Fellow",
+      },
+    ],
+  },
+  {
+    id: "cand74358738",
+    name: "Swami Sivasubramanian",
+    lastPosition: "Vice President and General Manager",
+    lastCompany: "Amazon Web Services",
+    shortlistedOpenings: [
+      {
+        id: "JAN14-1",
+        hiringManager: "a@example.com",
+        title: "Distinguished Engineer",
       },
       {
-        id: "9m4e2mr0ui3e8a215n000",
-        status: "SCHEDULED",
-        interviewers: ["d@example.com"],
-        at: "2024-03-14T10:00:00Z",
+        id: "JAN14-2",
+        hiringManager: "b@example.com",
+        title: "Fellow",
       },
       {
-        id: "9m4e2mr0ui3e8a215n100",
-        status: "PENDING_SCHEDULE",
+        id: "JAN14-3",
+        hiringManager: "c@example.com",
+        title: "Senior Fellow",
+      },
+    ],
+  },
+  {
+    id: "cand045646456",
+    name: "Joydeep Sen Sarma",
+    lastPosition: "CTO",
+    lastCompany: "Clearfeed",
+    shortlistedOpenings: [
+      {
+        id: "JAN14-1",
+        hiringManager: "a@example.com",
+        title: "Distinguished Engineer",
+      },
+      {
+        id: "JAN14-2",
+        hiringManager: "b@example.com",
+        title: "Fellow",
+      },
+      {
+        id: "JAN14-3",
+        hiringManager: "c@example.com",
+        title: "Senior Fellow",
+      },
+    ],
+  },
+  {
+    id: "cand078979789",
+    name: "Richard Hipp",
+    lastPosition: "Maintainer",
+    lastCompany: "Hwaci",
+    shortlistedOpenings: [
+      {
+        id: "JAN14-1",
+        hiringManager: "a@example.com",
+        title: "Distinguished Engineer",
+      },
+      {
+        id: "JAN14-2",
+        hiringManager: "b@example.com",
+        title: "Fellow",
+      },
+      {
+        id: "JAN14-3",
+        hiringManager: "c@example.com",
+        title: "Senior Fellow",
       },
     ],
   },
 ];
 
 export default function Candidates() {
-  return (
-    <List
-      itemLayout="vertical"
-      dataSource={data}
-      renderItem={(item) => (
-        <List.Item>
-          <Flex vertical>
-            <Typography.Title level={2}>{item.name}</Typography.Title>
-            <Text>{item.lastPosition + ", " + item.lastCompany}</Text>
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Last Position",
+      dataIndex: "lastPosition",
+      key: "lastPosition",
+    },
+    {
+      title: "Last Company",
+      dataIndex: "lastCompany",
+      key: "lastCompany",
+    },
+    {
+      title: "Candidacy",
+      key: "candidacy",
+      render: (record: { id: string }) => (
+        <Link to={`/candidacy/${record.id}`}>Candidacy</Link>
+      ),
+    },
+  ];
 
-            <Typography.Title level={5}>
-              Shortlisted for Opening(s)
-            </Typography.Title>
-            <Table
-              columns={[
-                {
-                  title: "Opening ID",
-                  dataIndex: "opening",
-                  key: "opening",
-                  render: (opening) => (
-                    <Link href={`/openings/${opening.id}`}>{opening.id}</Link>
-                  ),
-                },
-                {
-                  title: "Hiring Manager",
-                  dataIndex: "opening",
-                  key: "hiringManager",
-                  render: (opening) => opening.hiringManager,
-                },
-                {
-                  title: "Title",
-                  dataIndex: "opening",
-                  key: "title",
-                  render: (opening) => opening.title,
-                },
-              ]}
-              dataSource={item.shortlistedOpenings.map((opening, index) => ({
-                key: index,
-                opening,
-              }))}
-              pagination={false}
-            />
+  const dataSource = data.map((candidate, index) => ({
+    key: index,
+    ...candidate,
+  }));
 
-            <Typography.Title level={5}>Interviews</Typography.Title>
-            <Table
-              columns={[
-                {
-                  title: "Interviewers",
-                  dataIndex: "interviewers",
-                  key: "interviewers",
-                  render: (interviewers) =>
-                    interviewers ? interviewers.join(", ") : "",
-                },
-                { title: "Status", dataIndex: "status", key: "status" },
-                {
-                  title: "Evaluation Status",
-                  dataIndex: "evaluation_status",
-                  key: "evaluation_status",
-                },
-                {
-                  title: "Result",
-                  dataIndex: "evaluation",
-                  key: "evaluation",
-                  render: (evaluation) => (evaluation ? evaluation.result : ""),
-                },
-                {
-                  title: "Evaluation Report",
-                  key: "evaluation_report",
-                  render: (record) =>
-                    record.evaluation_status === "EVALUATION_COMPLETED" ? (
-                      <Link
-                        onClick={() => {
-                          Modal.info({
-                            title: "Evaluation Report",
-                            content: (
-                              <div
-                                style={{
-                                  maxHeight: "400px",
-                                  overflowY: "scroll",
-                                }}
-                              >
-                                <Typography.Title level={4}>
-                                  Positives
-                                </Typography.Title>
-                                <p>{record.evaluation.positives}</p>
-                                <Typography.Title level={4}>
-                                  Negatives
-                                </Typography.Title>
-                                <p>{record.evaluation.negatives}</p>
-                                <Typography.Title level={4}>
-                                  Summary
-                                </Typography.Title>
-                                <p>{record.evaluation.summary}</p>
-                                <Typography.Title level={4}>
-                                  Feedback
-                                </Typography.Title>
-                                <p>{record.evaluation.feedback}</p>
-                              </div>
-                            ),
-                          });
-                        }}
-                      >
-                        Evaluation Report
-                      </Link>
-                    ) : null,
-                },
-              ]}
-              dataSource={item.interviews}
-              rowKey="id"
-              pagination={false}
-            />
-          </Flex>
-        </List.Item>
-      )}
-    />
-  );
+  return <Table columns={columns} dataSource={dataSource} />;
 }
