@@ -1,5 +1,8 @@
-import { Table } from "antd";
+import { Divider, Flex, Input, Table } from "antd";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import t from "../i18n/i18n";
+import { formInputStyle } from "../Styles";
 
 const data = [
   {
@@ -170,5 +173,19 @@ export default function Candidates() {
     ),
   }));
 
-  return <Table columns={columns} dataSource={dataSource} />;
+  const [filterText, setFilterText] = useState("");
+
+  return (
+    <Flex vertical style={{ margin: "20px" }}>
+      <Input
+        type="text"
+        placeholder={t("applications.filter_by_name_or_employer")}
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        style={formInputStyle}
+      />
+      <Divider />
+      <Table columns={columns} dataSource={dataSource} />;
+    </Flex>
+  );
 }
