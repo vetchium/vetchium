@@ -89,4 +89,8 @@ export default {
     shortlist: "Shortlist",
     filter_by_name_or_employer: "Filter by Applicant Name or Current Employer",
   },
+
+  create_interview: {
+    interviewers: "Interviewers"
+  }
 };

@@ -7,6 +7,7 @@ import Openings from "../pages/Openings";
 import Users from "../pages/Users";
 import Candidates from "../pages/Candidates";
 import Candidacy from "../pages/Candidacy";
+import CreateInterview from "../pages/CreateInterview";
 
 function Router() {
   return (
@@ -18,6 +19,10 @@ function Router() {
       <Route path="/openings" element={<Openings />} />
       <Route path="/candidacy/:candidacy_id" element={<Candidacy />} />
       <Route path="/candidates" element={<Candidates />} />
+      <Route
+        path="/create-interview/:candidacy_id"
+        element={<CreateInterview />}
+      />
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />
       <Route path="/org-settings/locations" element={<LocationSelector />} />

@@ -1,4 +1,7 @@
-import { Flex, List, Modal, Table, Typography } from "antd";
+import { PlusCircleTwoTone } from "@ant-design/icons";
+import { Button, Flex, Modal, Table, Typography } from "antd";
+import { useNavigate, useParams } from "react-router-dom";
+import t from "../i18n/i18n";
 
 const { Text, Link } = Typography;
 
@@ -29,14 +32,14 @@ const data = {
       status: "CANCELLED",
     },
     {
-      id: "9m4e2mr0ui3e8a215n000",
+      id: "9m4e2mr0ui3e8a3215n000",
       status: "COMPLETED",
       interviewers: ["A <a@example.com>", "B <b@example.com>"],
       at: "2024-03-14T10:00:00Z",
       evaluation_status: "EVALUATION_PENDING",
     },
     {
-      id: "9m4e2mr0ui3e8a215n000",
+      id: "9m4e2mr0ui3e8a32215n000",
       status: "COMPLETED",
       interviewers: ["C <c@example.com>"],
       at: "2024-03-14T10:00:00Z",
@@ -66,6 +69,9 @@ const data = {
 };
 
 export default function Candidacy() {
+  const navigate = useNavigate();
+  const { candidacy_id } = useParams();
+
   return (
     <Flex vertical>
       <Typography.Title level={2}>{data.name}</Typography.Title>
@@ -168,6 +174,14 @@ export default function Candidacy() {
         rowKey="id"
         pagination={false}
       />
+      <Button
+        type="primary"
+        icon={<PlusCircleTwoTone />}
+        onClick={() => navigate(`/create-interview/${candidacy_id}`)}
+        style={{ marginTop: "1rem", marginLeft: "2rem", width: "fit-content" }}
+      >
+        {t("create_interview")}
+      </Button>
     </Flex>
   );
 }
