@@ -180,7 +180,7 @@ export default function Candidacy() {
         onClick={() => navigate(`/create-interview/${candidacy_id}`)}
         style={{ marginTop: "1rem", marginLeft: "2rem", width: "fit-content" }}
       >
-        {t("create_interview")}
+        {t("create_interview.create_interview")}
       </Button>
     </Flex>
   );

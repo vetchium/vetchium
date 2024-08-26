@@ -91,6 +91,7 @@ export default {
   },
 
   create_interview: {
-    interviewers: "Interviewers"
+    create_interview: "Create Interview",
+    interviewers: "Interviewers",
   }
 };

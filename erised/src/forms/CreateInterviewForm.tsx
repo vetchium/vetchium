@@ -1,4 +1,4 @@
-import { Form, Input } from "antd";
+import { Button, Form, Input } from "antd";
 import { formInputStyle, formItemStyle } from "../Styles";
 import t from "../i18n/i18n";
 
@@ -28,6 +28,11 @@ export default function CreateInterviewForm() {
       >
         {/* In future should autocomplete from users via SSO etc. */}
         <Input style={formInputStyle} />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          {t("create_interview.create_interview")}
+        </Button>
       </Form.Item>
     </Form>
   );
