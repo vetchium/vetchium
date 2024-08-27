@@ -91,7 +91,11 @@ export default {
   },
 
   create_interview: {
+    appointment_body: "Appointment Body",
     create_interview: "Create Interview",
-    interviewers: "Interviewers",
+    duration: "Duration",
+    interview_time: "Interview Time",
+    interviewers: "Interviewer(s)",
+    send_appointment: "Send Appointment",
   }
 };

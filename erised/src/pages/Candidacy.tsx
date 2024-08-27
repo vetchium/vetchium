@@ -61,10 +61,6 @@ const data = {
       interviewers: ["d@example.com"],
       at: "2024-03-14T10:00:00Z",
     },
-    {
-      id: "9m4e2mr0ui3e8a215n100",
-      status: "PENDING_SCHEDULE",
-    },
   ],
 };
 
@@ -73,7 +69,7 @@ export default function Candidacy() {
   const { candidacy_id } = useParams();
 
   return (
-    <Flex vertical>
+    <Flex vertical style={{ padding: "1rem" }}>
       <Typography.Title level={2}>{data.name}</Typography.Title>
       <Text>{data.lastPosition + ", " + data.lastCompany}</Text>
 
@@ -178,7 +174,7 @@ export default function Candidacy() {
         type="primary"
         icon={<PlusCircleTwoTone />}
         onClick={() => navigate(`/create-interview/${candidacy_id}`)}
-        style={{ marginTop: "1rem", marginLeft: "2rem", width: "fit-content" }}
+        style={{ margin: "1rem", width: "fit-content" }}
       >
         {t("create_interview.create_interview")}
       </Button>

@@ -42,6 +42,7 @@ export const formStyle = {
   margin: "3rem",
   padding: "1rem",
   borderRadius: "8px",
+  width: "80%",
 };
 
 export const formInputStyle = {
