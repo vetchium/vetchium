@@ -60,11 +60,13 @@ const Departments: React.FC = () => {
 
   return (
     <Flex wrap>
+      <Table dataSource={data} columns={columns} style={tableStyle} />
       <Divider>{t("add_department")}</Divider>
       <Form
         onFinish={handleAddDepartment}
         initialValues={{ name: "", notes: "" }}
         style={formStyle}
+        layout="vertical"
       >
         <Form.Item
           label={t("department_name")}
@@ -95,7 +97,6 @@ const Departments: React.FC = () => {
         </Flex>
       </Form>
       <Divider />
-      <Table dataSource={data} columns={columns} style={tableStyle} />
     </Flex>
   );
 };
