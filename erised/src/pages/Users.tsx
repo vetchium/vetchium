@@ -1,75 +1,50 @@
 import { DeleteTwoTone } from "@ant-design/icons";
-import {
-  Button,
-  Divider,
-  Flex,
-  Form,
-  Input,
-  Radio,
-  Table,
-  Typography,
-} from "antd";
+import { Button, Flex, Form, Input, Radio, Table, Typography } from "antd";
 import React, { useState } from "react";
 import { formItemStyle, formStyle, tableStyle } from "../Styles";
 import t from "../i18n/i18n";
 
 const Users: React.FC = () => {
   const [users, setUsers] = useState([
-    { key: 1, email: "john.doe@example.com", roles: ["Admin"] },
-    { key: 2, email: "jane.smith@example.com", roles: ["Recruiter"] },
-    { key: 3, email: "alice.johnson@example.com", roles: ["Panelist"] },
-    {
-      key: 4,
-      email: "bob.brown@example.com",
-      roles: ["Recruiter", "Panelist"],
-    },
+    { key: 1, email: "john.doe@example.com", role: "Admin" },
+    { key: 2, email: "jane.smith@example.com", role: "Recruiter" },
+    { key: 3, email: "alice.johnson@example.com", role: "Interviewer" },
   ]);
 
-  const handleAddUser = (values: { email: string; roles: string[] }) => {
+  const handleAddUser = (values: { email: string; role: string }) => {
     const newUser = {
       key: users.length + 1,
       email: values.email,
-      roles: values.roles,
+      role: values.role,
     };
     setUsers([...users, newUser]);
   };
 
-  const handleDeleteUser = (key: number) => {
-    setUsers(users.filter((user) => user.key !== key));
-  };
+  const handleDeleteUser = (key: number) => {};
 
   const columns = [
     { title: t("email"), dataIndex: "email", key: "email" },
     {
-      title: t("roles"),
-      dataIndex: "roles",
-      key: "roles",
-      render: (roles: string[]) => roles.join(", "),
+      title: t("role"),
+      dataIndex: "role",
+      key: "role",
     },
     {
       title: t("actions"),
       key: "actions",
-      render: (text: string, record: any) =>
+      render: (text: string, record: any) => (
         // TODO: Should enable the Delete icon only if the logged in user is and Admin
-        record.roles.includes("Admin") ? null : (
-          <span>
-            <Button
-              icon={<DeleteTwoTone />}
-              onClick={() => handleDeleteUser(record.key)}
-            />
-          </span>
-        ),
+        <Button
+          icon={<DeleteTwoTone />}
+          onClick={() => handleDeleteUser(record.key)}
+        />
+      ),
     },
   ];
 
   return (
-    <Flex wrap>
-      <Divider>{t("add_user")}</Divider>
-      <Form
-        onFinish={handleAddUser}
-        initialValues={{ email: "", roles: [] }}
-        style={formStyle}
-      >
+    <Flex wrap vertical>
+      <Form onFinish={handleAddUser} style={formStyle} layout="vertical">
         <Form.Item
           label={t("email")}
           name="email"
@@ -84,14 +59,29 @@ const Users: React.FC = () => {
           rules={[{ required: true }]}
           style={formItemStyle}
         >
-          <Radio.Group defaultValue={"panelist"} buttonStyle="solid">
+          {/* In future, we may have to accomodate roles that are not hierarchical */}
+          <Radio.Group defaultValue={"interviewer"} buttonStyle="solid">
             <Radio.Button value="admin">{t("admin")}</Radio.Button>
             <Radio.Button value="recruiter">{t("recruiter")}</Radio.Button>
-            <Radio.Button value="panelist">{t("panelist")}</Radio.Button>
+            <Radio.Button value="interviewer">{t("interviewer")}</Radio.Button>
           </Radio.Group>
+          <Typography style={formItemStyle}>
+            <Typography.Title level={5}>
+              {t("role_descriptions")}
+            </Typography.Title>
+            <Typography.Paragraph>
+              <strong>{t("admin")}:</strong> {t("admin_description")}
+            </Typography.Paragraph>
+            <Typography.Paragraph>
+              <strong>{t("recruiter")}:</strong> {t("recruiter_description")}
+            </Typography.Paragraph>
+            <Typography.Paragraph>
+              <strong>{t("interviewer")}:</strong>{" "}
+              {t("interviewer_description")}
+            </Typography.Paragraph>
+          </Typography>
         </Form.Item>
-        <Divider />
-        <Flex gap="middle">
+        <Flex wrap gap="large">
           <Form.Item style={formItemStyle}>
             <Button type="primary" htmlType="submit">
               {t("add_user")}
@@ -102,21 +92,7 @@ const Users: React.FC = () => {
           </Form.Item>
         </Flex>
       </Form>
-      <Divider />
       <Table dataSource={users} columns={columns} style={tableStyle} />
-      <Typography>
-        <Typography.Title level={3}>{t("role_descriptions")}</Typography.Title>
-        <Typography.Paragraph>
-          <strong>{t("admin")}:</strong> {t("admin_description")}
-        </Typography.Paragraph>
-        <Typography.Paragraph>
-          <strong>{t("recruiter")}:</strong> {t("recruiter_description")}
-        </Typography.Paragraph>
-        <Typography.Paragraph>
-          <strong>{t("panelist")}:</strong> {t("panelist_description")}
-        </Typography.Paragraph>
-      </Typography>
-      <Divider />
     </Flex>
   );
 };

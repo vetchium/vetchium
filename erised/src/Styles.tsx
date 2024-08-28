@@ -63,7 +63,7 @@ export const createOpeningFormStyle = {
 };
 
 export const formItemStyle = {
-  marginBottom: "3rem",
+  marginBottom: "2rem",
 };
 
 export const tableStyle = {
