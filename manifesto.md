@@ -100,6 +100,8 @@ Vetchi could potentially grow into a behemoth platform, on the likes of Peopleso
 
 Could do a myriad of other things like Employers rating, CEO Approval, Anonymous Survey, etc. 
 
+While most of the motivation was from tech jobs, Vetchi should be a problem to provide jobs across multiple domains and not just tech jobs alone. With the advent of AI, most of the tech jobs may anyway go away is what the fortune tellers are predicting anyway.
+
 
 [^1]: https://www.nytimes.com/2013/06/20/business/in-head-hunting-big-data-may-not-be-such-a-big-deal.html?_r=1&
 [^2]: https://paulgraham.com/foundermode.html
