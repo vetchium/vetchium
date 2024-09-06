@@ -91,11 +91,14 @@ In addition to the Employer and Employee, there is a third category of users tha
 * The functionality of Job providing should not be deprioritized for monetary gains in other potential revenue streams
 * Employee type of Users will not be able to write fake posts that would endorse interview training materials or resume review services. In fact, this social network may not allow all its members to post messages. Let the Employees use other social media (such as facebook, linkedin, etc.) if they want to pontificate.
 * Number of hours spent by Employee type of Users on Vetchi site could be tracked but not the central point in making decisions for the feature planning. This is quite easy to achieve when Vetchi is a one-person company or even when it is a small company. But it would be tough to enforce if the company grows big. The only way to achieve this would be to have strong leadership, not taking external money from VCs who are primarily driven by money. Vetchi should be managed with a perspective that prioritizes Longevity instead of extreme Profitability and Growth in short term. This point may need some eloquent explanation at some point of time in future. There are some literature on this based on keywords such as Responsible Capitalism.
+* Agents and Employers can be charged by Vetchi periodically to sustain as a business. How much ? I do not know at this time. Employers can even be allowed to write professional blog posts and be shared here. Definitely more people would read here instead of on the company website.
 
 
 # Future Potential
 
 Vetchi could potentially grow into a behemoth platform, on the likes of Peoplesoft, Workday, ADP etc. across multiple HR functionalities. But we will start humble and small as a job site. All these big companies could be built as separate entities that work on top of the Vetchi platform with open competition and could pay money to use the Vetchi platform data. The idea of a job site / database should be considered holy and not derailed.
+
+Could do a myriad of other things like Employers rating, CEO Approval, Anonymous Survey, etc. 
 
 
 [^1]: https://www.nytimes.com/2013/06/20/business/in-head-hunting-big-data-may-not-be-such-a-big-deal.html?_r=1&
