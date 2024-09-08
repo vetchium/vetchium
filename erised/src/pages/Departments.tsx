@@ -45,8 +45,8 @@ const Departments: React.FC = () => {
   const handleAddDepartment = (values: { name: string; notes: string }) => {};
 
   const columns = [
-    { title: t("department_name"), dataIndex: "name", key: "name" },
-    { title: t("notes"), dataIndex: "notes", key: "notes" },
+    { title: t("departments.department_name"), dataIndex: "name", key: "name" },
+    { title: t("departments.notes"), dataIndex: "notes", key: "notes" },
     {
       title: t("actions"),
       key: "actions",
@@ -61,7 +61,7 @@ const Departments: React.FC = () => {
   return (
     <Flex wrap>
       <Table dataSource={data} columns={columns} style={tableStyle} />
-      <Divider>{t("add_department")}</Divider>
+      <Divider>{t("departments.add_department")}</Divider>
       <Form
         onFinish={handleAddDepartment}
         initialValues={{ name: "", notes: "" }}
@@ -69,7 +69,7 @@ const Departments: React.FC = () => {
         layout="vertical"
       >
         <Form.Item
-          label={t("department_name")}
+          label={t("departments.department_name")}
           name="name"
           rules={[{ required: true }, { validator: validateDepartmentName }]}
           style={formItemStyle}
@@ -77,7 +77,7 @@ const Departments: React.FC = () => {
           <Input />
         </Form.Item>
         <Form.Item
-          label={t("department_notes")}
+          label={t("departments.department_notes")}
           name="notes"
           rules={[{ validator: validateNotes }]}
           style={formItemStyle}
@@ -88,11 +88,11 @@ const Departments: React.FC = () => {
         <Flex gap="middle">
           <Form.Item style={formItemStyle}>
             <Button type="primary" htmlType="submit">
-              {t("add_department")}
+              {t("departments.add_department")}
             </Button>
           </Form.Item>
           <Form.Item style={formItemStyle}>
-            <Button htmlType="reset">{t("reset")}</Button>
+            <Button htmlType="reset">{t("common.reset")}</Button>
           </Form.Item>
         </Flex>
       </Form>

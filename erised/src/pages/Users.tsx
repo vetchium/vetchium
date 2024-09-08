@@ -23,14 +23,14 @@ const Users: React.FC = () => {
   const handleDeleteUser = (key: number) => {};
 
   const columns = [
-    { title: t("email"), dataIndex: "email", key: "email" },
+    { title: t("users.email"), dataIndex: "email", key: "email" },
     {
-      title: t("role"),
+      title: t("users.role"),
       dataIndex: "role",
       key: "role",
     },
     {
-      title: t("actions"),
+      title: t("users.actions"),
       key: "actions",
       render: (text: string, record: any) => (
         // TODO: Should enable the Delete icon only if the logged in user is and Admin
@@ -46,7 +46,7 @@ const Users: React.FC = () => {
     <Flex wrap vertical>
       <Form onFinish={handleAddUser} style={formStyle} layout="vertical">
         <Form.Item
-          label={t("email")}
+          label={t("users.email")}
           name="email"
           rules={[{ required: true, type: "email" }]}
           style={formItemStyle}
@@ -54,41 +54,47 @@ const Users: React.FC = () => {
           <Input />
         </Form.Item>
         <Form.Item
-          label={t("role")}
+          label={t("users.role")}
           name="role"
           rules={[{ required: true }]}
           style={formItemStyle}
         >
           {/* In future, we may have to accomodate roles that are not hierarchical */}
           <Radio.Group defaultValue={"interviewer"} buttonStyle="solid">
-            <Radio.Button value="admin">{t("admin")}</Radio.Button>
-            <Radio.Button value="recruiter">{t("recruiter")}</Radio.Button>
-            <Radio.Button value="interviewer">{t("interviewer")}</Radio.Button>
+            <Radio.Button value="admin">{t("users.admin")}</Radio.Button>
+            <Radio.Button value="recruiter">
+              {t("users.recruiter")}
+            </Radio.Button>
+            <Radio.Button value="interviewer">
+              {t("users.interviewer")}
+            </Radio.Button>
           </Radio.Group>
           <Typography style={formItemStyle}>
             <Typography.Title level={5}>
-              {t("role_descriptions")}
+              {t("users.role_descriptions")}
             </Typography.Title>
             <Typography.Paragraph>
-              <strong>{t("admin")}:</strong> {t("admin_description")}
+              <strong>{t("users.admin")}:</strong>{" "}
+              {t("users.admin_description")}
             </Typography.Paragraph>
             <Typography.Paragraph>
-              <strong>{t("recruiter")}:</strong> {t("recruiter_description")}
+              <strong>{t("users.recruiter")}:</strong>{" "}
+              {t("users.recruiter_description")}
             </Typography.Paragraph>
             <Typography.Paragraph>
-              <strong>{t("interviewer")}:</strong>{" "}
-              {t("interviewer_description")}
+              <strong>{t("users.interviewer")}:</strong>{" "}
+              {t("users.interviewer_description")}
             </Typography.Paragraph>
           </Typography>
         </Form.Item>
         <Flex wrap gap="large">
           <Form.Item style={formItemStyle}>
             <Button type="primary" htmlType="submit">
-              {t("add_user")}
+              {t("users.add_user")}
             </Button>
           </Form.Item>
           <Form.Item style={formItemStyle}>
-            <Button htmlType="reset">{t("reset")}</Button>
+            <Button htmlType="reset">{t("common.reset")}</Button>
           </Form.Item>
         </Flex>
       </Form>

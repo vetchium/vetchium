@@ -44,7 +44,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
   return (
     <Form onFinish={onFinish} onFinishFailed={onFinishFailed} style={formStyle}>
       <Form.Item
-        label={t("company_domain")}
+        label={t("sign_in_form.company_domain")} // Updated for translation
         name="domain"
         rules={[{ required: true, validator: validateDomain }]}
         initialValue="example.com"
@@ -52,7 +52,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
         <Input />
       </Form.Item>
       <Form.Item
-        label={t("email_address")}
+        label={t("sign_in_form.email_address")} // Updated for translation
         name="email"
         rules={[{ required: true, validator: validateEmail, type: "email" }]}
         initialValue="master@example.com"
@@ -60,7 +60,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
         <Input />
       </Form.Item>
       <Form.Item
-        label={t("password")}
+        label={t("sign_in_form.password")} // Updated for translation
         name="password"
         rules={[{ required: true, validator: validatePassword }]}
         initialValue="Password123$"
@@ -69,7 +69,7 @@ function SignInForm({ onSignIn }: { onSignIn: () => void }) {
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit">
-          {t("sign_in")}
+          {t("sign_in_form.sign_in")}
         </Button>
       </Form.Item>
     </Form>

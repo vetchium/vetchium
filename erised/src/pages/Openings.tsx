@@ -112,7 +112,7 @@ function Openings() {
         onClick={() => navigate("/create-opening")}
         style={{ marginTop: "1rem", marginLeft: "2rem", width: "fit-content" }}
       >
-        {t("create_opening")}
+        {t("openings.create_opening")}
       </Button>
 
       <Table dataSource={dataSource} columns={columns} style={tableStyle} />

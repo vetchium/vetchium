@@ -108,7 +108,7 @@ function CreateOpeningForm() {
       layout="vertical"
     >
       <Form.Item
-        label={t("job_title")}
+        label={t("create_opening_form.job_title")}
         name="title"
         rules={[{ required: true, validator: validateTitle }]}
         style={formItemStyle}
@@ -116,7 +116,7 @@ function CreateOpeningForm() {
         <Input style={formInputStyle} />
       </Form.Item>
       <Form.Item
-        label={t("positions")}
+        label={t("create_opening_form.positions")}
         name="positions"
         initialValue={1}
         rules={[{ required: true, validator: validatePositions }]}
@@ -125,7 +125,7 @@ function CreateOpeningForm() {
         <InputNumber min={1} max={25} style={formInputStyle} />
       </Form.Item>
       <Form.Item
-        label={t("jd")}
+        label={t("create_opening_form.jd")}
         name="jd"
         rules={[{ required: true, validator: validateJD }]}
         style={formItemStyle}
@@ -137,20 +137,34 @@ function CreateOpeningForm() {
         />
       </Form.Item>
 
-      <Form.Item label={t("job_type")} name="jobType" style={formItemStyle}>
+      <Form.Item
+        label={t("create_opening_form.job_type")}
+        name="jobType"
+        style={formItemStyle}
+      >
         <Radio.Group defaultValue={"full_time"} buttonStyle="solid">
-          <Radio.Button value="full_time">{t("full_time")}</Radio.Button>
-          <Radio.Button value="part_time">{t("part_time")}</Radio.Button>
-          <Radio.Button value="contract">{t("contract")}</Radio.Button>
-          <Radio.Button value="internship">{t("internship")}</Radio.Button>
-          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
+          <Radio.Button value="full_time">
+            {t("create_opening_form.job_type_full_time")}
+          </Radio.Button>
+          <Radio.Button value="part_time">
+            {t("create_opening_form.job_type_part_time")}
+          </Radio.Button>
+          <Radio.Button value="contract">
+            {t("create_opening_form.job_type_contract")}
+          </Radio.Button>
+          <Radio.Button value="internship">
+            {t("create_opening_form.job_type_internship")}
+          </Radio.Button>
+          <Radio.Button value="unspecified">
+            {t("create_opening_form.job_type_unspecified")}
+          </Radio.Button>
         </Radio.Group>
       </Form.Item>
 
       {/* <!--------- Location Fields ---------!> */}
-      <Divider>{t("locations")}</Divider>
+      <Divider>{t("create_opening_form.locations")}</Divider>
       <Form.Item
-        label={t("onsite_locations")}
+        label={t("create_opening_form.onsite_locations")}
         rules={[{ required: true, validator: validateOnSiteLocations }]}
         style={formItemStyle}
       >
@@ -170,7 +184,7 @@ function CreateOpeningForm() {
       </Form.Item>
 
       <Form.Item
-        label={t("remote_locations_countries")}
+        label={t("create_opening_form.remote_locations_countries")}
         name="remoteLocationsCountries"
         style={formItemStyle}
       >
@@ -198,7 +212,7 @@ function CreateOpeningForm() {
       </Form.Item>
 
       <Form.Item
-        label={t("remote_locations_timezones")}
+        label={t("create_opening_form.remote_locations_timezones")}
         name="remoteLocationsTimezones"
         style={formItemStyle}
       >
@@ -224,9 +238,9 @@ function CreateOpeningForm() {
       </Form.Item>
 
       {/* <!--------- Optional Fields ---------!> */}
-      <Divider>{t("optional_fields")}</Divider>
+      <Divider>{t("create_opening_form.optional_fields")}</Divider>
       <Form.Item
-        label={t("yoe")}
+        label={t("create_opening_form.yoe")}
         name="yoe"
         rules={[{ validator: validateYOE }]}
         style={formItemStyle}
@@ -252,7 +266,7 @@ function CreateOpeningForm() {
         />
       </Form.Item>
       <Form.Item
-        label={t("educational_qualification")}
+        label={t("create_opening_form.educational_qualification")}
         name="educationalQualification"
         style={formItemStyle}
       >
@@ -267,7 +281,7 @@ function CreateOpeningForm() {
         </Radio.Group>
       </Form.Item>
       <Form.Item
-        label={t("hiring_manager")}
+        label={t("create_opening_form.hiring_manager")}
         name="hiringManager"
         rules={[{ validator: validateHiringManager }]}
         style={formItemStyle}
@@ -275,7 +289,7 @@ function CreateOpeningForm() {
         <Input style={formInputStyle} />
       </Form.Item>
       <Form.Item
-        label={t("currency")}
+        label={t("create_opening_form.currency")}
         name="currency"
         rules={[{ validator: validateCurrency }]}
         style={formItemStyle}
@@ -288,7 +302,7 @@ function CreateOpeningForm() {
         </Select>
       </Form.Item>
       <Form.Item
-        label={t("salary_min")}
+        label={t("create_opening_form.salary_min")}
         name="salarymin"
         rules={[{ validator: validateSalaryMin }]}
         style={formItemStyle}
@@ -296,38 +310,44 @@ function CreateOpeningForm() {
         <InputNumber style={formInputStyle} />
       </Form.Item>
       <Form.Item
-        label={t("salary_max")}
+        label={t("create_opening_form.salary_max")}
         name="salarymax"
         rules={[{ validator: validateSalaryMax }]}
         style={formItemStyle}
       >
         <InputNumber style={formInputStyle} />
       </Form.Item>
-      <Divider>{t("private_fields")}</Divider>
+      <Divider>{t("create_opening_form.private_fields")}</Divider>
       <Form.Item
-        label={t("department")}
+        label={t("create_opening_form.department")}
         name="department"
         rules={[{ validator: validateDepartment }]}
         style={formItemStyle}
       >
         <Input style={formInputStyle} />
       </Form.Item>
-      <Form.Item label={t("notes")} name="notes" style={formItemStyle}>
+      <Form.Item
+        label={t("create_opening_form.notes")}
+        name="notes"
+        style={formItemStyle}
+      >
         <TextArea style={formInputStyle} />
       </Form.Item>
       <Divider />
       <Flex gap="middle">
         <Form.Item>
           <Button type="primary" icon={<PlusCircleTwoTone />} htmlType="submit">
-            {t("create_opening")}
+            {t("create_opening_form.create_opening")}
           </Button>
         </Form.Item>
         <Flex gap="middle" justify="flex-end">
           <Form.Item>
-            <Button>{t("cancel")}</Button>
+            <Button>{t("common.cancel")}</Button>
           </Form.Item>
           <Form.Item>
-            <Button icon={<SaveTwoTone />}>{t("save_draft")}</Button>
+            <Button icon={<SaveTwoTone />}>
+              {t("create_opening_form.save_draft")}
+            </Button>
           </Form.Item>
         </Flex>
       </Flex>

@@ -36,7 +36,7 @@ const Locations: React.FC = () => {
 
   return (
     <Flex wrap vertical>
-      <Divider>{t("add_location")}</Divider>
+      <Divider>{t("locations.add_location")}</Divider>
       <LocationCreator />
       <Divider />
       <Table dataSource={data} columns={columns} style={tableStyle} />
