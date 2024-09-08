@@ -169,6 +169,7 @@ export default function Candidates() {
         dataSource={candidate.shortlistedOpenings}
         pagination={false}
         size="small"
+        scroll={{ x: true }}
       />
     ),
   }));
@@ -185,7 +186,7 @@ export default function Candidates() {
         style={formInputStyle}
       />
       <Divider />
-      <Table columns={columns} dataSource={dataSource} />;
+      <Table columns={columns} dataSource={dataSource} scroll={{ x: true }} />;
     </Flex>
   );
 }

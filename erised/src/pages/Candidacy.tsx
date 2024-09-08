@@ -102,6 +102,7 @@ export default function Candidacy() {
           opening,
         }))}
         pagination={false}
+        scroll={{ x: true }}
       />
 
       <Typography.Title level={5}>Interviews</Typography.Title>
@@ -169,6 +170,7 @@ export default function Candidacy() {
         dataSource={data.interviews}
         rowKey="id"
         pagination={false}
+        scroll={{ x: true }}
       />
       <Button
         type="primary"

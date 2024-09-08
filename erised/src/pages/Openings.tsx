@@ -115,7 +115,12 @@ function Openings() {
         {t("openings.create_opening")}
       </Button>
 
-      <Table dataSource={dataSource} columns={columns} style={tableStyle} />
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        style={tableStyle}
+        scroll={{ x: true }}
+      />
     </Flex>
   );
 }
