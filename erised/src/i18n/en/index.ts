@@ -70,13 +70,18 @@ export default {
     notes_too_long: "Notes cannot be longer than 500 characters",
   },
 
-  education: {
-    bachelors: "Bachelors",
-    doesnt_matter: "Doesn't Matter",
-    educational_qualification: "Minimum Qualification",
-    masters: "Masters",
-    phd: "PhD",
-    unspecified: "Unspecified",
+  interviews: {
+    candidate: "Candidate",
+    openings: "Openings",
+    date: "Date",
+    interview_id: "Interview ID",
+    interviewers: "Interviewers",
+    status: "Status",
+    view_calendar: "Calendar",
+    view_list: "Listview",
+    evaluation_status: "Evaluation Status",
+    evaluation_result: "Evaluation Result",
+    evaluation_report: "Evaluation Report",
   },
 
   job_type: {
@@ -103,6 +108,7 @@ export default {
     account_settings: "Account Settings",
     candidates: "Candidates",
     departments: "Departments",
+    interviews: "Interviews",
     openings: "Openings",
     org_settings: "Org Settings",
     sign_out: "Sign Out",

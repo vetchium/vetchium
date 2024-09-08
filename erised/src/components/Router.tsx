@@ -8,6 +8,7 @@ import Users from "../pages/Users";
 import Candidates from "../pages/Candidates";
 import Candidacy from "../pages/Candidacy";
 import CreateInterview from "../pages/CreateInterview";
+import Interviews from "../pages/Interviews";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
         path="/create-interview/:candidacy_id"
         element={<CreateInterview />}
       />
+      <Route path="/interviews" element={<Interviews />} />
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />
       <Route path="/org-settings/locations" element={<LocationSelector />} />
