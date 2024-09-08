@@ -31,9 +31,15 @@ export default {
 
   create_opening_form: {
     add_location: "Add Location",
+    create_opening: "Create Opening",
     currency: "Currency",
     department: "Department/CostCenter",
     educational_qualification: "Educational Qualification",
+    edu_bachelors: "Bachelors",
+    edu_doesnt_matter: "Doesn't Matter",
+    edu_masters: "Masters",
+    edu_phd: "PhD",
+    edu_unspecified: "Unspecified",
     hiring_manager: "Hiring Manager",
     jd: "Job Description",
     job_title: "Job Title",

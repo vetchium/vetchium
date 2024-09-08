@@ -271,13 +271,21 @@ function CreateOpeningForm() {
         style={formItemStyle}
       >
         <Radio.Group defaultValue="unspecified" buttonStyle="solid">
-          <Radio.Button value="bachelors">{t("bachelors")}</Radio.Button>
-          <Radio.Button value="masters">{t("masters")}</Radio.Button>
-          <Radio.Button value="phd">{t("phd")}</Radio.Button>
-          <Radio.Button value="doesnt_matter">
-            {t("doesnt_matter")}
+          <Radio.Button value="bachelors">
+            {t("create_opening_form.edu_bachelors")}
           </Radio.Button>
-          <Radio.Button value="unspecified">{t("unspecified")}</Radio.Button>
+          <Radio.Button value="masters">
+            {t("create_opening_form.edu_masters")}
+          </Radio.Button>
+          <Radio.Button value="phd">
+            {t("create_opening_form.edu_phd")}
+          </Radio.Button>
+          <Radio.Button value="doesnt_matter">
+            {t("create_opening_form.edu_doesnt_matter")}
+          </Radio.Button>
+          <Radio.Button value="unspecified">
+            {t("create_opening_form.edu_unspecified")}
+          </Radio.Button>
         </Radio.Group>
       </Form.Item>
       <Form.Item
