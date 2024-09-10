@@ -1,14 +1,15 @@
 import { Route, Routes } from "react-router-dom";
 import Applications from "../pages/Applications";
+import Candidacy from "../pages/Candidacy";
+import Candidates from "../pages/Candidates";
+import CreateInterview from "../pages/CreateInterview";
 import CreateOpening from "../pages/CreateOpening";
 import Departments from "../pages/Departments";
+import Interview from "../pages/Interview";
+import Interviews from "../pages/Interviews";
 import LocationSelector from "../pages/Locations";
 import Openings from "../pages/Openings";
 import Users from "../pages/Users";
-import Candidates from "../pages/Candidates";
-import Candidacy from "../pages/Candidacy";
-import CreateInterview from "../pages/CreateInterview";
-import Interviews from "../pages/Interviews";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
         path="/create-interview/:candidacy_id"
         element={<CreateInterview />}
       />
+      <Route path="/interview/:interview_id" element={<Interview />} />
       <Route path="/interviews" element={<Interviews />} />
       <Route path="/create-opening" element={<CreateOpening />} />
       <Route path="/org-settings" element={<div>Org Settings</div>} />

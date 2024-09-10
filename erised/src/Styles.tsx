@@ -54,6 +54,10 @@ export const formSelectStyle = {
   width: "100%",
 };
 
+export const formRadioStyle = {
+  width: "100%",
+};
+
 export const createOpeningFormStyle = {
   backgroundColor: "white",
   margin: "3rem",

@@ -87,6 +87,9 @@ export default function Interviews() {
       title: t("interviews.interview_id"),
       dataIndex: "interviewId",
       key: "interviewId",
+      render: (interviewId: string) => (
+        <Link to={`/interview/${interviewId}`}>{interviewId}</Link>
+      ),
     },
     {
       title: t("interviews.status"),
