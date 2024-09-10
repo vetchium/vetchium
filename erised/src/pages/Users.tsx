@@ -1,7 +1,12 @@
 import { DeleteTwoTone } from "@ant-design/icons";
 import { Button, Flex, Form, Input, Radio, Table, Typography } from "antd";
 import React, { useState } from "react";
-import { formItemStyle, formStyle, tableStyle } from "../Styles";
+import {
+  formItemStyle,
+  formRadioStyle,
+  formStyle,
+  tableStyle,
+} from "../Styles";
 import t from "../i18n/i18n";
 
 const Users: React.FC = () => {
@@ -60,7 +65,11 @@ const Users: React.FC = () => {
           style={formItemStyle}
         >
           {/* In future, we may have to accomodate roles that are not hierarchical */}
-          <Radio.Group defaultValue={"interviewer"} buttonStyle="solid">
+          <Radio.Group
+            defaultValue={"interviewer"}
+            buttonStyle="solid"
+            style={formRadioStyle}
+          >
             <Radio.Button value="admin">{t("users.admin")}</Radio.Button>
             <Radio.Button value="recruiter">
               {t("users.recruiter")}

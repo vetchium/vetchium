@@ -91,7 +91,7 @@ export default function Interview() {
   ];
 
   return (
-    <Flex vertical style={{ margin: "2rem" }}>
+    <Flex vertical style={{ marginLeft: "2rem" }}>
       <Table
         dataSource={dataSource}
         columns={columns}

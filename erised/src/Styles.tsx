@@ -52,10 +52,12 @@ export const formInputStyle = {
 
 export const formSelectStyle = {
   width: "100%",
+  textAlign: "left" as const,
 };
 
 export const formRadioStyle = {
   width: "100%",
+  textAlign: "left" as const,
 };
 
 export const createOpeningFormStyle = {
