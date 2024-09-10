@@ -1,9 +1,10 @@
 import { Button, Form, Switch } from "antd";
 import { t } from "i18next";
+import { formStyle } from "../Styles";
 
 function InterviewCancelForm() {
   return (
-    <Form>
+    <Form layout="vertical" style={formStyle}>
       <Form.Item label={t("interviews.cancel_notice")}>
         <Switch defaultChecked />
       </Form.Item>

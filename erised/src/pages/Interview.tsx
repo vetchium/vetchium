@@ -102,8 +102,9 @@ export default function Interview() {
       <Divider />
       <InterviewFeedbackForm />
       <Divider />
+
+      {/* Should be shown only for recruiters and admins */}
       <InterviewCancelForm />
-      <Divider />
     </Flex>
   );
 }
