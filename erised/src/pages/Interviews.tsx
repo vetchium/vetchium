@@ -14,7 +14,7 @@ import t from "../i18n/i18n";
 
 const interviewData = [
   {
-    interviewId: "INT-001",
+    interviewId: "INT-001dfsdfsdf",
     interviewStatus: "SCHEDULED",
     openingIds: ["JAN14-1", "JAN14-2"],
     candidacyId: "CAND-001",
@@ -26,7 +26,7 @@ const interviewData = [
     hiringManager: { name: "Urs Holzle", email: "ursholzle@example.com" },
   },
   {
-    interviewId: "INT-002",
+    interviewId: "INT-002kjkklklk",
     interviewStatus: "COMPLETED",
     evaluationStatus: "EVALUATION_PENDING",
     openingIds: ["JAN14-1", "JAN14-2"],
@@ -39,7 +39,7 @@ const interviewData = [
     hiringManager: { name: "Urs Holzle", email: "ursholzle@example.com" },
   },
   {
-    interviewId: "INT-003",
+    interviewId: "INT-003dsfsdf",
     interviewStatus: "COMPLETED",
     evaluationStatus: "EVALUATION_COMPLETED",
     evaluationResult: "STRONG_YES",

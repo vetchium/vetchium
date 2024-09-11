@@ -28,18 +28,18 @@ const data = {
   ],
   interviews: [
     {
-      id: "9m4e2mr0ui3e8a215n200",
+      id: "INT-001dfsdfsdf",
       status: "CANCELLED",
     },
     {
-      id: "9m4e2mr0ui3e8a3215n000",
+      id: "INT-002kjkklklk",
       status: "COMPLETED",
       interviewers: ["A <a@example.com>", "B <b@example.com>"],
       at: "2024-03-14T10:00:00Z",
       evaluation_status: "EVALUATION_PENDING",
     },
     {
-      id: "9m4e2mr0ui3e8a32215n000",
+      id: "INT-003dsfsdf",
       status: "COMPLETED",
       interviewers: ["C <c@example.com>"],
       at: "2024-03-14T10:00:00Z",
@@ -56,7 +56,7 @@ const data = {
       },
     },
     {
-      id: "9m4e2mr0ui3e8a215n000",
+      id: "INT-0042342dsfsdfewr",
       status: "SCHEDULED",
       interviewers: ["d@example.com"],
       at: "2024-03-14T10:00:00Z",
@@ -108,6 +108,12 @@ export default function Candidacy() {
       <Typography.Title level={5}>Interviews</Typography.Title>
       <Table
         columns={[
+          {
+            title: "Interview ID",
+            dataIndex: "id",
+            key: "id",
+            render: (id) => <Link href={`/interview/${id}`}>{id}</Link>,
+          },
           {
             title: "Interviewers",
             dataIndex: "interviewers",
