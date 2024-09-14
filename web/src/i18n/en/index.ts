@@ -1,27 +1,27 @@
 export default {
   common: {
-    appName: 'Vetchi',
-    home: 'Home',
-    signup: 'Sign Up',
-    login: 'Log In',
-    profile: 'Profile',
-    jobs: 'Jobs',
-    footerText: 'All rights reserved.',
+    appName: "Vetchi",
+    footerText: "All rights reserved.",
+    home: "Home",
+    jobs: "Jobs",
+    login: "Log In",
+    profile: "Profile",
+    signup: "Sign Up",
   },
   home: {
-    welcome: 'Welcome to Vetchi',
-    description: 'Connect with employers and find your dream job',
-  },
-  signup: {
-    title: 'Create an Account',
-    submit: 'Sign Up',
+    description: "Connect with employers and find your dream job",
+    welcome: "Welcome to Vetchi",
   },
   login: {
-    title: 'Log In to Your Account',
-    submit: 'Log In',
+    submit: "Log In",
+    title: "Log In to Your Account",
   },
   profile: {
-    title: 'Your Profile',
-    editProfile: 'Edit Profile',
+    editProfile: "Edit Profile",
+    title: "Your Profile",
+  },
+  signup: {
+    submit: "Sign Up",
+    title: "Create an Account",
   },
 };

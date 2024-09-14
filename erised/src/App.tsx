@@ -7,7 +7,6 @@ function App() {
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    // Check for a valid cookie on app load
     const cookie = Cookies.get("signedIn");
     setSignedIn(cookie === "true");
   }, []);
@@ -16,7 +15,7 @@ function App() {
     <Home
       onSignOut={() => {
         setSignedIn(false);
-        Cookies.remove("signedIn"); // Clear the cookie on sign out
+        Cookies.remove("signedIn");
         window.location.href = "/";
       }}
     />
@@ -24,7 +23,7 @@ function App() {
     <SignIn
       onSignIn={() => {
         setSignedIn(true);
-        Cookies.set("signedIn", "true"); // Set the cookie on sign in
+        Cookies.set("signedIn", "true");
       }}
     />
   );

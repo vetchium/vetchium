@@ -1,6 +1,6 @@
-import React from 'react';
-import { Typography } from 'antd';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import { Typography } from "antd";
+import { useTranslation } from "react-i18next";
 
 const { Title } = Typography;
 
@@ -9,7 +9,7 @@ const Profile: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>{t('profile.title')}</Title>
+      <Title level={2}>{t("profile.title")}</Title>
       {/* Add profile content here */}
     </div>
   );
