@@ -7,7 +7,7 @@ import t from "../i18n/i18n";
 
 const { Sider } = Layout;
 
-function Sidebar({ onSignOut }: { onSignOut: () => void }) {
+function Sidebar({ onLogOut }: { onLogOut: () => void }) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,8 +36,8 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
       icon: <SettingFilled />,
     },
     {
-      key: "/signout",
-      label: t("sidebar.sign_out"),
+      key: "/logout",
+      label: t("sidebar.log_out"),
       icon: <LogoutOutlined />,
     },
   ];
@@ -46,8 +46,8 @@ function Sidebar({ onSignOut }: { onSignOut: () => void }) {
     <Sider width="20%" style={siderStyle}>
       <Menu
         onClick={(item) => {
-          if (item.key === "/signout") {
-            onSignOut();
+          if (item.key === "/logout") {
+            onLogOut();
           } else {
             navigate(item.key);
           }

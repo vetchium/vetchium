@@ -1,18 +1,14 @@
-import { Button, Typography } from "antd";
-import { useTranslation } from "react-i18next";
+import { ForkOutlined } from "@ant-design/icons";
+import LogInForm from "../forms/LogInForm";
+import { headerLogo } from "../Styles";
 
-const { Title } = Typography;
-
-function Login({ onSignIn }: { onSignIn: () => void }) {
-  const { t } = useTranslation();
-
+function LogIn({ onLogIn }: { onLogIn: () => void }) {
   return (
-    <div>
-      <Title level={2}>{t("login.title")}</Title>
-      <Button onClick={onSignIn}>{t("login.signIn")}</Button>
-      {/* Add login form here */}
-    </div>
+    <>
+      <ForkOutlined style={headerLogo} />
+      <LogInForm onLogIn={onLogIn} />
+    </>
   );
 }
 
-export default Login;
+export default LogIn;

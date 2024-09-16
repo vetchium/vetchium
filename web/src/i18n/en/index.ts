@@ -15,11 +15,16 @@ export default {
     submit: "Sign Up",
     title: "Create an Account",
   },
+  login_form: {
+    email_address: "Email Address",
+    password: "Password",
+    login: "Log In",
+  },
   sidebar: {
     home: "Home",
     my_applications: "My Applications",
     interviews: "Interviews",
     account_settings: "Account Settings",
-    sign_out: "Sign Out",
+    log_out: "Log Out",
   },
 };

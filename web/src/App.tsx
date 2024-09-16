@@ -2,30 +2,42 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import { ConfigProvider } from "antd";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 const App: React.FC = () => {
-  const [signedIn, setSignedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
     const cookie = Cookies.get("signedIn");
-    setSignedIn(cookie === "true");
+    setLoggedIn(cookie === "true");
   }, []);
 
-  return signedIn ? (
-    <Home
-      onSignOut={() => {
-        setSignedIn(false);
-        Cookies.remove("signedIn");
-        window.location.href = "/";
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: "#00B96B", // A shade of green
+        },
       }}
-    />
-  ) : (
-    <Login
-      onSignIn={() => {
-        setSignedIn(true);
-        Cookies.set("signedIn", "true");
-      }}
-    />
+    >
+      {loggedIn ? (
+        <Home
+          onLogOut={() => {
+            setLoggedIn(false);
+            Cookies.remove("loggedIn");
+            window.location.href = "/";
+          }}
+        />
+      ) : (
+        <Login
+          onLogIn={() => {
+            setLoggedIn(true);
+            Cookies.set("loggedIn", "true");
+          }}
+        />
+      )}
+    </ConfigProvider>
   );
 };
 
