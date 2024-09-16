@@ -2,6 +2,9 @@ export const headerStyle = {
   textAlign: "center" as const,
   color: "#fff",
   backgroundColor: "cornflowerblue",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
 };
 
 export const headerLogo = {
