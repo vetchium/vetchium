@@ -1,30 +1,65 @@
-import React from 'react';
-import { Layout, Menu } from 'antd';
-import { UserOutlined, FileSearchOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { LogoutOutlined, SettingFilled } from "@ant-design/icons";
+import { Layout, Menu, MenuProps } from "antd";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { siderStyle } from "../Styles";
+import t from "../i18n/i18n";
 
 const { Sider } = Layout;
 
-const Sidebar: React.FC = () => {
-  const { t } = useTranslation();
+function Sidebar({ onSignOut }: { onSignOut: () => void }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (window.location.pathname === "/") {
+      navigate("/home");
+    }
+  }, []);
+
+  type MenuItem = Required<MenuProps>["items"][number];
+  const items: MenuItem[] = [
+    {
+      key: "/home",
+      label: t("sidebar.home"),
+    },
+    {
+      key: "/my-applications",
+      label: t("sidebar.my_applications"),
+    },
+    {
+      key: "/interviews",
+      label: t("sidebar.interviews"),
+    },
+    {
+      key: "/account-settings",
+      label: t("sidebar.account_settings"),
+      icon: <SettingFilled />,
+    },
+    {
+      key: "/signout",
+      label: t("sidebar.sign_out"),
+      icon: <LogoutOutlined />,
+    },
+  ];
 
   return (
-    <Sider width={200} className="site-layout-background">
+    <Sider width="20%" style={siderStyle}>
       <Menu
+        onClick={(item) => {
+          if (item.key === "/signout") {
+            onSignOut();
+          } else {
+            navigate(item.key);
+          }
+        }}
+        defaultSelectedKeys={["/home"]}
+        defaultOpenKeys={["org-settings"]}
         mode="inline"
-        defaultSelectedKeys={['profile']}
-        style={{ height: '100%', borderRight: 0 }}
-      >
-        <Menu.Item key="profile" icon={<UserOutlined />}>
-          <Link to="/profile">{t('common.profile')}</Link>
-        </Menu.Item>
-        <Menu.Item key="jobs" icon={<FileSearchOutlined />}>
-          <Link to="/jobs">{t('common.jobs')}</Link>
-        </Menu.Item>
-      </Menu>
+        items={items}
+        style={{ height: "100%" }}
+      />
     </Sider>
   );
-};
+}
 
 export default Sidebar;

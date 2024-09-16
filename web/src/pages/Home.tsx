@@ -1,17 +1,25 @@
-import { Button, Typography } from 'antd';
-import { useTranslation } from 'react-i18next';
+import { Flex, Layout } from "antd";
+import { contentStyle, footerStyle, layoutStyle } from "../Styles";
+import VetchiHeader from "../components/Header";
+import Router from "../components/Router";
+import Sidebar from "../components/Sidebar";
 
-const { Title, Paragraph } = Typography;
+const { Footer, Content } = Layout;
 
 function Home({ onSignOut }: { onSignOut: () => void }) {
-  const { t } = useTranslation();
-
   return (
-    <div>
-      <Title>{t('home.welcome')}</Title>
-      <Paragraph>{t('home.description')}</Paragraph>
-      <Button onClick={onSignOut}>{t('home.signOut')}</Button>
-    </div>
+    <Flex gap="middle" wrap>
+      <Layout style={layoutStyle}>
+        <VetchiHeader />
+        <Layout>
+          <Sidebar onSignOut={onSignOut} />
+          <Content style={contentStyle}>
+            <Router />
+          </Content>
+        </Layout>
+        <Footer style={footerStyle}>Footer</Footer>
+      </Layout>
+    </Flex>
   );
 }
 
