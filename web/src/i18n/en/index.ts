@@ -1,13 +1,4 @@
 export default {
-  common: {
-    appName: "Vetchi",
-    footerText: "All rights reserved.",
-    home: "Home",
-    jobs: "Jobs",
-    login: "Log In",
-    profile: "Profile",
-    signup: "Sign Up",
-  },
   home: {
     description: "Connect with employers and find your dream job",
     welcome: "Welcome to Vetchi",
@@ -23,5 +14,12 @@ export default {
   signup: {
     submit: "Sign Up",
     title: "Create an Account",
+  },
+  sidebar: {
+    home: "Home",
+    my_applications: "My Applications",
+    interviews: "Interviews",
+    account_settings: "Account Settings",
+    sign_out: "Sign Out",
   },
 };

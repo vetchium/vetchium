@@ -1,29 +1,16 @@
-import React from 'react';
-import { Layout, Menu } from 'antd';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { ForkOutlined, GlobalOutlined } from "@ant-design/icons";
+import { Layout } from "antd";
+import { headerLogo, headerMenuIcon, headerStyle } from "../Styles";
 
-const { Header: AntHeader } = Layout;
+const { Header } = Layout;
 
-const Header: React.FC = () => {
-  const { t } = useTranslation();
-
+function VetchiHeader() {
   return (
-    <AntHeader>
-      <div className="logo" />
-      <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['home']}>
-        <Menu.Item key="home">
-          <Link to="/">{t('common.home')}</Link>
-        </Menu.Item>
-        <Menu.Item key="signup">
-          <Link to="/signup">{t('common.signup')}</Link>
-        </Menu.Item>
-        <Menu.Item key="login">
-          <Link to="/login">{t('common.login')}</Link>
-        </Menu.Item>
-      </Menu>
-    </AntHeader>
+    <Header style={headerStyle}>
+      <ForkOutlined style={headerLogo} />
+      <GlobalOutlined style={headerMenuIcon} />
+    </Header>
   );
-};
+}
 
-export default Header;
+export default VetchiHeader;
