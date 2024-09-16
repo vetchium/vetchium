@@ -1,7 +1,6 @@
 export const headerStyle = {
   textAlign: "center" as const,
   color: "#fff",
-  backgroundColor: "darkcyan",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
