@@ -57,6 +57,12 @@ export const formSelectStyle = {
   textAlign: "left" as const,
 };
 
+export const formTextAreaStyle = {
+  width: "100%",
+  borderRadius: "8px",
+  rows: 10,
+};
+
 export const formRadioStyle = {
   width: "100%",
   textAlign: "left" as const,

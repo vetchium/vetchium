@@ -1,4 +1,7 @@
-import { Flex, Image, List, Typography } from "antd";
+import { PlusCircleTwoTone } from "@ant-design/icons";
+import { Button, Flex, Image, List, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
+import t from "../i18n/i18n";
 
 const data = [
   {
@@ -39,9 +42,17 @@ const data = [
 ];
 
 function WorkHistory() {
+  const navigate = useNavigate();
   return (
     <Flex vertical gap="large">
       <Typography.Title level={2}>Work History</Typography.Title>
+      <Button
+        type="primary"
+        icon={<PlusCircleTwoTone />}
+        onClick={() => navigate("/add-work-history")}
+      >
+        {t("workhistory.add")}
+      </Button>
       <List
         itemLayout="vertical"
         dataSource={data}

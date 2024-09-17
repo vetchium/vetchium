@@ -28,4 +28,18 @@ export default {
     submit: "Sign Up",
     title: "Create an Account",
   },
+  workhistory: {
+    add: "Add Work History",
+  },
+  add_work_history_form: {
+    company_name: "Company Name",
+    cancel: "Cancel",
+    submit: "Submit",
+    job_title: "Job Title",
+    job_description: "Job Description",
+    start_date: "Start Date",
+    end_date: "End Date",
+    still_employed: "Still Employed",
+    description: "Description",
+  },
 };
