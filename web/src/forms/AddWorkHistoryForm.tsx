@@ -74,15 +74,21 @@ function AddWorkHistoryForm() {
         <AutoComplete
           style={formInputStyle}
           options={[
-            { text: "Example Private Limited" },
-            { text: "Example Inc" },
-            { text: "Example Gmbh" },
+            {
+              text: "Example Private Limited",
+              value: "Example Private Limited",
+            },
+            { text: "Example Inc", value: "Example Inc" },
+            { text: "Example Gmbh", value: "Example Gmbh" },
           ]}
           onSearch={(searchText) => {
             return [
-              { text: "Example Private Limited" },
-              { text: "Example Inc" },
-              { text: "Example Gmbh" },
+              {
+                text: "Example Private Limited",
+                value: "Example Private Limited",
+              },
+              { text: "Example Inc", value: "Example Inc" },
+              { text: "Example Gmbh", value: "Example Gmbh" },
             ].filter((option) =>
               option.text.toLowerCase().includes(searchText.toLowerCase())
             );
