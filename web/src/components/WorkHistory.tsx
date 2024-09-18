@@ -1,5 +1,5 @@
 import { PlusCircleTwoTone } from "@ant-design/icons";
-import { Button, Flex, Image, List, Typography } from "antd";
+import { Button, Card, Flex, Image, List, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import t from "../i18n/i18n";
 
@@ -44,34 +44,38 @@ const data = [
 function WorkHistory() {
   const navigate = useNavigate();
   return (
-    <Flex vertical gap="large">
-      <Typography.Title level={2}>Work History</Typography.Title>
-      <Button
-        type="primary"
-        icon={<PlusCircleTwoTone />}
-        onClick={() => navigate("/add-work-history")}
-      >
-        {t("workhistory.add")}
-      </Button>
-      <List
-        itemLayout="vertical"
-        dataSource={data}
-        renderItem={(item: any) => (
-          <List.Item>
-            <Flex gap="large">
-              <Image src={item.logo} />
-              <Flex vertical>
-                <Typography.Title level={4}>{item.job_title}</Typography.Title>
-                <Typography.Text>{item.company_name}</Typography.Text>
-                <Typography.Text>
-                  {item.start_date} - {item.end_date}
-                </Typography.Text>
+    <Card>
+      <Flex vertical gap="large">
+        <Typography.Title level={2}>Work History</Typography.Title>
+        <Button
+          type="primary"
+          icon={<PlusCircleTwoTone />}
+          onClick={() => navigate("/add-work-history")}
+        >
+          {t("workhistory.add")}
+        </Button>
+        <List
+          itemLayout="vertical"
+          dataSource={data}
+          renderItem={(item: any) => (
+            <List.Item>
+              <Flex gap="large">
+                <Image src={item.logo} />
+                <Flex vertical>
+                  <Typography.Title level={4}>
+                    {item.job_title}
+                  </Typography.Title>
+                  <Typography.Text>{item.company_name}</Typography.Text>
+                  <Typography.Text>
+                    {item.start_date} - {item.end_date}
+                  </Typography.Text>
+                </Flex>
               </Flex>
-            </Flex>
-          </List.Item>
-        )}
-      />
-    </Flex>
+            </List.Item>
+          )}
+        />
+      </Flex>
+    </Card>
   );
 }
 
