@@ -5,17 +5,20 @@ import {
   Flex,
   Form,
   Input,
+  Select,
   Switch,
 } from "antd";
 import {
   formInputStyle,
   formItemStyle,
+  formSelectStyle,
   formStyle,
   formSwitchStyle,
   formTextAreaStyle,
 } from "../Styles";
 import t from "../i18n/i18n";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 function onFinish(values: any) {
   console.log(values);
@@ -48,8 +51,16 @@ function validateStartDate(rule: any, value: any) {
   return Promise.resolve();
 }
 
-function validateEndDate(rule: any, value: any) {
-  if (value && value.isBefore(rule.startDate)) {
+function validateEndDate(rule: any, value: any, stillEmployed: boolean) {
+  if (stillEmployed) {
+    return Promise.resolve();
+  }
+
+  if (!value) {
+    return Promise.reject(new Error("End date is required"));
+  }
+
+  if (value.isBefore(rule.startDate)) {
     return Promise.reject(new Error("End date must be after start date"));
   }
   return Promise.resolve();
@@ -57,6 +68,7 @@ function validateEndDate(rule: any, value: any) {
 
 function AddWorkHistoryForm() {
   const navigate = useNavigate();
+  const [stillEmployed, setStillEmployed] = useState(true);
 
   return (
     <Form
@@ -120,15 +132,51 @@ function AddWorkHistoryForm() {
           name="still_employed"
           rules={[{ required: false }]}
         >
-          <Switch style={formSwitchStyle} />
+          <Switch
+            style={formSwitchStyle}
+            onChange={(checked) => setStillEmployed(checked)}
+            checked={stillEmployed}
+          />
         </Form.Item>
-        <Form.Item
-          label={t("add_work_history_form.end_date")}
-          name="end_date"
-          rules={[{ required: false, validator: validateEndDate }]}
-        >
-          <DatePicker style={formInputStyle} />
-        </Form.Item>
+
+        <Flex vertical gap="small">
+          <Form.Item
+            label={t("add_work_history_form.official_email")}
+            name="official_email"
+            rules={[{ required: false }]}
+            style={formItemStyle}
+          >
+            <Flex>
+              <Input
+                style={formInputStyle}
+                placeholder="johndoe"
+                disabled={!stillEmployed}
+              />
+              <Select
+                style={formSelectStyle}
+                defaultValue="@example.com"
+                disabled={!stillEmployed}
+              >
+                {/* Should get filled automatically with the domain of the company selected above */}
+                <Select.Option value="example.com">@example.com</Select.Option>
+                <Select.Option value="example.org">@example.org</Select.Option>
+              </Select>
+            </Flex>
+          </Form.Item>
+          <Form.Item
+            label={t("add_work_history_form.end_date")}
+            name="end_date"
+            rules={[
+              {
+                required: false,
+                validator: (rule, value) =>
+                  validateEndDate(rule, value, stillEmployed),
+              },
+            ]}
+          >
+            <DatePicker style={formInputStyle} disabled={stillEmployed} />
+          </Form.Item>
+        </Flex>
       </Flex>
 
       <Form.Item
@@ -137,7 +185,7 @@ function AddWorkHistoryForm() {
         rules={[{ required: false }]}
         style={formItemStyle}
       >
-        <Input.TextArea style={formTextAreaStyle} />
+        <Input.TextArea style={formTextAreaStyle} rows={8} />
       </Form.Item>
 
       <Flex justify="space-between">

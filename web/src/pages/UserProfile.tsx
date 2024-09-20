@@ -1,4 +1,5 @@
-import { Button, Flex, Typography, Image, Card } from "antd";
+import { Button, Flex, Typography, Image, Card, Badge } from "antd";
+import t from "../i18n/i18n";
 
 const profileData = {
   name: "John Doe",
@@ -13,6 +14,7 @@ const profileData = {
       end_date: "2023-01-01",
       still_employed: true,
       description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      verified_colleagues: 102,
     },
     {
       company_name: "Example Private Limited",
@@ -22,6 +24,7 @@ const profileData = {
       end_date: "2022-01-01",
       still_employed: true,
       description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      verified_colleagues: 10,
     },
     {
       company_name: "Example Private Limited",
@@ -70,6 +73,17 @@ function UserProfile() {
                     {work.start_date} - {work.end_date}
                   </Typography.Text>
                   <Typography.Text>{work.description}</Typography.Text>
+                  {work.verified_colleagues ? (
+                    <Flex gap="small">
+                      <Badge
+                        count={work.verified_colleagues}
+                        style={{ backgroundColor: "#52c41a" }}
+                      />
+                      {t("user_profile.verified_colleagues")}
+                    </Flex>
+                  ) : (
+                    ""
+                  )}
                 </Flex>
               </Flex>
             </Card>

@@ -41,5 +41,9 @@ export default {
     end_date: "End Date",
     still_employed: "Still Employed",
     description: "Description",
+    official_email: "Official Email",
+  },
+  user_profile: {
+    verified_colleagues: "Verified Colleagues",
   },
 };
