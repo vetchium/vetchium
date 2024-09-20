@@ -96,6 +96,12 @@ function Openings() {
       key: "hiringManagerName",
       render: (hiringManagerName: string, record: any) =>
         `${hiringManagerName} (${record.hiringManagerEmail})`,
+      filters: [
+        { text: "Jane Smith", value: "Jane Smith" },
+        { text: "Bob Johnson", value: "Bob Johnson" },
+      ],
+      onFilter: (value: string, record: any) =>
+        record.hiringManagerName.includes(value),
     },
     {
       title: "Recruiter",
@@ -103,6 +109,12 @@ function Openings() {
       key: "recruiterName",
       render: (recruiterName: string, record: any) =>
         `${recruiterName} (${record.recruiterEmail})`,
+      filters: [
+        { text: "Diana Prince", value: "Diana Prince" },
+        { text: "Mother Theresa", value: "Mother Theresa" },
+      ],
+      onFilter: (value: string, record: any) =>
+        record.recruiterName.includes(value),
     },
     {
       title: "Unfilled Positions",
@@ -135,7 +147,7 @@ function Openings() {
 
       <Table
         dataSource={dataSource}
-        columns={columns}
+        columns={columns as any}
         style={tableStyle}
         scroll={{ x: true }}
       />
