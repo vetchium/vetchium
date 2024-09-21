@@ -55,6 +55,7 @@ export default {
     optional_fields: "Optional Fields",
     positions: "Position(s)",
     private_fields: "Private Fields (Not shared with Applicants)",
+    recruiter: "Recruiter",
     remote_locations_countries: "Remote Locations restricted to Countries",
     remote_locations_timezones: "Remote Locations restricted to Timezones",
     salary_max: "Salary Max",

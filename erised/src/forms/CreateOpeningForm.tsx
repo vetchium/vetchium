@@ -70,6 +70,12 @@ function CreateOpeningForm() {
     });
   }
 
+  function validateRecruiter(rule: any, value: string) {
+    return new Promise<void>((resolve, reject) => {
+      resolve();
+    });
+  }
+
   function validateHiringManager(rule: any, value: string) {
     return new Promise<void>((resolve, reject) => {
       resolve();
@@ -159,6 +165,23 @@ function CreateOpeningForm() {
             {t("create_opening_form.job_type_unspecified")}
           </Radio.Button>
         </Radio.Group>
+      </Form.Item>
+      <Form.Item
+        label={t("create_opening_form.recruiter")}
+        name="recruiter"
+        rules={[{ required: true, validator: validateRecruiter }]}
+        style={formItemStyle}
+      >
+        {/* Use logged in user as the recruiter */}
+        <Input style={formInputStyle} />
+      </Form.Item>
+      <Form.Item
+        label={t("create_opening_form.hiring_manager")}
+        name="hiringManager"
+        rules={[{ required: true, validator: validateHiringManager }]}
+        style={formItemStyle}
+      >
+        <Input style={formInputStyle} />
       </Form.Item>
 
       {/* <!--------- Location Fields ---------!> */}
@@ -287,14 +310,6 @@ function CreateOpeningForm() {
             {t("create_opening_form.edu_unspecified")}
           </Radio.Button>
         </Radio.Group>
-      </Form.Item>
-      <Form.Item
-        label={t("create_opening_form.hiring_manager")}
-        name="hiringManager"
-        rules={[{ validator: validateHiringManager }]}
-        style={formItemStyle}
-      >
-        <Input style={formInputStyle} />
       </Form.Item>
       <Form.Item
         label={t("create_opening_form.currency")}
