@@ -1,4 +1,16 @@
 export default {
+  add_work_history_form: {
+    cancel: "Cancel",
+    company_name: "Company Name",
+    description: "Description",
+    end_date: "End Date",
+    job_description: "Job Description",
+    job_title: "Job Title",
+    official_email: "Official Email",
+    start_date: "Start Date",
+    still_employed: "Still Employed",
+    submit: "Submit",
+  },
   home: {
     description: "Connect with employers and find your dream job",
     welcome: "Welcome to Vetchi",
@@ -18,6 +30,7 @@ export default {
   },
   sidebar: {
     account_settings: "Account Settings",
+    find_jobs: "Find Jobs",
     home: "Home",
     interviews: "Interviews",
     job_applications: "Job Applications",
@@ -28,22 +41,10 @@ export default {
     submit: "Sign Up",
     title: "Create an Account",
   },
-  workhistory: {
-    add: "Add Work History",
-  },
-  add_work_history_form: {
-    company_name: "Company Name",
-    cancel: "Cancel",
-    submit: "Submit",
-    job_title: "Job Title",
-    job_description: "Job Description",
-    start_date: "Start Date",
-    end_date: "End Date",
-    still_employed: "Still Employed",
-    description: "Description",
-    official_email: "Official Email",
-  },
   user_profile: {
     verified_colleagues: "Verified Colleagues",
+  },
+  workhistory: {
+    add: "Add Work History",
   },
 };

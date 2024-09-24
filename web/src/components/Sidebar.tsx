@@ -27,6 +27,10 @@ function Sidebar({ onLogOut }: { onLogOut: () => void }) {
       label: t("sidebar.my_profile"),
     },
     {
+      key: "/find-jobs",
+      label: t("sidebar.find_jobs"),
+    },
+    {
       key: "/job-applications",
       label: t("sidebar.job_applications"),
     },
