@@ -1,6 +1,7 @@
-import { Card, Flex, Typography, Image } from "antd";
+import { Card, Flex, Image, Typography } from "antd";
 import WorkHistory from "../components/WorkHistory";
 import t from "../i18n/i18n";
+import AutoBiography from "../components/AutoBiography";
 
 function MyProfile() {
   return (
@@ -10,6 +11,7 @@ function MyProfile() {
         style={{ borderRadius: "50%", width: "120px", height: "120px" }}
       />
       <Flex vertical gap="small" style={{ margin: "2rem" }}>
+        <AutoBiography />
         <WorkHistory />
 
         <Card>

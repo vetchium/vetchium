@@ -11,6 +11,12 @@ export default {
     still_employed: "Still Employed",
     submit: "Submit",
   },
+  auto_biography: {
+    display_name: "Display Name",
+    profile_url: "Profile URL",
+    about_me: "About Me",
+    websites: "Websites",
+  },
   home: {
     description: "Connect with employers and find your dream job",
     welcome: "Welcome to Vetchi",
@@ -46,5 +52,13 @@ export default {
   },
   workhistory: {
     add: "Add Work History",
+  },
+  myprofile: {
+    auto_biography: "Auto Biography",
+    display_name: "Display Name",
+    profile_url: "Profile URL",
+    about_me: "About Me",
+    websites: "Websites",
+    check_availability: "Check Availability",
   },
 };
