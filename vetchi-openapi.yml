@@ -17,7 +17,7 @@ components:
       minLength: 3
       pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
       type: string
-    EmployerGetOnboardStatusRequest:
+    GetOnboardStatusRequest:
       properties:
         client_id:
           $ref: '#/components/schemas/ClientId'
@@ -44,6 +44,44 @@ components:
           description: The authentication token
           type: string
       type: object
+    FilterOpeningsRequest:
+      properties:
+        client_id:
+          $ref: '#/components/schemas/ClientId'
+          description: The client ID
+        criteria:
+          description: The criteria to filter the openings
+          type: object
+          properties:
+            hiring_manager_email:
+              description: The hiring manager Email address
+              $ref: '#/components/schemas/EmailAddress'
+            recruiter_email:
+              description: The recruiter Email address
+              $ref: '#/components/schemas/EmailAddress'
+            order_by:
+              description: The order by field
+              type: string
+              default: created_at
+              enum:
+                - created_at
+                - unfilled_count
+            order_direction:
+              description: The order direction
+              type: string
+              default: desc
+              enum:
+                - asc
+                - desc
+            offset:
+              type: string
+              maxLength: 255
+              minLength: 1
+            limit:
+              type: integer
+              maximum: 100
+              minimum: 1
+              default: 50
     OnboardStatus:
       description: The onboarding status
       enum:
@@ -73,13 +111,13 @@ openapi: 3.0.0
 paths:
   /employer/get-onboard-status:
     post:
-      description: Get Onboarded Status for a Client
+      description: Get Onboarded Status for an Employer
       operationId: employer-get-onboard-status
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmployerGetOnboardStatusRequest'
+              $ref: '#/components/schemas/GetOnboardStatusRequest'
         required: true
       responses:
         '200':
@@ -119,3 +157,19 @@ paths:
       summary: SignIn
       tags:
         - Employer
+  /employer/filter-openings:
+    post:
+      description: Filter Openings for the signedin employer with the given criteria
+      operationId: employer-filter-openings
+      responses:
+        '200':
+          description: OK
+      summary: Get Openings
+      tags:
+        - Employer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterOpeningsRequest'
+        required: true
