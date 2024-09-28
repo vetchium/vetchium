@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Vetchi API
+  version: 0.0.1
+  description: Vetchi APIs that work across multiple clients
+
+paths:
+  /erised/login:
+    post:
+      tags:
+        - Erised
+      summary: Login
+      description: Login to the system
+      operationId: erised-login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ErisedLoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErisedLoginResponse"
+        "401":
+          description: Unauthorized
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+
+components:
+  schemas:
+    ClientId:
+      type: string
+      description: The client ID, usually a website domain
+      minLength: 3
+      maxLength: 255
+      example: "example.com"
+    EmailAddress:
+      type: string
+      format: email
+      description: An email address
+      minLength: 3
+      maxLength: 255
+      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      example: "test@example.com"
+    Password:
+      type: string
+      format: password
+      description: A password
+      minLength: 8
+      maxLength: 255
+      example: "Password123$"
+      pattern: "^(?:.*[a-z])(?:.*[A-Z])(?:.*\\d)(?:.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
+    ErisedLoginRequest:
+      type: object
+      properties:
+        client_id:
+          $ref: "#/components/schemas/ClientId"
+          description: The client ID
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+          description: The email
+        password:
+          $ref: "#/components/schemas/Password"
+          description: The password
+    ErisedLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The authentication token
+        expiresAt:
+          type: string
+          format: date-time
+    ValidationErrors:
+      type: array
+      description: A list of field names for which the validations failed
+      items:
+        type: string
