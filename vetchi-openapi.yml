@@ -44,6 +44,17 @@ components:
           description: The authentication token
           type: string
       type: object
+    OnboardStatus:
+      properties:
+        status:
+          description: The onboarding status
+          enum:
+            - domain_not_verified
+            - domain_verified_email_not_sent
+            - domain_verified_email_sent
+            - domain_onboarded
+          type: string
+      type: object
     Password:
       description: A password
       example: Password123$
@@ -75,6 +86,10 @@ paths:
         required: true
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardStatus'
           description: OK
       summary: Get Onboarded Status for a Client
       tags:
