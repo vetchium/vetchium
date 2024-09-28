@@ -45,16 +45,13 @@ components:
           type: string
       type: object
     OnboardStatus:
-      properties:
-        status:
-          description: The onboarding status
-          enum:
-            - domain_not_verified
-            - domain_verified_email_not_sent
-            - domain_verified_email_sent
-            - domain_onboarded
-          type: string
-      type: object
+      description: The onboarding status
+      enum:
+        - domain_not_verified
+        - domain_verified_email_not_sent
+        - domain_verified_email_sent
+        - domain_onboarded
+      type: string
     Password:
       description: A password
       example: Password123$
