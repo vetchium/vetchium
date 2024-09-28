@@ -5,26 +5,43 @@ info:
   description: Vetchi APIs that work across multiple clients
 
 paths:
-  /erised/login:
+  /employer/get-onboard-status:
     post:
       tags:
-        - Erised
-      summary: Login
-      description: Login to the system
-      operationId: erised-login
+        - Employer
+      summary: Get Onboarded Status for a Client
+      description: Get Onboarded Status for a Client
+      operationId: employer-get-onboard-status
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ErisedLoginRequest"
+              $ref: "#/components/schemas/EmployerGetOnboardStatusRequest"
+      responses:
+        "200":
+          description: OK
+        
+  /employer/signin:
+    post:
+      tags:
+        - Employer
+      summary: SignIn
+      description: SignIn to the system
+      operationId: employer-signin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployerSignInRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErisedLoginResponse"
+                $ref: "#/components/schemas/EmployerSignInResponse"
         "401":
           description: Unauthorized
         "400":
@@ -58,7 +75,13 @@ components:
       maxLength: 255
       example: "Password123$"
       pattern: "^(?:.*[a-z])(?:.*[A-Z])(?:.*\\d)(?:.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
-    ErisedLoginRequest:
+    EmployerGetOnboardStatusRequest:
+      type: object
+      properties:
+        client_id:
+          $ref: "#/components/schemas/ClientId"
+          description: The client ID
+    EmployerSignInRequest:
       type: object
       properties:
         client_id:
@@ -70,7 +93,7 @@ components:
         password:
           $ref: "#/components/schemas/Password"
           description: The password
-    ErisedLoginResponse:
+    EmployerSignInResponse:
       type: object
       properties:
         token:
