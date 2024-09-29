@@ -122,6 +122,11 @@ components:
           $ref: "#/components/schemas/ClientId"
           description: The client ID
       type: object
+    GetOnboardStatusResponse:
+      properties:
+        status:
+          $ref: "#/components/schemas/OnboardStatus"
+      type: object
     OnboardStatus:
       description: The onboarding status
       enum:
@@ -229,7 +234,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OnboardStatus"
+                $ref: "#/components/schemas/GetOnboardStatusResponse"
           description: OK
       summary: Get Onboarded Status for a Client
       tags:
