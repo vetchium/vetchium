@@ -2,6 +2,21 @@
 # Vetchi OpenAPI Specification
 # Remember to sort this yaml file alphabetically by keys after making changes
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants admin access
+
   schemas:
     ClientId:
       description: The client ID, usually a website domain
@@ -219,6 +234,9 @@ paths:
       summary: Get Openings
       tags:
         - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
   /employer/get-onboard-status:
     post:
       description: Get Onboarded Status for an Employer
