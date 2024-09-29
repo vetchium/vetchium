@@ -20,19 +20,19 @@ components:
     GetOnboardStatusRequest:
       properties:
         client_id:
-          $ref: '#/components/schemas/ClientId'
+          $ref: "#/components/schemas/ClientId"
           description: The client ID
       type: object
     EmployerSignInRequest:
       properties:
         client_id:
-          $ref: '#/components/schemas/ClientId'
+          $ref: "#/components/schemas/ClientId"
           description: The client ID
         email:
-          $ref: '#/components/schemas/EmailAddress'
+          $ref: "#/components/schemas/EmailAddress"
           description: The email
         password:
-          $ref: '#/components/schemas/Password'
+          $ref: "#/components/schemas/Password"
           description: The password
       type: object
     EmployerSignInResponse:
@@ -44,51 +44,138 @@ components:
           description: The authentication token
           type: string
       type: object
+    FilteredOpenings:
+      description: The filtered openings
+      type: array
+      items:
+        $ref: "#/components/schemas/OpeningInfo"
+      example:
+        - id: "JAN14-1"
+          status: "ACTIVE"
+          title: "Software Engineer"
+          department_id: "1"
+          department_name: "Engineering"
+          hiring_manager_email: "hiring_manager@example.com"
+          hiring_manager_name: "John Doe"
+          recruiter_email: "recruiter@example.com"
+          recruiter_name: "Jane Doe"
+        - id: "JAN14-2"
+          status: "DRAFT"
+          title: "Product Manager"
+          department_id: "2"
+          department_name: "Product"
+          hiring_manager_email: "hiring_manager2@example.com"
+          hiring_manager_name: "John Smith"
+          recruiter_email: "recruiter2@example.com"
+          recruiter_name: "Jane Smith"
+        - id: "JAN14-3"
+          status: "CLOSED"
+          title: "Data Scientist"
+          department_id: "3"
+          department_name: "Data Science"
+          hiring_manager_email: "hiring_manager3@example.com"
+          hiring_manager_name: "John Johnson"
+          recruiter_email: "recruiter3@example.com"
+          recruiter_name: "Jane Johnson"
     FilterOpeningsRequest:
       properties:
-        client_id:
-          $ref: '#/components/schemas/ClientId'
-          description: The client ID
-        criteria:
-          description: The criteria to filter the openings
-          type: object
-          properties:
-            hiring_manager_email:
-              description: The hiring manager Email address
-              $ref: '#/components/schemas/EmailAddress'
-            recruiter_email:
-              description: The recruiter Email address
-              $ref: '#/components/schemas/EmailAddress'
-            order_by:
-              description: The order by field
-              type: string
-              default: created_at
-              enum:
-                - created_at
-                - unfilled_count
-            order_direction:
-              description: The order direction
-              type: string
-              default: desc
-              enum:
-                - asc
-                - desc
-            offset:
-              type: string
-              maxLength: 255
-              minLength: 1
-            limit:
-              type: integer
-              maximum: 100
-              minimum: 1
-              default: 50
+        hiring_manager_emails:
+          description: Any Opening with any of the given HiringManager emails will be returned
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailAddress"
+        recruiter_emails:
+          description: Any Opening with any of the given Recruiter emails will be returned
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailAddress"
+        order_by:
+          description: The order by field
+          type: array
+          items:
+            type: string
+            enum:
+              - created_at
+              - department
+              - unfilled_count
+              - hiring_manager_email
+              - recruiter_email
+          default:
+            [
+              "created_at",
+              "department",
+              "unfilled_count",
+              "recruiter_email",
+              "hiring_manager_email",
+            ]
+        order_direction:
+          description: The order direction
+          type: string
+          default: desc
+          enum:
+            - asc
+            - desc
+        offset:
+          type: string
+          maxLength: 255
+          minLength: 1
+        limit:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+    OpeningStatus:
+      description: The status of an opening
+      type: string
+      enum:
+        - DRAFT
+        - ACTIVE
+        - CLOSED
+    OpeningInfo:
+      description: Information about an opening
+      type: object
+      properties:
+        id:
+          type: string
+          description: The opening ID
+          example: "JAN14-1"
+        status:
+          $ref: "#/components/schemas/OpeningStatus"
+        title:
+          type: string
+        department_id:
+          type: string
+          description: The department ID
+        department_name:
+          type: string
+          description: The department name
+        hiring_manager_email:
+          type: string
+          format: email
+          description: The hiring manager email
+        hiring_manager_name:
+          type: string
+          description: The hiring manager name
+        recruiter_email:
+          type: string
+          format: email
+          description: The recruiter email
+        recruiter_name:
+          type: string
+          description: The recruiter name
+        job_type:
+          type: string
+        unfilled_count:
+          type: integer
+        filled_count:
+          type: integer
     OnboardStatus:
       description: The onboarding status
       enum:
-        - domain_not_verified
-        - domain_verified_email_not_sent
-        - domain_verified_email_sent
-        - domain_onboarded
+        - DOMAIN_NOT_VERIFIED
+        - DOMAIN_VERIFIED_EMAIL_NOT_SENT
+        - DOMAIN_VERIFIED_EMAIL_SENT
+        - DOMAIN_ONBOARDED
       type: string
     Password:
       description: A password
@@ -117,14 +204,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetOnboardStatusRequest'
+              $ref: "#/components/schemas/GetOnboardStatusRequest"
         required: true
       responses:
-        '200':
+        "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OnboardStatus'
+                $ref: "#/components/schemas/OnboardStatus"
           description: OK
       summary: Get Onboarded Status for a Client
       tags:
@@ -137,22 +224,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmployerSignInRequest'
+              $ref: "#/components/schemas/EmployerSignInRequest"
         required: true
       responses:
-        '200':
+        "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmployerSignInResponse'
+                $ref: "#/components/schemas/EmployerSignInResponse"
           description: OK
-        '400':
+        "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrors'
+                $ref: "#/components/schemas/ValidationErrors"
           description: Bad Request
-        '401':
+        "401":
           description: Unauthorized
       summary: SignIn
       tags:
@@ -161,9 +248,6 @@ paths:
     post:
       description: Filter Openings for the signedin employer with the given criteria
       operationId: employer-filter-openings
-      responses:
-        '200':
-          description: OK
       summary: Get Openings
       tags:
         - Employer
@@ -171,5 +255,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FilterOpeningsRequest'
+              $ref: "#/components/schemas/FilterOpeningsRequest"
         required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilteredOpenings"
