@@ -131,6 +131,16 @@ components:
       items:
         $ref: "#/components/schemas/OpeningInfo"
       type: array
+    FilteredRecruiters:
+      description: The filtered recruiters
+      example:
+        - name: John Doe
+          email: john.doe@example.com
+        - name: Jane Smith
+          email: jane.smith@example.com
+      items:
+        $ref: "#/components/schemas/User"
+      type: array
     GetOnboardStatusRequest:
       properties:
         client_id:
@@ -203,6 +213,15 @@ components:
       minLength: 8
       pattern: ^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
       type: string
+    User:
+      description: A user object
+      properties:
+        name:
+          description: The name of the user
+          type: string
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+      type: object
     ValidationErrors:
       description: A list of field names for which the validations failed
       items:
@@ -223,7 +242,7 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/FilterOpeningsRequest"
-        required: true
+        required: false
       responses:
         "200":
           content:
@@ -232,6 +251,31 @@ paths:
                 $ref: "#/components/schemas/FilteredOpenings"
           description: OK
       summary: Get Openings
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/filter-recruiters:
+    get:
+      description: >
+        Match the passed input query param value against the name and email addresses of recruiters
+        and return a maximum of 10 results.
+      operationId: employer-filter-recruiters
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilteredRecruiters"
+          description: OK
+      summary: Filter Recruiters
       tags:
         - Employer
       security:
