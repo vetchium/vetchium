@@ -141,6 +141,16 @@ components:
       items:
         $ref: "#/components/schemas/User"
       type: array
+    FilteredHiringManagers:
+      description: The filtered hiring managers
+      example:
+        - name: John Doe
+          email: john.doe@example.com
+        - name: Jane Smith
+          email: jane.smith@example.com
+      items:
+        $ref: "#/components/schemas/User"
+      type: array
     GetOnboardStatusRequest:
       properties:
         client_id:
@@ -276,6 +286,31 @@ paths:
                 $ref: "#/components/schemas/FilteredRecruiters"
           description: OK
       summary: Filter Recruiters
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/filter-hiring-managers:
+    get:
+      description: >
+        Match the passed input query param value against the name and email addresses of hiring managers
+        and return a maximum of 10 results.
+      operationId: employer-filter-hiring-managers
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilteredHiringManagers"
+          description: OK
+      summary: Filter Hiring Managers
       tags:
         - Employer
       security:
