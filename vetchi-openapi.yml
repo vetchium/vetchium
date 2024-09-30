@@ -466,7 +466,7 @@ paths:
         - OAuth2: []
   /employer/add-user:
     post:
-      description: Add a new user associated with the employer.
+      description: Add a new user associated with the employer. This is available only for users with the ADMIN role.
       operationId: employer-add-user
       requestBody:
         content:
