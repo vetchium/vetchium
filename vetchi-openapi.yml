@@ -276,8 +276,8 @@ components:
     AddUserResponse:
       description: Response after adding a user
       properties:
-        user_id:
-          type: string
+        email:
+          $ref: "#/components/schemas/EmailAddress"
       type: object
     GetUserRequest:
       description: Request to get a list of users with pagination
@@ -305,6 +305,14 @@ components:
           type: string
       required:
         - prefix
+    RemoveUserRequest:
+      description: Request to remove a user
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+      required:
+        - email
+      type: object
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -482,6 +490,25 @@ paths:
                 $ref: "#/components/schemas/ValidationErrors"
           description: Bad Request - Validation errors
       summary: Add User
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/remove-user:
+    post:
+      description: Remove a user associated with the employer. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveUserRequest"
+        required: true
+      responses:
+        "200":
+          description: User removed successfully or user not found
+      summary: Remove User
       tags:
         - Employer
       security:
