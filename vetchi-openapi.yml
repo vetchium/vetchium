@@ -259,6 +259,26 @@ components:
       items:
         type: string
       type: array
+    AddUserRequest:
+      description: Request to add a new user
+      properties:
+        name:
+          type: string
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        role:
+          $ref: "#/components/schemas/Role"
+      required:
+        - name
+        - email
+        - role
+      type: object
+    AddUserResponse:
+      description: Response after adding a user
+      properties:
+        user_id:
+          type: string
+      type: object
     GetUserRequest:
       description: Request to get a list of users with pagination
       properties:
@@ -417,6 +437,37 @@ paths:
                 $ref: "#/components/schemas/UserListResponse"
           description: OK
       summary: Get Users
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/add-user:
+    post:
+      description: Add a new user associated with the employer.
+      operationId: employer-add-user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUserRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddUserResponse"
+          description: User added successfully
+        "409":
+          description: Conflict - User already exists with the same email
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors
+      summary: Add User
       tags:
         - Employer
       security:
