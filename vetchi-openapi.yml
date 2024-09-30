@@ -223,6 +223,13 @@ components:
       minLength: 8
       pattern: ^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
       type: string
+    Role:
+      description: User roles in the system
+      enum:
+        - ADMIN
+        - RECRUITER
+        - PANELIST
+      type: string
     User:
       description: A user object
       properties:
@@ -232,11 +239,39 @@ components:
         email:
           $ref: "#/components/schemas/EmailAddress"
       type: object
+    UserInfo:
+      description: Information about a user
+      properties:
+        name:
+          type: string
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        role:
+          $ref: "#/components/schemas/Role"
+      type: object
+    UserListResponse:
+      description: A list of user information, sorted by email address
+      items:
+        $ref: "#/components/schemas/UserInfo"
+      type: array
     ValidationErrors:
       description: A list of field names for which the validations failed
       items:
         type: string
       type: array
+    GetUserRequest:
+      description: Request to get a list of users with pagination
+      properties:
+        limit:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          description: The email address to start the list from
+          $ref: "#/components/schemas/EmailAddress"
+      type: object
+
 info:
   description: Vetchi APIs that work across multiple clients
   title: Vetchi API
@@ -364,3 +399,26 @@ paths:
       summary: SignIn
       tags:
         - Employer
+  /employer/users:
+    post:
+      description: Retrieve a list of users associated with the employer, sorted by their email address.
+      operationId: employer-get-users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetUserRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+          description: OK
+      summary: Get Users
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
