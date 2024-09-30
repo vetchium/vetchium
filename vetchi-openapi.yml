@@ -291,6 +291,20 @@ components:
           description: The email address to start the list from
           $ref: "#/components/schemas/EmailAddress"
       type: object
+    FilterRecruitersRequest:
+      type: object
+      properties:
+        prefix:
+          type: string
+      required:
+        - prefix
+    FilterHiringManagersRequest:
+      type: object
+      properties:
+        prefix:
+          type: string
+      required:
+        - prefix
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -322,17 +336,17 @@ paths:
         - BearerAuth: []
         - OAuth2: []
   /employer/filter-recruiters:
-    get:
+    post:
       description: >
-        Match the passed input query param value against the name and email addresses of recruiters
-        and return a maximum of 10 results.
+        Accepts a JSON body containing a prefix to match against the name and email addresses of recruiters
+        and returns a maximum of 10 results.
       operationId: employer-filter-recruiters
-      parameters:
-        - name: prefix
-          in: query
-          required: true
-          schema:
-            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterRecruitersRequest"
+        required: true
       responses:
         "200":
           content:
@@ -347,17 +361,17 @@ paths:
         - BearerAuth: []
         - OAuth2: []
   /employer/filter-hiring-managers:
-    get:
+    post:
       description: >
-        Match the passed input query param value against the name and email addresses of hiring managers
-        and return a maximum of 10 results.
+        Accepts a JSON body containing a prefix to match against the name and email addresses of hiring managers
+        and returns a maximum of 10 results.
       operationId: employer-filter-hiring-managers
-      parameters:
-        - name: prefix
-          in: query
-          required: true
-          schema:
-            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterHiringManagersRequest"
+        required: true
       responses:
         "200":
           content:
