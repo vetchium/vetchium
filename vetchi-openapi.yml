@@ -419,6 +419,17 @@ components:
       items:
         $ref: "#/components/schemas/CostCenter"
       type: array
+    EditRoleRequest:
+      description: Request to edit a user's role
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        role:
+          $ref: "#/components/schemas/Role"
+      required:
+        - email
+        - role
+      type: object
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -762,6 +773,27 @@ paths:
         "200":
           description: Cost center removed successfully or cost center not found
       summary: Remove Cost Center
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/edit-user-role:
+    post:
+      description: Edit the role of a user associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
+      operationId: employer-edit-user-role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: Role updated successfully
+        "404":
+          description: User not found
+      summary: Edit User Role
       tags:
         - Employer
       security:
