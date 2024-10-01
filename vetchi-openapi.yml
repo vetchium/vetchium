@@ -363,6 +363,62 @@ components:
           type: string
       required:
         - prefix
+    CostCenter:
+      description: A cost center object
+      properties:
+        cost_center_id:
+          type: string
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 1024
+      type: object
+    AddCostCenterRequest:
+      description: Request to add a new cost center
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 1024
+      required:
+        - name
+      type: object
+    AddCostCenterResponse:
+      description: Response after adding a cost center
+      properties:
+        cost_center_id:
+          type: string
+      type: object
+    RemoveCostCenterRequest:
+      description: Request to remove a cost center
+      properties:
+        cost_center_id:
+          type: string
+      required:
+        - cost_center_id
+      type: object
+    GetCostCentersRequest:
+      description: Request to get a list of cost centers with pagination
+      properties:
+        limit:
+          default: 100
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          type: string
+      type: object
+    GetCostCentersResponse:
+      description: Response containing a list of cost centers
+      items:
+        $ref: "#/components/schemas/CostCenter"
+      type: array
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -639,6 +695,73 @@ paths:
         "200":
           description: Location removed successfully or location not found
       summary: Remove Location
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/add-cost-center:
+    post:
+      description: Add a new cost center. This method is available only for users with the ADMIN role.
+      operationId: employer-add-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddCostCenterResponse"
+          description: Cost center added successfully
+      summary: Add Cost Center
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/get-cost-centers:
+    post:
+      description: Get a list of cost centers with pagination.
+      operationId: employer-get-cost-centers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCostCentersRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CostCenter"
+          description: OK
+      summary: Get Cost Centers
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/remove-cost-center:
+    post:
+      description: Remove a cost center. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center removed successfully or cost center not found
+      summary: Remove Cost Center
       tags:
         - Employer
       security:
