@@ -710,7 +710,7 @@ paths:
 
   /employer/remove-location:
     post:
-      description: Remove a location. This method is available only for users with the ADMIN role.
+      description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
       operationId: employer-remove-location
       requestBody:
         content:
@@ -777,7 +777,7 @@ paths:
         - OAuth2: []
   /employer/remove-cost-center:
     post:
-      description: Remove a cost center. This method is available only for users with the ADMIN role.
+      description: Remove a cost center. This method is available only for users with the ADMIN role. Removing a cost center will not remove any openings associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of cost centers and future openings.
       operationId: employer-remove-cost-center
       requestBody:
         content:
@@ -787,7 +787,7 @@ paths:
         required: true
       responses:
         "200":
-          description: Cost center removed successfully or cost center not found
+          description: Cost center removed successfully or cost center not found.
       summary: Remove Cost Center
       tags:
         - Employer
