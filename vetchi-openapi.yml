@@ -430,6 +430,22 @@ components:
         - email
         - role
       type: object
+    PutCostCenterRequest:
+      description: Request to update an existing cost center
+      properties:
+        cost_center_id:
+          type: string
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 1024
+      required:
+        - cost_center_id
+        - name
+      type: object
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -794,6 +810,27 @@ paths:
         "404":
           description: User not found
       summary: Edit User Role
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/put-cost-center:
+    post:
+      description: Update an existing cost center. This method is available only for users with the ADMIN role.
+      operationId: employer-put-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center updated successfully
+        "404":
+          description: Cost center not found
+      summary: Update Cost Center
       tags:
         - Employer
       security:
