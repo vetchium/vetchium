@@ -18,6 +18,57 @@ components:
             admin: Grants admin access
 
   schemas:
+    AddLocationRequest:
+      description: Request to add a new location
+      properties:
+        country:
+          type: string
+          minLength: 3
+          maxLength: 168
+        state:
+          type: string
+          minLength: 3
+          maxLength: 168
+        city:
+          type: string
+          minLength: 3
+          maxLength: 168
+        postal_address:
+          type: string
+          minLength: 3
+          maxLength: 168
+      required:
+        - country
+        - state
+        - city
+        - postal_address
+      type: object
+    AddLocationResponse:
+      description: Response after adding a location
+      properties:
+        location_id:
+          type: string
+      type: object
+    AddUserRequest:
+      description: Request to add a new user
+      properties:
+        name:
+          type: string
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        role:
+          $ref: "#/components/schemas/Role"
+      required:
+        - name
+        - email
+        - role
+      type: object
+    AddUserResponse:
+      description: Response after adding a user
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+      type: object
     ClientId:
       description: The client ID, usually a website domain
       example: example.com
@@ -151,6 +202,17 @@ components:
       items:
         $ref: "#/components/schemas/User"
       type: array
+    GetLocationsRequest:
+      description: Request to get a list of locations with pagination
+      properties:
+        limit:
+          default: 100
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          type: string
+      type: object
     GetOnboardStatusRequest:
       properties:
         client_id:
@@ -161,6 +223,18 @@ components:
       properties:
         status:
           $ref: "#/components/schemas/OnboardStatus"
+      type: object
+    GetUserRequest:
+      description: Request to get a list of users with pagination
+      properties:
+        limit:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          description: The email address to start the list from
+          $ref: "#/components/schemas/EmailAddress"
       type: object
     OnboardStatus:
       description: The onboarding status
@@ -223,6 +297,22 @@ components:
       minLength: 8
       pattern: ^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
       type: string
+    RemoveLocationRequest:
+      description: Request to remove a location
+      properties:
+        location_id:
+          type: string
+      required:
+        - location_id
+      type: object
+    RemoveUserRequest:
+      description: Request to remove a user
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+      required:
+        - email
+      type: object
     Role:
       description: User roles in the system
       enum:
@@ -259,38 +349,6 @@ components:
       items:
         type: string
       type: array
-    AddUserRequest:
-      description: Request to add a new user
-      properties:
-        name:
-          type: string
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        role:
-          $ref: "#/components/schemas/Role"
-      required:
-        - name
-        - email
-        - role
-      type: object
-    AddUserResponse:
-      description: Response after adding a user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-      type: object
-    GetUserRequest:
-      description: Request to get a list of users with pagination
-      properties:
-        limit:
-          default: 50
-          maximum: 100
-          minimum: 1
-          type: integer
-        offset:
-          description: The email address to start the list from
-          $ref: "#/components/schemas/EmailAddress"
-      type: object
     FilterRecruitersRequest:
       type: object
       properties:
@@ -305,14 +363,6 @@ components:
           type: string
       required:
         - prefix
-    RemoveUserRequest:
-      description: Request to remove a user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-      required:
-        - email
-      type: object
 
 info:
   description: Vetchi APIs that work across multiple clients
@@ -509,6 +559,86 @@ paths:
         "200":
           description: User removed successfully or user not found
       summary: Remove User
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/add-location:
+    post:
+      description: Add a new location. This method is available only for users with the ADMIN role.
+      operationId: employer-add-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddLocationRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddLocationResponse"
+          description: Location added successfully
+      summary: Add Location
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+
+  /employer/get-locations:
+    post:
+      description: Get a list of locations with pagination. This method is available only for users with the ADMIN role.
+      operationId: employer-get-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetLocationsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    location_id:
+                      type: string
+                    country:
+                      type: string
+                    state:
+                      type: string
+                    city:
+                      type: string
+                    postal_address:
+                      type: string
+          description: OK
+      summary: Get Locations
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+
+  /employer/remove-location:
+    post:
+      description: Remove a location. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location removed successfully or location not found
+      summary: Remove Location
       tags:
         - Employer
       security:
