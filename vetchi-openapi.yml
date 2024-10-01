@@ -491,7 +491,7 @@ paths:
       summary: SignIn
       tags:
         - Employer
-  /employer/users:
+  /employer/get-users:
     post:
       description: Retrieve a list of users associated with the employer, sorted by their email address.
       operationId: employer-get-users
