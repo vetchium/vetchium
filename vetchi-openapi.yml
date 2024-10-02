@@ -102,7 +102,7 @@ components:
           type: string
           format: email
           description: Hiring manager for the job
-        onsite_locations:
+        onsite_location_ids:
           type: array
           items:
             type: string
@@ -138,12 +138,26 @@ components:
         salary_max:
           type: number
           description: Maximum salary
-        department:
+        cost_center_id:
           type: string
-          description: Department for the job
+          description: Cost Center / Department for the job
         notes:
           type: string
           description: Additional notes
+        potential_team_mates_ids:
+          type: array
+          items:
+            type: string
+          description: List of potential team mates ids
+        max_hops:
+          type: integer
+          description: Maximum hops to allow to apply from the potential team mates network
+          minimum: 2
+          maximum: 5
+        internal_only:
+          type: boolean
+          default: false
+          description: If true, the opening will not be visible to the public
       required:
         - title
         - positions
