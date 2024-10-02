@@ -249,6 +249,22 @@ components:
           description: The authentication token
           type: string
       type: object
+    FilterEmployeesRequest:
+      properties:
+        prefix:
+          type: string
+          description: The prefix to filter by. The filtering is case insensitive and will match any part of the name or email.
+          minLength: 3
+          maxLength: 255
+    FilteredEmployee:
+      description: Filtered employee
+      example:
+        - name: John Doe
+          email: john.doe@example.com
+          vetchiHandle: johndoe
+        - name: Jane Smith
+          email: jane.smith@example.com
+          vetchiHandle: janesmith-123123
     FilterOpeningsRequest:
       properties:
         hiring_manager_emails:
@@ -1001,6 +1017,31 @@ paths:
                 $ref: "#/components/schemas/ValidationErrors"
           description: Bad Request - Validation errors
       summary: Create Opening
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/filter-employees:
+    post:
+      description: An API to use for autocompleting employees of the given organization, where the user personal vetchi handle is also obtained.
+      operationId: employer-filter-employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterEmployeesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FilteredEmployee"
+      summary: Filter Employees
       tags:
         - Employer
       security:
