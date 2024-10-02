@@ -69,12 +69,105 @@ components:
         email:
           $ref: "#/components/schemas/EmailAddress"
       type: object
+    JobType:
+      type: string
+      enum:
+        - FULL_TIME
+        - PART_TIME
+        - CONTRACT
+        - INTERNSHIP
+        - UNSPECIFIED
+      description: Type of job
+    CreateOpeningRequest:
+      description: Request to create a new opening
+      type: object
+      properties:
+        title:
+          type: string
+          description: The job title
+        positions:
+          type: integer
+          description: Number of positions available
+        jd:
+          type: string
+          description: Job description
+        job_type:
+          $ref: "#/components/schemas/JobType"
+          description: Job type
+        recruiter:
+          type: string
+          format: email
+          description: Recruiter for the job
+        hiring_manager:
+          type: string
+          format: email
+          description: Hiring manager for the job
+        onsite_locations:
+          type: array
+          items:
+            type: string
+          description: List of location_ids for the onsite locations that are admissible for this opening
+        remote_locations_countries:
+          type: array
+          items:
+            type: string
+          description: Remote locations by countries
+        remote_locations_timezones:
+          type: array
+          items:
+            type: string
+          description: Remote locations by timezones
+        yoe_min:
+          type: integer
+          description: Minimum years of experience
+          minimum: 0
+          maximum: 80
+        yoe_max:
+          type: integer
+          description: Maximum years of experience
+          minimum: 0
+          maximum: 80
+        educational_qualification:
+          $ref: "#/components/schemas/EducationalQualification"
+        currency:
+          type: string
+          description: Currency for the salary
+        salary_min:
+          type: number
+          description: Minimum salary
+        salary_max:
+          type: number
+          description: Maximum salary
+        department:
+          type: string
+          description: Department for the job
+        notes:
+          type: string
+          description: Additional notes
+      required:
+        - title
+        - positions
+        - job_type
+        - jd
+        - educational_qualification
+        - yoe_min
+        - yoe_max
+        - recruiter
+        - hiring_manager
     ClientId:
       description: The client ID, usually a website domain
       example: example.com
       maxLength: 255
       minLength: 3
       type: string
+    EducationalQualification:
+      description: Educational qualification
+      enum:
+        - BACHELORS
+        - MASTERS
+        - DOCTORATE
+        - DOESNT_MATTER
+        - UNSPECIFIED
     EmailAddress:
       description: An email address
       example: test@example.com
@@ -836,3 +929,25 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
+  /employer/create-opening:
+    post:
+      description: Create a new opening. This method is available only for users with the ADMIN role.
+      operationId: employer-create-opening
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpeningRequest"
+        required: true
+      responses:
+        "200":
+          description: Opening created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors
+      summary: Create Opening
+      tags:
+        - Employer
