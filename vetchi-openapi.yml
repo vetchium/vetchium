@@ -85,12 +85,41 @@ components:
         title:
           type: string
           description: The job title
+          example: Senior Staff Engineer
         positions:
           type: integer
           description: Number of positions available
+          minimum: 1
+          maximum: 100
         jd:
           type: string
-          description: Job description
+          description: Detailed job description in markdown format
+          minLength: 10
+          maxLength: 10000
+          example: |
+            **Responsibilities**
+            * Architecting and developing web, software, mobile apps, prototypes, or proofs of concepts (POC’s)
+            * Leading the gathering of functional requirements, developing technical specifications, and project & test planning
+            * Acting as the technical subject matter expert: Mentoring fellow engineers, demonstrating technical expertise, and leading a small team solving challenging programming and design problems
+            * Roughly 40-60% hands-on coding
+            * Generate technical documentation and PowerPoint presentations to communicate architectural and design options, and educate development teams and business users
+            * Work cross-functionally with various teams including: product management, various product lines, and/or business units to drive forward results
+            * Demonstrate a passion for developing well architected, elegant, web and/or mobile apps
+            * Experience with Agile Development, SCRUM, or Extreme Programming methodologies
+
+            **Qualifications**
+
+            * 8+ years experience designing and developing web, software, or mobile applications.
+            * Strong leadership experience: Leading meetings, presenting, technical go to person, and cross-functional leader.
+            * BS/MS in computer science or equivalent work experience.
+            * Expertise with any of the following Object Oriented Languages (OOD): Java/J2EE.
+            * Expertise with the entire Software Development Life Cycle (SDLC).
+            * 3+ years experience with web services (consuming or creating) with REST.
+            * Excellent communication skills: Demonstrated ability to explain complex technical issues to both technical and non-technical audiences.
+            * Expertise in the Software design/architecture process.
+            * Expertise with unit testing & Test Driven Development (TDD).
+            * Business Acumen - strategic thinking & strategy development.
+            * Building strong teams - set and evangelize vision, facilitative leadership, attract and retain key talent.
         job_type:
           $ref: "#/components/schemas/JobType"
           description: Job type
@@ -98,10 +127,12 @@ components:
           type: string
           format: email
           description: Recruiter for the job
+          example: recruiter.bob@example.com
         hiring_manager:
           type: string
           format: email
           description: Hiring manager for the job
+          example: hiringmanager.alice@example.com
         onsite_location_ids:
           type: array
           items:
@@ -122,6 +153,7 @@ components:
           description: Minimum years of experience
           minimum: 0
           maximum: 80
+          example: 8
         yoe_max:
           type: integer
           description: Maximum years of experience
@@ -129,15 +161,21 @@ components:
           maximum: 80
         educational_qualification:
           $ref: "#/components/schemas/EducationalQualification"
+
         currency:
           type: string
           description: Currency for the salary
-        salary_min:
+          example: USD
+        salary_range_min:
           type: number
           description: Minimum salary
-        salary_max:
+          minimum: 1
+          example: 175000
+        salary_range_max:
           type: number
           description: Maximum salary
+          minimum: 2
+          example: 200000
         cost_center_id:
           type: string
           description: Cost Center / Department for the job
@@ -151,7 +189,7 @@ components:
           description: List of potential team mates ids
         max_hops:
           type: integer
-          description: Maximum hops to allow to apply from the potential team mates network
+          description: Maximum hops upto which people in potential team mates network can apply
           minimum: 2
           maximum: 5
         internal_only:
@@ -177,8 +215,8 @@ components:
     EducationalQualification:
       description: Educational qualification
       enum:
-        - BACHELORS
-        - MASTERS
+        - UNDER_GRADUATE
+        - POST_GRADUATE
         - DOCTORATE
         - DOESNT_MATTER
         - UNSPECIFIED
@@ -945,7 +983,7 @@ paths:
         - OAuth2: []
   /employer/create-opening:
     post:
-      description: Create a new opening. This method is available only for users with the ADMIN role.
+      description: Create a new Job Opening. This method is available only for users with the ADMIN role.
       operationId: employer-create-opening
       requestBody:
         content:
@@ -965,3 +1003,6 @@ paths:
       summary: Create Opening
       tags:
         - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
