@@ -35,7 +35,7 @@ components:
           type: string
           description: The prefix for case insensitive search on either the Applicant name or the current company
           example: jeff google
-        color_filter:
+        color_filters:
           type: array
           items:
             $ref: "#/components/schemas/ApplicationLabelColor"
@@ -50,6 +50,8 @@ components:
           type: string
           description: The application_id to start the list from
       type: object
+      required:
+        - opening_id
     VouchingUser:
       description: A user who has vouched for an applicant
       properties:
