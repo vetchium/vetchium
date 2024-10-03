@@ -18,6 +18,13 @@ components:
             admin: Grants admin access
 
   schemas:
+    ShortlistApplicationRequest:
+      description: Request to Shortlist an Application
+      properties:
+        application_id:
+          type: string
+          description: The ID of the application to shortlist
+      type: object
     RejectApplicationRequest:
       description: Request to Reject an Application
       properties:
@@ -35,6 +42,9 @@ components:
     FilterApplicationsRequest:
       description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be ordered by application_id.
       properties:
+        application_state:
+          $ref: "#/components/schemas/ApplicationState"
+          default: APPLIED
         opening_id:
           type: string
           description: The ID of the opening
@@ -1186,6 +1196,27 @@ paths:
         "409":
           description: If the Application could not be rejected for some reason, for example the Application is already Shortlisted in parallel.
       summary: Reject Application
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/shortlist-application:
+    post:
+      description: Shortlist an application for a given opening.
+      operationId: employer-shortlist-application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShortlistApplicationRequest"
+        required: true
+      responses:
+        "200":
+          description: Application shortlisted successfully. TODO Should we return the candidacy_id ?
+        "409":
+          description: If the Application could not be shortlisted for some reason, for example the Application is already Rejected in parallel.
+      summary: Shortlist Application
       tags:
         - Employer
       security:
