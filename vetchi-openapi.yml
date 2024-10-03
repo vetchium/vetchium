@@ -18,6 +18,13 @@ components:
             admin: Grants admin access
 
   schemas:
+    RejectApplicationRequest:
+      description: Request to Reject an Application
+      properties:
+        application_id:
+          type: string
+          description: The ID of the application to reject
+      type: object
     ApplicationLabelColor:
       type: string
       enum:
@@ -52,19 +59,33 @@ components:
       type: object
       required:
         - opening_id
-    VouchingUser:
-      description: A user who has vouched for an applicant
+    VouchState:
+      type: string
+      enum:
+        - SOUGHT
+        - VOUCHED
+        - REJECTED
+    Vouch:
+      description: Details of a Vouch
       properties:
-        name:
+        voucher_name:
           type: string
-        vetchi_handle:
+        voucher_vetchi_handle:
           type: string
-        current_position:
+        voucher_current_position:
           type: string
-        current_company:
+        voucher_current_company:
           type: string
+        vouch_state:
+          $ref: "#/components/schemas/VouchState"
+    ApplicationState:
+      type: string
+      enum:
+        - APPLIED
+        - SHORTLISTED
+        - REJECTED
     FilteredApplication:
-      description: An Application that matched the filters
+      description: An Application that matches the filters
       properties:
         application_id:
           type: string
@@ -83,10 +104,10 @@ components:
         resume_url:
           type: string
           description: The URL to the applicant's resume
-        vouched_by:
+        vouches:
           type: array
           items:
-            $ref: "#/components/schemas/VouchingUser"
+            $ref: "#/components/schemas/Vouch"
         referred_by:
           type: object
           description: The user who referred the applicant
@@ -96,7 +117,6 @@ components:
             email:
               type: string
               description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
-
     AddLocationRequest:
       description: Request to add a new location
       properties:
@@ -1150,5 +1170,24 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-            
-
+  /employer/reject-application:
+    post:
+      description: Reject an application for a given opening.
+      operationId: employer-reject-application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectApplicationRequest"
+        required: true
+      responses:
+        "200":
+          description: Application rejected successfully
+        "409":
+          description: If the Application could not be rejected for some reason, for example the Application is already Shortlisted in parallel.
+      summary: Reject Application
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
