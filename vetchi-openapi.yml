@@ -18,6 +18,83 @@ components:
             admin: Grants admin access
 
   schemas:
+    ApplicationLabelColor:
+      type: string
+      enum:
+        - RED
+        - GREEN
+        - BLUE
+        - MAGENTA
+    FilterApplicationsRequest:
+      description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be ordered by application_id.
+      properties:
+        opening_id:
+          type: string
+          description: The ID of the opening
+        search_prefix:
+          type: string
+          description: The prefix for case insensitive search on either the Applicant name or the current company
+          example: jeff google
+        color_filter:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationLabelColor"
+          description: The color filters to apply to the applications. ANY of the given colors will be selected as a match.
+        limit:
+          type: integer
+          description: Number of applications to return
+          minimum: 1
+          maximum: 100
+          default: 50
+        offset:
+          type: string
+          description: The application_id to start the list from
+      type: object
+    VouchingUser:
+      description: A user who has vouched for an applicant
+      properties:
+        name:
+          type: string
+        vetchi_handle:
+          type: string
+        current_position:
+          type: string
+        current_company:
+          type: string
+    FilteredApplication:
+      description: An Application that matched the filters
+      properties:
+        application_id:
+          type: string
+        applicant_name:
+          type: string
+        last_company:
+          type: string
+        last_position:
+          type: string
+        vetchi_handle:
+          type: string
+        color_filters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationLabelColor"
+        resume_url:
+          type: string
+          description: The URL to the applicant's resume
+        vouched_by:
+          type: array
+          items:
+            $ref: "#/components/schemas/VouchingUser"
+        referred_by:
+          type: object
+          description: The user who referred the applicant
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
+
     AddLocationRequest:
       description: Request to add a new location
       properties:
@@ -1047,3 +1124,29 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
+  /employer/filter-applications:
+    post:
+      description: Get a list of applications for a given opening.
+      operationId: employer-filter-applications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterApplicationsRequest"
+      responses:
+        "200":
+          description: "List of Applications that match the filter"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FilteredApplication"
+      summary: Filter Applications
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+            
+
