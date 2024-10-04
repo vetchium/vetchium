@@ -18,8 +18,23 @@ components:
             admin: Grants admin access
 
   schemas:
+    UpdateInterviewFeedbackRequest:
+      description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+        evaluation_report:
+          $ref: "#/components/schemas/EvaluationReport"
+        evaluation_result:
+          $ref: "#/components/schemas/EvaluationResult"
+        feedback_to_candidate:
+          type: string
+          description: The feedback that should be shared with the candidate
+          minLength: 10
+          maxLength: 1000
     GetInterviewDetailsRequest:
-      description: Request to get interview details
+      description: Get Interview details
       properties:
         interview_id:
           type: string
@@ -1558,6 +1573,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/InterviewDetails"
       summary: Get Interview Details
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/update-interview-feedback:
+    post:
+      description: Update the feedback for an interview.
+      operationId: employer-update-interview-feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInterviewFeedbackRequest"
+        required: true
+      responses:
+        "200":
+          description: Interview feedback updated successfully
+        "400":
+          description: Bad Request - Validation errors
+      summary: Update Interview Feedback
       tags:
         - Employer
       security:
