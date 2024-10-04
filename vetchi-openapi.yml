@@ -18,6 +18,85 @@ components:
             admin: Grants admin access
 
   schemas:
+    GetCandidacyRequest:
+      description: Request to get a candidacy
+      properties:
+        candidacy_id:
+          type: string
+          description: The candidacy ID
+      required:
+        - candidacy_id
+    Candidacy:
+      description: Candidacy
+      properties:
+        candidacy_id:
+          type: string
+          description: The candidacy ID
+        name:
+          type: string
+          description: The candidate name
+        last_position:
+          type: string
+          description: The candidate's last position
+        last_company:
+          type: string
+          description: The candidate's last company
+        shortlisted_openings:
+          type: array
+          description: List of openings the candidate has been shortlisted for
+          items:
+            $ref: "#/components/schemas/ShortlistedOpening"
+        interviews:
+          type: array
+          description: List of interviews for the candidacy
+          items:
+            $ref: "#/components/schemas/Interview"
+      type: object
+    Interview:
+      description: Interview
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+        status:
+          $ref: "#/components/schemas/InterviewStatus"
+          description: The interview status
+        interviewers:
+          type: array
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+        at:
+          type: string
+          format: date-time
+          description: The date and time of the interview
+        evaluation_status:
+          $ref: "#/components/schemas/EvaluationStatus"
+        evaluation_report:
+          description: The evaluation report
+          type: string
+        evaluation_result:
+          description: The evaluation result
+          $ref: "#/components/schemas/EvaluationResult"
+      type: object
+    EvaluationResult:
+      type: string
+      enum:
+        - STRONG_YES
+        - YES
+        - NO
+        - STRONG_NO
+    EvaluationStatus:
+      type: string
+      enum:
+        - EVALUATION_PENDING
+        - EVALUATION_COMPLETED
+    InterviewStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - COMPLETED
+        - CANCELLED
     FilterCandidatesRequest:
       description: Request to get a list of Candidates across multiple openings.
       properties:
@@ -1291,5 +1370,26 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-
-    
+  /employer/get-candidacy:
+    post:
+      description: Get candidacy details for a given candidacy_id.
+      operationId: employer-get-candidacy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCandidacyRequest"
+        required: true
+      responses:
+        "200":
+          description: Candidacy details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidacy"
+      summary: Get Candidacy
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
