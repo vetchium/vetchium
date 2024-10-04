@@ -18,6 +18,60 @@ components:
             admin: Grants admin access
 
   schemas:
+    GetInterviewDetailsRequest:
+      description: Request to get interview details
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+      type: object
+    InterviewDetails:
+      description: Details of an interview
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+        interview_status:
+          type: string
+          description: The status of the interview
+        openings:
+          type: array
+          description: List of openings for the interview
+          items:
+            $ref: "#/components/schemas/ShortlistedOpening"
+        candidacy_id:
+          type: string
+          description: The candidacy ID
+        start_time:
+          type: string
+          format: date-time
+          description: The start time of the interview
+        end_time:
+          type: string
+          format: date-time
+          description: The end time of the interview
+        candidate_name:
+          type: string
+          description: The name of the candidate
+        candidate_current_company:
+          type: string
+          description: The current company of the candidate
+        interviewers:
+          type: array
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+        evaluation_status:
+          $ref: "#/components/schemas/EvaluationStatus"
+        evaluation_report:
+          $ref: "#/components/schemas/EvaluationReport"
+        evaluation_result:
+          $ref: "#/components/schemas/EvaluationResult"
+        feedback_to_candidate:
+          type: string
+          description: The feedback that should be shared with the candidate
+          minLength: 10
+          maxLength: 1000
     CreateInterviewResponse:
       description: Response after creating an interview
       properties:
@@ -127,6 +181,24 @@ components:
       enum:
         - EVALUATION_PENDING
         - EVALUATION_COMPLETED
+    EvaluationReport:
+      type: object
+      properties:
+        positives:
+          type: string
+          description: The positives of the applicant
+          minLength: 10
+          maxLength: 2048
+        negatives:
+          type: string
+          description: The negatives of the applicant
+          minLength: 10
+          maxLength: 2048
+        summary:
+          type: string
+          description: The summary of the evaluation report
+          minLength: 10
+          maxLength: 2048
     InterviewStatus:
       type: string
       enum:
@@ -142,7 +214,7 @@ components:
           example: jeff google
         offset:
           type: string
-          description: The applicant_id to start the list from
+          description: The candidate_id to start the list from
         limit:
           type: integer
           description: Number of candidates to return
@@ -177,6 +249,20 @@ components:
           description: The opening ID
         title:
           type: string
+        hiring_manager_name:
+          type: string
+          description: The hiring manager name
+        hiring_manager_email:
+          type: string
+          format: email
+          description: The hiring manager email
+        recruiter_name:
+          type: string
+          description: The recruiter name
+        recruiter_email:
+          type: string
+          format: email
+          description: The recruiter email
     ShortlistApplicationRequest:
       description: Request to Shortlist an Application
       properties:
@@ -1449,6 +1535,29 @@ paths:
         "400":
           description: Bad Request - Validation errors
       summary: Create Interview
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/get-interview-details:
+    post:
+      description: Get interview details for a given interview_id.
+      operationId: employer-get-interview-details
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetInterviewDetailsRequest"
+        required: true
+      responses:
+        "200":
+          description: Interview details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewDetails"
+      summary: Get Interview Details
       tags:
         - Employer
       security:
