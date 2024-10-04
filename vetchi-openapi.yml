@@ -18,6 +18,33 @@ components:
             admin: Grants admin access
 
   schemas:
+    ResetPasswordRequest:
+      description: Request to reset the password
+      properties:
+        token:
+          type: string
+          description: The token to reset the password
+        new_password:
+          type: string
+          description: The new password
+    ForgotPasswordRequest:
+      description: Request to send a password reset
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address associated with the account for which the password needs to be reset
+      type: object
+    ChangePasswordRequest:
+      description: Change the password for the currently logged in user
+      properties:
+        old_password:
+          description: The old password
+          $ref: "#/components/schemas/Password"
+        new_password:
+          description: The new password
+          $ref: "#/components/schemas/Password"
+      type: object
     CancelInterviewRequest:
       description: Cancel an Interview for a given interview_id.
       properties:
@@ -1634,3 +1661,74 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
+  /employer/change-password:
+    post:
+      description: Change the password for the current employer.
+      operationId: employer-change-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password changed successfully
+      summary: Change Password
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/forgot-password:
+    post:
+      description: Send a password reset email to the given email address, if the email address is associated with an account. This API will be a no-op for email addresses that are not associated with an account. This API will be a no-op for email addresses that belong to an Organization that has set up SSO.
+      operationId: employer-forgot-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password reset email sent successfully
+      summary: Forgot Password
+      tags:
+        - Employer
+  /employer/reset-password:
+    post:
+      description: Reset the password for the given token.
+      operationId: employer-reset-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password reset successfully
+      summary: Reset Password
+      tags:
+        - Employer
+    get:
+      description: Show a HTML page with a form to reset the password for the given token.
+      operationId: employer-reset-password-page
+      parameters:
+        - name: token
+          in: path
+          description: The token to reset the password
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: HTML page with a form to reset the password
+          content:
+            text/html:
+              schema:
+                type: string
+      summary: Reset Password Page
+      tags:
+        - Employer
