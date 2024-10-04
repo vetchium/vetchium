@@ -18,6 +18,50 @@ components:
             admin: Grants admin access
 
   schemas:
+    FilterCandidatesRequest:
+      description: Request to get a list of Candidates across multiple openings.
+      properties:
+        search_prefix:
+          type: string
+          description: The prefix for case insensitive search on either the Applicant name or the last Employer name
+          example: jeff google
+        offset:
+          type: string
+          description: The applicant_id to start the list from
+        limit:
+          type: integer
+          description: Number of candidates to return
+          minimum: 1
+          maximum: 100
+          default: 50
+    FilteredCandidate:
+      description: A candidate that matches the filters
+      properties:
+        candidacy_id:
+          type: string
+          description: The candidacy ID
+        name:
+          type: string
+          description: The candidate name
+        lastPosition:
+          type: string
+          description: The candidate's last position
+        lastCompany:
+          type: string
+          description: The candidate's last company
+        shortlistedOpenings:
+          type: array
+          description: List of openings the candidate has been shortlisted for
+          items:
+            $ref: "#/components/schemas/ShortlistedOpening"
+    ShortlistedOpening:
+      description: An opening that the candidate has been shortlisted for
+      properties:
+        id:
+          type: string
+          description: The opening ID
+        title:
+          type: string
     ShortlistApplicationRequest:
       description: Request to Shortlist an Application
       properties:
@@ -1222,3 +1266,30 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
+  /employer/filter-candidates:
+    post:
+      description: Filter candidates based on various criteria and ordered by candidacy_id
+      operationId: employer-filter-candidates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterCandidatesRequest"
+        required: true
+      responses:
+        "200":
+          description: List of candidates that match the filter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FilteredCandidate"
+      summary: Filter Candidates
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+
+    
