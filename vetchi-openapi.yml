@@ -18,6 +18,22 @@ components:
             admin: Grants admin access
 
   schemas:
+    CancelInterviewRequest:
+      description: Cancel an Interview for a given interview_id.
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+        send_cancellation_to_candidate:
+          type: boolean
+          default: false
+          description: Whether to send a cancellation notice to the candidate
+        cancellation_body:
+          type: string
+          description: The body of the cancellation notice. Only sent if send_cancellation_to_candidate is set to true. In future, could come from a mail template.
+          minLength: 10
+          maxLength: 1000
+      type: object
     UpdateInterviewFeedbackRequest:
       description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
       properties:
@@ -1594,6 +1610,25 @@ paths:
         "400":
           description: Bad Request - Validation errors
       summary: Update Interview Feedback
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/cancel-interview:
+    post:
+      description: Cancel an interview for a given interview_id.
+      operationId: employer-cancel-interview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelInterviewRequest"
+        required: true
+      responses:
+        "200":
+          description: Interview marked as Cancelled
+      summary: Cancel Interview
       tags:
         - Employer
       security:
