@@ -18,6 +18,42 @@ components:
             admin: Grants admin access
 
   schemas:
+    CreateInterviewResponse:
+      description: Response after creating an interview
+      properties:
+        interview_id:
+          type: string
+          description: The interview ID
+      type: object
+    CreateInterviewRequest:
+      description: Request to create a new interview
+      properties:
+        candidacy_id:
+          type: string
+          description: The candidacy ID
+        interviewers:
+          type: array
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+        start_time:
+          type: string
+          format: date-time
+          description: The start time of the interview
+        end_time:
+          type: string
+          format: date-time
+          description: The end time of the interview. The duration between start_time and end_time will be the duration and cannot be more than 8 hours.
+        send_appointment:
+          type: boolean
+          default: false
+          description: Whether to send an appointment confirmation to the candidate
+        interview_appointment_body:
+          type: string
+          description: The body of the interview appointment confirmation. Only sent if send_appointment is set to true. In future, could come from a mail template.
+          minLength: 10
+          maxLength: 1000
+      type: object
     GetCandidacyRequest:
       description: Request to get a candidacy
       properties:
@@ -1388,6 +1424,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Candidacy"
       summary: Get Candidacy
+      tags:
+        - Employer
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+  /employer/create-interview:
+    post:
+      description: Create a new interview for a given candidacy_id.
+      operationId: employer-create-interview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterviewRequest"
+        required: true
+      responses:
+        "200":
+          description: Interview created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInterviewResponse"
+        "400":
+          description: Bad Request - Validation errors
+      summary: Create Interview
       tags:
         - Employer
       security:
