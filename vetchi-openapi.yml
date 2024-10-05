@@ -3,6 +3,17 @@
 # Remember to sort this yaml file alphabetically by keys after making changes
 components:
   securitySchemes:
+    HubAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: string
+    TFAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: string
+
+    ### Hub things above
+
     BearerAuth:
       type: http
       scheme: bearer
@@ -18,6 +29,48 @@ components:
             admin: Grants admin access
 
   schemas:
+    LoginRequest:
+      description: Request to login
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address to use for authentication
+        password:
+          type: string
+          description: The password for the email address
+      type: object
+      required:
+        - email
+        - password
+    LoginResponse:
+      properties:
+        tfa_token:
+          type: string
+          description: The token for TFA
+        valid_till:
+          type: string
+          format: date-time
+          description: The time till when the token is valid
+    TFAuthRequest:
+      properties:
+        tfa_code:
+          type: string
+          description: The code from the TFA email
+      type: object
+      required:
+        - tfa_code
+    TFAuthResponse:
+      properties:
+        session_token:
+          type: string
+          description: The token for the session
+        valid_till:
+          type: string
+          format: date-time
+          description: The time till when the token is valid
+    ### Hub things above
+
     ResetPasswordRequest:
       description: Request to reset the password
       properties:
@@ -1243,7 +1296,6 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-
   /employer/get-locations:
     post:
       description: Get a list of locations with pagination. This method is available only for users with the ADMIN role.
@@ -1280,7 +1332,6 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-
   /employer/remove-location:
     post:
       description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
@@ -1717,7 +1768,7 @@ paths:
       operationId: employer-reset-password-page
       parameters:
         - name: token
-          in: path
+          in: query
           description: The token to reset the password
           required: true
           schema:
@@ -1732,3 +1783,62 @@ paths:
       summary: Reset Password Page
       tags:
         - Employer
+
+  #### hub things below
+
+  /hub/login:
+    post:
+      description: Login to the social network
+      operationId: hub-login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Unauthorized - Invalid credentials
+      summary: Login
+      tags:
+        - Hub
+  /hub/tfa:
+    post:
+      tags:
+        - Hub
+      description: Two factor authentication with the code sent to the email address
+      operationId: hub-tfa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TFAuthRequest"
+      responses:
+        "200":
+          description: TFA successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TFAuthResponse"
+        "401":
+          description: Unauthorized - Invalid credentials
+      security:
+        - TFAuth: []
+  /hub/logout:
+    post:
+      description: Logout from the social network
+      operationId: hub-logout
+      responses:
+        "200":
+          description: Logout successful
+      summary: Logout
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
