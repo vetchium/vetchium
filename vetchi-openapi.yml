@@ -1988,3 +1988,38 @@ paths:
         - Hub
       security:
         - HubAuth: []
+  /hub/profile-picture:
+    get:
+      description: Get the profile picture for the loggedin user
+      operationId: hub-get-profile-picture
+      responses:
+        "200":
+          description: Profile picture
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Get Profile Picture
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+    put:
+      description: Update the profile picture for the loggedin user
+      operationId: hub-update-profile-picture
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "200":
+          description: Profile picture updated successfully
+      summary: Update Profile Picture
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
