@@ -69,6 +69,54 @@ components:
           type: string
           format: date-time
           description: The time till when the token is valid
+    AutoBiography:
+      properties:
+        name_en:
+          type: string
+          description: The name of the user
+          minLength: 1
+          maxLength: 128
+        about_me:
+          type: string
+          description: The about me of the user
+          minLength: 1
+          maxLength: 1024
+        websites:
+          type: array
+          description: The websites of the user
+          items:
+            type: string
+            format: url
+            minLength: 1
+            maxLength: 255
+        names_in_other_languages:
+          type: array
+          description: The names of the user in other languages
+          items:
+            type: object
+            properties:
+              language:
+                type: string
+                description: Should be a valid IETF BCP 47 language tag.
+              name:
+                type: string
+                description: The name of the user in the given language
+      type: object
+      required:
+        - name
+        - about_me
+    VetchiHandle:
+      properties:
+        handle:
+          type: string
+          description: The vetchi handle of the user
+          minLength: 6 # May be shorter in future
+          maxLength: 32
+          pattern: "^[a-zA-Z0-9_-]+$"
+      type: object
+      required:
+        - handle
+
     ### Hub things above
 
     ResetPasswordRequest:
@@ -1810,6 +1858,7 @@ paths:
         - Hub
   /hub/tfa:
     post:
+      summary: Two Factor Authentication
       tags:
         - Hub
       description: Two factor authentication with the code sent to the email address
@@ -1838,6 +1887,103 @@ paths:
         "200":
           description: Logout successful
       summary: Logout
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/vetchi-handle:
+    get:
+      description: Get the vetchi handle for the loggedin user
+      operationId: hub-vetchi-handle
+      responses:
+        "200":
+          description: Vetchi handle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VetchiHandle"
+      summary: Get Vetchi Handle of the loggedin user
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+    put:
+      description: Update the vetchi handle for the loggedin user
+      operationId: hub-update-vetchi-handle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VetchiHandle"
+        required: true
+      responses:
+        "200":
+          description: Vetchi handle updated successfully
+        "400":
+          description: Bad Request - Validation errors. In future, we may have different error codes for different tiers of users as the field limits (3 letter handle) may change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+      summary: Update Vetchi Handle
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/check-handle-availability:
+    get:
+      description: Check if a vetchi handle is available
+      operationId: hub-check-handle-availability
+      parameters:
+        - name: handle
+          in: query
+          description: Check if handle is available. Having this as query param instead of request body is to help with caching.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Vetchi handle is available
+      summary: Check Vetchi Handle Availability
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/auto-biography:
+    get:
+      description: Get the auto-biography for the loggedin user
+      operationId: hub-auto-biography
+      responses:
+        "200":
+          description: Auto-biography
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoBiography"
+      summary: Get Auto-biography
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+    put:
+      description: Update the auto-biography for the loggedin user
+      operationId: hub-update-auto-biography
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoBiography"
+        required: true
+      responses:
+        "200":
+          description: Auto-biography updated successfully
+        "400":
+          description: Bad Request - Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+      summary: Update Auto-biography
       tags:
         - Hub
       security:
