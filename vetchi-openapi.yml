@@ -214,7 +214,71 @@ components:
           type: string
           description: The ID of the updated work history
       type: object
-
+    FindJobOpeningsRequest:
+      description: Request to find job openings based on ANY of the below filters. For each filter, we will check if the opening has ANY of the values specified in the filter.
+      properties:
+        job_types:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobType"
+          description: The job types to filter by
+        locations:
+          type: array
+          description: The locations to filter by. Can pass the names of Country, State/Province, City. The location_id that is used between this and the create_opening must remain consistent. It is to be decided how to maintain a common source of truth between these two TODO
+          items:
+            type: string
+        companies:
+          type: array
+          description: The companies to filter by. The company_id that is used between this and the create_opening must remain consistent. It is to be decided how to maintain a common source of truth between these two TODO
+          items:
+            type: string
+        remote_accepted:
+          type: boolean
+          description: Whether the opening allows people to work remotely
+          default: false
+        yoe_min:
+          type: integer
+          description: Minimum range for the experience filter
+          minimum: 0
+          maximum: 80
+          default: 0
+        yoe_max:
+          type: integer
+          description: Maximum range for the experience filter
+          minimum: 0
+          maximum: 80
+          default: 80
+        educational_qualifications:
+          type: array
+          description: The educational qualifications to filter by. If this value is not passed, then Openings with all educational qualifications will be returned.
+          items:
+            $ref: "#/components/schemas/EducationalQualification"
+          default:
+            - UNDER_GRADUATE
+            - POST_GRADUATE
+            - DOCTORATE
+            - DOESNT_MATTER
+            - UNSPECIFIED
+    OpeningPublicInfo:
+      properties:
+        opening_id:
+          type: string
+          description: The ID of the opening
+        title:
+          type: string
+          description: The title of the opening
+        company_name:
+          type: string
+          description: The name of the company
+        company_handle:
+          type: string
+          description: The handle of the company
+        company_logo:
+          type: string
+          format: url
+          description: The logo of the company
+        jd:
+          type: string
     ### Hub things above
 
     ResetPasswordRequest:
@@ -2197,6 +2261,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateWorkHistoryResponse"
       summary: Update Work History
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/find-job-openings:
+    post:
+      description: Find job openings based on various criteria
+      operationId: hub-find-job-openings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindJobOpeningsRequest"
+        required: true
+      responses:
+        "200":
+          description: List of job openings that match the filter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpeningPublicInfo"
+      summary: Find Job Openings
       tags:
         - Hub
       security:
