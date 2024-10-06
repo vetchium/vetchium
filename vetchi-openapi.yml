@@ -116,6 +116,104 @@ components:
       type: object
       required:
         - handle
+    GetWorkHistoryRequest:
+      description: Request to get the work history for the logged in user
+      properties:
+        language_id:
+          type: string
+          description: The language code for the language on which the work history should be fetched. Should be a valid IETF BCP 47 language tag. If the company has not set a name for the requested language, then the name in the default language of the company will be returned.
+      type: object
+    WorkHistory:
+      properties:
+        work_history_id:
+          type: string
+          description: The ID of the work history
+        company_name:
+          type: string
+          description: The name of the company in the requested language in the GetWorkHistoryRequest. If the company name is not set for the requested language, then the name in the default language of the company will be returned.
+        job_title:
+          type: string
+          description: The job title
+        start_date:
+          type: string
+          format: date
+          description: The start date of the job
+        end_date:
+          type: string
+          format: date
+          description: The end date of the job
+        logo:
+          type: string
+          format: url
+          description: The logo of the company
+      type: object
+    AddWorkHistoryRequest:
+      description: Request to add a new work history for the logged in user
+      properties:
+        company_handle:
+          type: string
+          description: The handle of the company within Vetchi. This is a unique identifier for the company and is used in the API. This is different from the company_name used in the UI and should not be confused with the company_id which is used in the database.
+        job_title:
+          type: string
+          description: The job title
+        start_date:
+          type: string
+          format: date
+          description: The start date of the job
+        end_date:
+          type: string
+          format: date
+          description: The end date of the job. If not passed, it will be considered as current job. There can be multiple current jobs for a user.
+      type: object
+      required:
+        - company_handle
+        - job_title
+        - start_date
+    AddWorkHistoryResponse:
+      properties:
+        work_history_id:
+          type: string
+          description: The ID of the newly created work history
+      type: object
+    RemoveWorkHistoryRequest:
+      description: Request to remove a work history for the logged in user
+      properties:
+        work_history_id:
+          type: string
+          description: The ID of the work history to remove
+      type: object
+    UpdateWorkHistoryRequest:
+      description: Request to update a work history for the logged in user
+      properties:
+        work_history_id:
+          type: string
+          description: The ID of the work history to update
+        company_handle:
+          type: string
+          description: The handle of the company within Vetchi. This is a unique identifier for the company and is used in the API. This is different from the company_name used in the UI and should not be confused with the company_id which is used in the database.
+        job_title:
+          type: string
+          description: The job title
+        start_date:
+          type: string
+          format: date
+          description: The start date of the job
+        end_date:
+          type: string
+          format: date
+          description: The end date of the job. If not passed, it will be considered as current job. There can be multiple current jobs for a user.
+      type: object
+      required:
+        - work_history_id
+        - company_handle
+        - job_title
+        - start_date
+    UpdateWorkHistoryResponse:
+      properties:
+        work_history_id:
+          type: string
+          description: The ID of the updated work history
+      type: object
 
     ### Hub things above
 
@@ -2019,6 +2117,86 @@ paths:
         "200":
           description: Profile picture updated successfully
       summary: Update Profile Picture
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/work-history:
+    get:
+      description: Get the work history for the loggedin user
+      operationId: hub-get-work-history
+      responses:
+        "200":
+          description: Work history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkHistory"
+      summary: Get Work History
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/add-work-history:
+    post:
+      description: Add a new work history for the loggedin user
+      operationId: hub-add-work-history
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddWorkHistoryRequest"
+        required: true
+      responses:
+        "200":
+          description: Work history added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddWorkHistoryResponse"
+      summary: Add Work History
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/remove-work-history:
+    post:
+      description: Remove a work history for the loggedin user
+      operationId: hub-remove-work-history
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveWorkHistoryRequest"
+        required: true
+      responses:
+        "200":
+          description: Work history removed successfully
+      summary: Remove Work History
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/update-work-history:
+    put:
+      description: Update a work history for the loggedin user
+      operationId: hub-update-work-history
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkHistoryRequest"
+        required: true
+      responses:
+        "200":
+          description: Work history updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateWorkHistoryResponse"
+      summary: Update Work History
       tags:
         - Hub
       security:
