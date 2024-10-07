@@ -280,11 +280,20 @@ components:
         jd:
           type: string
     FilterLocationsRequest:
-      description: Request to autocomplete location names while filtering Job Openings in Hub across Companies. This API should not be used during the creation of a job opening for a company, Use FilterOrgLocations struct and the corresponding API for that.
+      description: Request to autocomplete location names while filtering Job Openings in Hub across Companies. This API should not be used during the creation of a job opening for a company, Use FilterOrgLocations struct and the corresponding API for that. The results may be sorted by location, but not guaranteed to be sorted, as in future there may be semantic search (instead of prefix search) for location matching.
       properties:
         prefix:
           type: string
           description: The prefix to autocomplete
+        offset:
+          type: string
+          description: The offset to paginate from. This field should ideally be not used in autocompletion scenarios. This parameter is provided because it may be useful in analytical workloads.
+        limit:
+          type: integer
+          description: The limit to paginate
+          default: 5
+          minimum: 1
+          maximum: 10
     FilterLocationsResponse:
       properties:
         locations:
@@ -292,6 +301,35 @@ components:
           description: The list of locations
           items:
             type: string
+    FilterCompaniesRequest:
+      description: Request to autocomplete Company names in Hub across Screens.
+      properties:
+        language_id:
+          type: string
+          description: The language code for the language on which the company name should be fetched. Should be a valid IETF BCP 47 language tag. The default name of the company will be included for search always irrespective of the language_id passed. The results will be sorted by company_handle.
+        prefix:
+          type: string
+          description: The prefix to autocomplete
+        offset:
+          type: string
+          description: The offset to paginate from. This field should ideally be NOT used in autocompletion scenarios. The offset and limit parameters may be useful in analytical workloads and should not be abused. These parameters may be removed in the future.
+        limit:
+          type: integer
+          description: The limit to paginate
+          default: 5
+          minimum: 1
+          maximum: 10
+      required:
+        - language_id
+        - prefix
+    FilteredCompany:
+      properties:
+        company_handle:
+          type: string
+          description: The handle of the Company
+        company_name:
+          type: string
+          description: The name of the Company
 
     ### Hub things above
 
@@ -634,7 +672,7 @@ components:
         - BLUE
         - MAGENTA
     FilterApplicationsRequest:
-      description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be ordered by application_id.
+      description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be sorted by application_id.
       properties:
         application_state:
           $ref: "#/components/schemas/ApplicationState"
@@ -1854,7 +1892,7 @@ paths:
         - OAuth2: []
   /employer/filter-candidates:
     post:
-      description: Filter candidates based on various criteria and ordered by candidacy_id
+      description: Filter candidates based on various criteria and sorted by candidacy_id
       operationId: employer-filter-candidates
       requestBody:
         content:
@@ -2357,7 +2395,7 @@ paths:
         - HubAuth: []
   /hub/filter-locations:
     post:
-      description: Filter locations based on prefix. This is used for autocomplete of City names within Hub UI for various screens, such as while filtering Job Openings.
+      description: Filter locations based on prefix. This is used for autocomplete of City names within Hub UI for various screens, such as while filtering Job Openings. The results may be sorted by city name but not guaranteed to be sorted, as there may be semantic matches.
       operationId: hub-filter-locations
       requestBody:
         content:
@@ -2372,6 +2410,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/FilterLocationsResponse"
       summary: Filter Locations
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/filter-companies:
+    post:
+      description: Filter companies based on prefix. This is used for autocomplete of Company names within Hub UI for various screens, such as while filtering Job Openings.
+      operationId: hub-filter-companies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterCompaniesRequest"
+      responses:
+        "200":
+          description: List of companies that match the prefix
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FilteredCompany"
+      summary: Filter Companies
       tags:
         - Hub
       security:
