@@ -214,7 +214,7 @@ components:
           type: string
           description: The ID of the updated work history
       type: object
-    FindJobOpeningsRequest:
+    FilterJobOpeningsRequest:
       description: Request to find job openings based on ANY of the below filters. For each filter, we will check if the opening has ANY of the values specified in the filter.
       properties:
         job_types:
@@ -224,12 +224,12 @@ components:
           description: The job types to filter by
         locations:
           type: array
-          description: The locations to filter by. Can pass the names of Country, State/Province, City. The location_id that is used between this and the create_opening must remain consistent. It is to be decided how to maintain a common source of truth between these two TODO
+          description: The City locations to filter by. Use the /hub/filter-locations API to get the list of possible values for this field. Only those will result in a match. Do not pass random strings.
           items:
             type: string
         companies:
           type: array
-          description: The companies to filter by. The company_id that is used between this and the create_opening must remain consistent. It is to be decided how to maintain a common source of truth between these two TODO
+          description: The companies to filter by. Pass the company_handle of each interested company.
           items:
             type: string
         remote_accepted:
@@ -279,8 +279,36 @@ components:
           description: The logo of the company
         jd:
           type: string
+    FilterLocationsRequest:
+      description: Request to autocomplete location names while filtering Job Openings in Hub across Companies. This API should not be used during the creation of a job opening for a company, Use FilterOrgLocations struct and the corresponding API for that.
+      properties:
+        prefix:
+          type: string
+          description: The prefix to autocomplete
+    FilterLocationsResponse:
+      properties:
+        locations:
+          type: array
+          description: The list of locations
+          items:
+            type: string
+
     ### Hub things above
 
+    FilterOrgLocationsRequest:
+      description: Request to filter locations for a company. This API should not be used during the creation of a job opening for a company, Use AutoCompleteOrgLocation for that.
+      properties:
+        prefix:
+          type: string
+          description: The prefix to filter locations
+    FilteredOrgLocation:
+      properties:
+        location_id:
+          type: string
+          description: The ID of the location
+        location_title:
+          type: string
+          description: The title of the location
     ResetPasswordRequest:
       description: Request to reset the password
       properties:
@@ -694,24 +722,40 @@ components:
               type: string
               description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
     AddLocationRequest:
-      description: Request to add a new location
+      description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
       properties:
         country:
           type: string
           minLength: 3
-          maxLength: 168
+          maxLength: 32
         state:
           type: string
           minLength: 3
-          maxLength: 168
+          maxLength: 32
         city:
           type: string
           minLength: 3
-          maxLength: 168
+          maxLength: 32
+          example: Electronic City
+        other_names_for_city:
+          type: array
+          items:
+            type: string
+            minLength: 3
+            maxLength: 32
+          example:
+            - Bengaluru
+            - Bangalore
         postal_address:
           type: string
           minLength: 3
-          maxLength: 168
+          maxLength: 1024
+        location_title:
+          type: string
+          description: The title of the location
+          minLength: 3
+          maxLength: 32
+          example: DataCenter Campus
       required:
         - country
         - state
@@ -1289,6 +1333,28 @@ info:
   version: 0.0.1
 openapi: 3.0.0
 paths:
+  /employer/filter-org-locations:
+    post:
+      description: Filter locations for a company. Can be used for autocompletion of location titles for the company.
+      operationId: employer-filter-org-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterOrgLocationsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FilteredOrgLocation"
+          description: OK
+      summary: Filter Org Locations
+      tags:
+        - Employer
   /employer/filter-openings:
     post:
       description: Filter Openings for the signedin employer with the given criteria
@@ -2265,15 +2331,15 @@ paths:
         - Hub
       security:
         - HubAuth: []
-  /hub/find-job-openings:
+  /hub/filter-job-openings:
     post:
-      description: Find job openings based on various criteria
-      operationId: hub-find-job-openings
+      description: Filter job openings based on various criteria
+      operationId: hub-filter-job-openings
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FindJobOpeningsRequest"
+              $ref: "#/components/schemas/FilterJobOpeningsRequest"
         required: true
       responses:
         "200":
@@ -2284,7 +2350,28 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/OpeningPublicInfo"
-      summary: Find Job Openings
+      summary: Filter Job Openings
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/filter-locations:
+    post:
+      description: Filter locations based on prefix. This is used for autocomplete of City names within Hub UI for various screens, such as while filtering Job Openings.
+      operationId: hub-filter-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterLocationsRequest"
+      responses:
+        "200":
+          description: List of locations that match the prefix
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilterLocationsResponse"
+      summary: Filter Locations
       tags:
         - Hub
       security:
