@@ -330,6 +330,51 @@ components:
         company_name:
           type: string
           description: The name of the Company
+    GetMyApplicationsRequest:
+      description: Get all the Applications of the loggedin user within the given date range. The applications will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the applications will be returned for the last 30 days.
+      properties:
+        start_date:
+          type: string
+          format: date
+          description: The start date to filter by
+        end_date:
+          type: string
+          format: date
+          description: The end date to filter by
+    Application:
+      description: The Application object that will be responded to /hub/get-my-applications. The applications will be sorted by created_at in descending order.
+      properties:
+        application_id:
+          type: string
+          description: The ID of the application
+        opening_id:
+          type: string
+          description: The ID of the opening
+        opening_title:
+          type: string
+          description: The title of the opening
+        company_name:
+          type: string
+          description: The name of the company
+        company_handle:
+          type: string
+          description: The handle of the company
+        company_logo:
+          type: string
+          format: url
+          description: The logo of the company
+        applied_at:
+          type: string
+          format: date-time
+        application_state:
+          $ref: "#/components/schemas/ApplicationState"
+        candidacy_id:
+          type: string
+          description: The candidacy ID. This will be set when the application_state is APPLICATION_ACCEPTED.
+        last_statechange_at:
+          type: string
+          format: date-time
+          description: The latest timestamp on UTC on which the application state was changed. TODO We need to use this along with the last time the user logged in to figure out to how show Notification Badge to the user.
 
     ### Hub things above
 
@@ -2433,6 +2478,30 @@ paths:
                 items:
                   $ref: "#/components/schemas/FilteredCompany"
       summary: Filter Companies
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/get-my-applications:
+    post:
+      description: Get the applications for the loggedin user
+      operationId: hub-get-my-applications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetMyApplicationsRequest"
+        required: true
+      responses:
+        "200":
+          description: List of applications for the loggedin user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+      summary: Get My Applications
       tags:
         - Hub
       security:
