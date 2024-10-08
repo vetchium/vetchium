@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermione
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hermione
+  template:
+    metadata:
+      labels:
+        app: hermione
+    spec:
+      containers:
+        - name: hermione
+          image: hermione:latest
+          ports:
+            - containerPort: 8080

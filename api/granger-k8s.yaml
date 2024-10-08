@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granger
+spec:
+  serviceName: "granger"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: granger
+  template:
+    metadata:
+      labels:
+        app: granger
+    spec:
+      containers:
+        - name: granger
+          image: granger:latest
+          ports:
+            - containerPort: 8080

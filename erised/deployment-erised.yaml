@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: erised
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: erised
+  template:
+    metadata:
+      labels:
+        app: erised
+    spec:
+      containers:
+        - name: erised
+          image: erised:latest
+          ports:
+            - containerPort: 3000
