@@ -1476,11 +1476,6 @@ components:
         offset:
           type: string
       type: object
-    GetCostCentersResponse:
-      description: Response containing a list of cost centers
-      items:
-        $ref: "#/components/schemas/CostCenter"
-      type: array
     EditRoleRequest:
       description: Request to edit a user's role
       properties:
@@ -2433,10 +2428,16 @@ paths:
         - Hub
       security:
         - HubAuth: []
-  /hub/work-history:
-    get:
+  /hub/get-work-history:
+    post:
       description: Get the work history for the loggedin user
       operationId: hub-get-work-history
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetWorkHistoryRequest"
+        required: true
       responses:
         "200":
           description: Work history
@@ -2453,7 +2454,7 @@ paths:
         - HubAuth: []
   /hub/add-work-history:
     post:
-      description: Add a new work history for the loggedin user
+      description: Add a new work history for the loggedin user TODO Set some kind of limit on the number of work history items a user can have
       operationId: hub-add-work-history
       requestBody:
         content:
