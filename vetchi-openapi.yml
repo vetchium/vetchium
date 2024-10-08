@@ -375,6 +375,28 @@ components:
           type: string
           format: date-time
           description: The latest timestamp on UTC on which the application state was changed. TODO We need to use this along with the last time the user logged in to figure out to how show Notification Badge to the user.
+    ApplyToOpeningRequest:
+      description: Request to apply to an opening from the Hub. This API will not be used for candidates who want to apply internally from the same company and also for Referrals. Those should consider the /employer/ APIs for that. In future, this may be extended to include cover_letter, template_responses, etc.
+      properties:
+        opening_id:
+          type: string
+          description: The ID of the opening
+        resume:
+          type: string
+          description: Base64 encoded resume. TODO Should we use a different endpoint for uploading the resume !? Anyway we would have max size limit for all API calls.
+        vouchers_handles:
+          type: array
+          description: The Vetchi handles of the Verified Colleageus of the logged in user who can vouch for the Application
+          items:
+            type: string
+      required:
+        - opening_id
+        - resume
+    ApplyToOpeningResponse:
+      properties:
+        application_id:
+          type: string
+          description: The ID of the newly created Application
 
     ### Hub things above
 
@@ -2502,6 +2524,28 @@ paths:
                 items:
                   $ref: "#/components/schemas/Application"
       summary: Get My Applications
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/apply-to-opening:
+    post:
+      description: Apply to a job opening
+      operationId: hub-apply-to-opening
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyToOpeningRequest"
+        required: true
+      responses:
+        "200":
+          description: Application submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplyToOpeningResponse"
+      summary: Apply to Opening
       tags:
         - Hub
       security:
