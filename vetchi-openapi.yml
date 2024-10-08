@@ -29,6 +29,25 @@ components:
             admin: Grants admin access
 
   schemas:
+    CandidacyState:
+      type: string
+      enum:
+        - CANDIDACY_SHORTLISTED
+        - CANDIDACY_OFFERED
+        - CANDIDACY_REJECTED # Employer rejected the Candidate
+        - CANDIDACY_ACCEPTED
+        - CANDIDACY_WITHDRAWN # Candidate does not want to proceed further
+        - CANDIDACY_COMPLETED # Final state of the Candidacy
+    InterviewStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - COMPLETED
+        - CANCELLED
+        - CLOSED # Will be moved to this state when the Candidacy is changed to either CANDIDACY_OFFERED or CANDIDACY_REJECTED and stays in this state forever
+
+    ### Common between (Hub and Employer) schemas above
+
     LoginRequest:
       description: Request to login
       properties:
@@ -336,7 +355,7 @@ components:
         start_date:
           type: string
           format: date
-          description: The start date to filter by
+          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
         end_date:
           type: string
           format: date
@@ -376,7 +395,7 @@ components:
           format: date-time
           description: The latest timestamp on UTC on which the application state was changed. TODO We need to use this along with the last time the user logged in to figure out to how show Notification Badge to the user.
     ApplyToOpeningRequest:
-      description: Request to apply to an opening from the Hub. This API will not be used for candidates who want to apply internally from the same company and also for Referrals. Those should consider the /employer/ APIs for that. In future, this may be extended to include cover_letter, template_responses, etc.
+      description: Request to apply to an Opening. This API should not be used for Applicants who want to apply internally from the same company or for Referrals. Those should consider the /employer/ APIs for that. In future, this may be extended to include cover_letter, template_responses, etc. One cannot apply to more than 50 Openings in a day.
       properties:
         opening_id:
           type: string
@@ -397,8 +416,66 @@ components:
         application_id:
           type: string
           description: The ID of the newly created Application
+    GetMyCandidaciesRequest:
+      description: Get all the Candidacies of the logged in user. The candidacies will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the candidacies will be returned for the last 30 days.
+      properties:
+        start_date:
+          type: string
+          format: date
+          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
+        end_date:
+          type: string
+          format: date
+          description: The end date to filter by
+    MyInterview:
+      properties:
+        interview_id:
+          type: string
+          description: The ID of the interview
+        interview_status:
+          $ref: "#/components/schemas/InterviewStatus"
+        interview_start_time:
+          type: string
+          format: date-time
+          description: The start time of the interview
+        interview_end_time:
+          type: string
+          format: date-time
+          description: The end time of the interview
+        interviewers_names:
+          type: array
+          description: The names of the interviewers
+          items:
+            type: string
+        feedback_to_candidate:
+          type: string
+          description: The feedback that should be shared with the candidate. This may be set only when the interview_status is CLOSED.
+    MyCandidacy:
+      description: The Candidacy object that will be responded to /hub/get-my-candidacies. The Candidacies will be sorted by created_at in descending order.
+      properties:
+        candidacy_id:
+          type: string
+          description: The ID of the candidacy
+        openings:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpeningPublicInfo"
+        candidacy_state:
+          $ref: "#/components/schemas/CandidacyState"
+        candidacy_state_updated_at:
+          type: string
+          format: date-time
+          description: The timestamp of the candidacy state
+        interviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/MyInterview"
+        created_at:
+          type: string
+          format: date-time
+          description: The timestamp of the Candidacy creation
 
-    ### Hub things above
+    ### Hub schemas above
 
     FilterOrgLocationsRequest:
       description: Request to filter locations for a company. This API should not be used during the creation of a job opening for a company, Use AutoCompleteOrgLocation for that.
@@ -576,6 +653,8 @@ components:
         candidacy_id:
           type: string
           description: The candidacy ID
+        candidacy_state:
+          $ref: "#/components/schemas/CandidacyState"
         name:
           type: string
           description: The candidate name
@@ -610,10 +689,14 @@ components:
           description: List of interviewers
           items:
             $ref: "#/components/schemas/User"
-        at:
+        start_time:
           type: string
           format: date-time
-          description: The date and time of the interview
+          description: The start time of the interview
+        end_time:
+          type: string
+          format: date-time
+          description: The end time of the interview
         evaluation_status:
           $ref: "#/components/schemas/EvaluationStatus"
         evaluation_report:
@@ -653,12 +736,6 @@ components:
           description: The summary of the evaluation report
           minLength: 10
           maxLength: 2048
-    InterviewStatus:
-      type: string
-      enum:
-        - SCHEDULED
-        - COMPLETED
-        - CANCELLED
     FilterCandidatesRequest:
       description: Request to get a list of Candidates across multiple openings.
       properties:
@@ -2546,6 +2623,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplyToOpeningResponse"
       summary: Apply to Opening
+      tags:
+        - Hub
+      security:
+        - HubAuth: []
+  /hub/get-my-candidacies:
+    post:
+      description: Get the Candidacies for the loggedin user
+      operationId: hub-get-my-candidacies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetMyCandidaciesRequest"
+        required: true
+      responses:
+        "200":
+          description: List of candidacies for the loggedin user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyCandidacy"
+      summary: Get My Candidacies
       tags:
         - Hub
       security:
