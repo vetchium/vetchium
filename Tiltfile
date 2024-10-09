@@ -1,6 +1,6 @@
 # Load Kubernetes YAML files
-k8s_yaml('api/granger-k8s.yaml')
-k8s_yaml('api/hermione-k8s.yaml')
+k8s_yaml('api/granger-tilt.yaml')
+k8s_yaml('api/hermione-tilt.yaml')
 k8s_yaml('harrypotter/harrypotter-tilt.yaml')
 k8s_yaml('ronweasly/ronweasly-tilt.yaml')
 
