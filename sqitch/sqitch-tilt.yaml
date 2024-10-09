@@ -12,5 +12,6 @@ spec:
           command: ["sh", "-c"]
           args:
             - |
-              sqitch deploy --verbose db:pg:vetchidb
-              sqitch verify --verbose db:pg:vetchidb
+              sqitch deploy --verbose db:pg://user:password@postgres:5432/vetchidb
+              sqitch verify --verbose db:pg://user:password@postgres:5432/vetchidb
+      restartPolicy: Never
