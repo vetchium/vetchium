@@ -49,6 +49,11 @@ spec:
                   key: POSTGRES_DB
             - name: POSTGRES_HOST
               value: "postgres"
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_PORT
       volumes:
         - name: config-volume
           configMap:
