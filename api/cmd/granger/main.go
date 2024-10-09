@@ -1,12 +1,23 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"log/slog"
+	"os"
+
+	"vetchi.org/internal/granger"
 )
 
 func main() {
-	log.Println("Hello World from Granger")
+	slog.Info("Granger starting up ...")
 
-	http.ListenAndServe(":8080", nil)
+	granger, err := granger.NewGranger()
+	if err != nil {
+		slog.Error("Failed to initialize Granger", "error", err)
+		os.Exit(1)
+	}
+
+	if err := granger.Run(); err != nil {
+		slog.Error("Failed to run Granger", "error", err)
+		os.Exit(1)
+	}
 }

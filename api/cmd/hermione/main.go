@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	slog.Info("Hermione launching ...")
+	slog.Info("Hermione starting up ...")
 
 	hermione, err := hermione.New()
 	if err != nil {
