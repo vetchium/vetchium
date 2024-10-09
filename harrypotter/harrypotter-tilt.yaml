@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: erised
+  name: harrypotter
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: erised
+      app: harrypotter
   template:
     metadata:
       labels:
-        app: erised
+        app: harrypotter
     spec:
       containers:
-        - name: erised
-          image: erised:latest
+        - name: harrypotter
+          image: harrypotter:latest
           ports:
             - containerPort: 3000

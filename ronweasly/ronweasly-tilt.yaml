@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web
+  name: ronweasly
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: web
+      app: ronweasly
   template:
     metadata:
       labels:
-        app: web
+        app: ronweasly
     spec:
       containers:
-        - name: web
-          image: web:latest
+        - name: ronweasly
+          image: ronweasly:latest
           ports:
             - containerPort: 3000
