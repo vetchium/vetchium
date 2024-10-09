@@ -1,12 +1,12 @@
 package hermione
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Config struct {
@@ -19,6 +19,9 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
+
+	log.Println(os.Environ())
+
 	config := &Config{
 		Port:             os.Getenv("PORT"),
 		PostgresHost:     os.Getenv("POSTGRES_HOST"),
@@ -60,7 +63,7 @@ func validateConfig(config *Config) error {
 
 type Hermione struct {
 	Port string
-	DB   *sql.DB
+	DB   *pgxpool.Pool
 }
 
 func New() (*Hermione, error) {
@@ -69,19 +72,24 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
+	log.Printf("############## The config object is: %#v", config)
+
 	pgConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		config.PostgresHost, config.PostgresPort, config.PostgresUser,
 		config.PostgresDB, config.PostgresPassword)
+	log.Println("pgConnStr", pgConnStr)
 
-	db, err := sql.Open("postgres", pgConnStr)
-	if err != nil {
-		return nil, err
-	}
+	/*
+		dbpool, err := pgxpool.New(context.Background(), pgConnStr)
+		if err != nil {
+			return nil, err
+		}
+	*/
 
 	return &Hermione{
 		Port: fmt.Sprintf(":%s", config.Port),
-		DB:   db,
+		// DB:   dbpool,
 	}, nil
 }
 

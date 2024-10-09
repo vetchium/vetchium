@@ -18,7 +18,7 @@ $ tilt up
 
 To connect to the port-forwarded Postgres using the psql command line, use the following command:
 ```
-$ psql -h localhost -p 5432 -U user vetchidb
+$ psql -h localhost -p 5432 -U user vdb
 ```
 
 ### Tear down

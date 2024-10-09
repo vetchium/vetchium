@@ -48,10 +48,7 @@ spec:
                   name: vetchi-secrets
                   key: POSTGRES_DB
             - name: POSTGRES_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_HOST
+              value: "postgres"
       volumes:
         - name: config-volume
           configMap:
