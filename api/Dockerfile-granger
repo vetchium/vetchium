@@ -1,6 +1,6 @@
 FROM golang:1.23.2-bullseye AS builder
 WORKDIR /app
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 RUN go build -o granger ./cmd/granger

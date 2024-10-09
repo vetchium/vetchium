@@ -1,12 +1,23 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"log/slog"
+	"os"
+
+	"vetchi.org/internal/hermione"
 )
 
 func main() {
-	log.Println("Hello World from Hermione")
+	slog.Info("Hermione launching ...")
 
-	http.ListenAndServe(":8080", nil)
+	hermione, err := hermione.New()
+	if err != nil {
+		slog.Error("Failed to create new Hermione", "error", err)
+		os.Exit(1)
+	}
+
+	if err := hermione.Run(); err != nil {
+		slog.Error("Failed to run Hermione", "error", err)
+		os.Exit(1)
+	}
 }

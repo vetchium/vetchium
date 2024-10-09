@@ -6,6 +6,7 @@ metadata:
 spec:
   template:
     spec:
+      backoffLimit: 5
       containers:
         - name: sqitch
           image: psankar/vetchi-sqitch:latest

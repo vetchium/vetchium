@@ -1,4 +1,5 @@
 # Load Kubernetes YAML files
+k8s_yaml('vetchi-secrets-tilt.yaml')
 k8s_yaml('api/granger-tilt.yaml')
 k8s_yaml('api/hermione-tilt.yaml')
 k8s_yaml('harrypotter/harrypotter-tilt.yaml')

@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vetchi-pgdata-pvc
+  namespace: vetchidev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: hostpath
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,11 +33,27 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: "user"
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
-              value: "password"
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
-              value: "vetchidb"
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: pgdata-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata-volume
+          persistentVolumeClaim:
+            claimName: vetchi-pgdata-pvc
 ---
 apiVersion: v1
 kind: Service
