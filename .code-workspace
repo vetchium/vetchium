@@ -1,10 +1,13 @@
 {
     "folders": [
       {
-        "path": "erised"
+        "path": "harrypotter"
       },
       {
-        "path": "web"
+        "path": "ronweasly"
+      },
+      {
+        "path": "api"
       }
     ],
 }
