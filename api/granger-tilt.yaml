@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: granger-config
+  namespace: vetchidev
+data:
+  port: "8080"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,3 +27,44 @@ spec:
           image: psankar/granger:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: granger-config
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_DB
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: vetchi-secrets
+                  key: POSTGRES_PORT
+            - name: POSTGRES_HOST
+              value: "postgres"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: granger-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granger
+  namespace: vetchidev
+spec:
+  selector:
+    app: granger

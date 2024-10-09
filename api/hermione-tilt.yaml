@@ -58,3 +58,12 @@ spec:
         - name: config-volume
           configMap:
             name: hermione-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermione
+  namespace: vetchidev
+spec:
+  selector:
+    app: hermione
