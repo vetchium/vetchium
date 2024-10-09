@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granger
+  namespace: vetchidev
 spec:
   serviceName: "granger"
   replicas: 1
@@ -15,6 +16,6 @@ spec:
     spec:
       containers:
         - name: granger
-          image: granger:latest
+          image: psankar/granger:latest
           ports:
             - containerPort: 8080

@@ -1,0 +1,5 @@
+%syntax-version=1.0.0
+%project=vetchi
+%uri=vetchi
+
+1-initdb 2024-10-09T05:06:57Z System Administrator <root@Sankars-MacBook-Pro.local> # initialise database

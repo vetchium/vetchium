@@ -1,0 +1,5 @@
+BEGIN;
+
+SELECT 1 FROM hub_users LIMIT 1;
+
+ROLLBACK;

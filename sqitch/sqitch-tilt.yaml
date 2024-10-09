@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqitch
+  namespace: vetchidev
+spec:
+  template:
+    spec:
+      containers:
+        - name: sqitch
+          image: psankar/vetchi-sqitch:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              sqitch deploy --verbose db:pg:vetchidb
+              sqitch verify --verbose db:pg:vetchidb

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ronweasly
+  namespace: vetchidev
 spec:
   replicas: 1
   selector:
@@ -14,6 +15,6 @@ spec:
     spec:
       containers:
         - name: ronweasly
-          image: ronweasly:latest
+          image: psankar/ronweasly:latest
           ports:
             - containerPort: 3000

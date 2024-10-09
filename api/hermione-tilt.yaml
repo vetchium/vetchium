@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hermione
+  namespace: vetchidev
 spec:
   replicas: 3
   selector:
@@ -14,6 +15,6 @@ spec:
     spec:
       containers:
         - name: hermione
-          image: hermione:latest
+          image: psankar/hermione:latest
           ports:
             - containerPort: 8080
