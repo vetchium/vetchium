@@ -38,13 +38,13 @@ components:
         - CANDIDACY_ACCEPTED
         - CANDIDACY_WITHDRAWN # Candidate does not want to proceed further
         - CANDIDACY_COMPLETED # Final state of the Candidacy
-    InterviewStatus:
+    InterviewState:
       type: string
       enum:
-        - SCHEDULED
-        - COMPLETED
-        - CANCELLED
-        - CLOSED # Will be moved to this state when the Candidacy is changed to either CANDIDACY_OFFERED or CANDIDACY_REJECTED and stays in this state forever
+        - INTERVIEW_SCHEDULED
+        - INTERVIEW_COMPLETED
+        - INTERVIEW_CANCELLED
+        - INTERVIEW_CLOSED # Will be moved to this state when the Candidacy is changed to either CANDIDACY_OFFERED or CANDIDACY_REJECTED and stays in this state forever
 
     ### Common between (Hub and Employer) schemas above
 
@@ -432,8 +432,8 @@ components:
         interview_id:
           type: string
           description: The ID of the interview
-        interview_status:
-          $ref: "#/components/schemas/InterviewStatus"
+        interview_state:
+          $ref: "#/components/schemas/InterviewState"
         interview_start_time:
           type: string
           format: date-time
@@ -592,8 +592,8 @@ components:
           description: List of interviewers
           items:
             $ref: "#/components/schemas/User"
-        evaluation_status:
-          $ref: "#/components/schemas/EvaluationStatus"
+        evaluation_state:
+          $ref: "#/components/schemas/EvaluationState"
         evaluation_report:
           $ref: "#/components/schemas/EvaluationReport"
         evaluation_result:
@@ -682,7 +682,7 @@ components:
           type: string
           description: The interview ID
         status:
-          $ref: "#/components/schemas/InterviewStatus"
+          $ref: "#/components/schemas/InterviewState"
           description: The interview status
         interviewers:
           type: array
@@ -698,7 +698,7 @@ components:
           format: date-time
           description: The end time of the interview
         evaluation_status:
-          $ref: "#/components/schemas/EvaluationStatus"
+          $ref: "#/components/schemas/EvaluationState"
         evaluation_report:
           description: The evaluation report
           type: string
@@ -713,7 +713,7 @@ components:
         - YES
         - NO
         - STRONG_NO
-    EvaluationStatus:
+    EvaluationState:
       type: string
       enum:
         - EVALUATION_PENDING
@@ -775,7 +775,7 @@ components:
     ShortlistedOpening:
       description: An opening that the candidate has been shortlisted for
       properties:
-        id:
+        opening_id:
           type: string
           description: The opening ID
         title:
@@ -848,9 +848,9 @@ components:
     VouchState:
       type: string
       enum:
-        - SOUGHT
-        - VOUCHED
-        - REJECTED
+        - VOUCH_SOUGHT
+        - VOUCH_VOUCHED
+        - VOUCH_REJECTED
     Vouch:
       description: Details of a Vouch
       properties:
@@ -867,9 +867,18 @@ components:
     ApplicationState:
       type: string
       enum:
-        - APPLIED
-        - SHORTLISTED
-        - REJECTED
+        - APPLICATION_APPLIED
+        - APPLICATION_SHORTLISTED
+        - APPLICATION_REJECTED
+    ReferredBy:
+      type: object
+      description: The user who referred the applicant
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
     FilteredApplication:
       description: An Application that matches the filters
       properties:
@@ -895,14 +904,7 @@ components:
           items:
             $ref: "#/components/schemas/Vouch"
         referred_by:
-          type: object
-          description: The user who referred the applicant
-          properties:
-            name:
-              type: string
-            email:
-              type: string
-              description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
+          $ref: "#/components/schemas/ReferredBy"
     AddLocationRequest:
       description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
       properties:
@@ -1337,19 +1339,19 @@ components:
         recruiter_name:
           description: The recruiter name
           type: string
-        status:
-          $ref: "#/components/schemas/OpeningStatus"
+        opening_state:
+          $ref: "#/components/schemas/OpeningState"
         title:
           type: string
         unfilled_count:
           type: integer
       type: object
-    OpeningStatus:
+    OpeningState:
       description: The status of an opening
       enum:
-        - DRAFT
-        - ACTIVE
-        - CLOSED
+        - OPENING_DRAFT
+        - OPENING_ACTIVE
+        - OPENING_CLOSED
       type: string
     Password:
       description: A password
