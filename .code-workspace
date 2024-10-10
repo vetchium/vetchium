@@ -1,16 +1,19 @@
 {
-    "folders": [
-      {
-        "path": "harrypotter"
-      },
-      {
-        "path": "ronweasly"
-      },
-      {
-        "path": "api"
-      },
-      {
-        "path": "sqitch"
-      }
-    ],
+  "folders": [
+    {
+      "path": "harrypotter"
+    },
+    {
+      "path": "ronweasly"
+    },
+    {
+      "path": "api"
+    },
+    {
+      "path": "sqitch"
+    },
+    {
+      "path": "dolores"
+    }
+  ]
 }
