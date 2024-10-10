@@ -465,11 +465,11 @@ components:
     EducationalQualification:
       description: Educational qualification
       enum:
-        - UNDER_GRADUATE
-        - POST_GRADUATE
-        - DOCTORATE
-        - DOESNT_MATTER
-        - UNSPECIFIED
+        - UNDER_GRADUATE_EDU
+        - POST_GRADUATE_EDU
+        - DOCTORATE_EDU
+        - DOESNT_MATTER_EDU
+        - UNSPECIFIED_EDU
     EmailAddress:
       description: An email address
       example: test@example.com
@@ -615,11 +615,11 @@ components:
           type: array
         educational_qualifications:
           default:
-            - UNDER_GRADUATE
-            - POST_GRADUATE
-            - DOCTORATE
-            - DOESNT_MATTER
-            - UNSPECIFIED
+            - UNDER_GRADUATE_EDU
+            - POST_GRADUATE_EDU
+            - DOCTORATE_EDU
+            - DOESNT_MATTER_EDU
+            - UNSPECIFIED_EDU
           description: The educational qualifications to filter by. If this value is not passed, then Openings with all educational qualifications will be returned.
           items:
             $ref: "#/components/schemas/EducationalQualification"
@@ -1029,11 +1029,11 @@ components:
     JobType:
       description: Type of job
       enum:
-        - FULL_TIME
-        - PART_TIME
-        - CONTRACT
-        - INTERNSHIP
-        - UNSPECIFIED
+        - FULL_TIME_JOB
+        - PART_TIME_JOB
+        - CONTRACT_JOB
+        - INTERNSHIP_JOB
+        - UNSPECIFIED_JOB
       type: string
     LoginRequest:
       description: Request to login

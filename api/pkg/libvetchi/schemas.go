@@ -175,6 +175,16 @@ type CreateOpeningRequest struct {
 	InternalOnly             bool                     `json:"internal_only,omitempty"`
 }
 
+type EducationalQualification string
+
+const (
+	UnderGraduateEdu EducationalQualification = "UNDER_GRADUATE_EDU"
+	PostGraduateEdu  EducationalQualification = "POST_GRADUATE_EDU"
+	DoctorateEdu     EducationalQualification = "DOCTORATE_EDU"
+	DoesntMatterEdu  EducationalQualification = "DOESNT_MATTER_EDU"
+	UnspecifiedEdu   EducationalQualification = "UNSPECIFIED_EDU"
+)
+
 type EmailAddress struct {
 	Email string `json:"email" validate:"required,email"`
 }
@@ -396,11 +406,11 @@ const (
 type JobType string
 
 const (
-	FullTime    JobType = "FULL_TIME"
-	PartTime    JobType = "PART_TIME"
-	Contract    JobType = "CONTRACT"
-	Internship  JobType = "INTERNSHIP"
-	Unspecified JobType = "UNSPECIFIED"
+	FullTimeJob    JobType = "FULL_TIME_JOB"
+	PartTimeJob    JobType = "PART_TIME_JOB"
+	ContractJob    JobType = "CONTRACT_JOB"
+	InternshipJob  JobType = "INTERNSHIP_JOB"
+	UnspecifiedJob JobType = "UNSPECIFIED_JOB"
 )
 
 type LoginRequest struct {
