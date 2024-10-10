@@ -1,4 +1,4 @@
-module apitesting.vetchi.org
+module github.com/psankar/vetchi/dolores
 
 go 1.23.2
 
