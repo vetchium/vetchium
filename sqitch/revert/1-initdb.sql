@@ -1,5 +1,6 @@
 BEGIN;
 
+DROP TABLE IF EXISTS employers;
 DROP TABLE IF EXISTS hub_users;
 
 COMMIT;

@@ -10,4 +10,9 @@ CREATE TABLE IF NOT EXISTS hub_users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS employers (
+    client_id TEXT PRIMARY KEY,
+    onboard_status TEXT NOT NULL
+);
+
 COMMIT;

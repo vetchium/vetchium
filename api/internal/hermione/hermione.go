@@ -1,14 +1,13 @@
 package hermione
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"vetchi.org/internal/db"
+	"vetchi.org/internal/postgres"
 )
 
 type Config struct {
@@ -61,8 +60,8 @@ func validateConfig(config *Config) error {
 }
 
 type Hermione struct {
-	Port   string
-	DB     *pgxpool.Pool
+	port   string
+	db     db.DB
 	logger *slog.Logger
 }
 
@@ -72,27 +71,30 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	pgConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		config.PostgresHost, config.PostgresPort, config.PostgresUser,
-		config.PostgresDB, config.PostgresPassword)
-	log.Println("pgConnStr", pgConnStr)
-
-	dbpool, err := pgxpool.New(context.Background(), pgConnStr)
+		config.PostgresHost,
+		config.PostgresPort,
+		config.PostgresUser,
+		config.PostgresDB,
+		config.PostgresPassword,
+	)
+	db, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("Database connection pool established")
-
 	return &Hermione{
-		Port:   fmt.Sprintf(":%s", config.Port),
-		DB:     dbpool,
+		port:   fmt.Sprintf(":%s", config.Port),
+		db:     db,
 		logger: logger,
 	}, nil
 }
 
 func (h *Hermione) Run() error {
-	return http.ListenAndServe(h.Port, nil)
+	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
+
+	return http.ListenAndServe(h.port, nil)
 }
