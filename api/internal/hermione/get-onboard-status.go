@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"vetchi.org/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
 
 func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {

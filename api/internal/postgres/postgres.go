@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"vetchi.org/internal/db"
+	"github.com/psankar/vetchi/api/internal/db"
 )
 
 type PG struct {

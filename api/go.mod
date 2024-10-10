@@ -1,4 +1,4 @@
-module vetchi.org
+module github.com/psankar/vetchi/api
 
 go 1.23.2
 

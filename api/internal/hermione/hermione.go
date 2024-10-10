@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"vetchi.org/internal/db"
-	"vetchi.org/internal/postgres"
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/postgres"
 )
 
 type Config struct {
