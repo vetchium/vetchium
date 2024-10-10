@@ -1,201 +1,107 @@
-# Vetchi OpenAPI Specification
-# Remember to sort this yaml file alphabetically by keys after making changes
-
-###
-
 openapi: 3.0.0
 info:
   description: Vetchi APIs that work across multiple clients
   title: Vetchi API
   version: 0.0.1
-
-###
-
 components:
-  securitySchemes:
-    HubAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: string
-    TFAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: string
-
-    ### Hub things above
-
-    BearerAuth:
-      type: http
-      scheme: bearer
-    OAuth2:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://example.com/oauth/authorize
-          tokenUrl: https://example.com/oauth/token
-          scopes:
-            read: Grants read access
-            write: Grants write access
-            admin: Grants admin access
-
-  ###
-
   schemas:
-    CandidacyState:
-      type: string
-      enum:
-        - CANDIDACY_SHORTLISTED
-        - CANDIDACY_OFFERED
-        - CANDIDACY_REJECTED # Employer rejected the Candidate
-        - CANDIDACY_ACCEPTED
-        - CANDIDACY_WITHDRAWN # Candidate does not want to proceed further
-        - CANDIDACY_COMPLETED # Final state of the Candidacy
-    InterviewState:
-      type: string
-      enum:
-        - INTERVIEW_SCHEDULED
-        - INTERVIEW_COMPLETED
-        - INTERVIEW_CANCELLED
-        - INTERVIEW_CLOSED # Will be moved to this state when the Candidacy is changed to either CANDIDACY_OFFERED or CANDIDACY_REJECTED and stays in this state forever
-
-    ### Common between (Hub and Employer) schemas above
-
-    LoginRequest:
-      description: Request to login
+    AddCostCenterRequest:
+      description: Request to add a new cost center
       properties:
-        email:
+        name:
+          maxLength: 64
+          minLength: 3
           type: string
-          format: email
-          description: The email address to use for authentication
-        password:
-          type: string
-          description: The password for the email address
-      type: object
-      required:
-        - email
-        - password
-    LoginResponse:
-      properties:
-        tfa_token:
-          type: string
-          description: The token for TFA
-        valid_till:
-          type: string
-          format: date-time
-          description: The time till when the token is valid
-    TFAuthRequest:
-      properties:
-        tfa_code:
-          type: string
-          description: The code from the TFA email
-      type: object
-      required:
-        - tfa_code
-    TFAuthResponse:
-      properties:
-        session_token:
-          type: string
-          description: The token for the session
-        valid_till:
-          type: string
-          format: date-time
-          description: The time till when the token is valid
-    AutoBiography:
-      properties:
-        name_en:
-          type: string
-          description: The name of the user
-          minLength: 1
-          maxLength: 128
-        about_me:
-          type: string
-          description: The about me of the user
-          minLength: 1
+        notes:
           maxLength: 1024
-        websites:
-          type: array
-          description: The websites of the user
-          items:
-            type: string
-            format: url
-            minLength: 1
-            maxLength: 255
-        names_in_other_languages:
-          type: array
-          description: The names of the user in other languages
-          items:
-            type: object
-            properties:
-              language:
-                type: string
-                description: Should be a valid IETF BCP 47 language tag.
-              name:
-                type: string
-                description: The name of the user in the given language
-      type: object
+          type: string
       required:
         - name
-        - about_me
-    VetchiHandle:
+    AddCostCenterResponse:
+      description: Response after adding a cost center
       properties:
-        handle:
+        cost_center_id:
           type: string
-          description: The vetchi handle of the user
-          minLength: 6 # May be shorter in future
+    AddLocationRequest:
+      description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
+      properties:
+        city:
+          example: Electronic City
           maxLength: 32
-          pattern: "^[a-zA-Z0-9_-]+$"
-      type: object
+          minLength: 3
+          type: string
+        country:
+          maxLength: 32
+          minLength: 3
+          type: string
+        location_title:
+          description: The title of the location
+          example: DataCenter Campus
+          maxLength: 32
+          minLength: 3
+          type: string
+        other_names_for_city:
+          example:
+            - Bengaluru
+            - Bangalore
+          items:
+            maxLength: 32
+            minLength: 3
+            type: string
+          type: array
+        postal_address:
+          maxLength: 1024
+          minLength: 3
+          type: string
+        state:
+          maxLength: 32
+          minLength: 3
+          type: string
       required:
-        - handle
-    GetWorkHistoryRequest:
-      description: Request to get the work history for the logged in user
+        - country
+        - state
+        - city
+        - postal_address
+    AddLocationResponse:
+      description: Response after adding a location
       properties:
-        language_id:
+        location_id:
           type: string
-          description: The language code for the language on which the work history should be fetched. Should be a valid IETF BCP 47 language tag. If the company has not set a name for the requested language, then the name in the default language of the company will be returned.
-      type: object
-    WorkHistory:
+    AddUserRequest:
+      description: Request to add a new user
       properties:
-        work_history_id:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        name:
           type: string
-          description: The ID of the work history
-        company_name:
-          type: string
-          description: The name of the company in the requested language in the GetWorkHistoryRequest. If the company name is not set for the requested language, then the name in the default language of the company will be returned.
-        job_title:
-          type: string
-          description: The job title
-        start_date:
-          type: string
-          format: date
-          description: The start date of the job
-        end_date:
-          type: string
-          format: date
-          description: The end date of the job
-        logo:
-          type: string
-          format: url
-          description: The logo of the company
-      type: object
+        role:
+          $ref: "#/components/schemas/Role"
+      required:
+        - name
+        - email
+        - role
+    AddUserResponse:
+      description: Response after adding a user
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
     AddWorkHistoryRequest:
       description: Request to add a new work history for the logged in user
       properties:
         company_handle:
-          type: string
           description: The handle of the company within Vetchi. This is a unique identifier for the company and is used in the API. This is different from the company_name used in the UI and should not be confused with the company_id which is used in the database.
-        job_title:
           type: string
-          description: The job title
-        start_date:
-          type: string
-          format: date
-          description: The start date of the job
         end_date:
-          type: string
-          format: date
           description: The end date of the job. If not passed, it will be considered as current job. There can be multiple current jobs for a user.
-      type: object
+          format: date
+          type: string
+        job_title:
+          description: The job title
+          type: string
+        start_date:
+          description: The start date of the job
+          format: date
+          type: string
       required:
         - company_handle
         - job_title
@@ -203,814 +109,246 @@ components:
     AddWorkHistoryResponse:
       properties:
         work_history_id:
-          type: string
           description: The ID of the newly created work history
-      type: object
-    RemoveWorkHistoryRequest:
-      description: Request to remove a work history for the logged in user
-      properties:
-        work_history_id:
           type: string
-          description: The ID of the work history to remove
-      type: object
-    UpdateWorkHistoryRequest:
-      description: Request to update a work history for the logged in user
-      properties:
-        work_history_id:
-          type: string
-          description: The ID of the work history to update
-        company_handle:
-          type: string
-          description: The handle of the company within Vetchi. This is a unique identifier for the company and is used in the API. This is different from the company_name used in the UI and should not be confused with the company_id which is used in the database.
-        job_title:
-          type: string
-          description: The job title
-        start_date:
-          type: string
-          format: date
-          description: The start date of the job
-        end_date:
-          type: string
-          format: date
-          description: The end date of the job. If not passed, it will be considered as current job. There can be multiple current jobs for a user.
-      type: object
-      required:
-        - work_history_id
-        - company_handle
-        - job_title
-        - start_date
-    UpdateWorkHistoryResponse:
-      properties:
-        work_history_id:
-          type: string
-          description: The ID of the updated work history
-      type: object
-    FilterJobOpeningsRequest:
-      description: Request to find job openings based on ANY of the below filters. For each filter, we will check if the opening has ANY of the values specified in the filter.
-      properties:
-        job_types:
-          type: array
-          items:
-            $ref: "#/components/schemas/JobType"
-          description: The job types to filter by
-        locations:
-          type: array
-          description: The City locations to filter by. Use the /hub/filter-locations API to get the list of possible values for this field. Only those will result in a match. Do not pass random strings.
-          items:
-            type: string
-        companies:
-          type: array
-          description: The companies to filter by. Pass the company_handle of each interested company.
-          items:
-            type: string
-        remote_accepted:
-          type: boolean
-          description: Whether the opening allows people to work remotely
-          default: false
-        yoe_min:
-          type: integer
-          description: Minimum range for the experience filter
-          minimum: 0
-          maximum: 80
-          default: 0
-        yoe_max:
-          type: integer
-          description: Maximum range for the experience filter
-          minimum: 0
-          maximum: 80
-          default: 80
-        educational_qualifications:
-          type: array
-          description: The educational qualifications to filter by. If this value is not passed, then Openings with all educational qualifications will be returned.
-          items:
-            $ref: "#/components/schemas/EducationalQualification"
-          default:
-            - UNDER_GRADUATE
-            - POST_GRADUATE
-            - DOCTORATE
-            - DOESNT_MATTER
-            - UNSPECIFIED
-    OpeningPublicInfo:
-      properties:
-        opening_id:
-          type: string
-          description: The ID of the opening
-        title:
-          type: string
-          description: The title of the opening
-        company_name:
-          type: string
-          description: The name of the company
-        company_handle:
-          type: string
-          description: The handle of the company
-        company_logo:
-          type: string
-          format: url
-          description: The logo of the company
-        jd:
-          type: string
-    FilterLocationsRequest:
-      description: Request to autocomplete location names while filtering Job Openings in Hub across Companies. This API should not be used during the creation of a job opening for a company, Use FilterOrgLocations struct and the corresponding API for that. The results may be sorted by location, but not guaranteed to be sorted, as in future there may be semantic search (instead of prefix search) for location matching.
-      properties:
-        prefix:
-          type: string
-          description: The prefix to autocomplete
-        offset:
-          type: string
-          description: The offset to paginate from. This field should ideally be not used in autocompletion scenarios. This parameter is provided because it may be useful in analytical workloads.
-        limit:
-          type: integer
-          description: The limit to paginate
-          default: 5
-          minimum: 1
-          maximum: 10
-    FilterLocationsResponse:
-      properties:
-        locations:
-          type: array
-          description: The list of locations
-          items:
-            type: string
-    FilterCompaniesRequest:
-      description: Request to autocomplete Company names in Hub across Screens.
-      properties:
-        language_id:
-          type: string
-          description: The language code for the language on which the company name should be fetched. Should be a valid IETF BCP 47 language tag. The default name of the company will be included for search always irrespective of the language_id passed. The results will be sorted by company_handle.
-        prefix:
-          type: string
-          description: The prefix to autocomplete
-        offset:
-          type: string
-          description: The offset to paginate from. This field should ideally be NOT used in autocompletion scenarios. The offset and limit parameters may be useful in analytical workloads and should not be abused. These parameters may be removed in the future.
-        limit:
-          type: integer
-          description: The limit to paginate
-          default: 5
-          minimum: 1
-          maximum: 10
-      required:
-        - language_id
-        - prefix
-    FilteredCompany:
-      properties:
-        company_handle:
-          type: string
-          description: The handle of the Company
-        company_name:
-          type: string
-          description: The name of the Company
-    GetMyApplicationsRequest:
-      description: Get all the Applications of the loggedin user within the given date range. The applications will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the applications will be returned for the last 30 days.
-      properties:
-        start_date:
-          type: string
-          format: date
-          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
-        end_date:
-          type: string
-          format: date
-          description: The end date to filter by
     Application:
       description: The Application object that will be responded to /hub/get-my-applications. The applications will be sorted by created_at in descending order.
       properties:
         application_id:
-          type: string
           description: The ID of the application
-        opening_id:
           type: string
-          description: The ID of the opening
-        opening_title:
-          type: string
-          description: The title of the opening
-        company_name:
-          type: string
-          description: The name of the company
-        company_handle:
-          type: string
-          description: The handle of the company
-        company_logo:
-          type: string
-          format: url
-          description: The logo of the company
-        applied_at:
-          type: string
-          format: date-time
         application_state:
           $ref: "#/components/schemas/ApplicationState"
-        candidacy_id:
-          type: string
-          description: The candidacy ID. This will be set when the application_state is APPLICATION_ACCEPTED.
-        last_statechange_at:
-          type: string
+        applied_at:
           format: date-time
+          type: string
+        candidacy_id:
+          description: The candidacy ID. This will be set when the application_state is APPLICATION_ACCEPTED.
+          type: string
+        company_handle:
+          description: The handle of the company
+          type: string
+        company_logo:
+          description: The logo of the company
+          format: url
+          type: string
+        company_name:
+          description: The name of the company
+          type: string
+        last_statechange_at:
           description: The latest timestamp on UTC on which the application state was changed. TODO We need to use this along with the last time the user logged in to figure out to how show Notification Badge to the user.
+          format: date-time
+          type: string
+        opening_id:
+          description: The ID of the opening
+          type: string
+        opening_title:
+          description: The title of the opening
+          type: string
+    ApplicationLabelColor:
+      enum:
+        - RED
+        - GREEN
+        - BLUE
+        - MAGENTA
+      type: string
+    ApplicationState:
+      enum:
+        - APPLICATION_APPLIED
+        - APPLICATION_SHORTLISTED
+        - APPLICATION_REJECTED
+      type: string
     ApplyToOpeningRequest:
       description: Request to apply to an Opening. This API should not be used for Applicants who want to apply internally from the same company or for Referrals. Those should consider the /employer/ APIs for that. In future, this may be extended to include cover_letter, template_responses, etc. One cannot apply to more than 50 Openings in a day.
       properties:
         opening_id:
-          type: string
           description: The ID of the opening
-        resume:
           type: string
+        resume:
           description: Base64 encoded resume. TODO Should we use a different endpoint for uploading the resume !? Anyway we would have max size limit for all API calls.
+          type: string
         vouchers_handles:
-          type: array
           description: The Vetchi handles of the Verified Colleageus of the logged in user who can vouch for the Application
           items:
             type: string
+          type: array
       required:
         - opening_id
         - resume
     ApplyToOpeningResponse:
       properties:
         application_id:
-          type: string
           description: The ID of the newly created Application
-    GetMyCandidaciesRequest:
-      description: Get all the Candidacies of the logged in user. The candidacies will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the candidacies will be returned for the last 30 days.
+          type: string
+    AutoBiography:
       properties:
-        start_date:
+        about_me:
+          description: The about me of the user
+          maxLength: 1024
+          minLength: 1
           type: string
-          format: date
-          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
-        end_date:
+        name_en:
+          description: The name of the user
+          maxLength: 128
+          minLength: 1
           type: string
-          format: date
-          description: The end date to filter by
-    MyInterview:
-      properties:
-        interview_id:
-          type: string
-          description: The ID of the interview
-        interview_state:
-          $ref: "#/components/schemas/InterviewState"
-        interview_start_time:
-          type: string
-          format: date-time
-          description: The start time of the interview
-        interview_end_time:
-          type: string
-          format: date-time
-          description: The end time of the interview
-        interviewers_names:
-          type: array
-          description: The names of the interviewers
+        names_in_other_languages:
+          description: The names of the user in other languages
           items:
+            properties:
+              language:
+                description: Should be a valid IETF BCP 47 language tag.
+                type: string
+              name:
+                description: The name of the user in the given language
+                type: string
+          type: array
+        websites:
+          description: The websites of the user
+          items:
+            format: url
+            maxLength: 255
+            minLength: 1
             type: string
-        feedback_to_candidate:
-          type: string
-          description: The feedback that should be shared with the candidate. This may be set only when the interview_status is CLOSED.
-    MyCandidacy:
-      description: The Candidacy object that will be responded to /hub/get-my-candidacies. The Candidacies will be sorted by created_at in descending order.
-      properties:
-        candidacy_id:
-          type: string
-          description: The ID of the candidacy
-        openings:
           type: array
-          items:
-            $ref: "#/components/schemas/OpeningPublicInfo"
-        candidacy_state:
-          $ref: "#/components/schemas/CandidacyState"
-        candidacy_state_updated_at:
-          type: string
-          format: date-time
-          description: The timestamp of the candidacy state
-        interviews:
-          type: array
-          items:
-            $ref: "#/components/schemas/MyInterview"
-        created_at:
-          type: string
-          format: date-time
-          description: The timestamp of the Candidacy creation
-
-    ### Hub schemas above
-
-    FilterOrgLocationsRequest:
-      description: Request to filter locations for a company. This API should not be used during the creation of a job opening for a company, Use AutoCompleteOrgLocation for that.
-      properties:
-        prefix:
-          type: string
-          description: The prefix to filter locations
-    FilteredOrgLocation:
-      properties:
-        location_id:
-          type: string
-          description: The ID of the location
-        location_title:
-          type: string
-          description: The title of the location
-    ResetPasswordRequest:
-      description: Request to reset the password
-      properties:
-        token:
-          type: string
-          description: The token to reset the password
-        new_password:
-          type: string
-          description: The new password
-    ForgotPasswordRequest:
-      description: Request to send a password reset
-      properties:
-        email:
-          type: string
-          format: email
-          description: The email address associated with the account for which the password needs to be reset
-      type: object
-    ChangePasswordRequest:
-      description: Change the password for the currently logged in user
-      properties:
-        old_password:
-          description: The old password
-          $ref: "#/components/schemas/Password"
-        new_password:
-          description: The new password
-          $ref: "#/components/schemas/Password"
-      type: object
+      required:
+        - name
+        - about_me
     CancelInterviewRequest:
       description: Cancel an Interview for a given interview_id.
       properties:
-        interview_id:
+        cancellation_body:
+          description: The body of the cancellation notice. Only sent if send_cancellation_to_candidate is set to true. In future, could come from a mail template.
+          maxLength: 1000
+          minLength: 10
           type: string
+        interview_id:
           description: The interview ID
+          type: string
         send_cancellation_to_candidate:
-          type: boolean
           default: false
           description: Whether to send a cancellation notice to the candidate
-        cancellation_body:
-          type: string
-          description: The body of the cancellation notice. Only sent if send_cancellation_to_candidate is set to true. In future, could come from a mail template.
-          minLength: 10
-          maxLength: 1000
-      type: object
-    UpdateInterviewFeedbackRequest:
-      description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
-      properties:
-        interview_id:
-          type: string
-          description: The interview ID
-        evaluation_report:
-          $ref: "#/components/schemas/EvaluationReport"
-        evaluation_result:
-          $ref: "#/components/schemas/EvaluationResult"
-        feedback_to_candidate:
-          type: string
-          description: The feedback that should be shared with the candidate
-          minLength: 10
-          maxLength: 1000
-    GetInterviewDetailsRequest:
-      description: Get Interview details
-      properties:
-        interview_id:
-          type: string
-          description: The interview ID
-      type: object
-    InterviewDetails:
-      description: Details of an interview
-      properties:
-        interview_id:
-          type: string
-          description: The interview ID
-        interview_status:
-          type: string
-          description: The status of the interview
-        openings:
-          type: array
-          description: List of openings for the interview
-          items:
-            $ref: "#/components/schemas/ShortlistedOpening"
-        candidacy_id:
-          type: string
-          description: The candidacy ID
-        start_time:
-          type: string
-          format: date-time
-          description: The start time of the interview
-        end_time:
-          type: string
-          format: date-time
-          description: The end time of the interview
-        candidate_name:
-          type: string
-          description: The name of the candidate
-        candidate_current_company:
-          type: string
-          description: The current company of the candidate
-        interviewers:
-          type: array
-          description: List of interviewers
-          items:
-            $ref: "#/components/schemas/User"
-        evaluation_state:
-          $ref: "#/components/schemas/EvaluationState"
-        evaluation_report:
-          $ref: "#/components/schemas/EvaluationReport"
-        evaluation_result:
-          $ref: "#/components/schemas/EvaluationResult"
-        feedback_to_candidate:
-          type: string
-          description: The feedback that should be shared with the candidate
-          minLength: 10
-          maxLength: 1000
-    CreateInterviewResponse:
-      description: Response after creating an interview
-      properties:
-        interview_id:
-          type: string
-          description: The interview ID
-      type: object
-    CreateInterviewRequest:
-      description: Request to create a new interview
-      properties:
-        candidacy_id:
-          type: string
-          description: The candidacy ID
-        interviewers:
-          type: array
-          description: List of interviewers
-          items:
-            $ref: "#/components/schemas/User"
-        start_time:
-          type: string
-          format: date-time
-          description: The start time of the interview
-        end_time:
-          type: string
-          format: date-time
-          description: The end time of the interview. The duration between start_time and end_time will be the duration and cannot be more than 8 hours.
-        send_appointment:
           type: boolean
-          default: false
-          description: Whether to send an appointment confirmation to the candidate
-        interview_appointment_body:
-          type: string
-          description: The body of the interview appointment confirmation. Only sent if send_appointment is set to true. In future, could come from a mail template.
-          minLength: 10
-          maxLength: 1000
-      type: object
-    GetCandidacyRequest:
-      description: Request to get a candidacy
-      properties:
-        candidacy_id:
-          type: string
-          description: The candidacy ID
-      required:
-        - candidacy_id
     Candidacy:
       description: Candidacy
       properties:
         candidacy_id:
-          type: string
           description: The candidacy ID
+          type: string
         candidacy_state:
           $ref: "#/components/schemas/CandidacyState"
-        name:
-          type: string
-          description: The candidate name
-        last_position:
-          type: string
-          description: The candidate's last position
-        last_company:
-          type: string
-          description: The candidate's last company
-        shortlisted_openings:
-          type: array
-          description: List of openings the candidate has been shortlisted for
-          items:
-            $ref: "#/components/schemas/ShortlistedOpening"
         interviews:
-          type: array
           description: List of interviews for the candidacy
           items:
             $ref: "#/components/schemas/Interview"
-      type: object
-    Interview:
-      description: Interview
-      properties:
-        interview_id:
-          type: string
-          description: The interview ID
-        status:
-          $ref: "#/components/schemas/InterviewState"
-          description: The interview status
-        interviewers:
           type: array
-          description: List of interviewers
-          items:
-            $ref: "#/components/schemas/User"
-        start_time:
-          type: string
-          format: date-time
-          description: The start time of the interview
-        end_time:
-          type: string
-          format: date-time
-          description: The end time of the interview
-        evaluation_status:
-          $ref: "#/components/schemas/EvaluationState"
-        evaluation_report:
-          description: The evaluation report
-          type: string
-        evaluation_result:
-          description: The evaluation result
-          $ref: "#/components/schemas/EvaluationResult"
-      type: object
-    EvaluationResult:
-      type: string
-      enum:
-        - STRONG_YES
-        - YES
-        - NO
-        - STRONG_NO
-    EvaluationState:
-      type: string
-      enum:
-        - EVALUATION_PENDING
-        - EVALUATION_COMPLETED
-    EvaluationReport:
-      type: object
-      properties:
-        positives:
-          type: string
-          description: The positives of the applicant
-          minLength: 10
-          maxLength: 2048
-        negatives:
-          type: string
-          description: The negatives of the applicant
-          minLength: 10
-          maxLength: 2048
-        summary:
-          type: string
-          description: The summary of the evaluation report
-          minLength: 10
-          maxLength: 2048
-    FilterCandidatesRequest:
-      description: Request to get a list of Candidates across multiple openings.
-      properties:
-        search_prefix:
-          type: string
-          description: The prefix for case insensitive search on either the Applicant name or the last Employer name
-          example: jeff google
-        offset:
-          type: string
-          description: The candidate_id to start the list from
-        limit:
-          type: integer
-          description: Number of candidates to return
-          minimum: 1
-          maximum: 100
-          default: 50
-    FilteredCandidate:
-      description: A candidate that matches the filters
-      properties:
-        candidacy_id:
-          type: string
-          description: The candidacy ID
-        name:
-          type: string
-          description: The candidate name
-        lastPosition:
-          type: string
-          description: The candidate's last position
-        lastCompany:
-          type: string
+        last_company:
           description: The candidate's last company
-        shortlistedOpenings:
-          type: array
+          type: string
+        last_position:
+          description: The candidate's last position
+          type: string
+        name:
+          description: The candidate name
+          type: string
+        shortlisted_openings:
           description: List of openings the candidate has been shortlisted for
           items:
             $ref: "#/components/schemas/ShortlistedOpening"
-    ShortlistedOpening:
-      description: An opening that the candidate has been shortlisted for
-      properties:
-        opening_id:
-          type: string
-          description: The opening ID
-        title:
-          type: string
-        hiring_manager_name:
-          type: string
-          description: The hiring manager name
-        hiring_manager_email:
-          type: string
-          format: email
-          description: The hiring manager email
-        recruiter_name:
-          type: string
-          description: The recruiter name
-        recruiter_email:
-          type: string
-          format: email
-          description: The recruiter email
-    ShortlistApplicationRequest:
-      description: Request to Shortlist an Application
-      properties:
-        application_id:
-          type: string
-          description: The ID of the application to shortlist
-      type: object
-    RejectApplicationRequest:
-      description: Request to Reject an Application
-      properties:
-        application_id:
-          type: string
-          description: The ID of the application to reject
-      type: object
-    ApplicationLabelColor:
-      type: string
-      enum:
-        - RED
-        - GREEN
-        - BLUE
-        - MAGENTA
-    FilterApplicationsRequest:
-      description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be sorted by application_id.
-      properties:
-        application_state:
-          $ref: "#/components/schemas/ApplicationState"
-          default: APPLIED
-        opening_id:
-          type: string
-          description: The ID of the opening
-        search_prefix:
-          type: string
-          description: The prefix for case insensitive search on either the Applicant name or the current company
-          example: jeff google
-        color_filters:
           type: array
-          items:
-            $ref: "#/components/schemas/ApplicationLabelColor"
-          description: The color filters to apply to the applications. ANY of the given colors will be selected as a match.
-        limit:
-          type: integer
-          description: Number of applications to return
-          minimum: 1
-          maximum: 100
-          default: 50
-        offset:
-          type: string
-          description: The application_id to start the list from
-      type: object
-      required:
-        - opening_id
-    VouchState:
-      type: string
+    CandidacyState:
       enum:
-        - VOUCH_SOUGHT
-        - VOUCH_VOUCHED
-        - VOUCH_REJECTED
-    Vouch:
-      description: Details of a Vouch
-      properties:
-        voucher_name:
-          type: string
-        voucher_vetchi_handle:
-          type: string
-        voucher_current_position:
-          type: string
-        voucher_current_company:
-          type: string
-        vouch_state:
-          $ref: "#/components/schemas/VouchState"
-    ApplicationState:
+        - CANDIDACY_SHORTLISTED
+        - CANDIDACY_OFFERED
+        - CANDIDACY_REJECTED # Employer rejected the Candidate
+        - CANDIDACY_ACCEPTED
+        - CANDIDACY_WITHDRAWN # Candidate does not want to proceed further
+        - CANDIDACY_COMPLETED # Final state of the Candidacy
       type: string
-      enum:
-        - APPLICATION_APPLIED
-        - APPLICATION_SHORTLISTED
-        - APPLICATION_REJECTED
-    ReferredBy:
-      type: object
-      description: The user who referred the applicant
+    ChangePasswordRequest:
+      description: Change the password for the currently logged in user
       properties:
+        new_password:
+          $ref: "#/components/schemas/Password"
+          description: The new password
+        old_password:
+          $ref: "#/components/schemas/Password"
+          description: The old password
+    ClientId:
+      description: The client ID, usually a website domain
+      example: example.com
+      maxLength: 255
+      minLength: 3
+      type: string
+    CostCenter:
+      description: A cost center object
+      properties:
+        cost_center_id:
+          type: string
         name:
-          type: string
-        email:
-          type: string
-          description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
-    FilteredApplication:
-      description: An Application that matches the filters
-      properties:
-        application_id:
-          type: string
-        applicant_name:
-          type: string
-        last_company:
-          type: string
-        last_position:
-          type: string
-        vetchi_handle:
-          type: string
-        color_filters:
-          type: array
-          items:
-            $ref: "#/components/schemas/ApplicationLabelColor"
-        resume_url:
-          type: string
-          description: The URL to the applicant's resume
-        vouches:
-          type: array
-          items:
-            $ref: "#/components/schemas/Vouch"
-        referred_by:
-          $ref: "#/components/schemas/ReferredBy"
-    AddLocationRequest:
-      description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
-      properties:
-        country:
-          type: string
+          maxLength: 64
           minLength: 3
-          maxLength: 32
-        state:
           type: string
-          minLength: 3
-          maxLength: 32
-        city:
-          type: string
-          minLength: 3
-          maxLength: 32
-          example: Electronic City
-        other_names_for_city:
-          type: array
-          items:
-            type: string
-            minLength: 3
-            maxLength: 32
-          example:
-            - Bengaluru
-            - Bangalore
-        postal_address:
-          type: string
-          minLength: 3
+        notes:
           maxLength: 1024
-        location_title:
           type: string
-          description: The title of the location
-          minLength: 3
-          maxLength: 32
-          example: DataCenter Campus
-      required:
-        - country
-        - state
-        - city
-        - postal_address
-      type: object
-    AddLocationResponse:
-      description: Response after adding a location
+    CreateInterviewRequest:
+      description: Request to create a new interview
       properties:
-        location_id:
+        candidacy_id:
+          description: The candidacy ID
           type: string
-      type: object
-    AddUserRequest:
-      description: Request to add a new user
-      properties:
-        name:
+        end_time:
+          description: The end time of the interview. The duration between start_time and end_time will be the duration and cannot be more than 8 hours.
+          format: date-time
           type: string
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        role:
-          $ref: "#/components/schemas/Role"
-      required:
-        - name
-        - email
-        - role
-      type: object
-    AddUserResponse:
-      description: Response after adding a user
+        interview_appointment_body:
+          description: The body of the interview appointment confirmation. Only sent if send_appointment is set to true. In future, could come from a mail template.
+          maxLength: 1000
+          minLength: 10
+          type: string
+        interviewers:
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+          type: array
+        send_appointment:
+          default: false
+          description: Whether to send an appointment confirmation to the candidate
+          type: boolean
+        start_time:
+          description: The start time of the interview
+          format: date-time
+          type: string
+    CreateInterviewResponse:
+      description: Response after creating an interview
       properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-      type: object
-    JobType:
-      type: string
-      enum:
-        - FULL_TIME
-        - PART_TIME
-        - CONTRACT
-        - INTERNSHIP
-        - UNSPECIFIED
-      description: Type of job
+        interview_id:
+          description: The interview ID
+          type: string
     CreateOpeningRequest:
       description: Request to create a new opening
-      type: object
       properties:
-        title:
+        cost_center_id:
+          description: Cost Center / Department for the job
           type: string
-          description: The job title
-          example: Senior Staff Engineer
-        positions:
-          type: integer
-          description: Number of positions available
-          minimum: 1
-          maximum: 100
+        currency:
+          description: Currency for the salary
+          example: USD
+          type: string
+        educational_qualification:
+          $ref: "#/components/schemas/EducationalQualification"
+        hiring_manager:
+          description: Hiring manager for the job
+          example: hiringmanager.alice@example.com
+          format: email
+          type: string
+        internal_only:
+          default: false
+          description: If true, the opening will not be visible to the public
+          type: boolean
         jd:
-          type: string
           description: Detailed job description in markdown format
-          minLength: 10
-          maxLength: 10000
           example: |
             **Responsibilities**
             * Architecting and developing web, software, mobile apps, prototypes, or proofs of concepts (POC’s)
@@ -1035,82 +373,75 @@ components:
             * Expertise with unit testing & Test Driven Development (TDD).
             * Business Acumen - strategic thinking & strategy development.
             * Building strong teams - set and evangelize vision, facilitative leadership, attract and retain key talent.
+          maxLength: 10000
+          minLength: 10
+          type: string
         job_type:
           $ref: "#/components/schemas/JobType"
           description: Job type
-        recruiter:
+        max_hops:
+          description: Maximum hops upto which people in potential team mates network can apply
+          maximum: 5
+          minimum: 2
+          type: integer
+        notes:
+          description: Additional notes
           type: string
-          format: email
+        onsite_location_ids:
+          description: List of location_ids for the onsite locations that are admissible for this opening
+          items:
+            type: string
+          type: array
+        positions:
+          description: Number of positions available
+          maximum: 100
+          minimum: 1
+          type: integer
+        potential_team_mates_ids:
+          description: List of potential team mates ids
+          items:
+            type: string
+          type: array
+        recruiter:
           description: Recruiter for the job
           example: recruiter.bob@example.com
-        hiring_manager:
-          type: string
           format: email
-          description: Hiring manager for the job
-          example: hiringmanager.alice@example.com
-        onsite_location_ids:
-          type: array
-          items:
-            type: string
-          description: List of location_ids for the onsite locations that are admissible for this opening
+          type: string
         remote_locations_countries:
-          type: array
-          items:
-            type: string
           description: Remote locations by countries
+          items:
+            type: string
+          type: array
         remote_locations_timezones:
-          type: array
-          items:
-            type: string
           description: Remote locations by timezones
-        yoe_min:
-          type: integer
-          description: Minimum years of experience
-          minimum: 0
-          maximum: 80
-          example: 8
-        yoe_max:
-          type: integer
-          description: Maximum years of experience
-          minimum: 0
-          maximum: 80
-        educational_qualification:
-          $ref: "#/components/schemas/EducationalQualification"
-
-        currency:
-          type: string
-          description: Currency for the salary
-          example: USD
-        salary_range_min:
-          type: number
-          description: Minimum salary
-          minimum: 1
-          example: 175000
-        salary_range_max:
-          type: number
-          description: Maximum salary
-          minimum: 2
-          example: 200000
-        cost_center_id:
-          type: string
-          description: Cost Center / Department for the job
-        notes:
-          type: string
-          description: Additional notes
-        potential_team_mates_ids:
-          type: array
           items:
             type: string
-          description: List of potential team mates ids
-        max_hops:
-          type: integer
-          description: Maximum hops upto which people in potential team mates network can apply
+          type: array
+        salary_range_max:
+          description: Maximum salary
+          example: 200000
           minimum: 2
-          maximum: 5
-        internal_only:
-          type: boolean
-          default: false
-          description: If true, the opening will not be visible to the public
+          type: number
+        salary_range_min:
+          description: Minimum salary
+          example: 175000
+          minimum: 1
+          type: number
+        title:
+          description: The job title
+          example: Senior Staff Engineer
+          type: string
+        yoe_max:
+          description: Maximum years of experience
+          maximum: 80
+          minimum: 0
+          type: integer
+        yoe_min:
+          description: Minimum years of experience
+          example: 8
+          maximum: 80
+          minimum: 0
+          type: integer
       required:
         - title
         - positions
@@ -1121,12 +452,16 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
-    ClientId:
-      description: The client ID, usually a website domain
-      example: example.com
-      maxLength: 255
-      minLength: 3
-      type: string
+    EditRoleRequest:
+      description: Request to edit a user's role
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        role:
+          $ref: "#/components/schemas/Role"
+      required:
+        - email
+        - role
     EducationalQualification:
       description: Educational qualification
       enum:
@@ -1154,7 +489,6 @@ components:
         password:
           $ref: "#/components/schemas/Password"
           description: The password
-      type: object
     EmployerSignInResponse:
       properties:
         expiresAt:
@@ -1163,23 +497,181 @@ components:
         token:
           description: The authentication token
           type: string
-      type: object
+    EvaluationReport:
+      properties:
+        negatives:
+          description: The negatives of the applicant
+          maxLength: 2048
+          minLength: 10
+          type: string
+        positives:
+          description: The positives of the applicant
+          maxLength: 2048
+          minLength: 10
+          type: string
+        summary:
+          description: The summary of the evaluation report
+          maxLength: 2048
+          minLength: 10
+          type: string
+    EvaluationResult:
+      enum:
+        - STRONG_YES
+        - YES
+        - NO
+        - STRONG_NO
+      type: string
+    EvaluationState:
+      enum:
+        - EVALUATION_PENDING
+        - EVALUATION_COMPLETED
+      type: string
+    FilterApplicationsRequest:
+      description: Request to get a list of applications for an Opening. If search_prefix or opening_id is provided, results matching either of them (ANY) will be returned. Results will be sorted by application_id.
+      properties:
+        application_state:
+          $ref: "#/components/schemas/ApplicationState"
+          default: APPLIED
+        color_filters:
+          description: The color filters to apply to the applications. ANY of the given colors will be selected as a match.
+          items:
+            $ref: "#/components/schemas/ApplicationLabelColor"
+          type: array
+        limit:
+          default: 50
+          description: Number of applications to return
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          description: The application_id to start the list from
+          type: string
+        opening_id:
+          description: The ID of the opening
+          type: string
+        search_prefix:
+          description: The prefix for case insensitive search on either the Applicant name or the current company
+          example: jeff google
+          type: string
+      required:
+        - opening_id
+    FilterCandidatesRequest:
+      description: Request to get a list of Candidates across multiple openings.
+      properties:
+        limit:
+          default: 50
+          description: Number of candidates to return
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          description: The candidate_id to start the list from
+          type: string
+        search_prefix:
+          description: The prefix for case insensitive search on either the Applicant name or the last Employer name
+          example: jeff google
+          type: string
+    FilterCompaniesRequest:
+      description: Request to autocomplete Company names in Hub across Screens.
+      properties:
+        language_id:
+          description: The language code for the language on which the company name should be fetched. Should be a valid IETF BCP 47 language tag. The default name of the company will be included for search always irrespective of the language_id passed. The results will be sorted by company_handle.
+          type: string
+        limit:
+          default: 5
+          description: The limit to paginate
+          maximum: 10
+          minimum: 1
+          type: integer
+        offset:
+          description: The offset to paginate from. This field should ideally be NOT used in autocompletion scenarios. The offset and limit parameters may be useful in analytical workloads and should not be abused. These parameters may be removed in the future.
+          type: string
+        prefix:
+          description: The prefix to autocomplete
+          type: string
+      required:
+        - language_id
+        - prefix
     FilterEmployeesRequest:
       properties:
         prefix:
-          type: string
           description: The prefix to filter by. The filtering is case insensitive and will match any part of the name or email.
-          minLength: 3
           maxLength: 255
-    FilteredEmployee:
-      description: Filtered employee
-      example:
-        - name: John Doe
-          email: john.doe@example.com
-          vetchiHandle: johndoe
-        - name: Jane Smith
-          email: jane.smith@example.com
-          vetchiHandle: janesmith-123123
+          minLength: 3
+          type: string
+    FilterHiringManagersRequest:
+      properties:
+        prefix:
+          type: string
+      required:
+        - prefix
+    FilterJobOpeningsRequest:
+      description: Request to find job openings based on ANY of the below filters. For each filter, we will check if the opening has ANY of the values specified in the filter.
+      properties:
+        companies:
+          description: The companies to filter by. Pass the company_handle of each interested company.
+          items:
+            type: string
+          type: array
+        educational_qualifications:
+          default:
+            - UNDER_GRADUATE
+            - POST_GRADUATE
+            - DOCTORATE
+            - DOESNT_MATTER
+            - UNSPECIFIED
+          description: The educational qualifications to filter by. If this value is not passed, then Openings with all educational qualifications will be returned.
+          items:
+            $ref: "#/components/schemas/EducationalQualification"
+          type: array
+        job_types:
+          description: The job types to filter by
+          items:
+            $ref: "#/components/schemas/JobType"
+          type: array
+        locations:
+          description: The City locations to filter by. Use the /hub/filter-locations API to get the list of possible values for this field. Only those will result in a match. Do not pass random strings.
+          items:
+            type: string
+          type: array
+        remote_accepted:
+          default: false
+          description: Whether the opening allows people to work remotely
+          type: boolean
+        yoe_max:
+          default: 80
+          description: Maximum range for the experience filter
+          maximum: 80
+          minimum: 0
+          type: integer
+        yoe_min:
+          default: 0
+          description: Minimum range for the experience filter
+          maximum: 80
+          minimum: 0
+          type: integer
+    FilterLocationsRequest:
+      description: Request to autocomplete location names while filtering Job Openings in Hub across Companies. This API should not be used during the creation of a job opening for a company, Use FilterOrgLocations struct and the corresponding API for that. The results may be sorted by location, but not guaranteed to be sorted, as in future there may be semantic search (instead of prefix search) for location matching.
+      properties:
+        limit:
+          default: 5
+          description: The limit to paginate
+          maximum: 10
+          minimum: 1
+          type: integer
+        offset:
+          description: The offset to paginate from. This field should ideally be not used in autocompletion scenarios. This parameter is provided because it may be useful in analytical workloads.
+          type: string
+        prefix:
+          description: The prefix to autocomplete
+          type: string
+    FilterLocationsResponse:
+      properties:
+        locations:
+          description: The list of locations
+          items:
+            type: string
+          type: array
     FilterOpeningsRequest:
       properties:
         hiring_manager_emails:
@@ -1225,6 +717,91 @@ components:
           items:
             $ref: "#/components/schemas/EmailAddress"
           type: array
+    FilterOrgLocationsRequest:
+      description: Request to filter locations for a company. This API should not be used during the creation of a job opening for a company, Use AutoCompleteOrgLocation for that.
+      properties:
+        prefix:
+          description: The prefix to filter locations
+          type: string
+    FilterRecruitersRequest:
+      properties:
+        prefix:
+          type: string
+      required:
+        - prefix
+    FilteredApplication:
+      description: An Application that matches the filters
+      properties:
+        applicant_name:
+          type: string
+        application_id:
+          type: string
+        color_filters:
+          items:
+            $ref: "#/components/schemas/ApplicationLabelColor"
+          type: array
+        last_company:
+          type: string
+        last_position:
+          type: string
+        referred_by:
+          $ref: "#/components/schemas/ReferredBy"
+        resume_url:
+          description: The URL to the applicant's resume
+          type: string
+        vetchi_handle:
+          type: string
+        vouches:
+          items:
+            $ref: "#/components/schemas/Vouch"
+          type: array
+    FilteredCandidate:
+      description: A candidate that matches the filters
+      properties:
+        candidacy_id:
+          description: The candidacy ID
+          type: string
+        lastCompany:
+          description: The candidate's last company
+          type: string
+        lastPosition:
+          description: The candidate's last position
+          type: string
+        name:
+          description: The candidate name
+          type: string
+        shortlistedOpenings:
+          description: List of openings the candidate has been shortlisted for
+          items:
+            $ref: "#/components/schemas/ShortlistedOpening"
+          type: array
+    FilteredCompany:
+      properties:
+        company_handle:
+          description: The handle of the Company
+          type: string
+        company_name:
+          description: The name of the Company
+          type: string
+    FilteredEmployee:
+      description: Filtered employee
+      example:
+        - email: john.doe@example.com
+          name: John Doe
+          vetchiHandle: johndoe
+        - email: jane.smith@example.com
+          name: Jane Smith
+          vetchiHandle: janesmith-123123
+    FilteredHiringManagers:
+      description: The filtered hiring managers
+      example:
+        - email: john.doe@example.com
+          name: John Doe
+        - email: jane.smith@example.com
+          name: Jane Smith
+      items:
+        $ref: "#/components/schemas/User"
+      type: array
     FilteredOpenings:
       description: The filtered openings
       example:
@@ -1258,26 +835,55 @@ components:
       items:
         $ref: "#/components/schemas/OpeningInfo"
       type: array
+    FilteredOrgLocation:
+      properties:
+        location_id:
+          description: The ID of the location
+          type: string
+        location_title:
+          description: The title of the location
+          type: string
     FilteredRecruiters:
       description: The filtered recruiters
       example:
-        - name: John Doe
-          email: john.doe@example.com
-        - name: Jane Smith
-          email: jane.smith@example.com
+        - email: john.doe@example.com
+          name: John Doe
+        - email: jane.smith@example.com
+          name: Jane Smith
       items:
         $ref: "#/components/schemas/User"
       type: array
-    FilteredHiringManagers:
-      description: The filtered hiring managers
-      example:
-        - name: John Doe
-          email: john.doe@example.com
-        - name: Jane Smith
-          email: jane.smith@example.com
-      items:
-        $ref: "#/components/schemas/User"
-      type: array
+    ForgotPasswordRequest:
+      description: Request to send a password reset
+      properties:
+        email:
+          description: The email address associated with the account for which the password needs to be reset
+          format: email
+          type: string
+    GetCandidacyRequest:
+      description: Request to get a candidacy
+      properties:
+        candidacy_id:
+          description: The candidacy ID
+          type: string
+      required:
+        - candidacy_id
+    GetCostCentersRequest:
+      description: Request to get a list of cost centers with pagination
+      properties:
+        limit:
+          default: 100
+          maximum: 100
+          minimum: 1
+          type: integer
+        offset:
+          type: string
+    GetInterviewDetailsRequest:
+      description: Get Interview details
+      properties:
+        interview_id:
+          description: The interview ID
+          type: string
     GetLocationsRequest:
       description: Request to get a list of locations with pagination
       properties:
@@ -1288,18 +894,37 @@ components:
           type: integer
         offset:
           type: string
-      type: object
+    GetMyApplicationsRequest:
+      description: Get all the Applications of the loggedin user within the given date range. The applications will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the applications will be returned for the last 30 days.
+      properties:
+        end_date:
+          description: The end date to filter by
+          format: date
+          type: string
+        start_date:
+          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
+          format: date
+          type: string
+    GetMyCandidaciesRequest:
+      description: Get all the Candidacies of the logged in user. The candidacies will be sorted by created_at in descending order. The interval between start_date and end_date cannot be more than 30 days. If no date range is provided, the candidacies will be returned for the last 30 days.
+      properties:
+        end_date:
+          description: The end date to filter by
+          format: date
+          type: string
+        start_date:
+          description: The start date to filter by. Cannot be older than 365 days since the current date in UTC.
+          format: date
+          type: string
     GetOnboardStatusRequest:
       properties:
         client_id:
           $ref: "#/components/schemas/ClientId"
           description: The client ID
-      type: object
     GetOnboardStatusResponse:
       properties:
         status:
           $ref: "#/components/schemas/OnboardStatus"
-      type: object
     GetUserRequest:
       description: Request to get a list of users with pagination
       properties:
@@ -1309,9 +934,176 @@ components:
           minimum: 1
           type: integer
         offset:
-          description: The email address to start the list from
           $ref: "#/components/schemas/EmailAddress"
-      type: object
+          description: The email address to start the list from
+    GetWorkHistoryRequest:
+      description: Request to get the work history for the logged in user
+      properties:
+        language_id:
+          description: The language code for the language on which the work history should be fetched. Should be a valid IETF BCP 47 language tag. If the company has not set a name for the requested language, then the name in the default language of the company will be returned.
+          type: string
+    Interview:
+      description: Interview
+      properties:
+        end_time:
+          description: The end time of the interview
+          format: date-time
+          type: string
+        evaluation_report:
+          description: The evaluation report
+          type: string
+        evaluation_result:
+          $ref: "#/components/schemas/EvaluationResult"
+          description: The evaluation result
+        evaluation_status:
+          $ref: "#/components/schemas/EvaluationState"
+        interview_id:
+          description: The interview ID
+          type: string
+        interviewers:
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+          type: array
+        start_time:
+          description: The start time of the interview
+          format: date-time
+          type: string
+        status:
+          $ref: "#/components/schemas/InterviewState"
+          description: The interview status
+    InterviewDetails:
+      description: Details of an interview
+      properties:
+        candidacy_id:
+          description: The candidacy ID
+          type: string
+        candidate_current_company:
+          description: The current company of the candidate
+          type: string
+        candidate_name:
+          description: The name of the candidate
+          type: string
+        end_time:
+          description: The end time of the interview
+          format: date-time
+          type: string
+        evaluation_report:
+          $ref: "#/components/schemas/EvaluationReport"
+        evaluation_result:
+          $ref: "#/components/schemas/EvaluationResult"
+        evaluation_state:
+          $ref: "#/components/schemas/EvaluationState"
+        feedback_to_candidate:
+          description: The feedback that should be shared with the candidate
+          maxLength: 1000
+          minLength: 10
+          type: string
+        interview_id:
+          description: The interview ID
+          type: string
+        interview_status:
+          description: The status of the interview
+          type: string
+        interviewers:
+          description: List of interviewers
+          items:
+            $ref: "#/components/schemas/User"
+          type: array
+        openings:
+          description: List of openings for the interview
+          items:
+            $ref: "#/components/schemas/ShortlistedOpening"
+          type: array
+        start_time:
+          description: The start time of the interview
+          format: date-time
+          type: string
+    InterviewState:
+      enum:
+        - INTERVIEW_SCHEDULED
+        - INTERVIEW_COMPLETED
+        - INTERVIEW_CANCELLED
+        - INTERVIEW_CLOSED # Will be moved to this state when the Candidacy is changed to either CANDIDACY_OFFERED or CANDIDACY_REJECTED and stays in this state forever
+      type: string
+    JobType:
+      description: Type of job
+      enum:
+        - FULL_TIME
+        - PART_TIME
+        - CONTRACT
+        - INTERNSHIP
+        - UNSPECIFIED
+      type: string
+    LoginRequest:
+      description: Request to login
+      properties:
+        email:
+          description: The email address to use for authentication
+          format: email
+          type: string
+        password:
+          description: The password for the email address
+          type: string
+      required:
+        - email
+        - password
+    LoginResponse:
+      properties:
+        tfa_token:
+          description: The token for TFA
+          type: string
+        valid_till:
+          description: The time till when the token is valid
+          format: date-time
+          type: string
+    MyCandidacy:
+      description: The Candidacy object that will be responded to /hub/get-my-candidacies. The Candidacies will be sorted by created_at in descending order.
+      properties:
+        candidacy_id:
+          description: The ID of the candidacy
+          type: string
+        candidacy_state:
+          $ref: "#/components/schemas/CandidacyState"
+        candidacy_state_updated_at:
+          description: The timestamp of the candidacy state
+          format: date-time
+          type: string
+        created_at:
+          description: The timestamp of the Candidacy creation
+          format: date-time
+          type: string
+        interviews:
+          items:
+            $ref: "#/components/schemas/MyInterview"
+          type: array
+        openings:
+          items:
+            $ref: "#/components/schemas/OpeningPublicInfo"
+          type: array
+    MyInterview:
+      properties:
+        feedback_to_candidate:
+          description: The feedback that should be shared with the candidate. This may be set only when the interview_status is CLOSED.
+          type: string
+        interview_end_time:
+          description: The end time of the interview
+          format: date-time
+          type: string
+        interview_id:
+          description: The ID of the interview
+          type: string
+        interview_start_time:
+          description: The start time of the interview
+          format: date-time
+          type: string
+        interview_state:
+          $ref: "#/components/schemas/InterviewState"
+        interviewers_names:
+          description: The names of the interviewers
+          items:
+            type: string
+          type: array
     OnboardStatus:
       description: The onboarding status
       enum:
@@ -1344,6 +1136,8 @@ components:
           type: string
         job_type:
           type: string
+        opening_state:
+          $ref: "#/components/schemas/OpeningState"
         recruiter_email:
           description: The recruiter email
           format: email
@@ -1351,13 +1145,30 @@ components:
         recruiter_name:
           description: The recruiter name
           type: string
-        opening_state:
-          $ref: "#/components/schemas/OpeningState"
         title:
           type: string
         unfilled_count:
           type: integer
-      type: object
+    OpeningPublicInfo:
+      properties:
+        company_handle:
+          description: The handle of the company
+          type: string
+        company_logo:
+          description: The logo of the company
+          format: url
+          type: string
+        company_name:
+          description: The name of the company
+          type: string
+        jd:
+          type: string
+        opening_id:
+          description: The ID of the opening
+          type: string
+        title:
+          description: The title of the opening
+          type: string
     OpeningState:
       description: The status of an opening
       enum:
@@ -1373,6 +1184,42 @@ components:
       minLength: 8
       pattern: ^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
       type: string
+    PutCostCenterRequest:
+      description: Request to update an existing cost center
+      properties:
+        cost_center_id:
+          type: string
+        name:
+          maxLength: 64
+          minLength: 3
+          type: string
+        notes:
+          maxLength: 1024
+          type: string
+      required:
+        - cost_center_id
+        - name
+    ReferredBy:
+      description: The user who referred the applicant
+      properties:
+        email:
+          description: The email of the user who referred the applicant as stored under the Employer => User in the employer website. This can be different than the public or personal email used on the vetchi website.
+          type: string
+        name:
+          type: string
+    RejectApplicationRequest:
+      description: Request to Reject an Application
+      properties:
+        application_id:
+          description: The ID of the application to reject
+          type: string
+    RemoveCostCenterRequest:
+      description: Request to remove a cost center
+      properties:
+        cost_center_id:
+          type: string
+      required:
+        - cost_center_id
     RemoveLocationRequest:
       description: Request to remove a location
       properties:
@@ -1380,7 +1227,6 @@ components:
           type: string
       required:
         - location_id
-      type: object
     RemoveUserRequest:
       description: Request to remove a user
       properties:
@@ -1388,7 +1234,21 @@ components:
           $ref: "#/components/schemas/EmailAddress"
       required:
         - email
-      type: object
+    RemoveWorkHistoryRequest:
+      description: Request to remove a work history for the logged in user
+      properties:
+        work_history_id:
+          description: The ID of the work history to remove
+          type: string
+    ResetPasswordRequest:
+      description: Request to reset the password
+      properties:
+        new_password:
+          description: The new password
+          type: string
+        token:
+          description: The token to reset the password
+          type: string
     Role:
       description: User roles in the system
       enum:
@@ -1396,25 +1256,112 @@ components:
         - RECRUITER
         - PANELIST
       type: string
+    ShortlistApplicationRequest:
+      description: Request to Shortlist an Application
+      properties:
+        application_id:
+          description: The ID of the application to shortlist
+          type: string
+    ShortlistedOpening:
+      description: An opening that the candidate has been shortlisted for
+      properties:
+        hiring_manager_email:
+          description: The hiring manager email
+          format: email
+          type: string
+        hiring_manager_name:
+          description: The hiring manager name
+          type: string
+        opening_id:
+          description: The opening ID
+          type: string
+        recruiter_email:
+          description: The recruiter email
+          format: email
+          type: string
+        recruiter_name:
+          description: The recruiter name
+          type: string
+        title:
+          type: string
+    TFAuthRequest:
+      properties:
+        tfa_code:
+          description: The code from the TFA email
+          type: string
+      required:
+        - tfa_code
+    TFAuthResponse:
+      properties:
+        session_token:
+          description: The token for the session
+          type: string
+        valid_till:
+          description: The time till when the token is valid
+          format: date-time
+          type: string
+    UpdateInterviewFeedbackRequest:
+      description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
+      properties:
+        evaluation_report:
+          $ref: "#/components/schemas/EvaluationReport"
+        evaluation_result:
+          $ref: "#/components/schemas/EvaluationResult"
+        feedback_to_candidate:
+          description: The feedback that should be shared with the candidate
+          maxLength: 1000
+          minLength: 10
+          type: string
+        interview_id:
+          description: The interview ID
+          type: string
+    UpdateWorkHistoryRequest:
+      description: Request to update a work history for the logged in user
+      properties:
+        company_handle:
+          description: The handle of the company within Vetchi. This is a unique identifier for the company and is used in the API. This is different from the company_name used in the UI and should not be confused with the company_id which is used in the database.
+          type: string
+        end_date:
+          description: The end date of the job. If not passed, it will be considered as current job. There can be multiple current jobs for a user.
+          format: date
+          type: string
+        job_title:
+          description: The job title
+          type: string
+        start_date:
+          description: The start date of the job
+          format: date
+          type: string
+        work_history_id:
+          description: The ID of the work history to update
+          type: string
+      required:
+        - work_history_id
+        - company_handle
+        - job_title
+        - start_date
+    UpdateWorkHistoryResponse:
+      properties:
+        work_history_id:
+          description: The ID of the updated work history
+          type: string
     User:
       description: A user object
       properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
         name:
           description: The name of the user
           type: string
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-      type: object
     UserInfo:
       description: Information about a user
       properties:
-        name:
-          type: string
         email:
           $ref: "#/components/schemas/EmailAddress"
+        name:
+          type: string
         role:
           $ref: "#/components/schemas/Role"
-      type: object
     UserListResponse:
       description: A list of user information, sorted by email address
       items:
@@ -1425,122 +1372,364 @@ components:
       items:
         type: string
       type: array
-    FilterRecruitersRequest:
-      type: object
+    VetchiHandle:
       properties:
-        prefix:
+        handle:
+          description: The vetchi handle of the user
+          maxLength: 32
+          minLength: 6 # May be shorter in future
+          pattern: "^[a-zA-Z0-9_-]+$"
           type: string
       required:
-        - prefix
-    FilterHiringManagersRequest:
-      type: object
+        - handle
+    Vouch:
+      description: Details of a Vouch
       properties:
-        prefix:
+        vouch_state:
+          $ref: "#/components/schemas/VouchState"
+        voucher_current_company:
           type: string
-      required:
-        - prefix
-    CostCenter:
-      description: A cost center object
+        voucher_current_position:
+          type: string
+        voucher_name:
+          type: string
+        voucher_vetchi_handle:
+          type: string
+    VouchState:
+      enum:
+        - VOUCH_SOUGHT
+        - VOUCH_VOUCHED
+        - VOUCH_REJECTED
+      type: string
+    WorkHistory:
       properties:
-        cost_center_id:
+        company_name:
+          description: The name of the company in the requested language in the GetWorkHistoryRequest. If the company name is not set for the requested language, then the name in the default language of the company will be returned.
           type: string
-        name:
+        end_date:
+          description: The end date of the job
+          format: date
           type: string
-          minLength: 3
-          maxLength: 64
-        notes:
+        job_title:
+          description: The job title
           type: string
-          maxLength: 1024
-      type: object
-    AddCostCenterRequest:
-      description: Request to add a new cost center
-      properties:
-        name:
+        logo:
+          description: The logo of the company
+          format: url
           type: string
-          minLength: 3
-          maxLength: 64
-        notes:
+        start_date:
+          description: The start date of the job
+          format: date
           type: string
-          maxLength: 1024
-      required:
-        - name
-      type: object
-    AddCostCenterResponse:
-      description: Response after adding a cost center
-      properties:
-        cost_center_id:
+        work_history_id:
+          description: The ID of the work history
           type: string
-      type: object
-    RemoveCostCenterRequest:
-      description: Request to remove a cost center
-      properties:
-        cost_center_id:
-          type: string
-      required:
-        - cost_center_id
-      type: object
-    GetCostCentersRequest:
-      description: Request to get a list of cost centers with pagination
-      properties:
-        limit:
-          default: 100
-          maximum: 100
-          minimum: 1
-          type: integer
-        offset:
-          type: string
-      type: object
-    EditRoleRequest:
-      description: Request to edit a user's role
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        role:
-          $ref: "#/components/schemas/Role"
-      required:
-        - email
-        - role
-      type: object
-    PutCostCenterRequest:
-      description: Request to update an existing cost center
-      properties:
-        cost_center_id:
-          type: string
-        name:
-          type: string
-          minLength: 3
-          maxLength: 64
-        notes:
-          type: string
-          maxLength: 1024
-      required:
-        - cost_center_id
-        - name
-      type: object
-
-###
-
+  securitySchemes:
+    BearerAuth:
+      scheme: bearer
+      type: http
+    HubAuth:
+      bearerFormat: string
+      scheme: bearer
+      type: http
+    OAuth2:
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          scopes:
+            admin: Grants admin access
+            read: Grants read access
+            write: Grants write access
+          tokenUrl: https://example.com/oauth/token
+      type: oauth2
+    TFAuth:
+      bearerFormat: string
+      scheme: bearer
+      type: http
 paths:
-  /employer/filter-org-locations:
+  /employer/add-cost-center:
     post:
-      description: Filter locations for a company. Can be used for autocompletion of location titles for the company.
-      operationId: employer-filter-org-locations
+      description: Add a new cost center. This method is available only for users with the ADMIN role.
+      operationId: employer-add-cost-center
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FilterOrgLocationsRequest"
+              $ref: "#/components/schemas/AddCostCenterRequest"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                type: array
+                $ref: "#/components/schemas/AddCostCenterResponse"
+          description: Cost center added successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Add Cost Center
+      tags:
+        - Employer
+  /employer/add-location:
+    post:
+      description: Add a new location. This method is available only for users with the ADMIN role.
+      operationId: employer-add-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddLocationRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddLocationResponse"
+          description: Location added successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Add Location
+      tags:
+        - Employer
+  /employer/add-user:
+    post:
+      description: Add a new user associated with the employer. This is available only for users with the ADMIN role.
+      operationId: employer-add-user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUserRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddUserResponse"
+          description: User added successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors
+        "409":
+          description: Conflict - User already exists with the same email
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Add User
+      tags:
+        - Employer
+  /employer/cancel-interview:
+    post:
+      description: Cancel an interview for a given interview_id.
+      operationId: employer-cancel-interview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelInterviewRequest"
+        required: true
+      responses:
+        "200":
+          description: Interview marked as Cancelled
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Cancel Interview
+      tags:
+        - Employer
+  /employer/change-password:
+    post:
+      description: Change the password for the current employer.
+      operationId: employer-change-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password changed successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Change Password
+      tags:
+        - Employer
+  /employer/create-interview:
+    post:
+      description: Create a new interview for a given candidacy_id.
+      operationId: employer-create-interview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterviewRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInterviewResponse"
+          description: Interview created successfully
+        "400":
+          description: Bad Request - Validation errors
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Create Interview
+      tags:
+        - Employer
+  /employer/create-opening:
+    post:
+      description: Create a new Job Opening. This method is available only for users with the ADMIN role.
+      operationId: employer-create-opening
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpeningRequest"
+        required: true
+      responses:
+        "200":
+          description: Opening created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Create Opening
+      tags:
+        - Employer
+  /employer/edit-user-role:
+    post:
+      description: Edit the role of a user associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
+      operationId: employer-edit-user-role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: Role updated successfully
+        "404":
+          description: User not found
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Edit User Role
+      tags:
+        - Employer
+  /employer/filter-applications:
+    post:
+      description: Get a list of applications for a given opening.
+      operationId: employer-filter-applications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterApplicationsRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
                 items:
-                  $ref: "#/components/schemas/FilteredOrgLocation"
+                  $ref: "#/components/schemas/FilteredApplication"
+                type: array
+          description: "List of Applications that match the filter"
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Filter Applications
+      tags:
+        - Employer
+  /employer/filter-candidates:
+    post:
+      description: Filter candidates based on various criteria and sorted by candidacy_id
+      operationId: employer-filter-candidates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterCandidatesRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/FilteredCandidate"
+                type: array
+          description: List of candidates that match the filter
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Filter Candidates
+      tags:
+        - Employer
+  /employer/filter-employees:
+    post:
+      description: An API to use for autocompleting employees of the given organization, where the user personal vetchi handle is also obtained.
+      operationId: employer-filter-employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterEmployeesRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/FilteredEmployee"
+                type: array
           description: OK
-      summary: Filter Org Locations
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Filter Employees
+      tags:
+        - Employer
+  /employer/filter-hiring-managers:
+    post:
+      description: >
+        Accepts a JSON body containing a prefix to match against the name and email addresses of hiring managers and returns a maximum of 10 results.
+
+      operationId: employer-filter-hiring-managers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterHiringManagersRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilteredHiringManagers"
+          description: OK
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Filter Hiring Managers
       tags:
         - Employer
   /employer/filter-openings:
@@ -1560,17 +1749,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/FilteredOpenings"
           description: OK
-      summary: Get Openings
-      tags:
-        - Employer
       security:
         - BearerAuth: []
         - OAuth2: []
+      summary: Get Openings
+      tags:
+        - Employer
+  /employer/filter-org-locations:
+    post:
+      description: Filter locations for a company. Can be used for autocompletion of location titles for the company.
+      operationId: employer-filter-org-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterOrgLocationsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/FilteredOrgLocation"
+                type: array
+          description: OK
+      summary: Filter Org Locations
+      tags:
+        - Employer
   /employer/filter-recruiters:
     post:
       description: >
-        Accepts a JSON body containing a prefix to match against the name and email addresses of recruiters
-        and returns a maximum of 10 results.
+        Accepts a JSON body containing a prefix to match against the name and email addresses of recruiters and returns a maximum of 10 results.
+
       operationId: employer-filter-recruiters
       requestBody:
         content:
@@ -1585,37 +1796,134 @@ paths:
               schema:
                 $ref: "#/components/schemas/FilteredRecruiters"
           description: OK
-      summary: Filter Recruiters
-      tags:
-        - Employer
       security:
         - BearerAuth: []
         - OAuth2: []
-  /employer/filter-hiring-managers:
+      summary: Filter Recruiters
+      tags:
+        - Employer
+  /employer/forgot-password:
     post:
-      description: >
-        Accepts a JSON body containing a prefix to match against the name and email addresses of hiring managers
-        and returns a maximum of 10 results.
-      operationId: employer-filter-hiring-managers
+      description: Send a password reset email to the given email address, if the email address is associated with an account. This API will be a no-op for email addresses that are not associated with an account. This API will be a no-op for email addresses that belong to an Organization that has set up SSO.
+      operationId: employer-forgot-password
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FilterHiringManagersRequest"
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password reset email sent successfully
+      summary: Forgot Password
+      tags:
+        - Employer
+  /employer/get-candidacy:
+    post:
+      description: Get candidacy details for a given candidacy_id.
+      operationId: employer-get-candidacy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCandidacyRequest"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FilteredHiringManagers"
-          description: OK
-      summary: Filter Hiring Managers
-      tags:
-        - Employer
+                $ref: "#/components/schemas/Candidacy"
+          description: Candidacy details
       security:
         - BearerAuth: []
         - OAuth2: []
+      summary: Get Candidacy
+      tags:
+        - Employer
+  /employer/get-cost-centers:
+    post:
+      description: Get a list of cost centers with pagination.
+      operationId: employer-get-cost-centers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCostCentersRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/CostCenter"
+                type: array
+          description: OK
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Cost Centers
+      tags:
+        - Employer
+  /employer/get-interview-details:
+    post:
+      description: Get interview details for a given interview_id.
+      operationId: employer-get-interview-details
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetInterviewDetailsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewDetails"
+          description: Interview details
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Interview Details
+      tags:
+        - Employer
+  /employer/get-locations:
+    post:
+      description: Get a list of locations with pagination. This method is available only for users with the ADMIN role.
+      operationId: employer-get-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetLocationsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  properties:
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    location_id:
+                      type: string
+                    postal_address:
+                      type: string
+                    state:
+                      type: string
+                type: array
+          description: OK
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Locations
+      tags:
+        - Employer
   /employer/get-onboard-status:
     post:
       description: Get Onboarded Status for an Employer
@@ -1634,6 +1942,185 @@ paths:
                 $ref: "#/components/schemas/GetOnboardStatusResponse"
           description: OK
       summary: Get Onboarded Status for a Client
+      tags:
+        - Employer
+  /employer/get-users:
+    post:
+      description: Retrieve a list of users associated with the employer, sorted by their email address.
+      operationId: employer-get-users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetUserRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+          description: OK
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Users
+      tags:
+        - Employer
+  /employer/put-cost-center:
+    post:
+      description: Update an existing cost center. This method is available only for users with the ADMIN role.
+      operationId: employer-put-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center updated successfully
+        "404":
+          description: Cost center not found
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update Cost Center
+      tags:
+        - Employer
+  /employer/reject-application:
+    post:
+      description: Reject an application for a given opening.
+      operationId: employer-reject-application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectApplicationRequest"
+        required: true
+      responses:
+        "200":
+          description: Application rejected successfully
+        "409":
+          description: If the Application could not be rejected for some reason, for example the Application is already Shortlisted in parallel.
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Reject Application
+      tags:
+        - Employer
+  /employer/remove-cost-center:
+    post:
+      description: Remove a cost center. This method is available only for users with the ADMIN role. Removing a cost center will not remove any openings associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of cost centers and future openings.
+      operationId: employer-remove-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center removed successfully or cost center not found.
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Remove Cost Center
+      tags:
+        - Employer
+  /employer/remove-location:
+    post:
+      description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
+      operationId: employer-remove-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location removed successfully or location not found
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Remove Location
+      tags:
+        - Employer
+  /employer/remove-user:
+    post:
+      description: Remove a user associated with the employer. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveUserRequest"
+        required: true
+      responses:
+        "200":
+          description: User removed successfully or user not found
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Remove User
+      tags:
+        - Employer
+  /employer/reset-password:
+    get:
+      description: Show a HTML page with a form to reset the password for the given token.
+      operationId: employer-reset-password-page
+      parameters:
+        - description: The token to reset the password
+          in: query
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: HTML page with a form to reset the password
+      summary: Reset Password Page
+      tags:
+        - Employer
+    post:
+      description: Reset the password for the given token.
+      operationId: employer-reset-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password reset successfully
+      summary: Reset Password
+      tags:
+        - Employer
+  /employer/shortlist-application:
+    post:
+      description: Shortlist an application for a given opening.
+      operationId: employer-shortlist-application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShortlistApplicationRequest"
+        required: true
+      responses:
+        "200":
+          description: Application shortlisted successfully. TODO Should we return the candidacy_id ?
+        "409":
+          description: If the Application could not be shortlisted for some reason, for example the Application is already Rejected in parallel.
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Shortlist Application
       tags:
         - Employer
   /employer/signin:
@@ -1664,478 +2151,6 @@ paths:
       summary: SignIn
       tags:
         - Employer
-  /employer/get-users:
-    post:
-      description: Retrieve a list of users associated with the employer, sorted by their email address.
-      operationId: employer-get-users
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetUserRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserListResponse"
-          description: OK
-      summary: Get Users
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/add-user:
-    post:
-      description: Add a new user associated with the employer. This is available only for users with the ADMIN role.
-      operationId: employer-add-user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddUserRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddUserResponse"
-          description: User added successfully
-        "409":
-          description: Conflict - User already exists with the same email
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationErrors"
-          description: Bad Request - Validation errors
-      summary: Add User
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/remove-user:
-    post:
-      description: Remove a user associated with the employer. This method is available only for users with the ADMIN role.
-      operationId: employer-remove-user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoveUserRequest"
-        required: true
-      responses:
-        "200":
-          description: User removed successfully or user not found
-      summary: Remove User
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/add-location:
-    post:
-      description: Add a new location. This method is available only for users with the ADMIN role.
-      operationId: employer-add-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddLocationRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddLocationResponse"
-          description: Location added successfully
-      summary: Add Location
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/get-locations:
-    post:
-      description: Get a list of locations with pagination. This method is available only for users with the ADMIN role.
-      operationId: employer-get-locations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetLocationsRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    location_id:
-                      type: string
-                    country:
-                      type: string
-                    state:
-                      type: string
-                    city:
-                      type: string
-                    postal_address:
-                      type: string
-          description: OK
-      summary: Get Locations
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/remove-location:
-    post:
-      description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
-      operationId: employer-remove-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoveLocationRequest"
-        required: true
-      responses:
-        "200":
-          description: Location removed successfully or location not found
-      summary: Remove Location
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/add-cost-center:
-    post:
-      description: Add a new cost center. This method is available only for users with the ADMIN role.
-      operationId: employer-add-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddCostCenterResponse"
-          description: Cost center added successfully
-      summary: Add Cost Center
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/get-cost-centers:
-    post:
-      description: Get a list of cost centers with pagination.
-      operationId: employer-get-cost-centers
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetCostCentersRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CostCenter"
-          description: OK
-      summary: Get Cost Centers
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/remove-cost-center:
-    post:
-      description: Remove a cost center. This method is available only for users with the ADMIN role. Removing a cost center will not remove any openings associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of cost centers and future openings.
-      operationId: employer-remove-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoveCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center removed successfully or cost center not found.
-      summary: Remove Cost Center
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/edit-user-role:
-    post:
-      description: Edit the role of a user associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
-      operationId: employer-edit-user-role
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EditRoleRequest"
-        required: true
-      responses:
-        "200":
-          description: Role updated successfully
-        "404":
-          description: User not found
-      summary: Edit User Role
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/put-cost-center:
-    post:
-      description: Update an existing cost center. This method is available only for users with the ADMIN role.
-      operationId: employer-put-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PutCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center updated successfully
-        "404":
-          description: Cost center not found
-      summary: Update Cost Center
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/create-opening:
-    post:
-      description: Create a new Job Opening. This method is available only for users with the ADMIN role.
-      operationId: employer-create-opening
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateOpeningRequest"
-        required: true
-      responses:
-        "200":
-          description: Opening created successfully
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationErrors"
-          description: Bad Request - Validation errors
-      summary: Create Opening
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/filter-employees:
-    post:
-      description: An API to use for autocompleting employees of the given organization, where the user personal vetchi handle is also obtained.
-      operationId: employer-filter-employees
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FilterEmployeesRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/FilteredEmployee"
-      summary: Filter Employees
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/filter-applications:
-    post:
-      description: Get a list of applications for a given opening.
-      operationId: employer-filter-applications
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FilterApplicationsRequest"
-      responses:
-        "200":
-          description: "List of Applications that match the filter"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/FilteredApplication"
-      summary: Filter Applications
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/reject-application:
-    post:
-      description: Reject an application for a given opening.
-      operationId: employer-reject-application
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RejectApplicationRequest"
-        required: true
-      responses:
-        "200":
-          description: Application rejected successfully
-        "409":
-          description: If the Application could not be rejected for some reason, for example the Application is already Shortlisted in parallel.
-      summary: Reject Application
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/shortlist-application:
-    post:
-      description: Shortlist an application for a given opening.
-      operationId: employer-shortlist-application
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ShortlistApplicationRequest"
-        required: true
-      responses:
-        "200":
-          description: Application shortlisted successfully. TODO Should we return the candidacy_id ?
-        "409":
-          description: If the Application could not be shortlisted for some reason, for example the Application is already Rejected in parallel.
-      summary: Shortlist Application
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/filter-candidates:
-    post:
-      description: Filter candidates based on various criteria and sorted by candidacy_id
-      operationId: employer-filter-candidates
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FilterCandidatesRequest"
-        required: true
-      responses:
-        "200":
-          description: List of candidates that match the filter
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/FilteredCandidate"
-      summary: Filter Candidates
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/get-candidacy:
-    post:
-      description: Get candidacy details for a given candidacy_id.
-      operationId: employer-get-candidacy
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetCandidacyRequest"
-        required: true
-      responses:
-        "200":
-          description: Candidacy details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Candidacy"
-      summary: Get Candidacy
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/create-interview:
-    post:
-      description: Create a new interview for a given candidacy_id.
-      operationId: employer-create-interview
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateInterviewRequest"
-        required: true
-      responses:
-        "200":
-          description: Interview created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateInterviewResponse"
-        "400":
-          description: Bad Request - Validation errors
-      summary: Create Interview
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/get-interview-details:
-    post:
-      description: Get interview details for a given interview_id.
-      operationId: employer-get-interview-details
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetInterviewDetailsRequest"
-        required: true
-      responses:
-        "200":
-          description: Interview details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/InterviewDetails"
-      summary: Get Interview Details
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
   /employer/update-interview-feedback:
     post:
       description: Update the feedback for an interview.
@@ -2151,236 +2166,72 @@ paths:
           description: Interview feedback updated successfully
         "400":
           description: Bad Request - Validation errors
+      security:
+        - BearerAuth: []
+        - OAuth2: []
       summary: Update Interview Feedback
       tags:
         - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/cancel-interview:
+  /hub/add-work-history:
     post:
-      description: Cancel an interview for a given interview_id.
-      operationId: employer-cancel-interview
+      description: Add a new work history for the loggedin user TODO Set some kind of limit on the number of work history items a user can have
+      operationId: hub-add-work-history
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CancelInterviewRequest"
+              $ref: "#/components/schemas/AddWorkHistoryRequest"
         required: true
       responses:
         "200":
-          description: Interview marked as Cancelled
-      summary: Cancel Interview
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/change-password:
-    post:
-      description: Change the password for the current employer.
-      operationId: employer-change-password
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ChangePasswordRequest"
-        required: true
-      responses:
-        "200":
-          description: Password changed successfully
-      summary: Change Password
-      tags:
-        - Employer
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-  /employer/forgot-password:
-    post:
-      description: Send a password reset email to the given email address, if the email address is associated with an account. This API will be a no-op for email addresses that are not associated with an account. This API will be a no-op for email addresses that belong to an Organization that has set up SSO.
-      operationId: employer-forgot-password
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ForgotPasswordRequest"
-        required: true
-      responses:
-        "200":
-          description: Password reset email sent successfully
-      summary: Forgot Password
-      tags:
-        - Employer
-  /employer/reset-password:
-    post:
-      description: Reset the password for the given token.
-      operationId: employer-reset-password
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ResetPasswordRequest"
-        required: true
-      responses:
-        "200":
-          description: Password reset successfully
-      summary: Reset Password
-      tags:
-        - Employer
-    get:
-      description: Show a HTML page with a form to reset the password for the given token.
-      operationId: employer-reset-password-page
-      parameters:
-        - name: token
-          in: query
-          description: The token to reset the password
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: HTML page with a form to reset the password
-          content:
-            text/html:
-              schema:
-                type: string
-      summary: Reset Password Page
-      tags:
-        - Employer
-
-  #### hub things below
-
-  /hub/login:
-    post:
-      description: Login to the social network
-      operationId: hub-login
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginRequest"
-        required: true
-      responses:
-        "200":
-          description: Login successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LoginResponse"
-        "401":
-          description: Unauthorized - Invalid credentials
-      summary: Login
+                $ref: "#/components/schemas/AddWorkHistoryResponse"
+          description: Work history added successfully
+      security:
+        - HubAuth: []
+      summary: Add Work History
       tags:
         - Hub
-  /hub/tfa:
+  /hub/apply-to-opening:
     post:
-      summary: Two Factor Authentication
-      tags:
-        - Hub
-      description: Two factor authentication with the code sent to the email address
-      operationId: hub-tfa
+      description: Apply to a job opening
+      operationId: hub-apply-to-opening
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TFAuthRequest"
-      responses:
-        "200":
-          description: TFA successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TFAuthResponse"
-        "401":
-          description: Unauthorized - Invalid credentials
-      security:
-        - TFAuth: []
-  /hub/logout:
-    post:
-      description: Logout from the social network
-      operationId: hub-logout
-      responses:
-        "200":
-          description: Logout successful
-      summary: Logout
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
-  /hub/vetchi-handle:
-    get:
-      description: Get the vetchi handle for the loggedin user
-      operationId: hub-vetchi-handle
-      responses:
-        "200":
-          description: Vetchi handle
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VetchiHandle"
-      summary: Get Vetchi Handle of the loggedin user
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
-    put:
-      description: Update the vetchi handle for the loggedin user
-      operationId: hub-update-vetchi-handle
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VetchiHandle"
+              $ref: "#/components/schemas/ApplyToOpeningRequest"
         required: true
       responses:
         "200":
-          description: Vetchi handle updated successfully
-        "400":
-          description: Bad Request - Validation errors. In future, we may have different error codes for different tiers of users as the field limits (3 letter handle) may change.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ValidationErrors"
-      summary: Update Vetchi Handle
-      tags:
-        - Hub
+                $ref: "#/components/schemas/ApplyToOpeningResponse"
+          description: Application submitted successfully
       security:
         - HubAuth: []
-  /hub/check-handle-availability:
-    get:
-      description: Check if a vetchi handle is available
-      operationId: hub-check-handle-availability
-      parameters:
-        - name: handle
-          in: query
-          description: Check if handle is available. Having this as query param instead of request body is to help with caching.
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Vetchi handle is available
-      summary: Check Vetchi Handle Availability
+      summary: Apply to Opening
       tags:
         - Hub
-      security:
-        - HubAuth: []
   /hub/auto-biography:
     get:
       description: Get the auto-biography for the loggedin user
       operationId: hub-auto-biography
       responses:
         "200":
-          description: Auto-biography
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AutoBiography"
+          description: Auto-biography
+      security:
+        - HubAuth: []
       summary: Get Auto-biography
       tags:
         - Hub
-      security:
-        - HubAuth: []
     put:
       description: Update the auto-biography for the loggedin user
       operationId: hub-update-auto-biography
@@ -2394,51 +2245,151 @@ paths:
         "200":
           description: Auto-biography updated successfully
         "400":
-          description: Bad Request - Validation errors
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors
+      security:
+        - HubAuth: []
       summary: Update Auto-biography
       tags:
         - Hub
-      security:
-        - HubAuth: []
-  /hub/profile-picture:
+  /hub/check-handle-availability:
     get:
-      description: Get the profile picture for the loggedin user
-      operationId: hub-get-profile-picture
+      description: Check if a vetchi handle is available
+      operationId: hub-check-handle-availability
+      parameters:
+        - description: Check if handle is available. Having this as query param instead of request body is to help with caching.
+          in: query
+          name: handle
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: Profile picture
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-      summary: Get Profile Picture
-      tags:
-        - Hub
+          description: Vetchi handle is available
       security:
         - HubAuth: []
-    put:
-      description: Update the profile picture for the loggedin user
-      operationId: hub-update-profile-picture
+      summary: Check Vetchi Handle Availability
+      tags:
+        - Hub
+  /hub/filter-companies:
+    post:
+      description: Filter companies based on prefix. This is used for autocomplete of Company names within Hub UI for various screens, such as while filtering Job Openings.
+      operationId: hub-filter-companies
       requestBody:
         content:
-          application/octet-stream:
+          application/json:
             schema:
-              type: string
-              format: binary
+              $ref: "#/components/schemas/FilterCompaniesRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/FilteredCompany"
+                type: array
+          description: List of companies that match the prefix
+      security:
+        - HubAuth: []
+      summary: Filter Companies
+      tags:
+        - Hub
+  /hub/filter-job-openings:
+    post:
+      description: Filter job openings based on various criteria
+      operationId: hub-filter-job-openings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterJobOpeningsRequest"
         required: true
       responses:
         "200":
-          description: Profile picture updated successfully
-      summary: Update Profile Picture
-      tags:
-        - Hub
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/OpeningPublicInfo"
+                type: array
+          description: List of job openings that match the filter
       security:
         - HubAuth: []
+      summary: Filter Job Openings
+      tags:
+        - Hub
+  /hub/filter-locations:
+    post:
+      description: Filter locations based on prefix. This is used for autocomplete of City names within Hub UI for various screens, such as while filtering Job Openings. The results may be sorted by city name but not guaranteed to be sorted, as there may be semantic matches.
+      operationId: hub-filter-locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterLocationsRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilterLocationsResponse"
+          description: List of locations that match the prefix
+      security:
+        - HubAuth: []
+      summary: Filter Locations
+      tags:
+        - Hub
+  /hub/get-my-applications:
+    post:
+      description: Get the applications for the loggedin user
+      operationId: hub-get-my-applications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetMyApplicationsRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Application"
+                type: array
+          description: List of applications for the loggedin user
+      security:
+        - HubAuth: []
+      summary: Get My Applications
+      tags:
+        - Hub
+  /hub/get-my-candidacies:
+    post:
+      description: Get the Candidacies for the loggedin user
+      operationId: hub-get-my-candidacies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetMyCandidaciesRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/MyCandidacy"
+                type: array
+          description: List of candidacies for the loggedin user
+      security:
+        - HubAuth: []
+      summary: Get My Candidacies
+      tags:
+        - Hub
   /hub/get-work-history:
     post:
       description: Get the work history for the loggedin user
@@ -2451,40 +2402,87 @@ paths:
         required: true
       responses:
         "200":
-          description: Work history
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: "#/components/schemas/WorkHistory"
+                type: array
+          description: Work history
+      security:
+        - HubAuth: []
       summary: Get Work History
       tags:
         - Hub
-      security:
-        - HubAuth: []
-  /hub/add-work-history:
+  /hub/login:
     post:
-      description: Add a new work history for the loggedin user TODO Set some kind of limit on the number of work history items a user can have
-      operationId: hub-add-work-history
+      description: Login to the social network
+      operationId: hub-login
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AddWorkHistoryRequest"
+              $ref: "#/components/schemas/LoginRequest"
         required: true
       responses:
         "200":
-          description: Work history added successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AddWorkHistoryResponse"
-      summary: Add Work History
+                $ref: "#/components/schemas/LoginResponse"
+          description: Login successful
+        "401":
+          description: Unauthorized - Invalid credentials
+      summary: Login
       tags:
         - Hub
+  /hub/logout:
+    post:
+      description: Logout from the social network
+      operationId: hub-logout
+      responses:
+        "200":
+          description: Logout successful
       security:
         - HubAuth: []
+      summary: Logout
+      tags:
+        - Hub
+  /hub/profile-picture:
+    get:
+      description: Get the profile picture for the loggedin user
+      operationId: hub-get-profile-picture
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: Profile picture
+      security:
+        - HubAuth: []
+      summary: Get Profile Picture
+      tags:
+        - Hub
+    put:
+      description: Update the profile picture for the loggedin user
+      operationId: hub-update-profile-picture
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        required: true
+      responses:
+        "200":
+          description: Profile picture updated successfully
+      security:
+        - HubAuth: []
+      summary: Update Profile Picture
+      tags:
+        - Hub
   /hub/remove-work-history:
     post:
       description: Remove a work history for the loggedin user
@@ -2498,11 +2496,34 @@ paths:
       responses:
         "200":
           description: Work history removed successfully
+      security:
+        - HubAuth: []
       summary: Remove Work History
       tags:
         - Hub
+  /hub/tfa:
+    post:
+      description: Two factor authentication with the code sent to the email address
+      operationId: hub-tfa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TFAuthRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TFAuthResponse"
+          description: TFA successful
+        "401":
+          description: Unauthorized - Invalid credentials
       security:
-        - HubAuth: []
+        - TFAuth: []
+      summary: Two Factor Authentication
+      tags:
+        - Hub
   /hub/update-work-history:
     put:
       description: Update a work history for the loggedin user
@@ -2515,151 +2536,52 @@ paths:
         required: true
       responses:
         "200":
-          description: Work history updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateWorkHistoryResponse"
+          description: Work history updated successfully
+      security:
+        - HubAuth: []
       summary: Update Work History
       tags:
         - Hub
+  /hub/vetchi-handle:
+    get:
+      description: Get the vetchi handle for the loggedin user
+      operationId: hub-vetchi-handle
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VetchiHandle"
+          description: Vetchi handle
       security:
         - HubAuth: []
-  /hub/filter-job-openings:
-    post:
-      description: Filter job openings based on various criteria
-      operationId: hub-filter-job-openings
+      summary: Get Vetchi Handle of the loggedin user
+      tags:
+        - Hub
+    put:
+      description: Update the vetchi handle for the loggedin user
+      operationId: hub-update-vetchi-handle
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FilterJobOpeningsRequest"
+              $ref: "#/components/schemas/VetchiHandle"
         required: true
       responses:
         "200":
-          description: List of job openings that match the filter
+          description: Vetchi handle updated successfully
+        "400":
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OpeningPublicInfo"
-      summary: Filter Job Openings
-      tags:
-        - Hub
+                $ref: "#/components/schemas/ValidationErrors"
+          description: Bad Request - Validation errors. In future, we may have different error codes for different tiers of users as the field limits (3 letter handle) may change.
       security:
         - HubAuth: []
-  /hub/filter-locations:
-    post:
-      description: Filter locations based on prefix. This is used for autocomplete of City names within Hub UI for various screens, such as while filtering Job Openings. The results may be sorted by city name but not guaranteed to be sorted, as there may be semantic matches.
-      operationId: hub-filter-locations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FilterLocationsRequest"
-      responses:
-        "200":
-          description: List of locations that match the prefix
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FilterLocationsResponse"
-      summary: Filter Locations
+      summary: Update Vetchi Handle
       tags:
         - Hub
-      security:
-        - HubAuth: []
-  /hub/filter-companies:
-    post:
-      description: Filter companies based on prefix. This is used for autocomplete of Company names within Hub UI for various screens, such as while filtering Job Openings.
-      operationId: hub-filter-companies
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FilterCompaniesRequest"
-      responses:
-        "200":
-          description: List of companies that match the prefix
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/FilteredCompany"
-      summary: Filter Companies
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
-  /hub/get-my-applications:
-    post:
-      description: Get the applications for the loggedin user
-      operationId: hub-get-my-applications
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetMyApplicationsRequest"
-        required: true
-      responses:
-        "200":
-          description: List of applications for the loggedin user
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Application"
-      summary: Get My Applications
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
-  /hub/apply-to-opening:
-    post:
-      description: Apply to a job opening
-      operationId: hub-apply-to-opening
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ApplyToOpeningRequest"
-        required: true
-      responses:
-        "200":
-          description: Application submitted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApplyToOpeningResponse"
-      summary: Apply to Opening
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
-  /hub/get-my-candidacies:
-    post:
-      description: Get the Candidacies for the loggedin user
-      operationId: hub-get-my-candidacies
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetMyCandidaciesRequest"
-        required: true
-      responses:
-        "200":
-          description: List of candidacies for the loggedin user
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MyCandidacy"
-      summary: Get My Candidacies
-      tags:
-        - Hub
-      security:
-        - HubAuth: []
