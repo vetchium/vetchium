@@ -1,6 +1,16 @@
----
 # Vetchi OpenAPI Specification
 # Remember to sort this yaml file alphabetically by keys after making changes
+
+###
+
+openapi: 3.0.0
+info:
+  description: Vetchi APIs that work across multiple clients
+  title: Vetchi API
+  version: 0.0.1
+
+###
+
 components:
   securitySchemes:
     HubAuth:
@@ -27,6 +37,8 @@ components:
             read: Grants read access
             write: Grants write access
             admin: Grants admin access
+
+  ###
 
   schemas:
     CandidacyState:
@@ -1506,11 +1518,8 @@ components:
         - name
       type: object
 
-info:
-  description: Vetchi APIs that work across multiple clients
-  title: Vetchi API
-  version: 0.0.1
-openapi: 3.0.0
+###
+
 paths:
   /employer/filter-org-locations:
     post:
