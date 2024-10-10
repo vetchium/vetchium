@@ -1,4 +1,4 @@
-package dolores_test
+package dolores
 
 import (
 	"testing"
@@ -12,4 +12,4 @@ func TestDolores(t *testing.T) {
 	RunSpecs(t, "Dolores Suite")
 }
 
-var serverURL = "http://localhost:8080"
+const serverURL = "http://localhost:8081"

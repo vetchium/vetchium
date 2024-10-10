@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/psankar/vetchi/api/internal/db"
 )
@@ -37,6 +39,10 @@ WHERE client_id = $1`
 	err := p.pool.QueryRow(ctx, query, clientID).
 		Scan(&employer.ClientID, &employer.OnboardStatus)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Employer{}, db.ErrNoEmployer
+		}
+
 		return db.Employer{}, err
 	}
 
