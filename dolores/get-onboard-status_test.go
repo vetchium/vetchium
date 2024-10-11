@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,8 +25,6 @@ var _ = Describe("GetOnboardStatus", func() {
 			ctx,
 			`
 INSERT INTO employers (client_id, onboard_status) VALUES
-	('domain-verified-email-not-sent.example', 'DOMAIN_VERIFIED_EMAIL_NOT_SENT'),
-	('domain-verified-email-sent.example', 'DOMAIN_VERIFIED_EMAIL_SENT'),
 	('domain-onboarded.example', 'DOMAIN_ONBOARDED')`,
 		)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -35,10 +34,7 @@ INSERT INTO employers (client_id, onboard_status) VALUES
 		_, err := db.Exec(
 			ctx,
 			`
-DELETE FROM employers WHERE client_id IN
-	('domain-verified-email-not-sent.example',
-	'domain-verified-email-sent.example',
-	'domain-onboarded.example')`,
+DELETE FROM employers WHERE client_id IN('domain-onboarded.example')`,
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 		db.Close()
@@ -51,24 +47,21 @@ DELETE FROM employers WHERE client_id IN
 				want     libvetchi.OnboardStatus
 			}{
 				{
-					clientID: "notfound.example",
+					clientID: "domain-onboarded.example",
+					want:     libvetchi.DomainOnboarded,
+				},
+				{
+					clientID: "example.com",
 					want:     libvetchi.DomainNotVerified,
 				},
 				{
-					clientID: "domain-verified-email-not-sent.example",
-					want:     libvetchi.DomainVerifiedEmailNotSent,
-				},
-				{
-					clientID: "domain-verified-email-sent.example",
+					clientID: "secretsapp.com",
 					want:     libvetchi.DomainVerifiedEmailSent,
-				},
-				{
-					clientID: "domain-onboarded.example",
-					want:     libvetchi.DomainOnboarded,
 				},
 			}
 
 			for _, test := range tests {
+				log.Println("Testing for domain", test.clientID)
 				getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
 					ClientID: test.clientID,
 				}
