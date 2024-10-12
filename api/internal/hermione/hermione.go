@@ -71,7 +71,10 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	}))
 
 	pgConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",

@@ -30,7 +30,9 @@ func (p *PG) GetEmployer(
 	clientID string,
 ) (db.Employer, error) {
 	query := `
-SELECT client_id, onboard_status, onboard_admin, onboard_email_id, created_at, updated_at
+SELECT 	client_id, onboard_status, onboard_admin, 
+		onboard_secret_token, onboard_email_id, 
+		created_at, updated_at
 FROM employers 
 WHERE client_id = $1`
 
@@ -41,6 +43,7 @@ WHERE client_id = $1`
 			&employer.ClientID,
 			&employer.OnboardStatus,
 			&employer.OnboardAdmin,
+			&employer.OnboardSecretToken,
 			&employer.OnboardEmailID,
 			&employer.CreatedAt,
 			&employer.UpdatedAt,
@@ -50,6 +53,7 @@ WHERE client_id = $1`
 			return db.Employer{}, db.ErrNoEmployer
 		}
 
+		p.log.Error("failed to get employer", "error", err)
 		return db.Employer{}, err
 	}
 

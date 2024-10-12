@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
@@ -31,7 +32,6 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			h.logger.Error("failed to get employer", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -72,7 +72,7 @@ func (h *Hermione) newDomainProcess(
 	err = h.db.CreateEmployer(ctx, db.Employer{
 		ClientID:      domain,
 		OnboardStatus: string(libvetchi.DomainVerifiedOnboardPending),
-		OnboardAdmin:  admin,
+		OnboardAdmin:  pgtype.Text{String: admin, Valid: true},
 	})
 	if err != nil {
 		h.logger.Error("create employer failed", "domain", domain, "error", err)

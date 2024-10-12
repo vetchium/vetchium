@@ -84,7 +84,10 @@ func NewGranger() (*Granger, error) {
 		config.PostgresHost, config.PostgresPort, config.PostgresUser,
 		config.PostgresDB, config.PostgresPassword)
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	}))
 
 	pg, err := postgres.New(pgConnStr, logger)
 	if err != nil {
