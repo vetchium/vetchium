@@ -11,20 +11,6 @@ CREATE TABLE IF NOT EXISTS hub_users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
---- Must match libvetchi.OnboardStatus
-CREATE TYPE onboard_status AS ENUM ('DOMAIN_NOT_VERIFIED', 'DOMAIN_VERIFIED_ONBOARDING_PENDING', 'DOMAIN_ONBOARDED');
-
-CREATE TABLE IF NOT EXISTS employers (
-    client_id TEXT PRIMARY KEY,
-    onboard_status onboard_status NOT NULL,
-    onboarding_admin TEXT NOT NULL,
-    onboarding_email_id BIGINT REFERENCES emails(id),
-    onboarding_secret_token TEXT,
-
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
-);
-
 --- Must match dao.EmailState
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 
@@ -40,6 +26,20 @@ CREATE TABLE emails(
 	email_state email_states NOT NULL,
 	created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC', now()),
 	processed_at TIMESTAMP WITH TIME ZONE
+);
+
+--- Must match libvetchi.OnboardStatus
+CREATE TYPE onboard_status AS ENUM ('DOMAIN_NOT_VERIFIED', 'DOMAIN_VERIFIED_ONBOARDING_PENDING', 'DOMAIN_ONBOARDED');
+
+CREATE TABLE IF NOT EXISTS employers (
+    client_id TEXT PRIMARY KEY,
+    onboard_status onboard_status NOT NULL,
+    onboarding_admin TEXT,
+    onboarding_email_id BIGINT REFERENCES emails(id),
+    onboarding_secret_token TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 COMMIT;
