@@ -56,7 +56,7 @@ DELETE FROM employers WHERE client_id IN('domain-onboarded.example')`,
 				},
 				{
 					clientID: "secretsapp.com",
-					want:     libvetchi.DomainVerifiedEmailSent,
+					want:     libvetchi.DomainVerifiedOnboardPending,
 				},
 			}
 
