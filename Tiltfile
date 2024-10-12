@@ -1,5 +1,8 @@
+secret_settings(disable_scrub=True)
+
 # Load Kubernetes YAML files
 k8s_yaml('vetchi-secrets-tilt.yaml')
+k8s_yaml('api/mailpit-tilt.yaml')
 k8s_yaml('api/granger-tilt.yaml')
 k8s_yaml('api/hermione-tilt.yaml')
 k8s_yaml('harrypotter/harrypotter-tilt.yaml')
@@ -15,6 +18,7 @@ docker_build('psankar/ronweasly', 'ronweasly', dockerfile='ronweasly/Dockerfile'
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
 
 # Associate images with Kubernetes resources
+k8s_resource('mailpit', port_forwards=['8025:8025', '1025:1025'])
 k8s_resource('granger', port_forwards='8080:8080')
 k8s_resource('hermione', port_forwards='8081:8080')
 k8s_resource('harrypotter', port_forwards='3000:3000')

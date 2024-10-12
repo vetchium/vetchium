@@ -169,3 +169,46 @@ WHERE 	client_id = $3
 
 	return nil
 }
+
+func (p *PG) GetOldestUnsentEmails() ([]db.Email, error) {
+	query := `
+SELECT 	id, email_from, email_to, email_subject, 
+		email_html_body, email_text_body, email_state
+FROM 	emails
+WHERE 	email_state = $1
+ORDER BY created_at ASC
+LIMIT 10
+`
+	rows, err := p.pool.Query(context.Background(), query, db.EmailStatePending)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var emails []db.Email
+	for rows.Next() {
+		var email db.Email
+		err := rows.Scan(
+			&email.ID,
+			&email.EmailFrom,
+			&email.EmailTo,
+			&email.EmailSubject,
+			&email.EmailHTMLBody,
+			&email.EmailTextBody,
+			&email.EmailState,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		emails = append(emails, email)
+	}
+
+	return emails, nil
+}
+
+func (p *PG) UpdateEmailState(emailID int64, state db.EmailState) error {
+	query := `UPDATE emails SET email_state = $1 WHERE id = $2`
+	_, err := p.pool.Exec(context.Background(), query, state, emailID)
+	return err
+}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
 
 const subject = "Welcome to Vetchi !"
@@ -85,6 +86,7 @@ func (g *Granger) createOnboardEmails() {
 				}
 
 				email := db.Email{
+					EmailFrom:     libvetchi.EmailFrom,
 					EmailTo:       []string{employer.OnboardAdmin.String},
 					EmailSubject:  subject,
 					EmailHTMLBody: htmlBody.String(),

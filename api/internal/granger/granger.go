@@ -5,10 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
+	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
 
 type Config struct {
@@ -18,6 +20,11 @@ type Config struct {
 	PostgresUser     string
 	PostgresDB       string
 	PostgresPassword string
+	SMTPHost         string
+	SMTPPort         string
+	SMTPUser         string
+	SMTPPassword     string
+	Env              string
 }
 
 func LoadConfig() (*Config, error) {
@@ -28,6 +35,11 @@ func LoadConfig() (*Config, error) {
 		PostgresUser:     os.Getenv("POSTGRES_USER"),
 		PostgresDB:       os.Getenv("POSTGRES_DB"),
 		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
+		SMTPHost:         os.Getenv("SMTP_HOST"),
+		SMTPPort:         os.Getenv("SMTP_PORT"),
+		SMTPUser:         os.Getenv("SMTP_USER"),
+		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
+		Env:              os.Getenv("ENV"),
 	}
 
 	if err := validateConfig(config); err != nil {
@@ -62,11 +74,46 @@ func validateConfig(config *Config) error {
 		return fmt.Errorf("POSTGRES_PASSWORD environment variable not set")
 	}
 
+	if config.SMTPHost == "" {
+		return fmt.Errorf("SMTP_HOST environment variable not set")
+	}
+
+	if config.SMTPPort == "" {
+		return fmt.Errorf("SMTP_PORT environment variable not set")
+	}
+
+	if config.SMTPUser == "" {
+		return fmt.Errorf("SMTP_USER environment variable not set")
+	}
+
+	if config.SMTPPassword == "" {
+		return fmt.Errorf("SMTP_PASSWORD environment variable not set")
+	}
+
+	_, err := strconv.Atoi(config.SMTPPort)
+	if err != nil {
+		return fmt.Errorf(
+			"SMTP_PORT environment variable is not a valid integer: %w",
+			err,
+		)
+	}
+
+	if config.Env != libvetchi.ProdEnv && config.Env != libvetchi.DevEnv &&
+		config.Env != libvetchi.TestEnv {
+		return fmt.Errorf("ENV environment variable is not valid")
+	}
+
 	return nil
 }
 
 type Granger struct {
-	port string
+	port         string
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	env          string
+
 	db   db.DB
 	log  *slog.Logger
 	wg   sync.WaitGroup
@@ -94,16 +141,36 @@ func NewGranger() (*Granger, error) {
 		return nil, err
 	}
 
+	smtpPort, err := strconv.Atoi(config.SMTPPort)
+	if err != nil {
+		// This is unlikely to happen as we already validated the
+		// SMTP_PORT environment variable earlier, but we'll check anyway.
+		return nil, fmt.Errorf(
+			"SMTP_PORT environment variable is not a valid integer: %w",
+			err,
+		)
+	}
+
 	return &Granger{
-		port: fmt.Sprintf(":%s", config.Port),
-		db:   pg,
-		log:  logger,
+		port:         fmt.Sprintf(":%s", config.Port),
+		SMTPHost:     config.SMTPHost,
+		SMTPPort:     smtpPort,
+		SMTPUser:     config.SMTPUser,
+		SMTPPassword: config.SMTPPassword,
+		env:          config.Env,
+
+		db:  pg,
+		log: logger,
 	}, nil
 }
 
 func (g *Granger) Run() error {
 	g.wg.Add(1)
 	go g.createOnboardEmails()
+
+	g.wg.Add(1)
+	mailSenderQuit := make(chan struct{})
+	go g.mailSender(mailSenderQuit)
 
 	return http.ListenAndServe(g.port, nil)
 }

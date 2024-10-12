@@ -10,6 +10,9 @@ type DB interface {
 	CreateEmployer(ctx context.Context, employer Employer) error
 	GetUnmailedOnboardPendingEmployers() ([]Employer, error)
 	CreateOnboardEmail(employer Employer, email Email) error
+
+	GetOldestUnsentEmails() ([]Email, error)
+	UpdateEmailState(emailID int64, state EmailState) error
 }
 
 // Ideally should be a const, but go doesn't support const errors.
