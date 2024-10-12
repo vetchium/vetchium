@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS employers (
     onboard_secret_token TEXT,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
 
-    onboard_email_id BIGINT REFERENCES emails(id),
+    onboard_email_id BIGINT REFERENCES emails(id)
 );
 
 COMMIT;
