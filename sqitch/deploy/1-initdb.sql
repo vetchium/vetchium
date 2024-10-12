@@ -29,17 +29,18 @@ CREATE TABLE emails(
 );
 
 --- Must match libvetchi.OnboardStatus
-CREATE TYPE onboard_status AS ENUM ('DOMAIN_NOT_VERIFIED', 'DOMAIN_VERIFIED_ONBOARDING_PENDING', 'DOMAIN_ONBOARDED');
+CREATE TYPE onboard_status AS ENUM ('DOMAIN_NOT_VERIFIED', 'DOMAIN_VERIFIED_ONBOARD_PENDING', 'DOMAIN_ONBOARDED');
 
 CREATE TABLE IF NOT EXISTS employers (
     client_id TEXT PRIMARY KEY,
     onboard_status onboard_status NOT NULL,
-    onboarding_admin TEXT,
-    onboarding_email_id BIGINT REFERENCES emails(id),
-    onboarding_secret_token TEXT,
+    onboard_admin TEXT,
+    onboard_secret_token TEXT,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+
+    onboard_email_id BIGINT REFERENCES emails(id),
 );
 
 COMMIT;

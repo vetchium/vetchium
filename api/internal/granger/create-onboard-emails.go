@@ -54,14 +54,14 @@ func (g *Granger) createOnboardEmails() {
 
 				buff := make([]byte, 16)
 				rand.Read(buff)
-				employer.OnboardingSecretToken = hex.EncodeToString(buff)
+				employer.OnboardSecretToken = hex.EncodeToString(buff)
 
 				var textBody bytes.Buffer
 				err := ttmpl.Must(
 					ttmpl.New("text").Parse(textMailTemplate),
 				).Execute(&textBody, map[string]string{
 					"Domain": employer.ClientID,
-					"Link":   employer.OnboardingSecretToken,
+					"Link":   employer.OnboardSecretToken,
 				})
 				if err != nil {
 					g.log.Error("email text template failed", "error", err)
@@ -73,7 +73,7 @@ func (g *Granger) createOnboardEmails() {
 					template.New("html").Parse(htmlMailTemplate),
 				).Execute(&htmlBody, map[string]string{
 					"Domain": employer.ClientID,
-					"Link":   employer.OnboardingSecretToken,
+					"Link":   employer.OnboardSecretToken,
 				})
 				if err != nil {
 					g.log.Error("email html template failed", "error", err)
@@ -81,7 +81,7 @@ func (g *Granger) createOnboardEmails() {
 				}
 
 				email := db.Email{
-					EmailTo:       []string{employer.OnboardingAdmin},
+					EmailTo:       []string{employer.OnboardAdmin},
 					EmailSubject:  subject,
 					EmailHTMLBody: htmlBody.String(),
 					EmailTextBody: textBody.String(),

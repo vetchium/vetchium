@@ -30,7 +30,7 @@ func (p *PG) GetEmployer(
 	clientID string,
 ) (db.Employer, error) {
 	query := `
-SELECT client_id, onboard_status, onboarding_admin, onboarding_email_sent_at, created_at, updated_at
+SELECT client_id, onboard_status, onboard_admin, onboard_email_id, created_at, updated_at
 FROM employers 
 WHERE client_id = $1`
 
@@ -40,8 +40,8 @@ WHERE client_id = $1`
 		Scan(
 			&employer.ClientID,
 			&employer.OnboardStatus,
-			&employer.OnboardingAdmin,
-			&employer.OnboardingEmailSentAt,
+			&employer.OnboardAdmin,
+			&employer.OnboardEmailID,
 			&employer.CreatedAt,
 			&employer.UpdatedAt,
 		)
@@ -61,8 +61,8 @@ func (p *PG) CreateEmployer(
 	employer db.Employer,
 ) error {
 	query := `
-INSERT INTO employers	(client_id, onboard_status, onboarding_admin, 
-						onboarding_secret_token, onboarding_email_id)
+INSERT INTO employers	(client_id, onboard_status, onboard_admin, 
+						onboard_secret_token, onboard_email_id)
 VALUES ($1, $2, $3, $4, $5)
 `
 	_, err := p.pool.Exec(
@@ -70,7 +70,7 @@ VALUES ($1, $2, $3, $4, $5)
 		query,
 		employer.ClientID,
 		employer.OnboardStatus,
-		employer.OnboardingAdmin,
+		employer.OnboardAdmin,
 		nil,
 		nil,
 	)
@@ -79,11 +79,11 @@ VALUES ($1, $2, $3, $4, $5)
 
 func (p *PG) GetUnmailedOnboardPendingEmployers() ([]db.Employer, error) {
 	query := `
-SELECT 	client_id, onboard_status, onboarding_admin, 
-		onboarding_email_sent_at, created_at, updated_at
+SELECT 	client_id, onboard_status, onboard_admin, 
+		created_at, updated_at, onboard_email_id
 FROM 	employers 
-WHERE 	onboard_status = 'DOMAIN_VERIFIED_ONBOARDING_PENDING'
-		AND onboarding_email_id IS NULL
+WHERE 	onboard_status = 'DOMAIN_VERIFIED_ONBOARD_PENDING'
+		AND onboard_email_id IS NULL
 `
 	rows, err := p.pool.Query(context.Background(), query)
 	if err != nil {
@@ -97,10 +97,10 @@ WHERE 	onboard_status = 'DOMAIN_VERIFIED_ONBOARDING_PENDING'
 		err := rows.Scan(
 			&employer.ClientID,
 			&employer.OnboardStatus,
-			&employer.OnboardingAdmin,
-			&employer.OnboardingEmailSentAt,
+			&employer.OnboardAdmin,
 			&employer.CreatedAt,
 			&employer.UpdatedAt,
+			&employer.OnboardEmailID,
 		)
 		if err != nil {
 			return nil, err
@@ -144,11 +144,11 @@ RETURNING 			id
 		context.Background(),
 		`
 UPDATE 	employers 
-SET 	onboarding_email_id = $1, onboarding_secret_token = $2
+SET 	onboard_email_id = $1, onboard_secret_token = $2
 WHERE 	client_id = $3
 `,
 		email.ID,
-		employer.OnboardingSecretToken,
+		employer.OnboardSecretToken,
 		employer.ClientID,
 	)
 	if err != nil {

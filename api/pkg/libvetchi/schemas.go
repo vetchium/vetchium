@@ -444,9 +444,9 @@ type MyInterview struct {
 type OnboardStatus string
 
 const (
-	DomainNotVerified               OnboardStatus = "DOMAIN_NOT_VERIFIED"
-	DomainVerifiedOnboardingPending OnboardStatus = "DOMAIN_VERIFIED_ONBOARDING_PENDING"
-	DomainOnboarded                 OnboardStatus = "DOMAIN_ONBOARDED"
+	DomainNotVerified            OnboardStatus = "DOMAIN_NOT_VERIFIED"
+	DomainVerifiedOnboardPending OnboardStatus = "DOMAIN_VERIFIED_ONBOARD_PENDING"
+	DomainOnboarded              OnboardStatus = "DOMAIN_ONBOARDED"
 )
 
 type OpeningInfo struct {

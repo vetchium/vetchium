@@ -70,14 +70,14 @@ func (h *Hermione) newDomainProcess(
 	}
 
 	err = h.db.CreateEmployer(ctx, db.Employer{
-		ClientID:        domain,
-		OnboardStatus:   string(libvetchi.DomainVerifiedOnboardingPending),
-		OnboardingAdmin: admin,
+		ClientID:      domain,
+		OnboardStatus: string(libvetchi.DomainVerifiedOnboardPending),
+		OnboardAdmin:  admin,
 	})
 	if err != nil {
 		h.logger.Error("create employer failed", "domain", domain, "error", err)
 		return libvetchi.DomainNotVerified, err
 	}
 
-	return libvetchi.DomainVerifiedOnboardingPending, nil
+	return libvetchi.DomainVerifiedOnboardPending, nil
 }

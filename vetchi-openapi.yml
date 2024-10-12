@@ -1105,10 +1105,10 @@ components:
             type: string
           type: array
     OnboardStatus:
-      description: The onboarding status
+      description: The onboard status
       enum:
         - DOMAIN_NOT_VERIFIED
-        - DOMAIN_VERIFIED_ONBOARDING_PENDING
+        - DOMAIN_VERIFIED_ONBOARD_PENDING
         - DOMAIN_ONBOARDED
       type: string
     OpeningInfo:
