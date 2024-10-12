@@ -110,5 +110,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 		return err
 	}
 
+	g.log.Info("email sent", "email", email.ID, "to", email.EmailTo)
+
 	return nil
 }

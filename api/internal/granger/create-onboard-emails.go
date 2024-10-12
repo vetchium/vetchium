@@ -27,15 +27,25 @@ The Vetchi Team
 `
 
 const htmlMailTemplate = `Hi
-
+<p>
 You have been invited to set up password for managing {{ .Domain }} on Vetchi.
-
+</p>
+<p>
 Please click the link below to set up your password:
+</p>
+<p>
 <a href="{{ .Link }}">Set up your password</a>
+</p>
+<p>
+In case the above link does not work, you can copy and paste the following URL in your browser:
+</p>
+<p>
 {{ .Link }}
-
+</p>
+<p>
 Thanks,
 The Vetchi Team
+</p>
 `
 
 func (g *Granger) createOnboardEmails() {
@@ -56,17 +66,21 @@ func (g *Granger) createOnboardEmails() {
 
 				buff := make([]byte, 16)
 				rand.Read(buff)
+
+				token := hex.EncodeToString(buff)
 				employer.OnboardSecretToken = pgtype.Text{
-					String: hex.EncodeToString(buff),
+					String: token,
 					Valid:  true,
 				}
+
+				link := libvetchi.BaseURL + "/onboard/" + token
 
 				var textBody bytes.Buffer
 				err := ttmpl.Must(
 					ttmpl.New("text").Parse(textMailTemplate),
 				).Execute(&textBody, map[string]string{
 					"Domain": employer.ClientID,
-					"Link":   employer.OnboardSecretToken.String,
+					"Link":   link,
 				})
 				if err != nil {
 					g.log.Error("email text template failed", "error", err)
@@ -78,7 +92,7 @@ func (g *Granger) createOnboardEmails() {
 					template.New("html").Parse(htmlMailTemplate),
 				).Execute(&htmlBody, map[string]string{
 					"Domain": employer.ClientID,
-					"Link":   employer.OnboardSecretToken.String,
+					"Link":   link,
 				})
 				if err != nil {
 					g.log.Error("email html template failed", "error", err)
