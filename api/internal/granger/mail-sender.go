@@ -96,13 +96,13 @@ func (g *Granger) sendEmail(email db.Email) error {
 		c, err = mail.NewClient(
 			g.SMTPHost,
 			mail.WithPort(g.SMTPPort),
-			mail.WithTLSPolicy(mail.NoTLS),
+			mail.WithTLSPortPolicy(mail.NoTLS),
+			mail.WithSMTPAuth(mail.SMTPAuthCustom),
 		)
 		if err != nil {
 			g.log.Error("failed to create DEV mail client", "error", err)
 			return err
 		}
-		c.SetTLSPolicy(mail.NoTLS)
 	}
 
 	if err := c.DialAndSend(m); err != nil {
