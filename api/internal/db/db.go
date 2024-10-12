@@ -7,6 +7,7 @@ import (
 
 type DB interface {
 	GetEmployer(ctx context.Context, clientID string) (Employer, error)
+	CreateEmployer(ctx context.Context, employer Employer) error
 }
 
 // Ideally should be a const, but go doesn't support const errors.

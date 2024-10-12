@@ -1,6 +1,7 @@
 package hermione
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net"
@@ -24,7 +25,11 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, db.ErrNoEmployer) {
 			// Unregistered domain. Check if vetchiadmin TXT record is present
-			status = h.newDomainProcess(req.ClientID)
+			status, err = h.newDomainProcess(r.Context(), req.ClientID)
+			if err != nil {
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
 		} else {
 			h.logger.Error("failed to get employer", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
@@ -43,12 +48,15 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Hermione) newDomainProcess(domain string) libvetchi.OnboardStatus {
+func (h *Hermione) newDomainProcess(
+	ctx context.Context,
+	domain string,
+) (libvetchi.OnboardStatus, error) {
 	url := "vetchiadmin." + domain
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
 		h.logger.Debug("lookup TXT records", "domain", domain, "error", err)
-		return libvetchi.DomainNotVerified
+		return libvetchi.DomainNotVerified, nil
 	}
 
 	admin := ""
@@ -58,8 +66,18 @@ func (h *Hermione) newDomainProcess(domain string) libvetchi.OnboardStatus {
 	}
 
 	if admin == "" {
-		return libvetchi.DomainNotVerified
+		return libvetchi.DomainNotVerified, nil
 	}
 
-	return libvetchi.DomainVerifiedEmailSent
+	err = h.db.CreateEmployer(ctx, db.Employer{
+		ClientID:        domain,
+		OnboardStatus:   string(libvetchi.DomainVerifiedOnboardingPending),
+		OnboardingAdmin: admin,
+	})
+	if err != nil {
+		h.logger.Error("create employer failed", "domain", domain, "error", err)
+		return libvetchi.DomainNotVerified, err
+	}
+
+	return libvetchi.DomainVerifiedOnboardingPending, nil
 }

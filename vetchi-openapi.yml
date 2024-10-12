@@ -1108,8 +1108,7 @@ components:
       description: The onboarding status
       enum:
         - DOMAIN_NOT_VERIFIED
-        - DOMAIN_VERIFIED_EMAIL_NOT_SENT
-        - DOMAIN_VERIFIED_EMAIL_SENT
+        - DOMAIN_VERIFIED_ONBOARDING_PENDING
         - DOMAIN_ONBOARDED
       type: string
     OpeningInfo:

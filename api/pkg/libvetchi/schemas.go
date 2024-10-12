@@ -5,7 +5,7 @@ import (
 )
 
 type AddCostCenterRequest struct {
-	Name  string `json:"name" validate:"required,min=3,max=64"`
+	Name  string `json:"name"            validate:"required,min=3,max=64"`
 	Notes string `json:"notes,omitempty" validate:"max=1024"`
 }
 
@@ -14,12 +14,12 @@ type AddCostCenterResponse struct {
 }
 
 type AddLocationRequest struct {
-	Country           string   `json:"country" validate:"required,min=3,max=32"`
-	State             string   `json:"state" validate:"required,min=3,max=32"`
-	City              string   `json:"city" validate:"required,min=3,max=32"`
+	Country           string   `json:"country"                        validate:"required,min=3,max=32"`
+	State             string   `json:"state"                          validate:"required,min=3,max=32"`
+	City              string   `json:"city"                           validate:"required,min=3,max=32"`
 	OtherNamesForCity []string `json:"other_names_for_city,omitempty" validate:"omitempty,min=3,max=32"`
-	PostalAddress     string   `json:"postal_address" validate:"required,min=3,max=1024"`
-	LocationTitle     string   `json:"location_title" validate:"required,min=3,max=32"`
+	PostalAddress     string   `json:"postal_address"                 validate:"required,min=3,max=1024"`
+	LocationTitle     string   `json:"location_title"                 validate:"required,min=3,max=32"`
 }
 
 type AddLocationResponse struct {
@@ -27,9 +27,9 @@ type AddLocationResponse struct {
 }
 
 type AddUserRequest struct {
-	Name  string `json:"name" validate:"required"`
+	Name  string `json:"name"  validate:"required"`
 	Email string `json:"email" validate:"required,email"`
-	Role  Role   `json:"role" validate:"required"`
+	Role  Role   `json:"role"  validate:"required"`
 }
 
 type AddUserResponse struct {
@@ -37,9 +37,9 @@ type AddUserResponse struct {
 }
 
 type AddWorkHistoryRequest struct {
-	CompanyHandle string `json:"company_handle" validate:"required"`
-	JobTitle      string `json:"job_title" validate:"required"`
-	StartDate     string `json:"start_date" validate:"required,date"`
+	CompanyHandle string `json:"company_handle"     validate:"required"`
+	JobTitle      string `json:"job_title"          validate:"required"`
+	StartDate     string `json:"start_date"         validate:"required,date"`
 	EndDate       string `json:"end_date,omitempty" validate:"date"`
 }
 
@@ -78,8 +78,8 @@ const (
 )
 
 type ApplyToOpeningRequest struct {
-	OpeningID       string   `json:"opening_id" validate:"required"`
-	Resume          string   `json:"resume" validate:"required"`
+	OpeningID       string   `json:"opening_id"                 validate:"required"`
+	Resume          string   `json:"resume"                     validate:"required"`
 	VouchersHandles []string `json:"vouchers_handles,omitempty"`
 }
 
@@ -88,9 +88,9 @@ type ApplyToOpeningResponse struct {
 }
 
 type AutoBiography struct {
-	NameEn                string   `json:"name_en" validate:"required,min=1,max=128"`
-	AboutMe               string   `json:"about_me" validate:"required,min=1,max=1024"`
-	Websites              []string `json:"websites,omitempty" validate:"omitempty,min=1,max=255,url"`
+	NameEn                string   `json:"name_en"                            validate:"required,min=1,max=128"`
+	AboutMe               string   `json:"about_me"                           validate:"required,min=1,max=1024"`
+	Websites              []string `json:"websites,omitempty"                 validate:"omitempty,min=1,max=255,url"`
 	NamesInOtherLanguages []struct {
 		Language string `json:"language" validate:"required"`
 		Name     string `json:"name" validate:"required"`
@@ -98,9 +98,9 @@ type AutoBiography struct {
 }
 
 type CancelInterviewRequest struct {
-	InterviewID                 string `json:"interview_id" validate:"required"`
+	InterviewID                 string `json:"interview_id"                             validate:"required"`
 	SendCancellationToCandidate bool   `json:"send_cancellation_to_candidate,omitempty"`
-	CancellationBody            string `json:"cancellation_body,omitempty" validate:"min=10,max=1000"`
+	CancellationBody            string `json:"cancellation_body,omitempty"              validate:"min=10,max=1000"`
 }
 
 type Candidacy struct {
@@ -135,15 +135,15 @@ type ClientId struct {
 
 type CostCenter struct {
 	CostCenterID string `json:"cost_center_id"`
-	Name         string `json:"name" validate:"required,min=3,max=64"`
+	Name         string `json:"name"            validate:"required,min=3,max=64"`
 	Notes        string `json:"notes,omitempty" validate:"max=1024"`
 }
 
 type CreateInterviewRequest struct {
-	CandidacyID              string    `json:"candidacy_id" validate:"required"`
-	Interviewers             []User    `json:"interviewers" validate:"required"`
-	StartTime                time.Time `json:"start_time" validate:"required"`
-	EndTime                  time.Time `json:"end_time" validate:"required"`
+	CandidacyID              string    `json:"candidacy_id"                         validate:"required"`
+	Interviewers             []User    `json:"interviewers"                         validate:"required"`
+	StartTime                time.Time `json:"start_time"                           validate:"required"`
+	EndTime                  time.Time `json:"end_time"                             validate:"required"`
 	SendAppointment          bool      `json:"send_appointment,omitempty"`
 	InterviewAppointmentBody string    `json:"interview_appointment_body,omitempty" validate:"min=10,max=1000"`
 }
@@ -153,25 +153,25 @@ type CreateInterviewResponse struct {
 }
 
 type CreateOpeningRequest struct {
-	Title                    string                   `json:"title" validate:"required"`
-	Positions                int                      `json:"positions" validate:"required,min=1,max=100"`
-	JD                       string                   `json:"jd" validate:"required,min=10,max=10000"`
-	JobType                  JobType                  `json:"job_type" validate:"required"`
-	Recruiter                string                   `json:"recruiter" validate:"required,email"`
-	HiringManager            string                   `json:"hiring_manager" validate:"required,email"`
+	Title                    string                   `json:"title"                                validate:"required"`
+	Positions                int                      `json:"positions"                            validate:"required,min=1,max=100"`
+	JD                       string                   `json:"jd"                                   validate:"required,min=10,max=10000"`
+	JobType                  JobType                  `json:"job_type"                             validate:"required"`
+	Recruiter                string                   `json:"recruiter"                            validate:"required,email"`
+	HiringManager            string                   `json:"hiring_manager"                       validate:"required,email"`
 	OnsiteLocationIDs        []string                 `json:"onsite_location_ids,omitempty"`
 	RemoteLocationsCountries []string                 `json:"remote_locations_countries,omitempty"`
 	RemoteLocationsTimezones []string                 `json:"remote_locations_timezones,omitempty"`
-	YoeMin                   int                      `json:"yoe_min" validate:"required,min=0,max=80"`
-	YoeMax                   int                      `json:"yoe_max" validate:"required,min=0,max=80"`
-	EducationalQualification EducationalQualification `json:"educational_qualification" validate:"required"`
-	Currency                 string                   `json:"currency" validate:"required"`
-	SalaryRangeMin           float64                  `json:"salary_range_min" validate:"required,min=1"`
-	SalaryRangeMax           float64                  `json:"salary_range_max" validate:"required,min=2"`
+	YoeMin                   int                      `json:"yoe_min"                              validate:"required,min=0,max=80"`
+	YoeMax                   int                      `json:"yoe_max"                              validate:"required,min=0,max=80"`
+	EducationalQualification EducationalQualification `json:"educational_qualification"            validate:"required"`
+	Currency                 string                   `json:"currency"                             validate:"required"`
+	SalaryRangeMin           float64                  `json:"salary_range_min"                     validate:"required,min=1"`
+	SalaryRangeMax           float64                  `json:"salary_range_max"                     validate:"required,min=2"`
 	CostCenterID             string                   `json:"cost_center_id,omitempty"`
 	Notes                    string                   `json:"notes,omitempty"`
 	PotentialTeamMatesIDs    []string                 `json:"potential_team_mates_ids,omitempty"`
-	MaxHops                  int                      `json:"max_hops,omitempty" validate:"min=2,max=5"`
+	MaxHops                  int                      `json:"max_hops,omitempty"                   validate:"min=2,max=5"`
 	InternalOnly             bool                     `json:"internal_only,omitempty"`
 }
 
@@ -191,8 +191,8 @@ type EmailAddress struct {
 
 type EmployerSignInRequest struct {
 	ClientID string `json:"client_id" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email"     validate:"required,email"`
+	Password string `json:"password"  validate:"required"`
 }
 
 type EmployerSignInResponse struct {
@@ -203,7 +203,7 @@ type EmployerSignInResponse struct {
 type EvaluationReport struct {
 	Positives string `json:"positives" validate:"required,min=10,max=2048"`
 	Negatives string `json:"negatives" validate:"required,min=10,max=2048"`
-	Summary   string `json:"summary" validate:"required,min=10,max=2048"`
+	Summary   string `json:"summary"   validate:"required,min=10,max=2048"`
 }
 
 type EvaluationResult string
@@ -224,18 +224,18 @@ const (
 
 type FilterApplicationsRequest struct {
 	ApplicationState ApplicationState        `json:"application_state,omitempty"`
-	OpeningID        string                  `json:"opening_id" validate:"required"`
+	OpeningID        string                  `json:"opening_id"                  validate:"required"`
 	SearchPrefix     string                  `json:"search_prefix,omitempty"`
 	ColorFilters     []ApplicationLabelColor `json:"color_filters,omitempty"`
-	Limit            int                     `json:"limit,omitempty" validate:"min=1,max=100"`
+	Limit            int                     `json:"limit,omitempty"             validate:"min=1,max=100"`
 	Offset           string                  `json:"offset,omitempty"`
 }
 
 type FilterCompaniesRequest struct {
-	LanguageID string `json:"language_id" validate:"required"`
-	Prefix     string `json:"prefix" validate:"required"`
+	LanguageID string `json:"language_id"      validate:"required"`
+	Prefix     string `json:"prefix"           validate:"required"`
 	Offset     string `json:"offset,omitempty"`
-	Limit      int    `json:"limit,omitempty" validate:"min=1,max=10"`
+	Limit      int    `json:"limit,omitempty"  validate:"min=1,max=10"`
 }
 
 type FilterEmployeesRequest struct {
@@ -251,15 +251,15 @@ type FilterJobOpeningsRequest struct {
 	Locations                 []string                   `json:"locations,omitempty"`
 	Companies                 []string                   `json:"companies,omitempty"`
 	RemoteAccepted            bool                       `json:"remote_accepted,omitempty"`
-	YoeMin                    int                        `json:"yoe_min,omitempty" validate:"min=0,max=80"`
-	YoeMax                    int                        `json:"yoe_max,omitempty" validate:"min=0,max=80"`
+	YoeMin                    int                        `json:"yoe_min,omitempty"                    validate:"min=0,max=80"`
+	YoeMax                    int                        `json:"yoe_max,omitempty"                    validate:"min=0,max=80"`
 	EducationalQualifications []EducationalQualification `json:"educational_qualifications,omitempty"`
 }
 
 type FilterLocationsRequest struct {
-	Prefix string `json:"prefix" validate:"required"`
+	Prefix string `json:"prefix"           validate:"required"`
 	Offset string `json:"offset,omitempty"`
-	Limit  int    `json:"limit,omitempty" validate:"min=1,max=10"`
+	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=10"`
 }
 
 type FilterLocationsResponse struct {
@@ -268,8 +268,8 @@ type FilterLocationsResponse struct {
 
 type FilterOpeningsRequest struct {
 	HiringManagerEmails []string `json:"hiring_manager_emails,omitempty"`
-	Limit               int      `json:"limit,omitempty" validate:"min=1,max=100"`
-	Offset              string   `json:"offset,omitempty" validate:"min=1,max=255"`
+	Limit               int      `json:"limit,omitempty"                 validate:"min=1,max=100"`
+	Offset              string   `json:"offset,omitempty"                validate:"min=1,max=255"`
 	OrderBy             []string `json:"order_by,omitempty"`
 	OrderDirection      string   `json:"order_direction,omitempty"`
 	RecruiterEmails     []string `json:"recruiter_emails,omitempty"`
@@ -286,7 +286,7 @@ type FilteredApplication struct {
 	LastPosition  string                  `json:"last_position"`
 	VetchiHandle  string                  `json:"vetchi_handle"`
 	ColorFilters  []ApplicationLabelColor `json:"color_filters,omitempty"`
-	ResumeURL     string                  `json:"resume_url,omitempty" validate:"url"`
+	ResumeURL     string                  `json:"resume_url,omitempty"    validate:"url"`
 	Vouches       []Vouch                 `json:"vouches,omitempty"`
 	ReferredBy    ReferredBy              `json:"referred_by,omitempty"`
 }
@@ -298,7 +298,7 @@ type FilteredCompany struct {
 
 type FilteredEmployee struct {
 	Name         string `json:"name"`
-	Email        string `json:"email" validate:"email"`
+	Email        string `json:"email"        validate:"email"`
 	VetchiHandle string `json:"vetchiHandle"`
 }
 
@@ -313,7 +313,7 @@ type FilteredOpenings struct {
 	HiringManagerEmail string       `json:"hiring_manager_email" validate:"email"`
 	HiringManagerName  string       `json:"hiring_manager_name"`
 	ID                 string       `json:"id"`
-	RecruiterEmail     string       `json:"recruiter_email" validate:"email"`
+	RecruiterEmail     string       `json:"recruiter_email"      validate:"email"`
 	RecruiterName      string       `json:"recruiter_name"`
 	Status             OpeningState `json:"status"`
 	Title              string       `json:"title"`
@@ -329,7 +329,7 @@ type ForgotPasswordRequest struct {
 }
 
 type GetCostCentersRequest struct {
-	Limit  int    `json:"limit,omitempty" validate:"min=1,max=100"`
+	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=100"`
 	Offset string `json:"offset,omitempty"`
 }
 
@@ -338,18 +338,18 @@ type GetInterviewDetailsRequest struct {
 }
 
 type GetLocationsRequest struct {
-	Limit  int    `json:"limit,omitempty" validate:"min=1,max=100"`
+	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=100"`
 	Offset string `json:"offset,omitempty"`
 }
 
 type GetMyApplicationsRequest struct {
 	StartDate string `json:"start_date,omitempty" validate:"date"`
-	EndDate   string `json:"end_date,omitempty" validate:"date"`
+	EndDate   string `json:"end_date,omitempty"   validate:"date"`
 }
 
 type GetMyCandidaciesRequest struct {
 	StartDate string `json:"start_date,omitempty" validate:"date"`
-	EndDate   string `json:"end_date,omitempty" validate:"date"`
+	EndDate   string `json:"end_date,omitempty"   validate:"date"`
 }
 
 type GetOnboardStatusRequest struct {
@@ -361,7 +361,7 @@ type GetOnboardStatusResponse struct {
 }
 
 type GetUserRequest struct {
-	Limit  int    `json:"limit,omitempty" validate:"min=1,max=100"`
+	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=100"`
 	Offset string `json:"offset,omitempty" validate:"email"`
 }
 
@@ -414,7 +414,7 @@ const (
 )
 
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
+	Email    string `json:"email"    validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -444,10 +444,9 @@ type MyInterview struct {
 type OnboardStatus string
 
 const (
-	DomainNotVerified          OnboardStatus = "DOMAIN_NOT_VERIFIED"
-	DomainVerifiedEmailNotSent OnboardStatus = "DOMAIN_VERIFIED_EMAIL_NOT_SENT"
-	DomainVerifiedEmailSent    OnboardStatus = "DOMAIN_VERIFIED_EMAIL_SENT"
-	DomainOnboarded            OnboardStatus = "DOMAIN_ONBOARDED"
+	DomainNotVerified               OnboardStatus = "DOMAIN_NOT_VERIFIED"
+	DomainVerifiedOnboardingPending OnboardStatus = "DOMAIN_VERIFIED_ONBOARDING_PENDING"
+	DomainOnboarded                 OnboardStatus = "DOMAIN_ONBOARDED"
 )
 
 type OpeningInfo struct {
@@ -458,7 +457,7 @@ type OpeningInfo struct {
 	HiringManagerName  string       `json:"hiring_manager_name"`
 	ID                 string       `json:"id"`
 	JobType            string       `json:"job_type"`
-	RecruiterEmail     string       `json:"recruiter_email" validate:"email"`
+	RecruiterEmail     string       `json:"recruiter_email"      validate:"email"`
 	RecruiterName      string       `json:"recruiter_name"`
 	OpeningState       OpeningState `json:"opening_state"`
 	Title              string       `json:"title"`
@@ -483,7 +482,7 @@ const (
 )
 
 type Password struct {
-	Password string `json:"password" validate:"required,min=8,max=255,pattern=^(?:.*[a-z])(?:.*[A-Z])(?:.*\\d)(?:.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"`
+	Password string `json:"password" validate:"required,min=8,max=255,pattern=^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"`
 }
 
 type ReferredBy struct {
@@ -508,7 +507,7 @@ type RemoveWorkHistoryRequest struct {
 }
 
 type ResetPasswordRequest struct {
-	Token       string `json:"token" validate:"required"`
+	Token       string `json:"token"        validate:"required"`
 	NewPassword string `json:"new_password" validate:"required"`
 }
 
@@ -539,17 +538,17 @@ type TFAuthResponse struct {
 }
 
 type UpdateInterviewFeedbackRequest struct {
-	InterviewID         string           `json:"interview_id" validate:"required"`
-	EvaluationReport    EvaluationReport `json:"evaluation_report" validate:"required"`
-	EvaluationResult    EvaluationResult `json:"evaluation_result" validate:"required"`
+	InterviewID         string           `json:"interview_id"                    validate:"required"`
+	EvaluationReport    EvaluationReport `json:"evaluation_report"               validate:"required"`
+	EvaluationResult    EvaluationResult `json:"evaluation_result"               validate:"required"`
 	FeedbackToCandidate string           `json:"feedback_to_candidate,omitempty" validate:"min=10,max=1000"`
 }
 
 type UpdateWorkHistoryRequest struct {
-	WorkHistoryID string `json:"work_history_id" validate:"required"`
-	CompanyHandle string `json:"company_handle" validate:"required"`
-	JobTitle      string `json:"job_title" validate:"required"`
-	StartDate     string `json:"start_date" validate:"required,date"`
+	WorkHistoryID string `json:"work_history_id"    validate:"required"`
+	CompanyHandle string `json:"company_handle"     validate:"required"`
+	JobTitle      string `json:"job_title"          validate:"required"`
+	StartDate     string `json:"start_date"         validate:"required,date"`
 	EndDate       string `json:"end_date,omitempty" validate:"date"`
 }
 
@@ -600,7 +599,7 @@ type WorkHistory struct {
 	WorkHistoryID string `json:"work_history_id"`
 	CompanyName   string `json:"company_name"`
 	JobTitle      string `json:"job_title"`
-	StartDate     string `json:"start_date" validate:"date"`
+	StartDate     string `json:"start_date"         validate:"date"`
 	EndDate       string `json:"end_date,omitempty" validate:"date"`
-	Logo          string `json:"logo,omitempty" validate:"url"`
+	Logo          string `json:"logo,omitempty"     validate:"url"`
 }
