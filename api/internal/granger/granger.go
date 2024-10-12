@@ -1,13 +1,14 @@
 package granger
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"sync"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/postgres"
 )
 
 type Config struct {
@@ -65,9 +66,11 @@ func validateConfig(config *Config) error {
 }
 
 type Granger struct {
-	Port   string
-	DB     *pgxpool.Pool
-	logger *slog.Logger
+	port string
+	db   db.DB
+	log  *slog.Logger
+	wg   sync.WaitGroup
+	quit chan struct{}
 }
 
 func NewGranger() (*Granger, error) {
@@ -81,21 +84,23 @@ func NewGranger() (*Granger, error) {
 		config.PostgresHost, config.PostgresPort, config.PostgresUser,
 		config.PostgresDB, config.PostgresPassword)
 
-	dbpool, err := pgxpool.New(context.Background(), pgConnStr)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	pg, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("Database connection pool established")
-
 	return &Granger{
-		Port:   fmt.Sprintf(":%s", config.Port),
-		DB:     dbpool,
-		logger: logger,
+		port: fmt.Sprintf(":%s", config.Port),
+		db:   pg,
+		log:  logger,
 	}, nil
 }
 
 func (g *Granger) Run() error {
-	return http.ListenAndServe(g.Port, nil)
+	g.wg.Add(1)
+	go g.createOnboardEmails()
+
+	return http.ListenAndServe(g.port, nil)
 }
