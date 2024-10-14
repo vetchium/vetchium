@@ -253,7 +253,7 @@ WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
 
 	var employerID int64
 	var adminEmailAddr string
-	err := p.pool.QueryRow(ctx, employerQuery, token).
+	err := p.pool.QueryRow(ctx, employerQuery, token, domainName).
 		Scan(&employerID, &adminEmailAddr)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -280,7 +280,7 @@ VALUES ($1, $2, $3, $4)
 		orgUserInsertQuery,
 		adminEmailAddr,
 		password,
-		adminEmailAddr,
+		db.AdminOrgUserRole,
 		employerID,
 	)
 	if err != nil {
