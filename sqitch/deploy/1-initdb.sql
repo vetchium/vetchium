@@ -38,7 +38,10 @@ CREATE TABLE employers (
     client_id_type client_id_types NOT NULL,
     employer_state employer_states NOT NULL,
     onboard_admin_email TEXT NOT NULL,
-    onboard_secret_token TEXT NOT NULL,
+    onboard_secret_token TEXT,
+
+    --- Despite its name, it should not be confused with an email address. 
+    --- This is the rowid in the 'emails' table for the welcome email sent.
     onboard_email_id BIGINT REFERENCES emails(id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())

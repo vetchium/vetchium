@@ -17,25 +17,53 @@ import (
 var _ = Describe("GetOnboardStatus", func() {
 	var db *pgxpool.Pool
 	var ctx context.Context
+	var employerID, domainID, orgUserID int64
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		db = setupTestDB()
-		_, err := db.Exec(
+
+		err := db.QueryRow(
 			ctx,
 			`
-INSERT INTO employers (client_id, onboard_status) VALUES
-	('domain-onboarded.example', 'DOMAIN_ONBOARDED')`,
-		)
+INSERT INTO employers	(client_id_type, employer_state, 
+						onboard_admin_email, onboard_secret_token)
+VALUES ('DOMAIN', 'ONBOARDED', 'admin@domain-onboarded.example', 'token') 
+RETURNING id
+`,
+		).Scan(&employerID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		err = db.QueryRow(
+			ctx,
+			`
+INSERT INTO domains (domain_name, domain_state, employer_id) 
+VALUES ('domain-onboarded.example', 'VERIFIED', $1) 
+RETURNING id`,
+			employerID,
+		).Scan(&domainID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		err = db.QueryRow(
+			ctx,
+			`
+INSERT INTO org_users (email, password_hash, org_user_role, employer_id)
+VALUES ('admin@domain-onboarded.example', 'password_hash', 'ADMIN', $1)
+RETURNING id`,
+			employerID,
+		).Scan(&orgUserID)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		_, err := db.Exec(
-			ctx,
-			`
-DELETE FROM employers WHERE client_id IN('domain-onboarded.example')`,
-		)
+		_, err := db.Exec(ctx, `DELETE FROM org_users WHERE id = $1`, orgUserID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = db.Exec(ctx, `DELETE FROM domains WHERE id = $1`, domainID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = db.Exec(ctx, `DELETE FROM employers WHERE id = $1`, employerID)
+		Expect(err).ShouldNot(HaveOccurred())
 		Expect(err).ShouldNot(HaveOccurred())
 		db.Close()
 	})
