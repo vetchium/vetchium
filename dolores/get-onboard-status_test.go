@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"regexp"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
@@ -109,6 +113,39 @@ RETURNING id`,
 				err = json.NewDecoder(resp.Body).Decode(&got)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(got.Status).Should(Equal(test.want))
+			}
+		})
+
+		It("check mailpit if it got the email", func() {
+			// Sleep for 6 minutes to allow the email to be sent by granger
+			<-time.After(3 * time.Minute)
+
+			queryParams := url.Values{}
+			queryParams.Add("to", "secretsapp@example.com")
+			queryParams.Add("subject", "Welcome to Vetchi !")
+			qpStr := queryParams.Encode()
+
+			url := serverURL + "/employer/get-onboard-status?" + qpStr
+
+			req, err := http.NewRequest("GET", url, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err := io.ReadAll(resp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Extracting the URL from the body string
+			re := regexp.MustCompile(
+				`https://employer.vetchi.org/onboard/[^"]+`,
+			)
+			urls := re.FindAllString(string(body), -1)
+			Expect(len(urls)).Should(BeNumerically(">=", 1))
+
+			for _, url := range urls {
+				log.Println("URL:", url)
 			}
 		})
 	})

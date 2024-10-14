@@ -55,7 +55,7 @@ func (g *Granger) createOnboardEmails() {
 		select {
 		case <-g.quit:
 			return
-		case <-time.After(3 * time.Minute):
+		case <-time.After(1 * time.Minute):
 			ctx := context.Background()
 			employerID, adminAddr, domain, err := g.db.WhomToOnboardInvite(ctx)
 			if err != nil {
