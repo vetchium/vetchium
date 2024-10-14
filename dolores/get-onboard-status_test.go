@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"regexp"
 	"time"
 
@@ -116,19 +115,16 @@ RETURNING id`,
 			}
 		})
 
-		It("check mailpit if it got the email", func() {
-			// Sleep for 6 minutes to allow the email to be sent by granger
-			<-time.After(3 * time.Minute)
+		It("Check if mailpit got the email and set the admin password", func() {
+			// Sleep for 2 minutes to allow the email to be sent by granger
+			<-time.After(2 * time.Minute)
 
-			queryParams := url.Values{}
-			queryParams.Add("to", "secretsapp@example.com")
-			queryParams.Add("subject", "Welcome to Vetchi !")
-			qpStr := queryParams.Encode()
-
-			url := serverURL + "/employer/get-onboard-status?" + qpStr
+			url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			log.Println("URL:", url)
 
 			req, err := http.NewRequest("GET", url, nil)
 			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Add("Content-Type", "application/json")
 
 			resp, err := http.DefaultClient.Do(req)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -137,16 +133,87 @@ RETURNING id`,
 			body, err := io.ReadAll(resp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			// Extracting the URL from the body string
-			re := regexp.MustCompile(
-				`https://employer.vetchi.org/onboard/[^"]+`,
-			)
-			urls := re.FindAllString(string(body), -1)
-			Expect(len(urls)).Should(BeNumerically(">=", 1))
+			log.Println("Body:", string(body))
 
-			for _, url := range urls {
-				log.Println("URL:", url)
+			type Message struct {
+				ID string `json:"ID"`
 			}
+
+			type MailPitResponse struct {
+				Messages []Message `json:"messages"`
+			}
+
+			var response MailPitResponse
+			err = json.Unmarshal(body, &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(len(response.Messages)).Should(BeNumerically(">=", 1))
+
+			mailURL := "http://localhost:8025/api/v1/message/" + response.Messages[0].ID
+			log.Println("Mail URL:", mailURL)
+
+			req, err = http.NewRequest("GET", mailURL, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Add("Content-Type", "application/json")
+
+			resp, err = http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err = io.ReadAll(resp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			log.Println("Mail Body:", string(body))
+
+			// Extracting the token from the URL
+			re := regexp.MustCompile(
+				`https://employer.vetchi.org/onboard/([^\\\s]+)`,
+			)
+			tokens := re.FindAllStringSubmatch(string(body), -1)
+			Expect(len(tokens)).Should(BeNumerically(">=", 1))
+
+			token := tokens[0][1] // The token is captured in the first group
+			log.Println("Token:", token)
+
+			// TODO: Once password validation is added, add a testcase with
+			// an invalid password
+
+			// Set password for the admin
+			setOnboardPasswordBody, err := json.Marshal(
+				libvetchi.SetOnboardPasswordRequest{
+					ClientID: "domain-onboarded.example",
+					Password: "NewPassword123$",
+					Token:    token,
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err = http.Post(
+				serverURL+"/employer/set-onboard-password",
+				"application/json",
+				bytes.NewBuffer(setOnboardPasswordBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Get Onboard Status should now return DomainOnboarded
+			getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
+				ClientID: "domain-onboarded.example",
+			}
+			getOnboardStatusBody, err := json.Marshal(getOnboardStatusRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err = http.Post(
+				serverURL+"/employer/get-onboard-status",
+				"application/json",
+				bytes.NewBuffer(getOnboardStatusBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			var got libvetchi.GetOnboardStatusResponse
+			err = json.NewDecoder(resp.Body).Decode(&got)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
 		})
 	})
 })

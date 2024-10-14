@@ -98,6 +98,7 @@ func New() (*Hermione, error) {
 
 func (h *Hermione) Run() error {
 	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
+	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
 
 	return http.ListenAndServe(h.port, nil)
 }

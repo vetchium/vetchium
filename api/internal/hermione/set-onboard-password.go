@@ -8,7 +8,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
 
-func (h *Hermione) SetOnboardPassword(w http.ResponseWriter, r *http.Request) {
+func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
 	var req libvetchi.SetOnboardPasswordRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
