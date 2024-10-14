@@ -67,7 +67,7 @@ components:
       properties:
         location_id:
           type: string
-    AddUserRequest:
+    AddOrgUserRequest:
       description: Request to add a new user
       properties:
         email:
@@ -80,7 +80,7 @@ components:
         - name
         - email
         - role
-    AddUserResponse:
+    AddOrgUserResponse:
       description: Response after adding a user
       properties:
         email:
@@ -310,7 +310,7 @@ components:
         interviewers:
           description: List of interviewers
           items:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/OrgUser"
           type: array
         send_appointment:
           default: false
@@ -452,8 +452,8 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
-    EditRoleRequest:
-      description: Request to edit a user's role
+    EditOrgUserRoleRequest:
+      description: Request to edit an orguser's role
       properties:
         email:
           $ref: "#/components/schemas/EmailAddress"
@@ -800,7 +800,7 @@ components:
         - email: jane.smith@example.com
           name: Jane Smith
       items:
-        $ref: "#/components/schemas/User"
+        $ref: "#/components/schemas/OrgUser"
       type: array
     FilteredOpenings:
       description: The filtered openings
@@ -851,7 +851,7 @@ components:
         - email: jane.smith@example.com
           name: Jane Smith
       items:
-        $ref: "#/components/schemas/User"
+        $ref: "#/components/schemas/OrgUser"
       type: array
     ForgotPasswordRequest:
       description: Request to send a password reset
@@ -963,7 +963,7 @@ components:
         interviewers:
           description: List of interviewers
           items:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/OrgUser"
           type: array
         start_time:
           description: The start time of the interview
@@ -1008,7 +1008,7 @@ components:
         interviewers:
           description: List of interviewers
           items:
-            $ref: "#/components/schemas/User"
+            $ref: "#/components/schemas/OrgUser"
           type: array
         openings:
           description: List of openings for the interview
@@ -1175,6 +1175,28 @@ components:
         - OPENING_ACTIVE
         - OPENING_CLOSED
       type: string
+    OrgUser:
+      description: A user object
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        name:
+          description: The name of the user
+          type: string
+    OrgUserInfo:
+      description: Information about a user
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+    OrgUserListResponse:
+      description: A list of user information, sorted by email address
+      items:
+        $ref: "#/components/schemas/OrgUserInfo"
+      type: array
     Password:
       description: A password
       example: Password123$
@@ -1226,8 +1248,8 @@ components:
           type: string
       required:
         - location_id
-    RemoveUserRequest:
-      description: Request to remove a user
+    RemoveOrgUserRequest:
+      description: Request to remove an orguser
       properties:
         email:
           $ref: "#/components/schemas/EmailAddress"
@@ -1253,8 +1275,20 @@ components:
       enum:
         - ADMIN
         - RECRUITER
-        - PANELIST
+        - INTERVIEWER
       type: string
+    SetOnboardPasswordRequest:
+      description: Request to set the password for the given token
+      properties:
+        client_id:
+          description: The client ID
+          type: string
+        password:
+          description: The new password
+          type: string
+        token:
+          description: The token to set the password
+          type: string
     ShortlistApplicationRequest:
       description: Request to Shortlist an Application
       properties:
@@ -1344,28 +1378,6 @@ components:
         work_history_id:
           description: The ID of the updated work history
           type: string
-    User:
-      description: A user object
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        name:
-          description: The name of the user
-          type: string
-    UserInfo:
-      description: Information about a user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        name:
-          type: string
-        role:
-          $ref: "#/components/schemas/Role"
-    UserListResponse:
-      description: A list of user information, sorted by email address
-      items:
-        $ref: "#/components/schemas/UserInfo"
-      type: array
     ValidationErrors:
       description: A list of field names for which the validations failed
       items:
@@ -1492,22 +1504,22 @@ paths:
       summary: Add Location
       tags:
         - Employer
-  /employer/add-user:
+  /employer/add-org-user:
     post:
-      description: Add a new user associated with the employer. This is available only for users with the ADMIN role.
-      operationId: employer-add-user
+      description: Add a new orguser associated with the employer. This is available only for users with the ADMIN role.
+      operationId: employer-add-org-user
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AddUserRequest"
+              $ref: "#/components/schemas/AddOrgUserRequest"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AddUserResponse"
+                $ref: "#/components/schemas/AddOrgUserResponse"
           description: User added successfully
         "400":
           content:
@@ -1520,7 +1532,7 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Add User
+      summary: Add OrgUser
       tags:
         - Employer
   /employer/cancel-interview:
@@ -1611,15 +1623,15 @@ paths:
       summary: Create Opening
       tags:
         - Employer
-  /employer/edit-user-role:
+  /employer/edit-org-user-role:
     post:
-      description: Edit the role of a user associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
-      operationId: employer-edit-user-role
+      description: Edit the role of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
+      operationId: employer-edit-org-user-role
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EditRoleRequest"
+              $ref: "#/components/schemas/EditOrgUserRoleRequest"
         required: true
       responses:
         "200":
@@ -1943,10 +1955,10 @@ paths:
       summary: Get Onboarded Status for a Client
       tags:
         - Employer
-  /employer/get-users:
+  /employer/get-org-users:
     post:
-      description: Retrieve a list of users associated with the employer, sorted by their email address.
-      operationId: employer-get-users
+      description: Retrieve a list of orgusers associated with the employer, sorted by their email address.
+      operationId: employer-get-org-users
       requestBody:
         content:
           application/json:
@@ -1958,12 +1970,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserListResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrgUser"
           description: OK
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Get Users
+      summary: Get OrgUsers
       tags:
         - Employer
   /employer/put-cost-center:
@@ -2046,15 +2060,15 @@ paths:
       summary: Remove Location
       tags:
         - Employer
-  /employer/remove-user:
+  /employer/remove-org-user:
     post:
-      description: Remove a user associated with the employer. This method is available only for users with the ADMIN role.
-      operationId: employer-remove-user
+      description: Remove an orguser associated with the employer. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-org-user
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RemoveUserRequest"
+              $ref: "#/components/schemas/RemoveOrgUserRequest"
         required: true
       responses:
         "200":
@@ -2062,7 +2076,7 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Remove User
+      summary: Remove OrgUser
       tags:
         - Employer
   /employer/reset-password:
@@ -2099,6 +2113,22 @@ paths:
         "200":
           description: Password reset successfully
       summary: Reset Password
+      tags:
+        - Employer
+  /employer/set-onboard-password:
+    post:
+      description: Set the password for the given token.
+      operationId: employer-set-onboard-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetOnboardPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Password set successfully
+      summary: Set Onboard Password
       tags:
         - Employer
   /employer/shortlist-application:

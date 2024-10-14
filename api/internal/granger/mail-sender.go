@@ -1,6 +1,7 @@
 package granger
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -17,7 +18,8 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 		case <-quit:
 			return
 		case <-time.After(30 * time.Second):
-			emails, err := g.db.GetOldestUnsentEmails()
+			ctx := context.Background()
+			emails, err := g.db.GetOldestUnsentEmails(ctx)
 			if err != nil {
 				continue
 			}
@@ -28,7 +30,12 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 					continue
 				}
 
-				err = g.db.UpdateEmailState(email.ID, db.EmailStateProcessed)
+				ctx := context.Background()
+				err = g.db.UpdateEmailState(
+					ctx,
+					email.ID,
+					db.EmailStateProcessed,
+				)
 				if err != nil {
 					g.log.Error(
 						"Updating email state",

@@ -1,7 +1,8 @@
 package libvetchi
 
 const (
-	BaseURL = "https://vetchi.org"
+	HubBaseURL      = "https://vetchi.org"
+	EmployerBaseURL = "https://employer.vetchi.org"
 
 	ProdEnv = "prod"
 	DevEnv  = "dev"

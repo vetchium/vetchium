@@ -2,13 +2,13 @@ package granger
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"html/template"
 	ttmpl "text/template"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
@@ -56,60 +56,54 @@ func (g *Granger) createOnboardEmails() {
 		case <-g.quit:
 			return
 		case <-time.After(3 * time.Minute):
-			employers, err := g.db.GetUnmailedOnboardPendingEmployers()
+			ctx := context.Background()
+			employerID, adminAddr, domain, err := g.db.WhomToOnboardInvite(ctx)
 			if err != nil {
 				continue
 			}
 
-			for _, employer := range employers {
-				g.log.Info("onboard invites", "employer", employer.ClientID)
+			g.log.Info("onboard invites", "employer", employerID)
 
-				buff := make([]byte, 16)
-				rand.Read(buff)
+			buff := make([]byte, 16)
+			rand.Read(buff)
+			token := hex.EncodeToString(buff)
 
-				token := hex.EncodeToString(buff)
-				employer.OnboardSecretToken = pgtype.Text{
-					String: token,
-					Valid:  true,
-				}
+			link := libvetchi.EmployerBaseURL + "/onboard/" + token
 
-				link := libvetchi.BaseURL + "/onboard/" + token
-
-				var textBody bytes.Buffer
-				err := ttmpl.Must(
-					ttmpl.New("text").Parse(textMailTemplate),
-				).Execute(&textBody, map[string]string{
-					"Domain": employer.ClientID,
-					"Link":   link,
-				})
-				if err != nil {
-					g.log.Error("email text template failed", "error", err)
-					continue
-				}
-
-				var htmlBody bytes.Buffer
-				err = template.Must(
-					template.New("html").Parse(htmlMailTemplate),
-				).Execute(&htmlBody, map[string]string{
-					"Domain": employer.ClientID,
-					"Link":   link,
-				})
-				if err != nil {
-					g.log.Error("email html template failed", "error", err)
-					continue
-				}
-
-				email := db.Email{
-					EmailFrom:     libvetchi.EmailFrom,
-					EmailTo:       []string{employer.OnboardAdmin.String},
-					EmailSubject:  subject,
-					EmailHTMLBody: htmlBody.String(),
-					EmailTextBody: textBody.String(),
-				}
-
-				// Errors are already logged, so we can ignore the return value
-				_ = g.db.CreateOnboardEmail(employer, email)
+			var textBody bytes.Buffer
+			err = ttmpl.Must(
+				ttmpl.New("text").Parse(textMailTemplate),
+			).Execute(&textBody, map[string]string{
+				"Domain": domain,
+				"Link":   link,
+			})
+			if err != nil {
+				g.log.Error("email text template failed", "error", err)
+				continue
 			}
+
+			var htmlBody bytes.Buffer
+			err = template.Must(
+				template.New("html").Parse(htmlMailTemplate),
+			).Execute(&htmlBody, map[string]string{
+				"Domain": domain,
+				"Link":   link,
+			})
+			if err != nil {
+				g.log.Error("email html template failed", "error", err)
+				continue
+			}
+
+			email := db.Email{
+				EmailFrom:     libvetchi.EmailFrom,
+				EmailTo:       []string{adminAddr},
+				EmailSubject:  subject,
+				EmailHTMLBody: htmlBody.String(),
+				EmailTextBody: textBody.String(),
+			}
+
+			// Errors are already logged, so we can ignore the return value
+			_ = g.db.CreateOnboardEmail(ctx, employerID, token, email)
 		}
 	}
 }

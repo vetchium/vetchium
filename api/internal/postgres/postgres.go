@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/psankar/vetchi/api/internal/db"
 )
 
@@ -30,24 +31,21 @@ func (p *PG) GetEmployer(
 	clientID string,
 ) (db.Employer, error) {
 	query := `
-SELECT 	client_id, onboard_status, onboard_admin, 
-		onboard_secret_token, onboard_email_id, 
-		created_at, updated_at
-FROM employers 
-WHERE client_id = $1`
+SELECT 	e.id, e.client_id_type, e.employer_state, 
+		e.onboard_admin_email, e.onboard_secret_token, e.created_at
+FROM employers e, domains d	
+WHERE e.id = d.employer_id AND d.domain_name = $1
+`
 
 	var employer db.Employer
-
-	err := p.pool.QueryRow(ctx, query, clientID).
-		Scan(
-			&employer.ClientID,
-			&employer.OnboardStatus,
-			&employer.OnboardAdmin,
-			&employer.OnboardSecretToken,
-			&employer.OnboardEmailID,
-			&employer.CreatedAt,
-			&employer.UpdatedAt,
-		)
+	err := p.pool.QueryRow(ctx, query, clientID).Scan(
+		&employer.ID,
+		&employer.ClientIDType,
+		&employer.EmployerState,
+		&employer.OnboardAdminEmail,
+		&employer.OnboardSecretToken,
+		&employer.CreatedAt,
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return db.Employer{}, db.ErrNoEmployer
@@ -60,64 +58,90 @@ WHERE client_id = $1`
 	return employer, nil
 }
 
-func (p *PG) CreateEmployer(
+func (p *PG) InitEmployerAndDomain(
 	ctx context.Context,
 	employer db.Employer,
+	domain db.Domain,
 ) error {
-	query := `
-INSERT INTO employers	(client_id, onboard_status, onboard_admin, 
-						onboard_secret_token, onboard_email_id)
-VALUES ($1, $2, $3, $4, $5)
-`
-	_, err := p.pool.Exec(
-		ctx,
-		query,
-		employer.ClientID,
-		employer.OnboardStatus,
-		employer.OnboardAdmin,
-		nil,
-		nil,
-	)
-	return err
-}
-
-func (p *PG) GetUnmailedOnboardPendingEmployers() ([]db.Employer, error) {
-	query := `
-SELECT 	client_id, onboard_status, onboard_admin, 
-		created_at, updated_at, onboard_email_id
-FROM 	employers 
-WHERE 	onboard_status = 'DOMAIN_VERIFIED_ONBOARD_PENDING'
-		AND onboard_email_id IS NULL
-`
-	rows, err := p.pool.Query(context.Background(), query)
+	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		return nil, err
+		p.log.Error("failed to begin transaction", "error", err)
+		return err
 	}
-	defer rows.Close()
+	defer tx.Rollback(ctx)
 
-	var employers []db.Employer
-	for rows.Next() {
-		var employer db.Employer
-		err := rows.Scan(
-			&employer.ClientID,
-			&employer.OnboardStatus,
-			&employer.OnboardAdmin,
-			&employer.CreatedAt,
-			&employer.UpdatedAt,
-			&employer.OnboardEmailID,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		employers = append(employers, employer)
+	employerInsertQuery := `
+INSERT INTO employers 	(client_id_type, employer_state, onboard_admin_email,
+						onboard_secret_token, created_at)
+VALUES ($1, $2, $3, $4, NOW())
+RETURNING id
+`
+	var employerID int64
+	err = tx.QueryRow(
+		ctx,
+		employerInsertQuery,
+		employer.ClientIDType,
+		employer.EmployerState,
+		employer.OnboardAdminEmail,
+		nil,
+	).Scan(&employerID)
+	if err != nil {
+		p.log.Error("failed to insert employer", "error", err)
+		return err
 	}
 
-	return employers, nil
+	domainInsertQuery := `
+INSERT INTO domains (domain_name, domain_state, employer_id, created_at)
+VALUES ($1, $2, $3, NOW())
+`
+	_, err = tx.Exec(
+		ctx,
+		domainInsertQuery,
+		domain.DomainName,
+		domain.DomainState,
+		employerID,
+	)
+	if err != nil {
+		p.log.Error("failed to insert domain", "error", err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Error("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
 }
 
-func (p *PG) CreateOnboardEmail(employer db.Employer, email db.Email) error {
-	tx, err := p.pool.Begin(context.Background())
+func (p *PG) WhomToOnboardInvite(
+	ctx context.Context,
+) (employerID int64, adminEmailAddr, domainName string, err error) {
+	query := `
+SELECT e.id, e.onboard_admin_email, d.domain_name
+FROM employers e, domains d
+WHERE e.employer_state = $1 AND e.onboard_secret_token IS NULL
+ORDER BY e.created_at ASC
+LIMIT 1
+`
+	err = p.pool.QueryRow(ctx, query, db.OnboardPendingEmployerState).
+		Scan(&employerID, &adminEmailAddr, &domainName)
+	if err != nil {
+		p.log.Error("failed to query employers", "error", err)
+		return 0, "", "", err
+	}
+
+	return employerID, adminEmailAddr, domainName, nil
+}
+
+func (p *PG) CreateOnboardEmail(
+	ctx context.Context,
+	employerID int64,
+	onboardSecretToken string,
+	email db.Email,
+) error {
+	tx, err := p.pool.Begin(ctx)
 	if err != nil {
 		p.log.Error("failed to begin transaction", "error", err)
 		return err
@@ -149,11 +173,11 @@ RETURNING 			id
 		`
 UPDATE 	employers 
 SET 	onboard_email_id = $1, onboard_secret_token = $2
-WHERE 	client_id = $3
+WHERE 	id = $3
 `,
 		email.ID,
-		employer.OnboardSecretToken,
-		employer.ClientID,
+		onboardSecretToken,
+		employerID,
 	)
 	if err != nil {
 		p.log.Error("failed to update employer", "error", err)
@@ -170,7 +194,7 @@ WHERE 	client_id = $3
 	return nil
 }
 
-func (p *PG) GetOldestUnsentEmails() ([]db.Email, error) {
+func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {
 	query := `
 SELECT 	id, email_from, email_to, email_subject, 
 		email_html_body, email_text_body, email_state
@@ -179,7 +203,7 @@ WHERE 	email_state = $1
 ORDER BY created_at ASC
 LIMIT 10
 `
-	rows, err := p.pool.Query(context.Background(), query, db.EmailStatePending)
+	rows, err := p.pool.Query(ctx, query, db.EmailStatePending)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +231,82 @@ LIMIT 10
 	return emails, nil
 }
 
-func (p *PG) UpdateEmailState(emailID int64, state db.EmailState) error {
+func (p *PG) UpdateEmailState(
+	ctx context.Context,
+	emailID int64,
+	state db.EmailState,
+) error {
 	query := `UPDATE emails SET email_state = $1 WHERE id = $2`
-	_, err := p.pool.Exec(context.Background(), query, state, emailID)
+	_, err := p.pool.Exec(ctx, query, state, emailID)
 	return err
+}
+
+func (p *PG) OnboardAdmin(
+	ctx context.Context,
+	domainName, password, token string,
+) error {
+	employerQuery := `
+SELECT e.id, e.onboard_admin_email
+FROM employers e, domains d
+WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
+`
+
+	var employerID int64
+	var adminEmailAddr string
+	err := p.pool.QueryRow(ctx, employerQuery, token).
+		Scan(&employerID, &adminEmailAddr)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.ErrNoEmployer
+		}
+
+		p.log.Error("failed to query employers", "error", err)
+		return err
+	}
+
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		p.log.Error("failed to begin transaction", "error", err)
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	orgUserInsertQuery := `
+INSERT INTO org_users (email, password_hash, org_user_role, employer_id)
+VALUES ($1, $2, $3, $4)
+`
+	_, err = tx.Exec(
+		ctx,
+		orgUserInsertQuery,
+		adminEmailAddr,
+		password,
+		adminEmailAddr,
+		employerID,
+	)
+	if err != nil {
+		p.log.Error("failed to insert org user", "error", err)
+		return err
+	}
+
+	employerUpdateQuery := `
+UPDATE employers SET employer_state = $1 WHERE id = $2
+`
+	_, err = tx.Exec(
+		ctx,
+		employerUpdateQuery,
+		db.OnboardedEmployerState,
+		employerID,
+	)
+	if err != nil {
+		p.log.Error("failed to update employer", "error", err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Error("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
 }

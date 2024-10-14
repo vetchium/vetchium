@@ -7,13 +7,10 @@ CREATE TABLE IF NOT EXISTS hub_users (
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
---- Must match dao.EmailState
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
-
 CREATE TABLE emails(
 	id BIGSERIAL PRIMARY KEY,
 	email_from TEXT NOT NULL,
@@ -24,23 +21,57 @@ CREATE TABLE emails(
 	email_html_body TEXT NOT NULL,
 	email_text_body TEXT NOT NULL,
 	email_state email_states NOT NULL,
-	created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC', now()),
+	created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
 	processed_at TIMESTAMP WITH TIME ZONE
 );
 
---- Must match libvetchi.OnboardStatus
-CREATE TYPE onboard_status AS ENUM ('DOMAIN_NOT_VERIFIED', 'DOMAIN_VERIFIED_ONBOARD_PENDING', 'DOMAIN_ONBOARDED');
+---
 
-CREATE TABLE IF NOT EXISTS employers (
-    client_id TEXT PRIMARY KEY,
-    onboard_status onboard_status NOT NULL,
-    onboard_admin TEXT,
-    onboard_secret_token TEXT,
+CREATE TYPE client_id_types AS ENUM ('DOMAIN');
+CREATE TYPE employer_states AS ENUM (
+    'ONBOARD_PENDING',
+    'ONBOARDED',
+    'DEBOARDED'
+);
+CREATE TABLE employers (
+    id BIGSERIAL PRIMARY KEY,
+    client_id_type client_id_types NOT NULL,
+    employer_state employer_states NOT NULL,
+    onboard_admin_email TEXT NOT NULL,
+    onboard_secret_token TEXT NOT NULL,
+    onboard_email_id BIGINT REFERENCES emails(id),
 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
 
-    onboard_email_id BIGINT REFERENCES emails(id)
+---
+
+CREATE TYPE domain_states AS ENUM (
+    'VERIFIED',
+    'DEBOARDED'
+);
+CREATE TABLE domains (
+    id BIGSERIAL PRIMARY KEY,
+    domain_name TEXT NOT NULL UNIQUE,
+    domain_state domain_states NOT NULL,
+
+    employer_id INTEGER REFERENCES employers(id) NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+---
+
+CREATE TYPE org_user_roles AS ENUM ('ADMIN', 'RECRUITER', 'INTERVIEWER');
+CREATE TABLE org_users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    org_user_role org_user_roles NOT NULL,
+
+    employer_id INTEGER REFERENCES employers(id) NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 COMMIT;

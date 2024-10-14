@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
@@ -26,17 +25,31 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, db.ErrNoEmployer) {
 			// Unregistered domain. Check if vetchiadmin TXT record is present
-			status, err = h.newDomainProcess(r.Context(), req.ClientID)
-			if err != nil {
-				http.Error(w, "", http.StatusInternalServerError)
-				return
-			}
+			h.newDomainProcess(r.Context(), w, req.ClientID)
+			return
 		} else {
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-	} else {
-		status = libvetchi.OnboardStatus(employer.OnboardStatus)
+	}
+
+	switch employer.EmployerState {
+	case db.OnboardPendingEmployerState:
+		status = libvetchi.DomainVerifiedOnboardPending
+	case db.OnboardedEmployerState:
+		status = libvetchi.DomainOnboarded
+	case db.DeboardedEmployerState:
+		status = libvetchi.DomainNotVerified
+	default:
+		h.logger.Error(
+			"unknown employer state",
+			"client_id",
+			req.ClientID,
+			"state",
+			employer.EmployerState,
+		)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 
 	resp := libvetchi.GetOnboardStatusResponse{Status: status}
@@ -50,34 +63,63 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h *Hermione) newDomainProcess(
 	ctx context.Context,
+	w http.ResponseWriter,
 	domain string,
-) (libvetchi.OnboardStatus, error) {
+) {
 	url := "vetchiadmin." + domain
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
 		h.logger.Debug("lookup TXT records", "domain", domain, "error", err)
-		return libvetchi.DomainNotVerified, nil
+		resp := libvetchi.GetOnboardStatusResponse{
+			Status: libvetchi.DomainNotVerified,
+		}
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			h.logger.Error("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 
 	admin := ""
-
 	if len(txtRecords) > 0 {
 		admin = txtRecords[0]
 	}
 
 	if admin == "" {
-		return libvetchi.DomainNotVerified, nil
+		resp := libvetchi.GetOnboardStatusResponse{
+			Status: libvetchi.DomainNotVerified,
+		}
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			h.logger.Error("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 
-	err = h.db.CreateEmployer(ctx, db.Employer{
-		ClientID:      domain,
-		OnboardStatus: string(libvetchi.DomainVerifiedOnboardPending),
-		OnboardAdmin:  pgtype.Text{String: admin, Valid: true},
+	err = h.db.InitEmployerAndDomain(ctx, db.Employer{
+		ClientIDType:      db.DomainClientIDType,
+		OnboardAdminEmail: admin,
+		EmployerState:     db.OnboardPendingEmployerState,
+	}, db.Domain{
+		DomainName:  domain,
+		DomainState: db.VerifiedDomainState,
 	})
 	if err != nil {
-		h.logger.Error("create employer failed", "domain", domain, "error", err)
-		return libvetchi.DomainNotVerified, err
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 
-	return libvetchi.DomainVerifiedOnboardPending, nil
+	resp := libvetchi.GetOnboardStatusResponse{
+		Status: libvetchi.DomainVerifiedOnboardPending,
+	}
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		h.logger.Error("failed to encode response", "error", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
 }

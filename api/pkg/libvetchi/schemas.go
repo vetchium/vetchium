@@ -26,13 +26,13 @@ type AddLocationResponse struct {
 	LocationID string `json:"location_id"`
 }
 
-type AddUserRequest struct {
+type AddOrgUserRequest struct {
 	Name  string `json:"name"  validate:"required"`
 	Email string `json:"email" validate:"required,email"`
 	Role  Role   `json:"role"  validate:"required"`
 }
 
-type AddUserResponse struct {
+type AddOrgUserResponse struct {
 	Email string `json:"email"`
 }
 
@@ -141,7 +141,7 @@ type CostCenter struct {
 
 type CreateInterviewRequest struct {
 	CandidacyID              string    `json:"candidacy_id"                         validate:"required"`
-	Interviewers             []User    `json:"interviewers"                         validate:"required"`
+	Interviewers             []OrgUser `json:"interviewers"                         validate:"required"`
 	StartTime                time.Time `json:"start_time"                           validate:"required"`
 	EndTime                  time.Time `json:"end_time"                             validate:"required"`
 	SendAppointment          bool      `json:"send_appointment,omitempty"`
@@ -387,7 +387,7 @@ type InterviewDetails struct {
 	EndTime                 time.Time            `json:"end_time"`
 	CandidateName           string               `json:"candidate_name"`
 	CandidateCurrentCompany string               `json:"candidate_current_company"`
-	Interviewers            []User               `json:"interviewers"`
+	Interviewers            []OrgUser            `json:"interviewers"`
 	EvaluationState         EvaluationState      `json:"evaluation_state"`
 	EvaluationReport        EvaluationReport     `json:"evaluation_report"`
 	EvaluationResult        EvaluationResult     `json:"evaluation_result"`
@@ -481,6 +481,17 @@ const (
 	OpeningClosed OpeningState = "OPENING_CLOSED"
 )
 
+type OrgUser struct {
+	Name  string `json:"name"`
+	Email string `json:"email" validate:"email"`
+}
+
+type OrgUserInfo struct {
+	Name  string `json:"name"`
+	Email string `json:"email" validate:"email"`
+	Role  Role   `json:"role"`
+}
+
 type Password struct {
 	Password string `json:"password" validate:"required,min=8,max=255,pattern=^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"`
 }
@@ -498,7 +509,7 @@ type RemoveLocationRequest struct {
 	LocationID string `json:"location_id" validate:"required"`
 }
 
-type RemoveUserRequest struct {
+type RemoveOrgUserRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
@@ -514,10 +525,16 @@ type ResetPasswordRequest struct {
 type Role string
 
 const (
-	Admin     Role = "ADMIN"
-	Recruiter Role = "RECRUITER"
-	Panelist  Role = "PANELIST"
+	Admin       Role = "ADMIN"
+	Recruiter   Role = "RECRUITER"
+	Interviewer Role = "INTERVIEWER"
 )
+
+type SetOnboardPasswordRequest struct {
+	ClientID string `json:"client_id" validate:"required"`
+	Password string `json:"password"  validate:"required"`
+	Token    string `json:"token"     validate:"required"`
+}
 
 type ShortlistedOpening struct {
 	OpeningID          string `json:"opening_id"`
@@ -554,21 +571,6 @@ type UpdateWorkHistoryRequest struct {
 
 type UpdateWorkHistoryResponse struct {
 	WorkHistoryID string `json:"work_history_id"`
-}
-
-type User struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-}
-
-type UserInfo struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-	Role  Role   `json:"role"`
-}
-
-type UserListResponse struct {
-	Users []UserInfo `json:"users"`
 }
 
 type ValidationErrors struct {
