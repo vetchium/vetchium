@@ -127,9 +127,9 @@ VALUES ($1, $2, $3, NOW())
 	return nil
 }
 
-func (p *PG) WhomToOnboardInvite(
+func (p *PG) DeQOnboard(
 	ctx context.Context,
-) (employerID int64, adminEmailAddr, domainName string, err error) {
+) (employerID int64, adminEmailAddr, domainName string, ok bool, err error) {
 	query := `
 SELECT e.id, e.onboard_admin_email, d.domain_name
 FROM employers e, domains d
@@ -140,11 +140,15 @@ LIMIT 1
 	err = p.pool.QueryRow(ctx, query, db.OnboardPendingEmployerState).
 		Scan(&employerID, &adminEmailAddr, &domainName)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, "", "", false, nil
+		}
+
 		p.log.Error("failed to query employers", "error", err)
-		return 0, "", "", err
+		return 0, "", "", false, err
 	}
 
-	return employerID, adminEmailAddr, domainName, nil
+	return employerID, adminEmailAddr, domainName, true, nil
 }
 
 func (p *PG) CreateOnboardEmail(

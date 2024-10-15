@@ -58,8 +58,13 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			return
 		case <-time.After(1 * time.Minute):
 			ctx := context.Background()
-			employerID, adminAddr, domain, err := g.db.WhomToOnboardInvite(ctx)
+			employerID, adminAddr, domain, ok, err := g.db.DeQOnboard(ctx)
 			if err != nil {
+				continue
+			}
+
+			if !ok {
+				// no employer pending onboard
 				continue
 			}
 

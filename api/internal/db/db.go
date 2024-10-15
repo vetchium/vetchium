@@ -31,9 +31,9 @@ type DB interface {
 	) error
 	GetOldestUnsentEmails(ctx context.Context) ([]Email, error)
 	UpdateEmailState(ctx context.Context, emailID int64, state EmailState) error
-	WhomToOnboardInvite(
+	DeQOnboard(
 		ctx context.Context,
-	) (employerID int64, adminEmailAddr, domainName string, err error)
+	) (employerID int64, adminEmailAddr, domainName string, ok bool, err error)
 }
 
 // Ideally should be a const, but go doesn't support const errors.
