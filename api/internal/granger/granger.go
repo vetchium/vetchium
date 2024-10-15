@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
@@ -126,10 +128,9 @@ type Granger struct {
 	onboardTokenValidMins float64
 
 	// These are configured programatically in NewGranger()
-	db   db.DB
-	log  *slog.Logger
-	wg   sync.WaitGroup
-	quit chan struct{}
+	db  db.DB
+	log *slog.Logger
+	wg  sync.WaitGroup
 }
 
 func NewGranger() (*Granger, error) {
@@ -200,5 +201,23 @@ func (g *Granger) Run() error {
 	mailSenderQuit := make(chan struct{})
 	go g.mailSender(mailSenderQuit)
 
-	return http.ListenAndServe(g.port, nil)
+	go func() {
+		err := http.ListenAndServe(g.port, nil)
+		if err != nil {
+			g.log.Error("Failed to start HTTP server", "error", err)
+		}
+	}()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signalChan
+		close(cleanOldOnboardTokensQuit)
+		close(createOnboardEmailsQuit)
+		close(mailSenderQuit)
+	}()
+
+	g.wg.Wait()
+	return nil
 }
