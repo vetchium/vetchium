@@ -18,6 +18,15 @@ import (
 )
 
 var _ = Describe("GetOnboardStatus", func() {
+
+	type Message struct {
+		ID string `json:"ID"`
+	}
+
+	type MailPitResponse struct {
+		Messages []Message `json:"messages"`
+	}
+
 	var db *pgxpool.Pool
 	var ctx context.Context
 	var employerID, domainID, orgUserID int64
@@ -122,44 +131,38 @@ RETURNING id`,
 			url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
 			log.Println("URL:", url)
 
-			req, err := http.NewRequest("GET", url, nil)
+			listMailsReq, err := http.NewRequest("GET", url, nil)
 			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Add("Content-Type", "application/json")
+			listMailsReq.Header.Add("Content-Type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			listMailsResp, err := http.DefaultClient.Do(listMailsReq)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(listMailsResp.StatusCode).Should(Equal(http.StatusOK))
 
-			body, err := io.ReadAll(resp.Body)
+			body, err := io.ReadAll(listMailsResp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			log.Println("Body:", string(body))
 
-			type Message struct {
-				ID string `json:"ID"`
-			}
-
-			type MailPitResponse struct {
-				Messages []Message `json:"messages"`
-			}
-
-			var response MailPitResponse
-			err = json.Unmarshal(body, &response)
+			var listMailsRespObj MailPitResponse
+			err = json.Unmarshal(body, &listMailsRespObj)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(len(response.Messages)).Should(BeNumerically(">=", 1))
+			Expect(
+				len(listMailsRespObj.Messages),
+			).Should(BeNumerically(">=", 1))
 
-			mailURL := "http://localhost:8025/api/v1/message/" + response.Messages[0].ID
+			mailURL := "http://localhost:8025/api/v1/message/" + listMailsRespObj.Messages[0].ID
 			log.Println("Mail URL:", mailURL)
 
-			req, err = http.NewRequest("GET", mailURL, nil)
+			getMailReq, err := http.NewRequest("GET", mailURL, nil)
 			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Add("Content-Type", "application/json")
+			getMailReq.Header.Add("Content-Type", "application/json")
 
-			resp, err = http.DefaultClient.Do(req)
+			getMailResp, err := http.DefaultClient.Do(getMailReq)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(getMailResp.StatusCode).Should(Equal(http.StatusOK))
 
-			body, err = io.ReadAll(resp.Body)
+			body, err = io.ReadAll(getMailResp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			log.Println("Mail Body:", string(body))
@@ -187,13 +190,15 @@ RETURNING id`,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			resp, err = http.Post(
+			setOnboardPasswordResp, err := http.Post(
 				serverURL+"/employer/set-onboard-password",
 				"application/json",
 				bytes.NewBuffer(setOnboardPasswordBody),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			Expect(
+				setOnboardPasswordResp.StatusCode,
+			).Should(Equal(http.StatusOK))
 
 			// Get Onboard Status should now return DomainOnboarded
 			getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
@@ -202,10 +207,43 @@ RETURNING id`,
 			getOnboardStatusBody, err := json.Marshal(getOnboardStatusRequest)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			resp, err = http.Post(
+			getOnboardStatusResp, err := http.Post(
 				serverURL+"/employer/get-onboard-status",
 				"application/json",
 				bytes.NewBuffer(getOnboardStatusBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getOnboardStatusResp.StatusCode).Should(Equal(http.StatusOK))
+
+			var got libvetchi.GetOnboardStatusResponse
+			err = json.NewDecoder(getOnboardStatusResp.Body).Decode(&got)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
+
+			// Retry the set-password with the same token
+			setOnboardPasswordResp2, err := http.Post(
+				serverURL+"/employer/set-onboard-password",
+				"application/json",
+				bytes.NewBuffer(setOnboardPasswordBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(
+				setOnboardPasswordResp2.StatusCode,
+			).Should(Equal(http.StatusUnprocessableEntity))
+		})
+
+		It("test if invite token can be used after validity", func() {
+			getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
+				ClientID: "aadal.in",
+			}
+
+			req, err := json.Marshal(getOnboardStatusRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.Post(
+				serverURL+"/employer/get-onboard-status",
+				"application/json",
+				bytes.NewBuffer(req),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
@@ -213,13 +251,79 @@ RETURNING id`,
 			var got libvetchi.GetOnboardStatusResponse
 			err = json.NewDecoder(resp.Body).Decode(&got)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
+			Expect(
+				got.Status,
+			).Should(Equal(libvetchi.DomainVerifiedOnboardPending))
 
-			// Retry the set-password with the same token
+			// Sleep for 3 minutes to allow granger to email the token
+			<-time.After(3 * time.Minute)
+
+			// Sleep for 2 minutes to allow the email to be sent by granger
+			<-time.After(2 * time.Minute)
+
+			url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			log.Println("URL:", url)
+
+			mailPitReq1, err := http.NewRequest("GET", url, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq1.Header.Add("Content-Type", "application/json")
+
+			mailPitResp1, err := http.DefaultClient.Do(mailPitReq1)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp1.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err := io.ReadAll(mailPitResp1.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			log.Println("Body:", string(body))
+
+			var mailPitResp1Obj MailPitResponse
+			err = json.Unmarshal(body, &mailPitResp1Obj)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(len(mailPitResp1Obj.Messages)).Should(BeNumerically(">=", 1))
+
+			mailURL := "http://localhost:8025/api/v1/message/" + mailPitResp1Obj.Messages[0].ID
+			log.Println("Mail URL:", mailURL)
+
+			mailPitReq2, err := http.NewRequest("GET", mailURL, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq2.Header.Add("Content-Type", "application/json")
+
+			mailPitResp2, err := http.DefaultClient.Do(mailPitReq2)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp2.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err = io.ReadAll(mailPitResp2.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			log.Println("Mail Body:", string(body))
+
+			// Extracting the token from the URL
+			re := regexp.MustCompile(
+				`https://employer.vetchi.org/onboard/([^\\\s]+)`,
+			)
+			tokens := re.FindAllStringSubmatch(string(body), -1)
+			Expect(len(tokens)).Should(BeNumerically(">=", 1))
+
+			token := tokens[0][1] // The token is captured in the first group
+			log.Println("Token:", token)
+
+			// Sleep to allow the token to expire
+			<-time.After(4 * time.Minute)
+
+			setPasswordRequest := libvetchi.SetOnboardPasswordRequest{
+				ClientID: "aadal.in",
+				Password: "NewPassword123$",
+				Token:    token,
+			}
+
+			setPasswordBody, err := json.Marshal(setPasswordRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
 			resp, err = http.Post(
 				serverURL+"/employer/set-onboard-password",
 				"application/json",
-				bytes.NewBuffer(setOnboardPasswordBody),
+				bytes.NewBuffer(setPasswordBody),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(
