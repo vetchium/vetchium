@@ -5,9 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/wneessen/go-mail"
+
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
-	"github.com/wneessen/go-mail"
 )
 
 func (g *Granger) mailSender(quit <-chan struct{}) {
@@ -37,14 +38,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 					db.EmailStateProcessed,
 				)
 				if err != nil {
-					g.log.Error(
-						"Updating email state",
-						"error",
-						err,
-						"email",
-						email.ID,
-					)
-					return
+					continue
 				}
 			}
 

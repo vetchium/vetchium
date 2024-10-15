@@ -31,9 +31,9 @@ func (p *PG) GetEmployer(
 	clientID string,
 ) (db.Employer, error) {
 	query := `
-SELECT 	e.id, e.client_id_type, e.employer_state, 
+SELECT 	e.id, e.client_id_type, e.employer_state,
 		e.onboard_admin_email, e.onboard_secret_token, e.created_at
-FROM employers e, domains d	
+FROM employers e, domains d
 WHERE e.id = d.employer_id AND d.domain_name = $1
 `
 
@@ -151,7 +151,7 @@ func (p *PG) CreateOnboardEmail(
 	err = tx.QueryRow(
 		context.Background(),
 		`
-INSERT INTO emails 	(email_from, email_to, email_subject, 
+INSERT INTO emails 	(email_from, email_to, email_subject,
 					email_html_body, email_text_body, email_state)
 VALUES 				($1, $2, $3, $4, $5, $6)
 RETURNING 			id
@@ -171,7 +171,7 @@ RETURNING 			id
 	_, err = tx.Exec(
 		context.Background(),
 		`
-UPDATE 	employers 
+UPDATE 	employers
 SET 	onboard_email_id = $1, onboard_secret_token = $2
 WHERE 	id = $3
 `,
@@ -196,7 +196,7 @@ WHERE 	id = $3
 
 func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {
 	query := `
-SELECT 	id, email_from, email_to, email_subject, 
+SELECT 	id, email_from, email_to, email_subject,
 		email_html_body, email_text_body, email_state
 FROM 	emails
 WHERE 	email_state = $1
@@ -236,9 +236,18 @@ func (p *PG) UpdateEmailState(
 	emailID int64,
 	state db.EmailState,
 ) error {
-	query := `UPDATE emails SET email_state = $1 WHERE id = $2`
+	query := `
+UPDATE 	emails
+SET 	email_state = $1, processed_at = NOW()
+WHERE 	id = $2
+`
 	_, err := p.pool.Exec(ctx, query, state, emailID)
-	return err
+	if err != nil {
+		p.log.Error("failed to update email state", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *PG) OnboardAdmin(
@@ -289,7 +298,9 @@ VALUES ($1, $2, $3, $4)
 	}
 
 	employerUpdateQuery := `
-UPDATE employers SET employer_state = $1 WHERE id = $2
+UPDATE 	employers
+SET 	employer_state = $1, onboard_secret_token = NULL, updated_at = NOW()
+WHERE 	id = $2
 `
 	_, err = tx.Exec(
 		ctx,
