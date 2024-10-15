@@ -365,6 +365,10 @@ WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
 `
 	_, err := p.pool.Exec(ctx, query)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil
+		}
+
 		p.log.Error("failed to clean old onboard tokens", "error", err)
 		return err
 	}

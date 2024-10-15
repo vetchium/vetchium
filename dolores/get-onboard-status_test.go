@@ -214,6 +214,17 @@ RETURNING id`,
 			err = json.NewDecoder(resp.Body).Decode(&got)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
+
+			// Retry the set-password with the same token
+			resp, err = http.Post(
+				serverURL+"/employer/set-onboard-password",
+				"application/json",
+				bytes.NewBuffer(setOnboardPasswordBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(
+				resp.StatusCode,
+			).Should(Equal(http.StatusUnprocessableEntity))
 		})
 	})
 })

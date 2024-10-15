@@ -68,6 +68,8 @@ spec:
                   key: SMTP_PASSWORD
             - name: ENV
               value: "dev"
+            - name: ONBOARD_TOKEN_VALID_MINS
+              value: "4m"
       volumes:
         - name: config-volume
           configMap:

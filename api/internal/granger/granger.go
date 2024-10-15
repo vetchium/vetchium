@@ -15,36 +15,34 @@ import (
 )
 
 type Config struct {
-	Port                        string
-	PostgresHost                string
-	PostgresPort                string
-	PostgresUser                string
-	PostgresDB                  string
-	PostgresPassword            string
-	SMTPHost                    string
-	SMTPPort                    string
-	SMTPUser                    string
-	SMTPPassword                string
-	Env                         string
-	OnboardTokenValidityMinutes string
+	Port                  string
+	PostgresHost          string
+	PostgresPort          string
+	PostgresUser          string
+	PostgresDB            string
+	PostgresPassword      string
+	SMTPHost              string
+	SMTPPort              string
+	SMTPUser              string
+	SMTPPassword          string
+	Env                   string
+	OnboardTokenValidMins string
 }
 
 func LoadConfig() (*Config, error) {
 	config := &Config{
-		Port:             os.Getenv("PORT"),
-		PostgresHost:     os.Getenv("POSTGRES_HOST"),
-		PostgresPort:     os.Getenv("POSTGRES_PORT"),
-		PostgresUser:     os.Getenv("POSTGRES_USER"),
-		PostgresDB:       os.Getenv("POSTGRES_DB"),
-		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
-		SMTPHost:         os.Getenv("SMTP_HOST"),
-		SMTPPort:         os.Getenv("SMTP_PORT"),
-		SMTPUser:         os.Getenv("SMTP_USER"),
-		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
-		Env:              os.Getenv("ENV"),
-		OnboardTokenValidityMinutes: os.Getenv(
-			"ONBOARD_TOKEN_VALIDITY_MINUTES",
-		),
+		Port:                  os.Getenv("PORT"),
+		PostgresHost:          os.Getenv("POSTGRES_HOST"),
+		PostgresPort:          os.Getenv("POSTGRES_PORT"),
+		PostgresUser:          os.Getenv("POSTGRES_USER"),
+		PostgresDB:            os.Getenv("POSTGRES_DB"),
+		PostgresPassword:      os.Getenv("POSTGRES_PASSWORD"),
+		SMTPHost:              os.Getenv("SMTP_HOST"),
+		SMTPPort:              os.Getenv("SMTP_PORT"),
+		SMTPUser:              os.Getenv("SMTP_USER"),
+		SMTPPassword:          os.Getenv("SMTP_PASSWORD"),
+		Env:                   os.Getenv("ENV"),
+		OnboardTokenValidMins: os.Getenv("ONBOARD_TOKEN_VALID_MINS"),
 	}
 
 	if err := validateConfig(config); err != nil {
@@ -108,7 +106,7 @@ func validateConfig(config *Config) error {
 		return fmt.Errorf("ENV environment variable is not valid")
 	}
 
-	if config.OnboardTokenValidityMinutes == "" {
+	if config.OnboardTokenValidMins == "" {
 		return fmt.Errorf(
 			"ONBOARD_TOKEN_VALIDITY_MINUTES environment variable not set",
 		)
@@ -166,16 +164,13 @@ func NewGranger() (*Granger, error) {
 	}
 
 	tokenDuration, err := time.ParseDuration(
-		config.OnboardTokenValidityMinutes,
+		config.OnboardTokenValidMins,
 	)
 	if err != nil {
 		// This is unlikely to happen as we already validated the
-		// ONBOARD_TOKEN_VALIDITY_MINUTES environment variable earlier, but
+		// ONBOARD_TOKEN_VALID_MINS environment variable earlier, but
 		// we'll check anyway.
-		return nil, fmt.Errorf(
-			"ONBOARD_TOKEN_VALIDITY_MINUTES environment variable is not a valid integer: %w",
-			err,
-		)
+		return nil, fmt.Errorf("ONBOARD_TOKEN_VALID_MINS is invalid: %w", err)
 	}
 
 	return &Granger{
