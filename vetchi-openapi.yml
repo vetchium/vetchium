@@ -489,11 +489,12 @@ components:
         password:
           $ref: "#/components/schemas/Password"
           description: The password
+        remember_me:
+          default: false
+          description: If set, the session may be valid for a long time (like 1 year)
+          type: boolean
     EmployerSignInResponse:
       properties:
-        expiresAt:
-          format: date-time
-          type: string
         token:
           description: The authentication token
           type: string
@@ -2179,6 +2180,8 @@ paths:
           description: Bad Request
         "401":
           description: Unauthorized
+        "422":
+          description: The credentials are not validated possibly because the user account or the org account is locked.
       summary: SignIn
       tags:
         - Employer

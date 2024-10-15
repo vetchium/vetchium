@@ -6,6 +6,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
@@ -18,10 +19,20 @@ func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Validate the password
 
+	// Hash the password using bcrypt
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(req.Password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
 	err = h.db.OnboardAdmin(
 		r.Context(),
 		req.ClientID,
-		req.Password,
+		string(passwordHash),
 		req.Token,
 	)
 	if err != nil {

@@ -379,3 +379,59 @@ WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
 
 	return nil
 }
+
+func (p *PG) GetOrgUserAuth(
+	ctx context.Context,
+	clientID, email string,
+) (db.OrgUserAuth, error) {
+	query := `
+SELECT
+	ou.id,
+	ou.employer_id,
+	ou.org_user_role,
+	ou.password_hash,
+	ou.org_user_state
+FROM org_users ou, employers e
+WHERE ou.email = $1 AND ou.employer_id = e.id AND e.client_id = $2
+`
+
+	var orgUserAuth db.OrgUserAuth
+	err := p.pool.QueryRow(ctx, query, email, clientID).
+		Scan(&orgUserAuth.OrgUserID, &orgUserAuth.EmployerID,
+			&orgUserAuth.OrgUserRole, &orgUserAuth.PasswordHash,
+			&orgUserAuth.OrgUserState)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.OrgUserAuth{}, db.ErrNoOrgUser
+		}
+
+		p.log.Error("failed to query org user auth", "error", err)
+		return db.OrgUserAuth{}, err
+	}
+
+	return orgUserAuth, nil
+}
+
+func (p *PG) CreateOrgUserSession(
+	ctx context.Context,
+	orgUserID int64,
+	sessionToken string,
+	sessionValidityMins int,
+) error {
+	query := `
+INSERT INTO org_user_sessions (
+	session_token,
+	org_user_id,
+	token_valid_till
+)
+VALUES ($1, $2, NOW() + interval '1 minute' * $3)
+`
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		orgUserID,
+		sessionToken,
+		sessionValidityMins,
+	)
+	return err
+}

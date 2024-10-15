@@ -3,13 +3,12 @@ package granger
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"html/template"
 	ttmpl "text/template"
 	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/pkg/libvetchi"
 )
 
@@ -70,9 +69,8 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 
 			g.log.Info("onboard invites", "employer", employerID)
 
-			buff := make([]byte, 16)
-			rand.Read(buff)
-			token := hex.EncodeToString(buff)
+			// TODO: Should we read the length from a config?
+			token := util.RandomString(libvetchi.OnBoardTokenLenBytes)
 
 			link := libvetchi.EmployerBaseURL + "/onboard/" + token
 

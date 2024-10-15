@@ -41,7 +41,7 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 	case db.DeboardedEmployerState:
 		status = libvetchi.DomainNotVerified
 	default:
-		h.logger.Error(
+		h.log.Error(
 			"unknown employer state",
 			"client_id",
 			req.ClientID,
@@ -55,7 +55,7 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 	resp := libvetchi.GetOnboardStatusResponse{Status: status}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		h.logger.Error("failed to encode response", "error", err)
+		h.log.Error("failed to encode response", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
@@ -69,13 +69,13 @@ func (h *Hermione) newDomainProcess(
 	url := "vetchiadmin." + domain
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
-		h.logger.Debug("lookup TXT records", "domain", domain, "error", err)
+		h.log.Debug("lookup TXT records", "domain", domain, "error", err)
 		resp := libvetchi.GetOnboardStatusResponse{
 			Status: libvetchi.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
-			h.logger.Error("failed to encode response", "error", err)
+			h.log.Error("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -93,7 +93,7 @@ func (h *Hermione) newDomainProcess(
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
-			h.logger.Error("failed to encode response", "error", err)
+			h.log.Error("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -118,7 +118,7 @@ func (h *Hermione) newDomainProcess(
 	}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		h.logger.Error("failed to encode response", "error", err)
+		h.log.Error("failed to encode response", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}

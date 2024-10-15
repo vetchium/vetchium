@@ -1,5 +1,7 @@
 package db
 
+// This file contains the objects that should match the database schema.
+
 import (
 	"time"
 
@@ -41,6 +43,13 @@ const (
 	AdminOrgUserRole       OrgUserRole = "ADMIN"
 	RecruiterOrgUserRole   OrgUserRole = "RECRUITER"
 	InterviewerOrgUserRole OrgUserRole = "INTERVIEWER"
+)
+
+type OrgUserState string
+
+const (
+	ActiveOrgUserState OrgUserState = "ACTIVE"
+	LockedOrgUserState OrgUserState = "LOCKED"
 )
 
 // Structs
@@ -85,10 +94,11 @@ type Domain struct {
 }
 
 type OrgUser struct {
-	ID           int64       `db:"id"`
-	Email        string      `db:"email"`
-	PasswordHash string      `db:"password_hash"`
-	OrgUserRole  OrgUserRole `db:"org_user_role"`
-	EmployerID   int64       `db:"employer_id"`
-	CreatedAt    time.Time   `db:"created_at"`
+	ID           int64        `db:"id"`
+	Email        string       `db:"email"`
+	PasswordHash string       `db:"password_hash"`
+	OrgUserRole  OrgUserRole  `db:"org_user_role"`
+	OrgUserState OrgUserState `db:"org_user_state"`
+	EmployerID   int64        `db:"employer_id"`
+	CreatedAt    time.Time    `db:"created_at"`
 }

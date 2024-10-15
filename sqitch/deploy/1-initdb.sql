@@ -67,15 +67,24 @@ CREATE TABLE domains (
 ---
 
 CREATE TYPE org_user_roles AS ENUM ('ADMIN', 'RECRUITER', 'INTERVIEWER');
+CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'LOCKED');
 CREATE TABLE org_users (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     org_user_role org_user_roles NOT NULL,
-
+    org_user_state org_user_states NOT NULL,
+    
     employer_id INTEGER REFERENCES employers(id) NOT NULL,
     UNIQUE (email, employer_id),
 
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE org_user_sessions (
+    session_token TEXT PRIMARY KEY,
+    org_user_id INTEGER REFERENCES org_users(id) NOT NULL,
+    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

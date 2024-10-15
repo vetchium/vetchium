@@ -60,9 +60,9 @@ func validateConfig(config *Config) error {
 }
 
 type Hermione struct {
-	port   string
-	db     db.DB
-	logger *slog.Logger
+	port string
+	db   db.DB
+	log  *slog.Logger
 }
 
 func New() (*Hermione, error) {
@@ -90,15 +90,16 @@ func New() (*Hermione, error) {
 	}
 
 	return &Hermione{
-		port:   fmt.Sprintf(":%s", config.Port),
-		db:     db,
-		logger: logger,
+		port: fmt.Sprintf(":%s", config.Port),
+		db:   db,
+		log:  logger,
 	}, nil
 }
 
 func (h *Hermione) Run() error {
 	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
 	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
+	http.HandleFunc("/employer/signin", h.employerSignin)
 
 	return http.ListenAndServe(h.port, nil)
 }

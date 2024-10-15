@@ -190,14 +190,14 @@ type EmailAddress struct {
 }
 
 type EmployerSignInRequest struct {
-	ClientID string `json:"client_id" validate:"required"`
-	Email    string `json:"email"     validate:"required,email"`
-	Password string `json:"password"  validate:"required"`
+	ClientID   string `json:"client_id"             validate:"required"`
+	Email      string `json:"email"                 validate:"required,email"`
+	Password   string `json:"password"              validate:"required"`
+	RememberMe bool   `json:"remember_me,omitempty"`
 }
 
 type EmployerSignInResponse struct {
-	ExpiresAt time.Time `json:"expiresAt"`
-	Token     string    `json:"token"`
+	Token string `json:"token"`
 }
 
 type EvaluationReport struct {
