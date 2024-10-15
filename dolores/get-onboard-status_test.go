@@ -220,6 +220,8 @@ RETURNING id`,
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
 
+			log.Println("Test if the same token can be used again")
+
 			// Retry the set-password with the same token
 			setOnboardPasswordResp2, err := http.Post(
 				serverURL+"/employer/set-onboard-password",
