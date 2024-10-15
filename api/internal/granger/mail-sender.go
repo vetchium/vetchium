@@ -17,6 +17,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 	for {
 		select {
 		case <-quit:
+			g.log.Debug("mailSender quitting")
 			return
 		case <-time.After(30 * time.Second):
 			ctx := context.Background()

@@ -25,7 +25,7 @@ func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
 		req.Token,
 	)
 	if err != nil {
-		if err == db.ErrNoEmployer {
+		if err == db.ErrNoEmployer || err == db.ErrOrgUserAlreadyExists {
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return
 		}

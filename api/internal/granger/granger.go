@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
@@ -14,17 +15,18 @@ import (
 )
 
 type Config struct {
-	Port             string
-	PostgresHost     string
-	PostgresPort     string
-	PostgresUser     string
-	PostgresDB       string
-	PostgresPassword string
-	SMTPHost         string
-	SMTPPort         string
-	SMTPUser         string
-	SMTPPassword     string
-	Env              string
+	Port                        string
+	PostgresHost                string
+	PostgresPort                string
+	PostgresUser                string
+	PostgresDB                  string
+	PostgresPassword            string
+	SMTPHost                    string
+	SMTPPort                    string
+	SMTPUser                    string
+	SMTPPassword                string
+	Env                         string
+	OnboardTokenValidityMinutes string
 }
 
 func LoadConfig() (*Config, error) {
@@ -40,6 +42,9 @@ func LoadConfig() (*Config, error) {
 		SMTPUser:         os.Getenv("SMTP_USER"),
 		SMTPPassword:     os.Getenv("SMTP_PASSWORD"),
 		Env:              os.Getenv("ENV"),
+		OnboardTokenValidityMinutes: os.Getenv(
+			"ONBOARD_TOKEN_VALIDITY_MINUTES",
+		),
 	}
 
 	if err := validateConfig(config); err != nil {
@@ -103,17 +108,26 @@ func validateConfig(config *Config) error {
 		return fmt.Errorf("ENV environment variable is not valid")
 	}
 
+	if config.OnboardTokenValidityMinutes == "" {
+		return fmt.Errorf(
+			"ONBOARD_TOKEN_VALIDITY_MINUTES environment variable not set",
+		)
+	}
+
 	return nil
 }
 
 type Granger struct {
-	port         string
-	SMTPHost     string
-	SMTPPort     int
-	SMTPUser     string
-	SMTPPassword string
-	env          string
+	// These are configured using environment variables
+	port                  string
+	SMTPHost              string
+	SMTPPort              int
+	SMTPUser              string
+	SMTPPassword          string
+	env                   string
+	onboardTokenValidMins float64
 
+	// These are configured programatically in NewGranger()
 	db   db.DB
 	log  *slog.Logger
 	wg   sync.WaitGroup
@@ -151,13 +165,27 @@ func NewGranger() (*Granger, error) {
 		)
 	}
 
+	tokenDuration, err := time.ParseDuration(
+		config.OnboardTokenValidityMinutes,
+	)
+	if err != nil {
+		// This is unlikely to happen as we already validated the
+		// ONBOARD_TOKEN_VALIDITY_MINUTES environment variable earlier, but
+		// we'll check anyway.
+		return nil, fmt.Errorf(
+			"ONBOARD_TOKEN_VALIDITY_MINUTES environment variable is not a valid integer: %w",
+			err,
+		)
+	}
+
 	return &Granger{
-		port:         fmt.Sprintf(":%s", config.Port),
-		SMTPHost:     config.SMTPHost,
-		SMTPPort:     smtpPort,
-		SMTPUser:     config.SMTPUser,
-		SMTPPassword: config.SMTPPassword,
-		env:          config.Env,
+		port:                  fmt.Sprintf(":%s", config.Port),
+		SMTPHost:              config.SMTPHost,
+		SMTPPort:              smtpPort,
+		SMTPUser:              config.SMTPUser,
+		SMTPPassword:          config.SMTPPassword,
+		env:                   config.Env,
+		onboardTokenValidMins: tokenDuration.Minutes(),
 
 		db:  pg,
 		log: logger,
@@ -166,7 +194,12 @@ func NewGranger() (*Granger, error) {
 
 func (g *Granger) Run() error {
 	g.wg.Add(1)
-	go g.createOnboardEmails()
+	cleanOldOnboardTokensQuit := make(chan struct{})
+	go g.cleanOldOnboardTokens(cleanOldOnboardTokensQuit)
+
+	g.wg.Add(1)
+	createOnboardEmailsQuit := make(chan struct{})
+	go g.createOnboardEmails(createOnboardEmailsQuit)
 
 	g.wg.Add(1)
 	mailSenderQuit := make(chan struct{})

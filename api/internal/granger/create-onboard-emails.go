@@ -48,12 +48,13 @@ The Vetchi Team
 </p>
 `
 
-func (g *Granger) createOnboardEmails() {
+func (g *Granger) createOnboardEmails(quit chan struct{}) {
 	defer g.wg.Done()
 
 	for {
 		select {
-		case <-g.quit:
+		case <-quit:
+			g.log.Debug("createOnboardEmails quitting")
 			return
 		case <-time.After(1 * time.Minute):
 			ctx := context.Background()
@@ -103,7 +104,13 @@ func (g *Granger) createOnboardEmails() {
 			}
 
 			// Errors are already logged, so we can ignore the return value
-			_ = g.db.CreateOnboardEmail(ctx, employerID, token, email)
+			_ = g.db.CreateOnboardEmail(
+				ctx,
+				employerID,
+				token,
+				g.onboardTokenValidMins,
+				email,
+			)
 		}
 	}
 }

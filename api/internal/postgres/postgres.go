@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,8 +32,14 @@ func (p *PG) GetEmployer(
 	clientID string,
 ) (db.Employer, error) {
 	query := `
-SELECT 	e.id, e.client_id_type, e.employer_state,
-		e.onboard_admin_email, e.onboard_secret_token, e.created_at
+SELECT
+	e.id,
+	e.client_id_type,
+	e.employer_state,
+	e.onboard_admin_email,
+	e.onboard_secret_token,
+	e.token_valid_till,
+	e.created_at
 FROM employers e, domains d
 WHERE e.id = d.employer_id AND d.domain_name = $1
 `
@@ -44,6 +51,7 @@ WHERE e.id = d.employer_id AND d.domain_name = $1
 		&employer.EmployerState,
 		&employer.OnboardAdminEmail,
 		&employer.OnboardSecretToken,
+		&employer.TokenValidTill,
 		&employer.CreatedAt,
 	)
 	if err != nil {
@@ -71,9 +79,13 @@ func (p *PG) InitEmployerAndDomain(
 	defer tx.Rollback(ctx)
 
 	employerInsertQuery := `
-INSERT INTO employers 	(client_id_type, employer_state, onboard_admin_email,
-						onboard_secret_token, created_at)
-VALUES ($1, $2, $3, $4, NOW())
+INSERT INTO employers (
+	client_id_type,
+	employer_state,
+	onboard_admin_email,
+	onboard_secret_token
+)
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 	var employerID int64
@@ -139,6 +151,7 @@ func (p *PG) CreateOnboardEmail(
 	ctx context.Context,
 	employerID int64,
 	onboardSecretToken string,
+	tokenValidMins float64,
 	email db.Email,
 ) error {
 	tx, err := p.pool.Begin(ctx)
@@ -151,10 +164,16 @@ func (p *PG) CreateOnboardEmail(
 	err = tx.QueryRow(
 		context.Background(),
 		`
-INSERT INTO emails 	(email_from, email_to, email_subject,
-					email_html_body, email_text_body, email_state)
-VALUES 				($1, $2, $3, $4, $5, $6)
-RETURNING 			id
+INSERT INTO emails (
+	email_from,
+	email_to,
+	email_subject,
+	email_html_body,
+	email_text_body,
+	email_state
+)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id
 `,
 		email.EmailFrom,
 		email.EmailTo,
@@ -171,12 +190,16 @@ RETURNING 			id
 	_, err = tx.Exec(
 		context.Background(),
 		`
-UPDATE 	employers
-SET 	onboard_email_id = $1, onboard_secret_token = $2
-WHERE 	id = $3
+UPDATE employers
+SET
+	onboard_email_id = $1,
+	onboard_secret_token = $2, 
+	token_valid_till = NOW() + interval '1 minute' * $3
+WHERE id = $4
 `,
 		email.ID,
 		onboardSecretToken,
+		tokenValidMins,
 		employerID,
 	)
 	if err != nil {
@@ -196,10 +219,16 @@ WHERE 	id = $3
 
 func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {
 	query := `
-SELECT 	id, email_from, email_to, email_subject,
-		email_html_body, email_text_body, email_state
-FROM 	emails
-WHERE 	email_state = $1
+SELECT
+	id,
+	email_from,
+	email_to,
+	email_subject,
+	email_html_body,
+	email_text_body,
+	email_state
+FROM emails
+WHERE email_state = $1
 ORDER BY created_at ASC
 LIMIT 10
 `
@@ -237,9 +266,9 @@ func (p *PG) UpdateEmailState(
 	state db.EmailState,
 ) error {
 	query := `
-UPDATE 	emails
-SET 	email_state = $1, processed_at = NOW()
-WHERE 	id = $2
+UPDATE emails
+SET email_state = $1, processed_at = NOW()
+WHERE id = $2
 `
 	_, err := p.pool.Exec(ctx, query, state, emailID)
 	if err != nil {
@@ -293,14 +322,18 @@ VALUES ($1, $2, $3, $4)
 		employerID,
 	)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key value") {
+			return db.ErrOrgUserAlreadyExists
+		}
+
 		p.log.Error("failed to insert org user", "error", err)
 		return err
 	}
 
 	employerUpdateQuery := `
-UPDATE 	employers
-SET 	employer_state = $1, onboard_secret_token = NULL, updated_at = NOW()
-WHERE 	id = $2
+UPDATE employers
+SET employer_state = $1, onboard_secret_token = NULL, token_valid_till = NULL
+WHERE id = $2
 `
 	_, err = tx.Exec(
 		ctx,
@@ -316,6 +349,23 @@ WHERE 	id = $2
 	err = tx.Commit(ctx)
 	if err != nil {
 		p.log.Error("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (p *PG) CleanOldOnboardTokens(ctx context.Context) error {
+	// We hope that NTP will not be broken on the DB server and time
+	// will not be set to future.
+	query := `
+UPDATE employers	
+SET onboard_secret_token = NULL
+WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
+`
+	_, err := p.pool.Exec(ctx, query)
+	if err != nil {
+		p.log.Error("failed to clean old onboard tokens", "error", err)
 		return err
 	}
 

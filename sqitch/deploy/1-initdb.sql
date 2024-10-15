@@ -39,6 +39,7 @@ CREATE TABLE employers (
     employer_state employer_states NOT NULL,
     onboard_admin_email TEXT NOT NULL,
     onboard_secret_token TEXT,
+    token_valid_till TIMESTAMP WITH TIME ZONE,
 
     --- Despite its name, it should not be confused with an email address. 
     --- This is the rowid in the 'emails' table for the welcome email sent.
@@ -73,6 +74,7 @@ CREATE TABLE org_users (
     org_user_role org_user_roles NOT NULL,
 
     employer_id INTEGER REFERENCES employers(id) NOT NULL,
+    UNIQUE (email, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );

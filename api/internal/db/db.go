@@ -21,10 +21,12 @@ type DB interface {
 	) error
 
 	// Used by granger
+	CleanOldOnboardTokens(ctx context.Context) error
 	CreateOnboardEmail(
 		ctx context.Context,
 		employerID int64,
 		onboardSecretToken string,
+		tokenValidMins float64,
 		email Email,
 	) error
 	GetOldestUnsentEmails(ctx context.Context) ([]Email, error)
@@ -36,5 +38,6 @@ type DB interface {
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
-	ErrNoEmployer = errors.New("employer not found")
+	ErrNoEmployer           = errors.New("employer not found")
+	ErrOrgUserAlreadyExists = errors.New("org user already exists")
 )

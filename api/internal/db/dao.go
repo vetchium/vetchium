@@ -66,13 +66,14 @@ type Email struct {
 }
 
 type Employer struct {
-	ID                 int64         `db:"id"`
-	ClientIDType       ClientIDType  `db:"client_id_type"`
-	EmployerState      EmployerState `db:"employer_state"`
-	OnboardAdminEmail  string        `db:"onboard_admin_email"`
-	OnboardSecretToken pgtype.Text   `db:"onboard_secret_token"`
-	OnboardEmailID     pgtype.Int8   `db:"onboard_email_id"`
-	CreatedAt          time.Time     `db:"created_at"`
+	ID                 int64              `db:"id"`
+	ClientIDType       ClientIDType       `db:"client_id_type"`
+	EmployerState      EmployerState      `db:"employer_state"`
+	OnboardAdminEmail  string             `db:"onboard_admin_email"`
+	OnboardSecretToken pgtype.Text        `db:"onboard_secret_token"`
+	TokenValidTill     pgtype.Timestamptz `db:"token_valid_till"`
+	OnboardEmailID     pgtype.Int8        `db:"onboard_email_id"`
+	CreatedAt          time.Time          `db:"created_at"`
 }
 
 type Domain struct {
