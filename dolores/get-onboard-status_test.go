@@ -261,7 +261,7 @@ RETURNING id`,
 			// Sleep for 2 minutes to allow the email to be sent by granger
 			<-time.After(2 * time.Minute)
 
-			url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
 			log.Println("URL:", url)
 
 			mailPitReq1, err := http.NewRequest("GET", url, nil)
