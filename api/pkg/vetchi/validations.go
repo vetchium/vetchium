@@ -53,6 +53,21 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	// The regex taken from https://stackoverflow.com/a/67686133/153586
+	emailReg := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	err = validate.RegisterValidation(
+		"email",
+		func(fl validator.FieldLevel) bool {
+			value := fl.Field().String()
+
+			// Use regex to validate if the value matches an email pattern
+			return emailReg.MatchString(value)
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 
