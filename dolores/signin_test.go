@@ -11,7 +11,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Signin", func() {
+var _ = Describe("Signin", func() {
 	Describe("Employer Signin", func() {
 		It("various invalid inputs", func() {
 			signinReqBody, err := json.Marshal(
