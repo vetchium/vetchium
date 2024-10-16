@@ -314,8 +314,14 @@ WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
 	defer tx.Rollback(ctx)
 
 	orgUserInsertQuery := `
-INSERT INTO org_users (email, password_hash, org_user_role, employer_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO org_users (
+	email,
+	password_hash,
+	org_user_role,
+	org_user_state,
+	employer_id
+)
+VALUES ($1, $2, $3, $4, $5)
 `
 	_, err = tx.Exec(
 		ctx,
@@ -323,6 +329,7 @@ VALUES ($1, $2, $3, $4)
 		adminEmailAddr,
 		password,
 		db.AdminOrgUserRole,
+		db.ActiveOrgUserState,
 		employerID,
 	)
 	if err != nil {

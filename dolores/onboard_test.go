@@ -3,6 +3,7 @@ package dolores
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -45,7 +46,11 @@ var _ = Describe("GetOnboardStatus", func() {
 			}
 
 			for _, test := range tests {
-				log.Println("Testing for domain", test.clientID)
+				fmt.Fprintf(
+					GinkgoWriter,
+					"Testing for domain %s\n",
+					test.clientID,
+				)
 				getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 					ClientID: test.clientID,
 				}

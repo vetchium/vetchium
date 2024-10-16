@@ -1199,12 +1199,11 @@ components:
         $ref: "#/components/schemas/OrgUserInfo"
       type: array
     Password:
-      description: A password
+      description: A long password
       example: Password123$
       format: password
-      maxLength: 255
-      minLength: 8
-      pattern: ^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+      maxLength: 64
+      minLength: 12
       type: string
     PutCostCenterRequest:
       description: Request to update an existing cost center

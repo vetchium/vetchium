@@ -17,17 +17,14 @@ type Vator struct {
 func InitValidator(log *slog.Logger) (*Vator, error) {
 	validate := validator.New()
 
-	passwordReg := regexp.MustCompile(
-		`^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`,
-	)
 	err := validate.RegisterValidation(
 		"password",
 		func(fl validator.FieldLevel) bool {
 			value := fl.Field().String()
-			if len(value) < 8 || len(value) > 32 {
+			if len(value) < 12 || len(value) > 64 {
 				return false
 			}
-			return passwordReg.MatchString(value)
+			return true
 		},
 	)
 	if err != nil {
@@ -76,17 +73,16 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 		for _, err := range err.(validator.ValidationErrors) {
 			validationErrors.Errors = append(
 				validationErrors.Errors,
-				err.StructField(),
+				err.Tag(),
 			)
 		}
-
+		w.WriteHeader(http.StatusBadRequest)
 		err = json.NewEncoder(w).Encode(validationErrors)
 		if err != nil {
 			v.log.Error("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return false
 		}
-		w.WriteHeader(http.StatusBadRequest)
 		return false
 	}
 	return true
