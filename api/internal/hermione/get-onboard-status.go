@@ -8,18 +8,18 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
-	var req libvetchi.GetOnboardStatusRequest
+	var req vetchi.GetOnboardStatusRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	var status libvetchi.OnboardStatus
+	var status vetchi.OnboardStatus
 
 	employer, err := h.db.GetEmployer(r.Context(), req.ClientID)
 	if err != nil {
@@ -35,11 +35,11 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 
 	switch employer.EmployerState {
 	case db.OnboardPendingEmployerState:
-		status = libvetchi.DomainVerifiedOnboardPending
+		status = vetchi.DomainVerifiedOnboardPending
 	case db.OnboardedEmployerState:
-		status = libvetchi.DomainOnboarded
+		status = vetchi.DomainOnboarded
 	case db.DeboardedEmployerState:
-		status = libvetchi.DomainNotVerified
+		status = vetchi.DomainNotVerified
 	default:
 		h.log.Error(
 			"unknown employer state",
@@ -52,7 +52,7 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := libvetchi.GetOnboardStatusResponse{Status: status}
+	resp := vetchi.GetOnboardStatusResponse{Status: status}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		h.log.Error("failed to encode response", "error", err)
@@ -70,8 +70,8 @@ func (h *Hermione) newDomainProcess(
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
 		h.log.Debug("lookup TXT records", "domain", domain, "error", err)
-		resp := libvetchi.GetOnboardStatusResponse{
-			Status: libvetchi.DomainNotVerified,
+		resp := vetchi.GetOnboardStatusResponse{
+			Status: vetchi.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
@@ -88,8 +88,8 @@ func (h *Hermione) newDomainProcess(
 	}
 
 	if admin == "" {
-		resp := libvetchi.GetOnboardStatusResponse{
-			Status: libvetchi.DomainNotVerified,
+		resp := vetchi.GetOnboardStatusResponse{
+			Status: vetchi.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
@@ -113,8 +113,8 @@ func (h *Hermione) newDomainProcess(
 		return
 	}
 
-	resp := libvetchi.GetOnboardStatusResponse{
-		Status: libvetchi.DomainVerifiedOnboardPending,
+	resp := vetchi.GetOnboardStatusResponse{
+		Status: vetchi.DomainVerifiedOnboardPending,
 	}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {

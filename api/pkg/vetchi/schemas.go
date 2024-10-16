@@ -1,4 +1,4 @@
-package libvetchi
+package vetchi
 
 import (
 	"time"

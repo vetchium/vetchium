@@ -13,7 +13,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type Config struct {
@@ -103,8 +103,8 @@ func validateConfig(config *Config) error {
 		)
 	}
 
-	if config.Env != libvetchi.ProdEnv && config.Env != libvetchi.DevEnv &&
-		config.Env != libvetchi.TestEnv {
+	if config.Env != vetchi.ProdEnv && config.Env != vetchi.DevEnv &&
+		config.Env != vetchi.TestEnv {
 		return fmt.Errorf("ENV environment variable is not valid")
 	}
 

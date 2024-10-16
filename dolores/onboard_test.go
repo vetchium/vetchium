@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 var _ = Describe("GetOnboardStatus", func() {
@@ -84,25 +84,25 @@ RETURNING id`,
 		It("returns the onboard status", func() {
 			var tests = []struct {
 				clientID string
-				want     libvetchi.OnboardStatus
+				want     vetchi.OnboardStatus
 			}{
 				{
 					clientID: "domain-onboarded.example",
-					want:     libvetchi.DomainOnboarded,
+					want:     vetchi.DomainOnboarded,
 				},
 				{
 					clientID: "example.com",
-					want:     libvetchi.DomainNotVerified,
+					want:     vetchi.DomainNotVerified,
 				},
 				{
 					clientID: "secretsapp.com",
-					want:     libvetchi.DomainVerifiedOnboardPending,
+					want:     vetchi.DomainVerifiedOnboardPending,
 				},
 			}
 
 			for _, test := range tests {
 				log.Println("Testing for domain", test.clientID)
-				getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
+				getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 					ClientID: test.clientID,
 				}
 
@@ -117,7 +117,7 @@ RETURNING id`,
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-				var got libvetchi.GetOnboardStatusResponse
+				var got vetchi.GetOnboardStatusResponse
 				err = json.NewDecoder(resp.Body).Decode(&got)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(got.Status).Should(Equal(test.want))
@@ -182,7 +182,7 @@ RETURNING id`,
 
 			// Set password for the admin
 			setOnboardPasswordBody, err := json.Marshal(
-				libvetchi.SetOnboardPasswordRequest{
+				vetchi.SetOnboardPasswordRequest{
 					ClientID: "domain-onboarded.example",
 					Password: "NewPassword123$",
 					Token:    token,
@@ -201,7 +201,7 @@ RETURNING id`,
 			).Should(Equal(http.StatusOK))
 
 			// Get Onboard Status should now return DomainOnboarded
-			getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
+			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 				ClientID: "domain-onboarded.example",
 			}
 			getOnboardStatusBody, err := json.Marshal(getOnboardStatusRequest)
@@ -215,10 +215,10 @@ RETURNING id`,
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(getOnboardStatusResp.StatusCode).Should(Equal(http.StatusOK))
 
-			var got libvetchi.GetOnboardStatusResponse
+			var got vetchi.GetOnboardStatusResponse
 			err = json.NewDecoder(getOnboardStatusResp.Body).Decode(&got)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(got.Status).Should(Equal(libvetchi.DomainOnboarded))
+			Expect(got.Status).Should(Equal(vetchi.DomainOnboarded))
 
 			log.Println("Test if the same token can be used again")
 
@@ -235,7 +235,7 @@ RETURNING id`,
 		})
 
 		It("test if invite token can be used after validity", func() {
-			getOnboardStatusRequest := libvetchi.GetOnboardStatusRequest{
+			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 				ClientID: "aadal.in",
 			}
 
@@ -250,12 +250,12 @@ RETURNING id`,
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var got libvetchi.GetOnboardStatusResponse
+			var got vetchi.GetOnboardStatusResponse
 			err = json.NewDecoder(resp.Body).Decode(&got)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(
 				got.Status,
-			).Should(Equal(libvetchi.DomainVerifiedOnboardPending))
+			).Should(Equal(vetchi.DomainVerifiedOnboardPending))
 
 			// Sleep for 3 minutes to allow granger to email the token
 			<-time.After(3 * time.Minute)
@@ -313,7 +313,7 @@ RETURNING id`,
 			// Sleep to allow the token to expire
 			<-time.After(4 * time.Minute)
 
-			setPasswordRequest := libvetchi.SetOnboardPasswordRequest{
+			setPasswordRequest := vetchi.SetOnboardPasswordRequest{
 				ClientID: "aadal.in",
 				Password: "NewPassword123$",
 				Token:    token,

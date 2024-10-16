@@ -7,12 +7,12 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
-	var employerSigninReq libvetchi.EmployerSignInRequest
+	var employerSigninReq vetchi.EmployerSignInRequest
 
 	err := json.NewDecoder(r.Body).Decode(&employerSigninReq)
 	if err != nil {
@@ -49,11 +49,11 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionToken := util.RandomString(libvetchi.SessionTokenLenBytes)
+	sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 
-	sessionValidityMins := libvetchi.SessionTokenValidMins
+	sessionValidityMins := vetchi.SessionTokenValidMins
 	if employerSigninReq.RememberMe {
-		sessionValidityMins = libvetchi.LongTermSessionValidMins
+		sessionValidityMins = vetchi.LongTermSessionValidMins
 	}
 
 	err = h.db.CreateOrgUserSession(
@@ -67,7 +67,7 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employerSigninResp := libvetchi.EmployerSignInResponse{
+	employerSigninResp := vetchi.EmployerSignInResponse{
 		Token: sessionToken,
 	}
 

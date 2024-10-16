@@ -8,7 +8,7 @@ import (
 	"github.com/wneessen/go-mail"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (g *Granger) mailSender(quit <-chan struct{}) {
@@ -82,7 +82,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 
 	g.log.Info("sending email", "email", email.ID, "env", g.env)
 	var c *mail.Client
-	if g.env == libvetchi.ProdEnv {
+	if g.env == vetchi.ProdEnv {
 		c, err = mail.NewClient(
 			g.SMTPHost,
 			mail.WithPort(g.SMTPPort),

@@ -9,7 +9,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/libvetchi"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 const subject = "Welcome to Vetchi !"
@@ -70,9 +70,9 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			g.log.Info("onboard invites", "employer", employerID)
 
 			// TODO: Should we read the length from a config?
-			token := util.RandomString(libvetchi.OnBoardTokenLenBytes)
+			token := util.RandomString(vetchi.OnBoardTokenLenBytes)
 
-			link := libvetchi.EmployerBaseURL + "/onboard/" + token
+			link := vetchi.EmployerBaseURL + "/onboard/" + token
 
 			var textBody bytes.Buffer
 			err = ttmpl.Must(
@@ -99,7 +99,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			}
 
 			email := db.Email{
-				EmailFrom:     libvetchi.EmailFrom,
+				EmailFrom:     vetchi.EmailFrom,
 				EmailTo:       []string{adminAddr},
 				EmailSubject:  subject,
 				EmailHTMLBody: htmlBody.String(),
