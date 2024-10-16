@@ -4,41 +4,26 @@ import (
 	"context"
 )
 
+// Create a new qo.Struct for passing parameters to the db functions, if any
+// function declaration goes more than 80 characters or multiple lines.
+
+// Do not name parameters when passing objects. Name parameters when passing
+// primitive data types.
+
 type DB interface {
 	// Used by hermione and granger
 
 	// Used by hermione
-	CreateOrgUserSession(
-		ctx context.Context,
-		orgUserID int64,
-		sessionToken string,
-		sessionValidityMins int,
-	) error
-	InitEmployerAndDomain(
-		ctx context.Context,
-		employer Employer,
-		domain Domain,
-	) error
+	CreateOrgUserSession(context.Context, OrgUserSession) error
+	InitEmployerAndDomain(context.Context, Employer, Domain) error
 	GetEmployer(ctx context.Context, clientID string) (Employer, error)
-	GetOrgUserAuth(
-		ctx context.Context,
-		clientID, email string,
-	) (OrgUserAuth, error)
-	OnboardAdmin(
-		ctx context.Context,
-		domainName, password, token string,
-	) error
+	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
+	OnboardAdmin(context.Context, OnboardReq) error
 
 	// Used by granger
-	CleanOldOnboardTokens(ctx context.Context) error
-	CreateOnboardEmail(
-		ctx context.Context,
-		employerID int64,
-		onboardSecretToken string,
-		tokenValidMins float64,
-		email Email,
-	) error
-	GetOldestUnsentEmails(ctx context.Context) ([]Email, error)
-	UpdateEmailState(ctx context.Context, emailID int64, state EmailState) error
-	DeQOnboard(ctx context.Context) (*OnboardInfo, error)
+	CleanOldOnboardTokens(context.Context) error
+	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
+	GetOldestUnsentEmails(context.Context) ([]Email, error)
+	UpdateEmailState(context.Context, EmailStateChange) error
+	DeQOnboard(context.Context) (*OnboardInfo, error)
 }

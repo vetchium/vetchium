@@ -2,8 +2,9 @@ package db
 
 import "errors"
 
-// This file contains the struct defintions for data that should be retrieved
-// from the database and passed on to the backend.
+// This file contains internal structs that can be shared between db and backend
+// These are not part of the public API
+// A single struct below can span across multiple db tables
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
@@ -12,10 +13,28 @@ var (
 	ErrNoOrgUser            = errors.New("org user not found")
 )
 
+type EmailStateChange struct {
+	EmailDBKey int64
+	EmailState EmailState
+}
+
+type OnboardEmailInfo struct {
+	EmployerID         int64
+	OnboardSecretToken string
+	TokenValidMins     float64
+	Email              Email
+}
+
 type OnboardInfo struct {
 	EmployerID     int64
 	AdminEmailAddr string
 	DomainName     string
+}
+
+type OnboardReq struct {
+	DomainName string
+	Password   string
+	Token      string
 }
 
 type OrgUserAuth struct {
@@ -25,4 +44,15 @@ type OrgUserAuth struct {
 	PasswordHash  string
 	EmployerState EmployerState
 	OrgUserState  OrgUserState
+}
+
+type OrgUserCreds struct {
+	ClientID string
+	Email    string
+}
+
+type OrgUserSession struct {
+	OrgUserID           int64
+	SessionToken        string
+	SessionValidityMins float64
 }

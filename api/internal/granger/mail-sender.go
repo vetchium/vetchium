@@ -35,8 +35,10 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 				ctx := context.Background()
 				err = g.db.UpdateEmailState(
 					ctx,
-					email.ID,
-					db.EmailStateProcessed,
+					db.EmailStateChange{
+						EmailDBKey: email.ID,
+						EmailState: db.EmailStateProcessed,
+					},
 				)
 				if err != nil {
 					continue

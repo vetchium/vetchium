@@ -22,8 +22,10 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 
 	orgUserAuth, err := h.db.GetOrgUserAuth(
 		r.Context(),
-		employerSigninReq.ClientID,
-		employerSigninReq.Email,
+		db.OrgUserCreds{
+			ClientID: employerSigninReq.ClientID,
+			Email:    employerSigninReq.Email,
+		},
 	)
 	if err != nil {
 		if errors.Is(err, db.ErrNoOrgUser) {
@@ -51,19 +53,21 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 
 	sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 
-	sessionValidityMins := vetchi.SessionTokenValidMins
+	sessionValidityMins := h.sessionTokenValidMins
 	if employerSigninReq.RememberMe {
-		sessionValidityMins = vetchi.LongTermSessionValidMins
+		sessionValidityMins = h.longTermSessionValidMins
 	}
 
 	err = h.db.CreateOrgUserSession(
 		r.Context(),
-		orgUserAuth.OrgUserID,
-		sessionToken,
-		sessionValidityMins,
+		db.OrgUserSession{
+			OrgUserID:           orgUserAuth.OrgUserID,
+			SessionToken:        sessionToken,
+			SessionValidityMins: sessionValidityMins,
+		},
 	)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 

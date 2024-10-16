@@ -104,10 +104,12 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			// Errors are already logged, so we can ignore the return value
 			_ = g.db.CreateOnboardEmail(
 				ctx,
-				onboardInfo.EmployerID,
-				token,
-				g.onboardTokenValidMins,
-				email,
+				db.OnboardEmailInfo{
+					EmployerID:         onboardInfo.EmployerID,
+					OnboardSecretToken: token,
+					TokenValidMins:     g.onboardTokenValidMins,
+					Email:              email,
+				},
 			)
 		}
 	}

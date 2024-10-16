@@ -37,9 +37,11 @@ func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
 
 	err = h.db.OnboardAdmin(
 		r.Context(),
-		setOnboardPasswordReq.ClientID,
-		string(passwordHash),
-		setOnboardPasswordReq.Token,
+		db.OnboardReq{
+			DomainName: setOnboardPasswordReq.ClientID,
+			Password:   string(passwordHash),
+			Token:      setOnboardPasswordReq.Token,
+		},
 	)
 	if err != nil {
 		if err == db.ErrNoEmployer || err == db.ErrOrgUserAlreadyExists {

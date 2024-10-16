@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
@@ -12,22 +13,26 @@ import (
 )
 
 type Config struct {
-	Port             string
-	PostgresHost     string
-	PostgresPort     string
-	PostgresUser     string
-	PostgresDB       string
-	PostgresPassword string
+	Port                     string
+	PostgresHost             string
+	PostgresPort             string
+	PostgresUser             string
+	PostgresDB               string
+	PostgresPassword         string
+	SessionTokenValidMins    string
+	LongTermSessionValidMins string
 }
 
 func LoadConfig() (*Config, error) {
 	config := &Config{
-		Port:             os.Getenv("PORT"),
-		PostgresHost:     os.Getenv("POSTGRES_HOST"),
-		PostgresPort:     os.Getenv("POSTGRES_PORT"),
-		PostgresUser:     os.Getenv("POSTGRES_USER"),
-		PostgresDB:       os.Getenv("POSTGRES_DB"),
-		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
+		Port:                     os.Getenv("PORT"),
+		PostgresHost:             os.Getenv("POSTGRES_HOST"),
+		PostgresPort:             os.Getenv("POSTGRES_PORT"),
+		PostgresUser:             os.Getenv("POSTGRES_USER"),
+		PostgresDB:               os.Getenv("POSTGRES_DB"),
+		PostgresPassword:         os.Getenv("POSTGRES_PASSWORD"),
+		SessionTokenValidMins:    os.Getenv("SESSION_TOKEN_VALID_MINS"),
+		LongTermSessionValidMins: os.Getenv("LONG_TERM_SESSION_VALID_MINS"),
 	}
 
 	// Validate required fields
@@ -57,13 +62,33 @@ func validateConfig(config *Config) error {
 	if config.PostgresPassword == "" {
 		return fmt.Errorf("POSTGRES_PASSWORD environment variable not set")
 	}
+	if config.SessionTokenValidMins == "" {
+		_, err := time.ParseDuration(config.SessionTokenValidMins)
+		if err != nil {
+			return fmt.Errorf("SESSION_TOKEN_VALID_MINS invalid duration")
+		}
+	}
+	if config.LongTermSessionValidMins == "" {
+		_, err := time.ParseDuration(config.LongTermSessionValidMins)
+		if err != nil {
+			return fmt.Errorf("LONG_TERM_SESSION_VALID_MINS invalid duration")
+		}
+	}
+
 	return nil
 }
 
 type Hermione struct {
+	// This is initialized from config
+	port string
+
+	// These are initialized from config
+	longTermSessionValidMins float64
+	sessionTokenValidMins    float64
+
+	// These are initialized programmatically in New()
 	db    db.DB
 	log   *slog.Logger
-	port  string
 	vator *vetchi.Vator
 }
 
@@ -96,11 +121,30 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
+	sessionTokenValidity, err := time.ParseDuration(
+		config.SessionTokenValidMins,
+	)
+	if err != nil {
+		// This is unlikely to happen because we have already validated
+		// the config value in LoadConfig()
+		return nil, fmt.Errorf("SESSION_TOKEN_VALID_MINS invalid duration")
+	}
+	longTermSessionValidity, err := time.ParseDuration(
+		config.LongTermSessionValidMins,
+	)
+	if err != nil {
+		// This is unlikely to happen because we have already validated
+		// the config value in LoadConfig()
+		return nil, fmt.Errorf("LONG_TERM_SESSION_VALID_MINS invalid duration")
+	}
+
 	return &Hermione{
-		db:    db,
-		port:  fmt.Sprintf(":%s", config.Port),
-		log:   logger,
-		vator: vator,
+		db:                       db,
+		port:                     fmt.Sprintf(":%s", config.Port),
+		log:                      logger,
+		vator:                    vator,
+		sessionTokenValidMins:    sessionTokenValidity.Minutes(),
+		longTermSessionValidMins: longTermSessionValidity.Minutes(),
 	}, nil
 }
 

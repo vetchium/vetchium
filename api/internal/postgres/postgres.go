@@ -159,10 +159,7 @@ LIMIT 1
 
 func (p *PG) CreateOnboardEmail(
 	ctx context.Context,
-	employerID int64,
-	onboardSecretToken string,
-	tokenValidMins float64,
-	email db.Email,
+	onboardEmailInfo db.OnboardEmailInfo,
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
@@ -171,6 +168,7 @@ func (p *PG) CreateOnboardEmail(
 	}
 	defer tx.Rollback(context.Background())
 
+	var emailTableKey int64
 	err = tx.QueryRow(
 		context.Background(),
 		`
@@ -185,13 +183,13 @@ INSERT INTO emails (
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id
 `,
-		email.EmailFrom,
-		email.EmailTo,
-		email.EmailSubject,
-		email.EmailHTMLBody,
-		email.EmailTextBody,
+		onboardEmailInfo.Email.EmailFrom,
+		onboardEmailInfo.Email.EmailTo,
+		onboardEmailInfo.Email.EmailSubject,
+		onboardEmailInfo.Email.EmailHTMLBody,
+		onboardEmailInfo.Email.EmailTextBody,
 		db.EmailStatePending,
-	).Scan(&email.ID)
+	).Scan(&emailTableKey)
 	if err != nil {
 		p.log.Error("failed to create onboard email", "error", err)
 		return err
@@ -207,10 +205,10 @@ SET
 	token_valid_till = NOW() + interval '1 minute' * $3
 WHERE id = $4
 `,
-		email.ID,
-		onboardSecretToken,
-		tokenValidMins,
-		employerID,
+		emailTableKey,
+		onboardEmailInfo.OnboardSecretToken,
+		onboardEmailInfo.TokenValidMins,
+		onboardEmailInfo.EmployerID,
 	)
 	if err != nil {
 		p.log.Error("failed to update employer", "error", err)
@@ -272,15 +270,19 @@ LIMIT 10
 
 func (p *PG) UpdateEmailState(
 	ctx context.Context,
-	emailID int64,
-	state db.EmailState,
+	emailStateChange db.EmailStateChange,
 ) error {
 	query := `
 UPDATE emails
 SET email_state = $1, processed_at = NOW()
 WHERE id = $2
 `
-	_, err := p.pool.Exec(ctx, query, state, emailID)
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		emailStateChange.EmailState,
+		emailStateChange.EmailDBKey,
+	)
 	if err != nil {
 		p.log.Error("failed to update email state", "error", err)
 		return err
@@ -291,7 +293,7 @@ WHERE id = $2
 
 func (p *PG) OnboardAdmin(
 	ctx context.Context,
-	domainName, password, token string,
+	onboardReq db.OnboardReq,
 ) error {
 	employerQuery := `
 SELECT e.id, e.onboard_admin_email
@@ -301,8 +303,12 @@ WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
 
 	var employerID int64
 	var adminEmailAddr string
-	err := p.pool.QueryRow(ctx, employerQuery, token, domainName).
-		Scan(&employerID, &adminEmailAddr)
+	err := p.pool.QueryRow(
+		ctx,
+		employerQuery,
+		onboardReq.Token,
+		onboardReq.DomainName,
+	).Scan(&employerID, &adminEmailAddr)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return db.ErrNoEmployer
@@ -333,7 +339,7 @@ VALUES ($1, $2, $3, $4, $5)
 		ctx,
 		orgUserInsertQuery,
 		adminEmailAddr,
-		password,
+		onboardReq.Password,
 		db.AdminOrgUserRole,
 		db.ActiveOrgUserState,
 		employerID,
@@ -395,7 +401,7 @@ WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
 
 func (p *PG) GetOrgUserAuth(
 	ctx context.Context,
-	clientID, email string,
+	orgUserCreds db.OrgUserCreds,
 ) (db.OrgUserAuth, error) {
 	query := `
 SELECT
@@ -409,10 +415,18 @@ WHERE ou.email = $1 AND ou.employer_id = e.id AND e.client_id = $2
 `
 
 	var orgUserAuth db.OrgUserAuth
-	err := p.pool.QueryRow(ctx, query, email, clientID).
-		Scan(&orgUserAuth.OrgUserID, &orgUserAuth.EmployerID,
-			&orgUserAuth.OrgUserRole, &orgUserAuth.PasswordHash,
-			&orgUserAuth.OrgUserState)
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		orgUserCreds.Email,
+		orgUserCreds.ClientID,
+	).Scan(
+		&orgUserAuth.OrgUserID,
+		&orgUserAuth.EmployerID,
+		&orgUserAuth.OrgUserRole,
+		&orgUserAuth.PasswordHash,
+		&orgUserAuth.OrgUserState,
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return db.OrgUserAuth{}, db.ErrNoOrgUser
@@ -427,9 +441,7 @@ WHERE ou.email = $1 AND ou.employer_id = e.id AND e.client_id = $2
 
 func (p *PG) CreateOrgUserSession(
 	ctx context.Context,
-	orgUserID int64,
-	sessionToken string,
-	sessionValidityMins int,
+	orgUserSession db.OrgUserSession,
 ) error {
 	query := `
 INSERT INTO org_user_sessions (
@@ -442,9 +454,14 @@ VALUES ($1, $2, NOW() + interval '1 minute' * $3)
 	_, err := p.pool.Exec(
 		ctx,
 		query,
-		orgUserID,
-		sessionToken,
-		sessionValidityMins,
+		orgUserSession.SessionToken,
+		orgUserSession.OrgUserID,
+		orgUserSession.SessionValidityMins,
 	)
-	return err
+	if err != nil {
+		p.log.Error("failed to create org user session", "error", err)
+		return err
+	}
+
+	return nil
 }
