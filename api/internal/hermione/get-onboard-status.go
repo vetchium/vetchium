@@ -12,20 +12,24 @@ import (
 )
 
 func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
-	var req vetchi.GetOnboardStatusRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
+	var getOnboardStatusReq vetchi.GetOnboardStatusRequest
+	err := json.NewDecoder(r.Body).Decode(&getOnboardStatusReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	if !h.vator.Struct(w, getOnboardStatusReq) {
+		return
+	}
+
 	var status vetchi.OnboardStatus
 
-	employer, err := h.db.GetEmployer(r.Context(), req.ClientID)
+	employer, err := h.db.GetEmployer(r.Context(), getOnboardStatusReq.ClientID)
 	if err != nil {
 		if errors.Is(err, db.ErrNoEmployer) {
 			// Unregistered domain. Check if vetchiadmin TXT record is present
-			h.newDomainProcess(r.Context(), w, req.ClientID)
+			h.newDomainProcess(r.Context(), w, getOnboardStatusReq.ClientID)
 			return
 		} else {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -44,7 +48,7 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 		h.log.Error(
 			"unknown employer state",
 			"client_id",
-			req.ClientID,
+			getOnboardStatusReq.ClientID,
 			"state",
 			employer.EmployerState,
 		)

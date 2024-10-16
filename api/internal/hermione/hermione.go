@@ -8,6 +8,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type Config struct {
@@ -60,9 +61,10 @@ func validateConfig(config *Config) error {
 }
 
 type Hermione struct {
-	port string
-	db   db.DB
-	log  *slog.Logger
+	db    db.DB
+	log   *slog.Logger
+	port  string
+	vator *vetchi.Vator
 }
 
 func New() (*Hermione, error) {
@@ -89,10 +91,16 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
+	vator, err := vetchi.InitValidator(logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Hermione{
-		port: fmt.Sprintf(":%s", config.Port),
-		db:   db,
-		log:  logger,
+		db:    db,
+		port:  fmt.Sprintf(":%s", config.Port),
+		log:   logger,
+		vator: vator,
 	}, nil
 }
 

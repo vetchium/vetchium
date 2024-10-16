@@ -353,7 +353,7 @@ type GetMyCandidaciesRequest struct {
 }
 
 type GetOnboardStatusRequest struct {
-	ClientID string `json:"client_id" validate:"required"`
+	ClientID string `json:"client_id" validate:"required,client_id"`
 }
 
 type GetOnboardStatusResponse struct {
