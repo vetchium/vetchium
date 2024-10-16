@@ -492,9 +492,7 @@ type OrgUserInfo struct {
 	Role  Role   `json:"role"`
 }
 
-type Password struct {
-	Password string `json:"password" validate:"required,min=8,max=255,pattern=^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"`
-}
+type Password string
 
 type ReferredBy struct {
 	Name  string `json:"name"`
@@ -531,9 +529,9 @@ const (
 )
 
 type SetOnboardPasswordRequest struct {
-	ClientID string `json:"client_id" validate:"required"`
-	Password string `json:"password"  validate:"required"`
-	Token    string `json:"token"     validate:"required"`
+	ClientID string   `json:"client_id" validate:"required,client_id"`
+	Password Password `json:"password"  validate:"required,password"`
+	Token    string   `json:"token"     validate:"required"`
 }
 
 type ShortlistedOpening struct {

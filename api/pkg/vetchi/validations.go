@@ -25,7 +25,14 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 				return false
 			}
 
-			return true
+			// Use regex to validate if the value matches a password pattern
+			passwordPattern := `^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`
+			matched, err := regexp.MatchString(passwordPattern, value)
+			if err != nil {
+				log.Error("failed to validate password", "error", err)
+				return false
+			}
+			return matched
 		},
 	)
 	if err != nil {
@@ -76,9 +83,7 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 			return false
 		}
 		w.WriteHeader(http.StatusBadRequest)
-
 		return false
 	}
-
 	return true
 }
