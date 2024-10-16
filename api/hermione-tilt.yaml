@@ -54,6 +54,10 @@ spec:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: POSTGRES_PORT
+            - name: SESSION_TOKEN_VALID_MINS
+              value: "3m"
+            - name: LONG_TERM_SESSION_VALID_MINS
+              value: "5m"
       volumes:
         - name: config-volume
           configMap:

@@ -185,15 +185,13 @@ const (
 	UnspecifiedEdu   EducationalQualification = "UNSPECIFIED_EDU"
 )
 
-type EmailAddress struct {
-	Email string `json:"email" validate:"required,email"`
-}
+type EmailAddress string
 
 type EmployerSignInRequest struct {
-	ClientID   string   `json:"client_id"             validate:"required,client_id"`
-	Email      string   `json:"email"                 validate:"required,email"`
-	Password   Password `json:"password"              validate:"required,password"`
-	RememberMe bool     `json:"remember_me,omitempty"`
+	ClientID   string       `json:"client_id"             validate:"required,client_id"`
+	Email      EmailAddress `json:"email"                 validate:"required,email"`
+	Password   Password     `json:"password"              validate:"required,password"`
+	RememberMe bool         `json:"remember_me,omitempty"`
 }
 
 type EmployerSignInResponse struct {

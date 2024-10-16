@@ -20,19 +20,24 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !h.vator.Struct(w, employerSigninReq) {
+		return
+	}
+
 	orgUserAuth, err := h.db.GetOrgUserAuth(
 		r.Context(),
 		db.OrgUserCreds{
 			ClientID: employerSigninReq.ClientID,
-			Email:    employerSigninReq.Email,
+			Email:    string(employerSigninReq.Email),
 		},
 	)
 	if err != nil {
 		if errors.Is(err, db.ErrNoOrgUser) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "", http.StatusUnauthorized)
+			return
 		}
+
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 

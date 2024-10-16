@@ -201,7 +201,7 @@ RETURNING id
 UPDATE employers
 SET
 	onboard_email_id = $1,
-	onboard_secret_token = $2, 
+	onboard_secret_token = $2,
 	token_valid_till = NOW() + interval '1 minute' * $3
 WHERE id = $4
 `,
@@ -382,7 +382,7 @@ func (p *PG) CleanOldOnboardTokens(ctx context.Context) error {
 	// We hope that NTP will not be broken on the DB server and time
 	// will not be set to future.
 	query := `
-UPDATE employers	
+UPDATE employers
 SET onboard_secret_token = NULL
 WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
 `
@@ -409,9 +409,13 @@ SELECT
 	ou.employer_id,
 	ou.org_user_role,
 	ou.password_hash,
+	e.employer_state,
 	ou.org_user_state
-FROM org_users ou, employers e
-WHERE ou.email = $1 AND ou.employer_id = e.id AND e.client_id = $2
+FROM org_users ou, employers e, domains d
+WHERE 	ou.email = $1 AND
+		ou.employer_id = e.id AND
+		e.id = d.employer_id AND
+		d.domain_name = $2
 `
 
 	var orgUserAuth db.OrgUserAuth
@@ -425,6 +429,7 @@ WHERE ou.email = $1 AND ou.employer_id = e.id AND e.client_id = $2
 		&orgUserAuth.EmployerID,
 		&orgUserAuth.OrgUserRole,
 		&orgUserAuth.PasswordHash,
+		&orgUserAuth.EmployerState,
 		&orgUserAuth.OrgUserState,
 	)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/mail"
 	"regexp"
 
 	validator "github.com/go-playground/validator/v10"
@@ -42,12 +43,16 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
-	// The regex taken from https://stackoverflow.com/a/67686133/153586
-	emailReg := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	err = validate.RegisterValidation(
 		"email",
 		func(fl validator.FieldLevel) bool {
-			return emailReg.MatchString(fl.Field().String())
+			value := fl.Field().String()
+			if len(value) < 3 || len(value) > 254 {
+				return false
+			}
+
+			_, err := mail.ParseAddress(value)
+			return err == nil
 		},
 	)
 	if err != nil {
