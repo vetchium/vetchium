@@ -40,7 +40,5 @@ type DB interface {
 	) error
 	GetOldestUnsentEmails(ctx context.Context) ([]Email, error)
 	UpdateEmailState(ctx context.Context, emailID int64, state EmailState) error
-	DeQOnboard(
-		ctx context.Context,
-	) (employerID int64, adminEmailAddr, domainName string, ok bool, err error)
+	DeQOnboard(ctx context.Context) (*OnboardInfo, error)
 }

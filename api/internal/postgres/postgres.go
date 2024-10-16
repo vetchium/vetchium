@@ -129,7 +129,7 @@ VALUES ($1, $2, $3, NOW())
 
 func (p *PG) DeQOnboard(
 	ctx context.Context,
-) (employerID int64, adminEmailAddr, domainName string, ok bool, err error) {
+) (*db.OnboardInfo, error) {
 	query := `
 SELECT e.id, e.onboard_admin_email, d.domain_name
 FROM employers e, domains d
@@ -137,18 +137,24 @@ WHERE e.employer_state = $1 AND e.onboard_secret_token IS NULL
 ORDER BY e.created_at ASC
 LIMIT 1
 `
-	err = p.pool.QueryRow(ctx, query, db.OnboardPendingEmployerState).
-		Scan(&employerID, &adminEmailAddr, &domainName)
+
+	var onboardInfo db.OnboardInfo
+	err := p.pool.QueryRow(ctx, query, db.OnboardPendingEmployerState).
+		Scan(
+			&onboardInfo.EmployerID,
+			&onboardInfo.AdminEmailAddr,
+			&onboardInfo.DomainName,
+		)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, "", "", false, nil
+			return nil, nil
 		}
 
 		p.log.Error("failed to query employers", "error", err)
-		return 0, "", "", false, err
+		return nil, err
 	}
 
-	return employerID, adminEmailAddr, domainName, true, nil
+	return &onboardInfo, nil
 }
 
 func (p *PG) CreateOnboardEmail(

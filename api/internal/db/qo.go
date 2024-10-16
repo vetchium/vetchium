@@ -12,6 +12,12 @@ var (
 	ErrNoOrgUser            = errors.New("org user not found")
 )
 
+type OnboardInfo struct {
+	EmployerID     int64
+	AdminEmailAddr string
+	DomainName     string
+}
+
 type OrgUserAuth struct {
 	OrgUserID     int64
 	EmployerID    int64

@@ -57,17 +57,12 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			return
 		case <-time.After(1 * time.Minute):
 			ctx := context.Background()
-			employerID, adminAddr, domain, ok, err := g.db.DeQOnboard(ctx)
-			if err != nil {
+			onboardInfo, err := g.db.DeQOnboard(ctx)
+			if err != nil || onboardInfo == nil {
 				continue
 			}
 
-			if !ok {
-				// no employer pending onboard
-				continue
-			}
-
-			g.log.Info("onboard invites", "employer", employerID)
+			g.log.Info("onboard invites", "employer", onboardInfo.EmployerID)
 
 			// TODO: Should we read the length from a config?
 			token := util.RandomString(vetchi.OnBoardTokenLenBytes)
@@ -78,7 +73,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			err = ttmpl.Must(
 				ttmpl.New("text").Parse(textMailTemplate),
 			).Execute(&textBody, map[string]string{
-				"Domain": domain,
+				"Domain": onboardInfo.DomainName,
 				"Link":   link,
 			})
 			if err != nil {
@@ -90,7 +85,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			err = template.Must(
 				template.New("html").Parse(htmlMailTemplate),
 			).Execute(&htmlBody, map[string]string{
-				"Domain": domain,
+				"Domain": onboardInfo.DomainName,
 				"Link":   link,
 			})
 			if err != nil {
@@ -100,7 +95,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 
 			email := db.Email{
 				EmailFrom:     vetchi.EmailFrom,
-				EmailTo:       []string{adminAddr},
+				EmailTo:       []string{onboardInfo.AdminEmailAddr},
 				EmailSubject:  subject,
 				EmailHTMLBody: htmlBody.String(),
 				EmailTextBody: textBody.String(),
@@ -109,7 +104,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			// Errors are already logged, so we can ignore the return value
 			_ = g.db.CreateOnboardEmail(
 				ctx,
-				employerID,
+				onboardInfo.EmployerID,
 				token,
 				g.onboardTokenValidMins,
 				email,
