@@ -1,6 +1,8 @@
 package dolores
 
 import (
+	"context"
+	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,11 +22,9 @@ var db *pgxpool.Pool
 var _ = BeforeSuite(func() {
 	db = setupTestDB()
 
-	/*
-		seed, err := os.ReadFile("seed.pgsql")
-		Expect(err).ShouldNot(HaveOccurred())
+	seed, err := os.ReadFile("seed.pgsql")
+	Expect(err).ShouldNot(HaveOccurred())
 
-		_, err = db.Exec(context.Background(), string(seed))
-		Expect(err).ShouldNot(HaveOccurred())
-	*/
+	_, err = db.Exec(context.Background(), string(seed))
+	Expect(err).ShouldNot(HaveOccurred())
 })

@@ -44,7 +44,7 @@ INSERT INTO public.employers (
     'DOMAIN',
     'ONBOARDED',
     'admin@domain-onboarded.example',
-    '$2y$05$nTpbRp.SqiP0baLK/Am40.rbMkJItfiGJD7E9.n7k/d9b4LAAh2P6',
+    NULL,
     timezone('UTC'::text, now()) + interval '1 day', 
     11, 
     timezone('UTC'::text, now())
@@ -75,8 +75,8 @@ INSERT INTO public.org_users(
 ) VALUES(
     1001,
     'admin@domain-onboarded.example',
-    --- password is Password123$
-    '$2y$05$nTpbRp.SqiP0baLK/Am40.rbMkJItfiGJD7E9.n7k/d9b4LAAh2P6',
+    --- password is NewPassword123$
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ADMIN',
     'ACTIVE',
     201,
