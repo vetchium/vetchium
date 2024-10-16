@@ -17,6 +17,9 @@ type Vator struct {
 func InitValidator(log *slog.Logger) (*Vator, error) {
 	validate := validator.New()
 
+	passwordReg := regexp.MustCompile(
+		`^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`,
+	)
 	err := validate.RegisterValidation(
 		"password",
 		func(fl validator.FieldLevel) bool {
@@ -24,29 +27,18 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 			if len(value) < 8 || len(value) > 32 {
 				return false
 			}
-
-			// Use regex to validate if the value matches a password pattern
-			passwordPattern := `^(?:.*[a-z])(?:.*[A-Z])(?:.*\d)(?:.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`
-			matched, err := regexp.MatchString(passwordPattern, value)
-			if err != nil {
-				log.Error("failed to validate password", "error", err)
-				return false
-			}
-			return matched
+			return passwordReg.MatchString(value)
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	domainReg := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
 	err = validate.RegisterValidation(
 		"client_id",
 		func(fl validator.FieldLevel) bool {
-			value := fl.Field().String()
-			// Use regex to validate if the value matches a domain name pattern
-			domainPattern := `^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`
-			matched, _ := regexp.MatchString(domainPattern, value)
-			return matched
+			return domainReg.MatchString(fl.Field().String())
 		},
 	)
 	if err != nil {
@@ -58,10 +50,7 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"email",
 		func(fl validator.FieldLevel) bool {
-			value := fl.Field().String()
-
-			// Use regex to validate if the value matches an email pattern
-			return emailReg.MatchString(value)
+			return emailReg.MatchString(fl.Field().String())
 		},
 	)
 	if err != nil {
