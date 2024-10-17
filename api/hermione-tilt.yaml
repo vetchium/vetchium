@@ -6,17 +6,17 @@ metadata:
 data:
   config.json: |
     {
+      "employer": {
+        "lt_session_tok_life": "5m",
+        "session_tok_life": "3m",
+        "tgt_life": "3m"
+      },
       "port": "8080",
       "postgres": {
+        "db": "vdb",
         "host": "postgres",
         "port": "5432",
-        "user": "user",
-        "db": "vdb"
-      },
-      "employer": {
-        "tgt_life": "3m",
-        "session_tok_life": "3m",
-        "lt_session_tok_life": "5m"
+        "user": "user"
       }
     }
 ---

@@ -10,16 +10,15 @@ data:
       "onboard_token_life": "3m",
       "port": "8080",
       "postgres": {
+        "db": "vdb",
         "host": "postgres",
         "port": "5432",
-        "user": "user",
-        "db": "vdb"
+        "user": "user"
       },
       "smtp": {
         "host": "smtp",
         "port": "587",
-        "user": "user",
-        "password": "password"
+        "user": "user"
       }
     }
 ---
