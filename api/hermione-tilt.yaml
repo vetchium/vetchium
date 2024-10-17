@@ -4,7 +4,21 @@ metadata:
   name: hermione-config
   namespace: vetchidev
 data:
-  port: "8080"
+  config.json: |
+    {
+      "port": "8080",
+      "postgres": {
+        "host": "postgres",
+        "port": "5432",
+        "user": "user",
+        "db": "vdb"
+      },
+      "employer": {
+        "tgt_life": "3m",
+        "session_tok_life": "3m",
+        "lt_session_tok_life": "5m"
+      }
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -27,37 +41,14 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: hermione-config
-                  key: port
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: POSTGRES_PASSWORD
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_DB
-            - name: POSTGRES_HOST
-              value: "postgres"
-            - name: POSTGRES_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_PORT
-            - name: SESSION_TOKEN_VALID_MINS
-              value: "3m"
-            - name: LONG_TERM_SESSION_VALID_MINS
-              value: "5m"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/hermione-config
       volumes:
         - name: config-volume
           configMap:

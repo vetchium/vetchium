@@ -57,18 +57,12 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
-
-	sessionValidityMins := h.sessionTokenValidMins
-	if employerSigninReq.RememberMe {
-		sessionValidityMins = h.longTermSessionValidMins
-	}
-
 	err = h.db.CreateOrgUserSession(
 		r.Context(),
 		db.OrgUserSession{
 			OrgUserID:           orgUserAuth.OrgUserID,
 			SessionToken:        sessionToken,
-			SessionValidityMins: sessionValidityMins,
+			SessionValidityMins: h.employer.tgtLife.Minutes(),
 		},
 	)
 	if err != nil {

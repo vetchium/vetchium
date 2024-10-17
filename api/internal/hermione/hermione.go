@@ -1,90 +1,72 @@
 package hermione
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type Config struct {
-	Port                     string
-	PostgresHost             string
-	PostgresPort             string
-	PostgresUser             string
-	PostgresDB               string
-	PostgresPassword         string
-	SessionTokenValidMins    string
-	LongTermSessionValidMins string
+	Port     string `json:"port"     validate:"required,min=1,number"`
+	Postgres struct {
+		Host string `json:"host" validate:"required,min=1"`
+		Port string `json:"port" validate:"required,min=1"`
+		User string `json:"user" validate:"required,min=1"`
+		DB   string `json:"db" validate:"required,min=1"`
+	} `json:"postgres" validate:"required"`
+	Employer struct {
+		TGTLife          string `json:"tgt_life" validate:"required,min=1"`
+		SessionTokLife   string `json:"session_tok_life" validate:"required,min=1"`
+		LTSessionTokLife string `json:"lt_session_tok_life" validate:"required,min=1"`
+	} `json:"employer" validate:"required"`
 }
 
 func LoadConfig() (*Config, error) {
-	config := &Config{
-		Port:                     os.Getenv("PORT"),
-		PostgresHost:             os.Getenv("POSTGRES_HOST"),
-		PostgresPort:             os.Getenv("POSTGRES_PORT"),
-		PostgresUser:             os.Getenv("POSTGRES_USER"),
-		PostgresDB:               os.Getenv("POSTGRES_DB"),
-		PostgresPassword:         os.Getenv("POSTGRES_PASSWORD"),
-		SessionTokenValidMins:    os.Getenv("SESSION_TOKEN_VALID_MINS"),
-		LongTermSessionValidMins: os.Getenv("LONG_TERM_SESSION_VALID_MINS"),
+	data, err := os.ReadFile("/etc/hermione-config/config.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	// Validate required fields
-	if err := validateConfig(config); err != nil {
-		return nil, err
+	config := &Config{}
+	if err := json.Unmarshal(data, config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// Whatever can be validated by the struct tags, is done here. More
+	// validations continue to happen in the New() function
+	validate := validator.New()
+	if err := validate.Struct(config); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 
 	return config, nil
 }
 
-func validateConfig(config *Config) error {
-	if config.Port == "" {
-		return fmt.Errorf("PORT environment variable not set")
-	}
-	if config.PostgresHost == "" {
-		return fmt.Errorf("POSTGRES_HOST environment variable not set")
-	}
-	if config.PostgresPort == "" {
-		return fmt.Errorf("POSTGRES_PORT environment variable not set")
-	}
-	if config.PostgresUser == "" {
-		return fmt.Errorf("POSTGRES_USER environment variable not set")
-	}
-	if config.PostgresDB == "" {
-		return fmt.Errorf("POSTGRES_DB environment variable not set")
-	}
-	if config.PostgresPassword == "" {
-		return fmt.Errorf("POSTGRES_PASSWORD environment variable not set")
-	}
-	if config.SessionTokenValidMins == "" {
-		_, err := time.ParseDuration(config.SessionTokenValidMins)
-		if err != nil {
-			return fmt.Errorf("SESSION_TOKEN_VALID_MINS invalid duration")
-		}
-	}
-	if config.LongTermSessionValidMins == "" {
-		_, err := time.ParseDuration(config.LongTermSessionValidMins)
-		if err != nil {
-			return fmt.Errorf("LONG_TERM_SESSION_VALID_MINS invalid duration")
-		}
-	}
+// We can store the token lifetimes as float64 instead of time.Duration and
+// may be able to save some time avoiding the Mins() call everytime we need to
+// refer to these values. But a pretty-printed time.Duration is easier to debug
+// than a random float64 literal.
+type employer struct {
+	// Token Granting Token life - Should be used for /employer/signin
+	tgtLife time.Duration
 
-	return nil
+	// User Session Tokens life - Should be used for /employer/tfa
+	sessionTokLife         time.Duration
+	longTermSessionTokLife time.Duration
 }
 
 type Hermione struct {
-	// This is initialized from config
-	port string
-
-	// These are initialized from config
-	longTermSessionValidMins float64
-	sessionTokenValidMins    float64
+	// These are initialized from configmap
+	employer employer
+	port     string
 
 	// These are initialized programmatically in New()
 	db    db.DB
@@ -98,6 +80,11 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
+	pgPassword := os.Getenv("POSTGRES_PASSWORD")
+	if pgPassword == "" {
+		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
+	}
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
@@ -105,11 +92,11 @@ func New() (*Hermione, error) {
 
 	pgConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		config.PostgresHost,
-		config.PostgresPort,
-		config.PostgresUser,
-		config.PostgresDB,
-		config.PostgresPassword,
+		config.Postgres.Host,
+		config.Postgres.Port,
+		config.Postgres.User,
+		config.Postgres.DB,
+		pgPassword,
 	)
 	db, err := postgres.New(pgConnStr, logger)
 	if err != nil {
@@ -121,30 +108,29 @@ func New() (*Hermione, error) {
 		return nil, err
 	}
 
-	sessionTokenValidity, err := time.ParseDuration(
-		config.SessionTokenValidMins,
-	)
+	tgtLife, err := time.ParseDuration(config.Employer.TGTLife)
 	if err != nil {
-		// This is unlikely to happen because we have already validated
-		// the config value in LoadConfig()
-		return nil, fmt.Errorf("SESSION_TOKEN_VALID_MINS invalid duration")
+		return nil, fmt.Errorf("config.Employer.TGTLife: %w", err)
 	}
-	longTermSessionValidity, err := time.ParseDuration(
-		config.LongTermSessionValidMins,
-	)
+	sessionTokLife, err := time.ParseDuration(config.Employer.SessionTokLife)
 	if err != nil {
-		// This is unlikely to happen because we have already validated
-		// the config value in LoadConfig()
-		return nil, fmt.Errorf("LONG_TERM_SESSION_VALID_MINS invalid duration")
+		return nil, fmt.Errorf("config.Employer.SessionTokLife: %w", err)
+	}
+	ltsTokLife, err := time.ParseDuration(config.Employer.LTSessionTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("config.Employer.LTSessionTokLife: %w", err)
 	}
 
 	return &Hermione{
-		db:                       db,
-		port:                     fmt.Sprintf(":%s", config.Port),
-		log:                      logger,
-		vator:                    vator,
-		sessionTokenValidMins:    sessionTokenValidity.Minutes(),
-		longTermSessionValidMins: longTermSessionValidity.Minutes(),
+		db:    db,
+		port:  fmt.Sprintf(":%s", config.Port),
+		log:   logger,
+		vator: vator,
+		employer: employer{
+			tgtLife:                tgtLife,
+			sessionTokLife:         sessionTokLife,
+			longTermSessionTokLife: ltsTokLife,
+		},
 	}, nil
 }
 

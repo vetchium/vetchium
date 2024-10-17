@@ -34,25 +34,16 @@ spec:
                   name: granger-config
                   key: port
             - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_USER
+              value: user
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_DB
+              value: vdb
             - name: POSTGRES_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_PORT
+              value: "5432"
             - name: POSTGRES_HOST
               value: "postgres"
             - name: SMTP_HOST

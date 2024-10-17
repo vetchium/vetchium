@@ -33,20 +33,14 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_USER
+              value: user
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_DB
+              value: vdb
           volumeMounts:
             - name: pgdata-volume
               mountPath: /var/lib/postgresql/data
