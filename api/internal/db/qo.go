@@ -55,4 +55,5 @@ type OrgUserSession struct {
 	OrgUserID           int64
 	SessionToken        string
 	SessionValidityMins float64
+	TokenType           SessionTokenType
 }

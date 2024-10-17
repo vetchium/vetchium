@@ -63,6 +63,7 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 			OrgUserID:           orgUserAuth.OrgUserID,
 			SessionToken:        sessionToken,
 			SessionValidityMins: h.employer.tgtLife.Minutes(),
+			TokenType:           db.TGToken,
 		},
 	)
 	if err != nil {

@@ -102,3 +102,10 @@ type OrgUser struct {
 	EmployerID   int64        `db:"employer_id"`
 	CreatedAt    time.Time    `db:"created_at"`
 }
+
+type SessionTokenType string
+
+const (
+	UserSessionToken SessionTokenType = "USER"
+	TGToken          SessionTokenType = "TGT"
+)

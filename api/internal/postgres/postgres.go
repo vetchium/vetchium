@@ -452,6 +452,7 @@ func (p *PG) CreateOrgUserSession(
 INSERT INTO org_user_sessions (
 	session_token,
 	org_user_id,
+	token_type,
 	token_valid_till
 )
 VALUES ($1, $2, NOW() + interval '1 minute' * $3)
@@ -461,6 +462,7 @@ VALUES ($1, $2, NOW() + interval '1 minute' * $3)
 		query,
 		orgUserSession.SessionToken,
 		orgUserSession.OrgUserID,
+		orgUserSession.TokenType,
 		orgUserSession.SessionValidityMins,
 	)
 	if err != nil {
