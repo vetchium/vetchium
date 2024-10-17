@@ -16,7 +16,7 @@ data:
         "user": "user"
       },
       "smtp": {
-        "host": "smtp",
+        "host": "mailpit",
         "port": "587",
         "user": "user"
       }
