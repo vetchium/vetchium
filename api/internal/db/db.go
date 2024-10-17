@@ -21,9 +21,9 @@ type DB interface {
 	OnboardAdmin(context.Context, OnboardReq) error
 
 	// Used by granger
-	CleanOldOnboardTokens(context.Context) error
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
 	GetOldestUnsentEmails(context.Context) ([]Email, error)
+	PruneTokens(context.Context) error
 	UpdateEmailState(context.Context, EmailStateChange) error
 	DeQOnboard(context.Context) (*OnboardInfo, error)
 }

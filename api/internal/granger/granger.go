@@ -151,8 +151,8 @@ func NewGranger() (*Granger, error) {
 
 func (g *Granger) Run() error {
 	g.wg.Add(1)
-	cleanOldOnboardTokensQuit := make(chan struct{})
-	go g.cleanOldOnboardTokens(cleanOldOnboardTokensQuit)
+	pruneTokensQuit := make(chan struct{})
+	go g.pruneTokens(pruneTokensQuit)
 
 	g.wg.Add(1)
 	createOnboardEmailsQuit := make(chan struct{})
@@ -174,7 +174,7 @@ func (g *Granger) Run() error {
 
 	go func() {
 		<-signalChan
-		close(cleanOldOnboardTokensQuit)
+		close(pruneTokensQuit)
 		close(createOnboardEmailsQuit)
 		close(mailSenderQuit)
 	}()

@@ -378,22 +378,30 @@ WHERE id = $2
 	return nil
 }
 
-func (p *PG) CleanOldOnboardTokens(ctx context.Context) error {
+func (p *PG) PruneTokens(ctx context.Context) error {
 	// We hope that NTP will not be broken on the DB server and time
-	// will not be set to future.
-	query := `
+	// will not be set to future in the db server.
+
+	queries := []string{
+		`
 UPDATE employers
 SET onboard_secret_token = NULL
 WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
-`
-	_, err := p.pool.Exec(ctx, query)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil
-		}
+`,
+		`DELETE FROM org_user_sessions WHERE token_valid_till < NOW()`,
+	}
 
-		p.log.Error("failed to clean old onboard tokens", "error", err)
-		return err
+	for _, q := range queries {
+		_, err := p.pool.Exec(ctx, q)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				// No obsolete tokens to delete
+				continue
+			}
+
+			p.log.Error("failed to execute query", "error", err)
+			return err
+		}
 	}
 
 	return nil
