@@ -229,11 +229,9 @@ var _ = Describe("GetOnboardStatus", func() {
 				got.Status,
 			).Should(Equal(vetchi.DomainVerifiedOnboardPending))
 
-			// Sleep for 3 minutes to allow granger to email the token
+			fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
 			<-time.After(3 * time.Minute)
-
-			// Sleep for 2 minutes to allow the email to be sent by granger
-			<-time.After(2 * time.Minute)
+			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
 			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
 			log.Println("URL:", url)
