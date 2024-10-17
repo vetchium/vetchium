@@ -15,18 +15,20 @@ import (
 )
 
 type Config struct {
-	Port     string `json:"port"     validate:"required,min=1,number"`
+	Employer struct {
+		TGTLife          string `json:"tgt_life" validate:"required,min=1"`
+		SessionTokLife   string `json:"session_tok_life" validate:"required,min=1"`
+		LTSessionTokLife string `json:"lt_session_tok_life" validate:"required,min=1"`
+	} `json:"employer" validate:"required"`
+
 	Postgres struct {
 		Host string `json:"host" validate:"required,min=1"`
 		Port string `json:"port" validate:"required,min=1"`
 		User string `json:"user" validate:"required,min=1"`
 		DB   string `json:"db" validate:"required,min=1"`
 	} `json:"postgres" validate:"required"`
-	Employer struct {
-		TGTLife          string `json:"tgt_life" validate:"required,min=1"`
-		SessionTokLife   string `json:"session_tok_life" validate:"required,min=1"`
-		LTSessionTokLife string `json:"lt_session_tok_life" validate:"required,min=1"`
-	} `json:"employer" validate:"required"`
+
+	Port string `json:"port" validate:"required,min=1,number"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -74,7 +76,7 @@ type Hermione struct {
 	vator *vetchi.Vator
 }
 
-func New() (*Hermione, error) {
+func NewHermione() (*Hermione, error) {
 	config, err := LoadConfig()
 	if err != nil {
 		return nil, err

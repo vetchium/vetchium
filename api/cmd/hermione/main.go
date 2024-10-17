@@ -10,7 +10,7 @@ import (
 func main() {
 	slog.Info("Hermione starting up ...")
 
-	hermione, err := hermione.New()
+	hermione, err := hermione.NewHermione()
 	if err != nil {
 		slog.Error("Failed to create new Hermione", "error", err)
 		os.Exit(1)

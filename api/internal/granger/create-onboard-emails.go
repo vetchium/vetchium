@@ -107,7 +107,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 				db.OnboardEmailInfo{
 					EmployerID:         onboardInfo.EmployerID,
 					OnboardSecretToken: token,
-					TokenValidMins:     g.onboardTokenValidMins,
+					TokenValidMins:     g.onboardTokenLife.Minutes(),
 					Email:              email,
 				},
 			)

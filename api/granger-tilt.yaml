@@ -4,7 +4,24 @@ metadata:
   name: granger-config
   namespace: vetchidev
 data:
-  port: "8080"
+  config.json: |
+    {
+      "env": "dev",
+      "onboard_token_life": "3m",
+      "port": "8080",
+      "postgres": {
+        "host": "postgres",
+        "port": "5432",
+        "user": "user",
+        "db": "vdb"
+      },
+      "smtp": {
+        "host": "smtp",
+        "port": "587",
+        "user": "user",
+        "password": "password"
+      }
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -33,34 +50,16 @@ spec:
                 configMapKeyRef:
                   name: granger-config
                   key: port
-            - name: POSTGRES_USER
-              value: user
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: POSTGRES_PASSWORD
-            - name: POSTGRES_DB
-              value: vdb
-            - name: POSTGRES_PORT
-              value: "5432"
-            - name: POSTGRES_HOST
-              value: "postgres"
-            - name: SMTP_HOST
-              value: "mailpit"
-            - name: SMTP_PORT
-              value: "1025"
-            - name: SMTP_USER
-              value: "user"
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: vetchi-secrets
                   key: SMTP_PASSWORD
-            - name: ENV
-              value: "dev"
-            - name: ONBOARD_TOKEN_VALID_MINS
-              value: "4m"
       volumes:
         - name: config-volume
           configMap:

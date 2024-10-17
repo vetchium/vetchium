@@ -86,10 +86,10 @@ func (g *Granger) sendEmail(email db.Email) error {
 	var c *mail.Client
 	if g.env == vetchi.ProdEnv {
 		c, err = mail.NewClient(
-			g.SMTPHost,
-			mail.WithPort(g.SMTPPort),
-			mail.WithUsername(g.SMTPUser),
-			mail.WithPassword(g.SMTPPassword),
+			g.smtp.host,
+			mail.WithPort(g.smtp.port),
+			mail.WithUsername(g.smtp.user),
+			mail.WithPassword(g.smtp.password),
 			mail.WithSMTPAuth(mail.SMTPAuthLogin),
 		)
 		if err != nil {
@@ -98,8 +98,8 @@ func (g *Granger) sendEmail(email db.Email) error {
 		}
 	} else {
 		c, err = mail.NewClient(
-			g.SMTPHost,
-			mail.WithPort(g.SMTPPort),
+			g.smtp.host,
+			mail.WithPort(g.smtp.port),
 			mail.WithTLSPortPolicy(mail.NoTLS),
 			mail.WithSMTPAuth(mail.SMTPAuthCustom),
 		)

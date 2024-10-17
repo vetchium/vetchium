@@ -1,6 +1,7 @@
 package granger
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,123 +12,78 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type Config struct {
-	Port                  string
-	PostgresHost          string
-	PostgresPort          string
-	PostgresUser          string
-	PostgresDB            string
-	PostgresPassword      string
-	SMTPHost              string
-	SMTPPort              string
-	SMTPUser              string
-	SMTPPassword          string
-	Env                   string
-	OnboardTokenValidMins string
+	Env string `json:"env" validate:"required,min=1"`
+
+	OnboardTokenLife string `json:"onboard_token_life" validate:"required,min=1"`
+
+	Port string `json:"port" validate:"required,min=1,number"`
+
+	Postgres struct {
+		Host string `json:"host" validate:"required,min=1"`
+		Port string `json:"port" validate:"required,min=1,number"`
+		User string `json:"user" validate:"required,min=1"`
+		DB   string `json:"db" validate:"required,min=1"`
+	} `json:"postgres" validate:"required"`
+
+	SMTP struct {
+		Host string `json:"host" validate:"required,min=1"`
+		Port string `json:"port" validate:"required,min=1,number"`
+		User string `json:"user" validate:"required,min=1"`
+	} `json:"smtp" validate:"required"`
 }
 
 func LoadConfig() (*Config, error) {
-	config := &Config{
-		Port:                  os.Getenv("PORT"),
-		PostgresHost:          os.Getenv("POSTGRES_HOST"),
-		PostgresPort:          os.Getenv("POSTGRES_PORT"),
-		PostgresUser:          os.Getenv("POSTGRES_USER"),
-		PostgresDB:            os.Getenv("POSTGRES_DB"),
-		PostgresPassword:      os.Getenv("POSTGRES_PASSWORD"),
-		SMTPHost:              os.Getenv("SMTP_HOST"),
-		SMTPPort:              os.Getenv("SMTP_PORT"),
-		SMTPUser:              os.Getenv("SMTP_USER"),
-		SMTPPassword:          os.Getenv("SMTP_PASSWORD"),
-		Env:                   os.Getenv("ENV"),
-		OnboardTokenValidMins: os.Getenv("ONBOARD_TOKEN_VALID_MINS"),
+	data, err := os.ReadFile("/etc/granger-config/config.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	if err := validateConfig(config); err != nil {
-		return nil, err
+	config := &Config{}
+	if err := json.Unmarshal(data, config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// Whatever can be validated by the struct tags, is done here. More
+	// validations continue to happen in the New() function
+	validate := validator.New()
+	if err := validate.Struct(config); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+
+	if config.Env != vetchi.ProdEnv && config.Env != vetchi.DevEnv {
+		return nil, fmt.Errorf(
+			"%q is not one of [%q, %q]",
+			config.Env,
+			vetchi.ProdEnv,
+			vetchi.DevEnv,
+		)
 	}
 
 	return config, nil
 }
 
-func validateConfig(config *Config) error {
-	if config.Port == "" {
-		return fmt.Errorf("PORT environment variable not set")
-	}
-
-	if config.PostgresHost == "" {
-		return fmt.Errorf("POSTGRES_HOST environment variable not set")
-	}
-
-	if config.PostgresPort == "" {
-		return fmt.Errorf("POSTGRES_PORT environment variable not set")
-	}
-
-	if config.PostgresUser == "" {
-		return fmt.Errorf("POSTGRES_USER environment variable not set")
-	}
-
-	if config.PostgresDB == "" {
-		return fmt.Errorf("POSTGRES_DB environment variable not set")
-	}
-
-	if config.PostgresPassword == "" {
-		return fmt.Errorf("POSTGRES_PASSWORD environment variable not set")
-	}
-
-	if config.SMTPHost == "" {
-		return fmt.Errorf("SMTP_HOST environment variable not set")
-	}
-
-	if config.SMTPPort == "" {
-		return fmt.Errorf("SMTP_PORT environment variable not set")
-	}
-
-	if config.SMTPUser == "" {
-		return fmt.Errorf("SMTP_USER environment variable not set")
-	}
-
-	if config.SMTPPassword == "" {
-		return fmt.Errorf("SMTP_PASSWORD environment variable not set")
-	}
-
-	_, err := strconv.Atoi(config.SMTPPort)
-	if err != nil {
-		return fmt.Errorf(
-			"SMTP_PORT environment variable is not a valid integer: %w",
-			err,
-		)
-	}
-
-	if config.Env != vetchi.ProdEnv && config.Env != vetchi.DevEnv &&
-		config.Env != vetchi.TestEnv {
-		return fmt.Errorf("ENV environment variable is not valid")
-	}
-
-	if config.OnboardTokenValidMins == "" {
-		return fmt.Errorf(
-			"ONBOARD_TOKEN_VALIDITY_MINUTES environment variable not set",
-		)
-	}
-
-	return nil
+type smtp struct {
+	host     string
+	port     int
+	user     string
+	password string
 }
 
 type Granger struct {
-	// These are configured using environment variables
-	port                  string
-	SMTPHost              string
-	SMTPPort              int
-	SMTPUser              string
-	SMTPPassword          string
-	env                   string
-	onboardTokenValidMins float64
+	// These are initialized from configmap
+	env              string
+	onboardTokenLife time.Duration
+	port             string
+	smtp             smtp
 
-	// These are configured programatically in NewGranger()
+	// These are initialized programatically in NewGranger()
 	db  db.DB
 	log *slog.Logger
 	wg  sync.WaitGroup
@@ -139,51 +95,56 @@ func NewGranger() (*Granger, error) {
 		return nil, err
 	}
 
-	pgConnStr := fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		config.PostgresHost, config.PostgresPort, config.PostgresUser,
-		config.PostgresDB, config.PostgresPassword)
+	pgPassword := os.Getenv("POSTGRES_PASSWORD")
+	if pgPassword == "" {
+		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
+	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
 	}))
 
-	pg, err := postgres.New(pgConnStr, logger)
+	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	if smtpPassword == "" {
+		return nil, fmt.Errorf("SMTP_PASSWORD not set")
+	}
+
+	pgConnStr := fmt.Sprintf(
+		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
+		config.Postgres.Host,
+		config.Postgres.Port,
+		config.Postgres.User,
+		config.Postgres.DB,
+		pgPassword,
+	)
+	db, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	smtpPort, err := strconv.Atoi(config.SMTPPort)
+	smtpPort, err := strconv.Atoi(config.SMTP.Port)
 	if err != nil {
-		// This is unlikely to happen as we already validated the
-		// SMTP_PORT environment variable earlier, but we'll check anyway.
-		return nil, fmt.Errorf(
-			"SMTP_PORT environment variable is not a valid integer: %w",
-			err,
-		)
+		return nil, fmt.Errorf("SMTP_PORT is invalid: %w", err)
 	}
 
-	tokenDuration, err := time.ParseDuration(
-		config.OnboardTokenValidMins,
-	)
+	tokenDuration, err := time.ParseDuration(config.OnboardTokenLife)
 	if err != nil {
-		// This is unlikely to happen as we already validated the
-		// ONBOARD_TOKEN_VALID_MINS environment variable earlier, but
-		// we'll check anyway.
-		return nil, fmt.Errorf("ONBOARD_TOKEN_VALID_MINS is invalid: %w", err)
+		return nil, fmt.Errorf("OnboardTokenLife is invalid: %w", err)
 	}
 
 	return &Granger{
-		port:                  fmt.Sprintf(":%s", config.Port),
-		SMTPHost:              config.SMTPHost,
-		SMTPPort:              smtpPort,
-		SMTPUser:              config.SMTPUser,
-		SMTPPassword:          config.SMTPPassword,
-		env:                   config.Env,
-		onboardTokenValidMins: tokenDuration.Minutes(),
+		env:  config.Env,
+		port: fmt.Sprintf(":%s", config.Port),
+		smtp: smtp{
+			host:     config.SMTP.Host,
+			port:     smtpPort,
+			user:     config.SMTP.User,
+			password: smtpPassword,
+		},
+		onboardTokenLife: tokenDuration,
 
-		db:  pg,
+		db:  db,
 		log: logger,
 	}, nil
 }
