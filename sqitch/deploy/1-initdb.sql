@@ -86,7 +86,7 @@ CREATE TABLE org_user_tokens (
     token TEXT PRIMARY KEY,
     org_user_id INTEGER REFERENCES org_users(id) NOT NULL,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
-    token_type session_token_types NOT NULL,
+    token_type token_types NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

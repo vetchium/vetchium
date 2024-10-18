@@ -155,6 +155,7 @@ Vetchi Team
 		EmailSubject:  subject,
 		EmailHTMLBody: htmlBody.String(),
 		EmailTextBody: textBody.String(),
+		EmailState:    db.EmailStatePending,
 	}
 
 	return email, nil
