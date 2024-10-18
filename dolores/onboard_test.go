@@ -17,14 +17,6 @@ import (
 )
 
 var _ = Describe("GetOnboardStatus", func() {
-	type Message struct {
-		ID string `json:"ID"`
-	}
-
-	type MailPitResponse struct {
-		Messages []Message `json:"messages"`
-	}
-
 	var _ = Describe("GetOnboardStatus", func() {
 		It("returns the onboard status", func() {
 			var tests = []struct {

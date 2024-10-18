@@ -3,7 +3,11 @@ package dolores
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"regexp"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -139,6 +143,91 @@ var _ = Describe("Employer Signin", func() {
 			err = json.NewDecoder(resp.Body).Decode(&signinResp)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(signinResp.Token).ShouldNot(BeEmpty())
+
+			// Wait for granger to email the tfa code
+			<-time.After(2 * time.Minute)
+
+			// Get the tfa code from the email by querying mailpit
+			fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
+			<-time.After(3 * time.Minute)
+			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
+
+			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			fmt.Fprintf(GinkgoWriter, "URL: %s\n", url)
+
+			mailPitReq1, err := http.NewRequest("GET", url, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq1.Header.Add("Content-Type", "application/json")
+
+			mailPitResp1, err := http.DefaultClient.Do(mailPitReq1)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp1.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err := io.ReadAll(mailPitResp1.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			fmt.Fprintf(GinkgoWriter, "Body: %s\n", string(body))
+
+			var mailPitResp1Obj MailPitResponse
+			err = json.Unmarshal(body, &mailPitResp1Obj)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(len(mailPitResp1Obj.Messages)).Should(BeNumerically(">=", 1))
+
+			mailURL := "http://localhost:8025/api/v1/message/" + mailPitResp1Obj.Messages[0].ID
+			fmt.Fprintf(GinkgoWriter, "Mail URL: %s\n", mailURL)
+
+			mailPitReq2, err := http.NewRequest("GET", mailURL, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq2.Header.Add("Content-Type", "application/json")
+
+			mailPitResp2, err := http.DefaultClient.Do(mailPitReq2)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp2.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err = io.ReadAll(mailPitResp2.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			fmt.Fprintf(GinkgoWriter, "Mail Body: %s\n", string(body))
+
+			// Extracting the token from the mail body
+			re := regexp.MustCompile(`Token: <b>([a-zA-Z0-9]+)</b>`)
+			tokens := re.FindAllStringSubmatch(string(body), -1)
+			Expect(len(tokens)).Should(BeNumerically(">=", 1))
+
+			token := tokens[0][1] // The token is captured in the first group
+			fmt.Fprintf(GinkgoWriter, "Token: %s\n", token)
+
+			// TFA with the two tokens
+			tfaReqBody, err := json.Marshal(
+				vetchi.EmployerTFARequest{
+					TGT:     signinResp.Token,
+					TFACode: token,
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			tfaReq, err := http.NewRequest(
+				http.MethodPost,
+				serverURL+"/employer/tfa",
+				bytes.NewBuffer(tfaReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			tfaReq.Header.Set("Content-Type", "application/json")
+
+			tfaResp, err := http.DefaultClient.Do(tfaReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(tfaResp.StatusCode).Should(Equal(http.StatusOK))
+
+			var tfaRespObj vetchi.EmployerTFAResponse
+			err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(tfaRespObj.SessionToken).ShouldNot(BeEmpty())
+
+			fmt.Fprintf(
+				GinkgoWriter,
+				"Session Token: %s\n",
+				tfaRespObj.SessionToken,
+			)
 		})
 	})
 })
