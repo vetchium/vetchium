@@ -355,7 +355,7 @@ VALUES ($1, $2, $3, $4, $5)
 
 	employerUpdateQuery := `
 UPDATE employers
-SET employer_state = $1, onboard_secret_token = NULL, token_valid_till = NULL
+SET employer_state = $1, token_valid_till = NULL
 WHERE id = $2
 `
 	_, err = tx.Exec(

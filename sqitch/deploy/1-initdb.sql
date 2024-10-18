@@ -38,6 +38,8 @@ CREATE TABLE employers (
     client_id_type client_id_types NOT NULL,
     employer_state employer_states NOT NULL,
     onboard_admin_email TEXT NOT NULL,
+
+    -- TODO: Perhaps we can move this to org_user_tokens ?
     onboard_secret_token TEXT,
     token_valid_till TIMESTAMP WITH TIME ZONE,
 
