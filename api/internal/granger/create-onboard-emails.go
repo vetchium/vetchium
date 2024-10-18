@@ -58,11 +58,16 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 		case <-time.After(1 * time.Minute):
 			ctx := context.Background()
 			onboardInfo, err := g.db.DeQOnboard(ctx)
-			if err != nil || onboardInfo == nil {
+			if err != nil {
 				continue
 			}
 
-			g.log.Info("onboard invites", "employer", onboardInfo.EmployerID)
+			if onboardInfo == nil {
+				g.log.Debug("no pending employer onboard email generation")
+				continue
+			}
+
+			g.log.Info("onboard invites", "onboardInfo", onboardInfo)
 
 			// TODO: Should we read the length from a config?
 			token := util.RandomString(vetchi.OnBoardTokenLenBytes)

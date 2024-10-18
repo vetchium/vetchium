@@ -44,7 +44,7 @@ INSERT INTO public.employers (
     'DOMAIN',
     'ONBOARDED',
     'admin@domain-onboarded.example',
-    NULL,
+    'blah',
     timezone('UTC'::text, now()) + interval '1 day', 
     11, 
     timezone('UTC'::text, now())

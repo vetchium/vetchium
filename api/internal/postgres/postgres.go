@@ -133,7 +133,9 @@ func (p *PG) DeQOnboard(
 	query := `
 SELECT e.id, e.onboard_admin_email, d.domain_name
 FROM employers e, domains d
-WHERE e.employer_state = $1 AND e.onboard_secret_token IS NULL
+WHERE 	e.employer_state = $1 AND
+		e.onboard_secret_token IS NULL AND
+		d.employer_id = e.id
 ORDER BY e.created_at ASC
 LIMIT 1
 `
@@ -383,12 +385,7 @@ func (p *PG) PruneTokens(ctx context.Context) error {
 	// will not be set to future in the db server.
 
 	queries := []string{
-		`
-UPDATE employers
-SET onboard_secret_token = NULL
-WHERE onboard_secret_token IS NOT NULL AND token_valid_till < NOW()
-`,
-		`DELETE FROM org_user_sessions WHERE token_valid_till < NOW()`,
+		`DELETE FROM org_user_tokens WHERE token_valid_till < NOW()`,
 	}
 
 	for _, q := range queries {
