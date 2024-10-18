@@ -96,9 +96,9 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employerSigninResp := vetchi.EmployerSignInResponse{}
-
-	err = json.NewEncoder(w).Encode(employerSigninResp)
+	err = json.NewEncoder(w).Encode(vetchi.EmployerSignInResponse{
+		Token: tgToken.Token,
+	})
 	if err != nil {
 		h.log.Error("failed to encode employer signin response", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

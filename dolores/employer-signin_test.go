@@ -134,6 +134,11 @@ var _ = Describe("Employer Signin", func() {
 			resp, err := http.DefaultClient.Do(signinReq)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			var signinResp vetchi.EmployerSignInResponse
+			err = json.NewDecoder(resp.Body).Decode(&signinResp)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(signinResp.Token).ShouldNot(BeEmpty())
 		})
 	})
 })
