@@ -51,9 +51,8 @@ type OrgUserCreds struct {
 	Email    string
 }
 
-type OrgUserSession struct {
-	OrgUserID           int64
-	SessionToken        string
-	SessionValidityMins float64
-	TokenType           SessionTokenType
+type EmployerTFA struct {
+	EmailToken OrgUserToken
+	TGToken    OrgUserToken
+	Email      Email
 }

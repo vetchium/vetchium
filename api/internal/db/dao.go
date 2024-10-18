@@ -103,9 +103,18 @@ type OrgUser struct {
 	CreatedAt    time.Time    `db:"created_at"`
 }
 
-type SessionTokenType string
+type TokenType string
 
 const (
-	UserSessionToken SessionTokenType = "USER"
-	TGToken          SessionTokenType = "TGT"
+	UserSessionToken TokenType = "USER_SESSION"
+	TGToken          TokenType = "TGT"
+	EmailToken       TokenType = "EMAIL"
 )
+
+type OrgUserToken struct {
+	Token          string    `db:"token"`
+	OrgUserID      int64     `db:"org_user_id"`
+	TokenValidTill time.Time `db:"token_valid_till"`
+	TokenType      TokenType `db:"token_type"`
+	CreatedAt      time.Time `db:"created_at"`
+}

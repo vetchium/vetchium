@@ -489,14 +489,33 @@ components:
         password:
           $ref: "#/components/schemas/Password"
           description: The password
-        remember_me:
-          default: false
-          description: If set, the session may be valid for a long time (like 1 year)
-          type: boolean
     EmployerSignInResponse:
       properties:
         token:
           description: The authentication token
+          type: string
+    EmployerTFARequest:
+      properties:
+        tgt:
+          description: The TGT
+          type: string
+        tfa_code:
+          description: The code from the TFA email
+          type: string
+        remember_me:
+          default: false
+          description: If set, the session may be valid for a long time (like 1 year)
+          type: boolean
+      required:
+        - tfa_code
+    EmployerTFAResponse:
+      properties:
+        session_token:
+          description: The token for the session
+          type: string
+        valid_till:
+          description: The time till when the token is valid
+          format: date-time
           type: string
     EvaluationReport:
       properties:
@@ -943,6 +962,25 @@ components:
         language_id:
           description: The language code for the language on which the work history should be fetched. Should be a valid IETF BCP 47 language tag. If the company has not set a name for the requested language, then the name in the default language of the company will be returned.
           type: string
+    HubTFARequest:
+      properties:
+        tgt:
+          description: The TGT
+          type: string
+        tfa_code:
+          description: The code from the TFA email
+          type: string
+        remember_me:
+          default: false
+          description: If set, the session may be valid for a long time (like 1 year)
+          type: boolean
+      required:
+        - tfa_code
+    HubTFAResponse:
+      properties:
+        session_token:
+          description: The token for the session
+          type: string
     Interview:
       description: Interview
       properties:
@@ -1053,10 +1091,6 @@ components:
       properties:
         tfa_token:
           description: The token for TFA
-          type: string
-        valid_till:
-          description: The time till when the token is valid
-          format: date-time
           type: string
     MyCandidacy:
       description: The Candidacy object that will be responded to /hub/get-my-candidacies. The Candidacies will be sorted by created_at in descending order.
@@ -1317,22 +1351,6 @@ components:
           type: string
         title:
           type: string
-    TFAuthRequest:
-      properties:
-        tfa_code:
-          description: The code from the TFA email
-          type: string
-      required:
-        - tfa_code
-    TFAuthResponse:
-      properties:
-        session_token:
-          description: The token for the session
-          type: string
-        valid_till:
-          description: The time till when the token is valid
-          format: date-time
-          type: string
     UpdateInterviewFeedbackRequest:
       description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
       properties:
@@ -1453,10 +1471,6 @@ components:
             write: Grants write access
           tokenUrl: https://example.com/oauth/token
       type: oauth2
-    TFAuth:
-      bearerFormat: string
-      scheme: bearer
-      type: http
 paths:
   /employer/add-cost-center:
     post:
@@ -2184,6 +2198,26 @@ paths:
       summary: SignIn
       tags:
         - Employer
+  /employer/tfa:
+    post:
+      description: TFA for the employer signin flow
+      operationId: employer-tfa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployerTFARequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployerTFAResponse"
+          description: OK
+      summary: TFA
+      tags:
+        - Employer
   /employer/update-interview-feedback:
     post:
       description: Update the feedback for an interview.
@@ -2542,18 +2576,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TFAuthRequest"
+              $ref: "#/components/schemas/HubTFARequest"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TFAuthResponse"
+                $ref: "#/components/schemas/HubTFAResponse"
           description: TFA successful
         "401":
           description: Unauthorized - Invalid credentials
-      security:
-        - TFAuth: []
       summary: Two Factor Authentication
       tags:
         - Hub

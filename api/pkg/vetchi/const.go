@@ -12,7 +12,8 @@ const (
 
 const (
 	OnBoardTokenLenBytes = 32
-	SessionTokenLenBytes = 32
+	TGTokenLenBytes      = 32
+	EmailTokenLenBytes   = 32
 )
 
 const (

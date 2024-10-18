@@ -452,31 +452,15 @@ WHERE 	ou.email = $1 AND
 	return orgUserAuth, nil
 }
 
-func (p *PG) CreateOrgUserSession(
+func (p *PG) InitOrgUserTFA(
 	ctx context.Context,
-	orgUserSession db.OrgUserSession,
+	orgUserTFA db.OrgUserTFA,
 ) error {
-	query := `
-INSERT INTO org_user_sessions (
-	session_token,
-	org_user_id,
-	token_type,
-	token_valid_till
-)
-VALUES ($1, $2, NOW() + interval '1 minute' * $3)
-`
-	_, err := p.pool.Exec(
-		ctx,
-		query,
-		orgUserSession.SessionToken,
-		orgUserSession.OrgUserID,
-		orgUserSession.TokenType,
-		orgUserSession.SessionValidityMins,
-	)
+	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to create org user session", "error", err)
+		p.log.Error("failed to begin transaction", "error", err)
 		return err
 	}
+	defer tx.Rollback(ctx)
 
-	return nil
 }

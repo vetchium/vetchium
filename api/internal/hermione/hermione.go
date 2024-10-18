@@ -140,6 +140,7 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
 	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
 	http.HandleFunc("/employer/signin", h.employerSignin)
+	http.HandleFunc("/employer/tfa", h.employerTFA)
 
 	return http.ListenAndServe(h.port, nil)
 }

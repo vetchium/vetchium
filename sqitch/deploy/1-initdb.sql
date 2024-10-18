@@ -81,9 +81,9 @@ CREATE TABLE org_users (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TYPE session_token_types AS ENUM ('USER', 'TGT');
-CREATE TABLE org_user_sessions (
-    session_token TEXT PRIMARY KEY,
+CREATE TYPE token_types AS ENUM ('USER_SESSION', 'TGT', 'EMAIL');
+CREATE TABLE org_user_tokens (
+    token TEXT PRIMARY KEY,
     org_user_id INTEGER REFERENCES org_users(id) NOT NULL,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type session_token_types NOT NULL,

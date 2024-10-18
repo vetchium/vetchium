@@ -188,14 +188,22 @@ const (
 type EmailAddress string
 
 type EmployerSignInRequest struct {
-	ClientID   string       `json:"client_id"             validate:"required,client_id"`
-	Email      EmailAddress `json:"email"                 validate:"required,email"`
-	Password   Password     `json:"password"              validate:"required,password"`
-	RememberMe bool         `json:"remember_me,omitempty"`
+	ClientID string       `json:"client_id" validate:"required,client_id"`
+	Email    EmailAddress `json:"email"     validate:"required,email"`
+	Password Password     `json:"password"  validate:"required,password"`
 }
 
 type EmployerSignInResponse struct {
 	Token string `json:"token"`
+}
+
+type EmployerTFARequest struct {
+	TFACode    string `json:"tfa_code"              validate:"required"`
+	RememberMe bool   `json:"remember_me,omitempty"`
+}
+
+type EmployerTFAResponse struct {
+	SessionToken string `json:"session_token"`
 }
 
 type EvaluationReport struct {
@@ -365,6 +373,15 @@ type GetUserRequest struct {
 
 type GetWorkHistoryRequest struct {
 	LanguageID string `json:"language_id" validate:"required"`
+}
+
+type HubTFAuthRequest struct {
+	TFACode    string `json:"tfa_code"              validate:"required"`
+	RememberMe bool   `json:"remember_me,omitempty"`
+}
+
+type HubTFAuthResponse struct {
+	SessionToken string `json:"session_token"`
 }
 
 type Interview struct {
@@ -539,15 +556,6 @@ type ShortlistedOpening struct {
 	HiringManagerEmail string `json:"hiring_manager_email"`
 	RecruiterName      string `json:"recruiter_name"`
 	RecruiterEmail     string `json:"recruiter_email"`
-}
-
-type TFAuthRequest struct {
-	TFACode string `json:"tfa_code" validate:"required"`
-}
-
-type TFAuthResponse struct {
-	SessionToken string    `json:"session_token"`
-	ValidTill    time.Time `json:"valid_till"`
 }
 
 type UpdateInterviewFeedbackRequest struct {

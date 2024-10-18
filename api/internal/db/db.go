@@ -14,7 +14,7 @@ type DB interface {
 	// Used by hermione and granger
 
 	// Used by hermione
-	CreateOrgUserSession(context.Context, OrgUserSession) error
+	InitEmployerTFA(context.Context, EmployerTFA) error
 	InitEmployerAndDomain(context.Context, Employer, Domain) error
 	GetEmployer(ctx context.Context, clientID string) (Employer, error)
 	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)

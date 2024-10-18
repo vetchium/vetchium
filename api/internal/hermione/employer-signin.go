@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -56,14 +57,28 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
-	err = h.db.CreateOrgUserSession(
+	tgToken := db.OrgUserToken{
+		Token:          util.RandomString(vetchi.TGTokenLenBytes),
+		OrgUserID:      orgUserAuth.OrgUserID,
+		TokenValidTill: time.Now().Add(h.employer.tgtLife),
+		TokenType:      db.TGToken,
+	}
+
+	emailToken := db.OrgUserToken{
+		Token:          util.RandomString(vetchi.EmailTokenLenBytes),
+		OrgUserID:      orgUserAuth.OrgUserID,
+		TokenValidTill: time.Now().Add(h.employer.tgtLife),
+		TokenType:      db.EmailToken,
+	}
+
+	var email db.Email
+
+	err = h.db.InitEmployerTFA(
 		r.Context(),
-		db.OrgUserSession{
-			OrgUserID:           orgUserAuth.OrgUserID,
-			SessionToken:        sessionToken,
-			SessionValidityMins: h.employer.tgtLife.Minutes(),
-			TokenType:           db.TGToken,
+		db.EmployerTFA{
+			TGToken:    tgToken,
+			EmailToken: emailToken,
+			Email:      email,
 		},
 	)
 	if err != nil {
@@ -71,9 +86,7 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employerSigninResp := vetchi.EmployerSignInResponse{
-		Token: sessionToken,
-	}
+	employerSigninResp := vetchi.EmployerSignInResponse{}
 
 	err = json.NewEncoder(w).Encode(employerSigninResp)
 	if err != nil {
