@@ -39,6 +39,7 @@ type OnboardReq struct {
 
 type OrgUserAuth struct {
 	OrgUserID     int64
+	OrgUserEmail  string
 	EmployerID    int64
 	OrgUserRole   OrgUserRole
 	PasswordHash  string

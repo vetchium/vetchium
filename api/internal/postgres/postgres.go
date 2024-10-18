@@ -414,6 +414,7 @@ func (p *PG) GetOrgUserAuth(
 	query := `
 SELECT
 	ou.id,
+	ou.email,
 	ou.employer_id,
 	ou.org_user_role,
 	ou.password_hash,
@@ -434,6 +435,7 @@ WHERE 	ou.email = $1 AND
 		orgUserCreds.ClientID,
 	).Scan(
 		&orgUserAuth.OrgUserID,
+		&orgUserAuth.OrgUserEmail,
 		&orgUserAuth.EmployerID,
 		&orgUserAuth.OrgUserRole,
 		&orgUserAuth.PasswordHash,
@@ -452,9 +454,9 @@ WHERE 	ou.email = $1 AND
 	return orgUserAuth, nil
 }
 
-func (p *PG) InitOrgUserTFA(
+func (p *PG) InitEmployerTFA(
 	ctx context.Context,
-	orgUserTFA db.OrgUserTFA,
+	employerTFA db.EmployerTFA,
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
@@ -463,4 +465,68 @@ func (p *PG) InitOrgUserTFA(
 	}
 	defer tx.Rollback(ctx)
 
+	_, err = tx.Exec(
+		ctx,
+		`
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+VALUES ($1, $2, $3, $4)
+`,
+		employerTFA.TGToken.Token,
+		employerTFA.TGToken.OrgUserID,
+		employerTFA.TGToken.TokenValidTill,
+		employerTFA.TGToken.TokenType,
+	)
+	if err != nil {
+		p.log.Error("failed to insert TGT", "error", err)
+		return err
+	}
+
+	_, err = tx.Exec(
+		ctx,
+		`
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+VALUES ($1, $2, $3, $4)
+`,
+		employerTFA.EmailToken.Token,
+		employerTFA.EmailToken.OrgUserID,
+		employerTFA.EmailToken.TokenValidTill,
+		employerTFA.EmailToken.TokenType,
+	)
+	if err != nil {
+		p.log.Error("failed to insert EMAILToken", "error", err)
+		return err
+	}
+
+	_, err = tx.Exec(
+		ctx,
+		`
+INSERT INTO emails (
+	email_from,
+	email_to,
+	email_subject,
+	email_html_body,
+	email_text_body,
+	email_state
+)
+VALUES ($1, $2, $3, $4, $5, $6)
+`,
+		employerTFA.Email.EmailFrom,
+		employerTFA.Email.EmailTo,
+		employerTFA.Email.EmailSubject,
+		employerTFA.Email.EmailHTMLBody,
+		employerTFA.Email.EmailTextBody,
+		employerTFA.Email.EmailState,
+	)
+	if err != nil {
+		p.log.Error("failed to insert Email", "error", err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Error("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
 }

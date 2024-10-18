@@ -1,9 +1,12 @@
 package hermione
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"html/template"
 	"net/http"
+	ttmpl "text/template"
 	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
@@ -64,14 +67,21 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		TokenType:      db.TGToken,
 	}
 
+	emailTokenString := util.RandomString(vetchi.EmailTokenLenBytes)
 	emailToken := db.OrgUserToken{
-		Token:          util.RandomString(vetchi.EmailTokenLenBytes),
+		Token:          emailTokenString,
 		OrgUserID:      orgUserAuth.OrgUserID,
 		TokenValidTill: time.Now().Add(h.employer.tgtLife),
 		TokenType:      db.EmailToken,
 	}
 
-	var email db.Email
+	// We can even use the employerSigninReq.Email here but this
+	// feels better.
+	email, err := generateEmail(orgUserAuth.OrgUserEmail, emailTokenString)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
 
 	err = h.db.InitEmployerTFA(
 		r.Context(),
@@ -96,4 +106,56 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func generateEmail(orgUserEmail, token string) (db.Email, error) {
+	const textMailTemplate = `
+Hi there,
+
+Please use the following token to signin to Vetchi.
+
+Token: {{.Token}}
+
+Thanks,
+Vetchi Team
+`
+
+	const htmlMailTemplate = `Hi,
+<p>Please use the following token to signin to Vetchi.</p>
+<p>Token: <b>{{.Token}}</b></p>
+<p>Thanks,</p>
+<p>Vetchi Team</p>
+`
+
+	const subject = "Vetchi Two Factor Authentication Token"
+
+	var textBody bytes.Buffer
+	err := ttmpl.Must(
+		ttmpl.New("text").Parse(textMailTemplate),
+	).Execute(&textBody, map[string]string{
+		"Token": token,
+	})
+	if err != nil {
+		return db.Email{}, err
+	}
+
+	var htmlBody bytes.Buffer
+	err = template.Must(
+		template.New("html").Parse(htmlMailTemplate),
+	).Execute(&htmlBody, map[string]string{
+		"Token": token,
+	})
+	if err != nil {
+		return db.Email{}, err
+	}
+
+	email := db.Email{
+		EmailFrom:     vetchi.EmailFrom,
+		EmailTo:       []string{orgUserEmail},
+		EmailSubject:  subject,
+		EmailHTMLBody: htmlBody.String(),
+		EmailTextBody: textBody.String(),
+	}
+
+	return email, nil
 }
