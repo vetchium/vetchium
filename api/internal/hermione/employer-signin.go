@@ -104,8 +104,6 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func generateEmail(orgUserEmail, token string) (db.Email, error) {

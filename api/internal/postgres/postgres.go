@@ -302,6 +302,7 @@ SELECT e.id, e.onboard_admin_email
 FROM employers e, domains d
 WHERE
 	e.onboard_secret_token = $1 AND
+	e.token_valid_till > NOW() AND
 	d.domain_name = $2 AND
 	d.employer_id = e.id AND
 	e.employer_state = $3
@@ -361,9 +362,7 @@ VALUES ($1, $2, $3, $4, $5)
 	}
 
 	employerUpdateQuery := `
-UPDATE employers
-SET employer_state = $1, token_valid_till = NULL
-WHERE id = $2
+UPDATE employers SET employer_state = $1 WHERE id = $2
 `
 	_, err = tx.Exec(
 		ctx,

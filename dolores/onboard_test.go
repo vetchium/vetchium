@@ -129,7 +129,7 @@ var _ = Describe("GetOnboardStatus", func() {
 			// Test with an invalid password
 			setOnboardPasswordBody, err := json.Marshal(
 				vetchi.SetOnboardPasswordRequest{
-					ClientID: "domain-onboarded.example",
+					ClientID: "secretsapp.com",
 					Password: "pass",
 					Token:    token,
 				},
