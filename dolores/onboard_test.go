@@ -155,7 +155,7 @@ var _ = Describe("GetOnboardStatus", func() {
 			// Set password for the admin
 			setOnboardPasswordBody, err = json.Marshal(
 				vetchi.SetOnboardPasswordRequest{
-					ClientID: "domain-onboarded.example",
+					ClientID: "secretsapp.com",
 					Password: "NewPassword123$",
 					Token:    token,
 				},
@@ -174,7 +174,7 @@ var _ = Describe("GetOnboardStatus", func() {
 
 			// Get Onboard Status should now return DomainOnboarded
 			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
-				ClientID: "domain-onboarded.example",
+				ClientID: "secretsapp.com",
 			}
 			getOnboardStatusBody, err := json.Marshal(getOnboardStatusRequest)
 			Expect(err).ShouldNot(HaveOccurred())
