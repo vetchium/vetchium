@@ -300,7 +300,11 @@ func (p *PG) OnboardAdmin(
 	employerQuery := `
 SELECT e.id, e.onboard_admin_email
 FROM employers e, domains d
-WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
+WHERE
+	e.onboard_secret_token = $1 AND
+	d.domain_name = $2 AND
+	d.employer_id = e.id AND
+	e.employer_state = $3
 `
 
 	var employerID int64
@@ -310,6 +314,7 @@ WHERE e.onboard_secret_token = $1 AND d.domain_name = $2
 		employerQuery,
 		onboardReq.Token,
 		onboardReq.DomainName,
+		db.OnboardPendingEmployerState,
 	).Scan(&employerID, &adminEmailAddr)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
