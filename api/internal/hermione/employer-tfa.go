@@ -20,6 +20,13 @@ func (h *Hermione) employerTFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Validate token
+	// TODO: Validate incoming tokens and generate a session token
+	var employerTFAResponse vetchi.EmployerTFAResponse
+	employerTFAResponse.SessionToken = "TODO: Hardcoded session token"
 
+	err = json.NewEncoder(w).Encode(employerTFAResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
