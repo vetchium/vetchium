@@ -36,7 +36,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 				err = g.db.UpdateEmailState(
 					ctx,
 					db.EmailStateChange{
-						EmailDBKey: email.ID,
+						EmailDBKey: email.EmailKey,
 						EmailState: db.EmailStateProcessed,
 					},
 				)
@@ -51,7 +51,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 
 func (g *Granger) sendEmail(email db.Email) error {
 	if len(email.EmailTo) == 0 {
-		g.log.Error("Email has no recipients", "email", email.ID)
+		g.log.Error("Email has no recipients", "email", email.EmailKey)
 		return errors.New("email has no recipients")
 	}
 
@@ -82,7 +82,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 	m.SetBodyString(mail.TypeTextHTML, email.EmailHTMLBody)
 	m.AddAlternativeString(mail.TypeTextPlain, email.EmailTextBody)
 
-	g.log.Info("sending email", "email", email.ID, "env", g.env)
+	g.log.Info("sending email", "email", email.EmailKey, "env", g.env)
 	var c *mail.Client
 	if g.env == vetchi.ProdEnv {
 		c, err = mail.NewClient(
@@ -114,7 +114,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 		return err
 	}
 
-	g.log.Info("email sent", "email", email.ID, "to", email.EmailTo)
+	g.log.Info("email sent", "email", email.EmailKey, "to", email.EmailTo)
 
 	return nil
 }

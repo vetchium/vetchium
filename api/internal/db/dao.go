@@ -62,7 +62,7 @@ type HubUser struct {
 }
 
 type Email struct {
-	ID            uuid.UUID          `db:"id"`
+	EmailKey      uuid.UUID          `db:"email_key"`
 	EmailFrom     string             `db:"email_from"`
 	EmailTo       []string           `db:"email_to"`
 	EmailCC       []string           `db:"email_cc"`

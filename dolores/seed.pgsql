@@ -6,7 +6,7 @@ BEGIN;
 --- org_users table primary key uuids should end in 5 digits, 40001, 40002, 40003, etc
 
 INSERT INTO public.emails (
-    id,
+    email_key,
     email_from,
     email_to,
     email_cc,

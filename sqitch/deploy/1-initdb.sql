@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
 
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 CREATE TABLE emails(
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	email_key UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	email_from TEXT NOT NULL,
 	email_to TEXT ARRAY NOT NULL,
 	email_cc TEXT ARRAY,
@@ -46,7 +46,7 @@ CREATE TABLE employers (
 
     --- Despite its name, it should not be confused with an email address. 
     --- This is the rowid in the 'emails' table for the welcome email sent.
-    onboard_email_id UUID REFERENCES emails(id),
+    onboard_email_id UUID REFERENCES emails(email_key),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );

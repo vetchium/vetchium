@@ -184,7 +184,7 @@ INSERT INTO emails (
 	email_state
 )
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id
+RETURNING email_key
 `,
 		onboardEmailInfo.Email.EmailFrom,
 		onboardEmailInfo.Email.EmailTo,
@@ -231,7 +231,7 @@ WHERE id = $4
 func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {
 	query := `
 SELECT
-	id,
+	email_key,
 	email_from,
 	email_to,
 	email_subject,
@@ -253,7 +253,7 @@ LIMIT 10
 	for rows.Next() {
 		var email db.Email
 		err := rows.Scan(
-			&email.ID,
+			&email.EmailKey,
 			&email.EmailFrom,
 			&email.EmailTo,
 			&email.EmailSubject,
@@ -278,7 +278,7 @@ func (p *PG) UpdateEmailState(
 	query := `
 UPDATE emails
 SET email_state = $1, processed_at = NOW()
-WHERE id = $2
+WHERE email_key = $2
 `
 	_, err := p.pool.Exec(
 		ctx,
