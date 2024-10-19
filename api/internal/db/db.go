@@ -16,9 +16,11 @@ type DB interface {
 	// Used by hermione
 	InitEmployerTFA(context.Context, EmployerTFA) error
 	InitEmployerAndDomain(context.Context, Employer, Domain) error
-	GetEmployer(ctx context.Context, clientID string) (Employer, error)
+	GetEmployer(c context.Context, clientID string) (Employer, error)
 	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
+	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUser, error)
 	OnboardAdmin(context.Context, OnboardReq) error
+	CreateOrgUserToken(context.Context, OrgUserToken) error
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

@@ -531,3 +531,61 @@ VALUES ($1, $2, $3, $4, $5, $6)
 
 	return nil
 }
+
+func (p *PG) GetOrgUserByToken(
+	ctx context.Context,
+	tfaCode, tgt string,
+) (db.OrgUser, error) {
+	query := `
+SELECT
+	ou.id,
+	ou.email,
+	ou.employer_id,
+	ou.org_user_role,
+	ou.org_user_state
+FROM org_user_tokens out, org_users ou
+WHERE
+	out.token = $1 AND out.token_type = 'EMAIL' AND
+	out.token = $2 AND out.token_type = 'TGT' AND
+	ou.id = out.org_user_id
+`
+
+	var orgUser db.OrgUser
+	err := p.pool.QueryRow(
+		ctx,
+		query, tfaCode, tgt).Scan()
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.OrgUser{}, db.ErrNoOrgUser
+		}
+
+		p.log.Error("failed to query org user by token", "error", err)
+		return db.OrgUser{}, err
+	}
+
+	return orgUser, nil
+}
+
+func (p *PG) CreateOrgUserToken(
+	ctx context.Context,
+	orgUserToken db.OrgUserToken,
+) error {
+	query := `
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+VALUES ($1, $2, $3, $4)
+`
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		orgUserToken.Token,
+		orgUserToken.OrgUserID,
+		orgUserToken.TokenValidTill,
+		orgUserToken.TokenType,
+	)
+	if err != nil {
+		p.log.Error("failed to create org user token", "error", err)
+		return err
+	}
+
+	return nil
+}

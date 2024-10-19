@@ -2,8 +2,12 @@ package hermione
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"time"
 
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -20,7 +24,34 @@ func (h *Hermione) employerTFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Validate incoming tokens and generate a session token
+	orgUser, err := h.db.GetOrgUserByToken(
+		r.Context(),
+		employerTFARequest.TFACode,
+		employerTFARequest.TGT,
+	)
+	if err != nil {
+		if errors.Is(err, db.ErrNoOrgUser) {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
+	validUntil := time.Hour * 12
+	if employerTFARequest.RememberMe {
+		validUntil = time.Hour * 24 * 365 // 1 year
+	}
+
+	err = h.db.CreateOrgUserToken(r.Context(), db.OrgUserToken{
+		Token:          sessionToken,
+		OrgUserID:      orgUser.ID,
+		TokenValidTill: time.Now().Add(validUntil),
+		TokenType:      db.UserSessionToken,
+	})
+
 	var employerTFAResponse vetchi.EmployerTFAResponse
 	employerTFAResponse.SessionToken = "TODO: Hardcoded session token"
 

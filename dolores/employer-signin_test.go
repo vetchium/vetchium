@@ -218,12 +218,6 @@ var _ = Describe("Employer Signin", func() {
 			err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(tfaRespObj.SessionToken).ShouldNot(BeEmpty())
-
-			fmt.Fprintf(
-				GinkgoWriter,
-				"Session Token: %s\n",
-				tfaRespObj.SessionToken,
-			)
 		})
 	})
 })
