@@ -17,6 +17,12 @@ var (
 	ErrNoOrgUser            = errors.New("org user not found")
 )
 
+type CostCenterReq struct {
+	Name      string
+	Notes     string
+	OrgUserID uuid.UUID
+}
+
 type EmailStateChange struct {
 	EmailDBKey uuid.UUID
 	EmailState EmailState

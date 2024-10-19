@@ -137,10 +137,16 @@ func NewHermione() (*Hermione, error) {
 }
 
 func (h *Hermione) Run() error {
+	// Auth related endpoints
 	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
 	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
 	http.HandleFunc("/employer/signin", h.employerSignin)
 	http.HandleFunc("/employer/tfa", h.employerTFA)
+
+	// CostCenter related endpoints
+	// TODO: Add handler chaining to protect these endpoints and for rbac
+	http.HandleFunc("/employer/add-cost-center", h.addCostCenter)
+	http.HandleFunc("/employer/cost-centers", h.getCostCenters)
 
 	return http.ListenAndServe(h.port, nil)
 }

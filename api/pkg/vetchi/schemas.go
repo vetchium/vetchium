@@ -10,7 +10,7 @@ type AddCostCenterRequest struct {
 }
 
 type AddCostCenterResponse struct {
-	CostCenterID string `json:"cost_center_id"`
+	CostCenterName string `json:"cost_center_name"`
 }
 
 type AddLocationRequest struct {

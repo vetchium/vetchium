@@ -94,6 +94,14 @@ type Domain struct {
 	CreatedAt   time.Time   `db:"created_at"`
 }
 
+type OrgCostCenter struct {
+	ID             uuid.UUID `db:"id"`
+	CostCenterName string    `db:"cost_center_name"`
+	Notes          string    `db:"notes"`
+	EmployerID     uuid.UUID `db:"employer_id"`
+	CreatedAt      time.Time `db:"created_at"`
+}
+
 type OrgUser struct {
 	ID           uuid.UUID    `db:"id"`
 	Email        string       `db:"email"`

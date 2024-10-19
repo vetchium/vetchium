@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 // Create a new qo.Struct for passing parameters to the db functions, if any
@@ -20,6 +22,7 @@ type DB interface {
 	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
 	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUser, error)
 	OnboardAdmin(context.Context, OnboardReq) error
+	CreateCostCenter(context.Context, CostCenterReq) (uuid.UUID, error)
 	CreateOrgUserToken(context.Context, OrgUserToken) error
 
 	// Used by granger

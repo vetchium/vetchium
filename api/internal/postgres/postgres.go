@@ -597,3 +597,27 @@ VALUES ($1, $2, $3, $4)
 
 	return nil
 }
+
+func (p *PG) CreateCostCenter(
+	ctx context.Context,
+	costCenterReq db.CostCenterReq,
+) (uuid.UUID, error) {
+	query := `
+INSERT INTO org_cost_centers (cost_center_name, notes, employer_id)
+VALUES ($1, $2, $3)
+RETURNING id
+`
+	var costCenterID uuid.UUID
+	err := p.pool.QueryRow(
+		ctx, query,
+		costCenterReq.Name,
+		costCenterReq.Notes,
+		costCenterReq.OrgUserID,
+	).Scan(&costCenterID)
+	if err != nil {
+		p.log.Error("failed to create cost center", "error", err)
+		return uuid.UUID{}, err
+	}
+
+	return costCenterID, nil
+}
