@@ -144,15 +144,12 @@ var _ = Describe("Employer Signin", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(signinResp.Token).ShouldNot(BeEmpty())
 
-			// Wait for granger to email the tfa code
-			<-time.After(2 * time.Minute)
-
 			// Get the tfa code from the email by querying mailpit
 			fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
 			<-time.After(3 * time.Minute)
 			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
-			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			url := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40domain-onboarded.example%20subject%3AVetchi%20Two%20Factor%20Authentication"
 			fmt.Fprintf(GinkgoWriter, "URL: %s\n", url)
 
 			mailPitReq1, err := http.NewRequest("GET", url, nil)
@@ -171,7 +168,7 @@ var _ = Describe("Employer Signin", func() {
 			var mailPitResp1Obj MailPitResponse
 			err = json.Unmarshal(body, &mailPitResp1Obj)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(len(mailPitResp1Obj.Messages)).Should(BeNumerically(">=", 1))
+			Expect(len(mailPitResp1Obj.Messages)).Should(Equal(1))
 
 			mailURL := "http://localhost:8025/api/v1/message/" + mailPitResp1Obj.Messages[0].ID
 			fmt.Fprintf(GinkgoWriter, "Mail URL: %s\n", mailURL)
@@ -187,15 +184,14 @@ var _ = Describe("Employer Signin", func() {
 			body, err = io.ReadAll(mailPitResp2.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			fmt.Fprintf(GinkgoWriter, "Mail Body: %s\n", string(body))
-
 			// Extracting the token from the mail body
-			re := regexp.MustCompile(`Token: <b>([a-zA-Z0-9]+)</b>`)
+			re := regexp.MustCompile(`Token:\s*([a-zA-Z0-9]+)\s*`)
+
 			tokens := re.FindAllStringSubmatch(string(body), -1)
 			Expect(len(tokens)).Should(BeNumerically(">=", 1))
 
 			token := tokens[0][1] // The token is captured in the first group
-			fmt.Fprintf(GinkgoWriter, "Token: %s\n", token)
+			fmt.Fprintf(GinkgoWriter, "TGToken: %s\n", token)
 
 			// TFA with the two tokens
 			tfaReqBody, err := json.Marshal(
