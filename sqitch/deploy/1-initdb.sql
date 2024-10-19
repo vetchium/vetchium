@@ -46,7 +46,7 @@ CREATE TABLE employers (
 
     --- Despite its name, it should not be confused with an email address. 
     --- This is the rowid in the 'emails' table for the welcome email sent.
-    onboard_email_id BIGINT REFERENCES emails(id),
+    onboard_email_id UUID REFERENCES emails(id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -62,7 +62,7 @@ CREATE TABLE domains (
     domain_name TEXT NOT NULL UNIQUE,
     domain_state domain_states NOT NULL,
 
-    employer_id INTEGER REFERENCES employers(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -78,7 +78,7 @@ CREATE TABLE org_users (
     org_user_role org_user_roles NOT NULL,
     org_user_state org_user_states NOT NULL,
     
-    employer_id INTEGER REFERENCES employers(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
     UNIQUE (email, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
@@ -87,7 +87,7 @@ CREATE TABLE org_users (
 CREATE TYPE token_types AS ENUM ('USER_SESSION', 'TGT', 'EMAIL');
 CREATE TABLE org_user_tokens (
     token TEXT PRIMARY KEY,
-    org_user_id INTEGER REFERENCES org_users(id) NOT NULL,
+    org_user_id UUID REFERENCES org_users(id) NOT NULL,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type token_types NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())

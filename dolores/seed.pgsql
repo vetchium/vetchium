@@ -1,9 +1,9 @@
 BEGIN;
 
---- email table primary key ids should start from 11 and in 2 digits
---- employer table primary key ids should start from 201 and in 3 digits
---- domain table primary key ids should start from 3001 and in 4 digits
---- org_users table primary key ids should start from 40001 and in 5 digits
+--- email table primary key uuids should end in 2 digits, 11, 12, 13, etc
+--- employer table primary key uuids should end in 3 digits, 201, 202, 203, etc
+--- domain table primary key uuids should end in 4 digits, 3001, 3002, 3003, etc
+--- org_users table primary key uuids should end in 5 digits, 40001, 40002, 40003, etc
 
 INSERT INTO public.emails (
     id,
@@ -18,7 +18,7 @@ INSERT INTO public.emails (
     created_at,
     processed_at
 ) VALUES (
-    11,
+    '00000000-0000-0000-0000-000000000011'::UUID,
     'no-reply@vetchi.org',
     ARRAY['admin@domain-onboarded.example'],
     NULL,
@@ -40,13 +40,13 @@ INSERT INTO public.employers (
     onboard_email_id,
     created_at
 ) VALUES (
-    201,
+    '00000000-0000-0000-0000-000000000201'::UUID,
     'DOMAIN',
     'ONBOARDED',
     'admin@domain-onboarded.example',
     'blah',
-    timezone('UTC'::text, now()) + interval '1 day', 
-    11, 
+    timezone('UTC'::text, now()) + interval '1 day',
+    '00000000-0000-0000-0000-000000000011'::UUID,
     timezone('UTC'::text, now())
 );
 
@@ -57,10 +57,10 @@ INSERT INTO public.domains (
     employer_id,
     created_at
 ) VALUES(
-    1001,
+    '00000000-0000-0000-0000-000000003001'::UUID,  -- fixed
     'domain-onboarded.example',
     'VERIFIED',
-    201,
+    '00000000-0000-0000-0000-000000000201'::UUID,
     timezone('UTC'::text, now())
 );
 
@@ -73,13 +73,12 @@ INSERT INTO public.org_users(
     employer_id,
     created_at
 ) VALUES(
-    1001,
+    '00000000-0000-0000-0000-000000040001'::UUID,
     'admin@domain-onboarded.example',
-    --- password is NewPassword123$
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ADMIN',
     'ACTIVE',
-    201,
+    '00000000-0000-0000-0000-000000000201'::UUID,
     timezone('UTC'::text, now())
 );
 

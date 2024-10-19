@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -88,7 +89,7 @@ INSERT INTO employers (
 VALUES ($1, $2, $3, $4)
 RETURNING id
 `
-	var employerID int64
+	var employerID uuid.UUID
 	err = tx.QueryRow(
 		ctx,
 		employerInsertQuery,
@@ -170,7 +171,7 @@ func (p *PG) CreateOnboardEmail(
 	}
 	defer tx.Rollback(context.Background())
 
-	var emailTableKey int64
+	var emailTableKey uuid.UUID
 	err = tx.QueryRow(
 		context.Background(),
 		`
@@ -308,7 +309,7 @@ WHERE
 	e.employer_state = $3
 `
 
-	var employerID int64
+	var employerID uuid.UUID
 	var adminEmailAddr string
 	err := p.pool.QueryRow(
 		ctx,
@@ -543,17 +544,24 @@ SELECT
 	ou.employer_id,
 	ou.org_user_role,
 	ou.org_user_state
-FROM org_user_tokens out, org_users ou
+FROM org_user_tokens out1, org_user_tokens out2, org_users ou
 WHERE
-	out.token = $1 AND out.token_type = 'EMAIL' AND
-	out.token = $2 AND out.token_type = 'TGT' AND
-	ou.id = out.org_user_id
+	out1.token = $1 AND out1.token_type = 'EMAIL' AND
+	out2.token = $2 AND out2.token_type = 'TGT' AND
+	ou.id = out1.org_user_id AND
+	ou.id = out2.org_user_id
 `
 
 	var orgUser db.OrgUser
 	err := p.pool.QueryRow(
 		ctx,
-		query, tfaCode, tgt).Scan()
+		query, tfaCode, tgt).Scan(
+		&orgUser.ID,
+		&orgUser.Email,
+		&orgUser.EmployerID,
+		&orgUser.OrgUserRole,
+		&orgUser.OrgUserState,
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return db.OrgUser{}, db.ErrNoOrgUser

@@ -146,7 +146,7 @@ var _ = Describe("Employer Signin", func() {
 
 			// Get the tfa code from the email by querying mailpit
 			fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
-			<-time.After(3 * time.Minute)
+			<-time.After(2 * time.Minute)
 			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
 			url := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40domain-onboarded.example%20subject%3AVetchi%20Two%20Factor%20Authentication"
@@ -190,14 +190,15 @@ var _ = Describe("Employer Signin", func() {
 			tokens := re.FindAllStringSubmatch(string(body), -1)
 			Expect(len(tokens)).Should(BeNumerically(">=", 1))
 
-			token := tokens[0][1] // The token is captured in the first group
-			fmt.Fprintf(GinkgoWriter, "TGToken: %s\n", token)
+			tfaCode := tokens[0][1] // The token is captured in the first group
+			fmt.Fprintf(GinkgoWriter, "TFACode: %s\n", tfaCode)
+			fmt.Fprintf(GinkgoWriter, "TGT: %s\n", signinResp.Token)
 
 			// TFA with the two tokens
 			tfaReqBody, err := json.Marshal(
 				vetchi.EmployerTFARequest{
 					TGT:     signinResp.Token,
-					TFACode: token,
+					TFACode: tfaCode,
 				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())

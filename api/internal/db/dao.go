@@ -82,7 +82,7 @@ type Employer struct {
 	OnboardAdminEmail  string             `db:"onboard_admin_email"`
 	OnboardSecretToken pgtype.Text        `db:"onboard_secret_token"`
 	TokenValidTill     pgtype.Timestamptz `db:"token_valid_till"`
-	OnboardEmailID     pgtype.Int8        `db:"onboard_email_id"`
+	OnboardEmailID     uuid.UUID          `db:"onboard_email_id"`
 	CreatedAt          time.Time          `db:"created_at"`
 }
 
