@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
 
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 CREATE TABLE emails(
-	id BIGSERIAL PRIMARY KEY,
+	id UUID PRIMARY KEY,
 	email_from TEXT NOT NULL,
 	email_to TEXT ARRAY NOT NULL,
 	email_cc TEXT ARRAY,
@@ -34,7 +34,7 @@ CREATE TYPE employer_states AS ENUM (
     'DEBOARDED'
 );
 CREATE TABLE employers (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     client_id_type client_id_types NOT NULL,
     employer_state employer_states NOT NULL,
     onboard_admin_email TEXT NOT NULL,
@@ -57,7 +57,7 @@ CREATE TYPE domain_states AS ENUM (
     'DEBOARDED'
 );
 CREATE TABLE domains (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     domain_name TEXT NOT NULL UNIQUE,
     domain_state domain_states NOT NULL,
 

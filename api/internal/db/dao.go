@@ -5,6 +5,7 @@ package db
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -54,14 +55,14 @@ const (
 
 // Structs
 type HubUser struct {
-	ID           int64     `db:"id"`
+	ID           uuid.UUID `db:"id"`
 	Email        string    `db:"email"`
 	PasswordHash string    `db:"password_hash"`
 	CreatedAt    time.Time `db:"created_at"`
 }
 
 type Email struct {
-	ID            int64              `db:"id"`
+	ID            uuid.UUID          `db:"id"`
 	EmailFrom     string             `db:"email_from"`
 	EmailTo       []string           `db:"email_to"`
 	EmailCC       []string           `db:"email_cc"`
@@ -75,7 +76,7 @@ type Email struct {
 }
 
 type Employer struct {
-	ID                 int64              `db:"id"`
+	ID                 uuid.UUID          `db:"id"`
 	ClientIDType       ClientIDType       `db:"client_id_type"`
 	EmployerState      EmployerState      `db:"employer_state"`
 	OnboardAdminEmail  string             `db:"onboard_admin_email"`
@@ -86,20 +87,20 @@ type Employer struct {
 }
 
 type Domain struct {
-	ID          int64       `db:"id"`
+	ID          uuid.UUID   `db:"id"`
 	DomainName  string      `db:"domain_name"`
 	DomainState DomainState `db:"domain_state"`
-	EmployerID  int64       `db:"employer_id"`
+	EmployerID  uuid.UUID   `db:"employer_id"`
 	CreatedAt   time.Time   `db:"created_at"`
 }
 
 type OrgUser struct {
-	ID           int64        `db:"id"`
+	ID           uuid.UUID    `db:"id"`
 	Email        string       `db:"email"`
 	PasswordHash string       `db:"password_hash"`
 	OrgUserRole  OrgUserRole  `db:"org_user_role"`
 	OrgUserState OrgUserState `db:"org_user_state"`
-	EmployerID   int64        `db:"employer_id"`
+	EmployerID   uuid.UUID    `db:"employer_id"`
 	CreatedAt    time.Time    `db:"created_at"`
 }
 
@@ -113,7 +114,7 @@ const (
 
 type OrgUserToken struct {
 	Token          string    `db:"token"`
-	OrgUserID      int64     `db:"org_user_id"`
+	OrgUserID      uuid.UUID `db:"org_user_id"`
 	TokenValidTill time.Time `db:"token_valid_till"`
 	TokenType      TokenType `db:"token_type"`
 	CreatedAt      time.Time `db:"created_at"`

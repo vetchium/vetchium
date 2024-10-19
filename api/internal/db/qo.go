@@ -1,6 +1,10 @@
 package db
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 // This file contains internal structs that can be shared between db and backend
 // These are not part of the public API
@@ -14,19 +18,19 @@ var (
 )
 
 type EmailStateChange struct {
-	EmailDBKey int64
+	EmailDBKey uuid.UUID
 	EmailState EmailState
 }
 
 type OnboardEmailInfo struct {
-	EmployerID         int64
+	EmployerID         uuid.UUID
 	OnboardSecretToken string
 	TokenValidMins     float64
 	Email              Email
 }
 
 type OnboardInfo struct {
-	EmployerID     int64
+	EmployerID     uuid.UUID
 	AdminEmailAddr string
 	DomainName     string
 }
@@ -38,9 +42,9 @@ type OnboardReq struct {
 }
 
 type OrgUserAuth struct {
-	OrgUserID     int64
+	OrgUserID     uuid.UUID
 	OrgUserEmail  string
-	EmployerID    int64
+	EmployerID    uuid.UUID
 	OrgUserRole   OrgUserRole
 	PasswordHash  string
 	EmployerState EmployerState
