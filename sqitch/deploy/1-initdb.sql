@@ -7,12 +7,13 @@ CREATE TABLE IF NOT EXISTS hub_users (
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 CREATE TABLE emails(
-	id UUID PRIMARY KEY,
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	email_from TEXT NOT NULL,
 	email_to TEXT ARRAY NOT NULL,
 	email_cc TEXT ARRAY,
@@ -34,7 +35,7 @@ CREATE TYPE employer_states AS ENUM (
     'DEBOARDED'
 );
 CREATE TABLE employers (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id_type client_id_types NOT NULL,
     employer_state employer_states NOT NULL,
     onboard_admin_email TEXT NOT NULL,
@@ -57,7 +58,7 @@ CREATE TYPE domain_states AS ENUM (
     'DEBOARDED'
 );
 CREATE TABLE domains (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     domain_name TEXT NOT NULL UNIQUE,
     domain_state domain_states NOT NULL,
 
@@ -71,7 +72,7 @@ CREATE TABLE domains (
 CREATE TYPE org_user_roles AS ENUM ('ADMIN', 'RECRUITER', 'INTERVIEWER');
 CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'LOCKED');
 CREATE TABLE org_users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     org_user_role org_user_roles NOT NULL,
