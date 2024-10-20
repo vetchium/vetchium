@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -48,10 +49,21 @@ func employerSignin(clientID, email, password string) (string, error) {
 	<-time.After(2 * time.Minute)
 	fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
-	url := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40domain-onboarded.example%20subject%3AVetchi%20Two%20Factor%20Authentication"
-	fmt.Fprintf(GinkgoWriter, "URL: %s\n", url)
+	baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+	Expect(err).ShouldNot(HaveOccurred())
+	query := url.Values{}
+	query.Add(
+		"query",
+		fmt.Sprintf("to:%s subject:Vetchi Two Factor Authentication", email),
+	)
+	baseURL.RawQuery = query.Encode()
 
-	mailPitReq1, err := http.NewRequest("GET", url, nil)
+	url1 := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40domain-onboarded.example%20subject%3AVetchi%20Two%20Factor%20Authentication"
+	url2 := baseURL.String()
+	fmt.Fprintf(GinkgoWriter, "URL1: %s\n", url1)
+	fmt.Fprintf(GinkgoWriter, "URL2: %s\n", url2)
+
+	mailPitReq1, err := http.NewRequest("GET", url2, nil)
 	Expect(err).ShouldNot(HaveOccurred())
 	mailPitReq1.Header.Add("Content-Type", "application/json")
 

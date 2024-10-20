@@ -636,13 +636,13 @@ SELECT
 	ou.org_user_role,
 	ou.org_user_state
 FROM org_user_tokens out1, org_users ou
-WHERE out1.token = $1 AND out1.token_type = 'SESSION' AND
+WHERE out1.token = $1 AND out1.token_type = $2 AND
 	ou.id = out1.org_user_id
 `
 
 	var orgUser db.OrgUser
 	err := p.pool.QueryRow(
-		ctx, query, sessionToken).Scan(
+		ctx, query, sessionToken, db.UserSessionToken).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,

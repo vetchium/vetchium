@@ -15,7 +15,10 @@ func TestDolores(t *testing.T) {
 	RunSpecs(t, "Dolores Suite")
 }
 
-const serverURL = "http://localhost:8081"
+const (
+	serverURL  = "http://localhost:8081"
+	mailPitURL = "http://localhost:8025"
+)
 
 var db *pgxpool.Pool
 

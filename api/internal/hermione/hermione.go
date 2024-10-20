@@ -151,7 +151,7 @@ func (h *Hermione) Run() error {
 	http.Handle("/employer/add-cost-center", addCostCenter)
 
 	getCostCenters := h.mw.EmployerAuth(http.HandlerFunc(h.getCostCenters))
-	http.Handle("/employer/cost-centers", getCostCenters)
+	http.Handle("/employer/get-cost-centers", getCostCenters)
 
 	return http.ListenAndServe(h.port, nil)
 }
