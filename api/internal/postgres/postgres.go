@@ -621,3 +621,40 @@ RETURNING id
 
 	return costCenterID, nil
 }
+
+func (p *PG) AuthOrgUser(
+	ctx context.Context,
+	sessionToken string,
+) (db.OrgUser, error) {
+	query := `
+SELECT
+	ou.id,
+	ou.email,
+	ou.employer_id,
+	ou.org_user_role,
+	ou.org_user_state
+FROM org_user_tokens out1, org_users ou
+WHERE out1.token = $1 AND out1.token_type = 'SESSION' AND
+	ou.id = out1.org_user_id
+`
+
+	var orgUser db.OrgUser
+	err := p.pool.QueryRow(
+		ctx, query, sessionToken).Scan(
+		&orgUser.ID,
+		&orgUser.Email,
+		&orgUser.EmployerID,
+		&orgUser.OrgUserRole,
+		&orgUser.OrgUserState,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.OrgUser{}, db.ErrNoOrgUser
+		}
+
+		p.log.Error("failed to query org user", "error", err)
+		return db.OrgUser{}, err
+	}
+
+	return orgUser, nil
+}

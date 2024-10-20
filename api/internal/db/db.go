@@ -24,6 +24,7 @@ type DB interface {
 	OnboardAdmin(context.Context, OnboardReq) error
 	CreateCostCenter(context.Context, CostCenterReq) (uuid.UUID, error)
 	CreateOrgUserToken(context.Context, OrgUserToken) error
+	AuthOrgUser(c context.Context, sessionToken string) (OrgUser, error)
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
