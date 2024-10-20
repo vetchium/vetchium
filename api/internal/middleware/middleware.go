@@ -1,4 +1,4 @@
-package hermione
+package middleware
 
 import (
 	"errors"
