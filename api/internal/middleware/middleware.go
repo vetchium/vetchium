@@ -15,10 +15,10 @@ const (
 
 type Middleware struct {
 	db  db.DB
-	log slog.Logger
+	log *slog.Logger
 }
 
-func NewMiddleware(db db.DB, log slog.Logger) *Middleware {
+func NewMiddleware(db db.DB, log *slog.Logger) *Middleware {
 	return &Middleware{db: db, log: log}
 }
 

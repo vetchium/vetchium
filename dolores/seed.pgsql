@@ -82,4 +82,64 @@ INSERT INTO public.org_users(
     timezone('UTC'::text, now())
 );
 
+--- Another employer for testing test1.example
+INSERT INTO public.emails (
+    email_key,
+    email_from,
+    email_to,
+    email_cc,
+    email_bcc,
+    email_subject,
+    email_html_body,
+    email_text_body,
+    email_state,
+    created_at,
+    processed_at
+) VALUES (
+    '00000000-0000-0000-0000-000000000012'::UUID,
+    'no-reply@vetchi.org',
+    ARRAY['admin@test1.example'],
+    NULL,
+    NULL,
+    'Welcome to Vetchi',
+    '<h1>Welcome to Vetchi</h1>',
+    'Welcome to Vetchi',
+    'PROCESSED',
+    timezone('UTC'::text, now()), timezone('UTC'::text, now())
+);
+
+INSERT INTO public.employers (
+    id,
+    client_id_type,
+    employer_state,
+    onboard_admin_email,
+    onboard_secret_token,
+    token_valid_till,
+    onboard_email_id,
+    created_at
+) VALUES (
+    '00000000-0000-0000-0000-000000000202'::UUID,
+    'DOMAIN',
+    'ONBOARDED',
+    'admin@test1.example',
+    'blah',
+    timezone('UTC'::text, now()) + interval '1 day',
+    '00000000-0000-0000-0000-000000000012'::UUID,
+    timezone('UTC'::text, now())
+);
+
+INSERT INTO public.domains (
+    id,
+    domain_name,
+    domain_state,
+    employer_id,
+    created_at
+) VALUES(
+    '00000000-0000-0000-0000-000000003002'::UUID,
+    'test1.example',
+    'VERIFIED',
+    '00000000-0000-0000-0000-000000000202'::UUID,
+    timezone('UTC'::text, now())
+);
+
 COMMIT;

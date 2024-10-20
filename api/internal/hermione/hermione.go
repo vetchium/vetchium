@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -73,6 +74,7 @@ type Hermione struct {
 	// These are initialized programmatically in New()
 	db    db.DB
 	log   *slog.Logger
+	mw    *middleware.Middleware
 	vator *vetchi.Vator
 }
 
@@ -127,6 +129,7 @@ func NewHermione() (*Hermione, error) {
 		db:    db,
 		port:  fmt.Sprintf(":%s", config.Port),
 		log:   logger,
+		mw:    middleware.NewMiddleware(db, logger),
 		vator: vator,
 		employer: employer{
 			tgtLife:                tgtLife,
@@ -137,15 +140,18 @@ func NewHermione() (*Hermione, error) {
 }
 
 func (h *Hermione) Run() error {
-	// Auth related endpoints
+	// Authentication related endpoints
 	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
 	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
 	http.HandleFunc("/employer/signin", h.employerSignin)
 	http.HandleFunc("/employer/tfa", h.employerTFA)
 
 	// CostCenter related endpoints
-	http.HandleFunc("/employer/add-cost-center", h.addCostCenter)
-	http.HandleFunc("/employer/cost-centers", h.getCostCenters)
+	addCostCenter := h.mw.EmployerAuth(http.HandlerFunc(h.addCostCenter))
+	http.Handle("/employer/add-cost-center", addCostCenter)
+
+	getCostCenters := h.mw.EmployerAuth(http.HandlerFunc(h.getCostCenters))
+	http.Handle("/employer/cost-centers", getCostCenters)
 
 	return http.ListenAndServe(h.port, nil)
 }

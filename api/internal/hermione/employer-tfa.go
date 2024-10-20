@@ -51,13 +51,17 @@ func (h *Hermione) employerTFA(w http.ResponseWriter, r *http.Request) {
 		TokenValidTill: time.Now().Add(validUntil),
 		TokenType:      db.UserSessionToken,
 	})
-
-	var employerTFAResponse vetchi.EmployerTFAResponse
-	employerTFAResponse.SessionToken = "TODO: Hardcoded session token"
-
-	err = json.NewEncoder(w).Encode(employerTFAResponse)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(vetchi.EmployerTFAResponse{
+		SessionToken: sessionToken,
+	})
+	if err != nil {
+		h.log.Error("failed to encode response", "error", err)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 }

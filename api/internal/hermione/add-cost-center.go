@@ -47,10 +47,9 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 
 	h.log.Debug("Created CostCenter", "ID", costCenterID, "orgUser", orgUserID)
 
-	var addCostCenterResponse vetchi.AddCostCenterResponse
-	addCostCenterResponse.CostCenterName = addCostCenterReq.Name
-
-	err = json.NewEncoder(w).Encode(addCostCenterResponse)
+	err = json.NewEncoder(w).Encode(vetchi.AddCostCenterResponse{
+		CostCenterName: addCostCenterReq.Name,
+	})
 	if err != nil {
 		h.log.Error("failed to encode response", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
