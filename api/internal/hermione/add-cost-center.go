@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -20,7 +21,7 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orgUserIDString := r.Header.Get("X-Vetchi-OrgUserID")
+	orgUserIDString := r.Header.Get(middleware.OrgUserIDHeader)
 	if orgUserIDString == "" {
 		h.log.Error("X-Vetchi-OrgUserID header missing")
 		http.Error(w, "", http.StatusInternalServerError)

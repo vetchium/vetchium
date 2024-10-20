@@ -144,7 +144,6 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/employer/tfa", h.employerTFA)
 
 	// CostCenter related endpoints
-	// TODO: Add handler chaining to protect these endpoints and for rbac
 	http.HandleFunc("/employer/add-cost-center", h.addCostCenter)
 	http.HandleFunc("/employer/cost-centers", h.getCostCenters)
 
