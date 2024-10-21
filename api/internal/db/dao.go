@@ -1,6 +1,10 @@
 package db
 
-// This file contains the objects that should match the database schema.
+// This file contains the objects that should match the database schema. Some of
+// these types and enums will be internal. The handlers should not expose these
+// types and consts outside and should rely only on the pkg/vetchi/schemas.go
+// types. However, the code in the db package can make use of the types and enums
+// defined under pkg/vetchi/schemas.go
 
 import (
 	"time"

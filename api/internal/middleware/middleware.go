@@ -68,8 +68,8 @@ func (m *Middleware) Protect(
 	route string,
 	handler http.Handler,
 	allowedRoles []string,
-) http.Handler {
-	return m.employerAuth(
+) {
+	http.Handle(route, m.employerAuth(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Retrieve roles from the header set by EmployerAuth
 			userRolesHeader := r.Header.Get(OrgUserRolesHeader)
@@ -97,7 +97,7 @@ func (m *Middleware) Protect(
 			// Call the actual handler if roles are sufficient
 			handler.ServeHTTP(w, r)
 		}),
-	)
+	))
 }
 
 func IsAllowed(allowedRoles, userRoles []string) bool {

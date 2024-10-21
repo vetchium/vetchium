@@ -69,7 +69,15 @@ CREATE TABLE domains (
 
 ---
 
-CREATE TYPE org_user_roles AS ENUM ('ADMIN', 'RECRUITER', 'INTERVIEWER');
+CREATE TYPE org_user_roles AS ENUM (
+    'ADMIN',
+    'CRUD_COST_CENTERS',
+    'VIEW_COST_CENTERS',
+    'CRUD_LOCATIONS',
+    'VIEW_LOCATIONS',
+    'CRUD_OPENINGS',
+    'VIEW_OPENINGS'
+);
 CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'LOCKED');
 CREATE TABLE org_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

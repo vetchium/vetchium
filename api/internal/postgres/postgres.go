@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -339,11 +340,11 @@ WHERE
 INSERT INTO org_users (
 	email,
 	password_hash,
-	org_user_role,
+	org_user_roles,
 	org_user_state,
 	employer_id
 )
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3::org_user_roles[], $4, $5)
 `
 	_, err = tx.Exec(
 		ctx,
@@ -419,7 +420,7 @@ SELECT
 	ou.id,
 	ou.email,
 	ou.employer_id,
-	ou.org_user_role,
+	ou.org_user_roles,
 	ou.password_hash,
 	e.employer_state,
 	ou.org_user_state
@@ -431,6 +432,7 @@ WHERE 	ou.email = $1 AND
 `
 
 	var orgUserAuth db.OrgUserAuth
+	var roles []string
 	err := p.pool.QueryRow(
 		ctx,
 		query,
@@ -440,7 +442,7 @@ WHERE 	ou.email = $1 AND
 		&orgUserAuth.OrgUserID,
 		&orgUserAuth.OrgUserEmail,
 		&orgUserAuth.EmployerID,
-		&orgUserAuth.OrgUserRoles,
+		&roles,
 		&orgUserAuth.PasswordHash,
 		&orgUserAuth.EmployerState,
 		&orgUserAuth.OrgUserState,
@@ -451,6 +453,11 @@ WHERE 	ou.email = $1 AND
 		}
 
 		p.log.Error("failed to query org user auth", "error", err)
+		return db.OrgUserAuth{}, err
+	}
+
+	orgUserAuth.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
+	if err != nil {
 		return db.OrgUserAuth{}, err
 	}
 
@@ -543,7 +550,7 @@ SELECT
 	ou.id,
 	ou.email,
 	ou.employer_id,
-	ou.org_user_role,
+	ou.org_user_roles,
 	ou.org_user_state
 FROM org_user_tokens out1, org_user_tokens out2, org_users ou
 WHERE
@@ -554,13 +561,14 @@ WHERE
 `
 
 	var orgUser db.OrgUser
+	var roles []string
 	err := p.pool.QueryRow(
 		ctx,
 		query, tfaCode, tgt).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,
-		&orgUser.OrgUserRoles,
+		&roles,
 		&orgUser.OrgUserState,
 	)
 	if err != nil {
@@ -569,6 +577,11 @@ WHERE
 		}
 
 		p.log.Error("failed to query org user by token", "error", err)
+		return db.OrgUser{}, err
+	}
+
+	orgUser.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
+	if err != nil {
 		return db.OrgUser{}, err
 	}
 
@@ -634,7 +647,7 @@ SELECT
 	ou.id,
 	ou.email,
 	ou.employer_id,
-	ou.org_user_role,
+	ou.org_user_roles,
 	ou.org_user_state
 FROM org_user_tokens out1, org_users ou
 WHERE out1.token = $1 AND out1.token_type = $2 AND
@@ -642,12 +655,13 @@ WHERE out1.token = $1 AND out1.token_type = $2 AND
 `
 
 	var orgUser db.OrgUser
+	var roles []string
 	err := p.pool.QueryRow(
 		ctx, query, sessionToken, db.UserSessionToken).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,
-		&orgUser.OrgUserRoles,
+		&roles,
 		&orgUser.OrgUserState,
 	)
 	if err != nil {
@@ -659,5 +673,33 @@ WHERE out1.token = $1 AND out1.token_type = $2 AND
 		return db.OrgUser{}, err
 	}
 
+	orgUser.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
+	if err != nil {
+		return db.OrgUser{}, err
+	}
+
 	return orgUser, nil
+}
+
+func (p *PG) convertToOrgUserRoles(
+	dbRoles []string,
+) ([]vetchi.OrgUserRole, error) {
+	var roles []vetchi.OrgUserRole
+	for _, str := range dbRoles {
+		role := vetchi.OrgUserRole(str)
+		switch role {
+		case vetchi.Admin,
+			vetchi.CostCentersCRUD,
+			vetchi.CostCentersViewer,
+			vetchi.LocationsCRUD,
+			vetchi.LocationsViewer,
+			vetchi.OpeningsCRUD,
+			vetchi.OpeningsViewer:
+			roles = append(roles, role)
+		default:
+			p.log.Error("invalid role in the database", "role", str)
+			return nil, fmt.Errorf("invalid role: %s", str)
+		}
+	}
+	return roles, nil
 }
