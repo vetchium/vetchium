@@ -13,9 +13,10 @@ import (
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
-	ErrNoEmployer           = errors.New("employer not found")
-	ErrOrgUserAlreadyExists = errors.New("org user already exists")
-	ErrNoOrgUser            = errors.New("org user not found")
+	ErrNoEmployer              = errors.New("employer not found")
+	ErrOrgUserAlreadyExists    = errors.New("org user already exists")
+	ErrNoOrgUser               = errors.New("org user not found")
+	ErrCostCenterAlreadyExists = errors.New("cost center already exists")
 )
 
 type CostCenterReq struct {

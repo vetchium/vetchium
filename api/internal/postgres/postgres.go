@@ -640,6 +640,10 @@ RETURNING id
 		costCenterReq.OrgUserID,
 	).Scan(&costCenterID)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key value") {
+			return uuid.UUID{}, db.ErrCostCenterAlreadyExists
+		}
+
 		p.log.Error("failed to create cost center", "error", err)
 		return uuid.UUID{}, err
 	}

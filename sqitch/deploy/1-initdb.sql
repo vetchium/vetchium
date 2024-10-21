@@ -110,7 +110,7 @@ CREATE TABLE org_cost_centers (
     notes TEXT NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
-
+    UNIQUE (cost_center_name, employer_id),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

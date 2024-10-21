@@ -2,6 +2,7 @@ package hermione
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -41,7 +42,12 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		OrgUserID: orgUserID,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, db.ErrCostCenterAlreadyExists) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 

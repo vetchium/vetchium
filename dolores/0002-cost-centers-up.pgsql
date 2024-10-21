@@ -63,18 +63,18 @@ INSERT INTO public.org_users( id, email, password_hash, org_user_roles, org_user
     '12345678-0002-0002-0002-000000000201'::UUID,
     timezone('UTC'::text, now())
 ),(
-    '12345678-0002-0002-0002-000000040004'::UUID,
-    'deleted@cost-center.example',
-    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-    ARRAY['ADMIN']::org_user_roles[],
-    'DELETED',
-    '12345678-0002-0002-0002-000000000201'::UUID,
-    timezone('UTC'::text, now())
-),(
     '12345678-0002-0002-0002-000000040005'::UUID,
     'non-cost-center@cost-center.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     ARRAY['LOCATIONS_CRUD']::org_user_roles[],
+    'ACTIVE',
+    '12345678-0002-0002-0002-000000000201'::UUID,
+    timezone('UTC'::text, now())
+),(
+    '12345678-0002-0002-0002-000000040006'::UUID,
+    'multiple-non-cost-center-roles@cost-center.example',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    ARRAY['LOCATIONS_CRUD', 'EMPLOYERS_CRUD']::org_user_roles[],
     'ACTIVE',
     '12345678-0002-0002-0002-000000000201'::UUID,
     timezone('UTC'::text, now())
