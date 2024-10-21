@@ -68,7 +68,7 @@ INSERT INTO public.org_users(
     id,
     email,
     password_hash,
-    org_user_role,
+    org_user_roles,
     org_user_state,
     employer_id,
     created_at
@@ -76,7 +76,7 @@ INSERT INTO public.org_users(
     '00000000-0000-0000-0000-000000040001'::UUID,
     'admin@domain-onboarded.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-    'ADMIN',
+    ARRAY['ADMIN']::org_user_roles[],
     'ACTIVE',
     '00000000-0000-0000-0000-000000000201'::UUID,
     timezone('UTC'::text, now())
@@ -146,7 +146,7 @@ INSERT INTO public.org_users(
     id,
     email,
     password_hash,
-    org_user_role,
+    org_user_roles,
     org_user_state,
     employer_id,
     created_at
@@ -154,7 +154,7 @@ INSERT INTO public.org_users(
     '00000000-0000-0000-0000-000000040002'::UUID,
     'admin@test1.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-    'ADMIN',
+    ARRAY['ADMIN']::org_user_roles[],
     'ACTIVE',
     '00000000-0000-0000-0000-000000000202'::UUID,
     timezone('UTC'::text, now())

@@ -74,8 +74,10 @@ components:
           $ref: "#/components/schemas/EmailAddress"
         name:
           type: string
-        role:
-          $ref: "#/components/schemas/Role"
+        roles:
+          items:
+            $ref: "#/components/schemas/OrgUserRole"
+          type: array
       required:
         - name
         - email
@@ -452,13 +454,15 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
-    EditOrgUserRoleRequest:
-      description: Request to edit an orguser's role
+    UpdateOrgUserRolesRequest:
+      description: Request to update an orguser's roles
       properties:
         email:
           $ref: "#/components/schemas/EmailAddress"
-        role:
-          $ref: "#/components/schemas/Role"
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrgUserRole"
       required:
         - email
         - role
@@ -1226,7 +1230,7 @@ components:
         name:
           type: string
         role:
-          $ref: "#/components/schemas/Role"
+          $ref: "#/components/schemas/OrgUserRole"
     OrgUserListResponse:
       description: A list of user information, sorted by email address
       items:
@@ -1304,12 +1308,16 @@ components:
         token:
           description: The token to reset the password
           type: string
-    Role:
+    OrgUserRole:
       description: User roles in the system
       enum:
         - ADMIN
-        - RECRUITER
-        - INTERVIEWER
+        - CRUD_COST_CENTERS
+        - VIEW_COST_CENTERS
+        - CRUD_LOCATIONS
+        - VIEW_LOCATIONS
+        - CRUD_OPENINGS
+        - VIEW_OPENINGS
       type: string
     SetOnboardPasswordRequest:
       description: Request to set the password for the given token
@@ -1637,15 +1645,15 @@ paths:
       summary: Create Opening
       tags:
         - Employer
-  /employer/edit-org-user-role:
+  /employer/update-org-user-roles:
     post:
-      description: Edit the role of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for users with the ADMIN role.
-      operationId: employer-edit-org-user-role
+      description: Updates the roles of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for orgusers with the ADMIN role.
+      operationId: employer-update-org-user-role
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EditOrgUserRoleRequest"
+              $ref: "#/components/schemas/UpdateOrgUserRolesRequest"
         required: true
       responses:
         "200":
@@ -1655,7 +1663,7 @@ paths:
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Edit User Role
+      summary: Update OrgUser Role
       tags:
         - Employer
   /employer/filter-applications:

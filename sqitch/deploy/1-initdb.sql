@@ -75,9 +75,10 @@ CREATE TABLE org_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
-    org_user_role org_user_roles NOT NULL,
+    org_user_roles org_user_roles[] NOT NULL,
     org_user_state org_user_states NOT NULL,
 
+--- As of now, we have only one org per employer. This may change in future.
     employer_id UUID REFERENCES employers(id) NOT NULL,
     UNIQUE (email, employer_id),
 

@@ -147,11 +147,20 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/employer/tfa", h.employerTFA)
 
 	// CostCenter related endpoints
-	addCostCenter := h.mw.EmployerAuth(http.HandlerFunc(h.addCostCenter))
-	http.Handle("/employer/add-cost-center", addCostCenter)
-
-	getCostCenters := h.mw.EmployerAuth(http.HandlerFunc(h.getCostCenters))
-	http.Handle("/employer/get-cost-centers", getCostCenters)
+	h.mw.Protect(
+		"/employer/add-cost-center",
+		http.HandlerFunc(h.addCostCenter),
+		[]string{string(vetchi.Admin), string(vetchi.CostCentersCRUD)},
+	)
+	h.mw.Protect(
+		"/employer/get-cost-centers",
+		http.HandlerFunc(h.getCostCenters),
+		[]string{
+			string(vetchi.Admin),
+			string(vetchi.CostCentersCRUD),
+			string(vetchi.CostCentersViewer),
+		},
+	)
 
 	return http.ListenAndServe(h.port, nil)
 }

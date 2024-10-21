@@ -27,9 +27,9 @@ type AddLocationResponse struct {
 }
 
 type AddOrgUserRequest struct {
-	Name  string `json:"name"  validate:"required"`
-	Email string `json:"email" validate:"required,email"`
-	Role  Role   `json:"role"  validate:"required"`
+	Name  string        `json:"name"  validate:"required"`
+	Email string        `json:"email" validate:"required,email"`
+	Roles []OrgUserRole `json:"roles" validate:"required"`
 }
 
 type AddOrgUserResponse struct {
@@ -503,9 +503,9 @@ type OrgUser struct {
 }
 
 type OrgUserInfo struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-	Role  Role   `json:"role"`
+	Name  string      `json:"name"`
+	Email string      `json:"email" validate:"email"`
+	Role  OrgUserRole `json:"role"`
 }
 
 type Password string
@@ -536,12 +536,16 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required"`
 }
 
-type Role string
+type OrgUserRole string
 
 const (
-	Admin       Role = "ADMIN"
-	Recruiter   Role = "RECRUITER"
-	Interviewer Role = "INTERVIEWER"
+	Admin             OrgUserRole = "ADMIN"
+	CostCentersCRUD   OrgUserRole = "CRUD_COST_CENTERS"
+	CostCentersViewer OrgUserRole = "VIEW_COST_CENTERS"
+	LocationsCRUD     OrgUserRole = "CRUD_LOCATIONS"
+	LocationsViewer   OrgUserRole = "VIEW_LOCATIONS"
+	OpeningsCRUD      OrgUserRole = "CRUD_OPENINGS"
+	OpeningsViewer    OrgUserRole = "VIEW_OPENINGS"
 )
 
 type SetOnboardPasswordRequest struct {
@@ -564,6 +568,11 @@ type UpdateInterviewFeedbackRequest struct {
 	EvaluationReport    EvaluationReport `json:"evaluation_report"               validate:"required"`
 	EvaluationResult    EvaluationResult `json:"evaluation_result"               validate:"required"`
 	FeedbackToCandidate string           `json:"feedback_to_candidate,omitempty" validate:"min=10,max=1000"`
+}
+
+type UpdateOrgUserRolesRequest struct {
+	Email string        `json:"email" validate:"required,email"`
+	Roles []OrgUserRole `json:"roles" validate:"required"`
 }
 
 type UpdateWorkHistoryRequest struct {

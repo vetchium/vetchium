@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 // This file contains internal structs that can be shared between db and backend
@@ -51,7 +52,7 @@ type OrgUserAuth struct {
 	OrgUserID     uuid.UUID
 	OrgUserEmail  string
 	EmployerID    uuid.UUID
-	OrgUserRole   OrgUserRole
+	OrgUserRoles  []vetchi.OrgUserRole
 	PasswordHash  string
 	EmployerState EmployerState
 	OrgUserState  OrgUserState

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 // Enums
@@ -36,14 +37,6 @@ type DomainState string
 const (
 	VerifiedDomainState  DomainState = "VERIFIED"
 	DeboardedDomainState DomainState = "DEBOARDED"
-)
-
-type OrgUserRole string
-
-const (
-	AdminOrgUserRole       OrgUserRole = "ADMIN"
-	RecruiterOrgUserRole   OrgUserRole = "RECRUITER"
-	InterviewerOrgUserRole OrgUserRole = "INTERVIEWER"
 )
 
 type OrgUserState string
@@ -103,13 +96,13 @@ type OrgCostCenter struct {
 }
 
 type OrgUser struct {
-	ID           uuid.UUID    `db:"id"`
-	Email        string       `db:"email"`
-	PasswordHash string       `db:"password_hash"`
-	OrgUserRole  OrgUserRole  `db:"org_user_role"`
-	OrgUserState OrgUserState `db:"org_user_state"`
-	EmployerID   uuid.UUID    `db:"employer_id"`
-	CreatedAt    time.Time    `db:"created_at"`
+	ID           uuid.UUID            `db:"id"`
+	Email        string               `db:"email"`
+	PasswordHash string               `db:"password_hash"`
+	OrgUserRoles []vetchi.OrgUserRole `db:"org_user_roles"`
+	OrgUserState OrgUserState         `db:"org_user_state"`
+	EmployerID   uuid.UUID            `db:"employer_id"`
+	CreatedAt    time.Time            `db:"created_at"`
 }
 
 type TokenType string

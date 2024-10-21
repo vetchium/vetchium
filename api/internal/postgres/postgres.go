@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type PG struct {
@@ -349,7 +350,7 @@ VALUES ($1, $2, $3, $4, $5)
 		orgUserInsertQuery,
 		adminEmailAddr,
 		onboardReq.Password,
-		db.AdminOrgUserRole,
+		[]string{string(vetchi.Admin)},
 		db.ActiveOrgUserState,
 		employerID,
 	)
@@ -439,7 +440,7 @@ WHERE 	ou.email = $1 AND
 		&orgUserAuth.OrgUserID,
 		&orgUserAuth.OrgUserEmail,
 		&orgUserAuth.EmployerID,
-		&orgUserAuth.OrgUserRole,
+		&orgUserAuth.OrgUserRoles,
 		&orgUserAuth.PasswordHash,
 		&orgUserAuth.EmployerState,
 		&orgUserAuth.OrgUserState,
@@ -559,7 +560,7 @@ WHERE
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,
-		&orgUser.OrgUserRole,
+		&orgUser.OrgUserRoles,
 		&orgUser.OrgUserState,
 	)
 	if err != nil {
@@ -646,7 +647,7 @@ WHERE out1.token = $1 AND out1.token_type = $2 AND
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,
-		&orgUser.OrgUserRole,
+		&orgUser.OrgUserRoles,
 		&orgUser.OrgUserState,
 	)
 	if err != nil {
