@@ -2,19 +2,44 @@ package dolores
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+const (
+	serverURL  = "http://localhost:8081"
+	mailPitURL = "http://localhost:8025"
+)
+
+func setupTestDB() *pgxpool.Pool {
+	connStr := "host=localhost port=5432 user=user dbname=vdb password=pass sslmode=disable"
+	pool, err := pgxpool.New(context.Background(), connStr)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	return pool
+}
+
+type Message struct {
+	ID string `json:"ID"`
+}
+
+type MailPitResponse struct {
+	Messages []Message `json:"messages"`
+}
 
 // Returns the session token for the employer with the given credentials
 func employerSignin(clientID, email, password string) (string, error) {

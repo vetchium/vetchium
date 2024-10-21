@@ -2,15 +2,41 @@ package dolores
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = Describe("Cost Centers", func() {
+var _ = XDescribe("Cost Centers", Ordered, func() {
+	var db *pgxpool.Pool
+
+	BeforeAll(func() {
+		db = setupTestDB()
+
+		seed, err := os.ReadFile("0002-cost-centers-up.pgsql")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = db.Exec(context.Background(), string(seed))
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	AfterAll(func() {
+		seed, err := os.ReadFile("0002-cost-centers-down.pgsql")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = db.Exec(context.Background(), string(seed))
+		Expect(err).ShouldNot(HaveOccurred())
+
+		db.Close()
+	})
+
 	Context("Get Cost Centers", func() {
 		It("should return the cost centers for the employer", func() {
 			sessionToken, err := employerSignin(

@@ -71,14 +71,14 @@ CREATE TABLE domains (
 
 CREATE TYPE org_user_roles AS ENUM (
     'ADMIN',
-    'CRUD_COST_CENTERS',
-    'VIEW_COST_CENTERS',
-    'CRUD_LOCATIONS',
-    'VIEW_LOCATIONS',
-    'CRUD_OPENINGS',
-    'VIEW_OPENINGS'
+    'COST_CENTERS_CRUD',
+    'COST_CENTERS_VIEWER',
+    'LOCATIONS_CRUD',
+    'LOCATIONS_VIEWER',
+    'OPENINGS_CRUD',
+    'OPENINGS_VIEWER'
 );
-CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'LOCKED');
+CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'DELETED');
 CREATE TABLE org_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,

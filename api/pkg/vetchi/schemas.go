@@ -508,6 +508,18 @@ type OrgUserInfo struct {
 	Role  OrgUserRole `json:"role"`
 }
 
+type OrgUserRole string
+
+const (
+	Admin             OrgUserRole = "ADMIN"
+	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
+	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
+	LocationsCRUD     OrgUserRole = "LOCATIONS_CRUD"
+	LocationsViewer   OrgUserRole = "LOCATIONS_VIEWER"
+	OpeningsCRUD      OrgUserRole = "OPENINGS_CRUD"
+	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
+)
+
 type Password string
 
 type ReferredBy struct {
@@ -535,18 +547,6 @@ type ResetPasswordRequest struct {
 	Token       string `json:"token"        validate:"required"`
 	NewPassword string `json:"new_password" validate:"required"`
 }
-
-type OrgUserRole string
-
-const (
-	Admin             OrgUserRole = "ADMIN"
-	CostCentersCRUD   OrgUserRole = "CRUD_COST_CENTERS"
-	CostCentersViewer OrgUserRole = "VIEW_COST_CENTERS"
-	LocationsCRUD     OrgUserRole = "CRUD_LOCATIONS"
-	LocationsViewer   OrgUserRole = "VIEW_LOCATIONS"
-	OpeningsCRUD      OrgUserRole = "CRUD_OPENINGS"
-	OpeningsViewer    OrgUserRole = "VIEW_OPENINGS"
-)
 
 type SetOnboardPasswordRequest struct {
 	ClientID string   `json:"client_id" validate:"required,client_id"`

@@ -46,8 +46,8 @@ const (
 type OrgUserState string
 
 const (
-	ActiveOrgUserState OrgUserState = "ACTIVE"
-	LockedOrgUserState OrgUserState = "LOCKED"
+	ActiveOrgUserState  OrgUserState = "ACTIVE"
+	DeletedOrgUserState OrgUserState = "DELETED"
 )
 
 // Structs
