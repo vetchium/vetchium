@@ -14,7 +14,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = XDescribe("Cost Centers", Ordered, func() {
+var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -40,8 +40,8 @@ var _ = XDescribe("Cost Centers", Ordered, func() {
 	Context("Get Cost Centers", func() {
 		It("should return the cost centers for the employer", func() {
 			sessionToken, err := employerSignin(
-				"test1.example",
-				"admin@test1.example",
+				"cost-center.example",
+				"admin@cost-center.example",
 				"NewPassword123$",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
