@@ -619,8 +619,17 @@ func (p *PG) CreateCostCenter(
 	costCenterReq db.CostCenterReq,
 ) (uuid.UUID, error) {
 	query := `
-INSERT INTO org_cost_centers (cost_center_name, notes, employer_id)
-VALUES ($1, $2, $3)
+WITH employer_info AS (
+    SELECT ou.employer_id
+    FROM org_users ou
+    WHERE ou.id = $3
+)
+INSERT INTO org_cost_centers (
+    cost_center_name,
+    notes,
+    employer_id
+)
+VALUES ($1, $2, (SELECT employer_id FROM employer_info))
 RETURNING id
 `
 	var costCenterID uuid.UUID

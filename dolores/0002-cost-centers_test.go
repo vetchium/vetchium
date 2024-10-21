@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
-
+	var sessionToken string
 	BeforeAll(func() {
 		db = setupTestDB()
 
@@ -24,6 +24,13 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		_, err = db.Exec(context.Background(), string(seed))
+		Expect(err).ShouldNot(HaveOccurred())
+
+		sessionToken, err = employerSignin(
+			"cost-center.example",
+			"admin@cost-center.example",
+			"NewPassword123$",
+		)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
@@ -38,14 +45,76 @@ var _ = Describe("Cost Centers", Ordered, func() {
 	})
 
 	Context("Get Cost Centers", func() {
-		It("should return the cost centers for the employer", func() {
-			sessionToken, err := employerSignin(
-				"cost-center.example",
-				"admin@cost-center.example",
-				"NewPassword123$",
+		It("create a new cost center without a session token", func() {
+			createCostCenterRequestBody, err := json.Marshal(
+				vetchi.AddCostCenterRequest{
+					Name: "New Cost Center",
+				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
+			createCostCenterReq, err := http.NewRequest(
+				http.MethodPost,
+				serverURL+"/employer/add-cost-center",
+				bytes.NewBuffer(createCostCenterRequestBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.DefaultClient.Do(createCostCenterReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
+		})
+
+		It("create a new cost center with a session token", func() {
+			createCostCenterRequestBody, err := json.Marshal(
+				vetchi.AddCostCenterRequest{
+					Name: "New Cost Center",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			createCostCenterReq, err := http.NewRequest(
+				http.MethodPost,
+				serverURL+"/employer/add-cost-center",
+				bytes.NewBuffer(createCostCenterRequestBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			createCostCenterReq.Header.Set("Authorization", sessionToken)
+
+			resp, err := http.DefaultClient.Do(createCostCenterReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			var createCostCenterResp vetchi.AddCostCenterResponse
+			err = json.NewDecoder(resp.Body).Decode(&createCostCenterResp)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(createCostCenterResp.CostCenterName).ShouldNot(BeEmpty())
+		})
+
+		It("create a new cost center with an invalid name", func() {
+			createCostCenterRequestBody, err := json.Marshal(
+				vetchi.AddCostCenterRequest{
+					Name: "",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			createCostCenterReq, err := http.NewRequest(
+				http.MethodPost,
+				serverURL+"/employer/add-cost-center",
+				bytes.NewBuffer(createCostCenterRequestBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			createCostCenterReq.Header.Set("Authorization", sessionToken)
+
+			resp, err := http.DefaultClient.Do(createCostCenterReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
+		})
+
+		It("should return the cost centers for the employer", func() {
 			getCostCentersRequestBody, err := json.Marshal(
 				vetchi.GetCostCentersRequest{},
 			)
