@@ -71,7 +71,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 
 	// Get the tfa code from the email by querying mailpit
 	fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
-	<-time.After(90 * time.Second)
+	<-time.After(10 * time.Second)
 	fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
 	baseURL, err := url.Parse(mailPitURL + "/api/v1/search")

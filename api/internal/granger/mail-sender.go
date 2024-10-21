@@ -19,7 +19,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 		case <-quit:
 			g.log.Debug("mailSender quitting")
 			return
-		case <-time.After(30 * time.Second):
+		case <-time.After(5 * time.Second):
 			ctx := context.Background()
 			emails, err := g.db.GetOldestUnsentEmails(ctx)
 			if err != nil {

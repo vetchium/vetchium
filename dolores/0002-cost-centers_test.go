@@ -264,7 +264,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 			sessionToken5, err := employerSignin(
 				"cost-center.example",
-				"crud@cost-center.example",
+				"crud1@cost-center.example",
 				"NewPassword123$",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -300,7 +300,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 			sessionToken6, err := employerSignin(
 				"cost-center.example",
-				"crud@cost-center.example",
+				"crud2@cost-center.example",
 				"NewPassword123$",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
