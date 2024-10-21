@@ -35,6 +35,18 @@ spec:
       labels:
         app: hermione
     spec:
+      serviceAccountName: hermione-sa
+      initContainers:
+        - name: wait-for-sqitch
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until kubectl get job sqitch -n vetchidev -o jsonpath='{.status.succeeded}' | grep -q '1'; do
+                echo "Waiting for sqitch job to complete..."
+                sleep 5
+              done
       containers:
         - name: hermione
           image: psankar/hermione:latest
@@ -66,3 +78,31 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hermione-sa
+  namespace: vetchidev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: full-access
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hermione-full-access-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: full-access
+subjects:
+  - kind: ServiceAccount
+    name: hermione-sa
+    namespace: vetchidev
