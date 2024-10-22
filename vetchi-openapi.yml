@@ -20,7 +20,7 @@ components:
     AddCostCenterResponse:
       description: Response after adding a cost center
       properties:
-        cost_center_name:
+        name:
           type: string
     AddLocationRequest:
       description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
@@ -285,8 +285,6 @@ components:
     CostCenter:
       description: A cost center object
       properties:
-        cost_center_id:
-          type: string
         name:
           maxLength: 64
           minLength: 3

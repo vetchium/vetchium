@@ -10,7 +10,7 @@ type AddCostCenterRequest struct {
 }
 
 type AddCostCenterResponse struct {
-	CostCenterName string `json:"cost_center_name"`
+	Name string `json:"name"`
 }
 
 type AddLocationRequest struct {
@@ -134,9 +134,8 @@ type ClientId struct {
 }
 
 type CostCenter struct {
-	CostCenterID string `json:"cost_center_id"`
-	Name         string `json:"name"            validate:"required,min=3,max=64"`
-	Notes        string `json:"notes,omitempty" validate:"max=1024"`
+	Name  string `json:"name"            validate:"required,min=3,max=64" db:"cost_center_name"`
+	Notes string `json:"notes,omitempty" validate:"max=1024"              db:"notes"`
 }
 
 type CreateInterviewRequest struct {

@@ -36,7 +36,7 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	costCenterID, err := h.db.CreateCostCenter(r.Context(), db.CostCenterReq{
+	costCenterID, err := h.db.CreateCostCenter(r.Context(), db.CCenterReq{
 		Name:      addCostCenterReq.Name,
 		Notes:     addCostCenterReq.Notes,
 		OrgUserID: orgUserID,
@@ -54,7 +54,7 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 	h.log.Debug("Created CostCenter", "ID", costCenterID, "orgUser", orgUserID)
 
 	err = json.NewEncoder(w).Encode(vetchi.AddCostCenterResponse{
-		CostCenterName: addCostCenterReq.Name,
+		Name: addCostCenterReq.Name,
 	})
 	if err != nil {
 		h.log.Error("failed to encode response", "error", err)

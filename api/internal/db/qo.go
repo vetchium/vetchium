@@ -19,10 +19,17 @@ var (
 	ErrCostCenterAlreadyExists = errors.New("cost center already exists")
 )
 
-type CostCenterReq struct {
+type CCenterReq struct {
 	Name      string
 	Notes     string
 	OrgUserID uuid.UUID
+}
+
+type CCentersList struct {
+	EmployerID uuid.UUID
+
+	Offset string
+	Limit  int
 }
 
 type EmailStateChange struct {

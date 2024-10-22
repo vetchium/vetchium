@@ -356,8 +356,15 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 			resp3, err := http.DefaultClient.Do(getCostCentersReq3)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp3.StatusCode).Should(Equal(http.StatusNotImplemented))
+			Expect(resp3.StatusCode).Should(Equal(http.StatusOK))
+
+			var costCenters []vetchi.CostCenter
+			err = json.NewDecoder(resp3.Body).Decode(&costCenters)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(costCenters).Should(HaveLen(2))
 		})
+
+		// TODO: Add tests for pagination
 
 	})
 })

@@ -616,7 +616,7 @@ VALUES ($1, $2, $3, $4)
 
 func (p *PG) CreateCostCenter(
 	ctx context.Context,
-	costCenterReq db.CostCenterReq,
+	costCenterReq db.CCenterReq,
 ) (uuid.UUID, error) {
 	query := `
 WITH employer_info AS (
@@ -715,4 +715,43 @@ func (p *PG) convertToOrgUserRoles(
 		}
 	}
 	return roles, nil
+}
+
+func (p *PG) GetCostCenters(
+	ctx context.Context,
+	costCentersList db.CCentersList,
+) ([]vetchi.CostCenter, error) {
+	query := `
+SELECT
+	oc.id,
+	oc.cost_center_name,
+	oc.notes
+FROM org_cost_centers oc
+WHERE oc.employer_id = $1
+ORDER BY oc.cost_center_name ASC
+LIMIT $2 OFFSET $3
+`
+
+	rows, err := p.pool.Query(ctx, query,
+		costCentersList.EmployerID,
+		costCentersList.Limit,
+		costCentersList.Offset,
+	)
+	if err != nil {
+		p.log.Error("failed to query cost centers", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var costCenters []vetchi.CostCenter
+	costCenters, err = pgx.CollectRows(
+		rows,
+		pgx.RowToStructByName[vetchi.CostCenter],
+	)
+	if err != nil {
+		p.log.Error("failed to collect rows", "error", err)
+		return nil, err
+	}
+
+	return costCenters, nil
 }
