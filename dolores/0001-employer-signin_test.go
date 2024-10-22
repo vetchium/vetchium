@@ -123,7 +123,8 @@ var _ = Describe("Employer Signin", Ordered, func() {
 					len(listMailsRespObj.Messages),
 				).Should(BeNumerically(">=", 1))
 
-				mailURL := "http://localhost:8025/api/v1/message/" + listMailsRespObj.Messages[0].ID
+				messageID := listMailsRespObj.Messages[0].ID
+				mailURL := "http://localhost:8025/api/v1/message/" + messageID
 				log.Println("Mail URL:", mailURL)
 
 				getMailReq, err := http.NewRequest("GET", mailURL, nil)
@@ -233,6 +234,27 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				Expect(
 					setOnboardPasswordResp2.StatusCode,
 				).Should(Equal(http.StatusUnprocessableEntity))
+
+				// Delete the email from mailpit so that we can run the test multiple times
+				mailPitDeleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+					IDs: []string{messageID},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				mailPitReq3, err := http.NewRequest(
+					"DELETE",
+					"http://localhost:8025/api/v1/messages",
+					bytes.NewBuffer(mailPitDeleteReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				mailPitReq3.Header.Set("Accept", "application/json")
+				mailPitReq3.Header.Add("Content-Type", "application/json")
+
+				mailPitDeleteResp, err := http.DefaultClient.Do(mailPitReq3)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					mailPitDeleteResp.StatusCode,
+				).Should(Equal(http.StatusOK))
 			},
 		)
 
@@ -289,7 +311,8 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				len(mailPitResp1Obj.Messages),
 			).Should(BeNumerically(">=", 1))
 
-			mailURL := "http://localhost:8025/api/v1/message/" + mailPitResp1Obj.Messages[0].ID
+			messageID := mailPitResp1Obj.Messages[0].ID
+			mailURL := "http://localhost:8025/api/v1/message/" + messageID
 			log.Println("Mail URL:", mailURL)
 
 			mailPitReq2, err := http.NewRequest("GET", mailURL, nil)
@@ -336,6 +359,25 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			Expect(
 				resp.StatusCode,
 			).Should(Equal(http.StatusUnprocessableEntity))
+
+			// Delete the email from mailpit so that we can run the test multiple times
+			mailPitDeleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+				IDs: []string{messageID},
+			})
+			Expect(err).ShouldNot(HaveOccurred())
+
+			mailPitReq3, err := http.NewRequest(
+				"DELETE",
+				"http://localhost:8025/api/v1/messages",
+				bytes.NewBuffer(mailPitDeleteReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq3.Header.Set("Accept", "application/json")
+			mailPitReq3.Header.Add("Content-Type", "application/json")
+
+			mailPitDeleteResp, err := http.DefaultClient.Do(mailPitReq3)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitDeleteResp.StatusCode).Should(Equal(http.StatusOK))
 		})
 	})
 

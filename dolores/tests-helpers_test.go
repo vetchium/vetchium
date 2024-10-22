@@ -41,6 +41,18 @@ type MailPitResponse struct {
 	Messages []Message `json:"messages"`
 }
 
+type MailPitDeleteRequest struct {
+	IDs []string `json:"IDs"`
+}
+
+type SigninError struct {
+	StatusCode int
+}
+
+func (e SigninError) Error() string {
+	return fmt.Sprintf("signin failed with status code: %d", e.StatusCode)
+}
+
 // Returns the session token for the employer with the given credentials
 func employerSignin(clientID, email, password string) (string, error) {
 	signinReqBody, err := json.Marshal(
@@ -62,7 +74,10 @@ func employerSignin(clientID, email, password string) (string, error) {
 
 	resp, err := http.DefaultClient.Do(signinReq)
 	Expect(err).ShouldNot(HaveOccurred())
-	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+	if resp.StatusCode != http.StatusOK {
+		// Callers of employerSignin may expect a fail intentionally
+		return "", SigninError{StatusCode: resp.StatusCode}
+	}
 
 	var signinResp vetchi.EmployerSignInResponse
 	err = json.NewDecoder(resp.Body).Decode(&signinResp)
@@ -106,7 +121,8 @@ func employerSignin(clientID, email, password string) (string, error) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(len(mailPitResp1Obj.Messages)).Should(Equal(1))
 
-	mailURL := "http://localhost:8025/api/v1/message/" + mailPitResp1Obj.Messages[0].ID
+	messageID := mailPitResp1Obj.Messages[0].ID
+	mailURL := "http://localhost:8025/api/v1/message/" + messageID
 	fmt.Fprintf(GinkgoWriter, "Mail URL: %s\n", mailURL)
 
 	mailPitReq2, err := http.NewRequest("GET", mailURL, nil)
@@ -155,6 +171,25 @@ func employerSignin(clientID, email, password string) (string, error) {
 	err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(tfaRespObj.SessionToken).ShouldNot(BeEmpty())
+
+	// Delete the email from mailpit so that we can run the test multiple times
+	mailPitDeleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+		IDs: []string{messageID},
+	})
+	Expect(err).ShouldNot(HaveOccurred())
+
+	mailPitReq3, err := http.NewRequest(
+		"DELETE",
+		"http://localhost:8025/api/v1/messages",
+		bytes.NewBuffer(mailPitDeleteReqBody),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+	mailPitReq3.Header.Set("Accept", "application/json")
+	mailPitReq3.Header.Add("Content-Type", "application/json")
+
+	mailPitDeleteResp, err := http.DefaultClient.Do(mailPitReq3)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(mailPitDeleteResp.StatusCode).Should(Equal(http.StatusOK))
 
 	return tfaRespObj.SessionToken, nil
 }
