@@ -335,8 +335,8 @@ type ForgotPasswordRequest struct {
 }
 
 type GetCostCentersRequest struct {
-	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=100"`
-	Offset string `json:"offset,omitempty"`
+	Limit  int `json:"limit,omitempty"  validate:"max=100"`
+	Offset int `json:"offset,omitempty" validate:"min=0"`
 }
 
 type GetInterviewDetailsRequest struct {

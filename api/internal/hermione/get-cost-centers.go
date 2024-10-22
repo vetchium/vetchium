@@ -21,6 +21,10 @@ func (h *Hermione) getCostCenters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if getCostCentersRequest.Limit <= 0 {
+		getCostCentersRequest.Limit = 100
+	}
+
 	employerIDString := r.Header.Get(middleware.EmployerIDHeader)
 	if employerIDString == "" {
 		h.log.Error("X-Vetchi-EmployerID header missing")

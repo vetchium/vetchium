@@ -722,12 +722,9 @@ func (p *PG) GetCostCenters(
 	costCentersList db.CCentersList,
 ) ([]vetchi.CostCenter, error) {
 	query := `
-SELECT
-	oc.id,
-	oc.cost_center_name,
-	oc.notes
+SELECT oc.cost_center_name, oc.notes
 FROM org_cost_centers oc
-WHERE oc.employer_id = $1
+WHERE oc.employer_id = $1::uuid
 ORDER BY oc.cost_center_name ASC
 LIMIT $2 OFFSET $3
 `
@@ -741,15 +738,13 @@ LIMIT $2 OFFSET $3
 		p.log.Error("failed to query cost centers", "error", err)
 		return nil, err
 	}
-	defer rows.Close()
 
-	var costCenters []vetchi.CostCenter
-	costCenters, err = pgx.CollectRows(
+	costCenters, err := pgx.CollectRows(
 		rows,
 		pgx.RowToStructByName[vetchi.CostCenter],
 	)
 	if err != nil {
-		p.log.Error("failed to collect rows", "error", err)
+		p.log.Error("failed to query cost centers", "error", err)
 		return nil, err
 	}
 

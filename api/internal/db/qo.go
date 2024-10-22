@@ -28,7 +28,7 @@ type CCenterReq struct {
 type CCentersList struct {
 	EmployerID uuid.UUID
 
-	Offset string
+	Offset int
 	Limit  int
 }
 

@@ -46,6 +46,8 @@ github.com/psankar/vetchi/api v0.0.0-20241021133541-9c79c0404c10 h1:cpkI5srfCeRx
 github.com/psankar/vetchi/api v0.0.0-20241021133541-9c79c0404c10/go.mod h1:pArlM1qQwhMshQGDb5ZqWxM+zq9J3GD+OYOx+8ZjkkA=
 github.com/psankar/vetchi/api v0.0.0-20241022065607-49f436bf6e47 h1:8jmBrRHQ3cVbNuOfKnf2YXq8yjhUQcVOUPRgrvPUIVc=
 github.com/psankar/vetchi/api v0.0.0-20241022065607-49f436bf6e47/go.mod h1:pArlM1qQwhMshQGDb5ZqWxM+zq9J3GD+OYOx+8ZjkkA=
+github.com/psankar/vetchi/api v0.0.0-20241022080449-f4b98286f3fd h1:QO2CZGVo1mGOz+IrLhWdAbM4FVNOLEwvWrwcy5PE0tU=
+github.com/psankar/vetchi/api v0.0.0-20241022080449-f4b98286f3fd/go.mod h1:pArlM1qQwhMshQGDb5ZqWxM+zq9J3GD+OYOx+8ZjkkA=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

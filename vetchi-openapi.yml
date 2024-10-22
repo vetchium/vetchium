@@ -887,7 +887,8 @@ components:
           minimum: 1
           type: integer
         offset:
-          type: string
+          type: integer
+          minimum: 0
     GetInterviewDetailsRequest:
       description: Get Interview details
       properties:

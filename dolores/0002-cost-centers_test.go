@@ -14,7 +14,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = Describe("Cost Centers", Ordered, func() {
+var _ = FDescribe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 	var sessionToken string
 	BeforeAll(func() {
@@ -220,9 +220,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			var addCostCenterResp vetchi.AddCostCenterResponse
 			err = json.NewDecoder(resp.Body).Decode(&addCostCenterResp)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(
-				addCostCenterResp.CostCenterName,
-			).Should(Equal("CC1-Admin"))
+			Expect(addCostCenterResp.Name).Should(Equal("CC1-Admin"))
 		})
 
 		It("add a cost center with a duplicate name as Admin", func() {
@@ -278,9 +276,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			var addCostCenterResp vetchi.AddCostCenterResponse
 			err = json.NewDecoder(resp.Body).Decode(&addCostCenterResp)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(
-				addCostCenterResp.CostCenterName,
-			).Should(Equal("CC2-Crud"))
+			Expect(addCostCenterResp.Name).Should(Equal("CC2-Crud"))
 		})
 
 		It("add a cost center with a duplicate name as Crud", func() {
@@ -362,6 +358,9 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			err = json.NewDecoder(resp3.Body).Decode(&costCenters)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(costCenters).Should(HaveLen(2))
+
+			Expect(costCenters[0].Name).Should(Equal("CC1-Admin"))
+			Expect(costCenters[1].Name).Should(Equal("CC2-Crud"))
 		})
 
 		// TODO: Add tests for pagination
