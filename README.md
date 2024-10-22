@@ -13,10 +13,10 @@
 
 To bring the services up, run the following commands:
 ```
-$ # Setup any Kubernetes cluster (docker desktop, kind, etc.) and make kubectl point to it
-$ kubectl create namespace vetchidev
-$ tilt up
-$ #Visit http://localhost:10350/ to see the tilt UI
+vetchi $ # Setup any Kubernetes cluster (docker desktop, kind, etc.) and make kubectl point to it
+vetchi $ kubectl create namespace vetchidev
+vetchi $ tilt up
+vetchi $ # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 ```
 
 To connect to the port-forwarded Postgres using the psql command line, use the following command:
@@ -35,8 +35,8 @@ dolores $ ginkgo -vv ; # tilt up should be running
 
 To tear down the services, run the following command:
 ```
-$ tilt down
-$ kubectl delete namespace vetchidev
+vetchi $ tilt down
+vetchi $ kubectl delete namespace vetchidev
 ```
 
 ### Code Structure
@@ -55,7 +55,7 @@ $ kubectl delete namespace vetchidev
 ```
 $ yq eval 'sort_keys(..)' vetchi-openapi.yml -o=yaml > output.yaml
 $ # Move the openapi and info tags to the top of the file
-$ # Ensure the markdown is valid by editor.swagger.io or editor plugins
+$ # Ensure the yaml is valid by editor.swagger.io or editor plugins
 $ mv output.yaml vetchi-openapi.yml
 $ # Alternatively you can use a custom yaml sort in your editor
 ```
@@ -77,9 +77,9 @@ Following are some rules that you should follow while working on the code. It is
 - All backend APIs should have test coverage. Write exhaustive tests for positive and negative cases, border conditions. Focus on meaningfully detecting regressions and not just on coverage percentages.
 - End to end tests > Unit tests
 - We use [ginkgo](https://onsi.github.io/ginkgo/) for writing end to end tests. Each test should have a testcase-up.sql and testcase-down.sql file. The testcase-up.sql file should be used to setup the test data and the testcase-down.sql should be used to clean up the test data. All testcases must clean whatever data they create (including emails). All testcases must be idempotent.
-- Minimize data that has to be moved out of database to backend. But have most business logic in Go code. This may seem contradictory but if you read through the code, you will understand.
+- Minimize data that has to be moved out of database to backend. But have most business logic in Go code. This may seem contradictory at first, but if you read through the code, you will understand.
 - What is mentioned in the openapi spec is the contract. Try to keep the implementation as close to the contract as possible. Backend and Frontend code should adapt to the openapi spec.
-- Write openapi spec first before writing any code. It is okay to change the spec until the code is merged, but should be considered set in stone after that.
+- Write openapi spec first before writing any new code. It is okay to change the spec until the code is merged, but should be considered set in stone after that.
 - End all files with a newline. Do NOT have any trailing whitespace.
 - Enforce best-practices via editorconfig, CI or other FOSS tooling automation as much as possible. It is the responsibility of the reviewers to check for these.
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
