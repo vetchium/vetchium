@@ -454,18 +454,6 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
-    UpdateOrgUserRolesRequest:
-      description: Request to update an orguser's roles
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        roles:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrgUserRole"
-      required:
-        - email
-        - role
     EducationalQualification:
       description: Educational qualification
       enum:
@@ -500,16 +488,16 @@ components:
           type: string
     EmployerTFARequest:
       properties:
-        tgt:
-          description: The TGT
-          type: string
-        tfa_code:
-          description: The code from the TFA email
-          type: string
         remember_me:
           default: false
           description: If set, the session may be valid for a long time (like 1 year)
           type: boolean
+        tfa_code:
+          description: The code from the TFA email
+          type: string
+        tgt:
+          description: The TGT
+          type: string
       required:
         - tfa_code
     EmployerTFAResponse:
@@ -968,16 +956,16 @@ components:
           type: string
     HubTFARequest:
       properties:
-        tgt:
-          description: The TGT
-          type: string
-        tfa_code:
-          description: The code from the TFA email
-          type: string
         remember_me:
           default: false
           description: If set, the session may be valid for a long time (like 1 year)
           type: boolean
+        tfa_code:
+          description: The code from the TFA email
+          type: string
+        tgt:
+          description: The TGT
+          type: string
       required:
         - tfa_code
     HubTFAResponse:
@@ -1236,6 +1224,17 @@ components:
       items:
         $ref: "#/components/schemas/OrgUserInfo"
       type: array
+    OrgUserRole:
+      description: User roles in the system
+      enum:
+        - ADMIN
+        - CRUD_COST_CENTERS
+        - VIEW_COST_CENTERS
+        - CRUD_LOCATIONS
+        - VIEW_LOCATIONS
+        - CRUD_OPENINGS
+        - VIEW_OPENINGS
+      type: string
     Password:
       description: A long password
       example: Password123$
@@ -1308,17 +1307,6 @@ components:
         token:
           description: The token to reset the password
           type: string
-    OrgUserRole:
-      description: User roles in the system
-      enum:
-        - ADMIN
-        - CRUD_COST_CENTERS
-        - VIEW_COST_CENTERS
-        - CRUD_LOCATIONS
-        - VIEW_LOCATIONS
-        - CRUD_OPENINGS
-        - VIEW_OPENINGS
-      type: string
     SetOnboardPasswordRequest:
       description: Request to set the password for the given token
       properties:
@@ -1374,6 +1362,18 @@ components:
         interview_id:
           description: The interview ID
           type: string
+    UpdateOrgUserRolesRequest:
+      description: Request to update an orguser's roles
+      properties:
+        email:
+          $ref: "#/components/schemas/EmailAddress"
+        roles:
+          items:
+            $ref: "#/components/schemas/OrgUserRole"
+          type: array
+      required:
+        - email
+        - role
     UpdateWorkHistoryRequest:
       description: Request to update a work history for the logged in user
       properties:
@@ -1643,27 +1643,6 @@ paths:
         - BearerAuth: []
         - OAuth2: []
       summary: Create Opening
-      tags:
-        - Employer
-  /employer/update-org-user-roles:
-    post:
-      description: Updates the roles of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for orgusers with the ADMIN role.
-      operationId: employer-update-org-user-role
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateOrgUserRolesRequest"
-        required: true
-      responses:
-        "200":
-          description: Role updated successfully
-        "404":
-          description: User not found
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update OrgUser Role
       tags:
         - Employer
   /employer/filter-applications:
@@ -1992,9 +1971,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: "#/components/schemas/OrgUser"
+                type: array
           description: OK
       security:
         - BearerAuth: []
@@ -2245,6 +2224,27 @@ paths:
         - BearerAuth: []
         - OAuth2: []
       summary: Update Interview Feedback
+      tags:
+        - Employer
+  /employer/update-org-user-roles:
+    post:
+      description: Updates the roles of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for orgusers with the ADMIN role.
+      operationId: employer-update-org-user-role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrgUserRolesRequest"
+        required: true
+      responses:
+        "200":
+          description: Role updated successfully
+        "404":
+          description: User not found
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update OrgUser Role
       tags:
         - Employer
   /hub/add-work-history:
