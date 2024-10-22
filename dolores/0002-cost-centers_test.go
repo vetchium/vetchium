@@ -14,7 +14,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Cost Centers", Ordered, func() {
+var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 	var sessionToken string
 	BeforeAll(func() {
