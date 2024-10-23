@@ -83,3 +83,4 @@ Following are some rules that you should follow while working on the code. It is
 - End all files with a newline. Do NOT have any trailing whitespace.
 - Enforce best-practices via editorconfig, CI or other FOSS tooling automation as much as possible. It is the responsibility of the reviewers to check for these.
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
+- The test files under dolores do not have a 80 column limit. But ensure that the code is readable. Try to maintain 80 column limit for the rest of the code.
