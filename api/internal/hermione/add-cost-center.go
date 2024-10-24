@@ -22,27 +22,28 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orgUserIDString := r.Header.Get(middleware.OrgUserIDHeader)
-	if orgUserIDString == "" {
-		h.log.Error("X-Vetchi-OrgUserID header missing")
+	employerID, ok := r.Context().Value(middleware.EmployerID).(uuid.UUID)
+	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	orgUserID, err := uuid.Parse(orgUserIDString)
-	if err != nil {
-		h.log.Error("Invalid X-Vetchi-OrgUserID", "error", err)
+	orgUserID, ok := r.Context().Value(middleware.UserID).(uuid.UUID)
+	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	costCenterID, err := h.db.CreateCostCenter(r.Context(), db.CCenterReq{
-		Name:      addCostCenterReq.Name,
-		Notes:     addCostCenterReq.Notes,
-		OrgUserID: orgUserID,
-	})
+	ccReq := db.CCenterReq{
+		Name:       addCostCenterReq.Name,
+		Notes:      addCostCenterReq.Notes,
+		EmployerID: employerID,
+		OrgUserID:  orgUserID,
+	}
+
+	costCenterID, err := h.db.CreateCostCenter(r.Context(), ccReq)
 	if err != nil {
-		if errors.Is(err, db.ErrCostCenterAlreadyExists) {
+		if errors.Is(err, db.ErrDupCostCenterName) {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
@@ -51,7 +52,7 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.Debug("Created CostCenter", "ID", costCenterID, "orgUser", orgUserID)
+	h.log.Debug("Created CostCenter", "CC", ccReq, "ID", costCenterID)
 
 	err = json.NewEncoder(w).Encode(vetchi.AddCostCenterResponse{
 		Name: addCostCenterReq.Name,

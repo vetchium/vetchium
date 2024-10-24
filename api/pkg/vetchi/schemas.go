@@ -134,9 +134,17 @@ type ClientId struct {
 }
 
 type CostCenter struct {
-	Name  string `json:"name"            validate:"required,min=3,max=64" db:"cost_center_name"`
-	Notes string `json:"notes,omitempty" validate:"max=1024"              db:"notes"`
+	Name  string          `json:"name"            validate:"required,min=3,max=64" db:"cost_center_name"`
+	Notes string          `json:"notes,omitempty" validate:"max=1024"              db:"notes"`
+	State CostCenterState `json:"state"                                            db:"cost_center_state"`
 }
+
+type CostCenterState string
+
+const (
+	ActiveCC  CostCenterState = "ACTIVE_CC"
+	DefunctCC CostCenterState = "DEFUNCT_CC"
+)
 
 type CreateInterviewRequest struct {
 	CandidacyID              string    `json:"candidacy_id"                         validate:"required"`
@@ -335,8 +343,9 @@ type ForgotPasswordRequest struct {
 }
 
 type GetCostCentersRequest struct {
-	Limit  int `json:"limit,omitempty"  validate:"max=100"`
-	Offset int `json:"offset,omitempty" validate:"min=0"`
+	Limit  int               `json:"limit,omitempty"  validate:"max=100"`
+	Offset int               `json:"offset,omitempty" validate:"min=0"`
+	States []CostCenterState `json:"states,omitempty"`
 }
 
 type GetInterviewDetailsRequest struct {

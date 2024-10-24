@@ -13,20 +13,24 @@ import (
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
-	ErrNoEmployer              = errors.New("employer not found")
-	ErrOrgUserAlreadyExists    = errors.New("org user already exists")
-	ErrNoOrgUser               = errors.New("org user not found")
-	ErrCostCenterAlreadyExists = errors.New("cost center already exists")
+	ErrNoEmployer           = errors.New("employer not found")
+	ErrOrgUserAlreadyExists = errors.New("org user already exists")
+	ErrNoOrgUser            = errors.New("org user not found")
+	ErrDupCostCenterName    = errors.New("duplicate cost center name")
 )
 
 type CCenterReq struct {
-	Name      string
-	Notes     string
+	Name       string
+	Notes      string
+	EmployerID uuid.UUID
+
+	// Currently unused, but will be used in the future for audit logs
 	OrgUserID uuid.UUID
 }
 
 type CCentersList struct {
 	EmployerID uuid.UUID
+	States     []vetchi.CostCenterState
 
 	Offset int
 	Limit  int

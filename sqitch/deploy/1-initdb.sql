@@ -104,13 +104,18 @@ CREATE TABLE org_user_tokens (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+---
+
+CREATE TYPE cost_center_states AS ENUM ('ACTIVE_CC', 'DEFUNCT_CC');
 CREATE TABLE org_cost_centers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     cost_center_name TEXT NOT NULL,
+    cost_center_state cost_center_states NOT NULL,
     notes TEXT NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
     UNIQUE (cost_center_name, employer_id),
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

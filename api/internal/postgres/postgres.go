@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/psankar/vetchi/api/internal/db"
@@ -619,17 +620,12 @@ func (p *PG) CreateCostCenter(
 	costCenterReq db.CCenterReq,
 ) (uuid.UUID, error) {
 	query := `
-WITH employer_info AS (
-    SELECT ou.employer_id
-    FROM org_users ou
-    WHERE ou.id = $3
-)
 INSERT INTO org_cost_centers (
     cost_center_name,
     notes,
     employer_id
 )
-VALUES ($1, $2, (SELECT employer_id FROM employer_info))
+VALUES ($1, $2, $3)
 RETURNING id
 `
 	var costCenterID uuid.UUID
@@ -637,11 +633,13 @@ RETURNING id
 		ctx, query,
 		costCenterReq.Name,
 		costCenterReq.Notes,
-		costCenterReq.OrgUserID,
+		costCenterReq.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key value") {
-			return uuid.UUID{}, db.ErrCostCenterAlreadyExists
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "org_cost_centers_cost_center_name_key" {
+			return uuid.UUID{}, db.ErrDupCostCenterName
 		}
 
 		p.log.Error("failed to create cost center", "error", err)
@@ -657,14 +655,18 @@ func (p *PG) AuthOrgUser(
 ) (db.OrgUser, error) {
 	query := `
 SELECT
-	ou.id,
-	ou.email,
-	ou.employer_id,
-	ou.org_user_roles,
-	ou.org_user_state
-FROM org_user_tokens out1, org_users ou
-WHERE out1.token = $1 AND out1.token_type = $2 AND
-	ou.id = out1.org_user_id
+    ou.id,
+    ou.email,
+    ou.employer_id,
+    ou.org_user_roles,
+    ou.org_user_state
+FROM
+    org_user_tokens out1,
+    org_users ou
+WHERE
+    out1.token = $1
+    AND out1.token_type = $2
+    AND ou.id = out1.org_user_id
 `
 
 	var orgUser db.OrgUser
@@ -722,15 +724,22 @@ func (p *PG) GetCostCenters(
 	costCentersList db.CCentersList,
 ) ([]vetchi.CostCenter, error) {
 	query := `
-SELECT oc.cost_center_name, oc.notes
-FROM org_cost_centers oc
-WHERE oc.employer_id = $1::uuid
-ORDER BY oc.cost_center_name ASC
-LIMIT $2 OFFSET $3
+SELECT
+    oc.cost_center_name,
+    oc.notes
+FROM
+    org_cost_centers oc
+WHERE
+    oc.employer_id = $1::uuid
+    AND oc.cost_center_state = ANY ($2::cost_center_states[])
+ORDER BY
+    oc.cost_center_name ASC
+LIMIT $3 OFFSET $4
 `
 
 	rows, err := p.pool.Query(ctx, query,
 		costCentersList.EmployerID,
+		costCentersList.States,
 		costCentersList.Limit,
 		costCentersList.Offset,
 	)

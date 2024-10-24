@@ -1,19 +1,19 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 const (
-	OrgUserIDHeader    = "X-Vetchi-OrgUserID"
-	OrgUserRolesHeader = "X-Vetchi-OrgUserRoles"
-	EmployerIDHeader   = "X-Vetchi-EmployerID"
+	UserID       = "userID"
+	EmployerID   = "employerID"
+	OrgUserRoles = "orgUserRoles"
 )
 
 type Middleware struct {
@@ -46,17 +46,11 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 
 		m.log.Debug("Authenticated org user", "orgUser", orgUser)
 
-		r.Header.Set(OrgUserIDHeader, orgUser.ID.String())
-		r.Header.Set(EmployerIDHeader, orgUser.EmployerID.String())
+		ctx := context.WithValue(r.Context(), UserID, orgUser)
+		ctx = context.WithValue(ctx, EmployerID, orgUser.EmployerID)
+		ctx = context.WithValue(ctx, OrgUserRoles, orgUser.OrgUserRoles)
 
-		roles := strings.Builder{}
-		for _, role := range orgUser.OrgUserRoles {
-			roles.WriteString(string(role))
-			roles.WriteString(";")
-		}
-		r.Header.Set(OrgUserRolesHeader, roles.String())
-
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -67,30 +61,20 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 func (m *Middleware) Protect(
 	route string,
 	handler http.Handler,
-	allowedRoles []string,
+	allowedRoles []vetchi.OrgUserRole,
 ) {
 	http.Handle(route, m.employerAuth(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Retrieve roles from the header set by EmployerAuth
-			userRolesHeader := r.Header.Get(OrgUserRolesHeader)
-			if userRolesHeader == "" {
-				m.log.Error("No roles found in header")
+			ctx := r.Context()
+			orgUserRoles, ok := ctx.Value(OrgUserRoles).([]vetchi.OrgUserRole)
+			if !ok {
+				m.log.Error("Failed to get orgUserRoles from context")
 				http.Error(w, "", http.StatusInternalServerError)
 				return
 			}
 
-			if strings.Contains(userRolesHeader, string(vetchi.Admin)) {
-				// Admin can do anything within Org
-				handler.ServeHTTP(w, r)
-				return
-			}
-
-			// Split the roles into a slice
-			userRoles := strings.Split(userRolesHeader, ";")
-
-			// Check if the user has any of the allowed roles
-			if !IsAllowed(allowedRoles, userRoles) {
-				http.Error(w, "Forbidden", http.StatusForbidden)
+			if !hasRoles(orgUserRoles, allowedRoles) {
+				http.Error(w, "", http.StatusForbidden)
 				return
 			}
 
@@ -100,13 +84,18 @@ func (m *Middleware) Protect(
 	))
 }
 
-func IsAllowed(allowedRoles, userRoles []string) bool {
-	for _, allowedRole := range allowedRoles {
-		for _, userRole := range userRoles {
-			if allowedRole == userRole {
+func hasRoles(
+	orgUserRoles []vetchi.OrgUserRole,
+	allowedRoles []vetchi.OrgUserRole,
+) bool {
+	// TODO: Can potentially cache this ifF there is a performance issue
+	for _, orgUserRole := range orgUserRoles {
+		for _, role := range allowedRoles {
+			if role == orgUserRole {
 				return true
 			}
 		}
 	}
+
 	return false
 }

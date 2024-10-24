@@ -150,15 +150,15 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/add-cost-center",
 		http.HandlerFunc(h.addCostCenter),
-		[]string{string(vetchi.Admin), string(vetchi.CostCentersCRUD)},
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-cost-centers",
 		http.HandlerFunc(h.getCostCenters),
-		[]string{
-			string(vetchi.Admin),
-			string(vetchi.CostCentersCRUD),
-			string(vetchi.CostCentersViewer),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.CostCentersCRUD,
+			vetchi.CostCentersViewer,
 		},
 	)
 

@@ -292,6 +292,13 @@ components:
         notes:
           maxLength: 1024
           type: string
+        state:
+          $ref: "#/components/schemas/CostCenterState"
+    CostCenterState:
+      enum:
+        - ACTIVE_CC
+        - DEFUNCT_CC
+      type: string
     CreateInterviewRequest:
       description: Request to create a new interview
       properties:
@@ -452,6 +459,12 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
+    DefunctCostCenterRequest:
+      description: Request to mark a cost center as defunct
+      properties:
+        cost_center_name:
+          description: The name of the cost center
+          type: string
     EducationalQualification:
       description: Educational qualification
       enum:
@@ -889,6 +902,10 @@ components:
         offset:
           type: integer
           minimum: 0
+        state:
+          $ref: "#/components/schemas/CostCenterState"
+          default:
+            - ACTIVE_CC
     GetInterviewDetailsRequest:
       description: Get Interview details
       properties:
@@ -1227,12 +1244,12 @@ components:
       description: User roles in the system
       enum:
         - ADMIN
-        - CRUD_COST_CENTERS
-        - VIEW_COST_CENTERS
-        - CRUD_LOCATIONS
-        - VIEW_LOCATIONS
-        - CRUD_OPENINGS
-        - VIEW_OPENINGS
+        - COST_CENTERS_CRUD
+        - COST_CENTERS_VIEWER
+        - LOCATIONS_CRUD
+        - LOCATIONS_VIEWER
+        - OPENINGS_CRUD
+        - OPENINGS_VIEWER
       type: string
     Password:
       description: A long password
@@ -1270,13 +1287,6 @@ components:
         application_id:
           description: The ID of the application to reject
           type: string
-    RemoveCostCenterRequest:
-      description: Request to remove a cost center
-      properties:
-        cost_center_id:
-          type: string
-      required:
-        - cost_center_id
     RemoveLocationRequest:
       description: Request to remove a location
       properties:
@@ -1481,7 +1491,7 @@ components:
 paths:
   /employer/add-cost-center:
     post:
-      description: Add a new cost center. This method is available only for users with the ADMIN role.
+      description: Add a new cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
       operationId: employer-add-cost-center
       requestBody:
         content:
@@ -1496,6 +1506,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/AddCostCenterResponse"
           description: Cost center added successfully
+        "409":
+          description: Cost center with the same name already exists
       security:
         - BearerAuth: []
         - OAuth2: []
@@ -1854,7 +1866,7 @@ paths:
         - Employer
   /employer/get-cost-centers:
     post:
-      description: Get a list of cost centers with pagination.
+      description: Get a list of cost centers with pagination. This method is available only for users with the COST_CENTERS_CRUD or COST_CENTERS_VIEWER or ADMIN roles.
       operationId: employer-get-cost-centers
       requestBody:
         content:
@@ -1980,27 +1992,6 @@ paths:
       summary: Get OrgUsers
       tags:
         - Employer
-  /employer/put-cost-center:
-    post:
-      description: Update an existing cost center. This method is available only for users with the ADMIN role.
-      operationId: employer-put-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PutCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center updated successfully
-        "404":
-          description: Cost center not found
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update Cost Center
-      tags:
-        - Employer
   /employer/reject-application:
     post:
       description: Reject an application for a given opening.
@@ -2022,23 +2013,23 @@ paths:
       summary: Reject Application
       tags:
         - Employer
-  /employer/remove-cost-center:
+  /employer/defunct-cost-center:
     post:
-      description: Remove a cost center. This method is available only for users with the ADMIN role. Removing a cost center will not remove any openings associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of cost centers and future openings.
-      operationId: employer-remove-cost-center
+      description: Marks a cost center as defunct. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles. Marking a cost center as defunct will not remove any openings already associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of active cost centers and in the creation of New Openings in future.
+      operationId: employer-defunct-cost-center
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RemoveCostCenterRequest"
+              $ref: "#/components/schemas/DefunctCostCenterRequest"
         required: true
       responses:
         "200":
-          description: Cost center removed successfully or cost center not found.
+          description: Cost center marked as defunct successfully
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Remove Cost Center
+      summary: Mark Cost Center as Defunct
       tags:
         - Employer
   /employer/remove-location:

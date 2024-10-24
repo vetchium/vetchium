@@ -25,25 +25,23 @@ func (h *Hermione) getCostCenters(w http.ResponseWriter, r *http.Request) {
 		getCostCentersRequest.Limit = 100
 	}
 
-	employerIDString := r.Header.Get(middleware.EmployerIDHeader)
-	if employerIDString == "" {
-		h.log.Error("X-Vetchi-EmployerID header missing")
+	if len(getCostCentersRequest.States) == 0 {
+		getCostCentersRequest.States = []vetchi.CostCenterState{vetchi.ActiveCC}
+	}
+
+	employerID, ok := r.Context().Value(middleware.EmployerID).(uuid.UUID)
+	if !ok {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	employerID, err := uuid.Parse(employerIDString)
-	if err != nil {
-		h.log.Error("Invalid X-Vetchi-EmployerID", "error", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
 	costCenters, err := h.db.GetCostCenters(
 		r.Context(),
 		db.CCentersList{
 			EmployerID: employerID,
 			Offset:     getCostCentersRequest.Offset,
 			Limit:      getCostCentersRequest.Limit,
+			States:     getCostCentersRequest.States,
 		},
 	)
 	if err != nil {
