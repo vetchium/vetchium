@@ -84,3 +84,4 @@ Following are some rules that you should follow while working on the code. It is
 - Enforce best-practices via editorconfig, CI or other FOSS tooling automation as much as possible. It is the responsibility of the reviewers to check for these.
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
 - The test files under dolores do not have a 80 column limit. But ensure that the code is readable. Try to maintain 80 column limit for the rest of the code.
+- Use https://sqlformat.darold.net/ to format SQL within the postgres.go file and dolores/*.pgsql files. This does not do a good job at breaking long lines, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.

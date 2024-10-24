@@ -37,15 +37,19 @@ func (p *PG) GetEmployer(
 ) (db.Employer, error) {
 	query := `
 SELECT
-	e.id,
-	e.client_id_type,
-	e.employer_state,
-	e.onboard_admin_email,
-	e.onboard_secret_token,
-	e.token_valid_till,
-	e.created_at
-FROM employers e, domains d
-WHERE e.id = d.employer_id AND d.domain_name = $1
+    e.id,
+    e.client_id_type,
+    e.employer_state,
+    e.onboard_admin_email,
+    e.onboard_secret_token,
+    e.token_valid_till,
+    e.created_at
+FROM
+    employers e,
+    domains d
+WHERE
+    e.id = d.employer_id
+    AND d.domain_name = $1
 `
 
 	var employer db.Employer
@@ -135,12 +139,19 @@ func (p *PG) DeQOnboard(
 	ctx context.Context,
 ) (*db.OnboardInfo, error) {
 	query := `
-SELECT e.id, e.onboard_admin_email, d.domain_name
-FROM employers e, domains d
-WHERE 	e.employer_state = $1 AND
-		e.onboard_secret_token IS NULL AND
-		d.employer_id = e.id
-ORDER BY e.created_at ASC
+SELECT
+    e.id,
+    e.onboard_admin_email,
+    d.domain_name
+FROM
+    employers e,
+    domains d
+WHERE
+    e.employer_state = $1
+    AND e.onboard_secret_token IS NULL
+    AND d.employer_id = e.id
+ORDER BY
+    e.created_at ASC
 LIMIT 1
 `
 
@@ -204,12 +215,14 @@ RETURNING email_key
 	_, err = tx.Exec(
 		context.Background(),
 		`
-UPDATE employers
+UPDATE
+    employers
 SET
-	onboard_email_id = $1,
-	onboard_secret_token = $2,
-	token_valid_till = NOW() + interval '1 minute' * $3
-WHERE id = $4
+    onboard_email_id = $1,
+    onboard_secret_token = $2,
+    token_valid_till = NOW() + interval '1 minute' * $3
+WHERE
+    id = $4
 `,
 		emailTableKey,
 		onboardEmailInfo.OnboardSecretToken,
@@ -234,16 +247,19 @@ WHERE id = $4
 func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {
 	query := `
 SELECT
-	email_key,
-	email_from,
-	email_to,
-	email_subject,
-	email_html_body,
-	email_text_body,
-	email_state
-FROM emails
-WHERE email_state = $1
-ORDER BY created_at ASC
+    email_key,
+    email_from,
+    email_to,
+    email_subject,
+    email_html_body,
+    email_text_body,
+    email_state
+FROM
+    emails
+WHERE
+    email_state = $1
+ORDER BY
+    created_at ASC
 LIMIT 10
 `
 	rows, err := p.pool.Query(ctx, query, db.EmailStatePending)
@@ -279,9 +295,13 @@ func (p *PG) UpdateEmailState(
 	emailStateChange db.EmailStateChange,
 ) error {
 	query := `
-UPDATE emails
-SET email_state = $1, processed_at = NOW()
-WHERE email_key = $2
+UPDATE
+    emails
+SET
+    email_state = $1,
+    processed_at = NOW()
+WHERE
+    email_key = $2
 `
 	_, err := p.pool.Exec(
 		ctx,
@@ -302,14 +322,18 @@ func (p *PG) OnboardAdmin(
 	onboardReq db.OnboardReq,
 ) error {
 	employerQuery := `
-SELECT e.id, e.onboard_admin_email
-FROM employers e, domains d
+SELECT
+    e.id,
+    e.onboard_admin_email
+FROM
+    employers e,
+    domains d
 WHERE
-	e.onboard_secret_token = $1 AND
-	e.token_valid_till > NOW() AND
-	d.domain_name = $2 AND
-	d.employer_id = e.id AND
-	e.employer_state = $3
+    e.onboard_secret_token = $1
+    AND e.token_valid_till > NOW()
+    AND d.domain_name = $2
+    AND d.employer_id = e.id
+    AND e.employer_state = $3
 `
 
 	var employerID uuid.UUID
@@ -418,18 +442,22 @@ func (p *PG) GetOrgUserAuth(
 ) (db.OrgUserAuth, error) {
 	query := `
 SELECT
-	ou.id,
-	ou.email,
-	ou.employer_id,
-	ou.org_user_roles,
-	ou.password_hash,
-	e.employer_state,
-	ou.org_user_state
-FROM org_users ou, employers e, domains d
-WHERE 	ou.email = $1 AND
-		ou.employer_id = e.id AND
-		e.id = d.employer_id AND
-		d.domain_name = $2
+    ou.id,
+    ou.email,
+    ou.employer_id,
+    ou.org_user_roles,
+    ou.password_hash,
+    e.employer_state,
+    ou.org_user_state
+FROM
+    org_users ou,
+    employers e,
+    domains d
+WHERE
+    ou.email = $1
+    AND ou.employer_id = e.id
+    AND e.id = d.employer_id
+    AND d.domain_name = $2
 `
 
 	var orgUserAuth db.OrgUserAuth
@@ -548,17 +576,22 @@ func (p *PG) GetOrgUserByToken(
 ) (db.OrgUser, error) {
 	query := `
 SELECT
-	ou.id,
-	ou.email,
-	ou.employer_id,
-	ou.org_user_roles,
-	ou.org_user_state
-FROM org_user_tokens out1, org_user_tokens out2, org_users ou
+    ou.id,
+    ou.email,
+    ou.employer_id,
+    ou.org_user_roles,
+    ou.org_user_state
+FROM
+    org_user_tokens out1,
+    org_user_tokens out2,
+    org_users ou
 WHERE
-	out1.token = $1 AND out1.token_type = 'EMAIL' AND
-	out2.token = $2 AND out2.token_type = 'TGT' AND
-	ou.id = out1.org_user_id AND
-	ou.id = out2.org_user_id
+    out1.token = $1
+    AND out1.token_type = 'EMAIL'
+    AND out2.token = $2
+    AND out2.token_type = 'TGT'
+    AND ou.id = out1.org_user_id
+    AND ou.id = out2.org_user_id
 `
 
 	var orgUser db.OrgUser
@@ -620,13 +653,10 @@ func (p *PG) CreateCostCenter(
 	costCenterReq db.CCenterReq,
 ) (uuid.UUID, error) {
 	query := `
-INSERT INTO org_cost_centers (
-    cost_center_name,
-    notes,
-    employer_id
-)
-VALUES ($1, $2, $3)
-RETURNING id
+INSERT INTO org_cost_centers (cost_center_name, notes, employer_id)
+    VALUES ($1, $2, $3)
+RETURNING
+    id
 `
 	var costCenterID uuid.UUID
 	err := p.pool.QueryRow(
