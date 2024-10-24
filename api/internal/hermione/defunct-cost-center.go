@@ -17,7 +17,7 @@ func (h *Hermione) defunctCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.vator.Struct(w, defunctCostCenterRequest) {
+	if !h.vator.Struct(w, &defunctCostCenterRequest) {
 		return
 	}
 

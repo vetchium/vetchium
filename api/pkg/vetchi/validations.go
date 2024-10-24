@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/mail"
+	"reflect"
 	"regexp"
 
 	validator "github.com/go-playground/validator/v10"
@@ -87,6 +88,14 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 // writes the appropriate error to the http.ResponseWriter and returns false.
 // The caller should not touch the http.ResponseWriter if this returns false.
 func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
+	// Ensure that 'i' is a pointer to a struct
+	val := reflect.ValueOf(i)
+	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
+		v.log.Error("provided input is not a pointer to a struct")
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return false
+	}
+
 	err := v.validate.Struct(i)
 	if err != nil {
 		if _, ok := err.(*validator.InvalidValidationError); ok {
@@ -95,21 +104,38 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 			return false
 		}
 
-		var validationErrors ValidationErrors
-		for _, err := range err.(validator.ValidationErrors) {
-			validationErrors.Errors = append(
-				validationErrors.Errors,
-				err.Tag(),
-			)
+		// Collect all failed fields
+		var failedFields []string
+		structType := val.Elem().Type() // Get the actual struct type
+
+		for _, validationErr := range err.(validator.ValidationErrors) {
+			// Safely retrieve the field name via reflection
+			field, found := structType.FieldByName(validationErr.StructField())
+			if found {
+				// Use the JSON tag name if available, otherwise fallback to the field name
+				jsonTag := field.Tag.Get("json")
+				if jsonTag != "" {
+					failedFields = append(failedFields, jsonTag)
+				} else {
+					failedFields = append(failedFields, validationErr.Field())
+				}
+			} else {
+				// Fallback to field name if reflection doesn't find the field
+				failedFields = append(failedFields, validationErr.Field())
+			}
 		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		err = json.NewEncoder(w).Encode(validationErrors)
+		err = json.NewEncoder(w).Encode(ValidationErrors{Errors: failedFields})
 		if err != nil {
-			v.log.Error("failed to encode response", "error", err)
+			v.log.Error("failed to encode validation errors", "error", err)
+			// This would cause a superflous error response, but we'll log it
 			http.Error(w, "", http.StatusInternalServerError)
 			return false
 		}
 		return false
 	}
+
 	return true
 }

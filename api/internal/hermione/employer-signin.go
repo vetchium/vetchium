@@ -24,7 +24,7 @@ func (h *Hermione) employerSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.vator.Struct(w, employerSigninReq) {
+	if !h.vator.Struct(w, &employerSigninReq) {
 		return
 	}
 

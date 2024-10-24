@@ -20,7 +20,7 @@ func (h *Hermione) setOnboardPassword(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("Set Onboard Password Request", "request", setOnboardPasswordReq)
 	log.Printf("Set Onboard Password Request %+v", setOnboardPasswordReq)
 
-	if !h.vator.Struct(w, setOnboardPasswordReq) {
+	if !h.vator.Struct(w, &setOnboardPasswordReq) {
 		return
 	}
 

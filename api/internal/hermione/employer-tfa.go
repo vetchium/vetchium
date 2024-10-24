@@ -20,7 +20,7 @@ func (h *Hermione) employerTFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.vator.Struct(w, employerTFARequest) {
+	if !h.vator.Struct(w, &employerTFARequest) {
 		return
 	}
 

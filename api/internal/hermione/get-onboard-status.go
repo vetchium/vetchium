@@ -19,7 +19,7 @@ func (h *Hermione) getOnboardStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.vator.Struct(w, getOnboardStatusReq) {
+	if !h.vator.Struct(w, &getOnboardStatusReq) {
 		return
 	}
 

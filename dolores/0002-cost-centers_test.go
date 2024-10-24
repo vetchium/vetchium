@@ -620,7 +620,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			fmt.Fprintf(GinkgoWriter, "respBody: %+v\n", respBody)
 			Expect(respBody.Errors).Should(HaveLen(1))
-			// TODO Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
+			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
 		})
 
 		It("defunct a cost center with a name that doesn't exist", func() {
@@ -670,7 +670,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			err = json.NewDecoder(resp.Body).Decode(&respBody)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(respBody.Errors).Should(HaveLen(1))
-			// TODO Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
+			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
 		})
 
 		It("defunct a cost center with a name that is too short", func() {
@@ -698,7 +698,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			err = json.NewDecoder(resp.Body).Decode(&respBody)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(respBody.Errors).Should(HaveLen(1))
-			// TODO Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
+			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
 		})
 
 		It("get the list of defunct cost centers", func() {
@@ -734,5 +734,6 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		})
 
 		// TODO: Add tests for pagination
+		// TODO: Optimize signin flow so that for each account we login only once
 	})
 })
