@@ -30,7 +30,7 @@ type CCenterReq struct {
 
 type CCentersList struct {
 	EmployerID uuid.UUID
-	States     []vetchi.CostCenterState
+	States     []string
 
 	Offset int
 	Limit  int

@@ -653,8 +653,8 @@ func (p *PG) CreateCostCenter(
 	costCenterReq db.CCenterReq,
 ) (uuid.UUID, error) {
 	query := `
-INSERT INTO org_cost_centers (cost_center_name, notes, employer_id)
-    VALUES ($1, $2, $3)
+INSERT INTO org_cost_centers (cost_center_name, cost_center_state, notes, employer_id)
+    VALUES ($1, $2, $3, $4)
 RETURNING
     id
 `
@@ -662,13 +662,14 @@ RETURNING
 	err := p.pool.QueryRow(
 		ctx, query,
 		costCenterReq.Name,
+		vetchi.ActiveCC,
 		costCenterReq.Notes,
 		costCenterReq.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
-			pgErr.ConstraintName == "org_cost_centers_cost_center_name_key" {
+			pgErr.ConstraintName == "uniq_cost_center_name_employer_id" {
 			return uuid.UUID{}, db.ErrDupCostCenterName
 		}
 
@@ -756,6 +757,7 @@ func (p *PG) GetCostCenters(
 	query := `
 SELECT
     oc.cost_center_name,
+	oc.cost_center_state,
     oc.notes
 FROM
     org_cost_centers oc

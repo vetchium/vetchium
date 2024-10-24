@@ -7,12 +7,44 @@ spec:
   template:
     spec:
       backoffLimit: 5
+      serviceAccountName: sqitch-sa
+      initContainers:
+        - name: wait-for-postgres
+          image: bitnami/kubectl:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              until kubectl get pods -l app=postgres -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+                echo "Waiting for PostgreSQL to be ready..."
+                sleep 5
+              done
       containers:
         - name: sqitch
           image: psankar/vetchi-sqitch:latest
           command: ["sh", "-c"]
           args:
             - |
+              set -e
               sqitch deploy --verbose db:pg://user:pass@postgres:5432/vdb
               sqitch verify --verbose db:pg://user:pass@postgres:5432/vdb
       restartPolicy: Never
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sqitch-sa
+  namespace: vetchidev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sqitch-full-access-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: full-access
+subjects:
+  - kind: ServiceAccount
+    name: sqitch-sa
+    namespace: vetchidev

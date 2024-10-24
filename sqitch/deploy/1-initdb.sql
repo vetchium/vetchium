@@ -59,7 +59,10 @@ CREATE TYPE domain_states AS ENUM (
 );
 CREATE TABLE domains (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    domain_name TEXT NOT NULL UNIQUE,
+    
+    domain_name TEXT NOT NULL,
+    CONSTRAINT uniq_domain_name UNIQUE (domain_name),
+
     domain_state domain_states NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
@@ -88,7 +91,7 @@ CREATE TABLE org_users (
 
 --- As of now, we have only one org per employer. This may change in future.
     employer_id UUID REFERENCES employers(id) NOT NULL,
-    UNIQUE (email, employer_id),
+    CONSTRAINT uniq_email_employer_id UNIQUE (email, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -114,7 +117,7 @@ CREATE TABLE org_cost_centers (
     notes TEXT NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
-    UNIQUE (cost_center_name, employer_id),
+    CONSTRAINT uniq_cost_center_name_employer_id UNIQUE (cost_center_name, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );

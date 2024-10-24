@@ -10,10 +10,10 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
+type orgUserCtx int
+
 const (
-	UserID       = "userID"
-	EmployerID   = "employerID"
-	OrgUserRoles = "orgUserRoles"
+	OrgUserCtxKey orgUserCtx = iota
 )
 
 type Middleware struct {
@@ -46,9 +46,7 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 
 		m.log.Debug("Authenticated org user", "orgUser", orgUser)
 
-		ctx := context.WithValue(r.Context(), UserID, orgUser)
-		ctx = context.WithValue(ctx, EmployerID, orgUser.EmployerID)
-		ctx = context.WithValue(ctx, OrgUserRoles, orgUser.OrgUserRoles)
+		ctx := context.WithValue(r.Context(), OrgUserCtxKey, orgUser)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -66,14 +64,14 @@ func (m *Middleware) Protect(
 	http.Handle(route, m.employerAuth(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			orgUserRoles, ok := ctx.Value(OrgUserRoles).([]vetchi.OrgUserRole)
+			orgUser, ok := ctx.Value(OrgUserCtxKey).(db.OrgUser)
 			if !ok {
-				m.log.Error("Failed to get orgUserRoles from context")
+				m.log.Error("Failed to get orgUser from context")
 				http.Error(w, "", http.StatusInternalServerError)
 				return
 			}
 
-			if !hasRoles(orgUserRoles, allowedRoles) {
+			if !hasRoles(orgUser.OrgUserRoles, allowedRoles) {
 				http.Error(w, "", http.StatusForbidden)
 				return
 			}

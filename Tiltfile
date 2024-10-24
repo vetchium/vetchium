@@ -1,7 +1,7 @@
 secret_settings(disable_scrub=True)
 
 # Load Kubernetes YAML files
-k8s_yaml('vetchi-secrets-tilt.yaml')
+k8s_yaml('tiltenv/tiltenv.yaml')
 k8s_yaml('api/mailpit-tilt.yaml')
 k8s_yaml('api/granger-tilt.yaml')
 k8s_yaml('api/hermione-tilt.yaml')

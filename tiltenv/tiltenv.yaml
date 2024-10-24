@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: full-access
+  namespace: vetchidev
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vetchi-secrets
+  namespace: vetchidev
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "pass"
+  SMTP_PASSWORD: "password"

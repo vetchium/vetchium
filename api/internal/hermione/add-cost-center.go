@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -22,14 +21,9 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	employerID, ok := r.Context().Value(middleware.EmployerID).(uuid.UUID)
+	orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 	if !ok {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	orgUserID, ok := r.Context().Value(middleware.UserID).(uuid.UUID)
-	if !ok {
+		h.log.Error("failed to get orgUser from context")
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
@@ -37,8 +31,8 @@ func (h *Hermione) addCostCenter(w http.ResponseWriter, r *http.Request) {
 	ccReq := db.CCenterReq{
 		Name:       addCostCenterReq.Name,
 		Notes:      addCostCenterReq.Notes,
-		EmployerID: employerID,
-		OrgUserID:  orgUserID,
+		EmployerID: orgUser.EmployerID,
+		OrgUserID:  orgUser.ID,
 	}
 
 	costCenterID, err := h.db.CreateCostCenter(r.Context(), ccReq)

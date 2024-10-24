@@ -59,6 +59,27 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_cc_states",
+		func(fl validator.FieldLevel) bool {
+			states := fl.Field().Interface().([]CostCenterState)
+			for _, state := range states {
+				switch state {
+				case ActiveCC:
+					continue
+				case DefunctCC:
+					continue
+				default:
+					return false
+				}
+			}
+			return true
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

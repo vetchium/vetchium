@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -29,19 +28,25 @@ func (h *Hermione) getCostCenters(w http.ResponseWriter, r *http.Request) {
 		getCostCentersRequest.States = []vetchi.CostCenterState{vetchi.ActiveCC}
 	}
 
-	employerID, ok := r.Context().Value(middleware.EmployerID).(uuid.UUID)
+	orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 	if !ok {
+		h.log.Error("failed to get orgUser from context")
 		http.Error(w, "", http.StatusInternalServerError)
 		return
+	}
+
+	states := []string{}
+	for _, state := range getCostCentersRequest.States {
+		states = append(states, string(state))
 	}
 
 	costCenters, err := h.db.GetCostCenters(
 		r.Context(),
 		db.CCentersList{
-			EmployerID: employerID,
+			EmployerID: orgUser.EmployerID,
 			Offset:     getCostCentersRequest.Offset,
 			Limit:      getCostCentersRequest.Limit,
-			States:     getCostCentersRequest.States,
+			States:     states,
 		},
 	)
 	if err != nil {
