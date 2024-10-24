@@ -27,6 +27,7 @@ type DB interface {
 	OnboardAdmin(context.Context, OnboardReq) error
 
 	CreateCostCenter(context.Context, CCenterReq) (uuid.UUID, error)
+	DefunctCostCenter(context.Context, DefunctReq) error
 	GetCostCenters(context.Context, CCentersList) ([]vetchi.CostCenter, error)
 
 	// Used by granger

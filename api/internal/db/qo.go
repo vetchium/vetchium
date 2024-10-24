@@ -17,6 +17,7 @@ var (
 	ErrOrgUserAlreadyExists = errors.New("org user already exists")
 	ErrNoOrgUser            = errors.New("org user not found")
 	ErrDupCostCenterName    = errors.New("duplicate cost center name")
+	ErrNoCostCenter         = errors.New("cost center not found")
 )
 
 type CCenterReq struct {
@@ -34,6 +35,11 @@ type CCentersList struct {
 
 	Offset int
 	Limit  int
+}
+
+type DefunctReq struct {
+	EmployerID uuid.UUID
+	Name       string
 }
 
 type EmailStateChange struct {

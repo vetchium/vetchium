@@ -363,6 +363,26 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			Expect(costCenters[1].Name).Should(Equal("CC2-Crud"))
 		})
 
+		It("defunct a cost center with no session token", func() {
+			defunctCostCenterRequestBody, err := json.Marshal(
+				vetchi.DefunctCostCenterRequest{
+					Name: "CC1-Admin",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			defunctCostCenterReq, err := http.NewRequest(
+				http.MethodPost,
+				serverURL+"/employer/defunct-cost-center",
+				bytes.NewBuffer(defunctCostCenterRequestBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
+		})
+
 		// TODO: Add tests for pagination
 
 	})

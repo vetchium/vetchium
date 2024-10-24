@@ -791,3 +791,35 @@ LIMIT $3 OFFSET $4
 
 	return costCenters, nil
 }
+
+func (p *PG) DefunctCostCenter(
+	ctx context.Context,
+	defunctReq db.DefunctReq,
+) error {
+	query := `
+UPDATE
+    org_cost_centers
+SET
+    cost_center_state = $1
+WHERE
+    cost_center_name = $2
+    AND employer_id = $3
+`
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		vetchi.DefunctCC,
+		defunctReq.Name,
+		defunctReq.EmployerID,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.ErrNoCostCenter
+		}
+
+		p.log.Error("failed to defunct cost center", "error", err)
+		return err
+	}
+
+	return nil
+}

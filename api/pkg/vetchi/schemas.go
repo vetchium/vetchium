@@ -182,6 +182,10 @@ type CreateOpeningRequest struct {
 	InternalOnly             bool                     `json:"internal_only,omitempty"`
 }
 
+type DefunctCostCenterRequest struct {
+	Name string `json:"name" validate:"required,min=3,max=64"`
+}
+
 type EducationalQualification string
 
 const (
