@@ -804,14 +804,18 @@ SET
 WHERE
     cost_center_name = $2
     AND employer_id = $3
+RETURNING
+    id
 `
-	_, err := p.pool.Exec(
+
+	var costCenterID uuid.UUID
+	err := p.pool.QueryRow(
 		ctx,
 		query,
 		vetchi.DefunctCC,
 		defunctReq.Name,
 		defunctReq.EmployerID,
-	)
+	).Scan(&costCenterID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return db.ErrNoCostCenter
