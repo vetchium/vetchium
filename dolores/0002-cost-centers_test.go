@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
@@ -18,7 +19,9 @@ import (
 
 var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
-	var adminToken, viewerToken, nonCostCenterToken, multipleNonCostCenterRolesToken, crud1Token, crud2Token string
+	var adminToken, viewerToken string
+	var nonCostCenterToken, multipleNonCostCenterRolesToken string
+	var crud1Token, crud2Token string
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -29,47 +32,63 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		_, err = db.Exec(context.Background(), string(seed))
 		Expect(err).ShouldNot(HaveOccurred())
 
-		adminToken, err = employerSignin(
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"admin@cost-center.example",
 			"NewPassword123$",
+			&adminToken,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		viewerToken, err = employerSignin(
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"viewer@cost-center.example",
 			"NewPassword123$",
+			&viewerToken,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		nonCostCenterToken, err = employerSignin(
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"non-cost-center@cost-center.example",
 			"NewPassword123$",
+			&nonCostCenterToken,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		multipleNonCostCenterRolesToken, err = employerSignin(
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"multiple-non-cost-center-roles@cost-center.example",
 			"NewPassword123$",
+			&multipleNonCostCenterRolesToken,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		crud1Token, err = employerSignin(
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"crud1@cost-center.example",
 			"NewPassword123$",
+			&crud1Token,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		crud2Token, err = employerSignin(
+		wg.Add(1)
+		employerSigninAsync(
 			"cost-center.example",
 			"crud2@cost-center.example",
 			"NewPassword123$",
+			&crud2Token,
+			&wg,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
+
+		wg.Wait()
 	})
 
 	AfterAll(func() {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -51,6 +52,19 @@ type SigninError struct {
 
 func (e SigninError) Error() string {
 	return fmt.Sprintf("signin failed with status code: %d", e.StatusCode)
+}
+
+func employerSigninAsync(
+	clientID, email, password string,
+	token *string,
+	wg *sync.WaitGroup,
+) {
+	go func() {
+		defer wg.Done()
+		var err error
+		*token, err = employerSignin(clientID, email, password)
+		Expect(err).ShouldNot(HaveOccurred())
+	}()
 }
 
 // Returns the session token for the employer with the given credentials
