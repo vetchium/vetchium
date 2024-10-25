@@ -731,6 +731,122 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			).Should(ConsistOf("CC1-Admin", "CC2-Crud"))
 		})
 
-		// TODO: Add tests for pagination
+		It("create/defunct cost centers in bulk; verify pagination", func() {
+			// runID parameter is needed because even if a CC is defunct,
+			// its name cannot be used by another CC
+
+			fmt.Fprintf(GinkgoWriter, "count is not divisible by limit\n")
+			bulkCreateDefunctCC(adminToken, serverURL, "run-1", 30, 4)
+
+			fmt.Fprintf(GinkgoWriter, "count is divisible by limit\n")
+			bulkCreateDefunctCC(adminToken, serverURL, "run-2", 32, 4)
+
+			fmt.Fprintf(GinkgoWriter, "count is less than limit\n")
+			bulkCreateDefunctCC(adminToken, serverURL, "run-3", 2, 4)
+		})
 	})
 })
+
+func bulkCreateDefunctCC(
+	adminToken string,
+	serverURL string,
+	runID string,
+	count, limit int,
+) {
+	wantCC := []string{}
+
+	for i := 0; i < count; i++ {
+		ccName := fmt.Sprintf("CC-%s-%d", runID, i)
+		wantCC = append(wantCC, ccName)
+
+		addCostCenterReqBody, err := json.Marshal(
+			vetchi.AddCostCenterRequest{
+				Name: ccName,
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		addCostCenterReq, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/employer/add-cost-center",
+			bytes.NewBuffer(addCostCenterReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		addCostCenterReq.Header.Set("Authorization", adminToken)
+
+		resp, err := http.DefaultClient.Do(addCostCenterReq)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+	}
+
+	paginationKey := ""
+	gotCC := []string{}
+
+	for {
+		getCostCentersReqBody, err := json.Marshal(
+			vetchi.GetCostCentersRequest{
+				PaginationKey: paginationKey,
+				Limit:         limit,
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		getCostCentersReq, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/employer/get-cost-centers",
+			bytes.NewBuffer(getCostCentersReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		getCostCentersReq.Header.Set("Authorization", adminToken)
+
+		resp, err := http.DefaultClient.Do(getCostCentersReq)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		var costCenters []vetchi.CostCenter
+		err = json.NewDecoder(resp.Body).Decode(&costCenters)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		if len(costCenters) == 0 {
+			break
+		}
+
+		for _, costCenter := range costCenters {
+			gotCC = append(gotCC, costCenter.Name)
+		}
+		paginationKey = costCenters[len(costCenters)-1].Name
+
+		if len(costCenters) < limit {
+			break
+		}
+	}
+
+	Expect(gotCC).Should(HaveLen(count))
+	Expect(gotCC).Should(ContainElements(wantCC))
+
+	for i := 0; i < count; i++ {
+		ccName := fmt.Sprintf("CC-%s-%d", runID, i)
+
+		defunctCostCenterReqBody, err := json.Marshal(
+			vetchi.DefunctCostCenterRequest{
+				Name: ccName,
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		defunctCostCenterReq, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/employer/defunct-cost-center",
+			bytes.NewBuffer(defunctCostCenterReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		defunctCostCenterReq.Header.Set("Authorization", adminToken)
+
+		resp, err := http.DefaultClient.Do(defunctCostCenterReq)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+	}
+}

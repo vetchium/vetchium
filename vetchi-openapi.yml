@@ -1490,7 +1490,7 @@ components:
 paths:
   /employer/add-cost-center:
     post:
-      description: Add a new cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
+      description: Add a new Cost Center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
       operationId: employer-add-cost-center
       requestBody:
         content:
@@ -1504,9 +1504,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AddCostCenterResponse"
-          description: Cost center added successfully
+          description: Cost Center added successfully
         "409":
-          description: Cost center with the same name already exists
+          description: Cost Center with the same name already exists. Note that even if a Cost Center is defunct, its name cannot be used by another.
       security:
         - BearerAuth: []
         - OAuth2: []
