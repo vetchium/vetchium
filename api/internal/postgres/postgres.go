@@ -690,7 +690,8 @@ SELECT
     ou.email,
     ou.employer_id,
     ou.org_user_roles,
-    ou.org_user_state
+    ou.org_user_state,
+    ou.created_at
 FROM
     org_user_tokens out1,
     org_users ou
@@ -709,6 +710,7 @@ WHERE
 		&orgUser.EmployerID,
 		&roles,
 		&orgUser.OrgUserState,
+		&orgUser.CreatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
