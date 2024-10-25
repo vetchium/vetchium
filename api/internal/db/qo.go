@@ -33,8 +33,8 @@ type CCentersList struct {
 	EmployerID uuid.UUID
 	States     []string
 
-	Offset int
-	Limit  int
+	Limit         int
+	PaginationKey string
 }
 
 type DefunctReq struct {

@@ -764,16 +764,17 @@ FROM
 WHERE
     oc.employer_id = $1::uuid
     AND oc.cost_center_state = ANY ($2::cost_center_states[])
+	AND oc.cost_center_name > $3
 ORDER BY
     oc.cost_center_name ASC
-LIMIT $3 OFFSET $4
+LIMIT $4
 `
 
 	rows, err := p.pool.Query(ctx, query,
 		costCentersList.EmployerID,
 		costCentersList.States,
+		costCentersList.PaginationKey,
 		costCentersList.Limit,
-		costCentersList.Offset,
 	)
 	if err != nil {
 		p.log.Error("failed to query cost centers", "error", err)

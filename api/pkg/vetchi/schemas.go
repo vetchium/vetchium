@@ -347,9 +347,9 @@ type ForgotPasswordRequest struct {
 }
 
 type GetCostCentersRequest struct {
-	Limit  int               `json:"limit,omitempty"  validate:"max=100"`
-	Offset int               `json:"offset,omitempty" validate:"min=0"`
-	States []CostCenterState `json:"states,omitempty" validate:"validate_cc_states"`
+	Limit         int               `json:"limit,omitempty"          validate:"max=100"`
+	PaginationKey string            `json:"pagination_key,omitempty"`
+	States        []CostCenterState `json:"states,omitempty"         validate:"validate_cc_states"`
 }
 
 type GetInterviewDetailsRequest struct {

@@ -899,9 +899,8 @@ components:
           maximum: 100
           minimum: 1
           type: integer
-        offset:
-          type: integer
-          minimum: 0
+        pagination_key:
+          type: string
         state:
           $ref: "#/components/schemas/CostCenterState"
           default:

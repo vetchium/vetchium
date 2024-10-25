@@ -43,10 +43,10 @@ func (h *Hermione) getCostCenters(w http.ResponseWriter, r *http.Request) {
 	costCenters, err := h.db.GetCostCenters(
 		r.Context(),
 		db.CCentersList{
-			EmployerID: orgUser.EmployerID,
-			Offset:     getCostCentersRequest.Offset,
-			Limit:      getCostCentersRequest.Limit,
-			States:     states,
+			EmployerID:    orgUser.EmployerID,
+			States:        states,
+			PaginationKey: getCostCentersRequest.PaginationKey,
+			Limit:         getCostCentersRequest.Limit,
 		},
 	)
 	if err != nil {
