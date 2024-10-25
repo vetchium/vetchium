@@ -18,7 +18,8 @@ import (
 
 var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
-	var sessionToken string
+	var adminToken, viewerToken, nonCostCenterToken, multipleNonCostCenterRolesToken, crud1Token, crud2Token string
+
 	BeforeAll(func() {
 		db = setupTestDB()
 
@@ -28,9 +29,44 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		_, err = db.Exec(context.Background(), string(seed))
 		Expect(err).ShouldNot(HaveOccurred())
 
-		sessionToken, err = employerSignin(
+		adminToken, err = employerSignin(
 			"cost-center.example",
 			"admin@cost-center.example",
+			"NewPassword123$",
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		viewerToken, err = employerSignin(
+			"cost-center.example",
+			"viewer@cost-center.example",
+			"NewPassword123$",
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		nonCostCenterToken, err = employerSignin(
+			"cost-center.example",
+			"non-cost-center@cost-center.example",
+			"NewPassword123$",
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		multipleNonCostCenterRolesToken, err = employerSignin(
+			"cost-center.example",
+			"multiple-non-cost-center-roles@cost-center.example",
+			"NewPassword123$",
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		crud1Token, err = employerSignin(
+			"cost-center.example",
+			"crud1@cost-center.example",
+			"NewPassword123$",
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		crud2Token, err = employerSignin(
+			"cost-center.example",
+			"crud2@cost-center.example",
 			"NewPassword123$",
 		)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -104,7 +140,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			addCostCenterReq.Header.Set("Authorization", sessionToken)
+			addCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -126,14 +162,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken2, err := employerSignin(
-				"cost-center.example",
-				"viewer@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			addCostCenterReq.Header.Set("Authorization", sessionToken2)
+			addCostCenterReq.Header.Set("Authorization", viewerToken)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -155,14 +184,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken3, err := employerSignin(
-				"cost-center.example",
-				"non-cost-center@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			addCostCenterReq.Header.Set("Authorization", sessionToken3)
+			addCostCenterReq.Header.Set("Authorization", nonCostCenterToken)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -184,14 +206,10 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken4, err := employerSignin(
-				"cost-center.example",
-				"multiple-non-cost-center-roles@cost-center.example",
-				"NewPassword123$",
+			addCostCenterReq.Header.Set(
+				"Authorization",
+				multipleNonCostCenterRolesToken,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			addCostCenterReq.Header.Set("Authorization", sessionToken4)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -213,7 +231,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			addCostCenterReq.Header.Set("Authorization", sessionToken)
+			addCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -240,7 +258,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			addCostCenterReq.Header.Set("Authorization", sessionToken)
+			addCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -262,14 +280,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken5, err := employerSignin(
-				"cost-center.example",
-				"crud1@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			addCostCenterReq.Header.Set("Authorization", sessionToken5)
+			addCostCenterReq.Header.Set("Authorization", crud1Token)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -296,14 +307,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken6, err := employerSignin(
-				"cost-center.example",
-				"crud2@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			addCostCenterReq.Header.Set("Authorization", sessionToken6)
+			addCostCenterReq.Header.Set("Authorization", crud2Token)
 
 			resp, err := http.DefaultClient.Do(addCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -350,7 +354,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			getCostCentersReq3.Header.Set("Authorization", sessionToken)
+			getCostCentersReq3.Header.Set("Authorization", adminToken)
 
 			resp3, err := http.DefaultClient.Do(getCostCentersReq3)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -422,14 +426,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken7, err := employerSignin(
-				"cost-center.example",
-				"viewer@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken7)
+			defunctCostCenterReq.Header.Set("Authorization", viewerToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -451,14 +448,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken8, err := employerSignin(
-				"cost-center.example",
-				"non-cost-center@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken8)
+			defunctCostCenterReq.Header.Set("Authorization", nonCostCenterToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -480,14 +470,10 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken9, err := employerSignin(
-				"cost-center.example",
-				"multiple-non-cost-center-roles@cost-center.example",
-				"NewPassword123$",
+			defunctCostCenterReq.Header.Set(
+				"Authorization",
+				multipleNonCostCenterRolesToken,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken9)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -509,7 +495,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken)
+			defunctCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -528,7 +514,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			getCostCentersReq.Header.Set("Authorization", sessionToken)
+			getCostCentersReq.Header.Set("Authorization", adminToken)
 
 			resp, err = http.DefaultClient.Do(getCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -556,14 +542,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sessionToken10, err := employerSignin(
-				"cost-center.example",
-				"crud1@cost-center.example",
-				"NewPassword123$",
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken10)
+			defunctCostCenterReq.Header.Set("Authorization", crud1Token)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -582,7 +561,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			getCostCentersReq.Header.Set("Authorization", sessionToken)
+			getCostCentersReq.Header.Set("Authorization", adminToken)
 
 			resp, err = http.DefaultClient.Do(getCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -609,7 +588,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken)
+			defunctCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -638,7 +617,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken)
+			defunctCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -660,7 +639,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken)
+			defunctCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -688,7 +667,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			defunctCostCenterReq.Header.Set("Authorization", sessionToken)
+			defunctCostCenterReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -718,7 +697,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			getDefunctCostCentersReq.Header.Set("Authorization", sessionToken)
+			getDefunctCostCentersReq.Header.Set("Authorization", adminToken)
 
 			resp, err := http.DefaultClient.Do(getDefunctCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -734,6 +713,5 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		})
 
 		// TODO: Add tests for pagination
-		// TODO: Optimize signin flow so that for each account we login only once
 	})
 })
