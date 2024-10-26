@@ -168,136 +168,43 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		})
 
 		It("defunct a cost center with no session token", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			testDefunctCostCenter("", "CC1-Admin", http.StatusUnauthorized)
 		})
 
 		It("defunct a cost center with an invalid session token", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
+			testDefunctCostCenter(
+				"blah blah blah",
+				"CC1-Admin",
+				http.StatusUnauthorized,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", "blah blah blah")
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
 		})
 
 		It("defunct a cost center with a viewer session token", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
+			testDefunctCostCenter(
+				viewerToken,
+				"CC1-Admin",
+				http.StatusForbidden,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", viewerToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 		})
 
 		It("defunct a cost center with a non-cost-center session", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
+			testDefunctCostCenter(
+				nonCostCenterToken,
+				"CC1-Admin",
+				http.StatusForbidden,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", nonCostCenterToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 		})
 
 		It("defunct a cc with a multiple-non-cost-center session", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set(
-				"Authorization",
+			testDefunctCostCenter(
 				multipleNonCostCenterRolesToken,
+				"CC1-Admin",
+				http.StatusForbidden,
 			)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusForbidden))
 		})
 
 		It("defunct a cost center with an admin session token", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC1-Admin",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			testDefunctCostCenter(adminToken, "CC1-Admin", http.StatusOK)
 
 			// Get the cost centers and verify that the cost center is defunct
 			getCostCentersReqBody, err := json.Marshal(
@@ -314,7 +221,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 			getCostCentersReq.Header.Set("Authorization", adminToken)
 
-			resp, err = http.DefaultClient.Do(getCostCentersReq)
+			resp, err := http.DefaultClient.Do(getCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
@@ -326,25 +233,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		})
 
 		It("defunct cc with a cost-centers-crud session token", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "CC2-Crud",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", crud1Token)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+			testDefunctCostCenter(crud1Token, "CC2-Crud", http.StatusOK)
 
 			// Get the cost centers and verify that the cost center is defunct
 			getCostCentersReqBody, err := json.Marshal(
@@ -361,7 +250,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 			getCostCentersReq.Header.Set("Authorization", adminToken)
 
-			resp, err = http.DefaultClient.Do(getCostCentersReq)
+			resp, err := http.DefaultClient.Do(getCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
@@ -372,110 +261,27 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		})
 
 		It("defunct a cost center with an invalid name", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
-
-			var respBody vetchi.ValidationErrors
-			err = json.NewDecoder(resp.Body).Decode(&respBody)
-			Expect(err).ShouldNot(HaveOccurred())
-			fmt.Fprintf(GinkgoWriter, "respBody: %+v\n", respBody)
-			Expect(respBody.Errors).Should(HaveLen(1))
-			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
+			testDefunctCostCenter(adminToken, "", http.StatusBadRequest)
 		})
 
 		It("defunct a cost center with a name that doesn't exist", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "Non-existent Cost Center",
-				},
+			testDefunctCostCenter(
+				adminToken,
+				"Non-existent Cost Center",
+				http.StatusNotFound,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 		})
 
 		It("defunct a cost center with a name that is too long", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: strings.Repeat("A", 65),
-				},
+			testDefunctCostCenter(
+				adminToken,
+				strings.Repeat("A", 65),
+				http.StatusBadRequest,
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
-
-			var respBody vetchi.ValidationErrors
-			err = json.NewDecoder(resp.Body).Decode(&respBody)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(respBody.Errors).Should(HaveLen(1))
-			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
 		})
 
 		It("defunct a cost center with a name that is too short", func() {
-			defunctCostCenterReqBody, err := json.Marshal(
-				vetchi.DefunctCostCenterRequest{
-					Name: "A",
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/defunct-cost-center",
-				bytes.NewBuffer(defunctCostCenterReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			defunctCostCenterReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(defunctCostCenterReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
-
-			var respBody vetchi.ValidationErrors
-			err = json.NewDecoder(resp.Body).Decode(&respBody)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(respBody.Errors).Should(HaveLen(1))
-			Expect(respBody.Errors[0]).Should(ContainSubstring("name"))
+			testDefunctCostCenter(adminToken, "A", http.StatusBadRequest)
 		})
 
 		It("get the list of defunct cost centers", func() {
@@ -696,6 +502,28 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 		http.MethodPost,
 		serverURL+"/employer/add-cost-center",
 		bytes.NewBuffer(addCostCenterReqBody),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	if token != "" {
+		req.Header.Set("Authorization", token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(resp.StatusCode).Should(Equal(expectedStatus))
+}
+
+func testDefunctCostCenter(token, name string, expectedStatus int) {
+	defunctCostCenterReqBody, err := json.Marshal(
+		vetchi.DefunctCostCenterRequest{Name: name},
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/employer/defunct-cost-center",
+		bytes.NewBuffer(defunctCostCenterReqBody),
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
