@@ -736,46 +736,170 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			// its name cannot be used by another CC
 
 			fmt.Fprintf(GinkgoWriter, "count is not divisible by limit\n")
-			bulkCreateDefunctCC(adminToken, serverURL, "run-1", 30, 4)
+			bulkAddDefunctCC(adminToken, serverURL, "run-1", 30, 4)
 
 			fmt.Fprintf(GinkgoWriter, "count is divisible by limit\n")
-			bulkCreateDefunctCC(adminToken, serverURL, "run-2", 32, 4)
+			bulkAddDefunctCC(adminToken, serverURL, "run-2", 32, 4)
 
 			fmt.Fprintf(GinkgoWriter, "count is less than limit\n")
-			bulkCreateDefunctCC(adminToken, serverURL, "run-3", 2, 4)
+			bulkAddDefunctCC(adminToken, serverURL, "run-3", 2, 4)
 		})
 	})
 
 	It("update a cost center", func() {
-		addCostCenterReqBody, err := json.Marshal(
+		statusCode, err := addCostCenter(
+			adminToken,
 			vetchi.AddCostCenterRequest{
-				Name: "CC-update-test-1",
-			},
-		)
+				Name:  "CC-update-test-1",
+				Notes: "This is a test cost center",
+			})
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusOK))
 
-		addCostCenterReq, err := http.NewRequest(
-			http.MethodPost,
-			serverURL+"/employer/add-cost-center",
-			bytes.NewBuffer(addCostCenterReqBody),
-		)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		addCostCenterReq.Header.Set("Authorization", adminToken)
-
-		resp, err := http.DefaultClient.Do(addCostCenterReq)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-
-		getCostCenterReqBody, err := json.Marshal(
+		ccb4Update, err := getCostCenter(
+			adminToken,
 			vetchi.GetCostCenterRequest{
 				Name: "CC-update-test-1",
 			},
 		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(ccb4Update.Name).Should(Equal("CC-update-test-1"))
+		Expect(ccb4Update.Notes).Should(Equal("This is a test cost center"))
+
+		fmt.Fprintf(GinkgoWriter, "Update cost center with invalid name\n")
+		statusCode, err = updateCostCenter(
+			adminToken,
+			vetchi.UpdateCostCenterRequest{
+				Name: "Non-existent Cost Center",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusNotFound))
+
+		fmt.Fprintf(GinkgoWriter, "Updating cost center with invalid notes\n")
+		statusCode, err = updateCostCenter(
+			adminToken,
+			vetchi.UpdateCostCenterRequest{
+				Name:  "CC-update-test-1",
+				Notes: strings.Repeat("A", 1025),
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusBadRequest))
+
+		fmt.Fprintf(GinkgoWriter, "Updating cost center with new notes\n")
+		statusCode, err = updateCostCenter(
+			adminToken,
+			vetchi.UpdateCostCenterRequest{
+				Name:  "CC-update-test-1",
+				Notes: "This is an updated test cost center",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusOK))
+
+		ccAfterUpdate, err := getCostCenter(
+			adminToken,
+			vetchi.GetCostCenterRequest{
+				Name: "CC-update-test-1",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(ccAfterUpdate.Notes).Should(Equal(
+			"This is an updated test cost center",
+		))
 	})
 })
 
-func bulkCreateDefunctCC(
+// addCostCenter adds a cost center and returns the http status code. The status
+// code should be used only if err is nil.
+func addCostCenter(
+	token string,
+	addCostCenterReq vetchi.AddCostCenterRequest,
+) (int, error) {
+	addCostCenterReqBody, err := json.Marshal(addCostCenterReq)
+	if err != nil {
+		return -1, err
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/employer/add-cost-center",
+		bytes.NewBuffer(addCostCenterReqBody),
+	)
+	if err != nil {
+		return -1, err
+	}
+
+	req.Header.Set("Authorization", token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return -1, err
+	}
+
+	return resp.StatusCode, nil
+}
+
+func updateCostCenter(
+	token string,
+	updateCostCenterReq vetchi.UpdateCostCenterRequest,
+) (int, error) {
+	updateCostCenterReqBody, err := json.Marshal(updateCostCenterReq)
+	if err != nil {
+		return -1, err
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/employer/update-cost-center",
+		bytes.NewBuffer(updateCostCenterReqBody),
+	)
+	if err != nil {
+		return -1, err
+	}
+
+	req.Header.Set("Authorization", token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return -1, err
+	}
+
+	return resp.StatusCode, nil
+}
+
+func getCostCenter(
+	token string,
+	getCostCenterReq vetchi.GetCostCenterRequest,
+) (vetchi.CostCenter, error) {
+	getCostCenterReqBody, err := json.Marshal(getCostCenterReq)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/employer/get-cost-center",
+		bytes.NewBuffer(getCostCenterReqBody),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	req.Header.Set("Authorization", token)
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+	var costCenter vetchi.CostCenter
+	err = json.NewDecoder(resp.Body).Decode(&costCenter)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return costCenter, nil
+}
+
+// bulkAddDefunctCC adds a number of defunct cost centers and verifies that
+// they are paginated correctly. Not intended to be used in other test cases
+// because it defuncts the CCs it creates.
+func bulkAddDefunctCC(
 	adminToken string,
 	serverURL string,
 	runID string,
@@ -787,25 +911,14 @@ func bulkCreateDefunctCC(
 		ccName := fmt.Sprintf("CC-%s-%d", runID, i)
 		wantCC = append(wantCC, ccName)
 
-		addCostCenterReqBody, err := json.Marshal(
+		statusCode, err := addCostCenter(
+			adminToken,
 			vetchi.AddCostCenterRequest{
 				Name: ccName,
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-
-		addCostCenterReq, err := http.NewRequest(
-			http.MethodPost,
-			serverURL+"/employer/add-cost-center",
-			bytes.NewBuffer(addCostCenterReqBody),
-		)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		addCostCenterReq.Header.Set("Authorization", adminToken)
-
-		resp, err := http.DefaultClient.Do(addCostCenterReq)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		Expect(statusCode).Should(Equal(http.StatusOK))
 	}
 
 	paginationKey := ""

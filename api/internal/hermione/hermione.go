@@ -176,6 +176,11 @@ func (h *Hermione) Run() error {
 		http.HandlerFunc(h.updateCostCenter),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
+	h.mw.Protect(
+		"/employer/get-cost-center",
+		http.HandlerFunc(h.GetCostCenter),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersViewer},
+	)
 
 	return http.ListenAndServe(h.port, nil)
 }

@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"reflect"
 	"regexp"
+	"runtime/debug"
 
 	validator "github.com/go-playground/validator/v10"
 )
@@ -91,7 +92,11 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 	// Ensure that 'i' is a pointer to a struct
 	val := reflect.ValueOf(i)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
-		v.log.Error("provided input is not a pointer to a struct")
+		v.log.Error(
+			"provided input is not a pointer to a struct",
+			"stacktrace",
+			string(debug.Stack()),
+		)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return false
 	}

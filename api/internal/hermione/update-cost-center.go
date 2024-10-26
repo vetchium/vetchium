@@ -17,7 +17,7 @@ func (h *Hermione) updateCostCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.vator.Struct(w, updateCCRequest) {
+	if !h.vator.Struct(w, &updateCCRequest) {
 		return
 	}
 
