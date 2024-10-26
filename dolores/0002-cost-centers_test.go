@@ -52,8 +52,9 @@ var _ = Describe("Cost Centers", Ordered, func() {
 				&wg,
 			)
 		}
+
+		// Wait until all the signin operations are complete
 		wg.Wait()
-		fmt.Fprintf(GinkgoWriter, "admin token in beforeAll: %s\n", adminToken)
 	})
 
 	AfterAll(func() {
