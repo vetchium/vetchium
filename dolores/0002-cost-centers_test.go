@@ -849,7 +849,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		},
 	)
 
-	FIt("rename a cost center", func() {
+	It("rename a cost center", func() {
 		statusCode, err := addCostCenter(
 			adminToken,
 			vetchi.AddCostCenterRequest{
