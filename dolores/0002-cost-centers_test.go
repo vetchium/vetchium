@@ -745,6 +745,34 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			bulkCreateDefunctCC(adminToken, serverURL, "run-3", 2, 4)
 		})
 	})
+
+	It("update a cost center", func() {
+		addCostCenterReqBody, err := json.Marshal(
+			vetchi.AddCostCenterRequest{
+				Name: "CC-update-test-1",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		addCostCenterReq, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/employer/add-cost-center",
+			bytes.NewBuffer(addCostCenterReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		addCostCenterReq.Header.Set("Authorization", adminToken)
+
+		resp, err := http.DefaultClient.Do(addCostCenterReq)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		getCostCenterReqBody, err := json.Marshal(
+			vetchi.GetCostCenterRequest{
+				Name: "CC-update-test-1",
+			},
+		)
+	})
 })
 
 func bulkCreateDefunctCC(

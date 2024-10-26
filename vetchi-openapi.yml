@@ -5,6 +5,13 @@ info:
   version: 0.0.1
 components:
   schemas:
+    GetCostCenterRequest:
+      description: Request to get a cost center
+      properties:
+        name:
+          maxLength: 64
+          minLength: 3
+          type: string
     RenameCostCenterRequest:
       description: Request to rename a cost center
       properties:
@@ -1885,6 +1892,30 @@ paths:
       summary: Get Candidacy
       tags:
         - Employer
+  /employer/get-cost-center:
+    post:
+      description: Get a cost center by name.
+      operationId: employer-get-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostCenter"
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Cost Center
+      tags:
+        - Employer
+        - Cost Centers
   /employer/rename-cost-center:
     post:
       description: Rename a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.

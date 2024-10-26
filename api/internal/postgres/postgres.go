@@ -752,6 +752,44 @@ func (p *PG) convertToOrgUserRoles(
 	return roles, nil
 }
 
+func (p *PG) GetCCByName(
+	ctx context.Context,
+	getCCByNameReq db.GetCCByNameReq,
+) (vetchi.CostCenter, error) {
+	query := `
+SELECT
+    cost_center_name,
+    cost_center_state,
+    notes
+FROM
+    org_cost_centers
+WHERE
+    cost_center_name = $1
+    AND employer_id = $2
+`
+
+	// TODO: Perhaps in the future we will want to use sqlx.ScanStruct
+	// but for now this is fine.
+	var costCenter vetchi.CostCenter
+	err := p.pool.QueryRow(ctx, query,
+		getCCByNameReq.Name,
+		getCCByNameReq.EmployerID,
+	).Scan(&costCenter.Name,
+		&costCenter.State,
+		&costCenter.Notes,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return vetchi.CostCenter{}, db.ErrNoCostCenter
+		}
+
+		p.log.Error("failed to get cost center by name", "error", err)
+		return vetchi.CostCenter{}, err
+	}
+
+	return costCenter, nil
+}
+
 func (p *PG) UpdateCostCenter(
 	ctx context.Context,
 	updateCCReq db.UpdateCCReq,

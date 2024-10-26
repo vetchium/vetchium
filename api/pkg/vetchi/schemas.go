@@ -346,6 +346,10 @@ type ForgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
+type GetCostCenterRequest struct {
+	Name string `json:"name" validate:"required,min=3,max=64"`
+}
+
 type GetCostCentersRequest struct {
 	Limit         int               `json:"limit,omitempty"          validate:"max=100"`
 	PaginationKey string            `json:"pagination_key,omitempty"`

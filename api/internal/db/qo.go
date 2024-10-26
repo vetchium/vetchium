@@ -29,6 +29,11 @@ type CCenterReq struct {
 	OrgUserID uuid.UUID
 }
 
+type GetCCByNameReq struct {
+	Name       string
+	EmployerID uuid.UUID
+}
+
 type RenameCCReq struct {
 	OldName    string
 	NewName    string
