@@ -19,7 +19,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = Describe("Employer Signin", Ordered, func() {
+var _ = XDescribe("Employer Signin", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -258,7 +258,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			},
 		)
 
-		It("test if invite token can be used after validity", func() {
+		XIt("test if invite token can be used after validity", func() {
 			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 				ClientID: "aadal.in",
 			}

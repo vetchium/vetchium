@@ -27,8 +27,10 @@ func NewMiddleware(db db.DB, log *slog.Logger) *Middleware {
 
 func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.log.Debug("Entered employerAuth middleware")
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
+			m.log.Debug("No auth header")
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
@@ -36,10 +38,12 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 		orgUser, err := m.db.AuthOrgUser(r.Context(), authHeader)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
+				m.log.Debug("No org user")
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 
+			m.log.Error("Failed to auth org user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -63,6 +67,7 @@ func (m *Middleware) Protect(
 ) {
 	http.Handle(route, m.employerAuth(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			m.log.Debug("Entered Protect middleware")
 			ctx := r.Context()
 			orgUser, ok := ctx.Value(OrgUserCtxKey).(db.OrgUser)
 			if !ok {

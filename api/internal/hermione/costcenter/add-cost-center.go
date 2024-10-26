@@ -13,16 +13,19 @@ import (
 
 func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Log().Debug("AddCostCenter")
 		var addCostCenterReq vetchi.AddCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&addCostCenterReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		h.Log().Debug("AddCostCenterReq", "req", addCostCenterReq)
 
 		if !h.Vator().Struct(w, &addCostCenterReq) {
 			return
 		}
+		h.Log().Debug("AddCostCenterReq is valid")
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 		if !ok {

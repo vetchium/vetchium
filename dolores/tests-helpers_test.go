@@ -62,8 +62,16 @@ func employerSigninAsync(
 	go func() {
 		defer wg.Done()
 		var err error
-		*token, err = employerSignin(clientID, email, password)
+		gotToken, err := employerSignin(clientID, email, password)
 		Expect(err).ShouldNot(HaveOccurred())
+		*token = gotToken
+		fmt.Fprintf(
+			GinkgoWriter,
+			"email: %s, password: %s, gotToken: %s\n",
+			email,
+			password,
+			gotToken,
+		)
 	}()
 }
 

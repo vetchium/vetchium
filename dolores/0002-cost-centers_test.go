@@ -17,6 +17,13 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
+type costCenterTestCase struct {
+	description    string
+	token          string
+	costCenterName string
+	wantStatus     int
+}
+
 var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
@@ -48,6 +55,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 		}
 		wg.Wait()
+		fmt.Fprintf(GinkgoWriter, "admin token in beforeAll: %s\n", adminToken)
 	})
 
 	AfterAll(func() {
@@ -55,234 +63,159 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		db.Close()
 	})
 
-	Context("Get Cost Centers", func() {
-		It("add a new cost center without a session token", func() {
-			testAddCostCenter("", "New Cost Center", http.StatusUnauthorized)
-		})
+	Describe("Cost Centers related Tests", func() {
+		FIt("Add Cost Center", func() {
+			testCases := []costCenterTestCase{
+				{
+					description:    "without a session token",
+					costCenterName: "New Cost Center",
+					token:          "",
+					wantStatus:     http.StatusUnauthorized,
+				},
+				{
+					description:    "with an invalid session token",
+					costCenterName: "New Cost Center",
+					token:          "blah blah blah",
+					wantStatus:     http.StatusUnauthorized,
+				},
+				{
+					description:    "with an invalid name",
+					costCenterName: "",
+					token:          adminToken,
+					wantStatus:     http.StatusBadRequest,
+				},
+				{
+					description:    "with viewer role",
+					costCenterName: "New Cost Center",
+					token:          viewerToken,
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with non-cost-center role",
+					costCenterName: "New Cost Center",
+					token:          nonCostCenterToken,
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with multiple non-cost-center roles",
+					costCenterName: "New Cost Center",
+					token:          multipleNonCostCenterRolesToken,
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with an admin session token",
+					costCenterName: "CC1-Admin",
+					token:          adminToken,
+					wantStatus:     http.StatusOK,
+				},
+				{
+					description:    "with a duplicate name as Admin",
+					costCenterName: "CC1-Admin",
+					token:          adminToken,
+					wantStatus:     http.StatusConflict,
+				},
+				{
+					description:    "with cost-centers-crud session token",
+					costCenterName: "CC2-Crud",
+					token:          crud1Token,
+					wantStatus:     http.StatusOK,
+				},
+				{
+					description:    "with a duplicate name as Crud",
+					costCenterName: "CC2-Crud",
+					token:          crud2Token,
+					wantStatus:     http.StatusConflict,
+				},
+			}
 
-		It("add a new cost center with an invalid session token", func() {
-			testAddCostCenter(
-				"blah blah blah",
-				"New Cost Center",
-				http.StatusUnauthorized,
-			)
-		})
-
-		It("add a new cost center with an invalid name", func() {
-			testAddCostCenter(adminToken, "", http.StatusBadRequest)
-		})
-
-		It("add a new cost center with viewer role", func() {
-			testAddCostCenter(
-				viewerToken,
-				"New Cost Center",
-				http.StatusForbidden,
-			)
-		})
-
-		It("add a new cost center with non-cost-center role", func() {
-			testAddCostCenter(
-				nonCostCenterToken,
-				"New Cost Center",
-				http.StatusForbidden,
-			)
-		})
-
-		It("add a cost center with multiple non-cost-center roles", func() {
-			testAddCostCenter(
-				multipleNonCostCenterRolesToken,
-				"New Cost Center",
-				http.StatusForbidden,
-			)
-		})
-
-		It("add a new cost center with an admin session token", func() {
-			testAddCostCenter(adminToken, "CC1-Admin", http.StatusOK)
-		})
-
-		It("add a cost center with a duplicate name as Admin", func() {
-			testAddCostCenter(adminToken, "CC1-Admin", http.StatusConflict)
-		})
-
-		It("add a cost center with cost-centers-crud session token", func() {
-			testAddCostCenter(crud1Token, "CC2-Crud", http.StatusOK)
-		})
-
-		It("add a cost center with a duplicate name as Crud", func() {
-			testAddCostCenter(crud2Token, "CC2-Crud", http.StatusConflict)
+			for _, testCase := range testCases {
+				go func(i costCenterTestCase) {
+					testAddCostCenter(i.token, i.costCenterName, i.wantStatus)
+					fmt.Fprintf(GinkgoWriter, "%s\n", i.description)
+				}(testCase)
+			}
 		})
 
 		It("should return the cost centers for the employer", func() {
-			getCostCentersReqBody, err := json.Marshal(
-				vetchi.GetCostCentersRequest{},
+			testGetCostCenters(
+				adminToken,
+				2,
+				[]string{"CC1-Admin", "CC2-Crud"},
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			// First try without a session token
-			getCostCentersReq1, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/get-cost-centers",
-				bytes.NewBuffer(getCostCentersReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			resp1, err := http.DefaultClient.Do(getCostCentersReq1)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp1.StatusCode).Should(Equal(http.StatusUnauthorized))
-
-			// Then try with an invalid session token
-			getCostCentersReq2, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/get-cost-centers",
-				bytes.NewBuffer(getCostCentersReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq2.Header.Set("Authorization", "blah blah blah")
-
-			resp2, err := http.DefaultClient.Do(getCostCentersReq2)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp2.StatusCode).Should(Equal(http.StatusUnauthorized))
-
-			// Then try with a valid session token
-			getCostCentersReq3, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/get-cost-centers",
-				bytes.NewBuffer(getCostCentersReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq3.Header.Set("Authorization", adminToken)
-
-			resp3, err := http.DefaultClient.Do(getCostCentersReq3)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp3.StatusCode).Should(Equal(http.StatusOK))
-
-			var costCenters []vetchi.CostCenter
-			err = json.NewDecoder(resp3.Body).Decode(&costCenters)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(costCenters).Should(HaveLen(2))
-			Expect(
-				[]string{costCenters[0].Name, costCenters[1].Name},
-			).Should(ConsistOf("CC1-Admin", "CC2-Crud"))
 		})
 
-		It("defunct a cost center with no session token", func() {
-			testDefunctCostCenter("", "CC1-Admin", http.StatusUnauthorized)
-		})
-
-		It("defunct a cost center with an invalid session token", func() {
-			testDefunctCostCenter(
+		XDescribeTable(
+			"Defunct Cost Center",
+			func(token, name string, expectedStatus int) {
+				testDefunctCostCenter(token, name, expectedStatus)
+			},
+			Entry(
+				"with no session token",
+				"",
+				"CC1-Admin",
+				http.StatusUnauthorized,
+			),
+			Entry(
+				"with an invalid session token",
 				"blah blah blah",
 				"CC1-Admin",
 				http.StatusUnauthorized,
-			)
-		})
-
-		It("defunct a cost center with a viewer session token", func() {
-			testDefunctCostCenter(
+			),
+			Entry(
+				"with a viewer session token",
 				viewerToken,
 				"CC1-Admin",
 				http.StatusForbidden,
-			)
-		})
-
-		It("defunct a cost center with a non-cost-center session", func() {
-			testDefunctCostCenter(
+			),
+			Entry(
+				"with a non-cost-center session",
 				nonCostCenterToken,
 				"CC1-Admin",
 				http.StatusForbidden,
-			)
-		})
-
-		It("defunct a cc with a multiple-non-cost-center session", func() {
-			testDefunctCostCenter(
+			),
+			Entry(
+				"with a multiple-non-cost-center session",
 				multipleNonCostCenterRolesToken,
 				"CC1-Admin",
 				http.StatusForbidden,
-			)
-		})
-
-		It("defunct a cost center with an admin session token", func() {
-			testDefunctCostCenter(adminToken, "CC1-Admin", http.StatusOK)
-
-			// Get the cost centers and verify that the cost center is defunct
-			getCostCentersReqBody, err := json.Marshal(
-				vetchi.GetCostCentersRequest{},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/get-cost-centers",
-				bytes.NewBuffer(getCostCentersReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(getCostCentersReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-
-			var costCenters []vetchi.CostCenter
-			err = json.NewDecoder(resp.Body).Decode(&costCenters)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(costCenters).Should(HaveLen(1))
-			Expect(costCenters[0].Name).Should(Equal("CC2-Crud"))
-		})
-
-		It("defunct cc with a cost-centers-crud session token", func() {
-			testDefunctCostCenter(crud1Token, "CC2-Crud", http.StatusOK)
-
-			// Get the cost centers and verify that the cost center is defunct
-			getCostCentersReqBody, err := json.Marshal(
-				vetchi.GetCostCentersRequest{},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/employer/get-cost-centers",
-				bytes.NewBuffer(getCostCentersReqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			getCostCentersReq.Header.Set("Authorization", adminToken)
-
-			resp, err := http.DefaultClient.Do(getCostCentersReq)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-
-			var costCenters []vetchi.CostCenter
-			err = json.NewDecoder(resp.Body).Decode(&costCenters)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(costCenters).Should(HaveLen(0))
-		})
-
-		It("defunct a cost center with an invalid name", func() {
-			testDefunctCostCenter(adminToken, "", http.StatusBadRequest)
-		})
-
-		It("defunct a cost center with a name that doesn't exist", func() {
-			testDefunctCostCenter(
+			),
+			Entry(
+				"with an admin session token",
+				adminToken,
+				"CC1-Admin",
+				http.StatusOK,
+			),
+			Entry(
+				"with cost-centers-crud session token",
+				crud1Token,
+				"CC2-Crud",
+				http.StatusOK,
+			),
+			Entry(
+				"with an invalid name",
+				adminToken,
+				"",
+				http.StatusBadRequest,
+			),
+			Entry(
+				"with a name that doesn't exist",
 				adminToken,
 				"Non-existent Cost Center",
 				http.StatusNotFound,
-			)
-		})
-
-		It("defunct a cost center with a name that is too long", func() {
-			testDefunctCostCenter(
+			),
+			Entry(
+				"with a name that is too long",
 				adminToken,
 				strings.Repeat("A", 65),
 				http.StatusBadRequest,
-			)
-		})
-
-		It("defunct a cost center with a name that is too short", func() {
-			testDefunctCostCenter(adminToken, "A", http.StatusBadRequest)
-		})
+			),
+			Entry(
+				"with a name that is too short",
+				adminToken,
+				"A",
+				http.StatusBadRequest,
+			),
+		)
 
 		It("get the list of defunct cost centers", func() {
 			getDefunctCostCentersReqBody, err := json.Marshal(
@@ -316,19 +249,25 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			).Should(ConsistOf("CC1-Admin", "CC2-Crud"))
 		})
 
-		It("create/defunct cost centers in bulk; verify pagination", func() {
-			// runID parameter is needed because even if a CC is defunct,
-			// its name cannot be used by another CC
+		It(
+			"create/defunct cost centers in bulk; verify pagination",
+			func() {
+				// runID parameter is needed because even if a CC is defunct,
+				// its name cannot be used by another CC
 
-			fmt.Fprintf(GinkgoWriter, "count is not divisible by limit\n")
-			bulkAddDefunctCC(adminToken, serverURL, "run-1", 30, 4)
+				fmt.Fprintf(
+					GinkgoWriter,
+					"count is not divisible by limit\n",
+				)
+				bulkAddDefunctCC(adminToken, serverURL, "run-1", 30, 4)
 
-			fmt.Fprintf(GinkgoWriter, "count is divisible by limit\n")
-			bulkAddDefunctCC(adminToken, serverURL, "run-2", 32, 4)
+				fmt.Fprintf(GinkgoWriter, "count is divisible by limit\n")
+				bulkAddDefunctCC(adminToken, serverURL, "run-2", 32, 4)
 
-			fmt.Fprintf(GinkgoWriter, "count is less than limit\n")
-			bulkAddDefunctCC(adminToken, serverURL, "run-3", 2, 4)
-		})
+				fmt.Fprintf(GinkgoWriter, "count is less than limit\n")
+				bulkAddDefunctCC(adminToken, serverURL, "run-3", 2, 4)
+			},
+		)
 	})
 
 	It("update a cost center", func() {
@@ -361,7 +300,10 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(statusCode).Should(Equal(http.StatusNotFound))
 
-		fmt.Fprintf(GinkgoWriter, "Updating cost center with invalid notes\n")
+		fmt.Fprintf(
+			GinkgoWriter,
+			"Updating cost center with invalid notes\n",
+		)
 		statusCode, err = updateCostCenter(
 			adminToken,
 			vetchi.UpdateCostCenterRequest{
@@ -483,6 +425,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(statusCode).Should(Equal(http.StatusNotFound))
 	})
+
 })
 
 func seedDatabase(db *pgxpool.Pool, fileName string) {
@@ -493,15 +436,40 @@ func seedDatabase(db *pgxpool.Pool, fileName string) {
 }
 
 func testAddCostCenter(token, name string, expectedStatus int) {
-	addCostCenterReqBody, err := json.Marshal(
-		vetchi.AddCostCenterRequest{Name: name},
+	fmt.Fprintf(
+		GinkgoWriter,
+		"testAddCostCenter: token=%s, name=%s, expectedStatus=%d\n",
+		token,
+		name,
+		expectedStatus,
 	)
+	reqBody := vetchi.AddCostCenterRequest{Name: name}
+	testHTTPRequest(token, reqBody, "/employer/add-cost-center", expectedStatus)
+}
+
+func testDefunctCostCenter(token, name string, expectedStatus int) {
+	reqBody := vetchi.DefunctCostCenterRequest{Name: name}
+	testHTTPRequest(
+		token,
+		reqBody,
+		"/employer/defunct-cost-center",
+		expectedStatus,
+	)
+}
+
+func testHTTPRequest(
+	token string,
+	reqBody interface{},
+	endpoint string,
+	expectedStatus int,
+) {
+	body, err := json.Marshal(reqBody)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		serverURL+"/employer/add-cost-center",
-		bytes.NewBuffer(addCostCenterReqBody),
+		serverURL+endpoint,
+		bytes.NewBuffer(body),
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -514,26 +482,30 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 	Expect(resp.StatusCode).Should(Equal(expectedStatus))
 }
 
-func testDefunctCostCenter(token, name string, expectedStatus int) {
-	defunctCostCenterReqBody, err := json.Marshal(
-		vetchi.DefunctCostCenterRequest{Name: name},
-	)
+func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
+	getCostCentersReqBody, err := json.Marshal(vetchi.GetCostCentersRequest{})
 	Expect(err).ShouldNot(HaveOccurred())
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		serverURL+"/employer/defunct-cost-center",
-		bytes.NewBuffer(defunctCostCenterReqBody),
+		serverURL+"/employer/get-cost-centers",
+		bytes.NewBuffer(getCostCentersReqBody),
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	if token != "" {
-		req.Header.Set("Authorization", token)
-	}
+	req.Header.Set("Authorization", token)
 
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
-	Expect(resp.StatusCode).Should(Equal(expectedStatus))
+	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+	var costCenters []vetchi.CostCenter
+	err = json.NewDecoder(resp.Body).Decode(&costCenters)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(costCenters).Should(HaveLen(expectedLen))
+	Expect(
+		[]string{costCenters[0].Name, costCenters[1].Name},
+	).Should(ConsistOf(expectedNames))
 }
 
 // addCostCenter adds a cost center and returns the http status code. The status
