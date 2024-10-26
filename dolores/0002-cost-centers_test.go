@@ -756,7 +756,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(statusCode).Should(Equal(http.StatusOK))
 
-		ccb4Update, err := getCostCenter(
+		ccb4Update, _, err := getCostCenter(
 			adminToken,
 			vetchi.GetCostCenterRequest{
 				Name: "CC-update-test-1",
@@ -798,7 +798,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(statusCode).Should(Equal(http.StatusOK))
 
-		ccAfterUpdate, err := getCostCenter(
+		ccAfterUpdate, _, err := getCostCenter(
 			adminToken,
 			vetchi.GetCostCenterRequest{
 				Name: "CC-update-test-1",
@@ -808,6 +808,95 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(ccAfterUpdate.Notes).Should(Equal(
 			"This is an updated test cost center",
 		))
+	})
+
+	It("update a cost center with a viewer session token", func() {
+		statusCode, err := updateCostCenter(
+			viewerToken,
+			vetchi.UpdateCostCenterRequest{
+				Name:  "CC-update-test-1",
+				Notes: "This is an updated test cost center",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusForbidden))
+	})
+
+	It("update a cost center with a non-cost-center session token", func() {
+		statusCode, err := updateCostCenter(
+			nonCostCenterToken,
+			vetchi.UpdateCostCenterRequest{
+				Name:  "CC-update-test-1",
+				Notes: "This is an updated test cost center",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusForbidden))
+	})
+
+	It(
+		"update a cost center with a multiple-non-cost-center session token",
+		func() {
+			statusCode, err := updateCostCenter(
+				multipleNonCostCenterRolesToken,
+				vetchi.UpdateCostCenterRequest{
+					Name:  "CC-update-test-1",
+					Notes: "This is an updated test cost center",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(statusCode).Should(Equal(http.StatusForbidden))
+		},
+	)
+
+	FIt("rename a cost center", func() {
+		statusCode, err := addCostCenter(
+			adminToken,
+			vetchi.AddCostCenterRequest{
+				Name: "CC-rename-test-1",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusOK))
+
+		renameCostCenterReq := vetchi.RenameCostCenterRequest{
+			OldName: "CC-rename-test-1",
+			NewName: "CC-rename-test-2",
+		}
+
+		renameCostCenterReqBody, err := json.Marshal(renameCostCenterReq)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		req, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/employer/rename-cost-center",
+			bytes.NewBuffer(renameCostCenterReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		req.Header.Set("Authorization", adminToken)
+
+		resp, err := http.DefaultClient.Do(req)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		ccAfterRename, _, err := getCostCenter(
+			adminToken,
+			vetchi.GetCostCenterRequest{
+				Name: "CC-rename-test-2",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(ccAfterRename.Name).Should(Equal("CC-rename-test-2"))
+
+		_, statusCode, err = getCostCenter(
+			adminToken,
+			vetchi.GetCostCenterRequest{
+				Name: "CC-rename-test-1",
+			},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(statusCode).Should(Equal(http.StatusNotFound))
 	})
 })
 
@@ -872,7 +961,7 @@ func updateCostCenter(
 func getCostCenter(
 	token string,
 	getCostCenterReq vetchi.GetCostCenterRequest,
-) (vetchi.CostCenter, error) {
+) (vetchi.CostCenter, int, error) {
 	getCostCenterReqBody, err := json.Marshal(getCostCenterReq)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -887,13 +976,17 @@ func getCostCenter(
 
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
+	if resp.StatusCode != http.StatusOK {
+		return vetchi.CostCenter{}, resp.StatusCode, nil
+	}
+
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 	var costCenter vetchi.CostCenter
 	err = json.NewDecoder(resp.Body).Decode(&costCenter)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	return costCenter, nil
+	return costCenter, resp.StatusCode, nil
 }
 
 // bulkAddDefunctCC adds a number of defunct cost centers and verifies that

@@ -36,8 +36,13 @@ func (h *Hermione) renameCostCenter(w http.ResponseWriter, r *http.Request) {
 	}
 	err := h.db.RenameCostCenter(r.Context(), renameCCReq)
 	if err != nil {
+		if errors.Is(err, db.ErrNoCostCenter) {
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
+
 		if errors.Is(err, db.ErrDupCostCenterName) {
-			http.Error(w, err.Error(), http.StatusConflict)
+			http.Error(w, "", http.StatusConflict)
 			return
 		}
 
