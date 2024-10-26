@@ -2,11 +2,9 @@ package dolores
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 
@@ -434,13 +432,6 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 })
 
-func seedDatabase(db *pgxpool.Pool, fileName string) {
-	seed, err := os.ReadFile(fileName)
-	Expect(err).ShouldNot(HaveOccurred())
-	_, err = db.Exec(context.Background(), string(seed))
-	Expect(err).ShouldNot(HaveOccurred())
-}
-
 func testAddCostCenter(token, name string, expectedStatus int) {
 	fmt.Fprintf(
 		GinkgoWriter,
@@ -450,7 +441,7 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 		expectedStatus,
 	)
 	reqBody := vetchi.AddCostCenterRequest{Name: name}
-	testHTTPRequest(token, reqBody, "/employer/add-cost-center", expectedStatus)
+	testPOST(token, reqBody, "/employer/add-cost-center", expectedStatus)
 }
 
 func testDefunctCostCenter(token, name string, expectedStatus int) {
@@ -462,37 +453,12 @@ func testDefunctCostCenter(token, name string, expectedStatus int) {
 		expectedStatus,
 	)
 	reqBody := vetchi.DefunctCostCenterRequest{Name: name}
-	testHTTPRequest(
+	testPOST(
 		token,
 		reqBody,
 		"/employer/defunct-cost-center",
 		expectedStatus,
 	)
-}
-
-func testHTTPRequest(
-	token string,
-	reqBody interface{},
-	endpoint string,
-	expectedStatus int,
-) {
-	body, err := json.Marshal(reqBody)
-	Expect(err).ShouldNot(HaveOccurred())
-
-	req, err := http.NewRequest(
-		http.MethodPost,
-		serverURL+endpoint,
-		bytes.NewBuffer(body),
-	)
-	Expect(err).ShouldNot(HaveOccurred())
-
-	if token != "" {
-		req.Header.Set("Authorization", token)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(resp.StatusCode).Should(Equal(expectedStatus))
 }
 
 func testGetCostCenters(token string, expectedLen int, expectedNames []string) {

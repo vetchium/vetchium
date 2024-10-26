@@ -2,13 +2,11 @@ package dolores
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"time"
 
@@ -25,21 +23,11 @@ var _ = Describe("Employer Signin", Ordered, func() {
 	BeforeAll(func() {
 		fmt.Fprintf(GinkgoWriter, "BeforeEach is called\n")
 		db = setupTestDB()
-
-		seed, err := os.ReadFile("0001-employer-signin-up.pgsql")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = db.Exec(context.Background(), string(seed))
-		Expect(err).ShouldNot(HaveOccurred())
+		seedDatabase(db, "0001-employer-signin-up.pgsql")
 	})
 
 	AfterAll(func() {
-		seed, err := os.ReadFile("0001-employer-signin-down.pgsql")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = db.Exec(context.Background(), string(seed))
-		Expect(err).ShouldNot(HaveOccurred())
-
+		seedDatabase(db, "0001-employer-signin-down.pgsql")
 		db.Close()
 	})
 
@@ -95,8 +83,8 @@ var _ = Describe("Employer Signin", Ordered, func() {
 		It(
 			"Check if mailpit got the email and set the admin password",
 			func() {
-				// Sleep for 2 minutes to allow the email to be sent by granger
-				<-time.After(2 * time.Minute)
+				// Sleep for 10 seconds to allow the email to be sent by granger
+				<-time.After(10 * time.Second)
 
 				url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
 				log.Println("URL:", url)
@@ -258,7 +246,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			},
 		)
 
-		XIt("test if invite token can be used after validity", func() {
+		It("test if invite token can be used after validity", func() {
 			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
 				ClientID: "aadal.in",
 			}
@@ -285,7 +273,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				GinkgoWriter,
 				"Sleeping to allow granger to email\n",
 			)
-			<-time.After(3 * time.Minute)
+			<-time.After(10 * time.Second)
 			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
 			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
@@ -339,7 +327,8 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			log.Println("Token:", token)
 
 			// Sleep to allow the token to expire
-			<-time.After(4 * time.Minute)
+			// (grangerconfig.onboard_token_life*2) is a good wait time
+			<-time.After(5 * time.Minute)
 
 			setPasswordRequest := vetchi.SetOnboardPasswordRequest{
 				ClientID: "aadal.in",

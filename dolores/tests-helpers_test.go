@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"sync"
 	"time"
@@ -34,6 +35,14 @@ func setupTestDB() *pgxpool.Pool {
 	return pool
 }
 
+func seedDatabase(db *pgxpool.Pool, fileName string) {
+	seed, err := os.ReadFile(fileName)
+	Expect(err).ShouldNot(HaveOccurred())
+	_, err = db.Exec(context.Background(), string(seed))
+	Expect(err).ShouldNot(HaveOccurred())
+}
+
+// Message corresponds to the message object in mailpit
 type Message struct {
 	ID string `json:"ID"`
 }
@@ -54,6 +63,10 @@ func (e SigninError) Error() string {
 	return fmt.Sprintf("signin failed with status code: %d", e.StatusCode)
 }
 
+// employerSigninAsync performs the signin operation asynchronously and returns
+// the session token in the given token pointer. The wg will be decremented by
+// one when the signin operation is completed, irrespective of whether it
+// succeeds or fails.
 func employerSigninAsync(
 	clientID, email, password string,
 	token *string,
@@ -214,4 +227,31 @@ func employerSignin(clientID, email, password string) (string, error) {
 	Expect(mailPitDeleteResp.StatusCode).Should(Equal(http.StatusOK))
 
 	return tfaRespObj.SessionToken, nil
+}
+
+// testPOST performs a POST request to the given endpoint with the given request
+// body, token and expects the given status code. The response body is not read.
+func testPOST(
+	token string,
+	reqBody interface{},
+	endpoint string,
+	wantStatus int,
+) {
+	body, err := json.Marshal(reqBody)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+endpoint,
+		bytes.NewBuffer(body),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	if token != "" {
+		req.Header.Set("Authorization", token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(resp.StatusCode).Should(Equal(wantStatus))
 }
