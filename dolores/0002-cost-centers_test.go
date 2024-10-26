@@ -63,7 +63,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		db.Close()
 	})
 
-	Describe("Cost Centers related Tests", func() {
+	FDescribe("Cost Centers related Tests", func() {
 		FIt("Add Cost Center", func() {
 			testCases := []costCenterTestCase{
 				{
@@ -128,12 +128,11 @@ var _ = Describe("Cost Centers", Ordered, func() {
 				},
 			}
 
-			for _, testCase := range testCases {
-				go func(i costCenterTestCase) {
-					testAddCostCenter(i.token, i.costCenterName, i.wantStatus)
-					fmt.Fprintf(GinkgoWriter, "%s\n", i.description)
-				}(testCase)
+			for _, i := range testCases {
+				testAddCostCenter(i.token, i.costCenterName, i.wantStatus)
+				fmt.Fprintf(GinkgoWriter, "%s\n", i.description)
 			}
+
 		})
 
 		It("should return the cost centers for the employer", func() {
@@ -144,78 +143,85 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 		})
 
-		XDescribeTable(
-			"Defunct Cost Center",
-			func(token, name string, expectedStatus int) {
-				testDefunctCostCenter(token, name, expectedStatus)
-			},
-			Entry(
-				"with no session token",
-				"",
-				"CC1-Admin",
-				http.StatusUnauthorized,
-			),
-			Entry(
-				"with an invalid session token",
-				"blah blah blah",
-				"CC1-Admin",
-				http.StatusUnauthorized,
-			),
-			Entry(
-				"with a viewer session token",
-				viewerToken,
-				"CC1-Admin",
-				http.StatusForbidden,
-			),
-			Entry(
-				"with a non-cost-center session",
-				nonCostCenterToken,
-				"CC1-Admin",
-				http.StatusForbidden,
-			),
-			Entry(
-				"with a multiple-non-cost-center session",
-				multipleNonCostCenterRolesToken,
-				"CC1-Admin",
-				http.StatusForbidden,
-			),
-			Entry(
-				"with an admin session token",
-				adminToken,
-				"CC1-Admin",
-				http.StatusOK,
-			),
-			Entry(
-				"with cost-centers-crud session token",
-				crud1Token,
-				"CC2-Crud",
-				http.StatusOK,
-			),
-			Entry(
-				"with an invalid name",
-				adminToken,
-				"",
-				http.StatusBadRequest,
-			),
-			Entry(
-				"with a name that doesn't exist",
-				adminToken,
-				"Non-existent Cost Center",
-				http.StatusNotFound,
-			),
-			Entry(
-				"with a name that is too long",
-				adminToken,
-				strings.Repeat("A", 65),
-				http.StatusBadRequest,
-			),
-			Entry(
-				"with a name that is too short",
-				adminToken,
-				"A",
-				http.StatusBadRequest,
-			),
-		)
+		FIt("Defunct Cost Center", func() {
+			testCases := []costCenterTestCase{
+				{
+					description:    "with no session token",
+					token:          "",
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusUnauthorized,
+				},
+				{
+					description:    "with an invalid session token",
+					token:          "blah blah blah",
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusUnauthorized,
+				},
+				{
+					description:    "with a viewer session token",
+					token:          viewerToken,
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with a non-cost-center session",
+					token:          nonCostCenterToken,
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with a multiple-non-cost-center session",
+					token:          multipleNonCostCenterRolesToken,
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusForbidden,
+				},
+				{
+					description:    "with an admin session token",
+					token:          adminToken,
+					costCenterName: "CC1-Admin",
+					wantStatus:     http.StatusOK,
+				},
+				{
+					description:    "with cost-centers-crud session token",
+					token:          crud1Token,
+					costCenterName: "CC2-Crud",
+					wantStatus:     http.StatusOK,
+				},
+				{
+					description:    "with an invalid name",
+					token:          adminToken,
+					costCenterName: "",
+					wantStatus:     http.StatusBadRequest,
+				},
+				{
+					description:    "with a name that doesn't exist",
+					token:          adminToken,
+					costCenterName: "Non-existent Cost Center",
+					wantStatus:     http.StatusNotFound,
+				},
+				{
+					description:    "with a name that is too long",
+					token:          adminToken,
+					costCenterName: strings.Repeat("A", 65),
+					wantStatus:     http.StatusBadRequest,
+				},
+				{
+					description:    "with a name that is too short",
+					token:          adminToken,
+					costCenterName: "A",
+					wantStatus:     http.StatusBadRequest,
+				},
+			}
+
+			for _, testCase := range testCases {
+				testDefunctCostCenter(
+					testCase.token,
+					testCase.costCenterName,
+					testCase.wantStatus,
+				)
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+			}
+		})
 
 		It("get the list of defunct cost centers", func() {
 			getDefunctCostCentersReqBody, err := json.Marshal(
@@ -448,6 +454,13 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 }
 
 func testDefunctCostCenter(token, name string, expectedStatus int) {
+	fmt.Fprintf(
+		GinkgoWriter,
+		"testDefunctCostCenter: token=%s, name=%s, expectedStatus=%d\n",
+		token,
+		name,
+		expectedStatus,
+	)
 	reqBody := vetchi.DefunctCostCenterRequest{Name: name}
 	testHTTPRequest(
 		token,
