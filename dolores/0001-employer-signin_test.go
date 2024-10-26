@@ -19,7 +19,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = XDescribe("Employer Signin", Ordered, func() {
+var _ = Describe("Employer Signin", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {

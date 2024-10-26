@@ -63,8 +63,8 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		db.Close()
 	})
 
-	FDescribe("Cost Centers related Tests", func() {
-		FIt("Add Cost Center", func() {
+	Describe("Cost Centers related Tests", func() {
+		It("Add Cost Center", func() {
 			testCases := []costCenterTestCase{
 				{
 					description:    "without a session token",
@@ -143,7 +143,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 		})
 
-		FIt("Defunct Cost Center", func() {
+		It("Defunct Cost Center", func() {
 			testCases := []costCenterTestCase{
 				{
 					description:    "with no session token",
