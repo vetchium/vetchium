@@ -29,6 +29,8 @@ type DB interface {
 	CreateCostCenter(context.Context, CCenterReq) (uuid.UUID, error)
 	DefunctCostCenter(context.Context, DefunctReq) error
 	GetCostCenters(context.Context, CCentersList) ([]vetchi.CostCenter, error)
+	RenameCostCenter(context.Context, RenameCCReq) error
+	UpdateCostCenter(context.Context, UpdateCCReq) error
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

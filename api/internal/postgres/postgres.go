@@ -752,6 +752,80 @@ func (p *PG) convertToOrgUserRoles(
 	return roles, nil
 }
 
+func (p *PG) UpdateCostCenter(
+	ctx context.Context,
+	updateCCReq db.UpdateCCReq,
+) error {
+	query := `
+UPDATE
+    org_cost_centers
+SET
+    notes = $1
+WHERE
+    cost_center_name = $2
+    AND employer_id = $3
+RETURNING id
+`
+	var costCenterID uuid.UUID
+	err := p.pool.QueryRow(ctx, query,
+		updateCCReq.Notes,
+		updateCCReq.Name,
+		updateCCReq.EmployerID,
+	).Scan(&costCenterID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.ErrNoCostCenter
+		}
+
+		p.log.Error("failed to update cost center", "error", err)
+		return err
+	}
+
+	p.log.Debug("cost center updated", "cost_center_id", costCenterID)
+
+	return nil
+}
+
+func (p *PG) RenameCostCenter(
+	ctx context.Context,
+	renameCCReq db.RenameCCReq,
+) error {
+	query := `
+UPDATE
+    org_cost_centers
+SET
+    cost_center_name = $1
+WHERE
+    cost_center_name = $2
+    AND employer_id = $3
+RETURNING id
+`
+
+	var costCenterID uuid.UUID
+	err := p.pool.QueryRow(ctx, query,
+		renameCCReq.NewName,
+		renameCCReq.OldName,
+		renameCCReq.EmployerID,
+	).Scan(&costCenterID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.ErrNoCostCenter
+		}
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "uniq_cost_center_name_employer_id" {
+			return db.ErrDupCostCenterName
+		}
+
+		p.log.Error("failed to rename cost center", "error", err)
+		return err
+	}
+
+	p.log.Debug("cost center renamed", "cost_center_id", costCenterID)
+	return nil
+}
+
 func (p *PG) GetCostCenters(
 	ctx context.Context,
 	costCentersList db.CCentersList,

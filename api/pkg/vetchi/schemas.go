@@ -555,6 +555,11 @@ type RemoveWorkHistoryRequest struct {
 	WorkHistoryID string `json:"work_history_id" validate:"required"`
 }
 
+type RenameCostCenterRequest struct {
+	OldName string `json:"old_name" validate:"required,min=3,max=64"`
+	NewName string `json:"new_name" validate:"required,min=3,max=64"`
+}
+
 type ResetPasswordRequest struct {
 	Token       string `json:"token"        validate:"required"`
 	NewPassword string `json:"new_password" validate:"required"`
@@ -573,6 +578,11 @@ type ShortlistedOpening struct {
 	HiringManagerEmail string `json:"hiring_manager_email"`
 	RecruiterName      string `json:"recruiter_name"`
 	RecruiterEmail     string `json:"recruiter_email"`
+}
+
+type UpdateCostCenterRequest struct {
+	Name  string `json:"name"            validate:"required,min=3,max=64"`
+	Notes string `json:"notes,omitempty" validate:"max=1024"`
 }
 
 type UpdateInterviewFeedbackRequest struct {

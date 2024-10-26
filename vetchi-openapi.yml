@@ -5,6 +5,27 @@ info:
   version: 0.0.1
 components:
   schemas:
+    RenameCostCenterRequest:
+      description: Request to rename a cost center
+      properties:
+        old_name:
+          maxLength: 64
+          minLength: 3
+          type: string
+        new_name:
+          maxLength: 64
+          minLength: 3
+          type: string
+    UpdateCostCenterRequest:
+      description: Request to update a cost center
+      properties:
+        name:
+          maxLength: 64
+          minLength: 3
+          type: string
+        notes:
+          maxLength: 1024
+          type: string
     AddCostCenterRequest:
       description: Request to add a new cost center
       properties:
@@ -1513,6 +1534,7 @@ paths:
       summary: Add Cost Center
       tags:
         - Employer
+        - Cost Centers
   /employer/add-location:
     post:
       description: Add a new location. This method is available only for users with the ADMIN role.
@@ -1863,6 +1885,46 @@ paths:
       summary: Get Candidacy
       tags:
         - Employer
+  /employer/rename-cost-center:
+    post:
+      description: Rename a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
+      operationId: employer-rename-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center renamed successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Rename Cost Center
+      tags:
+        - Employer
+        - Cost Centers
+  /employer/update-cost-center:
+    post:
+      description: Update a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
+      operationId: employer-update-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center updated successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update Cost Center
+      tags:
+        - Employer
+        - Cost Centers
   /employer/get-cost-centers:
     post:
       description: Get a list of cost centers with pagination. This method is available only for users with the COST_CENTERS_CRUD or COST_CENTERS_VIEWER or ADMIN roles.
@@ -2031,6 +2093,7 @@ paths:
       summary: Mark Cost Center as Defunct
       tags:
         - Employer
+        - Cost Centers
   /employer/remove-location:
     post:
       description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
