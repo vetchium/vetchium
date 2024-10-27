@@ -2,65 +2,16 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
+import "./common.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
 namespace Vetchi;
 
-@route("/employer/add-location")
-interface AddLocation {
-    @tag("Locations")
-    @post
-    addLocation(@body location: Location): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/defunct-location")
-interface DefunctLocation {
-    @tag("Locations")
-    @post
-    defunctLocation(@body defuntLocationRequest: DefunctLocationRequest): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/get-location")
-interface GetLocation {
-    @tag("Locations")
-    @post
-    getLocation(@body getLocation: GetLocationRequest): {
-        @statusCode statusCode: 200;
-        @body location: Location;
-    };
-}
-
-@route("/employer/get-locations")
-interface GetLocations {
-    @tag("Locations")
-    @post
-    getLocations(@body getLocationsRequest: GetLocationsRequest): {
-        @statusCode statusCode: 200;
-        @body locations: Location[];
-    };
-}
-
-@route("/employer/rename-location")
-interface RenameLocation {
-    @tag("Locations")
-    @post
-    renameLocation(@body renameLocationRequest: RenameLocationRequest): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/update-location")
-interface UpdateLocation {
-    @tag("Locations")
-    @post
-    updateLocation(@body updateLocation: Location): {
-        @statusCode statusCode: 200;
-    };
+enum LocationState {
+    ActiveLocation: "ACTIVE_LOCATION",
+    DefunctLocation: "DEFUNCT_LOCATION",
 }
 
 @minLength(3)
@@ -74,6 +25,25 @@ scalar CountryCode extends string;
 
 @doc("Office Location of an Employer")
 model Location {
+    @minLength(3)
+    @maxLength(32)
+    title: string;
+
+    country_code: CountryCode;
+
+    @maxLength(1024)
+    postal_address: string;
+
+    postal_code: string;
+    openstreetmap_url?: url;
+
+    @maxItems(3)
+    city_aka?: City[];
+
+    state: LocationState;
+}
+
+model AddLocationRequest {
     @minLength(3)
     @maxLength(32)
     title: string;
@@ -108,6 +78,7 @@ model GetLocationsRequest {
     pagination_key?: string;
 
     @maxValue(100)
+    @doc("Number of Locations to return; 100 is the default if not specified")
     limit?: integer;
 }
 
@@ -119,4 +90,89 @@ model RenameLocationRequest {
     @minLength(3)
     @maxLength(32)
     new_title: string;
+}
+
+model UpdateLocationRequest {
+    @minLength(3)
+    @maxLength(32)
+    title: string;
+
+    country_code: CountryCode;
+
+    @maxLength(1024)
+    postal_address: string;
+
+    postal_code: string;
+    openstreetmap_url?: url;
+
+    @maxItems(3)
+    city_aka?: City[];
+}
+
+@route("/employer/add-location")
+interface AddLocation {
+    @tag("Locations")
+    @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
+    @post
+    addLocation(@body addLocationRequest: AddLocationRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Location already exists")
+        @statusCode
+        statusCode: 409;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/defunct-location")
+interface DefunctLocation {
+    @tag("Locations")
+    @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
+    @post
+    defunctLocation(@body defuntLocationRequest: DefunctLocationRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/get-location")
+interface GetLocation {
+    @tag("Locations")
+    @doc("Requires any of ${Admin}, ${LocationsCRUD}, ${LocationsViewer} roles")
+    @post
+    getLocation(@body getLocation: GetLocationRequest): {
+        @statusCode statusCode: 200;
+        @body location: Location;
+    };
+}
+
+@route("/employer/get-locations")
+interface GetLocations {
+    @tag("Locations")
+    @doc("Requires any of ${Admin}, ${LocationsCRUD}, ${LocationsViewer} roles")
+    @post
+    getLocations(@body getLocationsRequest: GetLocationsRequest): {
+        @statusCode statusCode: 200;
+        @body locations: Location[];
+    };
+}
+
+@route("/employer/rename-location")
+interface RenameLocation {
+    @tag("Locations")
+    @post
+    renameLocation(@body renameLocationRequest: RenameLocationRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/update-location")
+interface UpdateLocation {
+    @tag("Locations")
+    @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
+    @post
+    updateLocation(@body updateLocationRequest: UpdateLocationRequest): {
+        @statusCode statusCode: 200;
+    };
 }

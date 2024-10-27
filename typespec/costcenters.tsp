@@ -59,11 +59,11 @@ model GetCostCentersRequest {
 model RenameCostCenterRequest {
     @minLength(3)
     @maxLength(32)
-    old_title: string;
+    old_name: string;
 
     @minLength(3)
     @maxLength(32)
-    new_title: string;
+    new_name: string;
 }
 
 model UpdateCostCenterRequest {
@@ -83,7 +83,9 @@ interface AddCostCenter {
     addCostcenter(@body costcenter: AddCostCenterRequest): {
         @statusCode statusCode: 200;
     } | {
-        @statusCode statusCode: 409;
+        @doc("Cost Center already exists")
+        @statusCode
+        statusCode: 409;
     } | {
         @statusCode statusCode: 400;
         @body error: ValidationErrors;
@@ -109,6 +111,7 @@ interface GetCostCenter {
     @post
     getCostCenter(@body getCostCenterRequest: GetCostCenterRequest): {
         @statusCode statusCode: 200;
+        @body costcenter: CostCenter;
     };
 }
 
