@@ -13,7 +13,6 @@ import (
 
 func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Log().Debug("AddCostCenter")
 		var addCostCenterReq vetchi.AddCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&addCostCenterReq)
 		if err != nil {
@@ -52,7 +51,7 @@ func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		h.Log().Debug("Created CostCenter", "CC", ccReq, "ID", costCenterID)
+		h.Log().Debug("Added CostCenter", "CC", ccReq, "ID", costCenterID)
 
 		w.WriteHeader(http.StatusOK)
 	}

@@ -168,7 +168,7 @@ LIMIT $4
 
 func (p *PG) DefunctCostCenter(
 	ctx context.Context,
-	defunctReq db.DefunctReq,
+	defunctReq db.DefunctCCReq,
 ) error {
 	query := `
 UPDATE

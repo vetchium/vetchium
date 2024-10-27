@@ -32,7 +32,7 @@ func DefunctCostCenter(h vhandler.VHandler) http.HandlerFunc {
 		}
 		err = h.DB().DefunctCostCenter(
 			r.Context(),
-			db.DefunctReq{
+			db.DefunctCCReq{
 				EmployerID: orgUser.EmployerID,
 				Name:       defunctCostCenterRequest.Name,
 			},

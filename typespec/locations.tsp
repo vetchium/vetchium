@@ -35,6 +35,8 @@ model Location {
     postal_address: string;
 
     postal_code: string;
+
+    @maxLength(255)
     openstreetmap_url?: url;
 
     @maxItems(3)

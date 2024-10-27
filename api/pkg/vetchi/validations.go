@@ -82,6 +82,32 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_country_code",
+		func(fl validator.FieldLevel) bool {
+			return len(fl.Field().String()) == 3
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_city_aka",
+		func(fl validator.FieldLevel) bool {
+			cities := fl.Field().Interface().([]string)
+			for _, city := range cities {
+				if len(city) < 3 || len(city) > 32 {
+					return false
+				}
+			}
+			return true
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

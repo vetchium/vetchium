@@ -14,19 +14,6 @@ const (
 	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
 )
 
-type AddLocationRequest struct {
-	Country           string   `json:"country"                        validate:"required,min=3,max=32"`
-	State             string   `json:"state"                          validate:"required,min=3,max=32"`
-	City              string   `json:"city"                           validate:"required,min=3,max=32"`
-	OtherNamesForCity []string `json:"other_names_for_city,omitempty" validate:"omitempty,min=3,max=32"`
-	PostalAddress     string   `json:"postal_address"                 validate:"required,min=3,max=1024"`
-	LocationTitle     string   `json:"location_title"                 validate:"required,min=3,max=32"`
-}
-
-type AddLocationResponse struct {
-	LocationID string `json:"location_id"`
-}
-
 type AddOrgUserRequest struct {
 	Name  string        `json:"name"  validate:"required"`
 	Email string        `json:"email" validate:"required,email"`
@@ -334,11 +321,6 @@ type GetInterviewDetailsRequest struct {
 	InterviewID string `json:"interview_id" validate:"required"`
 }
 
-type GetLocationsRequest struct {
-	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=100"`
-	Offset string `json:"offset,omitempty"`
-}
-
 type GetMyApplicationsRequest struct {
 	StartDate string `json:"start_date,omitempty" validate:"date"`
 	EndDate   string `json:"end_date,omitempty"   validate:"date"`
@@ -505,10 +487,6 @@ type Password string
 type ReferredBy struct {
 	Name  string `json:"name"`
 	Email string `json:"email" validate:"email"`
-}
-
-type RemoveLocationRequest struct {
-	LocationID string `json:"location_id" validate:"required"`
 }
 
 type RemoveOrgUserRequest struct {

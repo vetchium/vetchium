@@ -60,7 +60,7 @@ type CCentersList struct {
 	PaginationKey string
 }
 
-type DefunctReq struct {
+type DefunctCCReq struct {
 	EmployerID uuid.UUID
 	Name       string
 }

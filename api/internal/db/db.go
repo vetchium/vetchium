@@ -27,11 +27,18 @@ type DB interface {
 	OnboardAdmin(context.Context, OnboardReq) error
 
 	CreateCostCenter(context.Context, CCenterReq) (uuid.UUID, error)
-	DefunctCostCenter(context.Context, DefunctReq) error
+	DefunctCostCenter(context.Context, DefunctCCReq) error
 	GetCCByName(context.Context, GetCCByNameReq) (vetchi.CostCenter, error)
 	GetCostCenters(context.Context, CCentersList) ([]vetchi.CostCenter, error)
 	RenameCostCenter(context.Context, RenameCCReq) error
 	UpdateCostCenter(context.Context, UpdateCCReq) error
+
+	AddLocation(context.Context, AddLocationReq) (uuid.UUID, error)
+	DefunctLocation(context.Context, DefunctLocationReq) error
+	GetLocByName(context.Context, GetLocByNameReq) (vetchi.Location, error)
+	GetLocations(context.Context, GetLocationsReq) ([]vetchi.Location, error)
+	RenameLocation(context.Context, RenameLocationReq) error
+	UpdateLocation(context.Context, UpdateLocationReq) error
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
