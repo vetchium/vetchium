@@ -51,24 +51,27 @@ components:
         name:
           type: string
     AddLocationRequest:
-      description: Request to add a new location. Any country, state, city whose name length is more than the allowed length are not supported currently.
       properties:
-        city:
-          example: Electronic City
-          maxLength: 32
-          minLength: 3
-          type: string
-        country:
-          maxLength: 32
-          minLength: 3
-          type: string
-        location_title:
+        title:
           description: The title of the location
           example: DataCenter Campus
           maxLength: 32
           minLength: 3
           type: string
-        other_names_for_city:
+        country:
+          minLength: 3
+          maxLength: 3
+          type: string
+          description: ISO 3166-1 alpha-3 code for the country
+          example: USA
+        postal_code:
+          description: The postal code of the location
+          example: P001-123
+          type: string
+          minLength: 1
+          maxLength: 24
+        city_aka:
+          description: Alternative names for the city
           example:
             - Bengaluru
             - Bangalore
@@ -77,23 +80,32 @@ components:
             minLength: 3
             type: string
           type: array
+          maxItems: 10
         postal_address:
+          description: The postal address of the location
+          example: 123, Street Name, City, State, Country, Postal Code
           maxLength: 1024
           minLength: 3
           type: string
-        state:
-          maxLength: 32
-          minLength: 3
+        openstreetmap_url:
+          description: OpenStreetMap URL for the location
+          format: url
+          maxLength: 255
           type: string
       required:
+        - title
         - country
-        - state
-        - city
-        - postal_address
+        - postal_code
+        - city_aka
     AddLocationResponse:
       description: Response after adding a location
       properties:
-        location_id:
+        title:
+          type: string
+    DefunctLocationRequest:
+      description: Request to mark a location as defunct
+      properties:
+        title:
           type: string
     AddOrgUserRequest:
       description: Request to add a new user
@@ -939,6 +951,11 @@ components:
         interview_id:
           description: The interview ID
           type: string
+    GetLocationRequest:
+      description: Request to get a location by title
+      properties:
+        title:
+          type: string
     GetLocationsRequest:
       description: Request to get a list of locations with pagination
       properties:
@@ -1109,6 +1126,49 @@ components:
         - INTERNSHIP_JOB
         - UNSPECIFIED_JOB
       type: string
+    Location:
+      description: An Employer Office Location
+      properties:
+        title:
+          description: The title of the location
+          example: DataCenter Campus
+          maxLength: 32
+          minLength: 3
+          type: string
+        country:
+          minLength: 3
+          maxLength: 3
+          type: string
+          description: ISO 3166-1 alpha-3 code for the country
+          example: USA
+        postal_code:
+          description: The postal code of the location
+          example: P001-123
+          type: string
+          minLength: 1
+          maxLength: 24
+        city_aka:
+          description: Alternative names for the city
+          example:
+            - Bengaluru
+            - Bangalore
+          items:
+            maxLength: 32
+            minLength: 3
+            type: string
+          type: array
+          maxItems: 10
+        postal_address:
+          description: The postal address of the location
+          example: 123, Street Name, City, State, Country, Postal Code
+          maxLength: 1024
+          minLength: 3
+          type: string
+        openstreetmap_url:
+          description: OpenStreetMap URL for the location
+          format: url
+          maxLength: 255
+          type: string
     LoginRequest:
       description: Request to login
       properties:
@@ -1314,13 +1374,13 @@ components:
         application_id:
           description: The ID of the application to reject
           type: string
-    RemoveLocationRequest:
-      description: Request to remove a location
+    RenameLocationRequest:
+      description: Request to rename a Location of an Employer
       properties:
-        location_id:
+        title:
           type: string
       required:
-        - location_id
+        - title
     RemoveOrgUserRequest:
       description: Request to remove an orguser
       properties:
@@ -1383,6 +1443,11 @@ components:
           type: string
         title:
           type: string
+    UpdateLocationRequest:
+      description: Request to update a Location
+      $ref: "#/components/schemas/Location"
+      required:
+        - title
     UpdateInterviewFeedbackRequest:
       description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
       properties:
@@ -1544,7 +1609,7 @@ paths:
         - Cost Centers
   /employer/add-location:
     post:
-      description: Add a new location. This method is available only for users with the ADMIN role.
+      description: Add a new location. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
       operationId: employer-add-location
       requestBody:
         content:
@@ -1565,6 +1630,7 @@ paths:
       summary: Add Location
       tags:
         - Employer
+        - Locations
   /employer/add-org-user:
     post:
       description: Add a new orguser associated with the employer. This is available only for users with the ADMIN role.
@@ -1981,6 +2047,7 @@ paths:
       summary: Get Cost Centers
       tags:
         - Employer
+        - Cost Centers
   /employer/get-interview-details:
     post:
       description: Get interview details for a given interview_id.
@@ -2006,7 +2073,7 @@ paths:
         - Employer
   /employer/get-locations:
     post:
-      description: Get a list of locations with pagination. This method is available only for users with the ADMIN role.
+      description: Get a list of locations with pagination. This method is available only for users with the ADMIN or LOCATIONS_CRUD or LOCATIONS_VIEWER roles.
       operationId: employer-get-locations
       requestBody:
         content:
@@ -2020,17 +2087,7 @@ paths:
             application/json:
               schema:
                 items:
-                  properties:
-                    city:
-                      type: string
-                    country:
-                      type: string
-                    location_id:
-                      type: string
-                    postal_address:
-                      type: string
-                    state:
-                      type: string
+                  $ref: "#/components/schemas/Location"
                 type: array
           description: OK
       security:
@@ -2039,6 +2096,71 @@ paths:
       summary: Get Locations
       tags:
         - Employer
+        - Locations
+  /employer/get-location:
+    post:
+      description: Get a location by id
+      operationId: employer-get-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: An Employer Office Location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Location
+      tags:
+        - Employer
+        - Locations
+  /employer/defunct-location:
+    post:
+      description: Marks a location as defunct. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
+      operationId: employer-defunct-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefunctLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location marked as defunct successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Mark Location as Defunct
+      tags:
+        - Employer
+        - Locations
+  /employer/update-location:
+    post:
+      description: Updates the details of an Employer's Location
+      operationId: employer-update-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location updated successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update Location
+      tags:
+        - Employer
+        - Locations
   /employer/get-onboard-status:
     post:
       description: Get Onboarded Status for an Employer
@@ -2125,15 +2247,15 @@ paths:
       tags:
         - Employer
         - Cost Centers
-  /employer/remove-location:
+  /employer/rename-location:
     post:
-      description: Remove a location. This method is available only for users with the ADMIN role. Removing a location will not remove any openings associated with it. The openings will continue to point to the old location. It will just not show up in the list of locations and future openings.
-      operationId: employer-remove-location
+      description: Rename a location. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
+      operationId: employer-rename-location
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RemoveLocationRequest"
+              $ref: "#/components/schemas/RenameLocationRequest"
         required: true
       responses:
         "200":
@@ -2144,6 +2266,7 @@ paths:
       summary: Remove Location
       tags:
         - Employer
+        - Locations
   /employer/remove-org-user:
     post:
       description: Remove an orguser associated with the employer. This method is available only for users with the ADMIN role.
