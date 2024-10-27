@@ -432,12 +432,6 @@ components:
         - yoe_max
         - recruiter
         - hiring_manager
-    DefunctCostCenterRequest:
-      description: Request to mark a cost center as defunct
-      properties:
-        cost_center_name:
-          description: The name of the cost center
-          type: string
     DefunctLocationRequest:
       description: Request to mark a location as defunct
       properties:
@@ -869,27 +863,6 @@ components:
           type: string
       required:
         - candidacy_id
-    GetCostCenterRequest:
-      description: Request to get a cost center
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-    GetCostCentersRequest:
-      description: Request to get a list of cost centers with pagination
-      properties:
-        limit:
-          default: 100
-          maximum: 100
-          minimum: 1
-          type: integer
-        pagination_key:
-          type: string
-        state:
-          $ref: "#/components/schemas/CostCenterState"
-          default:
-            - ACTIVE_CC
     GetInterviewDetailsRequest:
       description: Get Interview details
       properties:
@@ -1290,21 +1263,6 @@ components:
       maxLength: 64
       minLength: 12
       type: string
-    PutCostCenterRequest:
-      description: Request to update an existing cost center
-      properties:
-        cost_center_id:
-          type: string
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        notes:
-          maxLength: 1024
-          type: string
-      required:
-        - cost_center_id
-        - name
     ReferredBy:
       description: The user who referred the applicant
       properties:
