@@ -5,23 +5,6 @@ info:
   version: 0.0.1
 components:
   schemas:
-    AddCostCenterRequest:
-      description: Request to add a new cost center
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        notes:
-          maxLength: 1024
-          type: string
-      required:
-        - name
-    AddCostCenterResponse:
-      description: Response after adding a cost center
-      properties:
-        name:
-          type: string
     AddLocationRequest:
       properties:
         city_aka:
@@ -288,23 +271,6 @@ components:
       example: example.com
       maxLength: 255
       minLength: 3
-      type: string
-    CostCenter:
-      description: A cost center object
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        notes:
-          maxLength: 1024
-          type: string
-        state:
-          $ref: "#/components/schemas/CostCenterState"
-    CostCenterState:
-      enum:
-        - ACTIVE_CC
-        - DEFUNCT_CC
       type: string
     CreateInterviewRequest:
       description: Request to create a new interview
@@ -1366,17 +1332,6 @@ components:
         work_history_id:
           description: The ID of the work history to remove
           type: string
-    RenameCostCenterRequest:
-      description: Request to rename a cost center
-      properties:
-        new_name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        old_name:
-          maxLength: 64
-          minLength: 3
-          type: string
     RenameLocationRequest:
       description: Request to rename a Location of an Employer
       properties:
@@ -1432,16 +1387,6 @@ components:
           description: The recruiter name
           type: string
         title:
-          type: string
-    UpdateCostCenterRequest:
-      description: Request to update a cost center
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        notes:
-          maxLength: 1024
           type: string
     UpdateInterviewFeedbackRequest:
       description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
@@ -1581,32 +1526,6 @@ components:
           tokenUrl: https://example.com/oauth/token
       type: oauth2
 paths:
-  /employer/add-cost-center:
-    post:
-      description: Add a new Cost Center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
-      operationId: employer-add-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddCostCenterResponse"
-          description: Cost Center added successfully
-        "409":
-          description: Cost Center with the same name already exists. Note that even if a Cost Center is defunct, its name cannot be used by another.
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Add Cost Center
-      tags:
-        - Employer
-        - Cost Centers
   /employer/add-location:
     post:
       description: Add a new location. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
@@ -1750,26 +1669,6 @@ paths:
       summary: Create Opening
       tags:
         - Employer
-  /employer/defunct-cost-center:
-    post:
-      description: Marks a cost center as defunct. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles. Marking a cost center as defunct will not remove any openings already associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of active cost centers and in the creation of New Openings in future.
-      operationId: employer-defunct-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DefunctCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center marked as defunct successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Mark Cost Center as Defunct
-      tags:
-        - Employer
-        - Cost Centers
   /employer/defunct-location:
     post:
       description: Marks a location as defunct. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
@@ -1998,56 +1897,6 @@ paths:
       summary: Get Candidacy
       tags:
         - Employer
-  /employer/get-cost-center:
-    post:
-      description: Get a cost center by name.
-      operationId: employer-get-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CostCenter"
-          description: Cost center details
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Get Cost Center
-      tags:
-        - Employer
-        - Cost Centers
-  /employer/get-cost-centers:
-    post:
-      description: Get a list of cost centers with pagination. This method is available only for users with the COST_CENTERS_CRUD or COST_CENTERS_VIEWER or ADMIN roles.
-      operationId: employer-get-cost-centers
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetCostCentersRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/CostCenter"
-                type: array
-          description: OK
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Get Cost Centers
-      tags:
-        - Employer
-        - Cost Centers
   /employer/get-interview-details:
     post:
       description: Get interview details for a given interview_id.
@@ -2206,26 +2055,6 @@ paths:
       summary: Remove OrgUser
       tags:
         - Employer
-  /employer/rename-cost-center:
-    post:
-      description: Rename a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
-      operationId: employer-rename-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RenameCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center renamed successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Rename Cost Center
-      tags:
-        - Employer
-        - Cost Centers
   /employer/rename-location:
     post:
       description: Rename a location. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
@@ -2371,26 +2200,6 @@ paths:
       summary: TFA
       tags:
         - Employer
-  /employer/update-cost-center:
-    post:
-      description: Update a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
-      operationId: employer-update-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center updated successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update Cost Center
-      tags:
-        - Employer
-        - Cost Centers
   /employer/update-interview-feedback:
     post:
       description: Update the feedback for an interview.
