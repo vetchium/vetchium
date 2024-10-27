@@ -295,20 +295,17 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		Expect(ccb4Update.Name).Should(Equal("CC-update-test-1"))
 		Expect(ccb4Update.Notes).Should(Equal("This is a test cost center"))
 
-		fmt.Fprintf(GinkgoWriter, "Update cost center with invalid name\n")
+		fmt.Fprintf(GinkgoWriter, "Update Cost Center without Notes\n")
 		statusCode, err = updateCostCenter(
 			adminToken,
 			vetchi.UpdateCostCenterRequest{
-				Name: "Non-existent Cost Center",
+				Name: "CC-update-test-1",
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(statusCode).Should(Equal(http.StatusNotFound))
+		Expect(statusCode).Should(Equal(http.StatusBadRequest))
 
-		fmt.Fprintf(
-			GinkgoWriter,
-			"Updating cost center with invalid notes\n",
-		)
+		fmt.Fprintf(GinkgoWriter, "Update Cost Center with invalid notes\n")
 		statusCode, err = updateCostCenter(
 			adminToken,
 			vetchi.UpdateCostCenterRequest{
