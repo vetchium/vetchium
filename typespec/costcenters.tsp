@@ -1,7 +1,9 @@
 import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
+
 import "./common.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
@@ -73,9 +75,10 @@ model UpdateCostCenterRequest {
     notes: string;
 }
 
-@route("/employer/add-costcenter")
+@route("/employer/add-cost-center")
 interface AddCostCenter {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
     addCostcenter(@body costcenter: AddCostCenterRequest): {
         @statusCode statusCode: 200;
@@ -90,6 +93,7 @@ interface AddCostCenter {
 @route("/employer/defunct-cost-center")
 interface DefunctCostCenter {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
     defunctCostCenter(
         @body defunctCostCenterRequest: DefunctCostCenterRequest,
@@ -101,6 +105,7 @@ interface DefunctCostCenter {
 @route("/employer/get-cost-center")
 interface GetCostCenter {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD}, ${CostCentersViewer} roles")
     @post
     getCostCenter(@body getCostCenterRequest: GetCostCenterRequest): {
         @statusCode statusCode: 200;
@@ -110,6 +115,7 @@ interface GetCostCenter {
 @route("/employer/get-cost-centers")
 interface GetCostCenters {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD}, ${CostCentersViewer} roles")
     @post
     getCostCenters(@body getCostCentersRequest: GetCostCentersRequest): {
         @statusCode statusCode: 200;
@@ -120,6 +126,7 @@ interface GetCostCenters {
 @route("/employer/rename-cost-center")
 interface RenameCostCenter {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
     renameCostCenter(@body renameCostCenterRequest: RenameCostCenterRequest): {
         @statusCode statusCode: 200;
@@ -129,6 +136,7 @@ interface RenameCostCenter {
 @route("/employer/update-cost-center")
 interface UpdateCostCenter {
     @tag("Cost Centers")
+    @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
     updateCostCenter(@body updateCostCenterRequest: UpdateCostCenterRequest): {
         @statusCode statusCode: 200;

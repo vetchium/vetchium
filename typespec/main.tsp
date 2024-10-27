@@ -1,8 +1,11 @@
 import "@typespec/http";
-import "@typespec/rest";
 import "@typespec/openapi3";
-import "./locations.tsp";
+import "@typespec/rest";
+
+import "./common.tsp";
 import "./costcenters.tsp";
+import "./locations.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 

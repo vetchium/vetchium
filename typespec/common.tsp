@@ -4,8 +4,6 @@ model ValidationErrors {
     errors: string[];
 }
 
-enum OrgUserRole {
-    Admin: "ADMIN",
-    CostCentersCRUD: "COST_CENTERS_CRUD",
-    CostCentersViewer: "COST_CENTERS_VIEWER",
-}
+alias Admin = "ADMIN";
+alias CostCentersCRUD = "COST_CENTERS_CRUD";
+alias CostCentersViewer = "COST_CENTERS_VIEWER";
