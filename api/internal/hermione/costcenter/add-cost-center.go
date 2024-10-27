@@ -54,13 +54,6 @@ func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 
 		h.Log().Debug("Created CostCenter", "CC", ccReq, "ID", costCenterID)
 
-		err = json.NewEncoder(w).Encode(vetchi.AddCostCenterResponse{
-			Name: addCostCenterReq.Name,
-		})
-		if err != nil {
-			h.Log().Error("failed to encode response", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

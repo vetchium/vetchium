@@ -4,14 +4,15 @@ import (
 	"time"
 )
 
-type AddCostCenterRequest struct {
-	Name  string `json:"name"            validate:"required,min=3,max=64"`
-	Notes string `json:"notes,omitempty" validate:"max=1024"`
-}
-
-type AddCostCenterResponse struct {
-	Name string `json:"name"`
-}
+const (
+	Admin             OrgUserRole = "ADMIN"
+	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
+	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
+	LocationsCRUD     OrgUserRole = "LOCATIONS_CRUD"
+	LocationsViewer   OrgUserRole = "LOCATIONS_VIEWER"
+	OpeningsCRUD      OrgUserRole = "OPENINGS_CRUD"
+	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
+)
 
 type AddLocationRequest struct {
 	Country           string   `json:"country"                        validate:"required,min=3,max=32"`
@@ -133,19 +134,6 @@ type ClientId struct {
 	ClientID string `json:"client_id" validate:"required,min=3,max=255"`
 }
 
-type CostCenter struct {
-	Name  string          `json:"name"            validate:"required,min=3,max=64" db:"cost_center_name"`
-	Notes string          `json:"notes,omitempty" validate:"max=1024"              db:"notes"`
-	State CostCenterState `json:"state"                                            db:"cost_center_state"`
-}
-
-type CostCenterState string
-
-const (
-	ActiveCC  CostCenterState = "ACTIVE_CC"
-	DefunctCC CostCenterState = "DEFUNCT_CC"
-)
-
 type CreateInterviewRequest struct {
 	CandidacyID              string    `json:"candidacy_id"                         validate:"required"`
 	Interviewers             []OrgUser `json:"interviewers"                         validate:"required"`
@@ -180,10 +168,6 @@ type CreateOpeningRequest struct {
 	PotentialTeamMatesIDs    []string                 `json:"potential_team_mates_ids,omitempty"`
 	MaxHops                  int                      `json:"max_hops,omitempty"                   validate:"min=2,max=5"`
 	InternalOnly             bool                     `json:"internal_only,omitempty"`
-}
-
-type DefunctCostCenterRequest struct {
-	Name string `json:"name" validate:"required,min=3,max=64"`
 }
 
 type EducationalQualification string
@@ -344,16 +328,6 @@ type FilteredRecruiters struct {
 
 type ForgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
-}
-
-type GetCostCenterRequest struct {
-	Name string `json:"name" validate:"required,min=3,max=64"`
-}
-
-type GetCostCentersRequest struct {
-	Limit         int               `json:"limit,omitempty"          validate:"max=100"`
-	PaginationKey string            `json:"pagination_key,omitempty"`
-	States        []CostCenterState `json:"states,omitempty"         validate:"validate_cc_states"`
 }
 
 type GetInterviewDetailsRequest struct {
@@ -526,25 +500,11 @@ type OrgUserInfo struct {
 
 type OrgUserRole string
 
-const (
-	Admin             OrgUserRole = "ADMIN"
-	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
-	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
-	LocationsCRUD     OrgUserRole = "LOCATIONS_CRUD"
-	LocationsViewer   OrgUserRole = "LOCATIONS_VIEWER"
-	OpeningsCRUD      OrgUserRole = "OPENINGS_CRUD"
-	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
-)
-
 type Password string
 
 type ReferredBy struct {
 	Name  string `json:"name"`
 	Email string `json:"email" validate:"email"`
-}
-
-type RemoveCostCenterRequest struct {
-	CostCenterID string `json:"cost_center_id" validate:"required"`
 }
 
 type RemoveLocationRequest struct {
@@ -557,11 +517,6 @@ type RemoveOrgUserRequest struct {
 
 type RemoveWorkHistoryRequest struct {
 	WorkHistoryID string `json:"work_history_id" validate:"required"`
-}
-
-type RenameCostCenterRequest struct {
-	OldName string `json:"old_name" validate:"required,min=3,max=64"`
-	NewName string `json:"new_name" validate:"required,min=3,max=64"`
 }
 
 type ResetPasswordRequest struct {
@@ -582,11 +537,6 @@ type ShortlistedOpening struct {
 	HiringManagerEmail string `json:"hiring_manager_email"`
 	RecruiterName      string `json:"recruiter_name"`
 	RecruiterEmail     string `json:"recruiter_email"`
-}
-
-type UpdateCostCenterRequest struct {
-	Name  string `json:"name"            validate:"required,min=3,max=64"`
-	Notes string `json:"notes,omitempty" validate:"max=1024"`
 }
 
 type UpdateInterviewFeedbackRequest struct {
