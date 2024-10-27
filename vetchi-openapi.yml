@@ -5,34 +5,6 @@ info:
   version: 0.0.1
 components:
   schemas:
-    GetCostCenterRequest:
-      description: Request to get a cost center
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-    RenameCostCenterRequest:
-      description: Request to rename a cost center
-      properties:
-        old_name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        new_name:
-          maxLength: 64
-          minLength: 3
-          type: string
-    UpdateCostCenterRequest:
-      description: Request to update a cost center
-      properties:
-        name:
-          maxLength: 64
-          minLength: 3
-          type: string
-        notes:
-          maxLength: 1024
-          type: string
     AddCostCenterRequest:
       description: Request to add a new cost center
       properties:
@@ -52,24 +24,6 @@ components:
           type: string
     AddLocationRequest:
       properties:
-        title:
-          description: The title of the location
-          example: DataCenter Campus
-          maxLength: 32
-          minLength: 3
-          type: string
-        country:
-          minLength: 3
-          maxLength: 3
-          type: string
-          description: ISO 3166-1 alpha-3 code for the country
-          example: USA
-        postal_code:
-          description: The postal code of the location
-          example: P001-123
-          type: string
-          minLength: 1
-          maxLength: 24
         city_aka:
           description: Alternative names for the city
           example:
@@ -79,18 +33,36 @@ components:
             maxLength: 32
             minLength: 3
             type: string
-          type: array
           maxItems: 10
-        postal_address:
-          description: The postal address of the location
-          example: 123, Street Name, City, State, Country, Postal Code
-          maxLength: 1024
+          type: array
+        country:
+          description: ISO 3166-1 alpha-3 code for the country
+          example: USA
+          maxLength: 3
           minLength: 3
           type: string
         openstreetmap_url:
           description: OpenStreetMap URL for the location
           format: url
           maxLength: 255
+          type: string
+        postal_address:
+          description: The postal address of the location
+          example: 123, Street Name, City, State, Country, Postal Code
+          maxLength: 1024
+          minLength: 3
+          type: string
+        postal_code:
+          description: The postal code of the location
+          example: P001-123
+          maxLength: 24
+          minLength: 1
+          type: string
+        title:
+          description: The title of the location
+          example: DataCenter Campus
+          maxLength: 32
+          minLength: 3
           type: string
       required:
         - title
@@ -99,11 +71,6 @@ components:
         - city_aka
     AddLocationResponse:
       description: Response after adding a location
-      properties:
-        title:
-          type: string
-    DefunctLocationRequest:
-      description: Request to mark a location as defunct
       properties:
         title:
           type: string
@@ -504,6 +471,11 @@ components:
       properties:
         cost_center_name:
           description: The name of the cost center
+          type: string
+    DefunctLocationRequest:
+      description: Request to mark a location as defunct
+      properties:
+        title:
           type: string
     EducationalQualification:
       description: Educational qualification
@@ -931,6 +903,13 @@ components:
           type: string
       required:
         - candidacy_id
+    GetCostCenterRequest:
+      description: Request to get a cost center
+      properties:
+        name:
+          maxLength: 64
+          minLength: 3
+          type: string
     GetCostCentersRequest:
       description: Request to get a list of cost centers with pagination
       properties:
@@ -1129,24 +1108,6 @@ components:
     Location:
       description: An Employer Office Location
       properties:
-        title:
-          description: The title of the location
-          example: DataCenter Campus
-          maxLength: 32
-          minLength: 3
-          type: string
-        country:
-          minLength: 3
-          maxLength: 3
-          type: string
-          description: ISO 3166-1 alpha-3 code for the country
-          example: USA
-        postal_code:
-          description: The postal code of the location
-          example: P001-123
-          type: string
-          minLength: 1
-          maxLength: 24
         city_aka:
           description: Alternative names for the city
           example:
@@ -1156,18 +1117,36 @@ components:
             maxLength: 32
             minLength: 3
             type: string
-          type: array
           maxItems: 10
-        postal_address:
-          description: The postal address of the location
-          example: 123, Street Name, City, State, Country, Postal Code
-          maxLength: 1024
+          type: array
+        country:
+          description: ISO 3166-1 alpha-3 code for the country
+          example: USA
+          maxLength: 3
           minLength: 3
           type: string
         openstreetmap_url:
           description: OpenStreetMap URL for the location
           format: url
           maxLength: 255
+          type: string
+        postal_address:
+          description: The postal address of the location
+          example: 123, Street Name, City, State, Country, Postal Code
+          maxLength: 1024
+          minLength: 3
+          type: string
+        postal_code:
+          description: The postal code of the location
+          example: P001-123
+          maxLength: 24
+          minLength: 1
+          type: string
+        title:
+          description: The title of the location
+          example: DataCenter Campus
+          maxLength: 32
+          minLength: 3
           type: string
     LoginRequest:
       description: Request to login
@@ -1374,13 +1353,6 @@ components:
         application_id:
           description: The ID of the application to reject
           type: string
-    RenameLocationRequest:
-      description: Request to rename a Location of an Employer
-      properties:
-        title:
-          type: string
-      required:
-        - title
     RemoveOrgUserRequest:
       description: Request to remove an orguser
       properties:
@@ -1394,6 +1366,24 @@ components:
         work_history_id:
           description: The ID of the work history to remove
           type: string
+    RenameCostCenterRequest:
+      description: Request to rename a cost center
+      properties:
+        new_name:
+          maxLength: 64
+          minLength: 3
+          type: string
+        old_name:
+          maxLength: 64
+          minLength: 3
+          type: string
+    RenameLocationRequest:
+      description: Request to rename a Location of an Employer
+      properties:
+        title:
+          type: string
+      required:
+        - title
     ResetPasswordRequest:
       description: Request to reset the password
       properties:
@@ -1443,11 +1433,16 @@ components:
           type: string
         title:
           type: string
-    UpdateLocationRequest:
-      description: Request to update a Location
-      $ref: "#/components/schemas/Location"
-      required:
-        - title
+    UpdateCostCenterRequest:
+      description: Request to update a cost center
+      properties:
+        name:
+          maxLength: 64
+          minLength: 3
+          type: string
+        notes:
+          maxLength: 1024
+          type: string
     UpdateInterviewFeedbackRequest:
       description: Update the feedback for an Interview. This will change the status of the Interview to COMPLETED and the evaluation_status to EVALUATION_COMPLETED.
       properties:
@@ -1463,6 +1458,11 @@ components:
         interview_id:
           description: The interview ID
           type: string
+    UpdateLocationRequest:
+      $ref: "#/components/schemas/Location"
+      description: Request to update a Location
+      required:
+        - title
     UpdateOrgUserRolesRequest:
       description: Request to update an orguser's roles
       properties:
@@ -1750,6 +1750,46 @@ paths:
       summary: Create Opening
       tags:
         - Employer
+  /employer/defunct-cost-center:
+    post:
+      description: Marks a cost center as defunct. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles. Marking a cost center as defunct will not remove any openings already associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of active cost centers and in the creation of New Openings in future.
+      operationId: employer-defunct-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefunctCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center marked as defunct successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Mark Cost Center as Defunct
+      tags:
+        - Employer
+        - Cost Centers
+  /employer/defunct-location:
+    post:
+      description: Marks a location as defunct. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
+      operationId: employer-defunct-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefunctLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location marked as defunct successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Mark Location as Defunct
+      tags:
+        - Employer
+        - Locations
   /employer/filter-applications:
     post:
       description: Get a list of applications for a given opening.
@@ -1970,55 +2010,15 @@ paths:
         required: true
       responses:
         "200":
-          description: Cost center details
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CostCenter"
+          description: Cost center details
       security:
         - BearerAuth: []
         - OAuth2: []
       summary: Get Cost Center
-      tags:
-        - Employer
-        - Cost Centers
-  /employer/rename-cost-center:
-    post:
-      description: Rename a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
-      operationId: employer-rename-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RenameCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center renamed successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Rename Cost Center
-      tags:
-        - Employer
-        - Cost Centers
-  /employer/update-cost-center:
-    post:
-      description: Update a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
-      operationId: employer-update-cost-center
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateCostCenterRequest"
-        required: true
-      responses:
-        "200":
-          description: Cost center updated successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update Cost Center
       tags:
         - Employer
         - Cost Centers
@@ -2071,6 +2071,30 @@ paths:
       summary: Get Interview Details
       tags:
         - Employer
+  /employer/get-location:
+    post:
+      description: Get a location by id
+      operationId: employer-get-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetLocationRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+          description: An Employer Office Location
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Get Location
+      tags:
+        - Employer
+        - Locations
   /employer/get-locations:
     post:
       description: Get a list of locations with pagination. This method is available only for users with the ADMIN or LOCATIONS_CRUD or LOCATIONS_VIEWER roles.
@@ -2094,70 +2118,6 @@ paths:
         - BearerAuth: []
         - OAuth2: []
       summary: Get Locations
-      tags:
-        - Employer
-        - Locations
-  /employer/get-location:
-    post:
-      description: Get a location by id
-      operationId: employer-get-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetLocationRequest"
-        required: true
-      responses:
-        "200":
-          description: An Employer Office Location
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Location"
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Get Location
-      tags:
-        - Employer
-        - Locations
-  /employer/defunct-location:
-    post:
-      description: Marks a location as defunct. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
-      operationId: employer-defunct-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DefunctLocationRequest"
-        required: true
-      responses:
-        "200":
-          description: Location marked as defunct successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Mark Location as Defunct
-      tags:
-        - Employer
-        - Locations
-  /employer/update-location:
-    post:
-      description: Updates the details of an Employer's Location
-      operationId: employer-update-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateLocationRequest"
-        required: true
-      responses:
-        "200":
-          description: Location updated successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update Location
       tags:
         - Employer
         - Locations
@@ -2227,23 +2187,42 @@ paths:
       summary: Reject Application
       tags:
         - Employer
-  /employer/defunct-cost-center:
+  /employer/remove-org-user:
     post:
-      description: Marks a cost center as defunct. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles. Marking a cost center as defunct will not remove any openings already associated with it. The openings will continue to point to the old cost center. It will just not show up in the list of active cost centers and in the creation of New Openings in future.
-      operationId: employer-defunct-cost-center
+      description: Remove an orguser associated with the employer. This method is available only for users with the ADMIN role.
+      operationId: employer-remove-org-user
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DefunctCostCenterRequest"
+              $ref: "#/components/schemas/RemoveOrgUserRequest"
         required: true
       responses:
         "200":
-          description: Cost center marked as defunct successfully
+          description: User removed successfully or user not found
       security:
         - BearerAuth: []
         - OAuth2: []
-      summary: Mark Cost Center as Defunct
+      summary: Remove OrgUser
+      tags:
+        - Employer
+  /employer/rename-cost-center:
+    post:
+      description: Rename a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
+      operationId: employer-rename-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center renamed successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Rename Cost Center
       tags:
         - Employer
         - Cost Centers
@@ -2267,25 +2246,6 @@ paths:
       tags:
         - Employer
         - Locations
-  /employer/remove-org-user:
-    post:
-      description: Remove an orguser associated with the employer. This method is available only for users with the ADMIN role.
-      operationId: employer-remove-org-user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoveOrgUserRequest"
-        required: true
-      responses:
-        "200":
-          description: User removed successfully or user not found
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Remove OrgUser
-      tags:
-        - Employer
   /employer/reset-password:
     get:
       description: Show a HTML page with a form to reset the password for the given token.
@@ -2411,6 +2371,26 @@ paths:
       summary: TFA
       tags:
         - Employer
+  /employer/update-cost-center:
+    post:
+      description: Update a cost center. This method is available only for users with the COST_CENTERS_CRUD or ADMIN roles.
+      operationId: employer-update-cost-center
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCostCenterRequest"
+        required: true
+      responses:
+        "200":
+          description: Cost center updated successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update Cost Center
+      tags:
+        - Employer
+        - Cost Centers
   /employer/update-interview-feedback:
     post:
       description: Update the feedback for an interview.
@@ -2432,6 +2412,26 @@ paths:
       summary: Update Interview Feedback
       tags:
         - Employer
+  /employer/update-location:
+    post:
+      description: Updates the details of an Employer's Location
+      operationId: employer-update-location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLocationRequest"
+        required: true
+      responses:
+        "200":
+          description: Location updated successfully
+      security:
+        - BearerAuth: []
+        - OAuth2: []
+      summary: Update Location
+      tags:
+        - Employer
+        - Locations
   /employer/update-org-user-roles:
     post:
       description: Updates the roles of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for orgusers with the ADMIN role.
