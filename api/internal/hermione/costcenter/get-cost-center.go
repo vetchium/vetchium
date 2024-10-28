@@ -48,7 +48,8 @@ func GetCostCenter(h vhandler.VHandler) http.HandlerFunc {
 
 		err = json.NewEncoder(w).Encode(cc)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			h.Log().Error("failed to encode cost center", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 	}

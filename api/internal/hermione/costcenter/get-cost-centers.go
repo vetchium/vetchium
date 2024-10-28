@@ -42,6 +42,7 @@ func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
 
 		states := []string{}
 		for _, state := range getCostCentersRequest.States {
+			// already validated by vator
 			states = append(states, string(state))
 		}
 

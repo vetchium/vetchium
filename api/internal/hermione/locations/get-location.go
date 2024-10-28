@@ -1,4 +1,4 @@
-package costcenter
+package locations
 
 import (
 	"encoding/json"
@@ -11,16 +11,16 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func UpdateCostCenter(h vhandler.VHandler) http.HandlerFunc {
+func GetLocation(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var updateCCRequest vetchi.UpdateCostCenterRequest
-		err := json.NewDecoder(r.Body).Decode(&updateCCRequest)
+		var getLocationReq vetchi.GetLocationRequest
+		err := json.NewDecoder(r.Body).Decode(&getLocationReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !h.Vator().Struct(w, &updateCCRequest) {
+		if !h.Vator().Struct(w, &getLocationReq) {
 			return
 		}
 
@@ -31,15 +31,12 @@ func UpdateCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		updateCCReq := db.UpdateCCReq{
-			Name:       updateCCRequest.Name,
-			Notes:      updateCCRequest.Notes,
+		location, err := h.DB().GetLocByName(r.Context(), db.GetLocByNameReq{
+			Title:      getLocationReq.Title,
 			EmployerID: orgUser.EmployerID,
-		}
-
-		err = h.DB().UpdateCostCenter(r.Context(), updateCCReq)
+		})
 		if err != nil {
-			if errors.Is(err, db.ErrNoCostCenter) {
+			if errors.Is(err, db.ErrNoLocation) {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -48,6 +45,11 @@ func UpdateCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(location)
+		if err != nil {
+			h.Log().Error("failed to encode location", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }

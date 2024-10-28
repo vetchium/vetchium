@@ -1,4 +1,4 @@
-package costcenter
+package locations
 
 import (
 	"encoding/json"
@@ -11,16 +11,16 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func UpdateCostCenter(h vhandler.VHandler) http.HandlerFunc {
+func RenameLocation(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var updateCCRequest vetchi.UpdateCostCenterRequest
-		err := json.NewDecoder(r.Body).Decode(&updateCCRequest)
+		var renameLocationReq vetchi.RenameLocationRequest
+		err := json.NewDecoder(r.Body).Decode(&renameLocationReq)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		if !h.Vator().Struct(w, &updateCCRequest) {
+		if !h.Vator().Struct(w, &renameLocationReq) {
 			return
 		}
 
@@ -31,16 +31,19 @@ func UpdateCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		updateCCReq := db.UpdateCCReq{
-			Name:       updateCCRequest.Name,
-			Notes:      updateCCRequest.Notes,
+		err = h.DB().RenameLocation(r.Context(), db.RenameLocationReq{
 			EmployerID: orgUser.EmployerID,
-		}
-
-		err = h.DB().UpdateCostCenter(r.Context(), updateCCReq)
+			OldTitle:   renameLocationReq.OldTitle,
+			NewTitle:   renameLocationReq.NewTitle,
+		})
 		if err != nil {
-			if errors.Is(err, db.ErrNoCostCenter) {
+			if errors.Is(err, db.ErrNoLocation) {
 				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrDupLocationName) {
+				http.Error(w, "", http.StatusConflict)
 				return
 			}
 
