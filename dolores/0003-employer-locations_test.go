@@ -1,6 +1,7 @@
 package dolores
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -8,18 +9,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
-
+	. "github.com/onsi/gomega"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-type locationTestCase struct {
-	description string
-	token       string
-	location    vetchi.AddLocationRequest
-	wantStatus  int
-}
-
-var _ = FDescribe("Employer Locations", Ordered, func() {
+var _ = Describe("Employer Locations", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var crud1Token, crud2Token string
@@ -61,6 +55,13 @@ var _ = FDescribe("Employer Locations", Ordered, func() {
 
 	Describe("Locations related Tests", func() {
 		It("Add Location", func() {
+			type locationTestCase struct {
+				description string
+				token       string
+				location    vetchi.AddLocationRequest
+				wantStatus  int
+			}
+
 			dummyLocation := vetchi.AddLocationRequest{
 				Title:         "Location-dummy",
 				CountryCode:   "SCO",
@@ -168,6 +169,27 @@ PIN: 12345`,
 					location:    location1,
 					wantStatus:  http.StatusConflict,
 				},
+			}
+
+			for _, testCase := range testCases {
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				testAddLocation(
+					testCase.token,
+					testCase.location,
+					testCase.wantStatus,
+				)
+			}
+		})
+
+		It("Add Location Validation", func() {
+			type locationValidationTestCase struct {
+				description   string
+				token         string
+				location      vetchi.AddLocationRequest
+				wantStatus    int
+				wantErrFields []string
+			}
+			testCases := []locationValidationTestCase{
 				{
 					description: "with missing title",
 					token:       adminToken,
@@ -178,7 +200,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
 				},
 				{
 					description: "with small invalid title",
@@ -190,7 +213,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
 				},
 				{
 					description: "with long invalid title",
@@ -202,7 +226,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
 				},
 				{
 					description: "with missing country code",
@@ -214,7 +239,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
 				},
 				{
 					description: "with small invalid country code",
@@ -226,7 +252,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
 				},
 				{
 					description: "with long invalid country code",
@@ -238,7 +265,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
 				},
 				{
 					description: "with missing postal code",
@@ -250,7 +278,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
 				},
 				{
 					description: "with small invalid postal code",
@@ -262,7 +291,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
 				},
 				{
 					description: "with long invalid postal code",
@@ -274,7 +304,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
 				},
 				{
 					description: "with missing postal address",
@@ -286,7 +317,8 @@ PIN: 12345`,
 						PostalAddress: "",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
 				},
 				{
 					description: "with small invalid postal address",
@@ -298,7 +330,8 @@ PIN: 12345`,
 						PostalAddress: "xy",
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
 				},
 				{
 					description: "with long invalid postal address",
@@ -310,7 +343,8 @@ PIN: 12345`,
 						PostalAddress: strings.Repeat("x", 1025),
 						CityAka:       []string{"Dursleys"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
 				},
 				{
 					description: "with invalid city aka",
@@ -322,7 +356,8 @@ PIN: 12345`,
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
 						CityAka:       []string{"Dursleys", "xy"},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
 				},
 				{
 					description: "with long city aka",
@@ -337,7 +372,8 @@ PIN: 12345`,
 							strings.Repeat("x", 100),
 						},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
 				},
 				{
 					description: "with invalid number of city aka",
@@ -357,17 +393,21 @@ PIN: 12345`,
 							"Harry Potter and the Deathly Hallows",
 						},
 					},
-					wantStatus: http.StatusBadRequest,
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
 				},
 			}
 
 			for _, testCase := range testCases {
-				testAddLocation(
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				validationErrors := testAddLocationGetResp(
 					testCase.token,
 					testCase.location,
 					testCase.wantStatus,
 				)
-				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				Expect(
+					validationErrors.Errors,
+				).Should(ContainElements(testCase.wantErrFields))
 			}
 		})
 	})
@@ -392,4 +432,21 @@ func testAddLocation(
 		OpenStreetMapURL: location.OpenStreetMapURL,
 	}
 	testPOST(token, reqBody, "/employer/add-location", wantStatus)
+}
+
+func testAddLocationGetResp(
+	token string,
+	location vetchi.AddLocationRequest,
+	wantStatus int,
+) vetchi.ValidationErrors {
+	resp := testPOSTGetResp(
+		token,
+		location,
+		"/employer/add-location",
+		wantStatus,
+	).([]byte)
+	var validationErrors vetchi.ValidationErrors
+	err := json.Unmarshal(resp, &validationErrors)
+	Expect(err).ShouldNot(HaveOccurred())
+	return validationErrors
 }

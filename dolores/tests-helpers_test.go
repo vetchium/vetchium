@@ -237,6 +237,25 @@ func testPOST(
 	endpoint string,
 	wantStatus int,
 ) {
+	doPOST(token, reqBody, endpoint, wantStatus, false)
+}
+
+func testPOSTGetResp(
+	token string,
+	reqBody interface{},
+	endpoint string,
+	wantStatus int,
+) interface{} {
+	return doPOST(token, reqBody, endpoint, wantStatus, true)
+}
+
+func doPOST(
+	token string,
+	reqBody interface{},
+	endpoint string,
+	wantStatus int,
+	wantResp bool,
+) interface{} {
 	body, err := json.Marshal(reqBody)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -254,4 +273,13 @@ func testPOST(
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).Should(Equal(wantStatus))
+
+	if !wantResp {
+		return nil
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return respBody
 }
