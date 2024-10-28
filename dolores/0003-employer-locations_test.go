@@ -410,6 +410,34 @@ PIN: 12345`,
 				).Should(ContainElements(testCase.wantErrFields))
 			}
 		})
+
+		It("Get Locations", func() {
+			type testGetLocationsTestCase struct {
+				description         string
+				token               string
+				getLocationsRequest vetchi.GetLocationsRequest
+				wantStatus          int
+			}
+
+			testCases := []testGetLocationsTestCase{
+				{
+					description:         "with Admin token and no filters",
+					token:               adminToken,
+					getLocationsRequest: vetchi.GetLocationsRequest{},
+					wantStatus:          http.StatusOK,
+				},
+			}
+
+			for _, testCase := range testCases {
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				locations := testGetLocations(
+					testCase.token,
+					testCase.getLocationsRequest,
+					testCase.wantStatus,
+				)
+				fmt.Fprintf(GinkgoWriter, "locations: %v\n", locations)
+			}
+		})
 	})
 })
 
@@ -449,4 +477,22 @@ func testAddLocationGetResp(
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
+}
+
+func testGetLocations(
+	token string,
+	getLocationsRequest vetchi.GetLocationsRequest,
+	wantStatus int,
+) []vetchi.Location {
+	resp := testPOSTGetResp(
+		token,
+		getLocationsRequest,
+		"/employer/get-locations",
+		wantStatus,
+	).([]byte)
+
+	var locations []vetchi.Location
+	err := json.Unmarshal(resp, &locations)
+	Expect(err).ShouldNot(HaveOccurred())
+	return locations
 }

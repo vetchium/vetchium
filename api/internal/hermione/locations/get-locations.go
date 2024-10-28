@@ -15,11 +15,12 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 		var getLocationsReq vetchi.GetLocationsRequest
 		err := json.NewDecoder(r.Body).Decode(&getLocationsReq)
 		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &getLocationsReq) {
+			h.Log().Error("failed to validate getLocationsReq", "error", err)
 			return
 		}
 
@@ -34,6 +35,10 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 		for _, state := range getLocationsReq.States {
 			// already validated by vator
 			states = append(states, string(state))
+		}
+
+		if getLocationsReq.Limit == 0 {
+			getLocationsReq.Limit = 100
 		}
 
 		locations, err := h.DB().GetLocations(r.Context(), db.GetLocationsReq{

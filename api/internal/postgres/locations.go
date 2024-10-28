@@ -16,7 +16,7 @@ func (p *PG) AddLocation(
 	req db.AddLocationReq,
 ) (uuid.UUID, error) {
 	query := `
-INSERT INTO locations (title, country_code, postal_address, postal_code, openstreetmap_url, city_aka, employer_id, state)
+INSERT INTO locations (title, country_code, postal_address, postal_code, openstreetmap_url, city_aka, employer_id, location_state)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING
     id

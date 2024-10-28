@@ -134,7 +134,7 @@ CREATE TABLE locations (
     openstreetmap_url TEXT,
     city_aka TEXT ARRAY,
 
-    state location_states NOT NULL,
+    location_state location_states NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
     CONSTRAINT uniq_location_title_employer_id UNIQUE (title, employer_id),

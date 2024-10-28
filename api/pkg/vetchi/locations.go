@@ -36,9 +36,9 @@ type GetLocationRequest struct {
 }
 
 type GetLocationsRequest struct {
-	States        []LocationState `json:"states"         validate:"omitempty,maxItems=3,validate_location_state"`
+	States        []LocationState `json:"states"          validate:"omitempty,validate_location_state"`
 	PaginationKey string          `json:"pagination_key"`
-	Limit         int             `json:"limit"          validate:"min=0,max=100"`
+	Limit         int             `json:"limit,omitempty" validate:"min=0,max=100"`
 }
 
 type RenameLocationRequest struct {
