@@ -19,7 +19,7 @@ type locationTestCase struct {
 	wantStatus  int
 }
 
-var _ = Describe("Employer Locations", Ordered, func() {
+var _ = FDescribe("Employer Locations", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var crud1Token, crud2Token string
@@ -320,7 +320,7 @@ PIN: 12345`,
 						CountryCode:   "IND",
 						PostalCode:    "12345",
 						PostalAddress: "4 Privet Drive, Little Whinging, Surrey",
-						CityAka:       []string{"Dursleys", "xyz"},
+						CityAka:       []string{"Dursleys", "xy"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},

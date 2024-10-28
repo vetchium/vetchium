@@ -96,6 +96,9 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		"validate_city_aka",
 		func(fl validator.FieldLevel) bool {
 			cities := fl.Field().Interface().([]string)
+			if len(cities) > 3 {
+				return false
+			}
 			for _, city := range cities {
 				if len(city) < 3 || len(city) > 32 {
 					return false

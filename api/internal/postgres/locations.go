@@ -16,7 +16,7 @@ func (p *PG) AddLocation(
 	req db.AddLocationReq,
 ) (uuid.UUID, error) {
 	query := `
-INSERT INTO locations (title, country_code, postal_address, postal_code, openstreetmap_url, city_aka, employer_id, org_user_id)
+INSERT INTO locations (title, country_code, postal_address, postal_code, openstreetmap_url, city_aka, employer_id, state)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING
     id
@@ -33,12 +33,12 @@ RETURNING
 		req.OpenStreetMapURL,
 		req.CityAka,
 		req.EmployerID,
-		req.OrgUserID,
+		vetchi.ActiveLocation,
 	).Scan(&locationID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
-			pgErr.ConstraintName == "uniq_location_name_employer_id" {
+			pgErr.ConstraintName == "uniq_location_title_employer_id" {
 			return uuid.UUID{}, db.ErrDupLocationName
 		}
 

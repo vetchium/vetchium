@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
+	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -181,6 +182,38 @@ func (h *Hermione) Run() error {
 		"/employer/get-cost-center",
 		http.HandlerFunc(costcenter.GetCostCenter(h)),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersViewer},
+	)
+
+	// Location related endpoints
+	h.mw.Protect(
+		"/employer/add-location",
+		http.HandlerFunc(locations.AddLocation(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/defunct-location",
+		http.HandlerFunc(locations.DefunctLocation(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/get-locations",
+		http.HandlerFunc(locations.GetLocations(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsViewer},
+	)
+	h.mw.Protect(
+		"/employer/get-location",
+		http.HandlerFunc(locations.GetLocation(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsViewer},
+	)
+	h.mw.Protect(
+		"/employer/rename-location",
+		http.HandlerFunc(locations.RenameLocation(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/update-location",
+		http.HandlerFunc(locations.UpdateLocation(h)),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
 	)
 
 	return http.ListenAndServe(h.port, nil)

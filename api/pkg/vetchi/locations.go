@@ -24,7 +24,7 @@ type AddLocationRequest struct {
 	PostalAddress    string   `json:"postal_address"    validate:"required,min=3,max=1024"`
 	PostalCode       string   `json:"postal_code"       validate:"required,min=3,max=16"`
 	OpenStreetMapURL string   `json:"openstreetmap_url" validate:"omitempty,url,max=255"`
-	CityAka          []string `json:"city_aka"          validate:"omitempty,maxItems=3,validate_city_aka"`
+	CityAka          []string `json:"city_aka"          validate:"omitempty,validate_city_aka"`
 }
 
 type DefunctLocationRequest struct {

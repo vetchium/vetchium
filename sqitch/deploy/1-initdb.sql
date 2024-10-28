@@ -125,7 +125,7 @@ CREATE TABLE org_cost_centers (
 ---
 
 CREATE TYPE location_states AS ENUM ('ACTIVE_LOCATION', 'DEFUNCT_LOCATION');
-CREATE TABLE org_locations (
+CREATE TABLE locations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     country_code TEXT NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE org_locations (
     state location_states NOT NULL,
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
-    CONSTRAINT uniq_title_employer_id UNIQUE (title, employer_id),
+    CONSTRAINT uniq_location_title_employer_id UNIQUE (title, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
