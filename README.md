@@ -78,8 +78,8 @@ Following are some rules that you should follow while working on the code. It is
 - End to end tests > Unit tests
 - We use [ginkgo](https://onsi.github.io/ginkgo/) for writing end to end tests. Each test should have a testcase-up.sql and testcase-down.sql file. The testcase-up.sql file should be used to setup the test data and the testcase-down.sql should be used to clean up the test data. All testcases must clean whatever data they create (including emails). All testcases must be idempotent.
 - Minimize data that has to be moved out of database to backend. But have most business logic in Go code. This may seem contradictory at first, but if you read through the code, you will understand.
-- What is mentioned in the openapi spec is the contract. Try to keep the implementation as close to the contract as possible. Backend and Frontend code should adapt to the openapi spec.
-- Write openapi spec first before writing any new code. It is okay to change the spec until the code is merged, but should be considered set in stone after that.
+- We use [typespec](https://typespec.io/) to define our API contract. Backend and Frontend code should adhere to the typespec specification. Once the typespec is compiled it will export a openapi.yaml file, which can be previewed in your favorite editor. Take a quick 5 minute introduction to typespec, if you have not worked with it before. It is quite easy to pick up. It is more concise than yaml and is far easier to edit/read.
+- Write the typespec specification first before writing any new code. It is okay to change the spec until the code is merged, but should be considered set in stone after that.
 - End all files with a newline. Do NOT have any trailing whitespace.
 - Enforce best-practices via editorconfig, CI or other FOSS tooling automation as much as possible. It is the responsibility of the reviewers to check for these.
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
