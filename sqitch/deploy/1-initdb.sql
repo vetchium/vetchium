@@ -122,4 +122,24 @@ CREATE TABLE org_cost_centers (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+---
+
+CREATE TYPE location_states AS ENUM ('ACTIVE_LOCATION', 'DEFUNCT_LOCATION');
+CREATE TABLE org_locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    country_code TEXT NOT NULL,
+    postal_address TEXT NOT NULL,
+    postal_code TEXT NOT NULL,
+    openstreetmap_url TEXT,
+    city_aka TEXT ARRAY,
+
+    state location_states NOT NULL,
+
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    CONSTRAINT uniq_title_employer_id UNIQUE (title, employer_id),
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
 COMMIT;
