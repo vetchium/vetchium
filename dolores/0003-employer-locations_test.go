@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Employer Locations", Ordered, func() {
+var _ = Describe("Employer Locations", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var crud1Token, crud2Token string
@@ -100,7 +100,7 @@ PIN: 12345`,
 	})
 
 	Describe("Locations related Tests", func() {
-		FIt("Add Location", func() {
+		It("Add Location", func() {
 			type locationTestCase struct {
 				description string
 				token       string
@@ -417,7 +417,7 @@ PIN: 12345`,
 			}
 		})
 
-		FIt("Get Locations", func() {
+		It("Get Locations", func() {
 			type testGetLocationsTestCase struct {
 				description         string
 				token               string
@@ -444,6 +444,42 @@ PIN: 12345`,
 					getLocationsRequest: vetchi.GetLocationsRequest{},
 					wantStatus:          http.StatusOK,
 				},
+				{
+					description: "with invalid state",
+					token:       adminToken,
+					getLocationsRequest: vetchi.GetLocationsRequest{
+						States: []vetchi.LocationState{"invalid-state"},
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "with invalid low limit",
+					token:       adminToken,
+					getLocationsRequest: vetchi.GetLocationsRequest{
+						Limit: -1,
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "with invalid high limit",
+					token:       adminToken,
+					getLocationsRequest: vetchi.GetLocationsRequest{
+						Limit: 101,
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description:         "with invalid token",
+					token:               "invalid-token",
+					getLocationsRequest: vetchi.GetLocationsRequest{},
+					wantStatus:          http.StatusUnauthorized,
+				},
+				{
+					description:         "with empty token",
+					token:               "",
+					getLocationsRequest: vetchi.GetLocationsRequest{},
+					wantStatus:          http.StatusUnauthorized,
+				},
 			}
 
 			for _, testCase := range testCases {
@@ -453,13 +489,15 @@ PIN: 12345`,
 					testCase.getLocationsRequest,
 					testCase.wantStatus,
 				)
-				Expect(locations).Should(HaveLen(4))
-				Expect(locations).Should(ContainElements(
-					makeLocation(location1, vetchi.ActiveLocation),
-					makeLocation(location2, vetchi.ActiveLocation),
-					makeLocation(location3, vetchi.ActiveLocation),
-					makeLocation(location4, vetchi.ActiveLocation),
-				))
+				if testCase.wantStatus == http.StatusOK {
+					Expect(locations).Should(HaveLen(4))
+					Expect(locations).Should(ContainElements(
+						makeLocation(location1, vetchi.ActiveLocation),
+						makeLocation(location2, vetchi.ActiveLocation),
+						makeLocation(location3, vetchi.ActiveLocation),
+						makeLocation(location4, vetchi.ActiveLocation),
+					))
+				}
 			}
 		})
 	})
@@ -516,8 +554,10 @@ func testGetLocations(
 	).([]byte)
 
 	var locations []vetchi.Location
-	err := json.Unmarshal(resp, &locations)
-	Expect(err).ShouldNot(HaveOccurred())
+	if wantStatus == http.StatusOK {
+		err := json.Unmarshal(resp, &locations)
+		Expect(err).ShouldNot(HaveOccurred())
+	}
 	return locations
 }
 

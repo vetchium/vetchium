@@ -22,7 +22,7 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 		}
 
 		if !h.Vator().Struct(w, &getLocationsReq) {
-			h.Log().Error("failed to validate getLocationsReq", "error", err)
+			h.Log().Debug("failed to validate getLocationsReq", "error", err)
 			return
 		}
 		h.Log().Debug("Validated", "getLocationsReq", getLocationsReq)
