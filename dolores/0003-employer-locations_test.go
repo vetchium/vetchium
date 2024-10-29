@@ -616,6 +616,253 @@ PIN: 12345`,
 
 			Expect(location).Should(Equal(location3Updated))
 		})
+
+		It("Update Location Validation", func() {
+			type testUpdateLocationValidationTestCase struct {
+				description   string
+				token         string
+				location      vetchi.UpdateLocationRequest
+				wantStatus    int
+				wantErrFields []string
+			}
+
+			testCases := []testUpdateLocationValidationTestCase{
+				{
+					description: "with missing title",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title: "",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
+				},
+				{
+					description: "with small invalid title",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title: "a",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
+				},
+				{
+					description: "with long invalid title",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title: strings.Repeat("a", 33),
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"title"},
+				},
+				{
+					description: "with missing country code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   "",
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
+				},
+				{
+					description: "with small invalid country code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   "IN",
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
+				},
+				{
+					description: "with long invalid country code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   "INDIA",
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"country_code"},
+				},
+				{
+					description: "with missing postal code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    "",
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
+				},
+				{
+					description: "with small invalid postal code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    "1",
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
+				},
+				{
+					description: "with long invalid postal code",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    strings.Repeat("1", 17),
+						PostalAddress: location3.PostalAddress,
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_code"},
+				},
+				{
+					description: "with missing postal address",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: "",
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
+				},
+				{
+					description: "with small invalid postal address",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: "xy",
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
+				},
+				{
+					description: "with long invalid postal address",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: strings.Repeat("x", 1025),
+						CityAka:       location3.CityAka,
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"postal_address"},
+				},
+				{
+					description: "with invalid city aka",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka:       []string{"Dursleys", "xy"},
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
+				},
+				{
+					description: "with long city aka",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka: []string{
+							"Dursleys",
+							strings.Repeat("x", 100),
+						},
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
+				},
+				{
+					description: "with invalid number of city aka",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:         location3.Title,
+						CountryCode:   location3.CountryCode,
+						PostalCode:    location3.PostalCode,
+						PostalAddress: location3.PostalAddress,
+						CityAka: []string{
+							"Harry Potter and the Sorcerer's Stone",
+							"Harry Potter and the Chamber of Secrets",
+							"Harry Potter and the Prisoner of Azkaban",
+							"Harry Potter and the Goblet of Fire",
+							"Harry Potter and the Order of the Phoenix",
+							"Harry Potter and the Half-Blood Prince",
+							"Harry Potter and the Deathly Hallows",
+						},
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"city_aka"},
+				},
+				{
+					description: "with invalid small openstreetmap url",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:            location3.Title,
+						CountryCode:      location3.CountryCode,
+						PostalCode:       location3.PostalCode,
+						PostalAddress:    location3.PostalAddress,
+						CityAka:          location3.CityAka,
+						OpenStreetMapURL: "a",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"openstreetmap_url"},
+				},
+				{
+					description: "with invalid long openstreetmap url",
+					token:       adminToken,
+					location: vetchi.UpdateLocationRequest{
+						Title:            location3.Title,
+						CountryCode:      location3.CountryCode,
+						PostalCode:       location3.PostalCode,
+						PostalAddress:    location3.PostalAddress,
+						CityAka:          location3.CityAka,
+						OpenStreetMapURL: strings.Repeat("x", 256),
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"openstreetmap_url"},
+				},
+			}
+
+			for _, testCase := range testCases {
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				validationErrors := testUpdateLocationGetResp(
+					testCase.token,
+					testCase.location,
+					testCase.wantStatus,
+				)
+				Expect(
+					validationErrors.Errors,
+				).Should(ContainElements(testCase.wantErrFields))
+			}
+		})
 	})
 })
 
@@ -708,4 +955,21 @@ func testDefunctLocation(
 		Title: defunctLocationRequest.Title,
 	}
 	testPOST(token, reqBody, "/employer/defunct-location", wantStatus)
+}
+
+func testUpdateLocationGetResp(
+	token string,
+	location vetchi.UpdateLocationRequest,
+	wantStatus int,
+) vetchi.ValidationErrors {
+	resp := testPOSTGetResp(
+		token,
+		location,
+		"/employer/update-location",
+		wantStatus,
+	).([]byte)
+	var validationErrors vetchi.ValidationErrors
+	err := json.Unmarshal(resp, &validationErrors)
+	Expect(err).ShouldNot(HaveOccurred())
+	return validationErrors
 }
