@@ -863,6 +863,20 @@ PIN: 12345`,
 				).Should(ContainElements(testCase.wantErrFields))
 			}
 		})
+
+		It("Create Get Defunct Locations in bulk; Test Pagination", func() {
+			// runID parameter is needed because even if a CC is defunct,
+			// its name cannot be used by another CC
+
+			fmt.Fprintf(GinkgoWriter, "count is not divisible by limit\n")
+			bulkAddDefunctLocation(adminToken, "run-1", 30, 4)
+
+			fmt.Fprintf(GinkgoWriter, "count is divisible by limit\n")
+			bulkAddDefunctLocation(adminToken, "run-2", 32, 4)
+
+			fmt.Fprintf(GinkgoWriter, "limit is greater than count\n")
+			bulkAddDefunctLocation(adminToken, "run-3", 30, 40)
+		})
 	})
 })
 
@@ -972,4 +986,64 @@ func testUpdateLocationGetResp(
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
+}
+
+func bulkAddDefunctLocation(
+	token string,
+	runID string,
+	count int,
+	limit int,
+) {
+	wantLocations := []vetchi.Location{}
+
+	dummyLocation := vetchi.AddLocationRequest{
+		Title:         "dummy-location",
+		CountryCode:   "IND",
+		PostalCode:    "123456",
+		PostalAddress: "dummy-address",
+		CityAka:       []string{"dummy-city"},
+	}
+
+	for i := 0; i < count; i++ {
+		newLocation := makeLocation(dummyLocation, vetchi.ActiveLocation)
+		newLocation.Title = fmt.Sprintf("LOC-%s-%d", runID, i)
+		wantLocations = append(wantLocations, newLocation)
+
+		newLocationReq := vetchi.AddLocationRequest{
+			Title:         newLocation.Title,
+			CountryCode:   newLocation.CountryCode,
+			PostalCode:    newLocation.PostalCode,
+			PostalAddress: newLocation.PostalAddress,
+			CityAka:       newLocation.CityAka,
+		}
+		testAddLocation(token, newLocationReq, http.StatusOK)
+	}
+
+	paginationKey := ""
+	gotLocations := []vetchi.Location{}
+	for {
+		getLocationsRequest := vetchi.GetLocationsRequest{
+			PaginationKey: paginationKey,
+			Limit:         limit,
+		}
+		locations := testGetLocations(token, getLocationsRequest, http.StatusOK)
+
+		if len(locations) == 0 {
+			break
+		}
+
+		gotLocations = append(gotLocations, locations...)
+		if len(locations) < limit {
+			break
+		}
+		paginationKey = locations[len(locations)-1].Title
+	}
+
+	Expect(gotLocations).Should(ContainElements(wantLocations))
+
+	for _, location := range gotLocations {
+		testDefunctLocation(token, vetchi.DefunctLocationRequest{
+			Title: location.Title,
+		}, http.StatusOK)
+	}
 }
