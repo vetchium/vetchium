@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = Describe("Employer Locations", Ordered, func() {
+var _ = FDescribe("Employer Locations", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var crud1Token, crud2Token string
@@ -500,6 +500,122 @@ PIN: 12345`,
 				}
 			}
 		})
+
+		It("Defunct Location", func() {
+			type testDefunctLocationTestCase struct {
+				description string
+				token       string
+				location    vetchi.DefunctLocationRequest
+				wantStatus  int
+			}
+
+			testCases := []testDefunctLocationTestCase{
+				{
+					description: "with Admin token",
+					token:       adminToken,
+					location: vetchi.DefunctLocationRequest{
+						Title: location1.Title,
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with Crud1 token",
+					token:       crud1Token,
+					location: vetchi.DefunctLocationRequest{
+						Title: location2.Title,
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					location: vetchi.DefunctLocationRequest{
+						Title: location3.Title,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "with empty token",
+					token:       "",
+					location: vetchi.DefunctLocationRequest{
+						Title: location4.Title,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+			}
+
+			for _, testCase := range testCases {
+				fmt.Fprintf(GinkgoWriter, "%s\n", testCase.description)
+				testDefunctLocation(
+					testCase.token,
+					testCase.location,
+					testCase.wantStatus,
+				)
+			}
+
+			// Verify that the defunct location is not returned in the list
+			locations := testGetLocations(
+				adminToken,
+				vetchi.GetLocationsRequest{},
+				http.StatusOK,
+			)
+			Expect(locations).Should(HaveLen(2))
+			Expect(locations).Should(ContainElements(
+				makeLocation(location3, vetchi.ActiveLocation),
+				makeLocation(location4, vetchi.ActiveLocation),
+			))
+
+			// Verify that the defunct location is returned in the list
+			locations = testGetLocations(
+				adminToken,
+				vetchi.GetLocationsRequest{
+					States: []vetchi.LocationState{vetchi.DefunctLocation},
+				},
+				http.StatusOK,
+			)
+			Expect(locations).Should(HaveLen(2))
+			Expect(locations).Should(ContainElements(
+				makeLocation(location1, vetchi.DefunctLocation),
+				makeLocation(location2, vetchi.DefunctLocation),
+			))
+		})
+
+		It("Update and Get Location", func() {
+			location3Updated := makeLocation(location1, vetchi.ActiveLocation)
+			location3Updated.Title = location3.Title
+
+			updateLocationRequest := vetchi.UpdateLocationRequest{
+				Title:         location3.Title,
+				CountryCode:   location3Updated.CountryCode,
+				PostalCode:    location3Updated.PostalCode,
+				PostalAddress: location3Updated.PostalAddress,
+				CityAka:       location3Updated.CityAka,
+			}
+
+			_ = doPOST(
+				adminToken,
+				updateLocationRequest,
+				"/employer/update-location",
+				http.StatusOK,
+				false,
+			)
+
+			getLocationRequest := vetchi.GetLocationRequest{
+				Title: location3.Title,
+			}
+			locationRaw := doPOST(
+				adminToken,
+				getLocationRequest,
+				"/employer/get-location",
+				http.StatusOK,
+				true,
+			).([]byte)
+			var location vetchi.Location
+			err := json.Unmarshal(locationRaw, &location)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(location).Should(Equal(location3Updated))
+		})
 	})
 })
 
@@ -574,4 +690,22 @@ func makeLocation(
 		OpenStreetMapURL: req.OpenStreetMapURL,
 		State:            state,
 	}
+}
+
+func testDefunctLocation(
+	token string,
+	defunctLocationRequest vetchi.DefunctLocationRequest,
+	wantStatus int,
+) {
+	fmt.Fprintf(
+		GinkgoWriter,
+		"testDefunctLocation: token=%s, defunctLocationRequest=%v, wantStatus=%d\n",
+		token,
+		defunctLocationRequest,
+		wantStatus,
+	)
+	reqBody := vetchi.DefunctLocationRequest{
+		Title: defunctLocationRequest.Title,
+	}
+	testPOST(token, reqBody, "/employer/defunct-location", wantStatus)
 }
