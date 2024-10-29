@@ -41,6 +41,10 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 			getLocationsReq.Limit = 100
 		}
 
+		if len(states) == 0 {
+			states = []string{string(vetchi.ActiveLocation)}
+		}
+
 		locations, err := h.DB().GetLocations(r.Context(), db.GetLocationsReq{
 			States:        states,
 			EmployerID:    orgUser.EmployerID,

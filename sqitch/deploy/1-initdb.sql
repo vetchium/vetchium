@@ -1,5 +1,10 @@
 -- Deploy vetchi:1-initdb to pg
 
+ALTER SYSTEM SET log_statement = 'all';
+ALTER SYSTEM SET log_min_duration_statement = 0;
+ALTER SYSTEM SET log_duration = 'on';
+SELECT pg_reload_conf();
+
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS hub_users (

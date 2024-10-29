@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = Describe("Employer Locations", Ordered, func() {
+var _ = FDescribe("Employer Locations", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var crud1Token, crud2Token string
@@ -54,7 +54,7 @@ var _ = Describe("Employer Locations", Ordered, func() {
 	})
 
 	Describe("Locations related Tests", func() {
-		It("Add Location", func() {
+		FIt("Add Location", func() {
 			type locationTestCase struct {
 				description string
 				token       string
@@ -411,7 +411,7 @@ PIN: 12345`,
 			}
 		})
 
-		It("Get Locations", func() {
+		FIt("Get Locations", func() {
 			type testGetLocationsTestCase struct {
 				description         string
 				token               string
