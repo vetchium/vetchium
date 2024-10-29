@@ -19,6 +19,52 @@ var _ = FDescribe("Employer Locations", Ordered, func() {
 	var crud1Token, crud2Token string
 	var nonLocationToken, multipleNonLocationRolesToken string
 
+	dummyLocation := vetchi.AddLocationRequest{
+		Title:         "Location-dummy",
+		CountryCode:   "SCO",
+		PostalCode:    "TN-1234",
+		PostalAddress: "Hogwarts School of Witchcraft and Wizardry, Highlands, Scotland",
+		CityAka:       []string{"Hogwarts", "School"},
+	}
+
+	location1 := vetchi.AddLocationRequest{
+		Title:       "Location-1",
+		CountryCode: "UAE",
+		PostalCode:  "12345",
+		PostalAddress: `
+Number 6, Viveganandhar Theru,
+Dubai Kurukkuchandhu,
+Dubai Main Road,
+Dubai
+PIN: 12345`,
+		CityAka: []string{"Saarja", "Beghireen", "Abidhaabi"},
+	}
+
+	location2 := vetchi.AddLocationRequest{
+		Title:            "Location-2",
+		CountryCode:      "IND",
+		PostalCode:       "12345",
+		PostalAddress:    "4 Privet Drive, Little Whinging, Surrey",
+		OpenStreetMapURL: "https://www.openstreetmap.org/way/966341718",
+		CityAka:          []string{"Dursleys"},
+	}
+
+	location3 := vetchi.AddLocationRequest{
+		Title:         "Location-3",
+		CountryCode:   "USA",
+		PostalCode:    "12345",
+		PostalAddress: "6, Murray Hills, New Jersey",
+		CityAka:       []string{},
+	}
+
+	location4 := vetchi.AddLocationRequest{
+		Title:         "Location-4",
+		CountryCode:   "GBR",
+		PostalCode:    "23456",
+		PostalAddress: "Number 12, Grimmauld Place, London PIN: 23456",
+		CityAka:       []string{"Order of the Phoenix"},
+	}
+
 	BeforeAll(func() {
 		db = setupTestDB()
 		seedDatabase(db, "0003-employer-locations-up.pgsql")
@@ -62,27 +108,6 @@ var _ = FDescribe("Employer Locations", Ordered, func() {
 				wantStatus  int
 			}
 
-			dummyLocation := vetchi.AddLocationRequest{
-				Title:         "Location-dummy",
-				CountryCode:   "SCO",
-				PostalCode:    "TN-1234",
-				PostalAddress: "Hogwarts School of Witchcraft and Wizardry, Highlands, Scotland",
-				CityAka:       []string{"Hogwarts", "School"},
-			}
-
-			location1 := vetchi.AddLocationRequest{
-				Title:       "Location-1",
-				CountryCode: "UAE",
-				PostalCode:  "12345",
-				PostalAddress: `
-Number 6, Viveganandhar Theru,
-Dubai Kurukkuchandhu,
-Dubai Main Road,
-Dubai
-PIN: 12345`,
-				CityAka: []string{"Saarja", "Beghireen", "Abidhaabi"},
-			}
-
 			testCases := []locationTestCase{
 				{
 					description: "with Admin token",
@@ -93,39 +118,20 @@ PIN: 12345`,
 				{
 					description: "with Admin token second location",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
-						Title:            "Location-2",
-						CountryCode:      "IND",
-						PostalCode:       "12345",
-						PostalAddress:    "4 Privet Drive, Little Whinging, Surrey",
-						OpenStreetMapURL: "https://www.openstreetmap.org/way/966341718",
-						CityAka:          []string{"Dursleys"},
-					},
-					wantStatus: http.StatusOK,
+					location:    location2,
+					wantStatus:  http.StatusOK,
 				},
 				{
 					description: "with Crud1 token",
 					token:       crud1Token,
-					location: vetchi.AddLocationRequest{
-						Title:         "Location-3",
-						CountryCode:   "USA",
-						PostalCode:    "12345",
-						PostalAddress: "6, Murray Hills, New Jersey",
-						CityAka:       []string{},
-					},
-					wantStatus: http.StatusOK,
+					location:    location3,
+					wantStatus:  http.StatusOK,
 				},
 				{
 					description: "with Crud2 token",
 					token:       crud2Token,
-					location: vetchi.AddLocationRequest{
-						Title:         "Location-4",
-						CountryCode:   "GBR",
-						PostalCode:    "23456",
-						PostalAddress: "Number 12, Grimmauld Place, London PIN: 23456",
-						CityAka:       []string{"Order of the Phoenix"},
-					},
-					wantStatus: http.StatusOK,
+					location:    location4,
+					wantStatus:  http.StatusOK,
 				},
 				{
 					description: "with Viewer token",
@@ -426,6 +432,18 @@ PIN: 12345`,
 					getLocationsRequest: vetchi.GetLocationsRequest{},
 					wantStatus:          http.StatusOK,
 				},
+				{
+					description:         "with Viewer token and no filters",
+					token:               viewerToken,
+					getLocationsRequest: vetchi.GetLocationsRequest{},
+					wantStatus:          http.StatusOK,
+				},
+				{
+					description:         "with Crud1 token and no filters",
+					token:               crud1Token,
+					getLocationsRequest: vetchi.GetLocationsRequest{},
+					wantStatus:          http.StatusOK,
+				},
 			}
 
 			for _, testCase := range testCases {
@@ -435,7 +453,13 @@ PIN: 12345`,
 					testCase.getLocationsRequest,
 					testCase.wantStatus,
 				)
-				fmt.Fprintf(GinkgoWriter, "locations: %v\n", locations)
+				Expect(locations).Should(HaveLen(4))
+				Expect(locations).Should(ContainElements(
+					makeLocation(location1, vetchi.ActiveLocation),
+					makeLocation(location2, vetchi.ActiveLocation),
+					makeLocation(location3, vetchi.ActiveLocation),
+					makeLocation(location4, vetchi.ActiveLocation),
+				))
 			}
 		})
 	})
@@ -495,4 +519,19 @@ func testGetLocations(
 	err := json.Unmarshal(resp, &locations)
 	Expect(err).ShouldNot(HaveOccurred())
 	return locations
+}
+
+func makeLocation(
+	req vetchi.AddLocationRequest,
+	state vetchi.LocationState,
+) vetchi.Location {
+	return vetchi.Location{
+		Title:            req.Title,
+		CountryCode:      req.CountryCode,
+		PostalCode:       req.PostalCode,
+		PostalAddress:    req.PostalAddress,
+		CityAka:          req.CityAka,
+		OpenStreetMapURL: req.OpenStreetMapURL,
+		State:            state,
+	}
 }

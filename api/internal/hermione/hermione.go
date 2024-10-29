@@ -198,12 +198,20 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/get-locations",
 		http.HandlerFunc(locations.GetLocations(h)),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsViewer},
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.LocationsCRUD,
+			vetchi.LocationsViewer,
+		},
 	)
 	h.mw.Protect(
 		"/employer/get-location",
 		http.HandlerFunc(locations.GetLocation(h)),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsViewer},
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.LocationsCRUD,
+			vetchi.LocationsViewer,
+		},
 	)
 	h.mw.Protect(
 		"/employer/rename-location",
