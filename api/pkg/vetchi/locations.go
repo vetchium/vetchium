@@ -8,14 +8,14 @@ const (
 )
 
 type Location struct {
-	Title            string   `json:"title"`
-	CountryCode      string   `json:"country_code"`
-	PostalAddress    string   `json:"postal_address"`
-	PostalCode       string   `json:"postal_code"`
-	OpenStreetMapURL string   `json:"openstreetmap_url"`
-	CityAka          []string `json:"city_aka"`
+	Title            string   `json:"title"             db:"title"`
+	CountryCode      string   `json:"country_code"      db:"country_code"`
+	PostalAddress    string   `json:"postal_address"    db:"postal_address"`
+	PostalCode       string   `json:"postal_code"       db:"postal_code"`
+	OpenStreetMapURL string   `json:"openstreetmap_url" db:"openstreetmap_url"`
+	CityAka          []string `json:"city_aka"          db:"city_aka"`
 
-	State LocationState `json:"state"`
+	State LocationState `json:"state" db:"location_state"`
 }
 
 type AddLocationRequest struct {
