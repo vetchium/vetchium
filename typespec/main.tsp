@@ -5,6 +5,7 @@ import "@typespec/rest";
 import "./common.tsp";
 import "./costcenters.tsp";
 import "./locations.tsp";
+import "./orgusers.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
