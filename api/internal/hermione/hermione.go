@@ -11,7 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
-	"github.com/psankar/vetchi/api/internal/hermione/employerauth"
+	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
@@ -144,26 +144,20 @@ func NewHermione() (*Hermione, error) {
 
 func (h *Hermione) Run() error {
 	// Authentication related endpoints
-	http.HandleFunc(
-		"/employer/get-onboard-status",
-		employerauth.GetOnboardStatus(h),
-	)
-	http.HandleFunc(
-		"/employer/set-onboard-password",
-		employerauth.SetOnboardPassword(h),
-	)
-	http.HandleFunc("/employer/signin", employerauth.EmployerSignin(h))
-	http.HandleFunc("/employer/tfa", employerauth.EmployerTFA(h))
+	http.HandleFunc("/employer/get-onboard-status", ea.GetOnboardStatus(h))
+	http.HandleFunc("/employer/set-onboard-password", ea.SetOnboardPassword(h))
+	http.HandleFunc("/employer/signin", ea.EmployerSignin(h))
+	http.HandleFunc("/employer/tfa", ea.EmployerTFA(h))
 
 	// CostCenter related endpoints
 	h.mw.Protect(
 		"/employer/add-cost-center",
-		http.HandlerFunc(costcenter.AddCostCenter(h)),
+		costcenter.AddCostCenter(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-cost-centers",
-		http.HandlerFunc(costcenter.GetCostCenters(h)),
+		costcenter.GetCostCenters(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.CostCentersCRUD,
@@ -172,39 +166,39 @@ func (h *Hermione) Run() error {
 	)
 	h.mw.Protect(
 		"/employer/defunct-cost-center",
-		http.HandlerFunc(costcenter.DefunctCostCenter(h)),
+		costcenter.DefunctCostCenter(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/rename-cost-center",
-		http.HandlerFunc(costcenter.RenameCostCenter(h)),
+		costcenter.RenameCostCenter(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/update-cost-center",
-		http.HandlerFunc(costcenter.UpdateCostCenter(h)),
+		costcenter.UpdateCostCenter(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-cost-center",
-		http.HandlerFunc(costcenter.GetCostCenter(h)),
+		costcenter.GetCostCenter(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersViewer},
 	)
 
 	// Location related endpoints
 	h.mw.Protect(
 		"/employer/add-location",
-		http.HandlerFunc(locations.AddLocation(h)),
+		locations.AddLocation(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/defunct-location",
-		http.HandlerFunc(locations.DefunctLocation(h)),
+		locations.DefunctLocation(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-locations",
-		http.HandlerFunc(locations.GetLocations(h)),
+		locations.GetLocations(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.LocationsCRUD,
@@ -213,7 +207,7 @@ func (h *Hermione) Run() error {
 	)
 	h.mw.Protect(
 		"/employer/get-location",
-		http.HandlerFunc(locations.GetLocation(h)),
+		locations.GetLocation(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.LocationsCRUD,
@@ -222,12 +216,12 @@ func (h *Hermione) Run() error {
 	)
 	h.mw.Protect(
 		"/employer/rename-location",
-		http.HandlerFunc(locations.RenameLocation(h)),
+		locations.RenameLocation(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/update-location",
-		http.HandlerFunc(locations.UpdateLocation(h)),
+		locations.UpdateLocation(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
 	)
 

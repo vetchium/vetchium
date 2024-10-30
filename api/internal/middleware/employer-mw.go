@@ -62,7 +62,7 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 // be derived from the OrgUserToken.
 func (m *Middleware) Protect(
 	route string,
-	handler http.Handler,
+	handlerFunc http.HandlerFunc,
 	allowedRoles []vetchi.OrgUserRole,
 ) {
 	http.Handle(route, m.employerAuth(
@@ -82,7 +82,7 @@ func (m *Middleware) Protect(
 			}
 
 			// Call the actual handler if roles are sufficient
-			handler.ServeHTTP(w, r)
+			handlerFunc(w, r)
 		}),
 	))
 }
