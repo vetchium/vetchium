@@ -5,78 +5,6 @@ info:
   version: 0.0.1
 components:
   schemas:
-    AddLocationRequest:
-      properties:
-        city_aka:
-          description: Alternative names for the city
-          example:
-            - Bengaluru
-            - Bangalore
-          items:
-            maxLength: 32
-            minLength: 3
-            type: string
-          maxItems: 10
-          type: array
-        country:
-          description: ISO 3166-1 alpha-3 code for the country
-          example: USA
-          maxLength: 3
-          minLength: 3
-          type: string
-        openstreetmap_url:
-          description: OpenStreetMap URL for the location
-          format: url
-          maxLength: 255
-          type: string
-        postal_address:
-          description: The postal address of the location
-          example: 123, Street Name, City, State, Country, Postal Code
-          maxLength: 1024
-          minLength: 3
-          type: string
-        postal_code:
-          description: The postal code of the location
-          example: P001-123
-          maxLength: 24
-          minLength: 1
-          type: string
-        title:
-          description: The title of the location
-          example: DataCenter Campus
-          maxLength: 32
-          minLength: 3
-          type: string
-      required:
-        - title
-        - country
-        - postal_code
-        - city_aka
-    AddLocationResponse:
-      description: Response after adding a location
-      properties:
-        title:
-          type: string
-    AddOrgUserRequest:
-      description: Request to add a new user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        name:
-          type: string
-        roles:
-          items:
-            $ref: "#/components/schemas/OrgUserRole"
-          type: array
-      required:
-        - name
-        - email
-        - role
-    AddOrgUserResponse:
-      description: Response after adding a user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
     AddWorkHistoryRequest:
       description: Request to add a new work history for the logged in user
       properties:
@@ -1224,38 +1152,19 @@ components:
         - OPENING_CLOSED
       type: string
     OrgUser:
-      description: A user object
       properties:
         email:
-          $ref: "#/components/schemas/EmailAddress"
-        name:
-          description: The name of the user
+          description: The email address of the org user
+          format: email
           type: string
-    OrgUserInfo:
-      description: Information about a user
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
         name:
+          description: The name of the org user
           type: string
-        role:
-          $ref: "#/components/schemas/OrgUserRole"
-    OrgUserListResponse:
-      description: A list of user information, sorted by email address
-      items:
-        $ref: "#/components/schemas/OrgUserInfo"
-      type: array
-    OrgUserRole:
-      description: User roles in the system
-      enum:
-        - ADMIN
-        - COST_CENTERS_CRUD
-        - COST_CENTERS_VIEWER
-        - LOCATIONS_CRUD
-        - LOCATIONS_VIEWER
-        - OPENINGS_CRUD
-        - OPENINGS_VIEWER
-      type: string
+        roles:
+          description: The roles of the org user
+          items:
+            type: string
+          type: array
     Password:
       description: A long password
       example: Password123$
@@ -1277,13 +1186,6 @@ components:
         application_id:
           description: The ID of the application to reject
           type: string
-    RemoveOrgUserRequest:
-      description: Request to remove an orguser
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-      required:
-        - email
     RemoveWorkHistoryRequest:
       description: Request to remove a work history for the logged in user
       properties:
@@ -1366,18 +1268,6 @@ components:
       description: Request to update a Location
       required:
         - title
-    UpdateOrgUserRolesRequest:
-      description: Request to update an orguser's roles
-      properties:
-        email:
-          $ref: "#/components/schemas/EmailAddress"
-        roles:
-          items:
-            $ref: "#/components/schemas/OrgUserRole"
-          type: array
-      required:
-        - email
-        - role
     UpdateWorkHistoryRequest:
       description: Request to update a work history for the logged in user
       properties:
@@ -1484,61 +1374,6 @@ components:
           tokenUrl: https://example.com/oauth/token
       type: oauth2
 paths:
-  /employer/add-location:
-    post:
-      description: Add a new location. This method is available only for users with the ADMIN or LOCATIONS_CRUD roles.
-      operationId: employer-add-location
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddLocationRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddLocationResponse"
-          description: Location added successfully
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Add Location
-      tags:
-        - Employer
-        - Locations
-  /employer/add-org-user:
-    post:
-      description: Add a new orguser associated with the employer. This is available only for users with the ADMIN role.
-      operationId: employer-add-org-user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddOrgUserRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddOrgUserResponse"
-          description: User added successfully
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationErrors"
-          description: Bad Request - Validation errors
-        "409":
-          description: Conflict - User already exists with the same email
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Add OrgUser
-      tags:
-        - Employer
   /employer/cancel-interview:
     post:
       description: Cancel an interview for a given interview_id.
@@ -1948,31 +1783,6 @@ paths:
       summary: Get Onboarded Status for a Client
       tags:
         - Employer
-  /employer/get-org-users:
-    post:
-      description: Retrieve a list of orgusers associated with the employer, sorted by their email address.
-      operationId: employer-get-org-users
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/GetUserRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/OrgUser"
-                type: array
-          description: OK
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Get OrgUsers
-      tags:
-        - Employer
   /employer/reject-application:
     post:
       description: Reject an application for a given opening.
@@ -1992,25 +1802,6 @@ paths:
         - BearerAuth: []
         - OAuth2: []
       summary: Reject Application
-      tags:
-        - Employer
-  /employer/remove-org-user:
-    post:
-      description: Remove an orguser associated with the employer. This method is available only for users with the ADMIN role.
-      operationId: employer-remove-org-user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoveOrgUserRequest"
-        required: true
-      responses:
-        "200":
-          description: User removed successfully or user not found
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Remove OrgUser
       tags:
         - Employer
   /employer/rename-location:
@@ -2199,27 +1990,6 @@ paths:
       tags:
         - Employer
         - Locations
-  /employer/update-org-user-roles:
-    post:
-      description: Updates the roles of an orguser associated with the employer. ADMIN role cannot be changed for the last admin. This method is available only for orgusers with the ADMIN role.
-      operationId: employer-update-org-user-role
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateOrgUserRolesRequest"
-        required: true
-      responses:
-        "200":
-          description: Role updated successfully
-        "404":
-          description: User not found
-      security:
-        - BearerAuth: []
-        - OAuth2: []
-      summary: Update OrgUser Role
-      tags:
-        - Employer
   /hub/add-work-history:
     post:
       description: Add a new work history for the loggedin user TODO Set some kind of limit on the number of work history items a user can have
