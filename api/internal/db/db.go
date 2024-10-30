@@ -41,6 +41,7 @@ type DB interface {
 	UpdateLocation(context.Context, UpdateLocationReq) error
 
 	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
+	DisableOrgUser(context.Context, DisableOrgUserReq) error
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

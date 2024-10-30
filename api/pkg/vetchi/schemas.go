@@ -14,16 +14,6 @@ const (
 	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
 )
 
-type AddOrgUserRequest struct {
-	Name  string        `json:"name"  validate:"required"`
-	Email string        `json:"email" validate:"required,email"`
-	Roles []OrgUserRole `json:"roles" validate:"required"`
-}
-
-type AddOrgUserResponse struct {
-	Email string `json:"email"`
-}
-
 type AddWorkHistoryRequest struct {
 	CompanyHandle string `json:"company_handle"     validate:"required"`
 	JobTitle      string `json:"job_title"          validate:"required"`

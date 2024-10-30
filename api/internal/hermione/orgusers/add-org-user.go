@@ -12,6 +12,7 @@ import (
 
 func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered AddOrgUser")
 		var addOrgUserReq vetchi.AddOrgUserRequest
 		err := json.NewDecoder(r.Body).Decode(&addOrgUserReq)
 		if err != nil {

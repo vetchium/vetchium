@@ -43,5 +43,13 @@ type AddOrgUserReq struct {
 	EmployerID   uuid.UUID
 
 	// Currently unused, but will be used in the future for audit logs
-	AddingUser uuid.UUID
+	AddingUserID uuid.UUID
+}
+
+type DisableOrgUserReq struct {
+	Email      string
+	EmployerID uuid.UUID
+
+	// Currently unused, but will be used in the future for audit logs
+	DisablingUserID uuid.UUID
 }
