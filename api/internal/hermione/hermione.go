@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
+	"github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
@@ -143,10 +144,16 @@ func NewHermione() (*Hermione, error) {
 
 func (h *Hermione) Run() error {
 	// Authentication related endpoints
-	http.HandleFunc("/employer/get-onboard-status", h.getOnboardStatus)
-	http.HandleFunc("/employer/set-onboard-password", h.setOnboardPassword)
-	http.HandleFunc("/employer/signin", h.employerSignin)
-	http.HandleFunc("/employer/tfa", h.employerTFA)
+	http.HandleFunc(
+		"/employer/get-onboard-status",
+		employerauth.GetOnboardStatus(h),
+	)
+	http.HandleFunc(
+		"/employer/set-onboard-password",
+		employerauth.SetOnboardPassword(h),
+	)
+	http.HandleFunc("/employer/signin", employerauth.EmployerSignin(h))
+	http.HandleFunc("/employer/tfa", employerauth.EmployerTFA(h))
 
 	// CostCenter related endpoints
 	h.mw.Protect(
@@ -237,4 +244,8 @@ func (h *Hermione) Log() *slog.Logger {
 
 func (h *Hermione) Vator() *vetchi.Vator {
 	return h.vator
+}
+
+func (h *Hermione) TGTLife() time.Duration {
+	return h.employer.tgtLife
 }
