@@ -75,7 +75,7 @@ type Hermione struct {
 	port     string
 
 	// These are initialized programmatically in New()
-	db    db.DB
+	pg    *postgres.PG
 	log   *slog.Logger
 	mw    *middleware.Middleware
 	vator *vetchi.Vator
@@ -105,7 +105,7 @@ func NewHermione() (*Hermione, error) {
 		config.Postgres.DB,
 		pgPassword,
 	)
-	db, err := postgres.New(pgConnStr, logger)
+	pg, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +128,17 @@ func NewHermione() (*Hermione, error) {
 		return nil, fmt.Errorf("config.Employer.LTSessionTokLife: %w", err)
 	}
 
+	// Ensure that the db.DB interface is up to date with the postgres.PG
+	// implementation. We somehow need to ensure that no new function is
+	// added to the pg without it getting added to the db.DB interface first
+	var db db.DB
+	db = pg
+
 	return &Hermione{
-		db:    db,
-		port:  fmt.Sprintf(":%s", config.Port),
-		log:   logger,
+		pg:   pg,
+		port: fmt.Sprintf(":%s", config.Port),
+		log:  logger,
+
 		mw:    middleware.NewMiddleware(db, logger),
 		vator: vator,
 		employer: employer{
@@ -228,8 +235,8 @@ func (h *Hermione) Run() error {
 	return http.ListenAndServe(h.port, nil)
 }
 
-func (h *Hermione) DB() db.DB {
-	return h.db
+func (h *Hermione) DB() *postgres.PG {
+	return h.pg
 }
 
 func (h *Hermione) Err(msg string, args ...any) {

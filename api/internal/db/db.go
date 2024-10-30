@@ -40,6 +40,8 @@ type DB interface {
 	RenameLocation(context.Context, RenameLocationReq) error
 	UpdateLocation(context.Context, UpdateLocationReq) error
 
+	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
+
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
 	DeQOnboard(context.Context) (*OnboardInfo, error)
