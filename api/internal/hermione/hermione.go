@@ -238,14 +238,23 @@ func (h *Hermione) DB() db.DB {
 	return h.db
 }
 
-func (h *Hermione) Log() *slog.Logger {
-	return h.log
+func (h *Hermione) Err(msg string, args ...any) {
+	h.log.Error(msg, args...)
+}
+
+func (h *Hermione) Dbg(msg string, args ...any) {
+	h.log.Debug(msg, args...)
+}
+
+func (h *Hermione) Inf(msg string, args ...any) {
+	h.log.Info(msg, args...)
 }
 
 func (h *Hermione) Vator() *vetchi.Vator {
 	return h.vator
 }
 
+// TODO: Need a better way to pass config to the handlers
 func (h *Hermione) TGTLife() time.Duration {
 	return h.employer.tgtLife
 }
