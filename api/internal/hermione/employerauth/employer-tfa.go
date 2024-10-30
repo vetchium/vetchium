@@ -62,7 +62,7 @@ func EmployerTFA(h vhandler.VHandler) http.HandlerFunc {
 			SessionToken: sessionToken,
 		})
 		if err != nil {
-			h.Log().Error("failed to encode response", "error", err)
+			h.Err("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

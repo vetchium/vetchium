@@ -19,7 +19,7 @@ func SetOnboardPassword(h vhandler.VHandler) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.Log().Info(
+		h.Inf(
 			"Set Onboard Password Request",
 			"request",
 			setOnboardPasswordReq,
@@ -36,7 +36,7 @@ func SetOnboardPassword(h vhandler.VHandler) http.HandlerFunc {
 			bcrypt.DefaultCost,
 		)
 		if err != nil {
-			h.Log().Error("Failed to hash password", "error", err)
+			h.Err("Failed to hash password", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

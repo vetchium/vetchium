@@ -102,7 +102,7 @@ func EmployerSignin(h vhandler.VHandler) http.HandlerFunc {
 			Token: tgToken.Token,
 		})
 		if err != nil {
-			h.Log().Error(
+			h.Err(
 				"failed to encode employer signin response",
 				"error",
 				err,

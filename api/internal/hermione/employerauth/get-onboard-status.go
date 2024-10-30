@@ -55,7 +55,7 @@ func GetOnboardStatus(h vhandler.VHandler) http.HandlerFunc {
 		case db.DeboardedEmployerState:
 			status = vetchi.DomainNotVerified
 		default:
-			h.Log().Error(
+			h.Err(
 				"unknown employer state",
 				"client_id",
 				getOnboardStatusReq.ClientID,
@@ -69,7 +69,7 @@ func GetOnboardStatus(h vhandler.VHandler) http.HandlerFunc {
 		resp := vetchi.GetOnboardStatusResponse{Status: status}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
-			h.Log().Error("failed to encode response", "error", err)
+			h.Err("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -86,13 +86,13 @@ func newDomainProcess(
 	url := "vetchiadmin." + domain
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
-		h.Log().Debug("lookup TXT records", "domain", domain, "error", err)
+		h.Dbg("lookup TXT records", "domain", domain, "error", err)
 		resp := vetchi.GetOnboardStatusResponse{
 			Status: vetchi.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
-			h.Log().Error("failed to encode response", "error", err)
+			h.Err("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -110,7 +110,7 @@ func newDomainProcess(
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
-			h.Log().Error("failed to encode response", "error", err)
+			h.Err("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -135,7 +135,7 @@ func newDomainProcess(
 	}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		h.Log().Error("failed to encode response", "error", err)
+		h.Err("failed to encode response", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}

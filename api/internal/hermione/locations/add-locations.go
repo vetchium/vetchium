@@ -19,7 +19,7 @@ func AddLocation(h vhandler.VHandler) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.Log().Debug("AddLocationReq", "req", addLocationReq)
+		h.Dbg("AddLocationReq", "req", addLocationReq)
 
 		if !h.Vator().Struct(w, &addLocationReq) {
 			return
@@ -27,7 +27,7 @@ func AddLocation(h vhandler.VHandler) http.HandlerFunc {
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 		if !ok {
-			h.Log().Error("failed to get orgUser from context")
+			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -52,7 +52,7 @@ func AddLocation(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		h.Log().Debug("Added Location", "LocationID", locationID)
+		h.Dbg("Added Location", "LocationID", locationID)
 
 		w.WriteHeader(http.StatusOK)
 	}

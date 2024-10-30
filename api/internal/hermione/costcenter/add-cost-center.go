@@ -19,16 +19,16 @@ func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.Log().Debug("AddCostCenterReq", "req", addCostCenterReq)
+		h.Dbg("AddCostCenterReq", "req", addCostCenterReq)
 
 		if !h.Vator().Struct(w, &addCostCenterReq) {
 			return
 		}
-		h.Log().Debug("AddCostCenterReq is valid")
+		h.Dbg("AddCostCenterReq is valid")
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 		if !ok {
-			h.Log().Error("failed to get orgUser from context")
+			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -51,7 +51,7 @@ func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		h.Log().Debug("Added CostCenter", "CC", ccReq, "ID", costCenterID)
+		h.Dbg("Added CostCenter", "CC", ccReq, "ID", costCenterID)
 
 		w.WriteHeader(http.StatusOK)
 	}

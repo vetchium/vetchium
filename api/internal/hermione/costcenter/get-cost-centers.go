@@ -35,7 +35,7 @@ func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
 		if !ok {
-			h.Log().Error("failed to get orgUser from context")
+			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -62,7 +62,7 @@ func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
 
 		err = json.NewEncoder(w).Encode(costCenters)
 		if err != nil {
-			h.Log().Error("Error encoding response", "error", err)
+			h.Err("Error encoding response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
