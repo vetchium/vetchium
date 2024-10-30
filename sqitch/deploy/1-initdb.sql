@@ -86,11 +86,17 @@ CREATE TYPE org_user_roles AS ENUM (
     'OPENINGS_CRUD',
     'OPENINGS_VIEWER'
 );
-CREATE TYPE org_user_states AS ENUM ('ACTIVE', 'DELETED');
+CREATE TYPE org_user_states AS ENUM (
+    'ACTIVE_ORG_USER',
+    'INVITED_ORG_USER',
+    'ADDED_ORG_USER',
+    'DISABLED_ORG_USER',
+    'REPLICATED_ORG_USER'
+);
 CREATE TABLE org_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT,
     org_user_roles org_user_roles[] NOT NULL,
     org_user_state org_user_states NOT NULL,
 
