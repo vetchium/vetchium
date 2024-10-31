@@ -47,3 +47,13 @@ type FilterOrgUsersReq struct {
 	PaginationKey string
 	Limit         int
 }
+
+type UpdateOrgUserReq struct {
+	Email      string
+	Name       string
+	Roles      []vetchi.OrgUserRole
+	EmployerID uuid.UUID
+
+	// Currently unused, but will be used in the future for audit logs
+	UpdatingUserID uuid.UUID
+}

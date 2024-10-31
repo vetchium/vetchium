@@ -66,10 +66,10 @@ model UpdateOrgUserRequest {
     email: EmailAddress;
 
     @doc("The new name of the org user")
-    name?: string;
+    name: string;
 
     @doc("The new roles of the org user")
-    roles?: OrgUserRole[];
+    roles: OrgUserRole[];
 }
 
 @route("/employer/add-org-user")
@@ -112,7 +112,7 @@ interface FilterOrgUsers {
 @route("/employer/update-org-user")
 interface UpdateOrgUser {
     @tag("OrgUsers")
-    @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles. Atleast one of the name or roles must be specified.")
+    @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
     @post
     updateOrgUser(@body updateOrgUserRequest: UpdateOrgUserRequest): {
         @statusCode statusCode: 200;

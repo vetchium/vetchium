@@ -132,6 +132,33 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_org_user_state",
+		func(fl validator.FieldLevel) bool {
+			states := fl.Field().Interface().([]OrgUserState)
+			for _, state := range states {
+				switch state {
+				case ActiveOrgUserState:
+					continue
+				case InvitedOrgUserState:
+					continue
+				case AddedOrgUserState:
+					continue
+				case DisabledOrgUserState:
+					continue
+				case ReplicatedOrgUserState:
+					continue
+				default:
+					return false
+				}
+			}
+			return true
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

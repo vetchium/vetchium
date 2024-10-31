@@ -35,6 +35,7 @@ func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 		}
 
 		orgUserID, err := h.DB().AddOrgUser(r.Context(), db.AddOrgUserReq{
+			Name:         addOrgUserReq.Name,
 			Email:        addOrgUserReq.Email,
 			OrgUserRoles: addOrgUserReq.Roles,
 			OrgUserState: vetchi.AddedOrgUserState,

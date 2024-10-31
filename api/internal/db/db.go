@@ -43,6 +43,7 @@ type DB interface {
 	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
 	DisableOrgUser(context.Context, DisableOrgUserReq) error
 	FilterOrgUsers(context.Context, FilterOrgUsersReq) ([]vetchi.OrgUser, error)
+	UpdateOrgUser(context.Context, UpdateOrgUserReq) (uuid.UUID, error)
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

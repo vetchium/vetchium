@@ -31,6 +31,10 @@ func FilterOrgUsers(h vhandler.VHandler) http.Handler {
 			}
 		}
 
+		if filterOrgUsersReq.Limit == 0 {
+			filterOrgUsersReq.Limit = 40
+		}
+
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
 			h.Err("failed to get orgUser from context")
