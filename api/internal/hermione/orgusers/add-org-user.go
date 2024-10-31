@@ -2,6 +2,7 @@ package orgusers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
@@ -42,8 +43,14 @@ func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 			EmployerID:   orgUser.EmployerID,
 		})
 		if err != nil {
+			if errors.Is(err, db.ErrOrgUserAlreadyExists) {
+				h.Dbg("org user already exists", "addOrgUserReq", addOrgUserReq)
+				http.Error(w, "", http.StatusConflict)
+				return
+			}
+
 			h.Dbg("AddOrgUser DB callfailed", "err", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 

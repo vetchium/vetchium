@@ -1,14 +1,7 @@
 package db
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
-)
-
-var (
-	ErrDupLocationName = errors.New("location name already exists")
-	ErrNoLocation      = errors.New("location not found")
 )
 
 type AddLocationReq struct {

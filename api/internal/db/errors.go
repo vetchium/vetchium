@@ -6,10 +6,15 @@ import (
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
-	ErrNoEmployer           = errors.New("employer not found")
+	ErrNoEmployer = errors.New("employer not found")
+
 	ErrOrgUserAlreadyExists = errors.New("org user already exists")
 	ErrNoOrgUser            = errors.New("org user not found")
-	ErrDupCostCenterName    = errors.New("duplicate cost center name")
-	ErrNoCostCenter         = errors.New("cost center not found")
 	ErrLastActiveAdmin      = errors.New("last active admin cannot be disabled")
+
+	ErrDupCostCenterName = errors.New("duplicate cost center name")
+	ErrNoCostCenter      = errors.New("cost center not found")
+
+	ErrDupLocationName = errors.New("location name already exists")
+	ErrNoLocation      = errors.New("location not found")
 )

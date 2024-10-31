@@ -10,8 +10,8 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func FilterOrgUsers(h vhandler.VHandler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func FilterOrgUsers(h vhandler.VHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered FilterOrgUsers")
 		filterOrgUsersReq := vetchi.FilterOrgUsersRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&filterOrgUsersReq); err != nil {
@@ -62,5 +62,5 @@ func FilterOrgUsers(h vhandler.VHandler) http.Handler {
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-	})
+	}
 }

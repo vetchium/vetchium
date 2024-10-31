@@ -96,6 +96,13 @@ interface DisableOrgUser {
     @post
     disableOrgUser(@body disableOrgUserRequest: DisableOrgUserRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    } | {
+        @doc("Last active admin cannot be disabled")
+        @statusCode
+        statusCode: 403;
     };
 }
 
@@ -114,7 +121,22 @@ interface UpdateOrgUser {
     @tag("OrgUsers")
     @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
     @post
-    updateOrgUser(@body updateOrgUserRequest: UpdateOrgUserRequest): {
-        @statusCode statusCode: 200;
-    };
+    updateOrgUser(@body updateOrgUserRequest: UpdateOrgUserRequest):
+        | {
+              @statusCode statusCode: 200;
+          }
+        | {
+              @statusCode statusCode: 400;
+              @body error: ValidationErrors;
+          }
+        | {
+              @doc("User with same email already exist")
+              @statusCode
+              statusCode: 409;
+          }
+        | {
+              @doc("Last active admin cannot be updated")
+              @statusCode
+              statusCode: 403;
+          };
 }

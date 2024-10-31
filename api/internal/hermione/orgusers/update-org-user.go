@@ -47,7 +47,15 @@ func UpdateOrgUser(h vhandler.VHandler) http.HandlerFunc {
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
-				http.Error(w, err.Error(), http.StatusNotFound)
+				h.Dbg("orguser not found", "updateOrgUserReq", updateOrgUserReq)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrLastActiveAdmin) {
+				h.Dbg("last active admin", "updateOrgUserReq", updateOrgUserReq)
+				http.Error(w, "last active admin", http.StatusForbidden)
+				return
 			}
 
 			h.Dbg("failed to update org user", "error", err)

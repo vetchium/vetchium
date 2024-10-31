@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -25,6 +26,12 @@ func (p *PG) AddOrgUser(
 	err := p.pool.QueryRow(ctx, query, req.Name, req.Email, req.EmployerID, req.OrgUserRoles, req.OrgUserState).
 		Scan(&id)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "uniq_email_employer_id" {
+			return uuid.UUID{}, db.ErrOrgUserAlreadyExists
+		}
+
 		p.log.Error("failed to add org user", "error", err)
 		return uuid.Nil, err
 	}

@@ -5,13 +5,19 @@ import (
 )
 
 const (
-	Admin             OrgUserRole = "ADMIN"
+	Admin OrgUserRole = "ADMIN"
+
 	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
 	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
-	LocationsCRUD     OrgUserRole = "LOCATIONS_CRUD"
-	LocationsViewer   OrgUserRole = "LOCATIONS_VIEWER"
-	OpeningsCRUD      OrgUserRole = "OPENINGS_CRUD"
-	OpeningsViewer    OrgUserRole = "OPENINGS_VIEWER"
+
+	LocationsCRUD   OrgUserRole = "LOCATIONS_CRUD"
+	LocationsViewer OrgUserRole = "LOCATIONS_VIEWER"
+
+	OpeningsCRUD   OrgUserRole = "OPENINGS_CRUD"
+	OpeningsViewer OrgUserRole = "OPENINGS_VIEWER"
+
+	OrgUsersCRUD   OrgUserRole = "ORG_USERS_CRUD"
+	OrgUsersViewer OrgUserRole = "ORG_USERS_VIEWER"
 )
 
 type AddWorkHistoryRequest struct {

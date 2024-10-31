@@ -13,6 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
+	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -230,6 +231,32 @@ func (h *Hermione) Run() error {
 		"/employer/update-location",
 		locations.UpdateLocation(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+	)
+
+	// OrgUser related endpoints
+	h.mw.Protect(
+		"/employer/add-org-user",
+		orgusers.AddOrgUser(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+	)
+	h.mw.Protect(
+		"/employer/update-org-user",
+		orgusers.UpdateOrgUser(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+	)
+	h.mw.Protect(
+		"/employer/disable-org-user",
+		orgusers.DisableOrgUser(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+	)
+	h.mw.Protect(
+		"/employer/filter-org-users",
+		orgusers.FilterOrgUsers(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.OrgUsersCRUD,
+			vetchi.OrgUsersViewer,
+		},
 	)
 
 	return http.ListenAndServe(h.port, nil)

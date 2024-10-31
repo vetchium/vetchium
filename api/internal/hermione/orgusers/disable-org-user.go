@@ -11,8 +11,8 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func DisableOrgUser(h vhandler.VHandler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func DisableOrgUser(h vhandler.VHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered DisableOrgUser")
 		var disableOrgUserReq vetchi.DisableOrgUserRequest
 		err := json.NewDecoder(r.Body).Decode(&disableOrgUserReq)
@@ -61,5 +61,5 @@ func DisableOrgUser(h vhandler.VHandler) http.Handler {
 
 		h.Dbg("orgUser disabled", "email", disableOrgUserReq.Email)
 		w.WriteHeader(http.StatusOK)
-	})
+	}
 }
