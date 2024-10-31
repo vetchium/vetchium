@@ -13,16 +13,20 @@ import (
 
 func GetCostCenter(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered GetCostCenter")
 		var getCostCenterReq vetchi.GetCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&getCostCenterReq)
 		if err != nil {
+			h.Dbg("failed to decode get cost center request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &getCostCenterReq) {
+			h.Dbg("validation failed", "getCostCenterReq", getCostCenterReq)
 			return
 		}
+		h.Dbg("validated", "getCostCenterReq", getCostCenterReq)
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
@@ -35,13 +39,14 @@ func GetCostCenter(h vhandler.VHandler) http.HandlerFunc {
 			Name:       getCostCenterReq.Name,
 			EmployerID: orgUser.EmployerID,
 		})
-
 		if err != nil {
 			if errors.Is(err, db.ErrNoCostCenter) {
+				h.Dbg("CC not found", "name", getCostCenterReq.Name)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
+			h.Dbg("failed to get cost center", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

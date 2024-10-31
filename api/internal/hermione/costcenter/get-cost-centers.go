@@ -12,25 +12,31 @@ import (
 
 func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered GetCostCenters")
 		var getCostCentersRequest vetchi.GetCostCentersRequest
 		err := json.NewDecoder(r.Body).Decode(&getCostCentersRequest)
 		if err != nil {
+			h.Dbg("failed to decode get cost centers request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &getCostCentersRequest) {
+			h.Dbg("validation failed", "getCCsReq", getCostCentersRequest)
 			return
 		}
+		h.Dbg("validated", "getCCsReq", getCostCentersRequest)
 
 		if getCostCentersRequest.Limit <= 0 {
 			getCostCentersRequest.Limit = 100
+			h.Dbg("set default limit", "limit", getCostCentersRequest.Limit)
 		}
 
 		if len(getCostCentersRequest.States) == 0 {
 			getCostCentersRequest.States = []vetchi.CostCenterState{
 				vetchi.ActiveCC,
 			}
+			h.Dbg("set default states", "states", getCostCentersRequest.States)
 		}
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
@@ -56,6 +62,7 @@ func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
 			},
 		)
 		if err != nil {
+			h.Dbg("failed to get cost centers", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

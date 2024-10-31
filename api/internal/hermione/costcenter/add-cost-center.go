@@ -13,18 +13,20 @@ import (
 
 func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered AddCostCenter")
 		var addCostCenterReq vetchi.AddCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&addCostCenterReq)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			h.Dbg("failed to decode add cost center request", "error", err)
+			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
-		h.Dbg("AddCostCenterReq", "req", addCostCenterReq)
 
 		if !h.Vator().Struct(w, &addCostCenterReq) {
+			h.Dbg("validation failed", "addCostCenterReq", addCostCenterReq)
 			return
 		}
-		h.Dbg("AddCostCenterReq is valid")
+		h.Dbg("validated", "addCostCenterReq", addCostCenterReq)
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
@@ -43,16 +45,17 @@ func AddCostCenter(h vhandler.VHandler) http.HandlerFunc {
 		costCenterID, err := h.DB().CreateCostCenter(r.Context(), ccReq)
 		if err != nil {
 			if errors.Is(err, db.ErrDupCostCenterName) {
-				http.Error(w, err.Error(), http.StatusConflict)
+				h.Dbg("cost center exists", "name", addCostCenterReq.Name)
+				http.Error(w, "", http.StatusConflict)
 				return
 			}
 
+			h.Dbg("failed to create cost center", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
 		h.Dbg("Added CostCenter", "CC", ccReq, "ID", costCenterID)
-
 		w.WriteHeader(http.StatusOK)
 	}
 }
