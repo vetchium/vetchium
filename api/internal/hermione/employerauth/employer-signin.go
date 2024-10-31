@@ -47,7 +47,7 @@ func EmployerSignin(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		if orgUserAuth.OrgUserState != db.ActiveOrgUserState ||
+		if orgUserAuth.OrgUserState != vetchi.ActiveOrgUserState ||
 			orgUserAuth.EmployerState != db.OnboardedEmployerState {
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return

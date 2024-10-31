@@ -27,7 +27,7 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 		}
 		h.Dbg("Validated", "getLocationsReq", getLocationsReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
+		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
 			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)

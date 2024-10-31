@@ -69,7 +69,7 @@ func (m *Middleware) Protect(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			m.log.Debug("Entered Protect middleware")
 			ctx := r.Context()
-			orgUser, ok := ctx.Value(OrgUserCtxKey).(db.OrgUser)
+			orgUser, ok := ctx.Value(OrgUserCtxKey).(db.OrgUserTO)
 			if !ok {
 				m.log.Error("Failed to get orgUser from context")
 				http.Error(w, "", http.StatusInternalServerError)

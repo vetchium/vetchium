@@ -83,7 +83,7 @@ type OrgUserAuth struct {
 	OrgUserRoles  []vetchi.OrgUserRole
 	PasswordHash  string
 	EmployerState EmployerState
-	OrgUserState  OrgUserState
+	OrgUserState  vetchi.OrgUserState
 }
 
 type OrgUserCreds struct {

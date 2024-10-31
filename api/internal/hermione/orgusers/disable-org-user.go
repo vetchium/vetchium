@@ -29,7 +29,7 @@ func DisableOrgUser(h vhandler.VHandler) http.Handler {
 			return
 		}
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
+		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
 			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)

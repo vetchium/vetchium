@@ -27,7 +27,7 @@ func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUser)
+		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
 			h.Err("failed to get orgUser from context")
 			http.Error(w, "", http.StatusInternalServerError)
@@ -37,7 +37,7 @@ func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 		orgUserID, err := h.DB().AddOrgUser(r.Context(), db.AddOrgUserReq{
 			Email:        addOrgUserReq.Email,
 			OrgUserRoles: addOrgUserReq.Roles,
-			OrgUserState: db.AddedOrgUserState,
+			OrgUserState: vetchi.AddedOrgUserState,
 			EmployerID:   orgUser.EmployerID,
 		})
 		if err != nil {

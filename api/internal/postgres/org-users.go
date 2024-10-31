@@ -6,7 +6,9 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (p *PG) AddOrgUser(
@@ -80,8 +82,8 @@ SELECT
 		query,
 		req.EmployerID,
 		req.Email,
-		db.ActiveOrgUserState,
-		db.DisabledOrgUserState,
+		vetchi.ActiveOrgUserState,
+		vetchi.DisabledOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
 	).Scan(&result)
@@ -109,4 +111,45 @@ SELECT
 		p.log.Debug("org user disabled", "org_user_id", orgUserID)
 		return nil
 	}
+}
+
+func (p *PG) FilterOrgUsers(
+	ctx context.Context,
+	filterOrgUsersReq db.FilterOrgUsersReq,
+) ([]vetchi.OrgUser, error) {
+	query := `
+	SELECT 
+		name,
+		email,
+		org_user_roles,
+		org_user_state
+	FROM org_users
+	WHERE employer_id = $1 AND email < $2 AND org_user_roles = ANY($3)
+	ORDER BY email
+	LIMIT $4
+	`
+
+	rows, err := p.pool.Query(
+		ctx,
+		query,
+		filterOrgUsersReq.EmployerID,
+		filterOrgUsersReq.Prefix,
+		filterOrgUsersReq.State,
+		filterOrgUsersReq.Limit,
+	)
+	if err != nil {
+		p.log.Error("failed to filter org users", "error", err)
+		return nil, err
+	}
+
+	orgUsers, err := pgx.CollectRows[vetchi.OrgUser](
+		rows,
+		pgx.RowToStructByName[vetchi.OrgUser],
+	)
+	if err != nil {
+		p.log.Error("failed to collect org users", "error", err)
+		return nil, err
+	}
+
+	return orgUsers, nil
 }

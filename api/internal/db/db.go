@@ -17,11 +17,11 @@ type DB interface {
 	// Used by hermione and granger
 
 	// Used by hermione
-	AuthOrgUser(c context.Context, sessionToken string) (OrgUser, error)
+	AuthOrgUser(c context.Context, sessionToken string) (OrgUserTO, error)
 	CreateOrgUserToken(context.Context, OrgUserToken) error
 	GetEmployer(c context.Context, clientID string) (Employer, error)
 	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
-	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUser, error)
+	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUserTO, error)
 	InitEmployerAndDomain(context.Context, Employer, Domain) error
 	InitEmployerTFA(context.Context, EmployerTFA) error
 	OnboardAdmin(context.Context, OnboardReq) error
@@ -42,6 +42,7 @@ type DB interface {
 
 	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
 	DisableOrgUser(context.Context, DisableOrgUserReq) error
+	FilterOrgUsers(context.Context, FilterOrgUsersReq) ([]vetchi.OrgUser, error)
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

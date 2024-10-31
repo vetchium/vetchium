@@ -459,28 +459,11 @@ const (
 	OpeningClosed OpeningState = "OPENING_CLOSED"
 )
 
-type OrgUser struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-}
-
-type OrgUserInfo struct {
-	Name  string      `json:"name"`
-	Email string      `json:"email" validate:"email"`
-	Role  OrgUserRole `json:"role"`
-}
-
-type OrgUserRole string
-
 type Password string
 
 type ReferredBy struct {
 	Name  string `json:"name"`
 	Email string `json:"email" validate:"email"`
-}
-
-type RemoveOrgUserRequest struct {
-	Email string `json:"email" validate:"required,email"`
 }
 
 type RemoveWorkHistoryRequest struct {

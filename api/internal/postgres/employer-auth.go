@@ -285,7 +285,7 @@ VALUES ($1, $2, $3::org_user_roles[], $4, $5)
 		adminEmailAddr,
 		onboardReq.Password,
 		[]string{string(vetchi.Admin)},
-		db.ActiveOrgUserState,
+		vetchi.ActiveOrgUserState,
 		employerID,
 	)
 	if err != nil {
@@ -481,7 +481,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 func (p *PG) GetOrgUserByToken(
 	ctx context.Context,
 	tfaCode, tgt string,
-) (db.OrgUser, error) {
+) (db.OrgUserTO, error) {
 	query := `
 SELECT
     ou.id,
@@ -502,7 +502,7 @@ WHERE
     AND ou.id = out2.org_user_id
 `
 
-	var orgUser db.OrgUser
+	var orgUser db.OrgUserTO
 	var roles []string
 	err := p.pool.QueryRow(
 		ctx,
@@ -515,16 +515,16 @@ WHERE
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return db.OrgUser{}, db.ErrNoOrgUser
+			return db.OrgUserTO{}, db.ErrNoOrgUser
 		}
 
 		p.log.Error("failed to query org user by token", "error", err)
-		return db.OrgUser{}, err
+		return db.OrgUserTO{}, err
 	}
 
 	orgUser.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
 	if err != nil {
-		return db.OrgUser{}, err
+		return db.OrgUserTO{}, err
 	}
 
 	return orgUser, nil
@@ -559,7 +559,7 @@ VALUES ($1, $2, $3, $4)
 func (p *PG) AuthOrgUser(
 	ctx context.Context,
 	sessionToken string,
-) (db.OrgUser, error) {
+) (db.OrgUserTO, error) {
 	query := `
 SELECT
     ou.id,
@@ -577,7 +577,7 @@ WHERE
     AND ou.id = out1.org_user_id
 `
 
-	var orgUser db.OrgUser
+	var orgUser db.OrgUserTO
 	var roles []string
 	err := p.pool.QueryRow(
 		ctx, query, sessionToken, db.UserSessionToken).Scan(
@@ -590,16 +590,16 @@ WHERE
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return db.OrgUser{}, db.ErrNoOrgUser
+			return db.OrgUserTO{}, db.ErrNoOrgUser
 		}
 
 		p.log.Error("failed to query org user", "error", err)
-		return db.OrgUser{}, err
+		return db.OrgUserTO{}, err
 	}
 
 	orgUser.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
 	if err != nil {
-		return db.OrgUser{}, err
+		return db.OrgUserTO{}, err
 	}
 
 	return orgUser, nil
