@@ -132,8 +132,7 @@ func NewHermione() (*Hermione, error) {
 	// Ensure that the db.DB interface is up to date with the postgres.PG
 	// implementation. We somehow need to ensure that no new function is
 	// added to the pg without it getting added to the db.DB interface first
-	var db db.DB
-	db = pg
+	db := db.DB(pg)
 
 	return &Hermione{
 		pg:   pg,
