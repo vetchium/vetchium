@@ -13,16 +13,20 @@ import (
 
 func UpdateLocation(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered UpdateLocation")
 		var updateLocationReq vetchi.UpdateLocationRequest
 		err := json.NewDecoder(r.Body).Decode(&updateLocationReq)
 		if err != nil {
+			h.Dbg("failed to decode update location request", "error", err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &updateLocationReq) {
+			h.Dbg("validation failed", "updateLocationReq", updateLocationReq)
 			return
 		}
+		h.Dbg("validated", "updateLocationReq", updateLocationReq)
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
@@ -44,14 +48,17 @@ func UpdateLocation(h vhandler.VHandler) http.HandlerFunc {
 		err = h.DB().UpdateLocation(r.Context(), updateLocReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoLocation) {
+				h.Dbg("not found", "title", updateLocationReq.Title)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
+			h.Dbg("failed to update location", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
+		h.Dbg("updated location", "updateLocReq", updateLocReq)
 		w.WriteHeader(http.StatusOK)
 	}
 }

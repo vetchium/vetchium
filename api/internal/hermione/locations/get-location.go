@@ -13,16 +13,20 @@ import (
 
 func GetLocation(h vhandler.VHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered GetLocation")
 		var getLocationReq vetchi.GetLocationRequest
 		err := json.NewDecoder(r.Body).Decode(&getLocationReq)
 		if err != nil {
+			h.Dbg("failed to decode get location request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &getLocationReq) {
+			h.Dbg("validation failed", "getLocationReq", getLocationReq)
 			return
 		}
+		h.Dbg("validated", "getLocationReq", getLocationReq)
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
@@ -37,14 +41,17 @@ func GetLocation(h vhandler.VHandler) http.HandlerFunc {
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoLocation) {
+				h.Dbg("location not found", "title", getLocationReq.Title)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
+			h.Dbg("failed to get location", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
+		h.Dbg("got location", "location", location)
 		err = json.NewEncoder(w).Encode(location)
 		if err != nil {
 			h.Err("failed to encode location", "error", err)

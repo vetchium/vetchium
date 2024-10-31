@@ -42,13 +42,13 @@ func GetLocations(h vhandler.VHandler) http.HandlerFunc {
 		}
 		if len(states) == 0 {
 			states = []string{string(vetchi.ActiveLocation)}
+			h.Dbg("set default states", "states", states)
 		}
-		h.Dbg("States OK", "states", states)
 
 		if getLocationsReq.Limit == 0 {
 			getLocationsReq.Limit = 100
+			h.Dbg("set default limit", "limit", getLocationsReq.Limit)
 		}
-		h.Dbg("Limit OK", "limit", getLocationsReq.Limit)
 
 		locations, err := h.DB().GetLocations(r.Context(), db.GetLocationsReq{
 			States:        states,
