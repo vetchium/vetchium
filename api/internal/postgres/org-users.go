@@ -16,14 +16,22 @@ func (p *PG) AddOrgUser(
 	ctx context.Context,
 	req db.AddOrgUserReq,
 ) (uuid.UUID, error) {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		p.log.Error("failed to begin transaction", "error", err)
+		return uuid.UUID{}, err
+	}
+
+	defer tx.Rollback(ctx)
+
 	query := `
-	INSERT INTO org_users (name, email, employer_id, org_user_roles, org_user_state)
-		VALUES ($1, $2, $3, $4, $5)
-	RETURNING id
+INSERT INTO org_users (name, email, employer_id, org_user_roles, org_user_state)
+	VALUES ($1, $2, $3, $4, $5)
+RETURNING id
 	`
 
 	var id uuid.UUID
-	err := p.pool.QueryRow(ctx, query, req.Name, req.Email, req.EmployerID, req.OrgUserRoles, req.OrgUserState).
+	err = tx.QueryRow(ctx, query, req.Name, req.Email, req.EmployerID, req.OrgUserRoles, req.OrgUserState).
 		Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -34,6 +42,23 @@ func (p *PG) AddOrgUser(
 
 		p.log.Error("failed to add org user", "error", err)
 		return uuid.Nil, err
+	}
+
+	var emailKey uuid.UUID
+	err = tx.QueryRow(ctx, `
+INSERT INTO emails(email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+	VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING email_key
+	`, req.InviteMail.EmailFrom, req.InviteMail.EmailTo, req.InviteMail.EmailSubject, req.InviteMail.EmailHTMLBody, req.InviteMail.EmailTextBody, db.EmailStatePending).Scan(&emailKey)
+	if err != nil {
+		p.log.Error("failed to add invite email", "error", err)
+		return uuid.UUID{}, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Error("failed to commit transaction", "error", err)
+		return uuid.UUID{}, err
 	}
 
 	return id, nil

@@ -25,7 +25,10 @@ type AddOrgUserReq struct {
 	Email        string
 	OrgUserRoles []vetchi.OrgUserRole
 	OrgUserState vetchi.OrgUserState
-	EmployerID   uuid.UUID
+
+	InviteMail Email
+
+	EmployerID uuid.UUID
 
 	// Currently unused, but will be used in the future for audit logs
 	AddingUserID uuid.UUID
