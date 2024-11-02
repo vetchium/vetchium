@@ -1,0 +1,10 @@
+Hi,
+
+You have been invited to join Vetchi as an Employee of a Company with the following domain(s):
+{{.Domains}}
+
+Please click on the link below to accept the invitation and set your password:
+{{.Link}}
+
+Thanks,
+The Vetchi Team

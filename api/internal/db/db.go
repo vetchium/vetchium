@@ -20,6 +20,8 @@ type DB interface {
 	AuthOrgUser(c context.Context, sessionToken string) (OrgUserTO, error)
 	CreateOrgUserToken(context.Context, OrgUserToken) error
 	GetEmployer(c context.Context, clientID string) (Employer, error)
+	GetEmployerByID(c context.Context, employerID uuid.UUID) (Employer, error)
+	GetDomainNames(c context.Context, employerID uuid.UUID) ([]string, error)
 	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
 	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUserTO, error)
 	InitEmployerAndDomain(context.Context, Employer, Domain) error

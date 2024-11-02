@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
@@ -76,10 +77,11 @@ type Hermione struct {
 	port     string
 
 	// These are initialized programmatically in New()
-	pg    *postgres.PG
-	log   *slog.Logger
-	mw    *middleware.Middleware
-	vator *vetchi.Vator
+	hedwig hedwig.Hedwig
+	pg     *postgres.PG
+	log    *slog.Logger
+	mw     *middleware.Middleware
+	vator  *vetchi.Vator
 }
 
 func NewHermione() (*Hermione, error) {
@@ -134,7 +136,14 @@ func NewHermione() (*Hermione, error) {
 	// added to the pg without it getting added to the db.DB interface first
 	db := db.DB(pg)
 
-	return &Hermione{
+	var hermione *Hermione
+
+	hedwig, err := hedwig.NewHedwig(hermione)
+	if err != nil {
+		return nil, fmt.Errorf("Hedwig initialisation failure: %w", err)
+	}
+
+	hermione = &Hermione{
 		pg:   pg,
 		port: fmt.Sprintf(":%s", config.Port),
 		log:  logger,
@@ -146,7 +155,11 @@ func NewHermione() (*Hermione, error) {
 			sessionTokLife:         sessionTokLife,
 			longTermSessionTokLife: ltsTokLife,
 		},
-	}, nil
+
+		hedwig: hedwig,
+	}
+
+	return hermione, nil
 }
 
 func (h *Hermione) Run() error {
@@ -284,4 +297,8 @@ func (h *Hermione) Vator() *vetchi.Vator {
 // TODO: Need a better way to pass config to the handlers
 func (h *Hermione) TGTLife() time.Duration {
 	return h.employer.tgtLife
+}
+
+func (h *Hermione) Hedwig() hedwig.Hedwig {
+	return h.hedwig
 }

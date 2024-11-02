@@ -627,3 +627,23 @@ func (p *PG) convertToOrgUserRoles(
 	}
 	return roles, nil
 }
+
+func (p *PG) GetEmployerByID(
+	ctx context.Context,
+	employerID uuid.UUID,
+) (db.Employer, error) {
+	query := "SELECT * FROM employers WHERE id = $1::UUID"
+	rows, err := p.pool.Query(ctx, query, employerID)
+	if err != nil {
+		p.log.Error("failed to query employer", "error", err)
+		return db.Employer{}, err
+	}
+
+	employer, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[db.Employer])
+	if err != nil {
+		p.log.Error("failed to collect one row", "error", err)
+		return db.Employer{}, err
+	}
+
+	return employer, nil
+}

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/vhandler"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -35,12 +37,36 @@ func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
 			return
 		}
 
+		domains, err := h.DB().GetDomainNames(r.Context(), orgUser.EmployerID)
+		if err != nil {
+			h.Dbg("failed to get domains", "err", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+		domainList := strings.Join(domains, ", ")
+
+		inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
+			TemplateName: hedwig.InviteEmployee,
+			Args: map[string]string{
+				"Domains": domainList,
+			},
+		})
+		if err != nil {
+			h.Dbg("failed to generate invite mail", "err", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 		orgUserID, err := h.DB().AddOrgUser(r.Context(), db.AddOrgUserReq{
 			Name:         addOrgUserReq.Name,
 			Email:        addOrgUserReq.Email,
 			OrgUserRoles: addOrgUserReq.Roles,
 			OrgUserState: vetchi.AddedOrgUserState,
+
+			InviteMail: inviteMail,
+
 			EmployerID:   orgUser.EmployerID,
+			AddingUserID: orgUser.ID,
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrOrgUserAlreadyExists) {

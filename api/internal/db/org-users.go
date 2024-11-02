@@ -11,7 +11,7 @@ import (
 // should not be exposed to the outside world
 type OrgUserTO struct {
 	ID           uuid.UUID            `db:"id"             json:"-"`
-	Name         string               `db:"name"           json:"name"`
+	Name         string               `db:"name"           json:"-"`
 	Email        string               `db:"email"          json:"-"`
 	PasswordHash string               `db:"password_hash"  json:"-"`
 	OrgUserRoles []vetchi.OrgUserRole `db:"org_user_roles" json:"-"`
