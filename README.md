@@ -47,6 +47,7 @@ vetchi $ kubectl delete namespace vetchidev
 - [ronweasly](ronweasly) contains the React.js frontend for the Hub app
 - [sqitch](sqitch) contains the database migration scripts
 - [dolores](dolores) contains the end to end tests for the API server
+- [hedwig](api/internal/hedwig) is a library for sending emails. There is a template folder that contains the templates for the emails. Each template has a name, a html file and a text file. The template values should be consistent between the html and text files. create-onboard-emails does not use hedwig yet and should be migrated.
 - Use [Ginkgo](https://onsi.github.io/ginkgo/) for writing API tests
 - Use [Gomega](https://onsi.github.io/gomega/) for assertions
 - Use [golines](https://github.com/segmentio/golines) to format the Go code. Do NOT manually format the code or split the parameters to multiple lines. Write a really long line with all parameters and then summon golines to format it.
