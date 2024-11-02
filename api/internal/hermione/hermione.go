@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -177,7 +178,7 @@ func (h *Hermione) DB() *postgres.PG {
 }
 
 func (h *Hermione) Err(msg string, args ...any) {
-	h.log.Error(msg, args...)
+	h.log.With("stacktrace", string(debug.Stack())).Error(msg, args...)
 }
 
 func (h *Hermione) Dbg(msg string, args ...any) {
