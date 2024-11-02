@@ -7,11 +7,11 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func AddLocation(h vhandler.VHandler) http.HandlerFunc {
+func AddLocation(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered AddLocation")
 		var addLocationReq vetchi.AddLocationRequest

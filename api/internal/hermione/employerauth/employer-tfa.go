@@ -8,11 +8,11 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func EmployerTFA(h vhandler.VHandler) http.HandlerFunc {
+func EmployerTFA(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var employerTFARequest vetchi.EmployerTFARequest
 

@@ -9,11 +9,11 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func AddOrgUser(h vhandler.VHandler) http.HandlerFunc {
+func AddOrgUser(h wand.Wand) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered AddOrgUser")
 		var addOrgUserReq vetchi.AddOrgUserRequest

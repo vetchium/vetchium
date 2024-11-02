@@ -8,11 +8,11 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func GetOnboardStatus(h vhandler.VHandler) http.HandlerFunc {
+func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var getOnboardStatusReq vetchi.GetOnboardStatusRequest
 		err := json.NewDecoder(r.Body).Decode(&getOnboardStatusReq)
@@ -81,7 +81,7 @@ func newDomainProcess(
 	ctx context.Context,
 	w http.ResponseWriter,
 	domain string,
-	h vhandler.VHandler,
+	h wand.Wand,
 ) {
 	url := "vetchiadmin." + domain
 	txtRecords, err := net.LookupTXT(url)

@@ -11,12 +11,12 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func EmployerSignin(h vhandler.VHandler) http.HandlerFunc {
+func EmployerSignin(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var employerSigninReq vetchi.EmployerSignInRequest
 

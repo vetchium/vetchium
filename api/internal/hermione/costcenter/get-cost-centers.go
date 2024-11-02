@@ -6,11 +6,11 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func GetCostCenters(h vhandler.VHandler) http.HandlerFunc {
+func GetCostCenters(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetCostCenters")
 		var getCostCentersRequest vetchi.GetCostCentersRequest

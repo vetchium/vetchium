@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/vhandler"
+	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SetOnboardPassword(h vhandler.VHandler) http.HandlerFunc {
+func SetOnboardPassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var setOnboardPasswordReq vetchi.SetOnboardPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&setOnboardPasswordReq)

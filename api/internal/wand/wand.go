@@ -1,4 +1,4 @@
-package vhandler
+package wand
 
 import (
 	"time"
@@ -9,15 +9,14 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-// Might as well call it a Wand
-type VHandler interface {
+type Wand interface {
 	DB() *postgres.PG
 	Vator() *vetchi.Vator
+	Hedwig() hedwig.Hedwig
 
 	// TODO: Implement a better way to pass config to the handlers
 	TGTLife() time.Duration
 
-	Hedwig() hedwig.Hedwig
-
+	// Embed Err Dbg Inf methods instead of Log().Err() so that code is narrower
 	util.Logger
 }
