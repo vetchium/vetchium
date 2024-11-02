@@ -52,11 +52,6 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-		h.Dbg(
-			"####### session token validity duration",
-			"validityDuration",
-			validityDuration,
-		)
 		tokenType := db.EmployerSessionToken
 
 		if employerTFARequest.RememberMe {
