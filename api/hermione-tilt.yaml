@@ -9,8 +9,8 @@ data:
       "employer": {
         "tfa_tok_life": "3m",
 
-        "session_tok_life": "3m",
-        "lts_tok_life": "5m",
+        "session_tok_life": "10m",
+        "lts_tok_life": "20m",
 
         "employee_invite_tok_life": "5m"
       },

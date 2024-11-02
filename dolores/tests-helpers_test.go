@@ -73,6 +73,7 @@ func employerSigninAsync(
 	wg *sync.WaitGroup,
 ) {
 	go func() {
+		defer GinkgoRecover()
 		defer wg.Done()
 		var err error
 		gotToken, err := employerSignin(clientID, email, password)
@@ -184,8 +185,8 @@ func employerSignin(clientID, email, password string) (string, error) {
 	// TFA with the two tokens
 	tfaReqBody, err := json.Marshal(
 		vetchi.EmployerTFARequest{
-			TGT:     signinResp.Token,
-			TFACode: tfaCode,
+			TFAToken: signinResp.Token,
+			TFACode:  tfaCode,
 		},
 	)
 	Expect(err).ShouldNot(HaveOccurred())

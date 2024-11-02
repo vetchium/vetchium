@@ -12,15 +12,15 @@ func (p *PG) CreateOrgUserToken(
 ) error {
 	query := `
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-VALUES ($1, $2, $3, $4)
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 `
 	_, err := p.pool.Exec(
 		ctx,
 		query,
 		tokenReq.Token,
 		tokenReq.OrgUserID,
-		tokenReq.ValidityDuration,
-		db.EmployerInviteToken,
+		tokenReq.ValidityDuration.Minutes(),
+		tokenReq.TokenType,
 	)
 	if err != nil {
 		// TODO: Check if the error is due to duplicate key value

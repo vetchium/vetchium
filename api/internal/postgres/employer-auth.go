@@ -552,14 +552,19 @@ FROM
     org_users ou
 WHERE
     out1.token = $1
-    AND out1.token_type = $2
+    AND (out1.token_type = $2 OR out1.token_type = $3)
     AND ou.id = out1.org_user_id
 `
 
 	var orgUser db.OrgUserTO
 	var roles []string
 	err := p.pool.QueryRow(
-		ctx, query, sessionToken, db.EmployerSessionToken).Scan(
+		ctx,
+		query,
+		sessionToken,
+		db.EmployerSessionToken,
+		db.EmployerLTSToken,
+	).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,

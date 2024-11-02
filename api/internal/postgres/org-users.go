@@ -61,7 +61,7 @@ RETURNING token
 		ctx,
 		tokenQuery,
 		addOrgUserReq.InviteToken.Token,
-		addOrgUserReq.InviteToken.ValidityDuration,
+		addOrgUserReq.InviteToken.ValidityDuration.Minutes(),
 		db.EmployerInviteToken,
 		orgUserID,
 	)

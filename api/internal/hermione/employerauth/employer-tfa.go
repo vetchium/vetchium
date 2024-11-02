@@ -13,17 +13,20 @@ import (
 
 func EmployerTFA(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered employer tfa")
 		var employerTFARequest vetchi.EmployerTFARequest
-
 		err := json.NewDecoder(r.Body).Decode(&employerTFARequest)
 		if err != nil {
+			h.Dbg("failed to decode request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &employerTFARequest) {
+			h.Dbg("failed to validate request", "error", err)
 			return
 		}
+		h.Dbg("validated request", "employerTFARequest", employerTFARequest)
 
 		orgUser, err := h.DB().GetOrgUserByToken(
 			r.Context(),
@@ -32,38 +35,52 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
+				h.Dbg("no org user found", "error", err)
+				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			h.Dbg("failed to get org user", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 		validityDuration, err := h.ConfigDuration(db.EmployerSessionToken)
 		if err != nil {
+			h.Dbg("failed to get session token validity duration", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
+		h.Dbg(
+			"####### session token validity duration",
+			"validityDuration",
+			validityDuration,
+		)
 		tokenType := db.EmployerSessionToken
 
 		if employerTFARequest.RememberMe {
 			tokenType = db.EmployerLTSToken
 			validityDuration, err = h.ConfigDuration(db.EmployerLTSToken)
 			if err != nil {
+				h.Dbg("failed to get LTS token validity duration", "error", err)
 				http.Error(w, "", http.StatusInternalServerError)
 				return
 			}
+			h.Dbg("remember me", "validityDuration", validityDuration)
 		}
 
-		err = h.DB().CreateOrgUserToken(r.Context(), db.TokenReq{
+		tokenReq := db.TokenReq{
 			Token:            sessionToken,
 			TokenType:        tokenType,
 			ValidityDuration: validityDuration,
 			OrgUserID:        orgUser.ID,
-		})
+		}
+		h.Dbg("creating org user token", "tokenReq", tokenReq)
+
+		err = h.DB().CreateOrgUserToken(r.Context(), tokenReq)
 		if err != nil {
+			h.Dbg("failed to create org user token", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

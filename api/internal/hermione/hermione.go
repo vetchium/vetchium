@@ -17,12 +17,10 @@ import (
 
 type Config struct {
 	Employer struct {
-		TFATokLife string `json:"tfa_tok_life" validate:"required"`
-
+		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
 		SessionTokLife string `json:"session_tok_life" validate:"required"`
 		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
-
-		InviteTokLife string `json:"employee_invite_tok_life" validate:"required"`
+		InviteTokLife  string `json:"employee_invite_tok_life" validate:"required"`
 	} `json:"employer" validate:"required"`
 
 	Postgres struct {
@@ -121,24 +119,6 @@ func NewHermione() (*Hermione, error) {
 		return nil, err
 	}
 
-	ec := config.Employer
-	tfaTokLife, err := time.ParseDuration(ec.TFATokLife)
-	if err != nil {
-		return nil, fmt.Errorf("config.Employer.TGTLife: %w", err)
-	}
-	sessionTokLife, err := time.ParseDuration(ec.SessionTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("config.Employer.SessionTokLife: %w", err)
-	}
-	ltsTokLife, err := time.ParseDuration(ec.LTSTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("config.Employer.LTSessionTokLife: %w", err)
-	}
-	employeeInviteTokLife, err := time.ParseDuration(ec.InviteTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("config.Employer.EmployeeInviteTokLife: %w", err)
-	}
-
 	// Ensure that the db.DB interface is up to date with the postgres.PG
 	// implementation. We somehow need to ensure that no new function is
 	// added to the pg without it getting added to the db.DB interface first
@@ -151,6 +131,27 @@ func NewHermione() (*Hermione, error) {
 		return nil, fmt.Errorf("Hedwig initialisation failure: %w", err)
 	}
 
+	ce := config.Employer
+	tfaTokLife, err := time.ParseDuration(ce.TFATokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse tfa token life: %w", err)
+	}
+
+	sessionTokLife, err := time.ParseDuration(ce.SessionTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse session token life: %w", err)
+	}
+
+	longTermSessionTokLife, err := time.ParseDuration(ce.LTSTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse LTS token life: %w", err)
+	}
+
+	employeeInviteTokLife, err := time.ParseDuration(ce.InviteTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse invite token life : %w", err)
+	}
+
 	hermione = &Hermione{
 		pg:   pg,
 		port: fmt.Sprintf(":%s", config.Port),
@@ -161,7 +162,7 @@ func NewHermione() (*Hermione, error) {
 		employer: employer{
 			tfaTokLife:             tfaTokLife,
 			sessionTokLife:         sessionTokLife,
-			longTermSessionTokLife: ltsTokLife,
+			longTermSessionTokLife: longTermSessionTokLife,
 			employeeInviteTokLife:  employeeInviteTokLife,
 		},
 
@@ -202,6 +203,7 @@ func (h *Hermione) ConfigDuration(key db.TokenType) (time.Duration, error) {
 	case db.EmployerInviteToken:
 		return h.employer.employeeInviteTokLife, nil
 	default:
+		h.log.Error("unknown key", "key", key)
 		return 0, fmt.Errorf("unknown key: %s", key)
 	}
 }
