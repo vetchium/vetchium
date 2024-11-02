@@ -201,7 +201,7 @@ UPDATE
 SET
     onboard_email_id = $1,
     onboard_secret_token = $2,
-    token_valid_till = NOW() + interval '1 minute' * $3
+    token_valid_till = (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute'))
 WHERE
     id = $4
 `,
@@ -416,31 +416,15 @@ func (p *PG) InitEmployerTFA(
 		ctx,
 		`
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-VALUES ($1, $2, $3, $4)
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 `,
-		employerTFA.TGToken.Token,
-		employerTFA.TGToken.OrgUserID,
-		employerTFA.TGToken.TokenValidTill,
-		employerTFA.TGToken.TokenType,
+		employerTFA.TFAToken.Token,
+		employerTFA.TFAToken.OrgUserID,
+		employerTFA.TFAToken.ValidityDuration.Minutes(),
+		db.EmployerTFAToken,
 	)
 	if err != nil {
 		p.log.Error("failed to insert TGT", "error", err)
-		return err
-	}
-
-	_, err = tx.Exec(
-		ctx,
-		`
-INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-VALUES ($1, $2, $3, $4)
-`,
-		employerTFA.EmailToken.Token,
-		employerTFA.EmailToken.OrgUserID,
-		employerTFA.EmailToken.TokenValidTill,
-		employerTFA.EmailToken.TokenType,
-	)
-	if err != nil {
-		p.log.Error("failed to insert EMAILToken", "error", err)
 		return err
 	}
 
@@ -530,32 +514,6 @@ WHERE
 	return orgUser, nil
 }
 
-func (p *PG) CreateOrgUserToken(
-	ctx context.Context,
-	orgUserToken db.OrgUserToken,
-) error {
-	query := `
-INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-VALUES ($1, $2, $3, $4)
-`
-	_, err := p.pool.Exec(
-		ctx,
-		query,
-		orgUserToken.Token,
-		orgUserToken.OrgUserID,
-		orgUserToken.TokenValidTill,
-		orgUserToken.TokenType,
-	)
-	if err != nil {
-		// TODO: Check if the error is due to duplicate key value
-		// and if so retry with a different token
-		p.log.Error("failed to create org user token", "error", err)
-		return err
-	}
-
-	return nil
-}
-
 func (p *PG) AuthOrgUser(
 	ctx context.Context,
 	sessionToken string,
@@ -580,7 +538,7 @@ WHERE
 	var orgUser db.OrgUserTO
 	var roles []string
 	err := p.pool.QueryRow(
-		ctx, query, sessionToken, db.UserSessionToken).Scan(
+		ctx, query, sessionToken, db.EmployerSessionToken).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,

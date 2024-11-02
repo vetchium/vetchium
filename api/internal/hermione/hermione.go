@@ -4,17 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
-	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
-	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
-	"github.com/psankar/vetchi/api/internal/hermione/locations"
-	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -22,9 +17,12 @@ import (
 
 type Config struct {
 	Employer struct {
-		TGTLife          string `json:"tgt_life" validate:"required,min=1"`
-		SessionTokLife   string `json:"session_tok_life" validate:"required,min=1"`
-		LTSessionTokLife string `json:"lt_session_tok_life" validate:"required,min=1"`
+		TFATokLife string `json:"tfa_tok_life" validate:"required"`
+
+		SessionTokLife string `json:"session_tok_life" validate:"required"`
+		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
+
+		InviteTokLife string `json:"employee_invite_tok_life" validate:"required"`
 	} `json:"employer" validate:"required"`
 
 	Postgres struct {
@@ -63,12 +61,17 @@ func LoadConfig() (*Config, error) {
 // refer to these values. But a pretty-printed time.Duration is easier to debug
 // than a random float64 literal.
 type employer struct {
-	// Token Granting Token life - Should be used for /employer/signin
-	tgtLife time.Duration
+	// TFA Token is sent as response to the signin request and should be used
+	// in the subsequent tfa request, to get one of the session tokens.
+	tfaTokLife time.Duration
 
-	// User Session Tokens life - Should be used for /employer/tfa
+	// One of the below Session Tokens is sent as response to the tfa request
+	// and should be used in subsequent /employer/* requests.
 	sessionTokLife         time.Duration
 	longTermSessionTokLife time.Duration
+
+	// Employee invite token life - Should be used for /employer/add-org-user
+	employeeInviteTokLife time.Duration
 }
 
 type Hermione struct {
@@ -118,17 +121,22 @@ func NewHermione() (*Hermione, error) {
 		return nil, err
 	}
 
-	tgtLife, err := time.ParseDuration(config.Employer.TGTLife)
+	ec := config.Employer
+	tfaTokLife, err := time.ParseDuration(ec.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("config.Employer.TGTLife: %w", err)
 	}
-	sessionTokLife, err := time.ParseDuration(config.Employer.SessionTokLife)
+	sessionTokLife, err := time.ParseDuration(ec.SessionTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("config.Employer.SessionTokLife: %w", err)
 	}
-	ltsTokLife, err := time.ParseDuration(config.Employer.LTSessionTokLife)
+	ltsTokLife, err := time.ParseDuration(ec.LTSTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("config.Employer.LTSessionTokLife: %w", err)
+	}
+	employeeInviteTokLife, err := time.ParseDuration(ec.InviteTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("config.Employer.EmployeeInviteTokLife: %w", err)
 	}
 
 	// Ensure that the db.DB interface is up to date with the postgres.PG
@@ -151,127 +159,16 @@ func NewHermione() (*Hermione, error) {
 		mw:    middleware.NewMiddleware(db, logger),
 		vator: vator,
 		employer: employer{
-			tgtLife:                tgtLife,
+			tfaTokLife:             tfaTokLife,
 			sessionTokLife:         sessionTokLife,
 			longTermSessionTokLife: ltsTokLife,
+			employeeInviteTokLife:  employeeInviteTokLife,
 		},
 
 		hedwig: hedwig,
 	}
 
 	return hermione, nil
-}
-
-func (h *Hermione) Run() error {
-	// Authentication related endpoints
-	http.HandleFunc("/employer/get-onboard-status", ea.GetOnboardStatus(h))
-	http.HandleFunc("/employer/set-onboard-password", ea.SetOnboardPassword(h))
-	http.HandleFunc("/employer/signin", ea.EmployerSignin(h))
-	http.HandleFunc("/employer/tfa", ea.EmployerTFA(h))
-
-	// CostCenter related endpoints
-	h.mw.Protect(
-		"/employer/add-cost-center",
-		costcenter.AddCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/get-cost-centers",
-		costcenter.GetCostCenters(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.CostCentersCRUD,
-			vetchi.CostCentersViewer,
-		},
-	)
-	h.mw.Protect(
-		"/employer/defunct-cost-center",
-		costcenter.DefunctCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/rename-cost-center",
-		costcenter.RenameCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/update-cost-center",
-		costcenter.UpdateCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/get-cost-center",
-		costcenter.GetCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersViewer},
-	)
-
-	// Location related endpoints
-	h.mw.Protect(
-		"/employer/add-location",
-		locations.AddLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
-	)
-	h.mw.Protect(
-		"/employer/defunct-location",
-		locations.DefunctLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
-	)
-	h.mw.Protect(
-		"/employer/get-locations",
-		locations.GetLocations(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.LocationsCRUD,
-			vetchi.LocationsViewer,
-		},
-	)
-	h.mw.Protect(
-		"/employer/get-location",
-		locations.GetLocation(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.LocationsCRUD,
-			vetchi.LocationsViewer,
-		},
-	)
-	h.mw.Protect(
-		"/employer/rename-location",
-		locations.RenameLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
-	)
-	h.mw.Protect(
-		"/employer/update-location",
-		locations.UpdateLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
-	)
-
-	// OrgUser related endpoints
-	h.mw.Protect(
-		"/employer/add-org-user",
-		orgusers.AddOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/update-org-user",
-		orgusers.UpdateOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/disable-org-user",
-		orgusers.DisableOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
-	)
-	h.mw.Protect(
-		"/employer/filter-org-users",
-		orgusers.FilterOrgUsers(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.OrgUsersCRUD,
-			vetchi.OrgUsersViewer,
-		},
-	)
-
-	return http.ListenAndServe(h.port, nil)
 }
 
 func (h *Hermione) DB() *postgres.PG {
@@ -294,9 +191,19 @@ func (h *Hermione) Vator() *vetchi.Vator {
 	return h.vator
 }
 
-// TODO: Need a better way to pass config to the handlers
-func (h *Hermione) TGTLife() time.Duration {
-	return h.employer.tgtLife
+func (h *Hermione) ConfigDuration(key db.TokenType) (time.Duration, error) {
+	switch key {
+	case db.EmployerSessionToken:
+		return h.employer.sessionTokLife, nil
+	case db.EmployerLTSToken:
+		return h.employer.longTermSessionTokLife, nil
+	case db.EmployerTFAToken:
+		return h.employer.tfaTokLife, nil
+	case db.EmployerInviteToken:
+		return h.employer.employeeInviteTokLife, nil
+	default:
+		return 0, fmt.Errorf("unknown key: %s", key)
+	}
 }
 
 func (h *Hermione) Hedwig() hedwig.Hedwig {

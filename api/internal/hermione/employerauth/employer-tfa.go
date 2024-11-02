@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -42,16 +41,27 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 		}
 
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
-		validUntil := time.Hour * 12
+		validityDuration, err := h.ConfigDuration(db.EmployerSessionToken)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+		tokenType := db.EmployerSessionToken
+
 		if employerTFARequest.RememberMe {
-			validUntil = time.Hour * 24 * 365 // 1 year
+			tokenType = db.EmployerLTSToken
+			validityDuration, err = h.ConfigDuration(db.EmployerLTSToken)
+			if err != nil {
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
 		}
 
-		err = h.DB().CreateOrgUserToken(r.Context(), db.OrgUserToken{
-			Token:          sessionToken,
-			OrgUserID:      orgUser.ID,
-			TokenValidTill: time.Now().Add(validUntil),
-			TokenType:      db.UserSessionToken,
+		err = h.DB().CreateOrgUserToken(r.Context(), db.TokenReq{
+			Token:            sessionToken,
+			TokenType:        tokenType,
+			ValidityDuration: validityDuration,
+			OrgUserID:        orgUser.ID,
 		})
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)

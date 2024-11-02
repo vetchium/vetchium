@@ -28,6 +28,8 @@ type AddOrgUserReq struct {
 
 	InviteMail Email
 
+	InviteToken TokenReq
+
 	EmployerID uuid.UUID
 
 	// Currently unused, but will be used in the future for audit logs

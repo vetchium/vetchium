@@ -14,8 +14,8 @@ import (
 
 func (p *PG) AddOrgUser(
 	ctx context.Context,
-	req db.AddOrgUserReq,
-) (uuid.UUID, error) {
+	addOrgUserReq db.AddOrgUserReq,
+) (orgUserID uuid.UUID, err error) {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
 		p.log.Error("failed to begin transaction", "error", err)
@@ -24,15 +24,21 @@ func (p *PG) AddOrgUser(
 
 	defer tx.Rollback(ctx)
 
-	query := `
+	orgUserQuery := `
 INSERT INTO org_users (name, email, employer_id, org_user_roles, org_user_state)
 	VALUES ($1, $2, $3, $4, $5)
 RETURNING id
-	`
-
-	var id uuid.UUID
-	err = tx.QueryRow(ctx, query, req.Name, req.Email, req.EmployerID, req.OrgUserRoles, req.OrgUserState).
-		Scan(&id)
+`
+	row := tx.QueryRow(
+		ctx,
+		orgUserQuery,
+		addOrgUserReq.Name,
+		addOrgUserReq.Email,
+		addOrgUserReq.EmployerID,
+		addOrgUserReq.OrgUserRoles,
+		addOrgUserReq.OrgUserState,
+	)
+	err = row.Scan(&orgUserID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
@@ -41,19 +47,53 @@ RETURNING id
 		}
 
 		p.log.Error("failed to add org user", "error", err)
-		return uuid.Nil, err
+		return uuid.UUID{}, err
 	}
+	p.log.Debug("org user added", "org_user_id", orgUserID)
 
-	var emailKey uuid.UUID
-	err = tx.QueryRow(ctx, `
+	var tokenQuery = `
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+	VALUES ($1, $2, $3, $4)
+RETURNING token
+`
+	var tokenKey string
+	row = tx.QueryRow(
+		ctx,
+		tokenQuery,
+		addOrgUserReq.InviteToken.Token,
+		addOrgUserReq.InviteToken.ValidityDuration,
+		db.EmployerInviteToken,
+		orgUserID,
+	)
+	err = row.Scan(&tokenKey)
+	if err != nil {
+		p.log.Error("failed to add org user token", "error", err)
+		return uuid.UUID{}, err
+	}
+	p.log.Debug("org user token added", "token_key", tokenKey)
+
+	var emailQuery = `
 INSERT INTO emails(email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
 	VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING email_key
-	`, req.InviteMail.EmailFrom, req.InviteMail.EmailTo, req.InviteMail.EmailSubject, req.InviteMail.EmailHTMLBody, req.InviteMail.EmailTextBody, db.EmailStatePending).Scan(&emailKey)
+`
+	var emailKey uuid.UUID
+	row = tx.QueryRow(
+		ctx,
+		emailQuery,
+		addOrgUserReq.InviteMail.EmailFrom,
+		addOrgUserReq.InviteMail.EmailTo,
+		addOrgUserReq.InviteMail.EmailSubject,
+		addOrgUserReq.InviteMail.EmailHTMLBody,
+		addOrgUserReq.InviteMail.EmailTextBody,
+		db.EmailStatePending,
+	)
+	err = row.Scan(&emailKey)
 	if err != nil {
 		p.log.Error("failed to add invite email", "error", err)
 		return uuid.UUID{}, err
 	}
+	p.log.Debug("invite email added", "email_key", emailKey)
 
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -61,7 +101,7 @@ RETURNING email_key
 		return uuid.UUID{}, err
 	}
 
-	return id, nil
+	return orgUserID, nil
 }
 
 func (p *PG) DisableOrgUser(

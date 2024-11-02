@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"net/http"
 	ttmpl "text/template"
-	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -62,25 +61,21 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		tgToken := db.OrgUserToken{
-			Token:          util.RandomString(vetchi.TGTokenLenBytes),
-			OrgUserID:      orgUserAuth.OrgUserID,
-			TokenValidTill: time.Now().Add(h.TGTLife()),
-			TokenType:      db.TGToken,
-		}
-
 		emailTokenString := util.RandomString(vetchi.EmailTokenLenBytes)
-		emailToken := db.OrgUserToken{
-			Token:          emailTokenString,
-			OrgUserID:      orgUserAuth.OrgUserID,
-			TokenValidTill: time.Now().Add(h.TGTLife()),
-			TokenType:      db.EmailToken,
-		}
 
 		// We can even use the employerSigninReq.Email here but this
-		// feels better.
+		// feels better. TODO: This needs to migrate to Hedwig package.
 		email, err := generateEmail(orgUserAuth.OrgUserEmail, emailTokenString)
 		if err != nil {
+			h.Dbg("failed to generate email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		tfaTokenString := util.RandomString(vetchi.TGTokenLenBytes)
+		tfaTokLife, err := h.ConfigDuration(db.EmployerTFAToken)
+		if err != nil {
+			h.Dbg("failed to get tfa token life", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -88,9 +83,13 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 		err = h.DB().InitEmployerTFA(
 			r.Context(),
 			db.EmployerTFA{
-				TGToken:    tgToken,
-				EmailToken: emailToken,
-				Email:      email,
+				TFAToken: db.TokenReq{
+					Token:            tfaTokenString,
+					TokenType:        db.EmployerTFAToken,
+					ValidityDuration: tfaTokLife,
+					OrgUserID:        orgUserAuth.OrgUserID,
+				},
+				Email: email,
 			},
 		)
 		if err != nil {
@@ -99,20 +98,17 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(vetchi.EmployerSignInResponse{
-			Token: tgToken.Token,
+			Token: tfaTokenString,
 		})
 		if err != nil {
-			h.Err(
-				"failed to encode employer signin response",
-				"error",
-				err,
-			)
+			h.Dbg("encode employer signin response", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
+// TODO: This needs to migrate to Hedwig package.
 func generateEmail(orgUserEmail, token string) (db.Email, error) {
 	const textMailTemplate = `
 Hi there,

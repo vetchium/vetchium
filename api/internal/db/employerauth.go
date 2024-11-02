@@ -8,22 +8,6 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-type TokenType string
-
-const (
-	UserSessionToken TokenType = "USER_SESSION"
-	TGToken          TokenType = "TGT"
-	EmailToken       TokenType = "EMAIL"
-)
-
-type OrgUserToken struct {
-	Token          string    `db:"token"`
-	OrgUserID      uuid.UUID `db:"org_user_id"`
-	TokenValidTill time.Time `db:"token_valid_till"`
-	TokenType      TokenType `db:"token_type"`
-	CreatedAt      time.Time `db:"created_at"`
-}
-
 type ClientIDType string
 
 const (
@@ -92,7 +76,6 @@ type OrgUserCreds struct {
 }
 
 type EmployerTFA struct {
-	EmailToken OrgUserToken
-	TGToken    OrgUserToken
-	Email      Email
+	TFAToken TokenReq
+	Email    Email
 }

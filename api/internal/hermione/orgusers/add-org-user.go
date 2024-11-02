@@ -9,6 +9,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -45,14 +46,27 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 		}
 		domainList := strings.Join(domains, ", ")
 
+		token := util.RandomString(vetchi.EmailTokenLenBytes)
+		link := vetchi.EmployerBaseURL + "/signup-orguser/" + token
+
 		inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.InviteEmployee,
 			Args: map[string]string{
 				"Domains": domainList,
+				"Link":    link,
 			},
 		})
 		if err != nil {
 			h.Dbg("failed to generate invite mail", "err", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		inviteTokenValidityDuration, err := h.ConfigDuration(
+			db.EmployerInviteToken,
+		)
+		if err != nil {
+			h.Dbg("failed to get invite token validity duration", "err", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -64,6 +78,11 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 			OrgUserState: vetchi.AddedOrgUserState,
 
 			InviteMail: inviteMail,
+			InviteToken: db.TokenReq{
+				Token:            token,
+				TokenType:        db.EmployerInviteToken,
+				ValidityDuration: inviteTokenValidityDuration,
+			},
 
 			EmployerID:   orgUser.EmployerID,
 			AddingUserID: orgUser.ID,

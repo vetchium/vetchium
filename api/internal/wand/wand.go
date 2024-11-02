@@ -3,6 +3,7 @@ package wand
 import (
 	"time"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/postgres"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -14,8 +15,7 @@ type Wand interface {
 	Vator() *vetchi.Vator
 	Hedwig() hedwig.Hedwig
 
-	// TODO: Implement a better way to pass config to the handlers
-	TGTLife() time.Duration
+	ConfigDuration(key db.TokenType) (time.Duration, error)
 
 	// Embed Err Dbg Inf methods instead of Log().Err() so that code is narrower
 	util.Logger
