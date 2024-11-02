@@ -28,7 +28,7 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 		orgUser, err := h.DB().GetOrgUserByToken(
 			r.Context(),
 			employerTFARequest.TFACode,
-			employerTFARequest.TGT,
+			employerTFARequest.TFAToken,
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {

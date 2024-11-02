@@ -80,6 +80,9 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// The tfa code & the token should have approx same validity duration
+		tfaCodeLife := tfaTokLife
+
 		err = h.DB().InitEmployerTFA(
 			r.Context(),
 			db.EmployerTFA{
@@ -87,6 +90,12 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 					Token:            tfaTokenString,
 					TokenType:        db.EmployerTFAToken,
 					ValidityDuration: tfaTokLife,
+					OrgUserID:        orgUserAuth.OrgUserID,
+				},
+				TFACode: db.TokenReq{
+					Token:            emailTokenString,
+					TokenType:        db.EmployerTFACode,
+					ValidityDuration: tfaCodeLife,
 					OrgUserID:        orgUserAuth.OrgUserID,
 				},
 				Email: email,

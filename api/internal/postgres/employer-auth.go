@@ -431,6 +431,22 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 	_, err = tx.Exec(
 		ctx,
 		`
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+`,
+		employerTFA.TFACode.Token,
+		employerTFA.TFACode.OrgUserID,
+		employerTFA.TFACode.ValidityDuration.Minutes(),
+		db.EmployerTFACode,
+	)
+	if err != nil {
+		p.log.Error("failed to insert TFA code", "error", err)
+		return err
+	}
+
+	_, err = tx.Exec(
+		ctx,
+		`
 INSERT INTO emails (
 	email_from,
 	email_to,
@@ -464,7 +480,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 
 func (p *PG) GetOrgUserByToken(
 	ctx context.Context,
-	tfaCode, tgt string,
+	tfaCode, tfaToken string,
 ) (db.OrgUserTO, error) {
 	query := `
 SELECT
@@ -479,9 +495,9 @@ FROM
     org_users ou
 WHERE
     out1.token = $1
-    AND out1.token_type = 'EMAIL'
-    AND out2.token = $2
-    AND out2.token_type = 'TGT'
+    AND out1.token_type = $2
+    AND out2.token = $3
+    AND out2.token_type = $4
     AND ou.id = out1.org_user_id
     AND ou.id = out2.org_user_id
 `
@@ -490,7 +506,12 @@ WHERE
 	var roles []string
 	err := p.pool.QueryRow(
 		ctx,
-		query, tfaCode, tgt).Scan(
+		query,
+		tfaCode,
+		db.EmployerTFACode,
+		tfaToken,
+		db.EmployerTFAToken,
+	).Scan(
 		&orgUser.ID,
 		&orgUser.Email,
 		&orgUser.EmployerID,

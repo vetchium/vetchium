@@ -177,7 +177,7 @@ type EmployerSignInResponse struct {
 
 type EmployerTFARequest struct {
 	TFACode    string `json:"tfa_code"              validate:"required"`
-	TGT        string `json:"tgt"                   validate:"required"`
+	TFAToken   string `json:"tfa_token"             validate:"required"`
 	RememberMe bool   `json:"remember_me,omitempty"`
 }
 

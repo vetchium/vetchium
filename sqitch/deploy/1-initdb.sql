@@ -107,7 +107,13 @@ CREATE TABLE org_users (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TYPE token_types AS ENUM ('USER_SESSION', 'TGT', 'EMAIL');
+CREATE TYPE token_types AS ENUM (
+    'EMPLOYER_SESSION',
+    'EMPLOYER_LTS',
+    'EMPLOYER_TFA_TOKEN',
+    'EMPLOYER_TFA_CODE',
+    'EMPLOYER_INVITE'
+);
 CREATE TABLE org_user_tokens (
     token TEXT PRIMARY KEY,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,

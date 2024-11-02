@@ -16,7 +16,12 @@ const (
 
 	// This is sent as a response to the signin request and should be used
 	// in the tfa request, to get one of the session tokens.
-	EmployerTFAToken TokenType = "EMPLOYER_TFA"
+	EmployerTFAToken TokenType = "EMPLOYER_TFA_TOKEN"
+
+	// This is emailed to the OrgUser after a sucessful signin request and
+	// should be used in the tfa request as part of the body, to get one
+	// of the session tokens.
+	EmployerTFACode TokenType = "EMPLOYER_TFA_CODE"
 
 	EmployerInviteToken TokenType = "EMPLOYER_INVITE"
 )
