@@ -84,7 +84,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			"Check if mailpit got the email and set the admin password",
 			func() {
 				// Sleep for 10 seconds to allow the email to be sent by granger
-				<-time.After(10 * time.Second)
+				<-time.After(30 * time.Second)
 
 				url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
 				log.Println("URL:", url)

@@ -133,11 +133,6 @@ func employerSignin(clientID, email, password string) (string, error) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(signinResp.Token).ShouldNot(BeEmpty())
 
-	// Get the tfa code from the email by querying mailpit
-	fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
-	<-time.After(15 * time.Second)
-	fmt.Fprintf(GinkgoWriter, "Wokeup\n")
-
 	baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
 	Expect(err).ShouldNot(HaveOccurred())
 	query := url.Values{}
@@ -150,25 +145,38 @@ func employerSignin(clientID, email, password string) (string, error) {
 	url2 := baseURL.String()
 	fmt.Fprintf(GinkgoWriter, "URL2: %s\n", url2)
 
-	mailPitReq1, err := http.NewRequest("GET", url2, nil)
-	Expect(err).ShouldNot(HaveOccurred())
-	mailPitReq1.Header.Add("Content-Type", "application/json")
+	var messageID string
+	for i := 0; i < 3; i++ {
+		// Get the tfa code from the email by querying mailpit
+		fmt.Fprintf(GinkgoWriter, "Sleeping to allow granger to email\n")
+		<-time.After(10 * time.Second)
+		fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
-	mailPitResp1, err := http.DefaultClient.Do(mailPitReq1)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(mailPitResp1.StatusCode).Should(Equal(http.StatusOK))
+		mailPitReq1, err := http.NewRequest("GET", url2, nil)
+		Expect(err).ShouldNot(HaveOccurred())
+		mailPitReq1.Header.Add("Content-Type", "application/json")
 
-	body, err := io.ReadAll(mailPitResp1.Body)
-	Expect(err).ShouldNot(HaveOccurred())
+		mailPitResp1, err := http.DefaultClient.Do(mailPitReq1)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mailPitResp1.StatusCode).Should(Equal(http.StatusOK))
 
-	fmt.Fprintf(GinkgoWriter, "Body: %s\n", string(body))
+		body, err := io.ReadAll(mailPitResp1.Body)
+		Expect(err).ShouldNot(HaveOccurred())
 
-	var mailPitResp1Obj MailPitResponse
-	err = json.Unmarshal(body, &mailPitResp1Obj)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(len(mailPitResp1Obj.Messages)).Should(Equal(1))
+		fmt.Fprintf(GinkgoWriter, "Body: %s\n", string(body))
 
-	messageID := mailPitResp1Obj.Messages[0].ID
+		var mailPitResp1Obj MailPitResponse
+		err = json.Unmarshal(body, &mailPitResp1Obj)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		if len(mailPitResp1Obj.Messages) == 0 {
+			continue
+		}
+		Expect(len(mailPitResp1Obj.Messages)).Should(Equal(1))
+		messageID = mailPitResp1Obj.Messages[0].ID
+		break
+	}
+
 	mailURL := "http://localhost:8025/api/v1/message/" + messageID
 	fmt.Fprintf(GinkgoWriter, "Mail URL: %s\n", mailURL)
 
@@ -180,7 +188,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(mailPitResp2.StatusCode).Should(Equal(http.StatusOK))
 
-	body, err = io.ReadAll(mailPitResp2.Body)
+	body, err := io.ReadAll(mailPitResp2.Body)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// Extracting the token from the mail body
