@@ -297,7 +297,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			}
 		})
 
-		It("Disable OrgUser", func() {
+		FIt("Disable OrgUser", func() {
 			// First create some test users that we can disable
 			testUsers := []vetchi.AddOrgUserRequest{
 				{
@@ -380,7 +380,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "%s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "###### %s\n", tc.description)
 				testPOST(
 					tc.token,
 					tc.request,

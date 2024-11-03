@@ -54,6 +54,12 @@ func DisableOrgUser(h wand.Wand) http.HandlerFunc {
 				return
 			}
 
+			if errors.Is(err, db.ErrOrgUserAlreadyDisabled) {
+				h.Dbg("DisableOrgUser: OrgUser already disabled", "err", err)
+				http.Error(w, "already disabled", http.StatusBadRequest)
+				return
+			}
+
 			h.Err("DisableOrgUser DB call failed", "err", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

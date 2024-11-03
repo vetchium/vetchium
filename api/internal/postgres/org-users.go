@@ -112,15 +112,16 @@ func (p *PG) DisableOrgUser(
 	const (
 		userNotFound    = "USER_NOT_FOUND"
 		lastActiveAdmin = "LAST_ACTIVE_ADMIN"
+		alreadyDisabled = "ALREADY_DISABLED"
 	)
 	query := `
 WITH target_user AS (
-    SELECT id, org_user_roles
+    SELECT id, org_user_roles, org_user_state
     FROM org_users
     WHERE employer_id = $1
       AND email = $2
 ),
-is_last_admin AS (
+other_active_admins AS (
     SELECT 1
     FROM org_users
     WHERE employer_id = $1
@@ -136,7 +137,7 @@ updated_user AS (
       AND org_user_state != $4 -- DISABLED_ORG_USER
       AND (
           NOT 'ADMIN' = ANY((SELECT org_user_roles FROM target_user)::text[])
-          OR NOT EXISTS (SELECT 1 FROM is_last_admin)
+          OR EXISTS (SELECT 1 FROM other_active_admins)
       )
     RETURNING id
 ),
@@ -147,8 +148,10 @@ deleted_tokens AS (
 SELECT 
     CASE 
         WHEN (SELECT id FROM target_user) IS NULL THEN $5
-        WHEN NOT EXISTS (SELECT 1 FROM updated_user) THEN $6
-        ELSE (SELECT id FROM updated_user)::TEXT
+        WHEN (SELECT org_user_state FROM target_user) = $4 THEN $7
+        WHEN 'ADMIN' = ANY((SELECT org_user_roles FROM target_user)::text[])
+          AND NOT EXISTS (SELECT 1 FROM other_active_admins) THEN $6
+        ELSE COALESCE((SELECT id FROM updated_user)::TEXT, $6)
     END AS result
 `
 
@@ -162,6 +165,7 @@ SELECT
 		vetchi.DisabledOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
+		alreadyDisabled,
 	).Scan(&result)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -177,6 +181,8 @@ SELECT
 		return db.ErrNoOrgUser
 	case lastActiveAdmin:
 		return db.ErrLastActiveAdmin
+	case alreadyDisabled:
+		return db.ErrOrgUserAlreadyDisabled
 	default:
 		orgUserID, err := uuid.Parse(result)
 		if err != nil {
