@@ -23,7 +23,7 @@ func DisableOrgUser(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("DisableOrgUserReq", "req", disableOrgUserReq)
 
-		if !h.Vator().Struct(w, disableOrgUserReq) {
+		if !h.Vator().Struct(w, &disableOrgUserReq) {
 			h.Dbg("DisableOrgUserReq is not valid", "req", disableOrgUserReq)
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return

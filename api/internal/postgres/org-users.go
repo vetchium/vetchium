@@ -115,7 +115,7 @@ func (p *PG) DisableOrgUser(
 	)
 	query := `
 WITH target_user AS (
-    SELECT id
+    SELECT id, org_user_roles
     FROM org_users
     WHERE employer_id = $1
       AND email = $2
@@ -125,7 +125,7 @@ is_last_admin AS (
     FROM org_users
     WHERE employer_id = $1
       AND id != (SELECT id FROM target_user)
-      AND 'ADMIN' = ANY(org_user_roles)
+      AND 'ADMIN' = ANY(org_user_roles::text[])
       AND org_user_state = $3 -- ACTIVE_ORG_USER
     LIMIT 1
 ),
@@ -134,7 +134,10 @@ updated_user AS (
     SET org_user_state = $4 -- DISABLED_ORG_USER
     WHERE id = (SELECT id FROM target_user)
       AND org_user_state != $4 -- DISABLED_ORG_USER
-      AND NOT EXISTS (SELECT 1 FROM is_last_admin)
+      AND (
+          NOT 'ADMIN' = ANY((SELECT org_user_roles FROM target_user)::text[])
+          OR NOT EXISTS (SELECT 1 FROM is_last_admin)
+      )
     RETURNING id
 ),
 deleted_tokens AS (
@@ -146,7 +149,7 @@ SELECT
         WHEN (SELECT id FROM target_user) IS NULL THEN $5
         WHEN NOT EXISTS (SELECT 1 FROM updated_user) THEN $6
         ELSE (SELECT id FROM updated_user)::TEXT
-    END AS result;
+    END AS result
 `
 
 	var result string
