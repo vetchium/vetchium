@@ -72,7 +72,7 @@ func employerSigninAsync(
 	token *string,
 	wg *sync.WaitGroup,
 ) {
-	go func() {
+	go func(clientID, email, password string, token *string, wg *sync.WaitGroup) {
 		defer GinkgoRecover()
 		defer wg.Done()
 		var err error
@@ -86,11 +86,24 @@ func employerSigninAsync(
 			password,
 			gotToken,
 		)
-	}()
+	}(
+		clientID,
+		email,
+		password,
+		token,
+		wg,
+	)
 }
 
 // Returns the session token for the employer with the given credentials
 func employerSignin(clientID, email, password string) (string, error) {
+	fmt.Fprintf(
+		GinkgoWriter,
+		"clientID: %s, email: %s, password: %s\n",
+		clientID,
+		email,
+		password,
+	)
 	signinReqBody, err := json.Marshal(
 		vetchi.EmployerSignInRequest{
 			ClientID: clientID,
@@ -134,9 +147,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 	)
 	baseURL.RawQuery = query.Encode()
 
-	url1 := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40domain-onboarded.example%20subject%3AVetchi%20Two%20Factor%20Authentication"
 	url2 := baseURL.String()
-	fmt.Fprintf(GinkgoWriter, "URL1: %s\n", url1)
 	fmt.Fprintf(GinkgoWriter, "URL2: %s\n", url2)
 
 	mailPitReq1, err := http.NewRequest("GET", url2, nil)
