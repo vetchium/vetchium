@@ -9,6 +9,6 @@ INSERT INTO public.employers (id, client_id_type, employer_state, onboard_admin_
     VALUES ('12345678-0001-0001-0001-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@domain-onboarded.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0001-0001-0001-000000000011'::uuid, timezone('UTC'::text, now()));
 INSERT INTO public.domains (id, domain_name, domain_state, employer_id, created_at)
     VALUES ('12345678-0001-0001-0001-000000003001'::uuid, 'domain-onboarded.example', 'VERIFIED', '12345678-0001-0001-0001-000000000201'::uuid, timezone('UTC'::text, now()));
-INSERT INTO public.org_users (id, email, password_hash, org_user_roles, org_user_state, employer_id, created_at)
-    VALUES ('12345678-0001-0001-0001-000000040001'::uuid, 'admin@domain-onboarded.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0001-0001-0001-000000000201'::uuid, timezone('UTC'::text, now()));
+INSERT INTO public.org_users (id, name, email, password_hash, org_user_roles, org_user_state, employer_id, created_at)
+    VALUES ('12345678-0001-0001-0001-000000040001'::uuid, 'admin', 'admin@domain-onboarded.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0001-0001-0001-000000000201'::uuid, timezone('UTC'::text, now()));
 COMMIT;

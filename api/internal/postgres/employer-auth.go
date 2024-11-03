@@ -270,17 +270,23 @@ WHERE
 
 	orgUserInsertQuery := `
 INSERT INTO org_users (
+	name,
 	email,
 	password_hash,
 	org_user_roles,
 	org_user_state,
 	employer_id
 )
-VALUES ($1, $2, $3::org_user_roles[], $4, $5)
+VALUES ($1, $2, $3, $4::org_user_roles[], $5, $6)
 `
 	_, err = tx.Exec(
 		ctx,
 		orgUserInsertQuery,
+
+		// During onboarding, we will use the admin email as the name.
+		// The admin can change this later.
+		adminEmailAddr,
+
 		adminEmailAddr,
 		onboardReq.Password,
 		[]string{string(vetchi.Admin)},

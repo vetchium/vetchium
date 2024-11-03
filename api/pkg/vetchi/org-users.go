@@ -65,6 +65,6 @@ type OrgUser struct {
 
 type UpdateOrgUserRequest struct {
 	Email string        `json:"email" validate:"required,email,min=3,max=255"`
-	Name  string        `json:"name"  validate:"required,min=1,max=255"`
+	Name  string        `json:"name"  validate:"required,min=3,max=255"`
 	Roles []OrgUserRole `json:"roles" validate:"required,validate_org_user_roles"`
 }
