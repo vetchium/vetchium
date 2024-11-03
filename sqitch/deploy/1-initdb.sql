@@ -83,6 +83,8 @@ CREATE TYPE org_user_roles AS ENUM (
     'COST_CENTERS_VIEWER',
     'LOCATIONS_CRUD',
     'LOCATIONS_VIEWER',
+    'ORG_USERS_CRUD',
+    'ORG_USERS_VIEWER',
     'OPENINGS_CRUD',
     'OPENINGS_VIEWER'
 );
@@ -96,6 +98,7 @@ CREATE TYPE org_user_states AS ENUM (
 CREATE TABLE org_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
+    name TEXT NOT NULL,
     password_hash TEXT,
     org_user_roles org_user_roles[] NOT NULL,
     org_user_state org_user_states NOT NULL,

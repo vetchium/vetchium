@@ -2,6 +2,22 @@ package vetchi
 
 type OrgUserRole string
 
+const (
+	Admin OrgUserRole = "ADMIN"
+
+	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
+	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
+
+	LocationsCRUD   OrgUserRole = "LOCATIONS_CRUD"
+	LocationsViewer OrgUserRole = "LOCATIONS_VIEWER"
+
+	OpeningsCRUD   OrgUserRole = "OPENINGS_CRUD"
+	OpeningsViewer OrgUserRole = "OPENINGS_VIEWER"
+
+	OrgUsersCRUD   OrgUserRole = "ORG_USERS_CRUD"
+	OrgUsersViewer OrgUserRole = "ORG_USERS_VIEWER"
+)
+
 type OrgUserState string
 
 const (
@@ -22,9 +38,9 @@ const (
 )
 
 type AddOrgUserRequest struct {
-	Name  string        `json:"name"  validate:"required,min=1,max=255"`
+	Name  string        `json:"name"  validate:"required,min=3,max=255"`
 	Email string        `json:"email" validate:"required,email,min=3,max=255"`
-	Roles []OrgUserRole `json:"roles" validate:"required"`
+	Roles []OrgUserRole `json:"roles" validate:"required,validate_org_user_roles"`
 }
 
 type DisableOrgUserRequest struct {

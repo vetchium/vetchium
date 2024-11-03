@@ -159,6 +159,41 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_org_user_roles",
+		func(fl validator.FieldLevel) bool {
+			roles := fl.Field().Interface().([]OrgUserRole)
+			if len(roles) == 0 {
+				return false
+			}
+			for _, role := range roles {
+				switch role {
+				case Admin:
+					continue
+				case CostCentersCRUD:
+					continue
+				case CostCentersViewer:
+					continue
+				case LocationsCRUD:
+					continue
+				case LocationsViewer:
+					continue
+				case OpeningsCRUD:
+					continue
+				case OpeningsViewer:
+					continue
+				case OrgUsersCRUD:
+					continue
+				case OrgUsersViewer:
+					continue
+				default:
+					return false
+				}
+			}
+			return true
+		},
+	)
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

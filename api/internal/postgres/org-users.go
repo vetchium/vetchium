@@ -26,7 +26,7 @@ func (p *PG) AddOrgUser(
 
 	orgUserQuery := `
 INSERT INTO org_users (name, email, employer_id, org_user_roles, org_user_state)
-	VALUES ($1, $2, $3, $4, $5)
+	VALUES ($1, $2, $3::UUID, $4::org_user_roles[], $5)
 RETURNING id
 `
 	row := tx.QueryRow(
@@ -35,7 +35,8 @@ RETURNING id
 		addOrgUserReq.Name,
 		addOrgUserReq.Email,
 		addOrgUserReq.EmployerID,
-		addOrgUserReq.OrgUserRoles,
+		// addOrgUserReq.OrgUserRoles,
+		convertOrgUserRolesToStringArray(addOrgUserReq.OrgUserRoles),
 		addOrgUserReq.OrgUserState,
 	)
 	err = row.Scan(&orgUserID)
@@ -53,7 +54,7 @@ RETURNING id
 
 	var tokenQuery = `
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-	VALUES ($1, $2, $3, $4)
+	VALUES ($1, $2::UUID, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 RETURNING token
 `
 	var tokenKey string
@@ -61,9 +62,9 @@ RETURNING token
 		ctx,
 		tokenQuery,
 		addOrgUserReq.InviteToken.Token,
+		orgUserID,
 		addOrgUserReq.InviteToken.ValidityDuration.Minutes(),
 		db.EmployerInviteToken,
-		orgUserID,
 	)
 	err = row.Scan(&tokenKey)
 	if err != nil {

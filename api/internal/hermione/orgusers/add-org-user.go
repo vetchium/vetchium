@@ -30,6 +30,7 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 			h.Dbg("AddOrgUserReq validation failed", "req", addOrgUserReq)
 			return
 		}
+		h.Dbg("validated", "AddOrgUserReq", addOrgUserReq)
 
 		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 		if !ok {
@@ -55,6 +56,11 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 				"Domains": domainList,
 				"Link":    link,
 			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{addOrgUserReq.Email},
+
+			// TODO: The subject should be from Hedwig, based on the template
+			Subject: "Vetchi Employer Invitation",
 		})
 		if err != nil {
 			h.Dbg("failed to generate invite mail", "err", err)
