@@ -297,7 +297,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			}
 		})
 
-		FIt("Disable OrgUser", func() {
+		It("Disable OrgUser", func() {
 			// First create some test users that we can disable
 			testUsers := []vetchi.AddOrgUserRequest{
 				{
