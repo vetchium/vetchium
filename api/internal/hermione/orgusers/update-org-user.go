@@ -40,6 +40,7 @@ func UpdateOrgUser(h wand.Wand) http.HandlerFunc {
 		}
 
 		orgUserID, err := h.DB().UpdateOrgUser(r.Context(), db.UpdateOrgUserReq{
+			Email:          updateOrgUserReq.Email,
 			Name:           updateOrgUserReq.Name,
 			Roles:          updateOrgUserReq.Roles,
 			EmployerID:     orgUser.EmployerID,
