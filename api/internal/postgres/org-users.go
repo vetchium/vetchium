@@ -241,30 +241,30 @@ WITH target_user AS (
     SELECT id, org_user_roles
     FROM org_users
     WHERE email = $1
-      AND employer_id = $4
+      AND employer_id = $4::UUID
 ),
 is_last_admin AS (
     SELECT 1
     FROM org_users
-    WHERE employer_id = $4
+    WHERE employer_id = $4::UUID
       AND id != (SELECT id FROM target_user)
-      AND 'ADMIN' = ANY(org_user_roles)
+      AND 'ADMIN' = ANY(org_user_roles::org_user_roles[])
       AND org_user_state = $5 -- ACTIVE_ORG_USER
     LIMIT 1
 ),
 updated_user AS (
     UPDATE org_users
     SET name = $2,
-        org_user_roles = $3
+        org_user_roles = $3::org_user_roles[]
     WHERE id = (SELECT id FROM target_user)
-      AND ('ADMIN' = ANY($3) OR EXISTS (SELECT 1 FROM is_last_admin))
+      AND ('ADMIN' = ANY($3::org_user_roles[]) OR EXISTS (SELECT 1 FROM is_last_admin))
     RETURNING id
 )
 SELECT 
     CASE 
         WHEN (SELECT id FROM target_user) IS NULL THEN $6
         WHEN NOT EXISTS (SELECT 1 FROM updated_user) THEN $7
-        ELSE (SELECT id FROM updated_user)::UUID
+        ELSE (SELECT id FROM updated_user)::TEXT
     END AS result;
 `
 
@@ -273,18 +273,18 @@ SELECT
 		lastActiveAdmin = "LAST_ACTIVE_ADMIN"
 	)
 
-	var id uuid.UUID
+	var orgUserIDStr string
 	err := p.pool.QueryRow(
 		ctx,
 		query,
 		req.Email,
 		req.Name,
-		req.Roles,
+		convertOrgUserRolesToStringArray(req.Roles),
 		req.EmployerID,
 		vetchi.ActiveOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
-	).Scan(&id)
+	).Scan(&orgUserIDStr)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return uuid.UUID{}, db.ErrNoOrgUser
@@ -294,11 +294,17 @@ SELECT
 		return uuid.UUID{}, err
 	}
 
-	if id.String() == userNotFound {
+	if orgUserIDStr == userNotFound {
 		return uuid.UUID{}, db.ErrNoOrgUser
-	} else if id.String() == lastActiveAdmin {
+	} else if orgUserIDStr == lastActiveAdmin {
 		return uuid.UUID{}, db.ErrLastActiveAdmin
 	}
 
-	return id, nil
+	orgUserID, err := uuid.Parse(orgUserIDStr)
+	if err != nil {
+		p.log.Error("failed to parse org user id", "error", err)
+		return uuid.UUID{}, err
+	}
+
+	return orgUserID, nil
 }

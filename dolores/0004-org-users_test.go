@@ -183,6 +183,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "Updated CRUD User",
+						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusOK,
 				},
@@ -191,6 +192,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					token:       adminToken,
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
+						Name:  "Updated CRUD User",
 						Roles: []vetchi.OrgUserRole{
 							"ORG_USERS_CRUD",
 							"COST_CENTERS_CRUD",
@@ -204,6 +206,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "viewer@orgusers.example",
 						Name:  "Updated Viewer User",
+						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusOK,
 				},
@@ -213,6 +216,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "Should Not Update",
+						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusForbidden,
 				},
@@ -222,6 +226,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "nonexistent@orgusers.example",
 						Name:  "Non-existent User",
+						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusNotFound,
 				},
@@ -230,6 +235,7 @@ var _ = FDescribe("Org Users", Ordered, func() {
 					token:       adminToken,
 					request: vetchi.UpdateOrgUserRequest{
 						Email: "admin@orgusers.example",
+						Name:  "Last Admin",
 						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusForbidden,

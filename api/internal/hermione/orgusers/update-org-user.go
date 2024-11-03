@@ -22,7 +22,7 @@ func UpdateOrgUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if !h.Vator().Struct(w, updateOrgUserReq) {
+		if !h.Vator().Struct(w, &updateOrgUserReq) {
 			h.Dbg("validation failed", "updateOrgUserReq", updateOrgUserReq)
 			return
 		}
