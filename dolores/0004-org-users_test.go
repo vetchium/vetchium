@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 
@@ -390,7 +391,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			}
 		})
 
-		FIt("Filter OrgUsers with Pagination", func() {
+		It("Filter OrgUsers with Pagination", func() {
 			// First create bulk test users
 			bulkAddFilterOrgUsers(
 				adminToken,
@@ -493,6 +494,125 @@ var _ = Describe("Org Users", Ordered, func() {
 				}
 			}
 		})
+
+		It("Filter OrgUsers with Prefix Search", func() {
+			// First create test users with specific prefixes
+			prefixUsers := []vetchi.AddOrgUserRequest{
+				{
+					Email: "alpha1@orgusers.example",
+					Name:  "Beta User One",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+				{
+					Email: "beta1@orgusers.example",
+					Name:  "Alpha User One",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+				{
+					Email: "gamma1@orgusers.example",
+					Name:  "Alpha User Two",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+			}
+
+			for _, user := range prefixUsers {
+				testPOST(
+					adminToken,
+					user,
+					"/employer/add-org-user",
+					http.StatusOK,
+				)
+			}
+
+			type prefixTestCase struct {
+				description string
+				prefix      string
+				wantEmails  []string
+			}
+
+			testCases := []prefixTestCase{
+				{
+					description: "search by email prefix",
+					prefix:      "alpha",
+					wantEmails:  []string{"alpha1@orgusers.example"},
+				},
+				{
+					description: "search by name prefix",
+					prefix:      "Alpha",
+					wantEmails: []string{
+						"beta1@orgusers.example",
+						"gamma1@orgusers.example",
+					},
+				},
+				{
+					description: "search with no matches",
+					prefix:      "nonexistent",
+					wantEmails:  []string{},
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+
+				resp := testPOSTGetResp(
+					adminToken,
+					vetchi.FilterOrgUsersRequest{Prefix: tc.prefix},
+					"/employer/filter-org-users",
+					http.StatusOK,
+				).([]byte)
+
+				var users []vetchi.OrgUser
+				err := json.Unmarshal(resp, &users)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				gotEmails := make([]string, len(users))
+				for i, user := range users {
+					gotEmails[i] = user.Email
+				}
+
+				// Sort both slices to ensure consistent comparison
+				sort.Strings(gotEmails)
+				sort.Strings(tc.wantEmails)
+
+				Expect(gotEmails).Should(ContainElements(tc.wantEmails))
+			}
+		})
+
+		It("Filter OrgUsers RBAC", func() {
+			type rbacTestCase struct {
+				description string
+				token       string
+				wantStatus  int
+			}
+
+			testCases := []rbacTestCase{
+				{
+					description: "with CRUD token",
+					token:       crudToken,
+					wantStatus:  http.StatusOK,
+				},
+				{
+					description: "with Viewer token",
+					token:       viewerToken,
+					wantStatus:  http.StatusOK,
+				},
+				{
+					description: "with non-orgusers token",
+					token:       nonOrgUsersToken,
+					wantStatus:  http.StatusForbidden,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+				testPOST(
+					tc.token,
+					vetchi.FilterOrgUsersRequest{Prefix: "alpha"},
+					"/employer/filter-org-users",
+					tc.wantStatus,
+				)
+			}
+		})
 	})
 })
 
@@ -584,7 +704,7 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 		paginationKey = users[len(users)-1].Email
 	}
 
-	fmt.Fprintf(GinkgoWriter, "Got users: %v\n", gotUsers)
+	// fmt.Fprintf(GinkgoWriter, "Got users: %v\n", gotUsers)
 
 	// Verify the bulk created users are found
 	for _, wantUser := range wantUsers {
