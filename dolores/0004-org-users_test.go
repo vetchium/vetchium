@@ -390,7 +390,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			}
 		})
 
-		It("Filter OrgUsers with Pagination", func() {
+		FIt("Filter OrgUsers with Pagination", func() {
 			// First create bulk test users
 			bulkAddFilterOrgUsers(
 				adminToken,
@@ -536,8 +536,8 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 	wantUsers := []vetchi.OrgUser{}
 
 	for i := 0; i < count; i++ {
-		email := fmt.Sprintf("bulk%d-%s@orgusers.example", i, runID)
-		name := fmt.Sprintf("Bulk User %d-%s", i, runID)
+		email := fmt.Sprintf("bulk-%s-%d@orgusers.example", runID, i)
+		name := fmt.Sprintf("Bulk User %s-%d", runID, i)
 
 		request := vetchi.AddOrgUserRequest{
 			Email: email,
@@ -545,13 +545,14 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 			Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
 		}
 
+		fmt.Fprintf(GinkgoWriter, "Adding user %q %q\n", email, name)
 		testPOST(token, request, "/employer/add-org-user", http.StatusOK)
 
 		wantUsers = append(wantUsers, vetchi.OrgUser{
 			Email: email,
 			Name:  name,
 			Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
-			State: vetchi.ActiveOrgUserState,
+			State: vetchi.AddedOrgUserState,
 		})
 	}
 
@@ -582,6 +583,8 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 
 		paginationKey = users[len(users)-1].Email
 	}
+
+	fmt.Fprintf(GinkgoWriter, "Got users: %v\n", gotUsers)
 
 	// Verify the bulk created users are found
 	for _, wantUser := range wantUsers {

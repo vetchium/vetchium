@@ -200,17 +200,21 @@ func (p *PG) FilterOrgUsers(
 	filterOrgUsersReq db.FilterOrgUsersReq,
 ) ([]vetchi.OrgUser, error) {
 	query := `
-SELECT 
-	name,
-	email,
-	org_user_roles,
-	org_user_state
-FROM org_users
-WHERE employer_id = $1 
-	AND email < $2 
-	AND org_user_roles = ANY($3)
-	AND (email ILIKE $4 OR name ILIKE $4)
-ORDER BY email
+SELECT
+    name,
+    email,
+    org_user_roles::text[],
+    org_user_state
+FROM
+    org_users
+WHERE
+    employer_id = $1
+    AND email > $2
+    AND org_user_state = ANY ($3::org_user_states[])
+    AND (email ILIKE $4
+        OR name ILIKE $4)
+ORDER BY
+    email
 LIMIT $5
 `
 

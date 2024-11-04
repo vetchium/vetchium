@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -292,7 +293,23 @@ func doPOST(
 
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
-	Expect(resp.StatusCode).Should(Equal(wantStatus))
+
+	if resp.StatusCode != wantStatus {
+		debug.PrintStack()
+
+		respBody, err := io.ReadAll(resp.Body)
+		if err == nil {
+			fmt.Fprintf(GinkgoWriter, "Response Body: %s\n", string(respBody))
+		}
+
+		Fail(
+			fmt.Sprintf(
+				"Expected status %d, got %d",
+				wantStatus,
+				resp.StatusCode,
+			),
+		)
+	}
 
 	if !wantResp {
 		return nil

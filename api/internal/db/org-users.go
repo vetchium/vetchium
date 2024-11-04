@@ -46,7 +46,7 @@ type DisableOrgUserReq struct {
 
 type FilterOrgUsersReq struct {
 	Prefix     string
-	State      []vetchi.OrgUserState
+	State      []string
 	EmployerID uuid.UUID
 
 	PaginationKey string

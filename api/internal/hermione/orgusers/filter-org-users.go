@@ -24,14 +24,18 @@ func FilterOrgUsers(h wand.Wand) http.HandlerFunc {
 			h.Dbg("validation failed", "filterOrgUsersReq", filterOrgUsersReq)
 			return
 		}
+		h.Dbg("validated", "filterOrgUsersReq", filterOrgUsersReq)
 
 		if len(filterOrgUsersReq.State) == 0 {
+			h.Dbg("no state specified, defaulting to ActiveOrgUserState")
 			filterOrgUsersReq.State = []vetchi.OrgUserState{
 				vetchi.ActiveOrgUserState,
+				vetchi.AddedOrgUserState,
 			}
 		}
 
 		if filterOrgUsersReq.Limit == 0 {
+			h.Dbg("no limit specified, defaulting to 40")
 			filterOrgUsersReq.Limit = 40
 		}
 
@@ -42,10 +46,15 @@ func FilterOrgUsers(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		var states []string
+		for _, state := range filterOrgUsersReq.State {
+			states = append(states, string(state))
+		}
+
 		orgUsers, err := h.DB().
 			FilterOrgUsers(r.Context(), db.FilterOrgUsersReq{
 				Prefix:        filterOrgUsersReq.Prefix,
-				State:         filterOrgUsersReq.State,
+				State:         states,
 				EmployerID:    orgUser.EmployerID,
 				PaginationKey: filterOrgUsersReq.PaginationKey,
 				Limit:         filterOrgUsersReq.Limit,

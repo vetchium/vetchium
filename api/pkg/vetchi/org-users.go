@@ -49,11 +49,11 @@ type DisableOrgUserRequest struct {
 
 // Should we graphqlize this for auto-completion ?
 type FilterOrgUsersRequest struct {
-	Prefix string         `json:"prefix" validate:"required,min=1,max=255"`
-	State  []OrgUserState `json:"state"  validate:"required,validate_org_user_state"`
+	Prefix string         `json:"prefix" validate:"omitempty,min=1,max=255"`
+	State  []OrgUserState `json:"state"  validate:"omitempty,validate_org_user_state"`
 
-	PaginationKey string `json:"pagination_key" validate:"email"`
-	Limit         int    `json:"limit"          validate:"min=0,max=40"`
+	PaginationKey string `json:"pagination_key" validate:"omitempty,email"`
+	Limit         int    `json:"limit"          validate:"omitempty,min=0,max=40"`
 }
 
 type OrgUser struct {
