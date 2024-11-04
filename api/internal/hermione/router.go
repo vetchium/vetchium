@@ -110,6 +110,11 @@ func (h *Hermione) Run() error {
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
 	)
 	h.mw.Protect(
+		"/employer/enable-org-user",
+		orgusers.EnableOrgUser(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+	)
+	h.mw.Protect(
 		"/employer/filter-org-users",
 		orgusers.FilterOrgUsers(h),
 		[]vetchi.OrgUserRole{

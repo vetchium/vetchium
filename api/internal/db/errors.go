@@ -12,6 +12,7 @@ var (
 	ErrNoOrgUser              = errors.New("org user not found")
 	ErrLastActiveAdmin        = errors.New("cannot disable last active admin")
 	ErrOrgUserAlreadyDisabled = errors.New("org user already disabled")
+	ErrOrgUserNotDisabled     = errors.New("org user not in disabled state")
 
 	ErrDupCostCenterName = errors.New("duplicate cost center name")
 	ErrNoCostCenter      = errors.New("cost center not found")

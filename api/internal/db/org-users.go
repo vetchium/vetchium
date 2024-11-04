@@ -44,6 +44,14 @@ type DisableOrgUserReq struct {
 	DisablingUserID uuid.UUID
 }
 
+type EnableOrgUserReq struct {
+	Email      string
+	EmployerID uuid.UUID
+
+	// Currently unused, but will be used in the future for audit logs
+	EnablingUserID uuid.UUID
+}
+
 type FilterOrgUsersReq struct {
 	Prefix     string
 	State      []string

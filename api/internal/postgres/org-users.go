@@ -321,3 +321,70 @@ SELECT
 
 	return orgUserID, nil
 }
+
+func (p *PG) EnableOrgUser(
+	ctx context.Context,
+	req db.EnableOrgUserReq,
+) error {
+	const (
+		userNotFound = "NO_USER"
+		notDisabled  = "NOT_DISABLED"
+	)
+
+	query := `
+WITH target_user AS (
+    SELECT id, org_user_state
+    FROM org_users
+    WHERE email = $1
+      AND employer_id = $2::UUID
+),
+update_result AS (
+    UPDATE org_users
+    SET org_user_state = $3 -- ACTIVE_ORG_USER
+    WHERE id = (
+        SELECT id 
+        FROM target_user
+        WHERE org_user_state = $4 -- DISABLED_ORG_USER
+    )
+    RETURNING id
+)
+SELECT 
+    CASE 
+        WHEN NOT EXISTS (SELECT 1 FROM target_user) THEN $5
+        WHEN EXISTS (
+            SELECT 1 FROM target_user 
+            WHERE org_user_state != $4
+        ) THEN $6
+        ELSE COALESCE(
+            (SELECT id::TEXT FROM update_result),
+            $5
+        )
+    END AS result
+`
+
+	var result string
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		req.Email,
+		req.EmployerID,
+		vetchi.ActiveOrgUserState,
+		vetchi.DisabledOrgUserState,
+		userNotFound,
+		notDisabled,
+	).Scan(&result)
+	if err != nil {
+		p.log.Error("failed to enable org user", "error", err)
+		return err
+	}
+
+	switch result {
+	case userNotFound:
+		return db.ErrNoOrgUser
+	case notDisabled:
+		return db.ErrOrgUserNotDisabled
+	default:
+		// Successfully enabled the user
+		return nil
+	}
+}

@@ -47,6 +47,10 @@ type DisableOrgUserRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
+type EnableOrgUserRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
 // Should we graphqlize this for auto-completion ?
 type FilterOrgUsersRequest struct {
 	Prefix string         `json:"prefix" validate:"omitempty,min=1,max=255"`

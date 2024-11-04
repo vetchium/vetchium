@@ -42,7 +42,10 @@ model AddOrgUserRequest {
 
 model DisableOrgUserRequest {
     email: EmailAddress;
-    fallback_org_user_email?: EmailAddress;
+}
+
+model EnableOrgUserRequest {
+    email: EmailAddress;
 }
 
 model FilterOrgUsersRequest {
@@ -57,7 +60,7 @@ model FilterOrgUsersRequest {
     @doc("The maximum number of org users to return; 40 is the default if not specified")
     limit?: integer;
 
-    @doc("If specified, only org users with this state will be returned. If not specified, all users in ${ActiveOrgUser} state will be returned")
+    @doc("If specified, only org users with this state will be returned. If not specified, all users in either of ${ActiveOrgUser} or ${InvitedOrgUser} states will be returned")
     state?: OrgUserState[];
 }
 
@@ -103,6 +106,16 @@ interface DisableOrgUser {
         @doc("Last active admin cannot be disabled")
         @statusCode
         statusCode: 403;
+    };
+}
+
+@route("/employer/enable-org-user")
+interface EnableOrgUser {
+    @tag("OrgUsers")
+    @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
+    @post
+    enableOrgUser(@body enableOrgUserRequest: EnableOrgUserRequest): {
+        @statusCode statusCode: 200;
     };
 }
 
