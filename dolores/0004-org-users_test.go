@@ -613,6 +613,161 @@ var _ = Describe("Org Users", Ordered, func() {
 				)
 			}
 		})
+
+		FIt("Enable OrgUser", func() {
+			// First create and disable some test users that we can enable
+			testUsers := []vetchi.AddOrgUserRequest{
+				{
+					Email: "to-enable1@orgusers.example",
+					Name:  "To Enable User 1",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+				},
+				{
+					Email: "to-enable2@orgusers.example",
+					Name:  "To Enable User 2",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+				{
+					Email: "active-user@orgusers.example",
+					Name:  "Active User",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+			}
+
+			for _, user := range testUsers {
+				testPOST(
+					adminToken,
+					user,
+					"/employer/add-org-user",
+					http.StatusOK,
+				)
+			}
+
+			// Disable users that we'll enable in our tests
+			disableUsers := []string{
+				"to-enable1@orgusers.example",
+				"to-enable2@orgusers.example",
+			}
+
+			for _, email := range disableUsers {
+				testPOST(
+					adminToken,
+					vetchi.DisableOrgUserRequest{Email: email},
+					"/employer/disable-org-user",
+					http.StatusOK,
+				)
+			}
+
+			type enableOrgUserTestCase struct {
+				description string
+				token       string
+				request     vetchi.EnableOrgUserRequest
+				wantStatus  int
+			}
+
+			testCases := []enableOrgUserTestCase{
+				{
+					description: "with Admin token - enable disabled user",
+					token:       adminToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "to-enable1@orgusers.example",
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with CRUD token - enable disabled user",
+					token:       crudToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "to-enable2@orgusers.example",
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with Viewer token - should fail",
+					token:       viewerToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "to-enable2@orgusers.example",
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "with non-orgusers token - should fail",
+					token:       nonOrgUsersToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "to-enable2@orgusers.example",
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "enable non-existent user",
+					token:       adminToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "nonexistent@orgusers.example",
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "enable already active user",
+					token:       adminToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "active-user@orgusers.example",
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "enable already enabled user",
+					token:       adminToken,
+					request: vetchi.EnableOrgUserRequest{
+						Email: "to-enable1@orgusers.example",
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "###### %s\n", tc.description)
+				testPOST(
+					tc.token,
+					tc.request,
+					"/employer/enable-org-user",
+					tc.wantStatus,
+				)
+			}
+
+			// Verify the enabled users are actually enabled by trying to filter them
+			resp := testPOSTGetResp(
+				adminToken,
+				vetchi.FilterOrgUsersRequest{
+					State: []vetchi.OrgUserState{vetchi.ActiveOrgUserState},
+				},
+				"/employer/filter-org-users",
+				http.StatusOK,
+			).([]byte)
+
+			var users []vetchi.OrgUser
+			err := json.Unmarshal(resp, &users)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			enabledEmails := []string{
+				"to-enable1@orgusers.example",
+				"to-enable2@orgusers.example",
+			}
+			for _, email := range enabledEmails {
+				found := false
+				for _, user := range users {
+					if user.Email == email {
+						found = true
+						Expect(
+							user.State,
+						).Should(Equal(vetchi.ActiveOrgUserState))
+						break
+					}
+				}
+				Expect(
+					found,
+				).Should(BeTrue(), "Enabled user %s not found or not active", email)
+			}
+		})
 	})
 })
 
