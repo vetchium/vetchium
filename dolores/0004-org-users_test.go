@@ -1,16 +1,22 @@
 package dolores
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -768,6 +774,231 @@ var _ = Describe("Org Users", Ordered, func() {
 				).Should(BeTrue(), "Enabled user %s not found or not active", email)
 			}
 		})
+
+		FIt("Test SignUp of OrgUsers", func() {
+			type signupOrgUserTestCase struct {
+				description   string
+				request       vetchi.SignupOrgUserRequest
+				wantStatus    int
+				wantErrFields []string
+			}
+
+			// First create an org user that we can use to get an invite token
+			testPOST(
+				adminToken,
+				vetchi.AddOrgUserRequest{
+					Email: "to-signup@orgusers.example",
+					Name:  "To Signup User",
+					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+				},
+				"/employer/add-org-user",
+				http.StatusOK,
+			)
+
+			// Get the invite token from mailpit
+			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+			Expect(err).ShouldNot(HaveOccurred())
+			query := url.Values{}
+			// Subject comes from api/internal/hermione/orgusers/add-org-user.go
+			// and potentially in future, from hedwig templates. Changes should
+			// be synced in both places.
+			query.Add(
+				"query",
+				"to:to-signup@orgusers.example subject:Vetchi Employer Invitation",
+			)
+			baseURL.RawQuery = query.Encode()
+
+			finalURL := baseURL.String()
+			fmt.Fprintf(GinkgoWriter, "finalURL: %s\n", finalURL)
+
+			var messageID string
+			// Retry a few times as email delivery might take time
+			for i := 0; i < 3; i++ {
+				<-time.After(10 * time.Second)
+				fmt.Fprintf(GinkgoWriter, "Trying to get Invite mail\n")
+
+				mailPitReq, err := http.NewRequest("GET", finalURL, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+				mailPitReq.Header.Add("Content-Type", "application/json")
+
+				mailPitResp, err := http.DefaultClient.Do(mailPitReq)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
+
+				body, err := io.ReadAll(mailPitResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				var mailPitRespObj MailPitResponse
+				err = json.Unmarshal(body, &mailPitRespObj)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				if len(mailPitRespObj.Messages) > 0 {
+					Expect(len(mailPitRespObj.Messages)).Should(Equal(1))
+					messageID = mailPitRespObj.Messages[0].ID
+					break
+				}
+			}
+			Expect(messageID).ShouldNot(BeEmpty())
+
+			// Get the email content
+			mailURL := fmt.Sprintf(
+				"%s/api/v1/message/%s",
+				mailPitURL,
+				messageID,
+			)
+			mailPitReq, err := http.NewRequest("GET", mailURL, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq.Header.Add("Content-Type", "application/json")
+
+			mailPitResp, err := http.DefaultClient.Do(mailPitReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err := io.ReadAll(mailPitResp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Extract the invite token from the email body
+			// The link format is: vetchi.example/signup-orguser/<token>
+			re := regexp.MustCompile(`/signup-orguser/([a-zA-Z0-9]+)`)
+			matches := re.FindStringSubmatch(string(body))
+			Expect(len(matches)).Should(BeNumerically(">=", 2))
+			inviteToken := matches[1]
+			Expect(inviteToken).ShouldNot(BeEmpty())
+
+			// Delete the email from mailpit
+			mailPitDeleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+				IDs: []string{messageID},
+			})
+			Expect(err).ShouldNot(HaveOccurred())
+
+			mailPitReq, err = http.NewRequest(
+				"DELETE",
+				mailPitURL+"/api/v1/messages",
+				bytes.NewBuffer(mailPitDeleteReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			mailPitReq.Header.Set("Accept", "application/json")
+			mailPitReq.Header.Add("Content-Type", "application/json")
+
+			mailPitDeleteResp, err := http.DefaultClient.Do(mailPitReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitDeleteResp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Now continue with the test cases using the extracted invite token
+			testCases := []signupOrgUserTestCase{
+				{
+					description: "valid signup",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: inviteToken,
+						Name:        "Signed Up User",
+						Password:    "ValidPassword123$",
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with non-existent token",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "non-existent-token",
+						Name:        "Invalid Token User",
+						Password:    "ValidPassword123$",
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "with already used token",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: inviteToken, // Using the same token again
+						Name:        "Duplicate Token User",
+						Password:    "ValidPassword123$",
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "with empty token",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "",
+						Name:        "Empty Token User",
+						Password:    "ValidPassword123$",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"invite_token"},
+				},
+				{
+					description: "with short name",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "some-token",
+						Name:        "ab", // Too short
+						Password:    "ValidPassword123$",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"name"},
+				},
+				{
+					description: "with long name",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "some-token",
+						Name:        strings.Repeat("a", 257), // Too long
+						Password:    "ValidPassword123$",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"name"},
+				},
+				{
+					description: "with empty password",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "some-token",
+						Name:        "Valid Name",
+						Password:    "",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"password"},
+				},
+				{
+					description: "with short password",
+					request: vetchi.SignupOrgUserRequest{
+						InviteToken: "some-token",
+						Name:        "Valid Name",
+						Password:    "short",
+					},
+					wantStatus:    http.StatusBadRequest,
+					wantErrFields: []string{"password"},
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+				if len(tc.wantErrFields) > 0 {
+					validationErrors := testSignupOrgUserGetResp(
+						tc.request,
+						tc.wantStatus,
+					)
+					Expect(
+						validationErrors.Errors,
+					).Should(ContainElements(tc.wantErrFields))
+				} else {
+					// Note: Not using testPOST here since this endpoint doesn't require auth
+					jsonBytes, err := json.Marshal(tc.request)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					resp, err := http.Post(
+						fmt.Sprintf("%s/employer/signup-org-user", serverURL),
+						"application/json",
+						bytes.NewBuffer(jsonBytes),
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
+				}
+			}
+
+			// Verify the successful signup by trying to signin
+			sessionToken, err := employerSignin(
+				"orgusers.example",
+				"to-signup@orgusers.example",
+				"ValidPassword123$",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(sessionToken).ShouldNot(BeEmpty())
+		})
 	})
 })
 
@@ -875,4 +1106,30 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 		}
 		Expect(found).Should(BeTrue(), "User %s not found", wantUser.Email)
 	}
+}
+
+// Helper function for signup validation error responses
+func testSignupOrgUserGetResp(
+	request vetchi.SignupOrgUserRequest,
+	wantStatus int,
+) vetchi.ValidationErrors {
+	jsonBytes, err := json.Marshal(request)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	resp, err := http.Post(
+		fmt.Sprintf("%s/employer/signup-org-user", serverURL),
+		"application/json",
+		bytes.NewBuffer(jsonBytes),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(resp.StatusCode).Should(Equal(wantStatus))
+
+	body, err := io.ReadAll(resp.Body)
+	Expect(err).ShouldNot(HaveOccurred())
+	defer resp.Body.Close()
+
+	var validationErrors vetchi.ValidationErrors
+	err = json.Unmarshal(body, &validationErrors)
+	Expect(err).ShouldNot(HaveOccurred())
+	return validationErrors
 }

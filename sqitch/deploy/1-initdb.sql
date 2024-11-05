@@ -121,10 +121,11 @@ CREATE TYPE token_types AS ENUM (
     'EMPLOYER_INVITE'
 );
 CREATE TABLE org_user_tokens (
-    token TEXT PRIMARY KEY CONSTRAINT org_user_tokens_pkey,
+    token TEXT,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type token_types NOT NULL,
 
+    CONSTRAINT org_user_tokens_pkey PRIMARY KEY (token),
     org_user_id UUID REFERENCES org_users(id) NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())

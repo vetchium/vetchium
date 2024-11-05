@@ -24,10 +24,7 @@ const (
 	// The user is active in the organization
 	ActiveOrgUserState OrgUserState = "ACTIVE_ORG_USER"
 
-	// The user has been invited to the organization but has not yet signed up
-	InvitedOrgUserState OrgUserState = "INVITED_ORG_USER"
-
-	// The user has been added to the organization but not yet sent an invitation email
+	// The user has been added to the organization but not yet signed up
 	AddedOrgUserState OrgUserState = "ADDED_ORG_USER"
 
 	// The user is no longer active in the organization
@@ -68,7 +65,6 @@ type OrgUser struct {
 }
 
 type SignupOrgUserRequest struct {
-	Email       string `json:"email"        validate:"required,email"`
 	Name        string `json:"name"         validate:"required,min=3,max=255"`
 	Password    string `json:"password"     validate:"required,password"`
 	InviteToken string `json:"invite_token" validate:"required,min=1,max=255"`

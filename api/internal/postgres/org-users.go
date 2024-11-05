@@ -339,7 +339,7 @@ WHERE
         WHERE
             token = $4
             AND token_type = $5)
-    AND org_user_state = $6 -- INVITED_ORG_USER
+    AND org_user_state = $6 -- ADDED_ORG_USER
 RETURNING
     id
 `
@@ -353,7 +353,7 @@ RETURNING
 		vetchi.ActiveOrgUserState,
 		signupOrgUserReq.InviteToken,
 		db.EmployerInviteToken,
-		vetchi.InvitedOrgUserState,
+		vetchi.AddedOrgUserState,
 	).Scan(&orgUserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

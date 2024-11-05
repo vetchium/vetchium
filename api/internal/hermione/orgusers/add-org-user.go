@@ -66,6 +66,8 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 			EmailTo:   []string{addOrgUserReq.Email},
 
 			// TODO: The subject should be from Hedwig, based on the template
+			// This subject is used in 0004-org-users_test.go too. Any change
+			// in either place should be synced.
 			Subject: "Vetchi Employer Invitation",
 		})
 		if err != nil {

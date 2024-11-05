@@ -123,6 +123,7 @@ func (h *Hermione) Run() error {
 			vetchi.OrgUsersViewer,
 		},
 	)
+	http.HandleFunc("/employer/signup-org-user", orgusers.SignupOrgUser(h))
 
 	return http.ListenAndServe(h.port, nil)
 }

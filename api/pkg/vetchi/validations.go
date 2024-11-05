@@ -140,8 +140,6 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 				switch state {
 				case ActiveOrgUserState:
 					continue
-				case InvitedOrgUserState:
-					continue
 				case AddedOrgUserState:
 					continue
 				case DisabledOrgUserState:
