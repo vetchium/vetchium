@@ -15,7 +15,14 @@ func TestDolores(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	// Delete all mails on mailpit to clean up from past runs
-	resp, err := http.DefaultClient.Get("http://localhost:8025/api/v1/messages")
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		"http://localhost:8025/api/v1/messages",
+		nil,
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 })
