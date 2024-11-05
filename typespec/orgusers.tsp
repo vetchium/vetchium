@@ -11,9 +11,7 @@ namespace Vetchi;
 
 scalar OrgUserState extends string;
 
-// The user has been invited to the organization but has not yet signed up
-alias InvitedOrgUser = "INVITED_ORG_USER";
-// The user has been added to the organization but not yet sent an invitation email
+// The user has been added to the organization but not yet signed up by clicking on the link in the invitation email
 alias AddedOrgUser = "ADDED_ORG_USER";
 // The user is active in the organization
 alias ActiveOrgUser = "ACTIVE_ORG_USER";
@@ -60,7 +58,7 @@ model FilterOrgUsersRequest {
     @doc("The maximum number of org users to return; 40 is the default if not specified")
     limit?: integer;
 
-    @doc("If specified, only org users with this state will be returned. If not specified, all users in either of ${ActiveOrgUser} or ${InvitedOrgUser} states will be returned")
+    @doc("If specified, only org users with this state will be returned. If not specified, all users in either of ${ActiveOrgUser} or ${AddedOrgUser} states will be returned")
     state?: OrgUserState[];
 }
 
@@ -126,6 +124,28 @@ interface FilterOrgUsers {
     @post
     filterOrgUsers(@body filterOrgUsersRequest: FilterOrgUsersRequest): {
         @statusCode statusCode: 200;
+    };
+}
+
+model SignupOrgUserRequest {
+    email: EmailAddress;
+    name: string;
+    password: Password;
+}
+
+@route("/employer/signup-orguser")
+interface SignupOrgUser {
+    @tag("OrgUsers")
+    @post
+    signupOrgUser(@body signupOrgUserRequest: SignupOrgUserRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Either Invite Token is not found or expired")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
     };
 }
 

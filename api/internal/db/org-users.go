@@ -61,6 +61,12 @@ type FilterOrgUsersReq struct {
 	Limit         int
 }
 
+type SignupOrgUserReq struct {
+	InviteToken  string
+	Name         string
+	PasswordHash string
+}
+
 type UpdateOrgUserReq struct {
 	Email      string
 	Name       string

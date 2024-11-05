@@ -67,6 +67,13 @@ type OrgUser struct {
 	State OrgUserState  `json:"state" db:"org_user_state"`
 }
 
+type SignupOrgUserRequest struct {
+	Email       string `json:"email"        validate:"required,email"`
+	Name        string `json:"name"         validate:"required,min=3,max=255"`
+	Password    string `json:"password"     validate:"required,password"`
+	InviteToken string `json:"invite_token" validate:"required,min=1,max=255"`
+}
+
 type UpdateOrgUserRequest struct {
 	Email string        `json:"email" validate:"required,email,min=3,max=255"`
 	Name  string        `json:"name"  validate:"required,min=3,max=255"`

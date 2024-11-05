@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
@@ -47,7 +49,11 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 		}
 		domainList := strings.Join(domains, ", ")
 
-		token := util.RandomString(vetchi.EmailTokenLenBytes)
+		// Ensures secrecy
+		token := util.RandomString(vetchi.OnBoardTokenLenBytes)
+		// Ensures uniqueness. This is not needed mostly, but good to have
+		token = token + strconv.FormatInt(time.Now().UnixNano(), 36)
+
 		link := vetchi.EmployerBaseURL + "/signup-orguser/" + token
 
 		inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{

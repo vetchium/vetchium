@@ -8,6 +8,7 @@ import (
 var (
 	ErrNoEmployer = errors.New("employer not found")
 
+	ErrInviteTokenNotFound    = errors.New("invite token not found")
 	ErrOrgUserAlreadyExists   = errors.New("org user already exists")
 	ErrNoOrgUser              = errors.New("org user not found")
 	ErrLastActiveAdmin        = errors.New("cannot disable last active admin")

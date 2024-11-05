@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	ttmpl "text/template"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -72,7 +73,14 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// Ensures randomness and security
 		tfaTokenString := util.RandomString(vetchi.TGTokenLenBytes)
+		// Minimizes Collision and aspires for uniqueness
+		tfaTokenString = tfaTokenString + time.Now().Format("0405")
+
+		// TODO: Should we just email a magic URL instead of a token ? We can
+		// make it longer, so minimize collisions and also more secure.
+
 		tfaTokLife, err := h.ConfigDuration(db.EmployerTFAToken)
 		if err != nil {
 			h.Dbg("failed to get tfa token life", "error", err)

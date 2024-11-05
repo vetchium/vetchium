@@ -114,11 +114,14 @@ CREATE TYPE token_types AS ENUM (
     'EMPLOYER_SESSION',
     'EMPLOYER_LTS',
     'EMPLOYER_TFA_TOKEN',
+
+    -- Perhaps this alone can be moved to a new table, to minimize collisions !?
     'EMPLOYER_TFA_CODE',
+
     'EMPLOYER_INVITE'
 );
 CREATE TABLE org_user_tokens (
-    token TEXT PRIMARY KEY,
+    token TEXT PRIMARY KEY CONSTRAINT org_user_tokens_pkey,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type token_types NOT NULL,
 

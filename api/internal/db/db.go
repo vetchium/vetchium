@@ -46,6 +46,7 @@ type DB interface {
 	DisableOrgUser(context.Context, DisableOrgUserReq) error
 	EnableOrgUser(context.Context, EnableOrgUserReq) error
 	FilterOrgUsers(context.Context, FilterOrgUsersReq) ([]vetchi.OrgUser, error)
+	SignupOrgUser(context.Context, SignupOrgUserReq) error
 	UpdateOrgUser(context.Context, UpdateOrgUserReq) (uuid.UUID, error)
 
 	// Used by granger

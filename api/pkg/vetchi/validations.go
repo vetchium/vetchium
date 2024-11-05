@@ -193,6 +193,9 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 			return true
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Vator{validate: validate, log: log}, nil
 }

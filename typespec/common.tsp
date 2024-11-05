@@ -9,6 +9,10 @@ model ValidationErrors {
 @doc("A valid email address")
 scalar EmailAddress extends string;
 
+@minLength(12)
+@maxLength(64)
+scalar Password extends string;
+
 scalar OrgUserRole extends string;
 
 alias Admin = "ADMIN";

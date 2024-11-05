@@ -68,6 +68,13 @@ RETURNING token
 	)
 	err = row.Scan(&tokenKey)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "org_user_tokens_pkey" {
+			// Unlikely to happen but still handle it
+			p.log.Error("duplicate token generated", "error", err)
+			return uuid.UUID{}, err
+		}
 		p.log.Error("failed to add org user token", "error", err)
 		return uuid.UUID{}, err
 	}
@@ -195,6 +202,73 @@ SELECT
 	}
 }
 
+func (p *PG) EnableOrgUser(
+	ctx context.Context,
+	enableOrgUserReq db.EnableOrgUserReq,
+) error {
+	const (
+		userNotFound = "NO_USER"
+		notDisabled  = "NOT_DISABLED"
+	)
+
+	query := `
+WITH target_user AS (
+    SELECT id, org_user_state
+    FROM org_users
+    WHERE email = $1
+      AND employer_id = $2::UUID
+),
+update_result AS (
+    UPDATE org_users
+    SET org_user_state = $3 -- ACTIVE_ORG_USER
+    WHERE id = (
+        SELECT id 
+        FROM target_user
+        WHERE org_user_state = $4 -- DISABLED_ORG_USER
+    )
+    RETURNING id
+)
+SELECT 
+    CASE 
+        WHEN NOT EXISTS (SELECT 1 FROM target_user) THEN $5
+        WHEN EXISTS (
+            SELECT 1 FROM target_user 
+            WHERE org_user_state != $4
+        ) THEN $6
+        ELSE COALESCE(
+            (SELECT id::TEXT FROM update_result),
+            $5
+        )
+    END AS result
+`
+
+	var result string
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		enableOrgUserReq.Email,
+		enableOrgUserReq.EmployerID,
+		vetchi.ActiveOrgUserState,
+		vetchi.DisabledOrgUserState,
+		userNotFound,
+		notDisabled,
+	).Scan(&result)
+	if err != nil {
+		p.log.Error("failed to enable org user", "error", err)
+		return err
+	}
+
+	switch result {
+	case userNotFound:
+		return db.ErrNoOrgUser
+	case notDisabled:
+		return db.ErrOrgUserNotDisabled
+	default:
+		// Successfully enabled the user
+		return nil
+	}
+}
+
 func (p *PG) FilterOrgUsers(
 	ctx context.Context,
 	filterOrgUsersReq db.FilterOrgUsersReq,
@@ -245,9 +319,58 @@ LIMIT $5
 	return orgUsers, nil
 }
 
+func (p *PG) SignupOrgUser(
+	ctx context.Context,
+	signupOrgUserReq db.SignupOrgUserReq,
+) error {
+	query := `
+UPDATE
+    org_users
+SET
+    name = $1,
+    password_hash = $2,
+    org_user_state = $3 -- ACTIVE_ORG_USER
+WHERE
+    id = (
+        SELECT
+            id
+        FROM
+            org_user_tokens
+        WHERE
+            token = $4
+            AND token_type = $5)
+    AND org_user_state = $6 -- INVITED_ORG_USER
+RETURNING
+    id
+`
+
+	var orgUserID uuid.UUID
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		signupOrgUserReq.Name,
+		signupOrgUserReq.PasswordHash,
+		vetchi.ActiveOrgUserState,
+		signupOrgUserReq.InviteToken,
+		db.EmployerInviteToken,
+		vetchi.InvitedOrgUserState,
+	).Scan(&orgUserID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return db.ErrInviteTokenNotFound
+		}
+
+		p.log.Error("failed to signup org user", "error", err)
+		return err
+	}
+
+	p.log.Debug("org user signed up", "org_user_id", orgUserID)
+	return nil
+}
+
 func (p *PG) UpdateOrgUser(
 	ctx context.Context,
-	req db.UpdateOrgUserReq,
+	updateOrgUserReq db.UpdateOrgUserReq,
 ) (uuid.UUID, error) {
 	query := `
 WITH target_user AS (
@@ -290,10 +413,10 @@ SELECT
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.Email,
-		req.Name,
-		convertOrgUserRolesToStringArray(req.Roles),
-		req.EmployerID,
+		updateOrgUserReq.Email,
+		updateOrgUserReq.Name,
+		convertOrgUserRolesToStringArray(updateOrgUserReq.Roles),
+		updateOrgUserReq.EmployerID,
 		vetchi.ActiveOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
@@ -320,71 +443,4 @@ SELECT
 	}
 
 	return orgUserID, nil
-}
-
-func (p *PG) EnableOrgUser(
-	ctx context.Context,
-	req db.EnableOrgUserReq,
-) error {
-	const (
-		userNotFound = "NO_USER"
-		notDisabled  = "NOT_DISABLED"
-	)
-
-	query := `
-WITH target_user AS (
-    SELECT id, org_user_state
-    FROM org_users
-    WHERE email = $1
-      AND employer_id = $2::UUID
-),
-update_result AS (
-    UPDATE org_users
-    SET org_user_state = $3 -- ACTIVE_ORG_USER
-    WHERE id = (
-        SELECT id 
-        FROM target_user
-        WHERE org_user_state = $4 -- DISABLED_ORG_USER
-    )
-    RETURNING id
-)
-SELECT 
-    CASE 
-        WHEN NOT EXISTS (SELECT 1 FROM target_user) THEN $5
-        WHEN EXISTS (
-            SELECT 1 FROM target_user 
-            WHERE org_user_state != $4
-        ) THEN $6
-        ELSE COALESCE(
-            (SELECT id::TEXT FROM update_result),
-            $5
-        )
-    END AS result
-`
-
-	var result string
-	err := p.pool.QueryRow(
-		ctx,
-		query,
-		req.Email,
-		req.EmployerID,
-		vetchi.ActiveOrgUserState,
-		vetchi.DisabledOrgUserState,
-		userNotFound,
-		notDisabled,
-	).Scan(&result)
-	if err != nil {
-		p.log.Error("failed to enable org user", "error", err)
-		return err
-	}
-
-	switch result {
-	case userNotFound:
-		return db.ErrNoOrgUser
-	case notDisabled:
-		return db.ErrOrgUserNotDisabled
-	default:
-		// Successfully enabled the user
-		return nil
-	}
 }
