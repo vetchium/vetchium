@@ -744,7 +744,8 @@ var _ = Describe("Org Users", Ordered, func() {
 			resp := testPOSTGetResp(
 				adminToken,
 				vetchi.FilterOrgUsersRequest{
-					State: []vetchi.OrgUserState{vetchi.AddedOrgUserState},
+					State:  []vetchi.OrgUserState{vetchi.AddedOrgUserState},
+					Prefix: "to-enable",
 				},
 				"/employer/filter-org-users",
 				http.StatusOK,
@@ -775,7 +776,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			// TODO Check that the invite email was sent to the enabled users by querying mailpit
 		})
 
-		FIt("Test SignUp of OrgUsers", func() {
+		It("Test SignUp of OrgUsers", func() {
 			type signupOrgUserTestCase struct {
 				description   string
 				request       vetchi.SignupOrgUserRequest
@@ -814,7 +815,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			var messageID string
 			// Retry a few times as email delivery might take time
 			for i := 0; i < 3; i++ {
-				<-time.After(10 * time.Second)
+				<-time.After(15 * time.Second)
 				fmt.Fprintf(GinkgoWriter, "Trying to get Invite mail\n")
 
 				mailPitReq, err := http.NewRequest("GET", finalURL, nil)

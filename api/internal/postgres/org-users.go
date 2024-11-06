@@ -217,7 +217,7 @@ func (p *PG) EnableOrgUser(
 	getOrgUserQuery := `
 SELECT
     id,
-    org_user_state,
+    org_user_state
 FROM
     org_users
 WHERE
