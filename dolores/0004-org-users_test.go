@@ -744,7 +744,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			resp := testPOSTGetResp(
 				adminToken,
 				vetchi.FilterOrgUsersRequest{
-					State: []vetchi.OrgUserState{vetchi.ActiveOrgUserState},
+					State: []vetchi.OrgUserState{vetchi.AddedOrgUserState},
 				},
 				"/employer/filter-org-users",
 				http.StatusOK,
@@ -765,14 +765,14 @@ var _ = Describe("Org Users", Ordered, func() {
 						found = true
 						Expect(
 							user.State,
-						).Should(Equal(vetchi.ActiveOrgUserState))
+						).Should(Equal(vetchi.AddedOrgUserState))
 						break
 					}
 				}
-				Expect(
-					found,
-				).Should(BeTrue(), "Enabled user %s not found or not active", email)
+				Expect(found).Should(BeTrue(), "Enabled but notfound %q", email)
 			}
+
+			// TODO Check that the invite email was sent to the enabled users by querying mailpit
 		})
 
 		FIt("Test SignUp of OrgUsers", func() {
@@ -799,7 +799,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
 			Expect(err).ShouldNot(HaveOccurred())
 			query := url.Values{}
-			// Subject comes from api/internal/hermione/orgusers/add-org-user.go
+			// Subject comes from api/internal/hermione/orgusers/generate-invite.go
 			// and potentially in future, from hedwig templates. Changes should
 			// be synced in both places.
 			query.Add(

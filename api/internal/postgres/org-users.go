@@ -206,67 +206,92 @@ func (p *PG) EnableOrgUser(
 	ctx context.Context,
 	enableOrgUserReq db.EnableOrgUserReq,
 ) error {
-	const (
-		userNotFound = "NO_USER"
-		notDisabled  = "NOT_DISABLED"
-	)
-
-	query := `
-WITH target_user AS (
-    SELECT id, org_user_state
-    FROM org_users
-    WHERE email = $1
-      AND employer_id = $2::UUID
-),
-update_result AS (
-    UPDATE org_users
-    SET org_user_state = $3 -- ACTIVE_ORG_USER
-    WHERE id = (
-        SELECT id 
-        FROM target_user
-        WHERE org_user_state = $4 -- DISABLED_ORG_USER
-    )
-    RETURNING id
-)
-SELECT 
-    CASE 
-        WHEN NOT EXISTS (SELECT 1 FROM target_user) THEN $5
-        WHEN EXISTS (
-            SELECT 1 FROM target_user 
-            WHERE org_user_state != $4
-        ) THEN $6
-        ELSE COALESCE(
-            (SELECT id::TEXT FROM update_result),
-            $5
-        )
-    END AS result
-`
-
-	var result string
-	err := p.pool.QueryRow(
-		ctx,
-		query,
-		enableOrgUserReq.Email,
-		enableOrgUserReq.EmployerID,
-		vetchi.ActiveOrgUserState,
-		vetchi.DisabledOrgUserState,
-		userNotFound,
-		notDisabled,
-	).Scan(&result)
+	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to enable org user", "error", err)
+		p.log.Error("failed to begin transaction", "error", err)
 		return err
 	}
 
-	switch result {
-	case userNotFound:
-		return db.ErrNoOrgUser
-	case notDisabled:
-		return db.ErrOrgUserNotDisabled
-	default:
-		// Successfully enabled the user
-		return nil
+	defer tx.Rollback(ctx)
+
+	getOrgUserQuery := `
+SELECT
+    id,
+    org_user_state,
+FROM
+    org_users
+WHERE
+    email = $1
+	AND employer_id = $2
+`
+
+	var orgUserID uuid.UUID
+	var orgUserState vetchi.OrgUserState
+	err = tx.QueryRow(ctx, getOrgUserQuery, enableOrgUserReq.Email, enableOrgUserReq.EmployerID).
+		Scan(&orgUserID, &orgUserState)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return db.ErrNoOrgUser
+		}
+
+		p.log.Error("failed to get org user", "error", err)
+		return err
 	}
+
+	if orgUserState != vetchi.DisabledOrgUserState {
+		p.log.Debug("org user not disabled", "org_user_id", orgUserID)
+		return db.ErrOrgUserNotDisabled
+	}
+
+	updateOrgUserQuery := `
+UPDATE
+    org_users
+SET
+    org_user_state = $1 -- ADDED_ORG_USER
+WHERE
+    id = $2
+    AND org_user_state = $3 -- DISABLED_ORG_USER
+RETURNING id
+`
+
+	var updatedOrgUserID uuid.UUID
+	err = tx.QueryRow(ctx, updateOrgUserQuery, vetchi.AddedOrgUserState, orgUserID, vetchi.DisabledOrgUserState).
+		Scan(&updatedOrgUserID)
+	if err != nil {
+		p.log.Error("failed to update org user", "error", err)
+		return err
+	}
+	p.log.Debug("org user set to Added state", "org_user_id", updatedOrgUserID)
+
+	var emailQuery = `
+INSERT INTO emails(email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+	VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING email_key
+`
+	var emailKey uuid.UUID
+	err = tx.QueryRow(
+		ctx,
+		emailQuery,
+		enableOrgUserReq.InviteMail.EmailFrom,
+		enableOrgUserReq.InviteMail.EmailTo,
+		enableOrgUserReq.InviteMail.EmailSubject,
+		enableOrgUserReq.InviteMail.EmailHTMLBody,
+		enableOrgUserReq.InviteMail.EmailTextBody,
+		db.EmailStatePending,
+	).Scan(&emailKey)
+	if err != nil {
+		p.log.Error("failed to add invite email", "error", err)
+		return err
+	}
+	p.log.Debug("invite email added", "email_key", emailKey)
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Error("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *PG) FilterOrgUsers(

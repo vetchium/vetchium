@@ -48,6 +48,8 @@ type EnableOrgUserReq struct {
 	Email      string
 	EmployerID uuid.UUID
 
+	InviteMail  Email
+	InviteToken TokenReq
 	// Currently unused, but will be used in the future for audit logs
 	EnablingUserID uuid.UUID
 }

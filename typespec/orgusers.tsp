@@ -110,7 +110,7 @@ interface DisableOrgUser {
 @route("/employer/enable-org-user")
 interface EnableOrgUser {
     @tag("OrgUsers")
-    @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
+    @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles. The account must be in ${DisabledOrgUser} state")
     @post
     enableOrgUser(@body enableOrgUserRequest: EnableOrgUserRequest): {
         @statusCode statusCode: 200;

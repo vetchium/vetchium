@@ -70,7 +70,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			g.log.Info("onboard invites", "onboardInfo", onboardInfo)
 
 			// TODO: Should we read the length from a config?
-			token := util.RandomString(vetchi.OnBoardTokenLenBytes)
+			token := util.RandomString(vetchi.InviteTokenLenBytes)
 
 			link := vetchi.EmployerBaseURL + "/onboard/" + token
 
