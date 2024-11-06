@@ -640,6 +640,57 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 			}
 
+			// Delete any existing invite emails for these users
+			for _, user := range testUsers {
+				baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+				Expect(err).ShouldNot(HaveOccurred())
+				query := url.Values{}
+				query.Add(
+					"query",
+					fmt.Sprintf(
+						"to:%s subject:Vetchi Employer Invitation",
+						user.Email,
+					),
+				)
+				baseURL.RawQuery = query.Encode()
+
+				mailPitResp, err := http.Get(baseURL.String())
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err := io.ReadAll(mailPitResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+				mailPitResp.Body.Close()
+
+				var mailPitRespObj MailPitResponse
+				err = json.Unmarshal(body, &mailPitRespObj)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				if len(mailPitRespObj.Messages) > 0 {
+					messageIDs := make([]string, len(mailPitRespObj.Messages))
+					for i, msg := range mailPitRespObj.Messages {
+						messageIDs[i] = msg.ID
+					}
+
+					deleteReqBody, err := json.Marshal(
+						MailPitDeleteRequest{IDs: messageIDs},
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					req, err := http.NewRequest(
+						"DELETE",
+						mailPitURL+"/api/v1/messages",
+						bytes.NewBuffer(deleteReqBody),
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+					req.Header.Set("Accept", "application/json")
+					req.Header.Add("Content-Type", "application/json")
+
+					deleteResp, err := http.DefaultClient.Do(req)
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
+				}
+			}
+
+			// Create the test users
 			for _, user := range testUsers {
 				testPOST(
 					adminToken,
@@ -773,7 +824,72 @@ var _ = Describe("Org Users", Ordered, func() {
 				Expect(found).Should(BeTrue(), "Enabled but notfound %q", email)
 			}
 
-			// TODO Check that the invite email was sent to the enabled users by querying mailpit
+			// After running test cases, verify that invite emails were sent to enabled users
+
+			enabledUsers := []string{
+				"to-enable1@orgusers.example",
+				"to-enable2@orgusers.example",
+			}
+
+			for _, email := range enabledUsers {
+				baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+				Expect(err).ShouldNot(HaveOccurred())
+				query := url.Values{}
+				query.Add(
+					"query",
+					fmt.Sprintf(
+						"to:%s subject:Vetchi Employer Invitation",
+						email,
+					),
+				)
+				baseURL.RawQuery = query.Encode()
+
+				var messageFound bool
+				for i := 0; i < 3; i++ { // Retry up to 3 times
+					<-time.After(
+						15 * time.Second,
+					) // Sleep at start of each iteration
+
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+					mailPitResp.Body.Close()
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						messageFound = true
+						// Clean up the message
+						deleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+							IDs: []string{mailPitRespObj.Messages[0].ID},
+						})
+						Expect(err).ShouldNot(HaveOccurred())
+
+						req, err := http.NewRequest(
+							"DELETE",
+							mailPitURL+"/api/v1/messages",
+							bytes.NewBuffer(deleteReqBody),
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						req.Header.Set("Accept", "application/json")
+						req.Header.Add("Content-Type", "application/json")
+
+						deleteResp, err := http.DefaultClient.Do(req)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							deleteResp.StatusCode,
+						).Should(Equal(http.StatusOK))
+						break
+					}
+				}
+
+				Expect(
+					messageFound,
+				).Should(BeTrue(), "No invite email found for %s", email)
+			}
 		})
 
 		It("Test SignUp of OrgUsers", func() {
