@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -27,21 +26,7 @@ func RenameCostCenter(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		renameCCReq := db.RenameCCReq{
-			OldName:    renameCostCenterReq.OldName,
-			NewName:    renameCostCenterReq.NewName,
-			EmployerID: orgUser.EmployerID,
-			OrgUserID:  orgUser.ID,
-		}
-
-		err = h.DB().RenameCostCenter(r.Context(), renameCCReq)
+		err = h.DB().RenameCostCenter(r.Context(), renameCostCenterReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoCostCenter) {
 				h.Dbg("CC not found", "name", renameCostCenterReq.OldName)
@@ -60,7 +45,7 @@ func RenameCostCenter(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("renamed cost center", "renameCCReq", renameCCReq)
+		h.Dbg("renamed cost center", "renameCostCenterReq", renameCostCenterReq)
 		w.WriteHeader(http.StatusOK)
 	}
 }

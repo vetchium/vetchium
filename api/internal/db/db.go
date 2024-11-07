@@ -28,12 +28,21 @@ type DB interface {
 	InitEmployerTFA(context.Context, EmployerTFA) error
 	OnboardAdmin(context.Context, OnboardReq) error
 
-	CreateCostCenter(context.Context, CCenterReq) (uuid.UUID, error)
-	DefunctCostCenter(context.Context, DefunctCCReq) error
-	GetCCByName(context.Context, GetCCByNameReq) (vetchi.CostCenter, error)
-	GetCostCenters(context.Context, CCentersList) ([]vetchi.CostCenter, error)
-	RenameCostCenter(context.Context, RenameCCReq) error
-	UpdateCostCenter(context.Context, UpdateCCReq) error
+	CreateCostCenter(
+		context.Context,
+		vetchi.AddCostCenterRequest,
+	) (uuid.UUID, error)
+	DefunctCostCenter(context.Context, vetchi.DefunctCostCenterRequest) error
+	GetCCByName(
+		context.Context,
+		vetchi.GetCostCenterRequest,
+	) (vetchi.CostCenter, error)
+	GetCostCenters(
+		context.Context,
+		vetchi.GetCostCentersRequest,
+	) ([]vetchi.CostCenter, error)
+	RenameCostCenter(context.Context, vetchi.RenameCostCenterRequest) error
+	UpdateCostCenter(context.Context, vetchi.UpdateCostCenterRequest) error
 
 	AddLocation(context.Context, vetchi.AddLocationRequest) (uuid.UUID, error)
 	DefunctLocation(context.Context, vetchi.DefunctLocationRequest) error

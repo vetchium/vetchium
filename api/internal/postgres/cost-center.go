@@ -58,8 +58,14 @@ WHERE
 
 func (p *PG) UpdateCostCenter(
 	ctx context.Context,
-	updateCCReq db.UpdateCCReq,
+	updateCCReq vetchi.UpdateCostCenterRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     org_cost_centers
@@ -74,7 +80,7 @@ RETURNING id
 	err := p.pool.QueryRow(ctx, query,
 		updateCCReq.Notes,
 		updateCCReq.Name,
-		updateCCReq.EmployerID,
+		orgUser.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -92,8 +98,14 @@ RETURNING id
 
 func (p *PG) RenameCostCenter(
 	ctx context.Context,
-	renameCCReq db.RenameCCReq,
+	renameCostCenterReq vetchi.RenameCostCenterRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     org_cost_centers
@@ -107,9 +119,9 @@ RETURNING id
 
 	var costCenterID uuid.UUID
 	err := p.pool.QueryRow(ctx, query,
-		renameCCReq.NewName,
-		renameCCReq.OldName,
-		renameCCReq.EmployerID,
+		renameCostCenterReq.NewName,
+		renameCostCenterReq.OldName,
+		orgUser.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

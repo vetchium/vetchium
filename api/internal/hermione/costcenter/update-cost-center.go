@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,20 +27,7 @@ func UpdateCostCenter(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "updateCCReq", updateCCRequest)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		updateCCReq := db.UpdateCCReq{
-			Name:       updateCCRequest.Name,
-			Notes:      updateCCRequest.Notes,
-			EmployerID: orgUser.EmployerID,
-		}
-
-		err = h.DB().UpdateCostCenter(r.Context(), updateCCReq)
+		err = h.DB().UpdateCostCenter(r.Context(), updateCCRequest)
 		if err != nil {
 			if errors.Is(err, db.ErrNoCostCenter) {
 				h.Dbg("cc not found", "name", updateCCRequest.Name)
@@ -54,7 +40,7 @@ func UpdateCostCenter(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("updated cost center", "updateCCReq", updateCCReq)
+		h.Dbg("updated cost center", "updateCCReq", updateCCRequest)
 		w.WriteHeader(http.StatusOK)
 	}
 }
