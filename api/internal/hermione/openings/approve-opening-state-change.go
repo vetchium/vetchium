@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,19 +27,7 @@ func ApproveOpeningStateChange(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "approveReq", approveReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		err = h.DB().
-			ApproveOpeningStateChange(r.Context(), db.ApproveOpeningStateChangeReq{
-				ID:         approveReq.ID,
-				EmployerID: orgUser.EmployerID,
-				ApprovedBy: orgUser.ID,
-			})
+		err = h.DB().ApproveOpeningStateChange(r.Context(), approveReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
 				h.Dbg("opening not found", "id", approveReq.ID)

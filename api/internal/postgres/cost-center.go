@@ -8,13 +8,20 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (p *PG) GetCCByName(
 	ctx context.Context,
-	getCCByNameReq db.GetCCByNameReq,
+	getCCByNameReq vetchi.GetCostCenterRequest,
 ) (vetchi.CostCenter, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return vetchi.CostCenter{}, db.ErrInternal
+	}
+
 	query := `
 SELECT
     cost_center_name,
@@ -32,7 +39,7 @@ WHERE
 	var costCenter vetchi.CostCenter
 	err := p.pool.QueryRow(ctx, query,
 		getCCByNameReq.Name,
-		getCCByNameReq.EmployerID,
+		orgUser.EmployerID,
 	).Scan(&costCenter.Name,
 		&costCenter.State,
 		&costCenter.Notes,
@@ -125,8 +132,14 @@ RETURNING id
 
 func (p *PG) GetCostCenters(
 	ctx context.Context,
-	costCentersList db.CCentersList,
+	costCentersList vetchi.GetCostCentersRequest,
 ) ([]vetchi.CostCenter, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return nil, db.ErrInternal
+	}
+
 	query := `
 SELECT
     oc.cost_center_name,
@@ -144,8 +157,8 @@ LIMIT $4
 `
 
 	rows, err := p.pool.Query(ctx, query,
-		costCentersList.EmployerID,
-		costCentersList.States,
+		orgUser.EmployerID,
+		costCentersList.StatesAsStrings(),
 		costCentersList.PaginationKey,
 		costCentersList.Limit,
 	)
@@ -168,8 +181,14 @@ LIMIT $4
 
 func (p *PG) DefunctCostCenter(
 	ctx context.Context,
-	defunctReq db.DefunctCCReq,
+	defunctCostCenterReq vetchi.DefunctCostCenterRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     org_cost_centers
@@ -187,8 +206,8 @@ RETURNING
 		ctx,
 		query,
 		vetchi.DefunctCC,
-		defunctReq.Name,
-		defunctReq.EmployerID,
+		defunctCostCenterReq.Name,
+		orgUser.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -204,8 +223,14 @@ RETURNING
 
 func (p *PG) CreateCostCenter(
 	ctx context.Context,
-	costCenterReq db.CCenterReq,
+	costCenterReq vetchi.AddCostCenterRequest,
 ) (uuid.UUID, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return uuid.UUID{}, db.ErrInternal
+	}
+
 	query := `
 INSERT INTO org_cost_centers (cost_center_name, cost_center_state, notes, employer_id)
     VALUES ($1, $2, $3, $4)
@@ -218,7 +243,7 @@ RETURNING
 		costCenterReq.Name,
 		vetchi.ActiveCC,
 		costCenterReq.Notes,
-		costCenterReq.EmployerID,
+		orgUser.EmployerID,
 	).Scan(&costCenterID)
 	if err != nil {
 		var pgErr *pgconn.PgError

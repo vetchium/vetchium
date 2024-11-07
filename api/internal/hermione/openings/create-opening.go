@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -27,33 +25,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "createOpeningReq", createOpeningReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		openingID, err := h.DB().CreateOpening(r.Context(), db.CreateOpeningReq{
-			Title:              createOpeningReq.Title,
-			Positions:          createOpeningReq.Positions,
-			JD:                 createOpeningReq.JD,
-			Recruiters:         createOpeningReq.Recruiters,
-			HiringManager:      string(createOpeningReq.HiringManager),
-			CostCenterName:     string(createOpeningReq.CostCenterName),
-			EmployerNotes:      createOpeningReq.EmployerNotes,
-			LocationTitles:     createOpeningReq.LocationTitles,
-			RemoteCountryCodes: createOpeningReq.RemoteCountryCodes,
-			RemoteTimezones:    createOpeningReq.RemoteTimezones,
-			OpeningType:        string(createOpeningReq.OpeningType),
-			YoeMin:             createOpeningReq.YoeMin,
-			YoeMax:             createOpeningReq.YoeMax,
-			MinEducationLevel:  createOpeningReq.MinEducationLevel,
-			Salary:             createOpeningReq.Salary,
-
-			EmployerID: orgUser.EmployerID,
-			OrgUserID:  orgUser.ID,
-		})
+		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
 			h.Dbg("failed to create opening", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

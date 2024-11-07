@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,17 +27,7 @@ func GetCostCenter(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "getCostCenterReq", getCostCenterReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		cc, err := h.DB().GetCCByName(r.Context(), db.GetCCByNameReq{
-			Name:       getCostCenterReq.Name,
-			EmployerID: orgUser.EmployerID,
-		})
+		cc, err := h.DB().GetCCByName(r.Context(), getCostCenterReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoCostCenter) {
 				h.Dbg("CC not found", "name", getCostCenterReq.Name)

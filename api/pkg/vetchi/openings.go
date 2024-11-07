@@ -85,9 +85,10 @@ type GetOpeningRequest struct {
 }
 
 type FilterOpeningsRequest struct {
-	PaginationKey *string        `json:"pagination_key,omitempty"`
-	State         []OpeningState `json:"state,omitempty"`
-	Limit         *int           `json:"limit,omitempty"          validate:"omitempty,max=40"`
+	State []OpeningState `json:"state,omitempty"`
+
+	PaginationKey string `json:"pagination_key,omitempty"`
+	Limit         int    `json:"limit,omitempty"          validate:"omitempty,max=40"`
 }
 
 type UpdateOpeningRequest struct {

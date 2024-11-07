@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -32,18 +31,8 @@ func GetOpeningWatchers(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "getOpeningWatchersReq", getOpeningWatchersReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
 		watchers, err := h.DB().
-			GetOpeningWatchers(r.Context(), db.GetOpeningWatchersReq{
-				ID:         getOpeningWatchersReq.ID,
-				EmployerID: orgUser.EmployerID,
-			})
+			GetOpeningWatchers(r.Context(), getOpeningWatchersReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
 				h.Dbg("opening not found", "id", getOpeningWatchersReq.ID)

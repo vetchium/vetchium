@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,17 +27,7 @@ func GetOpening(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "getOpeningReq", getOpeningReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		opening, err := h.DB().GetOpening(r.Context(), db.GetOpeningReq{
-			ID:         getOpeningReq.ID,
-			EmployerID: orgUser.EmployerID,
-		})
+		opening, err := h.DB().GetOpening(r.Context(), getOpeningReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
 				h.Dbg("opening not found", "id", getOpeningReq.ID)
@@ -51,6 +40,7 @@ func GetOpening(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("got opening", "opening", opening)
 		err = json.NewEncoder(w).Encode(opening)
 		if err != nil {
 			h.Err("failed to encode opening", "error", err)

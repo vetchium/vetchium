@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -32,35 +30,8 @@ func GetCostCenters(h wand.Wand) http.HandlerFunc {
 			h.Dbg("set default limit", "limit", getCostCentersRequest.Limit)
 		}
 
-		if len(getCostCentersRequest.States) == 0 {
-			getCostCentersRequest.States = []vetchi.CostCenterState{
-				vetchi.ActiveCC,
-			}
-			h.Dbg("set default states", "states", getCostCentersRequest.States)
-		}
-
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		states := []string{}
-		for _, state := range getCostCentersRequest.States {
-			// already validated by vator
-			states = append(states, string(state))
-		}
-
-		costCenters, err := h.DB().GetCostCenters(
-			r.Context(),
-			db.CCentersList{
-				EmployerID:    orgUser.EmployerID,
-				States:        states,
-				PaginationKey: getCostCentersRequest.PaginationKey,
-				Limit:         getCostCentersRequest.Limit,
-			},
-		)
+		costCenters, err := h.DB().
+			GetCostCenters(r.Context(), getCostCentersRequest)
 		if err != nil {
 			h.Dbg("failed to get cost centers", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

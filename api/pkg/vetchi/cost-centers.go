@@ -36,6 +36,19 @@ type GetCostCentersRequest struct {
 	States        []CostCenterState `json:"states,omitempty"         validate:"validate_cc_states"`
 }
 
+func (g *GetCostCentersRequest) StatesAsStrings() []string {
+	if len(g.States) == 0 {
+		return []string{string(ActiveCC)}
+	}
+
+	states := []string{}
+	for _, state := range g.States {
+		// already validated by vator
+		states = append(states, string(state))
+	}
+	return states
+}
+
 type RenameCostCenterRequest struct {
 	OldName CostCenterName `json:"old_name" validate:"required,min=3,max=64"`
 	NewName CostCenterName `json:"new_name" validate:"required,min=3,max=64"`

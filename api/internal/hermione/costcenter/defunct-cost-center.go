@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -29,18 +28,9 @@ func DefunctCostCenter(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("validated", "defunctCostCenterRequest", defunctCostCenterRequest)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
 		err = h.DB().DefunctCostCenter(
 			r.Context(),
-			db.DefunctCCReq{
-				EmployerID: orgUser.EmployerID,
-				Name:       defunctCostCenterRequest.Name,
-			},
+			defunctCostCenterRequest,
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoCostCenter) {

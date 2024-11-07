@@ -22,4 +22,8 @@ var (
 
 	ErrDupLocationName = errors.New("location name already exists")
 	ErrNoLocation      = errors.New("location not found")
+
+	ErrNoOpening = errors.New("opening not found")
+
+	ErrNoStateChangeWaiting = errors.New("no state change waiting")
 )

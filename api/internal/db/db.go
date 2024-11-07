@@ -63,19 +63,34 @@ type DB interface {
 	UpdateEmailState(context.Context, EmailStateChange) error
 
 	// Opening related methods
-	CreateOpening(context.Context, CreateOpeningReq) (uuid.UUID, error)
-	GetOpening(context.Context, GetOpeningReq) (vetchi.Opening, error)
-	FilterOpenings(context.Context, FilterOpeningsReq) ([]vetchi.Opening, error)
-	UpdateOpening(context.Context, UpdateOpeningReq) error
+	CreateOpening(
+		context.Context,
+		vetchi.CreateOpeningRequest,
+	) (uuid.UUID, error)
+	GetOpening(
+		context.Context,
+		vetchi.GetOpeningRequest,
+	) (vetchi.Opening, error)
+	FilterOpenings(
+		context.Context,
+		vetchi.FilterOpeningsRequest,
+	) ([]vetchi.Opening, error)
+	UpdateOpening(context.Context, vetchi.UpdateOpeningRequest) error
 	GetOpeningWatchers(
 		context.Context,
-		GetOpeningWatchersReq,
+		vetchi.GetOpeningWatchersRequest,
 	) (vetchi.OpeningWatchers, error)
-	AddOpeningWatchers(context.Context, AddOpeningWatchersReq) error
-	RemoveOpeningWatcher(context.Context, RemoveOpeningWatcherReq) error
+	AddOpeningWatchers(context.Context, vetchi.AddOpeningWatchersRequest) error
+	RemoveOpeningWatcher(
+		context.Context,
+		vetchi.RemoveOpeningWatcherRequest,
+	) error
 	ApproveOpeningStateChange(
 		context.Context,
-		ApproveOpeningStateChangeReq,
+		vetchi.ApproveOpeningStateChangeRequest,
 	) error
-	RejectOpeningStateChange(context.Context, RejectOpeningStateChangeReq) error
+	RejectOpeningStateChange(
+		context.Context,
+		vetchi.RejectOpeningStateChangeRequest,
+	) error
 }
