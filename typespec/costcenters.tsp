@@ -9,15 +9,17 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+@minLength(3)
+@maxLength(64)
+scalar CostCenterName extends string;
+
 enum CostCenterState {
     ActiveCC: "ACTIVE_CC",
     DefunctCC: "DEFUNCT_CC",
 }
 
 model CostCenter {
-    @minLength(3)
-    @maxLength(64)
-    name: string;
+    name: CostCenterName;
 
     @maxLength(1024)
     notes?: string;
@@ -26,30 +28,22 @@ model CostCenter {
 }
 
 model AddCostCenterRequest {
-    @minLength(3)
-    @maxLength(64)
-    name: string;
+    name: CostCenterName;
 
     @maxLength(1024)
     notes?: string;
 }
 
 model DefunctCostCenterRequest {
-    @minLength(3)
-    @maxLength(32)
-    name: string;
+    name: CostCenterName;
 }
 
 model GetCostCenterRequest {
-    @minLength(3)
-    @maxLength(32)
-    name: string;
+    name: CostCenterName;
 }
 
 model GetCostCentersRequest {
-    @minLength(3)
-    @maxLength(32)
-    pagination_key?: string;
+    pagination_key?: CostCenterName;
 
     @maxValue(100)
     @doc("Number of Cost Centers to return; 100 is the default if not specified")
@@ -57,19 +51,12 @@ model GetCostCentersRequest {
 }
 
 model RenameCostCenterRequest {
-    @minLength(3)
-    @maxLength(32)
-    old_name: string;
-
-    @minLength(3)
-    @maxLength(32)
-    new_name: string;
+    old_name: CostCenterName;
+    new_name: CostCenterName;
 }
 
 model UpdateCostCenterRequest {
-    @minLength(3)
-    @maxLength(64)
-    name: string;
+    name: CostCenterName;
 
     @maxLength(1024)
     notes: string;
