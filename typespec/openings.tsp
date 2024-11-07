@@ -25,13 +25,107 @@ union EducationLevel {
     Unspecified: "UNSPECIFIED",
 }
 
+union OpeningState {
+    // Initial state of an Opening. Applicants are not allowed. Occasionally can be reverted to this state by the employer, to prevent new Applicants.
+    DraftOpening: "DRAFT_OPENING",
+
+    // Applicants are allowed to apply.
+    ActiveOpening: "ACTIVE_OPENING",
+
+    // Vetchi moves an Opening to this state when there are many pending unprocessed Applications for this Opening. New Applicants are not allowed.
+    SuspendedOpening: "SUSPENDED_OPENING",
+
+    // Applicants are no longer allowed to apply. All the positions needed were either filled or can no longer be filled.
+    ClosedOpening: "CLOSED_OPENING",
+}
+
 model Salary {
-    min_amount: integer;
-    max_amount: integer;
+    // salary values are in decimal and not integer because of crypto currencies
+
+    @minValue(0)
+    min_amount: decimal;
+
+    @minValue(1)
+    max_amount: decimal;
+
     currency: Currency;
 }
 
 model Opening {
+    id: string;
+
+    @minLength(3)
+    @maxLength(32)
+    title: string;
+
+    @minValue(1)
+    @maxValue(20)
+    positions: integer;
+
+    @minValue(0)
+    @maxValue(20)
+    filled_positions: integer;
+
+    @minLength(10)
+    @maxLength(1024)
+    jd: string;
+
+    @doc("List of recruiters assigned to the opening")
+    @minItems(1)
+    @maxItems(10)
+    recruiters: string[];
+
+    hiring_manager: EmailAddress;
+
+    @doc("Cost Center name under which the opening is created")
+    cost_center_name: CostCenterName;
+
+    @doc("Privates notes about the opening visible only to the employer")
+    @maxLength(1024)
+    employer_notes?: string;
+
+    @doc("List of pre-configured Location titles where the opening is available")
+    @maxItems(10)
+    location_titles?: string[];
+
+    @doc("List of ISO 3166-1 alpha-3 country codes where the opening is available for remote work. Special value ZZG to indicate Global")
+    @maxItems(100)
+    remote_country_codes?: CountryCode[];
+
+    @doc("List of timezones where the opening is available for remote work")
+    @maxItems(200)
+    remote_timezones?: TimeZone[];
+
+    opening_type: OpeningType;
+
+    @doc("Minimum years of experience required for the opening")
+    @minValue(0)
+    @maxValue(100)
+    yoe_min: integer;
+
+    @minValue(1)
+    @maxValue(100)
+    @doc("Maximum years of experience allowed for the opening")
+    yoe_max: integer;
+
+    min_education_level?: EducationLevel;
+    salary?: Salary;
+
+    @doc("Current state of the opening")
+    current_state: OpeningState;
+
+    @doc("If the Opening's state is changed and needs an approval, this field will indicate the state it is waiting for")
+    approval_waiting_state?: OpeningState;
+
+    @doc("List of the Vetchi handles of the members of the team for which the opening is created. Note that this is different from the OrgUsers within the Employer.")
+    @maxItems(10)
+    hiring_team?: string[];
+
+    created_at: utcDateTime;
+    last_updated_at: utcDateTime;
+}
+
+model CreateOpeningRequest {
     @minLength(3)
     @maxLength(32)
     title: string;
@@ -74,9 +168,170 @@ model Opening {
 
     @minValue(0)
     @maxValue(100)
-    @doc("Years of experience from 0 to 100")
-    yoe?: integer;
+    @doc("Minimum years of experience required for the opening")
+    yoe_min: integer;
+
+    @minValue(1)
+    @maxValue(100)
+    @doc("Maximum years of experience allowed for the opening")
+    yoe_max: integer;
 
     min_education_level?: EducationLevel;
     salary?: Salary;
+}
+
+model UpdateOpeningRequest {
+    id: string;
+
+    @minLength(3)
+    @maxLength(32)
+    title: string;
+
+    @minValue(1)
+    @maxValue(20)
+    positions: integer;
+
+    @minLength(10)
+    @maxLength(1024)
+    jd: string;
+
+    @doc("List of recruiters assigned to the opening")
+    @minItems(1)
+    @maxItems(10)
+    recruiters: string[];
+
+    hiring_manager: EmailAddress;
+
+    @doc("Cost Center name under which the opening is created")
+    cost_center_name: CostCenterName;
+
+    @doc("Privates notes about the opening visible only to the employer")
+    @maxLength(1024)
+    employer_notes?: string;
+
+    @doc("List of pre-configured Location titles where the opening is available")
+    @maxItems(10)
+    location_titles?: string[];
+
+    @doc("List of ISO 3166-1 alpha-3 country codes where the opening is available for remote work. Special value ZZG to indicate Global")
+    @maxItems(100)
+    remote_country_codes?: CountryCode[];
+
+    @doc("List of timezones where the opening is available for remote work")
+    @maxItems(200)
+    remote_timezones?: TimeZone[];
+
+    opening_type: OpeningType;
+
+    @minValue(0)
+    @maxValue(100)
+    @doc("Minimum years of experience required for the opening")
+    yoe_min: integer;
+
+    @minValue(1)
+    @maxValue(100)
+    @doc("Maximum years of experience allowed for the opening")
+    yoe_max: integer;
+
+    min_education_level?: EducationLevel;
+    salary?: Salary;
+}
+
+model GetOpeningWatchersRequest {
+    id: string;
+}
+
+model OpeningWatchers {
+    id: string;
+
+    @doc("Maximum of 20 OrgUsers can watch an Opening")
+    @maxItems(20)
+    emails?: EmailAddress[];
+}
+
+model AddWatchersRequest {
+    id: string;
+    emails: EmailAddress[];
+}
+
+model RemoveWatcherRequest {
+    id: string;
+    email: EmailAddress;
+}
+
+model ApproveOpeningStateChangeRequest {
+    id: string;
+}
+
+model RejectOpeningStateChangeRequest {
+    id: string;
+}
+
+@route("/employer/create-opening")
+interface CreateOpening {
+    @post
+    createOpening(@body createOpeningRequest: CreateOpeningRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/update-opening")
+interface UpdateOpening {
+    @post
+    updateOpening(@body updateOpeningRequest: UpdateOpeningRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/get-opening-watchers")
+interface GetOpeningWatchers {
+    @post
+    getOpeningWatchers(
+        @body getOpeningWatchersRequest: GetOpeningWatchersRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/add-opening-watchers")
+interface AddOpeningWatchers {
+    @post
+    addOpeningWatchers(@body addWatchersRequest: AddWatchersRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/remove-opening-watcher")
+interface RemoveOpeningWatcher {
+    @post
+    removeOpeningWatcher(@body removeWatcherRequest: RemoveWatcherRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/approve-opening-state-change")
+interface ApproveOpeningStateChange {
+    @post
+    approveOpeningStateChange(
+        @body
+        approveOpeningStateChangeRequest: ApproveOpeningStateChangeRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/reject-opening-state-change")
+interface RejectOpeningStateChange {
+    @post
+    rejectOpeningStateChange(
+        @body rejectOpeningStateChangeRequest: RejectOpeningStateChangeRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
 }
