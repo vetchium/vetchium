@@ -50,9 +50,9 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			YoeMax:             createOpeningReq.YoeMax,
 			MinEducationLevel:  createOpeningReq.MinEducationLevel,
 			Salary:             createOpeningReq.Salary,
-			EmployerID:         orgUser.EmployerID,
 
-			OrgUserID: orgUser.ID,
+			EmployerID: orgUser.EmployerID,
+			OrgUserID:  orgUser.ID,
 		})
 		if err != nil {
 			h.Dbg("failed to create opening", "error", err)

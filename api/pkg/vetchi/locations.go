@@ -41,6 +41,18 @@ type GetLocationsRequest struct {
 	Limit         int             `json:"limit,omitempty" validate:"omitempty,min=0,max=100"`
 }
 
+func (r *GetLocationsRequest) StatesAsStrings() []string {
+	states := []string{}
+	for _, state := range r.States {
+		// already validated by vator
+		states = append(states, string(state))
+	}
+	if len(states) == 0 {
+		states = []string{string(ActiveLocation)}
+	}
+	return states
+}
+
 type RenameLocationRequest struct {
 	OldTitle string `json:"old_title" validate:"required,min=3,max=32"`
 	NewTitle string `json:"new_title" validate:"required,min=3,max=32"`

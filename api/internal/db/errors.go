@@ -6,6 +6,8 @@ import (
 
 // Ideally should be a const, but go doesn't support const errors.
 var (
+	ErrInternal = errors.New("internal error")
+
 	ErrNoEmployer = errors.New("employer not found")
 
 	ErrInviteTokenNotFound    = errors.New("invite token not found")

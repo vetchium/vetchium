@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,23 +27,7 @@ func AddLocation(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addLocationReq", addLocationReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		locationID, err := h.DB().AddLocation(r.Context(), db.AddLocationReq{
-			Title:            addLocationReq.Title,
-			CountryCode:      addLocationReq.CountryCode,
-			PostalAddress:    addLocationReq.PostalAddress,
-			PostalCode:       addLocationReq.PostalCode,
-			OpenStreetMapURL: addLocationReq.OpenStreetMapURL,
-			CityAka:          addLocationReq.CityAka,
-			EmployerID:       orgUser.EmployerID,
-			OrgUserID:        orgUser.ID,
-		})
+		locationID, err := h.DB().AddLocation(r.Context(), addLocationReq)
 		if err != nil {
 			if errors.Is(err, db.ErrDupLocationName) {
 				h.Dbg("location exists", "addLocationReq", addLocationReq)

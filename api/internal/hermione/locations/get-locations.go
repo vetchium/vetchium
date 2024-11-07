@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -27,35 +25,12 @@ func GetLocations(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("Validated", "getLocationsReq", getLocationsReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-		h.Dbg("Got orgUser", "orgUser", orgUser)
-
-		states := []string{}
-		for _, state := range getLocationsReq.States {
-			// already validated by vator
-			states = append(states, string(state))
-		}
-		if len(states) == 0 {
-			states = []string{string(vetchi.ActiveLocation)}
-			h.Dbg("set default states", "states", states)
-		}
-
 		if getLocationsReq.Limit == 0 {
 			getLocationsReq.Limit = 100
 			h.Dbg("set default limit", "limit", getLocationsReq.Limit)
 		}
 
-		locations, err := h.DB().GetLocations(r.Context(), db.GetLocationsReq{
-			States:        states,
-			EmployerID:    orgUser.EmployerID,
-			PaginationKey: getLocationsReq.PaginationKey,
-			Limit:         getLocationsReq.Limit,
-		})
+		locations, err := h.DB().GetLocations(r.Context(), getLocationsReq)
 		if err != nil {
 			h.Dbg("failed to get locations", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,17 +27,7 @@ func GetLocation(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "getLocationReq", getLocationReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		location, err := h.DB().GetLocByName(r.Context(), db.GetLocByNameReq{
-			Title:      getLocationReq.Title,
-			EmployerID: orgUser.EmployerID,
-		})
+		location, err := h.DB().GetLocByName(r.Context(), getLocationReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoLocation) {
 				h.Dbg("location not found", "title", getLocationReq.Title)

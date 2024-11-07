@@ -8,31 +8,38 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (p *PG) AddLocation(
 	ctx context.Context,
-	req db.AddLocationReq,
+	addLocationRequest vetchi.AddLocationRequest,
 ) (uuid.UUID, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return uuid.UUID{}, db.ErrInternal
+	}
+
 	query := `
 INSERT INTO locations (title, country_code, postal_address, postal_code, openstreetmap_url, city_aka, employer_id, location_state)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING
     id
-	`
+`
 
 	var locationID uuid.UUID
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.Title,
-		req.CountryCode,
-		req.PostalAddress,
-		req.PostalCode,
-		req.OpenStreetMapURL,
-		req.CityAka,
-		req.EmployerID,
+		addLocationRequest.Title,
+		addLocationRequest.CountryCode,
+		addLocationRequest.PostalAddress,
+		addLocationRequest.PostalCode,
+		addLocationRequest.OpenStreetMapURL,
+		addLocationRequest.CityAka,
+		orgUser.EmployerID,
 		vetchi.ActiveLocation,
 	).Scan(&locationID)
 	if err != nil {
@@ -51,8 +58,14 @@ RETURNING
 
 func (p *PG) DefunctLocation(
 	ctx context.Context,
-	req db.DefunctLocationReq,
+	defunctLocationReq vetchi.DefunctLocationRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     locations
@@ -69,8 +82,8 @@ RETURNING
 		ctx,
 		query,
 		vetchi.DefunctLocation,
-		req.Title,
-		req.EmployerID,
+		defunctLocationReq.Title,
+		orgUser.EmployerID,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -86,8 +99,14 @@ RETURNING
 
 func (p *PG) GetLocByName(
 	ctx context.Context,
-	req db.GetLocByNameReq,
+	getLocationReq vetchi.GetLocationRequest,
 ) (vetchi.Location, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return vetchi.Location{}, db.ErrInternal
+	}
+
 	query := `
 SELECT
     title,
@@ -108,8 +127,8 @@ WHERE
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.Title,
-		req.EmployerID,
+		getLocationReq.Title,
+		orgUser.EmployerID,
 	).Scan(
 		&location.Title,
 		&location.CountryCode,
@@ -133,8 +152,14 @@ WHERE
 
 func (p *PG) GetLocations(
 	ctx context.Context,
-	req db.GetLocationsReq,
+	getLocationsReq vetchi.GetLocationsRequest,
 ) ([]vetchi.Location, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return nil, db.ErrInternal
+	}
+
 	query := `
 SELECT
     title,
@@ -158,10 +183,10 @@ LIMIT $4
 	rows, err := p.pool.Query(
 		ctx,
 		query,
-		req.EmployerID,
-		req.States,
-		req.PaginationKey,
-		req.Limit,
+		orgUser.EmployerID,
+		getLocationsReq.StatesAsStrings(),
+		getLocationsReq.PaginationKey,
+		getLocationsReq.Limit,
 	)
 	if err != nil {
 		p.log.Error("failed to get locations", "error", err)
@@ -182,8 +207,14 @@ LIMIT $4
 
 func (p *PG) RenameLocation(
 	ctx context.Context,
-	req db.RenameLocationReq,
+	renameLocationReq vetchi.RenameLocationRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     locations
@@ -200,9 +231,9 @@ RETURNING
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.NewTitle,
-		req.OldTitle,
-		req.EmployerID,
+		renameLocationReq.NewTitle,
+		renameLocationReq.OldTitle,
+		orgUser.EmployerID,
 	).Scan(&locationID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -226,8 +257,14 @@ RETURNING
 
 func (p *PG) UpdateLocation(
 	ctx context.Context,
-	req db.UpdateLocationReq,
+	updateLocationReq vetchi.UpdateLocationRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	query := `
 UPDATE
     locations
@@ -248,13 +285,13 @@ RETURNING
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.CountryCode,
-		req.PostalAddress,
-		req.PostalCode,
-		req.OpenStreetMapURL,
-		req.CityAka,
-		req.Title,
-		req.EmployerID,
+		updateLocationReq.CountryCode,
+		updateLocationReq.PostalAddress,
+		updateLocationReq.PostalCode,
+		updateLocationReq.OpenStreetMapURL,
+		updateLocationReq.CityAka,
+		updateLocationReq.Title,
+		orgUser.EmployerID,
 	).Scan(&locationID)
 	if err != nil {
 		p.log.Error("failed to update location", "error", err)

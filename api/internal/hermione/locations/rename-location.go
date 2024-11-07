@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,18 +27,7 @@ func RenameLocation(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "renameLocationReq", renameLocationReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		err = h.DB().RenameLocation(r.Context(), db.RenameLocationReq{
-			EmployerID: orgUser.EmployerID,
-			OldTitle:   renameLocationReq.OldTitle,
-			NewTitle:   renameLocationReq.NewTitle,
-		})
+		err = h.DB().RenameLocation(r.Context(), renameLocationReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoLocation) {
 				h.Dbg("not found", "title", renameLocationReq.OldTitle)

@@ -35,12 +35,18 @@ type DB interface {
 	RenameCostCenter(context.Context, RenameCCReq) error
 	UpdateCostCenter(context.Context, UpdateCCReq) error
 
-	AddLocation(context.Context, AddLocationReq) (uuid.UUID, error)
-	DefunctLocation(context.Context, DefunctLocationReq) error
-	GetLocByName(context.Context, GetLocByNameReq) (vetchi.Location, error)
-	GetLocations(context.Context, GetLocationsReq) ([]vetchi.Location, error)
-	RenameLocation(context.Context, RenameLocationReq) error
-	UpdateLocation(context.Context, UpdateLocationReq) error
+	AddLocation(context.Context, vetchi.AddLocationRequest) (uuid.UUID, error)
+	DefunctLocation(context.Context, vetchi.DefunctLocationRequest) error
+	GetLocByName(
+		context.Context,
+		vetchi.GetLocationRequest,
+	) (vetchi.Location, error)
+	GetLocations(
+		context.Context,
+		vetchi.GetLocationsRequest,
+	) ([]vetchi.Location, error)
+	RenameLocation(context.Context, vetchi.RenameLocationRequest) error
+	UpdateLocation(context.Context, vetchi.UpdateLocationRequest) error
 
 	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
 	DisableOrgUser(context.Context, DisableOrgUserReq) error

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -28,24 +27,7 @@ func UpdateLocation(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "updateLocationReq", updateLocationReq)
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		updateLocReq := db.UpdateLocationReq{
-			Title:            updateLocationReq.Title,
-			CountryCode:      updateLocationReq.CountryCode,
-			PostalAddress:    updateLocationReq.PostalAddress,
-			PostalCode:       updateLocationReq.PostalCode,
-			OpenStreetMapURL: updateLocationReq.OpenStreetMapURL,
-			CityAka:          updateLocationReq.CityAka,
-			EmployerID:       orgUser.EmployerID,
-		}
-
-		err = h.DB().UpdateLocation(r.Context(), updateLocReq)
+		err = h.DB().UpdateLocation(r.Context(), updateLocationReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoLocation) {
 				h.Dbg("not found", "title", updateLocationReq.Title)
@@ -58,7 +40,7 @@ func UpdateLocation(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("updated location", "updateLocReq", updateLocReq)
+		h.Dbg("updated location", "updateLocationReq", updateLocationReq)
 		w.WriteHeader(http.StatusOK)
 	}
 }
