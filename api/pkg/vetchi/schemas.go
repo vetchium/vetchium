@@ -114,39 +114,6 @@ type CreateInterviewResponse struct {
 	InterviewID string `json:"interview_id"`
 }
 
-type CreateOpeningRequest struct {
-	Title                    string                   `json:"title"                                validate:"required"`
-	Positions                int                      `json:"positions"                            validate:"required,min=1,max=100"`
-	JD                       string                   `json:"jd"                                   validate:"required,min=10,max=10000"`
-	JobType                  JobType                  `json:"job_type"                             validate:"required"`
-	Recruiter                string                   `json:"recruiter"                            validate:"required,email"`
-	HiringManager            string                   `json:"hiring_manager"                       validate:"required,email"`
-	OnsiteLocationIDs        []string                 `json:"onsite_location_ids,omitempty"`
-	RemoteLocationsCountries []string                 `json:"remote_locations_countries,omitempty"`
-	RemoteLocationsTimezones []string                 `json:"remote_locations_timezones,omitempty"`
-	YoeMin                   int                      `json:"yoe_min"                              validate:"required,min=0,max=80"`
-	YoeMax                   int                      `json:"yoe_max"                              validate:"required,min=0,max=80"`
-	EducationalQualification EducationalQualification `json:"educational_qualification"            validate:"required"`
-	Currency                 string                   `json:"currency"                             validate:"required"`
-	SalaryRangeMin           float64                  `json:"salary_range_min"                     validate:"required,min=1"`
-	SalaryRangeMax           float64                  `json:"salary_range_max"                     validate:"required,min=2"`
-	CostCenterID             string                   `json:"cost_center_id,omitempty"`
-	Notes                    string                   `json:"notes,omitempty"`
-	PotentialTeamMatesIDs    []string                 `json:"potential_team_mates_ids,omitempty"`
-	MaxHops                  int                      `json:"max_hops,omitempty"                   validate:"min=2,max=5"`
-	InternalOnly             bool                     `json:"internal_only,omitempty"`
-}
-
-type EducationalQualification string
-
-const (
-	UnderGraduateEdu EducationalQualification = "UNDER_GRADUATE_EDU"
-	PostGraduateEdu  EducationalQualification = "POST_GRADUATE_EDU"
-	DoctorateEdu     EducationalQualification = "DOCTORATE_EDU"
-	DoesntMatterEdu  EducationalQualification = "DOESNT_MATTER_EDU"
-	UnspecifiedEdu   EducationalQualification = "UNSPECIFIED_EDU"
-)
-
 type EmailAddress string
 
 type EmployerSignInRequest struct {
@@ -213,35 +180,6 @@ type FilterEmployeesRequest struct {
 
 type FilterHiringManagersRequest struct {
 	Prefix string `json:"prefix" validate:"required"`
-}
-
-type FilterJobOpeningsRequest struct {
-	JobTypes                  []JobType                  `json:"job_types,omitempty"`
-	Locations                 []string                   `json:"locations,omitempty"`
-	Companies                 []string                   `json:"companies,omitempty"`
-	RemoteAccepted            bool                       `json:"remote_accepted,omitempty"`
-	YoeMin                    int                        `json:"yoe_min,omitempty"                    validate:"min=0,max=80"`
-	YoeMax                    int                        `json:"yoe_max,omitempty"                    validate:"min=0,max=80"`
-	EducationalQualifications []EducationalQualification `json:"educational_qualifications,omitempty"`
-}
-
-type FilterLocationsRequest struct {
-	Prefix string `json:"prefix"           validate:"required"`
-	Offset string `json:"offset,omitempty"`
-	Limit  int    `json:"limit,omitempty"  validate:"min=1,max=10"`
-}
-
-type FilterLocationsResponse struct {
-	Locations []string `json:"locations"`
-}
-
-type FilterOpeningsRequest struct {
-	HiringManagerEmails []string `json:"hiring_manager_emails,omitempty"`
-	Limit               int      `json:"limit,omitempty"                 validate:"min=1,max=100"`
-	Offset              string   `json:"offset,omitempty"                validate:"min=1,max=255"`
-	OrderBy             []string `json:"order_by,omitempty"`
-	OrderDirection      string   `json:"order_direction,omitempty"`
-	RecruiterEmails     []string `json:"recruiter_emails,omitempty"`
 }
 
 type FilterRecruitersRequest struct {
@@ -371,16 +309,6 @@ const (
 	InterviewClosed    InterviewState = "INTERVIEW_CLOSED"
 )
 
-type JobType string
-
-const (
-	FullTimeJob    JobType = "FULL_TIME_JOB"
-	PartTimeJob    JobType = "PART_TIME_JOB"
-	ContractJob    JobType = "CONTRACT_JOB"
-	InternshipJob  JobType = "INTERNSHIP_JOB"
-	UnspecifiedJob JobType = "UNSPECIFIED_JOB"
-)
-
 type LoginRequest struct {
 	Email    string `json:"email"    validate:"required,email"`
 	Password string `json:"password" validate:"required"`
@@ -440,14 +368,6 @@ type OpeningPublicInfo struct {
 	CompanyLogo   string `json:"company_logo,omitempty" validate:"url"`
 	JD            string `json:"jd"`
 }
-
-type OpeningState string
-
-const (
-	OpeningDraft  OpeningState = "OPENING_DRAFT"
-	OpeningActive OpeningState = "OPENING_ACTIVE"
-	OpeningClosed OpeningState = "OPENING_CLOSED"
-)
 
 type Password string
 

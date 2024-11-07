@@ -10,19 +10,19 @@ using TypeSpec.Rest;
 namespace Vetchi;
 
 union OpeningType {
-    FullTime: "FULL_TIME",
-    PartTime: "PART_TIME",
-    Contract: "CONTRACT",
-    Internship: "INTERNSHIP",
-    Unspecified: "UNSPECIFIED",
+    FullTimeOpening: "FULL_TIME_OPENING",
+    PartTimeOpening: "PART_TIME_OPENING",
+    ContractOpening: "CONTRACT_OPENING",
+    InternshipOpening: "INTERNSHIP_OPENING",
+    UnspecifiedOpening: "UNSPECIFIED_OPENING",
 }
 
 union EducationLevel {
-    Bachelor: "BACHELOR",
-    Master: "MASTER",
-    Doctorate: "DOCTORATE",
-    NotMatters: "NOT_MATTERS",
-    Unspecified: "UNSPECIFIED",
+    BachelorEducation: "BACHELOR_EDUCATION",
+    MasterEducation: "MASTER_EDUCATION",
+    DoctorateEducation: "DOCTORATE_EDUCATION",
+    NotMattersEducation: "NOT_MATTERS_EDUCATION",
+    UnspecifiedEducation: "UNSPECIFIED_EDUCATION",
 }
 
 union OpeningState {
@@ -144,7 +144,7 @@ model CreateOpeningRequest {
     @doc("List of recruiters assigned to the opening")
     @minItems(1)
     @maxItems(10)
-    recruiters: string[];
+    recruiters: EmailAddress[];
 
     hiring_manager: EmailAddress;
 

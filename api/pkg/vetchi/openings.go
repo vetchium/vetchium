@@ -5,21 +5,21 @@ import "time"
 type OpeningType string
 
 const (
-	FullTime    OpeningType = "FULL_TIME"
-	PartTime    OpeningType = "PART_TIME"
-	Contract    OpeningType = "CONTRACT"
-	Internship  OpeningType = "INTERNSHIP"
-	Unspecified OpeningType = "UNSPECIFIED"
+	FullTimeOpening    OpeningType = "FULL_TIME_OPENING"
+	PartTimeOpening    OpeningType = "PART_TIME_OPENING"
+	ContractOpening    OpeningType = "CONTRACT_OPENING"
+	InternshipOpening  OpeningType = "INTERNSHIP_OPENING"
+	UnspecifiedOpening OpeningType = "UNSPECIFIED_OPENING"
 )
 
 type EducationLevel string
 
 const (
-	Bachelor    EducationLevel = "BACHELOR"
-	Master      EducationLevel = "MASTER"
-	Doctorate   EducationLevel = "DOCTORATE"
-	NotMatters  EducationLevel = "NOT_MATTERS"
-	Unspecified EducationLevel = "UNSPECIFIED"
+	BachelorEducation    EducationLevel = "BACHELOR_EDUCATION"
+	MasterEducation      EducationLevel = "MASTER_EDUCATION"
+	DoctorateEducation   EducationLevel = "DOCTORATE_EDUCATION"
+	NotMattersEducation  EducationLevel = "NOT_MATTERS_EDUCATION"
+	UnspecifiedEducation EducationLevel = "UNSPECIFIED_EDUCATION"
 )
 
 type OpeningState string
@@ -32,9 +32,9 @@ const (
 )
 
 type Salary struct {
-	MinAmount decimal.Decimal `json:"min_amount" validate:"required,min=0"`
-	MaxAmount decimal.Decimal `json:"max_amount" validate:"required,min=1"`
-	Currency  Currency        `json:"currency"   validate:"required"`
+	MinAmount float64  `json:"min_amount" validate:"required,min=0"`
+	MaxAmount float64  `json:"max_amount" validate:"required,min=1"`
+	Currency  Currency `json:"currency"   validate:"required"`
 }
 
 type Opening struct {
@@ -66,7 +66,7 @@ type CreateOpeningRequest struct {
 	Title              string          `json:"title"                          validate:"required,min=3,max=32"`
 	Positions          int             `json:"positions"                      validate:"required,min=1,max=20"`
 	JD                 string          `json:"jd"                             validate:"required,min=10,max=1024"`
-	Recruiters         []string        `json:"recruiters"                     validate:"required,min=1,max=10"`
+	Recruiters         []EmailAddress  `json:"recruiters"                     validate:"required,min=1,max=10"`
 	HiringManager      EmailAddress    `json:"hiring_manager"                 validate:"required"`
 	CostCenterName     CostCenterName  `json:"cost_center_name"               validate:"required"`
 	EmployerNotes      *string         `json:"employer_notes,omitempty"       validate:"omitempty,max=1024"`
