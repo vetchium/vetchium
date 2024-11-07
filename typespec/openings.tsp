@@ -17,6 +17,20 @@ union OpeningType {
     Unspecified: "UNSPECIFIED",
 }
 
+union EducationLevel {
+    Bachelor: "BACHELOR",
+    Master: "MASTER",
+    Doctorate: "DOCTORATE",
+    NotMatters: "NOT_MATTERS",
+    Unspecified: "UNSPECIFIED",
+}
+
+model Salary {
+    min_amount: integer;
+    max_amount: integer;
+    currency: Currency;
+}
+
 model Opening {
     @minLength(3)
     @maxLength(32)
@@ -40,6 +54,10 @@ model Opening {
     @doc("Cost Center name under which the opening is created")
     cost_center_name: CostCenterName;
 
+    @doc("Privates notes about the opening visible only to the employer")
+    @maxLength(1024)
+    employer_notes?: string;
+
     @doc("List of pre-configured Location titles where the opening is available")
     @maxItems(10)
     location_titles?: string[];
@@ -53,4 +71,12 @@ model Opening {
     remote_timezones?: TimeZone[];
 
     opening_type: OpeningType;
+
+    @minValue(0)
+    @maxValue(100)
+    @doc("Years of experience from 0 to 100")
+    yoe?: integer;
+
+    min_education_level?: EducationLevel;
+    salary?: Salary;
 }

@@ -22,6 +22,11 @@ scalar City extends string;
 @doc("ISO 3166-1 alpha-3 code for the Country; Special value ZZG to indicate Global")
 scalar CountryCode extends string;
 
+@minLength(3)
+@maxLength(3)
+@doc("One of the active ISO 4217 currency codes")
+scalar Currency extends string;
+
 @doc("Supported timezone values with their GMT offsets")
 union TimeZone {
     "ACDT Australian Central Daylight Time GMT+1030",
