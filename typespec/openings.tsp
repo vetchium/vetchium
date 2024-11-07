@@ -51,8 +51,11 @@ model Salary {
     currency: Currency;
 }
 
+@maxLength(64)
+scalar OpeningID extends string;
+
 model Opening {
-    id: string;
+    id: OpeningID;
 
     @minLength(3)
     @maxLength(32)
@@ -180,8 +183,25 @@ model CreateOpeningRequest {
     salary?: Salary;
 }
 
+model GetOpeningRequest {
+    @doc("ID of the Opening to fetch")
+    id: OpeningID;
+}
+
+model FilterOpeningsRequest {
+    @doc("Pagination key to fetch the next page of Openings")
+    pagination_key?: OpeningID;
+
+    @doc("Filter by Opening state")
+    state?: OpeningState[];
+
+    @maxValue(40)
+    @doc("Number of Openings to return; 40 is the default if not specified")
+    limit?: integer;
+}
+
 model UpdateOpeningRequest {
-    id: string;
+    id: OpeningID;
 
     @minLength(3)
     @maxLength(32)
@@ -269,6 +289,8 @@ model RejectOpeningStateChangeRequest {
 
 @route("/employer/create-opening")
 interface CreateOpening {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
     createOpening(@body createOpeningRequest: CreateOpeningRequest): {
         @statusCode statusCode: 200;
@@ -278,8 +300,30 @@ interface CreateOpening {
     };
 }
 
+@route("/employer/get-opening")
+interface GetOpening {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
+    @post
+    getOpening(@body getOpeningRequest: GetOpeningRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/filter-openings")
+interface FilterOpenings {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
+    @post
+    filterOpenings(@body filterOpeningsRequest: FilterOpeningsRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
 @route("/employer/update-opening")
 interface UpdateOpening {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
     updateOpening(@body updateOpeningRequest: UpdateOpeningRequest): {
         @statusCode statusCode: 200;
@@ -291,6 +335,8 @@ interface UpdateOpening {
 
 @route("/employer/get-opening-watchers")
 interface GetOpeningWatchers {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
     @post
     getOpeningWatchers(
         @body getOpeningWatchersRequest: GetOpeningWatchersRequest,
@@ -301,6 +347,8 @@ interface GetOpeningWatchers {
 
 @route("/employer/add-opening-watchers")
 interface AddOpeningWatchers {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
     addOpeningWatchers(@body addWatchersRequest: AddWatchersRequest): {
         @statusCode statusCode: 200;
@@ -309,6 +357,8 @@ interface AddOpeningWatchers {
 
 @route("/employer/remove-opening-watcher")
 interface RemoveOpeningWatcher {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
     removeOpeningWatcher(@body removeWatcherRequest: RemoveWatcherRequest): {
         @statusCode statusCode: 200;
@@ -317,6 +367,8 @@ interface RemoveOpeningWatcher {
 
 @route("/employer/approve-opening-state-change")
 interface ApproveOpeningStateChange {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
     approveOpeningStateChange(
         @body
@@ -328,6 +380,8 @@ interface ApproveOpeningStateChange {
 
 @route("/employer/reject-opening-state-change")
 interface RejectOpeningStateChange {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD}, ${OpeningsViewer} roles")
     @post
     rejectOpeningStateChange(
         @body rejectOpeningStateChangeRequest: RejectOpeningStateChangeRequest,
