@@ -55,4 +55,21 @@ type DB interface {
 	GetOldestUnsentEmails(context.Context) ([]Email, error)
 	PruneTokens(context.Context) error
 	UpdateEmailState(context.Context, EmailStateChange) error
+
+	// Opening related methods
+	CreateOpening(context.Context, CreateOpeningReq) (uuid.UUID, error)
+	GetOpening(context.Context, GetOpeningReq) (vetchi.Opening, error)
+	FilterOpenings(context.Context, FilterOpeningsReq) ([]vetchi.Opening, error)
+	UpdateOpening(context.Context, UpdateOpeningReq) error
+	GetOpeningWatchers(
+		context.Context,
+		GetOpeningWatchersReq,
+	) (vetchi.OpeningWatchers, error)
+	AddOpeningWatchers(context.Context, AddOpeningWatchersReq) error
+	RemoveOpeningWatcher(context.Context, RemoveOpeningWatcherReq) error
+	ApproveOpeningStateChange(
+		context.Context,
+		ApproveOpeningStateChangeReq,
+	) error
+	RejectOpeningStateChange(context.Context, RejectOpeningStateChangeReq) error
 }

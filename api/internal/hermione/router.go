@@ -6,6 +6,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
+	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -124,6 +125,65 @@ func (h *Hermione) Run() error {
 		},
 	)
 	http.HandleFunc("/employer/signup-org-user", orgusers.SignupOrgUser(h))
+
+	// Opening related endpoints
+	h.mw.Protect(
+		"/employer/create-opening",
+		openings.CreateOpening(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/get-opening",
+		openings.GetOpening(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.OpeningsCRUD,
+			vetchi.OpeningsViewer,
+		},
+	)
+	h.mw.Protect(
+		"/employer/filter-openings",
+		openings.FilterOpenings(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.OpeningsCRUD,
+			vetchi.OpeningsViewer,
+		},
+	)
+	h.mw.Protect(
+		"/employer/update-opening",
+		openings.UpdateOpening(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/get-opening-watchers",
+		openings.GetOpeningWatchers(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.OpeningsCRUD,
+			vetchi.OpeningsViewer,
+		},
+	)
+	h.mw.Protect(
+		"/employer/add-opening-watchers",
+		openings.AddOpeningWatchers(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/remove-opening-watcher",
+		openings.RemoveOpeningWatcher(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/approve-opening-state-change",
+		openings.ApproveOpeningStateChange(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+	h.mw.Protect(
+		"/employer/reject-opening-state-change",
+		openings.RejectOpeningStateChange(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
 
 	return http.ListenAndServe(h.port, nil)
 }
