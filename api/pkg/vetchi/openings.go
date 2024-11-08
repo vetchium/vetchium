@@ -39,25 +39,25 @@ type Salary struct {
 
 type Opening struct {
 	ID                   string          `json:"id"`
-	Title                string          `json:"title"                            validate:"required,min=3,max=32"`
-	Positions            int             `json:"positions"                        validate:"required,min=1,max=20"`
-	FilledPositions      int             `json:"filled_positions"                 validate:"min=0,max=20"`
-	JD                   string          `json:"jd"                               validate:"required,min=10,max=1024"`
-	Recruiters           []string        `json:"recruiters"                       validate:"required,min=1,max=10"`
-	HiringManager        EmailAddress    `json:"hiring_manager"                   validate:"required"`
-	CostCenterName       CostCenterName  `json:"cost_center_name"                 validate:"required"`
-	EmployerNotes        *string         `json:"employer_notes,omitempty"         validate:"omitempty,max=1024"`
-	LocationTitles       []string        `json:"location_titles,omitempty"        validate:"omitempty,max=10"`
-	RemoteCountryCodes   []CountryCode   `json:"remote_country_codes,omitempty"   validate:"omitempty,max=100"`
-	RemoteTimezones      []TimeZone      `json:"remote_timezones,omitempty"       validate:"omitempty,max=200"`
-	OpeningType          OpeningType     `json:"opening_type"                     validate:"required"`
-	YoeMin               int             `json:"yoe_min"                          validate:"min=0,max=100"`
-	YoeMax               int             `json:"yoe_max"                          validate:"min=1,max=100"`
+	Title                string          `json:"title"`
+	Positions            int             `json:"positions"`
+	FilledPositions      int             `json:"filled_positions"`
+	JD                   string          `json:"jd"`
+	Recruiters           []OrgUserShort  `json:"recruiters"`
+	HiringManager        OrgUserShort    `json:"hiring_manager"`
+	CostCenterName       CostCenterName  `json:"cost_center_name"`
+	EmployerNotes        *string         `json:"employer_notes,omitempty"`
+	LocationTitles       []string        `json:"location_titles,omitempty"`
+	RemoteCountryCodes   []CountryCode   `json:"remote_country_codes,omitempty"`
+	RemoteTimezones      []TimeZone      `json:"remote_timezones,omitempty"`
+	OpeningType          OpeningType     `json:"opening_type"`
+	YoeMin               int             `json:"yoe_min"`
+	YoeMax               int             `json:"yoe_max"`
 	MinEducationLevel    *EducationLevel `json:"min_education_level,omitempty"`
 	Salary               *Salary         `json:"salary,omitempty"`
-	CurrentState         OpeningState    `json:"current_state"                    validate:"required"`
+	CurrentState         OpeningState    `json:"current_state"`
 	ApprovalWaitingState *OpeningState   `json:"approval_waiting_state,omitempty"`
-	HiringTeam           []string        `json:"hiring_team,omitempty"            validate:"omitempty,max=10"`
+	HiringTeam           []HubUserShort  `json:"hiring_team,omitempty"`
 	CreatedAt            time.Time       `json:"created_at"`
 	LastUpdatedAt        time.Time       `json:"last_updated_at"`
 }

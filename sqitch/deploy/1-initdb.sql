@@ -9,6 +9,8 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS hub_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name TEXT NOT NULL,
+    handle TEXT NOT NULL,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
 
