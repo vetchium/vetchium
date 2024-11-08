@@ -122,13 +122,40 @@ RETURNING
 	return openingID, nil
 }
 
-// GetOpening gets an opening by ID
 func (pg *PG) GetOpening(
 	ctx context.Context,
 	getOpeningReq vetchi.GetOpeningRequest,
 ) (vetchi.Opening, error) {
-	// TODO: Implement this
-	return vetchi.Opening{}, nil
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		pg.log.Error("failed to get orgUser from context")
+		return vetchi.Opening{}, db.ErrInternal
+	}
+
+	query := `
+SELECT
+    id,
+    title,
+    positions,
+    jd,
+    hiring_manager
+FROM
+    openings
+WHERE
+    id = $1
+	AND employer_id = $2
+`
+
+	var opening vetchi.Opening
+	err := pg.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
+		Scan(&opening.ID, &opening.Title, &opening.Positions, &opening.JD, &opening.HiringManager)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return vetchi.Opening{}, db.ErrNoOpening
+		}
+		return vetchi.Opening{}, err
+	}
+	return opening, nil
 }
 
 // FilterOpenings filters openings based on the given criteria
