@@ -56,7 +56,10 @@ type DB interface {
 	UpdateEmailState(c.Context, EmailStateChange) error
 
 	// Openings related methods
-	CreateOpening(c.Context, v.CreateOpeningRequest) (uuid.UUID, error)
+	CreateOpening(
+		ctx c.Context,
+		createOpeningRequest v.CreateOpeningRequest,
+	) (openingID string, err error)
 	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
 	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.Opening, error)
 	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
