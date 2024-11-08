@@ -1,105 +1,74 @@
 package db
 
 import (
-	"context"
+	c "context"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	v "github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-// Create a new qo.Struct for passing parameters to the db functions, if any
-// function declaration goes more than 80 characters or multiple lines.
-
 // Do not name parameters when passing objects. Name parameters when passing
-// primitive data types.
+// primitive data types. Try to keep within 80 characters.
 
 type DB interface {
 	// Used by hermione and granger
 
 	// Used by hermione
-	AuthOrgUser(c context.Context, sessionToken string) (OrgUserTO, error)
-	CreateOrgUserToken(context.Context, TokenReq) error
-	GetEmployer(c context.Context, clientID string) (Employer, error)
-	GetEmployerByID(c context.Context, employerID uuid.UUID) (Employer, error)
-	GetDomainNames(c context.Context, employerID uuid.UUID) ([]string, error)
-	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
-	GetOrgUserByToken(c context.Context, tfaCode, tgt string) (OrgUserTO, error)
-	InitEmployerAndDomain(context.Context, Employer, Domain) error
-	InitEmployerTFA(context.Context, EmployerTFA) error
-	OnboardAdmin(context.Context, OnboardReq) error
+	AuthOrgUser(c c.Context, sessionToken string) (OrgUserTO, error)
+	CreateOrgUserToken(c.Context, TokenReq) error
+	GetEmployer(c c.Context, clientID string) (Employer, error)
+	GetEmployerByID(c c.Context, employerID uuid.UUID) (Employer, error)
+	GetDomainNames(c c.Context, employerID uuid.UUID) ([]string, error)
+	GetOrgUserAuth(c.Context, OrgUserCreds) (OrgUserAuth, error)
+	GetOrgUserByToken(c c.Context, tfaCode, tgt string) (OrgUserTO, error)
+	InitEmployerAndDomain(c.Context, Employer, Domain) error
+	InitEmployerTFA(c.Context, EmployerTFA) error
+	OnboardAdmin(c.Context, OnboardReq) error
 
-	CreateCostCenter(
-		context.Context,
-		vetchi.AddCostCenterRequest,
-	) (uuid.UUID, error)
-	DefunctCostCenter(context.Context, vetchi.DefunctCostCenterRequest) error
-	GetCCByName(
-		context.Context,
-		vetchi.GetCostCenterRequest,
-	) (vetchi.CostCenter, error)
-	GetCostCenters(
-		context.Context,
-		vetchi.GetCostCentersRequest,
-	) ([]vetchi.CostCenter, error)
-	RenameCostCenter(context.Context, vetchi.RenameCostCenterRequest) error
-	UpdateCostCenter(context.Context, vetchi.UpdateCostCenterRequest) error
+	CreateCostCenter(c.Context, v.AddCostCenterRequest) (uuid.UUID, error)
+	DefunctCostCenter(c.Context, v.DefunctCostCenterRequest) error
+	GetCCByName(c.Context, v.GetCostCenterRequest) (v.CostCenter, error)
+	GetCostCenters(c.Context, v.GetCostCentersRequest) ([]v.CostCenter, error)
+	RenameCostCenter(c.Context, v.RenameCostCenterRequest) error
+	UpdateCostCenter(c.Context, v.UpdateCostCenterRequest) error
 
-	AddLocation(context.Context, vetchi.AddLocationRequest) (uuid.UUID, error)
-	DefunctLocation(context.Context, vetchi.DefunctLocationRequest) error
-	GetLocByName(
-		context.Context,
-		vetchi.GetLocationRequest,
-	) (vetchi.Location, error)
-	GetLocations(
-		context.Context,
-		vetchi.GetLocationsRequest,
-	) ([]vetchi.Location, error)
-	RenameLocation(context.Context, vetchi.RenameLocationRequest) error
-	UpdateLocation(context.Context, vetchi.UpdateLocationRequest) error
+	// Locations related methods
+	AddLocation(c.Context, v.AddLocationRequest) (uuid.UUID, error)
+	DefunctLocation(c.Context, v.DefunctLocationRequest) error
+	GetLocByName(c.Context, v.GetLocationRequest) (v.Location, error)
+	GetLocations(c.Context, v.GetLocationsRequest) ([]v.Location, error)
+	RenameLocation(c.Context, v.RenameLocationRequest) error
+	UpdateLocation(c.Context, v.UpdateLocationRequest) error
 
-	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
-	DisableOrgUser(context.Context, DisableOrgUserReq) error
-	EnableOrgUser(context.Context, EnableOrgUserReq) error
-	FilterOrgUsers(context.Context, FilterOrgUsersReq) ([]vetchi.OrgUser, error)
-	SignupOrgUser(context.Context, SignupOrgUserReq) error
-	UpdateOrgUser(context.Context, UpdateOrgUserReq) (uuid.UUID, error)
+	// Org users related methods
+	AddOrgUser(c.Context, AddOrgUserReq) (uuid.UUID, error)
+	DisableOrgUser(c.Context, DisableOrgUserReq) error
+	EnableOrgUser(c.Context, EnableOrgUserReq) error
+	FilterOrgUsers(c.Context, FilterOrgUsersReq) ([]v.OrgUser, error)
+	SignupOrgUser(c.Context, SignupOrgUserReq) error
+	UpdateOrgUser(c.Context, UpdateOrgUserReq) (uuid.UUID, error)
 
 	// Used by granger
-	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
-	DeQOnboard(context.Context) (*OnboardInfo, error)
-	GetOldestUnsentEmails(context.Context) ([]Email, error)
-	PruneTokens(context.Context) error
-	UpdateEmailState(context.Context, EmailStateChange) error
+	CreateOnboardEmail(c.Context, OnboardEmailInfo) error
+	DeQOnboard(c.Context) (*OnboardInfo, error)
+	GetOldestUnsentEmails(c.Context) ([]Email, error)
+	PruneTokens(c.Context) error
+	UpdateEmailState(c.Context, EmailStateChange) error
 
-	// Opening related methods
-	CreateOpening(
-		context.Context,
-		vetchi.CreateOpeningRequest,
-	) (uuid.UUID, error)
-	GetOpening(
-		context.Context,
-		vetchi.GetOpeningRequest,
-	) (vetchi.Opening, error)
-	FilterOpenings(
-		context.Context,
-		vetchi.FilterOpeningsRequest,
-	) ([]vetchi.Opening, error)
-	UpdateOpening(context.Context, vetchi.UpdateOpeningRequest) error
+	// Openings related methods
+	CreateOpening(c.Context, v.CreateOpeningRequest) (uuid.UUID, error)
+	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
+	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.Opening, error)
+	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
 	GetOpeningWatchers(
-		context.Context,
-		vetchi.GetOpeningWatchersRequest,
-	) (vetchi.OpeningWatchers, error)
-	AddOpeningWatchers(context.Context, vetchi.AddOpeningWatchersRequest) error
-	RemoveOpeningWatcher(
-		context.Context,
-		vetchi.RemoveOpeningWatcherRequest,
-	) error
+		c.Context,
+		v.GetOpeningWatchersRequest,
+	) (v.OpeningWatchers, error)
+	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
+	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
 	ApproveOpeningStateChange(
-		context.Context,
-		vetchi.ApproveOpeningStateChangeRequest,
+		c.Context,
+		v.ApproveOpeningStateChangeRequest,
 	) error
-	RejectOpeningStateChange(
-		context.Context,
-		vetchi.RejectOpeningStateChangeRequest,
-	) error
+	RejectOpeningStateChange(c.Context, v.RejectOpeningStateChangeRequest) error
 }
