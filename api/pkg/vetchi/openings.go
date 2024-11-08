@@ -78,6 +78,7 @@ type CreateOpeningRequest struct {
 	YoeMax             int             `json:"yoe_max"                        validate:"min=1,max=100"`
 	MinEducationLevel  *EducationLevel `json:"min_education_level,omitempty"`
 	Salary             *Salary         `json:"salary,omitempty"`
+	HiringTeamMembers  []string        `json:"hiring_team_members,omitempty"  validate:"omitempty,max=10"`
 }
 
 type GetOpeningRequest struct {

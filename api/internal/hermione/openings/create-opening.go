@@ -2,8 +2,10 @@ package openings
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -27,6 +29,13 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
+			if errors.Is(err, db.ErrNoRecruiter) ||
+				errors.Is(err, db.ErrNoLocation) {
+				h.Dbg("location or team or recruiter not found", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to create opening", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

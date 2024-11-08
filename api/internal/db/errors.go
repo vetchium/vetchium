@@ -25,5 +25,6 @@ var (
 
 	ErrNoOpening = errors.New("opening not found")
 
+	ErrNoRecruiter          = errors.New("recruiter not found")
 	ErrNoStateChangeWaiting = errors.New("no state change waiting")
 )

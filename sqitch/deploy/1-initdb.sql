@@ -8,7 +8,7 @@ SELECT pg_reload_conf();
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS hub_users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
 
@@ -164,6 +164,57 @@ CREATE TABLE locations (
     CONSTRAINT uniq_location_title_employer_id UNIQUE (title, employer_id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+---
+
+CREATE TYPE opening_states AS ENUM ('DRAFT_OPENING', 'ACTIVE_OPENING', 'SUSPENDED_OPENING', 'CLOSED_OPENING');
+CREATE TYPE opening_types AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'UNSPECIFIED');
+CREATE TYPE education_levels AS ENUM ('BACHELOR', 'MASTER', 'DOCTORATE', 'NOT_MATTERS', 'UNSPECIFIED');
+CREATE TABLE openings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    positions INTEGER NOT NULL,
+    jd TEXT NOT NULL,
+    hiring_manager UUID REFERENCES org_users(id) NOT NULL,
+    cost_center_id UUID REFERENCES org_cost_centers(id),
+    employer_notes TEXT NOT NULL,
+    remote_country_codes TEXT[] NOT NULL,
+    remote_timezones TEXT[] NOT NULL,
+    opening_type opening_types NOT NULL,
+    yoe_min INTEGER NOT NULL,
+    yoe_max INTEGER NOT NULL,
+    min_education_level education_levels NOT NULL,
+    salary_min NUMERIC NOT NULL,
+    salary_max NUMERIC NOT NULL,
+    salary_currency TEXT NOT NULL,
+    current_state opening_states NOT NULL,
+    approval_waiting_state opening_states,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE opening_recruiters (
+    opening_id UUID REFERENCES openings(id) NOT NULL,
+    recruiter_id UUID REFERENCES org_users(id) NOT NULL,
+
+    PRIMARY KEY (opening_id, recruiter_id)
+);
+
+CREATE TABLE opening_hiring_team(
+    opening_id UUID REFERENCES openings(id) NOT NULL,
+    hiring_team_member_id UUID REFERENCES hub_users(id) NOT NULL,
+
+    PRIMARY KEY (opening_id, hiring_team_member_id)
+);
+
+CREATE TABLE opening_locations(
+    opening_id UUID REFERENCES openings(id) NOT NULL,
+    location_id UUID REFERENCES locations(id) NOT NULL,
+
+    PRIMARY KEY (opening_id, location_id)
 );
 
 COMMIT;

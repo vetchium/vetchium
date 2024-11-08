@@ -297,6 +297,10 @@ interface CreateOpening {
     } | {
         @statusCode statusCode: 400;
         @body error: ValidationErrors;
+    } | {
+        @doc("One or more of the provided values for locations, recruiters, hiring_team are invalid")
+        @statusCode
+        statusCode: 422;
     };
 }
 
