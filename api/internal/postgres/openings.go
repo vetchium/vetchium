@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
@@ -13,16 +15,16 @@ import (
 func (p *PG) CreateOpening(
 	ctx context.Context,
 	createOpeningReq vetchi.CreateOpeningRequest,
-) (uuid.UUID, error) {
+) (string, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Error("failed to get orgUser from context")
-		return uuid.UUID{}, db.ErrInternal
+		return "", db.ErrInternal
 	}
 
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		return uuid.UUID{}, err
+		return "", err
 	}
 	defer tx.Rollback(ctx)
 
@@ -33,23 +35,44 @@ func (p *PG) CreateOpening(
 	if err != nil {
 		if err == sql.ErrNoRows {
 			p.log.Debug("CC not found", "name", createOpeningReq.CostCenterName)
-			return uuid.UUID{}, db.ErrNoCostCenter
+			return "", db.ErrNoCostCenter
 		}
-		return uuid.UUID{}, err
+		return "", err
 	}
 
+	todayOpeningsCountQuery := `SELECT COUNT(*) FROM openings WHERE employer_id = $1 AND created_at::date = CURRENT_DATE`
+	var todayOpeningsCount int
+	err = tx.QueryRow(ctx, todayOpeningsCountQuery, orgUser.EmployerID).
+		Scan(&todayOpeningsCount)
+	if err != nil {
+		p.log.Error("failed to get today's openings count", "error", err)
+		return "", err
+	}
+
+	// TODO: Check for max openings allowed per Employer and/or per Day.
+	// Potentially this is where charging/pricing status codes will be returned
+	var openingID string
+	t := time.Now()
+	openingID = fmt.Sprintf(
+		"%d-%s-%d-%d",
+		t.Year(),
+		t.Format("Jan"),
+		t.Day(),
+		todayOpeningsCount+1,
+	)
+	p.log.Debug("generated opening ID", "id", openingID)
+
 	query := `
-INSERT INTO openings (title, positions, jd, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id, created_at, last_updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+INSERT INTO openings (id, title, positions, jd, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 RETURNING
     id
 `
-	var openingID uuid.UUID
-	err = tx.QueryRow(ctx, query, createOpeningReq.Title, createOpeningReq.Positions, createOpeningReq.JD, createOpeningReq.HiringManager, costCenterID, createOpeningReq.EmployerNotes, createOpeningReq.RemoteCountryCodes, createOpeningReq.RemoteTimezones, createOpeningReq.OpeningType, createOpeningReq.YoeMin, createOpeningReq.YoeMax, createOpeningReq.MinEducationLevel, createOpeningReq.Salary.MinAmount, createOpeningReq.Salary.MaxAmount, createOpeningReq.Salary.Currency, vetchi.DraftOpening, nil, orgUser.ID).
+	err = tx.QueryRow(ctx, query, openingID, createOpeningReq.Title, createOpeningReq.Positions, createOpeningReq.JD, createOpeningReq.HiringManager, costCenterID, createOpeningReq.EmployerNotes, createOpeningReq.RemoteCountryCodes, createOpeningReq.RemoteTimezones, createOpeningReq.OpeningType, createOpeningReq.YoeMin, createOpeningReq.YoeMax, createOpeningReq.MinEducationLevel, createOpeningReq.Salary.MinAmount, createOpeningReq.Salary.MaxAmount, createOpeningReq.Salary.Currency, vetchi.DraftOpening, nil, orgUser.EmployerID).
 		Scan(&openingID)
 	if err != nil {
 		p.log.Error("failed to create opening", "error", err)
-		return uuid.UUID{}, err
+		return "", err
 	}
 
 	if len(createOpeningReq.Recruiters) > 0 {
@@ -72,10 +95,10 @@ RETURNING
 			if err != nil {
 				if err == sql.ErrNoRows {
 					p.log.Debug("recruiter not found", "email", recruiter)
-					return uuid.UUID{}, db.ErrNoRecruiter
+					return "", db.ErrNoRecruiter
 				}
 				p.log.Error("failed to insert recruiters", "error", err)
-				return uuid.UUID{}, err
+				return "", err
 			}
 		}
 	}
@@ -104,11 +127,11 @@ RETURNING
 			if err != nil {
 				if err == sql.ErrNoRows {
 					p.log.Debug("location not found", "title", location)
-					return uuid.UUID{}, db.ErrNoLocation
+					return "", db.ErrNoLocation
 				}
 
 				p.log.Error("failed to insert locations", "error", err)
-				return uuid.UUID{}, err
+				return "", err
 			}
 		}
 	}
@@ -116,7 +139,7 @@ RETURNING
 	err = tx.Commit(ctx)
 	if err != nil {
 		p.log.Error("failed to commit transaction", "error", err)
-		return uuid.UUID{}, err
+		return "", err
 	}
 
 	return openingID, nil
@@ -132,6 +155,7 @@ func (pg *PG) GetOpening(
 		return vetchi.Opening{}, db.ErrInternal
 	}
 
+	// TODO: Add the hiring team members, recruiters and locations to the opening
 	query := `
 SELECT
     id,
