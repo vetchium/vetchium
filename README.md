@@ -52,34 +52,28 @@ vetchi $ kubectl delete namespace vetchidev
 - Use [Gomega](https://onsi.github.io/gomega/) for assertions
 - Use [golines](https://github.com/segmentio/golines) to format the Go code. Do NOT manually format the code or split the parameters to multiple lines. Write a really long line with all parameters and then summon golines to format it.
 - Use [prettier](https://prettier.io/) to format the typescript code. Do not manually format the code or split the parameters to multiple lines.
-- Use the below snippet to sort the openapi-spec.yaml file
-```
-$ yq eval 'sort_keys(..)' vetchi-openapi.yml -o=yaml > output.yaml
-$ # Move the openapi and info tags to the top of the file
-$ # Ensure the yaml is valid by editor.swagger.io or editor plugins
-$ mv output.yaml vetchi-openapi.yml
-$ # Alternatively you can use a custom yaml sort in your editor
-```
 
-### Engineering Notes
-Following are some rules that you should follow while working on the code. It is okay to break these rules, if that would make the code more readable. But your interest to break rules should not stem from your inability to follow rules.
+## Engineering Notes
+Following are some rules that you should follow while working on the code. It is okay to break these rules, if that would make the code more readable. But your interest to break rules should not spawn from your inability to follow rules.
 
+#### Backend
 - Readability > Scalability > Performance. Optimise in this order.
 - Do not use fancy algorithms. Use simple and scalable solutions.
 - Do not use ORMs. Do not fear SQL.
-- Do not introduce a caching layer (like Redis). Rely on database indexes and query tuning for performance.
-- Always sort the methods in an interface, OpenAPI spec, etc., alphabetically, so that it is easier for editing. Try as much possible to keep any list of items in code alphabetically sorted. There may be exceptions where grouping items together will help with readability. Use your best judgement.
-- Do not depend on any library unnecessarily (only one exception mentioned below). Try to reimplement in simple Go or Typescript.
-- Do not reimplement any security related features yourself. Use well-established libraries and algorithms. Eg: Use bcrypt not your own hashing algorithm.
+- Do not introduce a caching layer (like Redis or within the Golang handlers) for any data that has a strong consistency requirement. Rely on database indexes and query tuning for performance. It is okay to put a lot of load on the database. It is easier to scale a single ACID compliant database layer (either vertically or horizontally) than debug a problem across multiple caching layers.
+- Group related items in Code together. For example a section could be for Location related functions, another section could be for OrgUser related functions. Within a group, try to maintain some kind of pattern that would be obvious (like alphabetical ordering of methods) and consistent across multiple groups/files.
+- Do not depend on any library unnecessarily (only one exception mentioned below). Try to reimplement in simple Go
+- Do not reimplement any security related features/algorithms yourself. Use well-established libraries and algorithms. Eg: Use bcrypt not your own hashing algorithm.
 - Do not create more modules for the backend. Try to code within one of Hermione or Granger.
-- Do not use any kubernetes specific abstractions. Eg: Do not create a Kubernetes Job to send email but use goroutines and channels.
-- All configuration data should be read from configmap
-- All sensitive data (passwords, API keys, etc.) should be read from secrets
+- Do not use any kubernetes specific abstractions. Eg: Do not create a Kubernetes Job to send email, but instead use goroutines and channels. The lesser the images that we have, the easier it is to maintain.
+- All configuration data should be read from kubernetes configmap
+- All sensitive data (passwords, API keys, etc.) should be read from kubernetes secrets
 - All backend APIs should have test coverage. Write exhaustive tests for positive and negative cases, border conditions. Focus on meaningfully detecting regressions and not just on coverage percentages.
-- End to end tests > Unit tests
-- We use [ginkgo](https://onsi.github.io/ginkgo/) for writing end to end tests. Each test should have a testcase-up.sql and testcase-down.sql file. The testcase-up.sql file should be used to setup the test data and the testcase-down.sql should be used to clean up the test data. All testcases must clean whatever data they create (including emails). All testcases must be idempotent.
+- End to end tests > Unit tests. It is okay to ignore unit tests as long as the end to end tests are comprehensive across all codepaths.
+- We use [ginkgo](https://onsi.github.io/ginkgo/) for writing end to end tests. Each test should have a testcase-up.sql and testcase-down.sql file. The testcase-up.sql file should be used to setup the test data and the testcase-down.sql should be used to clean up the test data. All testcases must clean whatever data they create (including emails). All testcases must be [idempotent](https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning).
 - Minimize data that has to be moved out of database to backend. But have most business logic in Go code. This may seem contradictory at first, but if you read through the code, you will understand.
-- We use [typespec](https://typespec.io/) to define our API contract. Backend and Frontend code should adhere to the typespec specification. Once the typespec is compiled it will export a openapi.yaml file, which can be previewed in your favorite editor. Take a quick 5 minute introduction to typespec, if you have not worked with it before. It is quite easy to pick up. It is more concise than yaml and is far easier to edit/read.
+- Use the vetchi.Structs to pass data around everywhere as much as possible. If a handler has to write to multiple tables for a single HTTP request, then create and use a new struct under the `db` package. All things under the `db` package should be strictly internal and should not be exposed to the API (for frontend or clients). Things under the `db` package can be changed anytime.
+- We use [typespec](https://typespec.io/) to define our API contract. Backend and Frontend code should adhere to the typespec specification. Once the typespec is compiled, it will export an openapi.yaml file, which can be previewed in your favorite editor. Take a quick 5 minute introduction to typespec, if you have not worked with it before. It is quite easy to pick up. It is more concise than yaml and is far easier to edit/read.
 - Write the typespec specification first before writing any new code. It is okay to change the spec until the code is merged, but should be considered set in stone after that.
 - End all files with a newline. Do NOT have any trailing whitespace.
 - Enforce best-practices via editorconfig, CI or other FOSS tooling automation as much as possible. It is the responsibility of the reviewers to check for these.
