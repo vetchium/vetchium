@@ -172,7 +172,10 @@ CREATE TYPE opening_states AS ENUM ('DRAFT_OPENING', 'ACTIVE_OPENING', 'SUSPENDE
 CREATE TYPE opening_types AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'UNSPECIFIED');
 CREATE TYPE education_levels AS ENUM ('BACHELOR', 'MASTER', 'DOCTORATE', 'NOT_MATTERS', 'UNSPECIFIED');
 CREATE TABLE openings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    id TEXT NOT NULL,
+    CONSTRAINT openings_pk PRIMARY KEY (employer_id, id),
+
     title TEXT NOT NULL,
     positions INTEGER NOT NULL,
     jd TEXT NOT NULL,
@@ -190,31 +193,39 @@ CREATE TABLE openings (
     salary_currency TEXT NOT NULL,
     current_state opening_states NOT NULL,
     approval_waiting_state opening_states,
-    employer_id UUID REFERENCES employers(id) NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE opening_recruiters (
-    opening_id UUID REFERENCES openings(id) NOT NULL,
+    employer_id UUID NOT NULL,
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+
     recruiter_id UUID REFERENCES org_users(id) NOT NULL,
 
-    PRIMARY KEY (opening_id, recruiter_id)
+    PRIMARY KEY (employer_id, opening_id, recruiter_id)
 );
 
 CREATE TABLE opening_hiring_team(
-    opening_id UUID REFERENCES openings(id) NOT NULL,
+    employer_id UUID NOT NULL,
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+
     hiring_team_member_id UUID REFERENCES hub_users(id) NOT NULL,
 
-    PRIMARY KEY (opening_id, hiring_team_member_id)
+    PRIMARY KEY (employer_id, opening_id, hiring_team_member_id)
 );
 
 CREATE TABLE opening_locations(
-    opening_id UUID REFERENCES openings(id) NOT NULL,
+    employer_id UUID NOT NULL,
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+
     location_id UUID REFERENCES locations(id) NOT NULL,
 
-    PRIMARY KEY (opening_id, location_id)
+    PRIMARY KEY (employer_id, opening_id, location_id)
 );
 
 COMMIT;
