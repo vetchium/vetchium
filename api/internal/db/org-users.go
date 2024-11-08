@@ -23,7 +23,7 @@ type OrgUserTO struct {
 type AddOrgUserReq struct {
 	Name         string
 	Email        string
-	OrgUserRoles []vetchi.OrgUserRole
+	OrgUserRoles vetchi.OrgUserRoles
 	OrgUserState vetchi.OrgUserState
 
 	InviteMail Email
@@ -36,14 +36,6 @@ type AddOrgUserReq struct {
 	AddingUserID uuid.UUID
 }
 
-type DisableOrgUserReq struct {
-	Email      string
-	EmployerID uuid.UUID
-
-	// Currently unused, but will be used in the future for audit logs
-	DisablingUserID uuid.UUID
-}
-
 type EnableOrgUserReq struct {
 	Email      string
 	EmployerID uuid.UUID
@@ -54,27 +46,8 @@ type EnableOrgUserReq struct {
 	EnablingUserID uuid.UUID
 }
 
-type FilterOrgUsersReq struct {
-	Prefix     string
-	State      []string
-	EmployerID uuid.UUID
-
-	PaginationKey string
-	Limit         int
-}
-
 type SignupOrgUserReq struct {
 	InviteToken  string
 	Name         string
 	PasswordHash string
-}
-
-type UpdateOrgUserReq struct {
-	Email      string
-	Name       string
-	Roles      []vetchi.OrgUserRole
-	EmployerID uuid.UUID
-
-	// Currently unused, but will be used in the future for audit logs
-	UpdatingUserID uuid.UUID
 }

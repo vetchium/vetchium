@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -32,20 +31,7 @@ func UpdateOrgUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		orgUserID, err := h.DB().UpdateOrgUser(r.Context(), db.UpdateOrgUserReq{
-			Email:          updateOrgUserReq.Email,
-			Name:           updateOrgUserReq.Name,
-			Roles:          updateOrgUserReq.Roles,
-			EmployerID:     orgUser.EmployerID,
-			UpdatingUserID: orgUser.ID,
-		})
+		orgUserID, err := h.DB().UpdateOrgUser(r.Context(), updateOrgUserReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
 				h.Dbg("orguser not found", "updateOrgUserReq", updateOrgUserReq)

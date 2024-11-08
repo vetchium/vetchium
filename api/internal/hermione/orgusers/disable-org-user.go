@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -29,18 +28,7 @@ func DisableOrgUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-		if !ok {
-			h.Err("failed to get orgUser from context")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		err = h.DB().DisableOrgUser(r.Context(), db.DisableOrgUserReq{
-			Email:           disableOrgUserReq.Email,
-			EmployerID:      orgUser.EmployerID,
-			DisablingUserID: orgUser.ID,
-		})
+		err = h.DB().DisableOrgUser(r.Context(), disableOrgUserReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
 				h.Dbg("DisableOrgUser: OrgUser not found", "err", err)

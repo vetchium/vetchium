@@ -30,13 +30,3 @@ func (p *PG) convertToOrgUserRoles(
 	}
 	return roles, nil
 }
-
-func convertOrgUserRolesToStringArray(
-	roles []vetchi.OrgUserRole,
-) []string {
-	var strRoles []string
-	for _, role := range roles {
-		strRoles = append(strRoles, string(role))
-	}
-	return strRoles
-}

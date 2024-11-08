@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -35,8 +36,7 @@ RETURNING id
 		addOrgUserReq.Name,
 		addOrgUserReq.Email,
 		addOrgUserReq.EmployerID,
-		// addOrgUserReq.OrgUserRoles,
-		convertOrgUserRolesToStringArray(addOrgUserReq.OrgUserRoles),
+		addOrgUserReq.OrgUserRoles.StringArray(),
 		addOrgUserReq.OrgUserState,
 	)
 	err = row.Scan(&orgUserID)
@@ -114,8 +114,14 @@ RETURNING email_key
 
 func (p *PG) DisableOrgUser(
 	ctx context.Context,
-	req db.DisableOrgUserReq,
+	disableOrgUserRequest vetchi.DisableOrgUserRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	const (
 		userNotFound    = "USER_NOT_FOUND"
 		lastActiveAdmin = "LAST_ACTIVE_ADMIN"
@@ -166,8 +172,8 @@ SELECT
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.EmployerID,
-		req.Email,
+		orgUser.EmployerID,
+		disableOrgUserRequest.Email,
 		vetchi.ActiveOrgUserState,
 		vetchi.DisabledOrgUserState,
 		userNotFound,
@@ -296,8 +302,14 @@ RETURNING email_key
 
 func (p *PG) FilterOrgUsers(
 	ctx context.Context,
-	filterOrgUsersReq db.FilterOrgUsersReq,
+	filterOrgUsersReq vetchi.FilterOrgUsersRequest,
 ) ([]vetchi.OrgUser, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return nil, db.ErrInternal
+	}
+
 	query := `
 SELECT
     name,
@@ -321,9 +333,9 @@ LIMIT $5
 	rows, err := p.pool.Query(
 		ctx,
 		query,
-		filterOrgUsersReq.EmployerID,
+		orgUser.EmployerID,
 		filterOrgUsersReq.PaginationKey,
-		filterOrgUsersReq.State,
+		filterOrgUsersReq.StatesAsStrings(),
 		prefix,
 		filterOrgUsersReq.Limit,
 	)
@@ -395,8 +407,14 @@ RETURNING
 
 func (p *PG) UpdateOrgUser(
 	ctx context.Context,
-	updateOrgUserReq db.UpdateOrgUserReq,
+	updateOrgUserReq vetchi.UpdateOrgUserRequest,
 ) (uuid.UUID, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Error("failed to get orgUser from context")
+		return uuid.UUID{}, db.ErrInternal
+	}
+
 	query := `
 WITH target_user AS (
     SELECT id, org_user_roles
@@ -440,8 +458,8 @@ SELECT
 		query,
 		updateOrgUserReq.Email,
 		updateOrgUserReq.Name,
-		convertOrgUserRolesToStringArray(updateOrgUserReq.Roles),
-		updateOrgUserReq.EmployerID,
+		updateOrgUserReq.Roles.StringArray(),
+		orgUser.EmployerID,
 		vetchi.ActiveOrgUserState,
 		userNotFound,
 		lastActiveAdmin,

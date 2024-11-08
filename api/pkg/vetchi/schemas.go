@@ -407,11 +407,6 @@ type UpdateInterviewFeedbackRequest struct {
 	FeedbackToCandidate string           `json:"feedback_to_candidate,omitempty" validate:"min=10,max=1000"`
 }
 
-type UpdateOrgUserRolesRequest struct {
-	Email string        `json:"email" validate:"required,email"`
-	Roles []OrgUserRole `json:"roles" validate:"required"`
-}
-
 type UpdateWorkHistoryRequest struct {
 	WorkHistoryID string `json:"work_history_id"    validate:"required"`
 	CompanyHandle string `json:"company_handle"     validate:"required"`

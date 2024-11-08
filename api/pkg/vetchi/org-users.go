@@ -2,6 +2,16 @@ package vetchi
 
 type OrgUserRole string
 
+type OrgUserRoles []OrgUserRole
+
+func (roles OrgUserRoles) StringArray() []string {
+	var rolesStr []string
+	for _, role := range roles {
+		rolesStr = append(rolesStr, string(role))
+	}
+	return rolesStr
+}
+
 const (
 	Admin OrgUserRole = "ADMIN"
 
@@ -35,9 +45,9 @@ const (
 )
 
 type AddOrgUserRequest struct {
-	Name  string        `json:"name"  validate:"required,min=3,max=255"`
-	Email string        `json:"email" validate:"required,email,min=3,max=255"`
-	Roles []OrgUserRole `json:"roles" validate:"required,validate_org_user_roles"`
+	Name  string       `json:"name"  validate:"required,min=3,max=255"`
+	Email string       `json:"email" validate:"required,email,min=3,max=255"`
+	Roles OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
 }
 
 type DisableOrgUserRequest struct {
@@ -57,11 +67,24 @@ type FilterOrgUsersRequest struct {
 	Limit         int    `json:"limit"          validate:"omitempty,min=0,max=40"`
 }
 
+func (filterOrgUsersReq *FilterOrgUsersRequest) StatesAsStrings() []string {
+	if len(filterOrgUsersReq.State) == 0 {
+		return []string{string(ActiveOrgUserState), string(AddedOrgUserState)}
+	}
+
+	var states []string
+	for _, state := range filterOrgUsersReq.State {
+		// Already validated by Vator validate_org_user_state
+		states = append(states, string(state))
+	}
+	return states
+}
+
 type OrgUser struct {
-	Name  string        `json:"name"  db:"name"`
-	Email string        `json:"email" db:"email"`
-	Roles []OrgUserRole `json:"roles" db:"org_user_roles"`
-	State OrgUserState  `json:"state" db:"org_user_state"`
+	Name  string       `json:"name"  db:"name"`
+	Email string       `json:"email" db:"email"`
+	Roles OrgUserRoles `json:"roles" db:"org_user_roles"`
+	State OrgUserState `json:"state" db:"org_user_state"`
 }
 
 type SignupOrgUserRequest struct {
@@ -71,7 +94,7 @@ type SignupOrgUserRequest struct {
 }
 
 type UpdateOrgUserRequest struct {
-	Email string        `json:"email" validate:"required,email,min=3,max=255"`
-	Name  string        `json:"name"  validate:"required,min=3,max=255"`
-	Roles []OrgUserRole `json:"roles" validate:"required,validate_org_user_roles"`
+	Email string       `json:"email" validate:"required,email,min=3,max=255"`
+	Name  string       `json:"name"  validate:"required,min=3,max=255"`
+	Roles OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
 }

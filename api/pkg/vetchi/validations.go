@@ -160,7 +160,7 @@ func InitValidator(log *slog.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_org_user_roles",
 		func(fl validator.FieldLevel) bool {
-			roles := fl.Field().Interface().([]OrgUserRole)
+			roles := fl.Field().Interface().(OrgUserRoles)
 			if len(roles) == 0 {
 				return false
 			}

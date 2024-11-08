@@ -42,11 +42,11 @@ type DB interface {
 
 	// Org users related methods
 	AddOrgUser(c.Context, AddOrgUserReq) (uuid.UUID, error)
-	DisableOrgUser(c.Context, DisableOrgUserReq) error
+	DisableOrgUser(c.Context, v.DisableOrgUserRequest) error
 	EnableOrgUser(c.Context, EnableOrgUserReq) error
-	FilterOrgUsers(c.Context, FilterOrgUsersReq) ([]v.OrgUser, error)
+	FilterOrgUsers(c.Context, v.FilterOrgUsersRequest) ([]v.OrgUser, error)
 	SignupOrgUser(c.Context, SignupOrgUserReq) error
-	UpdateOrgUser(c.Context, UpdateOrgUserReq) (uuid.UUID, error)
+	UpdateOrgUser(c.Context, v.UpdateOrgUserRequest) (uuid.UUID, error)
 
 	// Used by granger
 	CreateOnboardEmail(c.Context, OnboardEmailInfo) error
