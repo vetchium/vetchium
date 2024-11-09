@@ -18,6 +18,17 @@ CREATE TABLE IF NOT EXISTS hub_users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+CREATE TYPE official_email_states AS ENUM ('PENDING', 'VERIFIED');
+CREATE TABLE hub_users_official_emails (
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    official_email TEXT NOT NULL,
+    state official_email_states NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
+    PRIMARY KEY (hub_user_id, official_email)
+);
+
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 CREATE TABLE emails(
 	email_key UUID PRIMARY KEY DEFAULT gen_random_uuid(),
