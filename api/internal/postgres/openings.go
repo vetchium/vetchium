@@ -123,17 +123,18 @@ WHERE email = ANY($2)
 	}
 
 	if len(createOpeningReq.HiringTeam) > 0 {
-		// TODO: Parse the vetchi handles and insert the hub_users(id) to the table
+		// TODO: Parse the org_users.emails  and insert the hub_users(id) to the table
 	}
 
 	if len(createOpeningReq.LocationTitles) > 0 {
-		// First verify all locations exist
+		// First verify all locations exist for this employer
 		verifyLocationsQuery := `
 SELECT COUNT(*)
 FROM (
     SELECT UNNEST($1::text[]) AS title
     EXCEPT
     SELECT title FROM locations
+    WHERE employer_id = $2
 ) AS invalid_locations`
 
 		var invalidCount int
@@ -141,6 +142,7 @@ FROM (
 			ctx,
 			verifyLocationsQuery,
 			createOpeningReq.LocationTitles,
+			orgUser.EmployerID,
 		).Scan(&invalidCount)
 		if err != nil {
 			p.log.Error("failed to verify locations", "error", err)
@@ -157,12 +159,14 @@ INSERT INTO opening_locations (opening_id, location_id)
 SELECT $1, l.id
 FROM locations l
 WHERE l.title = ANY($2)
+AND l.employer_id = $3
 `
 		_, err = tx.Exec(
 			ctx,
 			locationQuery,
 			openingID,
 			createOpeningReq.LocationTitles,
+			orgUser.EmployerID,
 		)
 		if err != nil {
 			p.log.Error("failed to insert locations", "error", err)

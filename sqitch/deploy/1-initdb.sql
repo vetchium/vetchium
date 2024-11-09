@@ -226,9 +226,9 @@ CREATE TABLE opening_hiring_team(
     opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
 
-    hiring_team_member_id UUID REFERENCES org_users(id) NOT NULL,
+    hiring_team_mate_id UUID REFERENCES org_users(id) NOT NULL,
 
-    PRIMARY KEY (employer_id, opening_id, hiring_team_member_id)
+    PRIMARY KEY (employer_id, opening_id, hiring_team_mate_id)
 );
 
 CREATE TABLE opening_locations(
