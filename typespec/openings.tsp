@@ -54,6 +54,7 @@ model Salary {
 @maxLength(64)
 scalar OpeningID extends string;
 
+@doc("The Opening object that should be used within the Employer API. Should not be exposed to the Hub APIs or the Hub UI.")
 model Opening {
     id: OpeningID;
 
@@ -78,7 +79,11 @@ model Opening {
     @maxItems(10)
     recruiters: string[];
 
-    hiring_manager: EmailAddress;
+    hiring_manager: OrgUserShort;
+
+    @doc("OrgUser emails of the members of the team for which the opening is created")
+    @maxItems(10)
+    hiring_team_members?: OrgUserShort[];
 
     @doc("Cost Center name under which the opening is created")
     cost_center_name: CostCenterName;
@@ -120,10 +125,6 @@ model Opening {
     @doc("If the Opening's state is changed and needs an approval, this field will indicate the state it is waiting for")
     approval_waiting_state?: OpeningState;
 
-    @doc("List of the Vetchi handles of the members of the team for which the opening is created. Note that this is different from the OrgUsers within the Employer.")
-    @maxItems(10)
-    hiring_team?: string[];
-
     created_at: utcDateTime;
     last_updated_at: utcDateTime;
 }
@@ -147,6 +148,10 @@ model CreateOpeningRequest {
     recruiters: EmailAddress[];
 
     hiring_manager: EmailAddress;
+
+    @doc("OrgUser emails of the members of the team for which the opening is created")
+    @maxItems(10)
+    hiring_team_members?: EmailAddress[];
 
     @doc("Cost Center name under which the opening is created")
     cost_center_name: CostCenterName;

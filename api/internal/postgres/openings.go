@@ -104,7 +104,7 @@ RETURNING
 		}
 	}
 
-	if len(createOpeningReq.HiringTeamMembers) > 0 {
+	if len(createOpeningReq.HiringTeam) > 0 {
 		// TODO: Parse the vetchi handles and insert the hub_users(id) to the table
 	}
 
@@ -246,27 +246,12 @@ GROUP BY
 			return vetchi.Opening{}, err
 		}
 		opening.Recruiters = append(opening.Recruiters, vetchi.OrgUserShort{
-			OrgUserEmail: recruiter.Email,
-			OrgUserName:  recruiter.Name,
+			Email: recruiter.Email,
+			Name:  recruiter.Name,
 		})
 	}
 
-	// Parse hiring team JSON
-	opening.HiringTeam = make([]vetchi.HubUserShort, 0, len(hiringTeamJSON))
-	for _, memberBytes := range hiringTeamJSON {
-		var member struct {
-			Handle   string `json:"handle"`
-			FullName string `json:"full_name"`
-		}
-		if err := json.Unmarshal(memberBytes, &member); err != nil {
-			pg.log.Error("failed to unmarshal hiring team member", "error", err)
-			return vetchi.Opening{}, err
-		}
-		opening.HiringTeam = append(opening.HiringTeam, vetchi.HubUserShort{
-			Handle:   member.Handle,
-			FullName: member.FullName,
-		})
-	}
+	// TODO: Parse hiring team
 
 	opening.LocationTitles = locations
 

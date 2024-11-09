@@ -62,6 +62,14 @@ model FilterOrgUsersRequest {
     state?: OrgUserState[];
 }
 
+model OrgUserShort {
+    name: string;
+    email: EmailAddress;
+
+    @doc("In case the same email address of the org_user is added by a hub profile, its Vetchi handle is populated here")
+    vetchi_handle?: string;
+}
+
 model UpdateOrgUserRequest {
     @doc("The email address of the org user to update")
     email: EmailAddress;

@@ -87,6 +87,12 @@ type OrgUser struct {
 	State OrgUserState `json:"state" db:"org_user_state"`
 }
 
+type OrgUserShort struct {
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	VetchiHandle string `json:"vetchi_handle"`
+}
+
 type SignupOrgUserRequest struct {
 	Name        string `json:"name"         validate:"required,min=3,max=255"`
 	Password    string `json:"password"     validate:"required,password"`

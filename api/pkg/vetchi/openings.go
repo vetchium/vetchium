@@ -45,6 +45,7 @@ type Opening struct {
 	JD                   string          `json:"jd"`
 	Recruiters           []OrgUserShort  `json:"recruiters"`
 	HiringManager        OrgUserShort    `json:"hiring_manager"`
+	HiringTeam           []OrgUserShort  `json:"hiring_team,omitempty"`
 	CostCenterName       CostCenterName  `json:"cost_center_name"`
 	EmployerNotes        *string         `json:"employer_notes,omitempty"`
 	LocationTitles       []string        `json:"location_titles,omitempty"`
@@ -57,7 +58,6 @@ type Opening struct {
 	Salary               *Salary         `json:"salary,omitempty"`
 	CurrentState         OpeningState    `json:"current_state"`
 	ApprovalWaitingState *OpeningState   `json:"approval_waiting_state,omitempty"`
-	HiringTeam           []HubUserShort  `json:"hiring_team,omitempty"`
 	CreatedAt            time.Time       `json:"created_at"`
 	LastUpdatedAt        time.Time       `json:"last_updated_at"`
 }
@@ -68,6 +68,7 @@ type CreateOpeningRequest struct {
 	JD                 string          `json:"jd"                             validate:"required,min=10,max=1024"`
 	Recruiters         []EmailAddress  `json:"recruiters"                     validate:"required,min=1,max=10"`
 	HiringManager      EmailAddress    `json:"hiring_manager"                 validate:"required"`
+	HiringTeam         []EmailAddress  `json:"hiring_team,omitempty"          validate:"omitempty,max=10"`
 	CostCenterName     CostCenterName  `json:"cost_center_name"               validate:"required"`
 	EmployerNotes      *string         `json:"employer_notes,omitempty"       validate:"omitempty,max=1024"`
 	LocationTitles     []string        `json:"location_titles,omitempty"      validate:"omitempty,max=10"`
@@ -78,7 +79,6 @@ type CreateOpeningRequest struct {
 	YoeMax             int             `json:"yoe_max"                        validate:"min=1,max=100"`
 	MinEducationLevel  *EducationLevel `json:"min_education_level,omitempty"`
 	Salary             *Salary         `json:"salary,omitempty"`
-	HiringTeamMembers  []string        `json:"hiring_team_members,omitempty"  validate:"omitempty,max=10"`
 }
 
 type GetOpeningRequest struct {
