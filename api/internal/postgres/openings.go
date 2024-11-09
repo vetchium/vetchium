@@ -26,8 +26,8 @@ SELECT
     o.title,
     o.positions,
     o.jd,
-    o.hiring_manager,
-    cc.name as cost_center_name,
+    jsonb_build_object('email', hm.email, 'name', hm.name, 'vetchi_handle', hu_hm.handle) AS hiring_manager,
+    cc.name AS cost_center_name,
     o.employer_notes,
     o.remote_country_codes,
     o.remote_timezones,
@@ -40,31 +40,60 @@ SELECT
     o.salary_currency,
     o.current_state,
     o.approval_waiting_state,
-    ARRAY_AGG(DISTINCT jsonb_build_object('email', r.email, 'name', r.name)) FILTER (WHERE r.email IS NOT NULL) as recruiters,
-    ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) as locations,
-    ARRAY_AGG(DISTINCT jsonb_build_object('handle', hu.handle, 'full_name', hu.full_name)) FILTER (WHERE hu.handle IS NOT NULL) as hiring_team
+    o.created_at,
+    o.last_updated_at,
+    ARRAY_AGG(DISTINCT jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle)) FILTER (WHERE r.email IS NOT NULL) AS recruiters,
+    ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) AS locations,
+    ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team
 FROM
     openings o
     LEFT JOIN cost_centers cc ON o.cost_center_id = cc.id
+    LEFT JOIN org_users hm ON o.hiring_manager = hm.id
+    LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
+    LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
     LEFT JOIN opening_recruiters or2 ON o.id = or2.opening_id
     LEFT JOIN org_users r ON or2.recruiter_id = r.id
+    LEFT JOIN hub_users_official_emails hue_r ON r.email = hue_r.official_email
+    LEFT JOIN hub_users hu_r ON hue_r.hub_user_id = hu_r.id
     LEFT JOIN opening_locations ol ON o.id = ol.opening_id
     LEFT JOIN locations l ON ol.location_id = l.id
     LEFT JOIN opening_hiring_team oht ON o.id = oht.opening_id
-    LEFT JOIN hub_users hu ON oht.hub_user_id = hu.id
+    LEFT JOIN org_users ht ON oht.hiring_team_mate_id = ht.id
+    LEFT JOIN hub_users_official_emails hue_ht ON ht.email = hue_ht.official_email
+    LEFT JOIN hub_users hu_ht ON hue_ht.hub_user_id = hu_ht.id
 WHERE
     o.id = $1
     AND o.employer_id = $2
 GROUP BY
-    o.id, o.title, o.positions, o.jd, o.hiring_manager, cc.name,
-    o.employer_notes, o.remote_country_codes, o.remote_timezones,
-    o.opening_type, o.yoe_min, o.yoe_max, o.min_education_level,
-    o.salary_min, o.salary_max, o.salary_currency, o.current_state,
-    o.approval_waiting_state`
+    o.id,
+    o.title,
+    o.positions,
+    o.jd,
+    hm.email,
+    hm.name,
+    hu_hm.handle,
+    cc.name,
+    o.employer_notes,
+    o.remote_country_codes,
+    o.remote_timezones,
+    o.opening_type,
+    o.yoe_min,
+    o.yoe_max,
+    o.min_education_level,
+    o.salary_min,
+    o.salary_max,
+    o.salary_currency,
+    o.current_state,
+    o.approval_waiting_state,
+    o.created_at,
+    o.last_updated_at
+`
 
 	var opening vetchi.Opening
 	var locations []string
 	var recruitersJSON, hiringTeamJSON [][]byte
+	var hiringManagerJSON []byte
+	var salary vetchi.Salary
 
 	err := pg.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(
@@ -72,7 +101,7 @@ GROUP BY
 			&opening.Title,
 			&opening.Positions,
 			&opening.JD,
-			&opening.HiringManager,
+			&hiringManagerJSON,
 			&opening.CostCenterName,
 			&opening.EmployerNotes,
 			&opening.RemoteCountryCodes,
@@ -81,11 +110,13 @@ GROUP BY
 			&opening.YoeMin,
 			&opening.YoeMax,
 			&opening.MinEducationLevel,
-			&opening.Salary.MinAmount,
-			&opening.Salary.MaxAmount,
-			&opening.Salary.Currency,
+			&salary.MinAmount,
+			&salary.MaxAmount,
+			&salary.Currency,
 			&opening.CurrentState,
 			&opening.ApprovalWaitingState,
+			&opening.CreatedAt,
+			&opening.LastUpdatedAt,
 			&recruitersJSON,
 			&locations,
 			&hiringTeamJSON,
@@ -98,26 +129,33 @@ GROUP BY
 		return vetchi.Opening{}, err
 	}
 
-	// Parse recruiters JSON
+	opening.Salary = &salary
+	opening.LocationTitles = locations
+
+	if err := json.Unmarshal(hiringManagerJSON, &opening.HiringManager); err != nil {
+		pg.log.Error("failed to unmarshal hiring manager", "error", err)
+		return vetchi.Opening{}, err
+	}
+
 	opening.Recruiters = make([]vetchi.OrgUserShort, 0, len(recruitersJSON))
 	for _, recruiterBytes := range recruitersJSON {
-		var recruiter struct {
-			Email string `json:"email"`
-			Name  string `json:"name"`
-		}
+		var recruiter vetchi.OrgUserShort
 		if err := json.Unmarshal(recruiterBytes, &recruiter); err != nil {
 			pg.log.Error("failed to unmarshal recruiter", "error", err)
 			return vetchi.Opening{}, err
 		}
-		opening.Recruiters = append(opening.Recruiters, vetchi.OrgUserShort{
-			Email: recruiter.Email,
-			Name:  recruiter.Name,
-		})
+		opening.Recruiters = append(opening.Recruiters, recruiter)
 	}
 
-	// TODO: Parse hiring team
-
-	opening.LocationTitles = locations
+	opening.HiringTeam = make([]vetchi.OrgUserShort, 0, len(hiringTeamJSON))
+	for _, teamMemberBytes := range hiringTeamJSON {
+		var teamMember vetchi.OrgUserShort
+		if err := json.Unmarshal(teamMemberBytes, &teamMember); err != nil {
+			pg.log.Error("failed to unmarshal team member", "error", err)
+			return vetchi.Opening{}, err
+		}
+		opening.HiringTeam = append(opening.HiringTeam, teamMember)
+	}
 
 	return opening, nil
 }

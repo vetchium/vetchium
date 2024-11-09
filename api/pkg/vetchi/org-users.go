@@ -88,8 +88,12 @@ type OrgUser struct {
 }
 
 type OrgUserShort struct {
-	Name         string `json:"name"`
-	Email        string `json:"email"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+
+	// If there is a HubUser (hub_users table in the db) who has the above email
+	// as one of the VERIFIED emails in hub_users_official_emails table,
+	// then this field will contain the handle of that HubUser.
 	VetchiHandle string `json:"vetchi_handle"`
 }
 
