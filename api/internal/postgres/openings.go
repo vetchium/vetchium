@@ -77,30 +77,48 @@ RETURNING
 	}
 
 	if len(createOpeningReq.Recruiters) > 0 {
+		// First verify all recruiters exist
+		verifyRecruitersQuery := `
+SELECT COUNT(*)
+FROM (
+    SELECT UNNEST($1::text[]) AS email
+    EXCEPT
+    SELECT email FROM org_users
+    WHERE employer_id = $2
+) AS invalid_recruiters`
+
+		var invalidCount int
+		err = tx.QueryRow(
+			ctx,
+			verifyRecruitersQuery,
+			createOpeningReq.Recruiters,
+			orgUser.EmployerID,
+		).Scan(&invalidCount)
+		if err != nil {
+			p.log.Error("failed to verify recruiters", "error", err)
+			return "", err
+		}
+		if invalidCount > 0 {
+			p.log.Debug("invalid recruiters found", "count", invalidCount)
+			return "", db.ErrInvalidRecruiter
+		}
+
+		// If all recruiters are valid, proceed with insertion
 		insertRecruitersQuery := `
 INSERT INTO opening_recruiters (opening_id, recruiter_id)
-    VALUES ($1, (
-            SELECT
-                id
-            FROM
-                org_users
-            WHERE
-                email = $2))
-RETURNING
-    id
+SELECT $1, id
+FROM org_users
+WHERE email = ANY($2)
 `
-		for _, recruiter := range createOpeningReq.Recruiters {
-			var recruiterID uuid.UUID
-			err = tx.QueryRow(ctx, insertRecruitersQuery, openingID, string(recruiter)).
-				Scan(&recruiterID)
-			if err != nil {
-				if err == sql.ErrNoRows {
-					p.log.Debug("recruiter not found", "email", recruiter)
-					return "", db.ErrNoRecruiter
-				}
-				p.log.Error("failed to insert recruiters", "error", err)
-				return "", err
-			}
+		_, err = tx.Exec(
+			ctx,
+			insertRecruitersQuery,
+			openingID,
+			createOpeningReq.Recruiters,
+		)
+		if err != nil {
+			p.log.Error("failed to insert recruiters", "error", err)
+			return "", err
 		}
 	}
 
@@ -109,31 +127,46 @@ RETURNING
 	}
 
 	if len(createOpeningReq.LocationTitles) > 0 {
+		// First verify all locations exist
+		verifyLocationsQuery := `
+SELECT COUNT(*)
+FROM (
+    SELECT UNNEST($1::text[]) AS title
+    EXCEPT
+    SELECT title FROM locations
+) AS invalid_locations`
+
+		var invalidCount int
+		err = tx.QueryRow(
+			ctx,
+			verifyLocationsQuery,
+			createOpeningReq.LocationTitles,
+		).Scan(&invalidCount)
+		if err != nil {
+			p.log.Error("failed to verify locations", "error", err)
+			return "", err
+		}
+		if invalidCount > 0 {
+			p.log.Debug("invalid locations found", "count", invalidCount)
+			return "", db.ErrInvalidLocation
+		}
+
+		// If all locations are valid, proceed with insertion
 		locationQuery := `
 INSERT INTO opening_locations (opening_id, location_id)
-    VALUES ($1, (
-            SELECT
-                id
-            FROM
-                locations
-            WHERE
-                title = $2))
-RETURNING
-    id
+SELECT $1, l.id
+FROM locations l
+WHERE l.title = ANY($2)
 `
-		for _, location := range createOpeningReq.LocationTitles {
-			var locationID uuid.UUID
-			err = tx.QueryRow(ctx, locationQuery, openingID, location).
-				Scan(&locationID)
-			if err != nil {
-				if err == sql.ErrNoRows {
-					p.log.Debug("location not found", "title", location)
-					return "", db.ErrNoLocation
-				}
-
-				p.log.Error("failed to insert locations", "error", err)
-				return "", err
-			}
+		_, err = tx.Exec(
+			ctx,
+			locationQuery,
+			openingID,
+			createOpeningReq.LocationTitles,
+		)
+		if err != nil {
+			p.log.Error("failed to insert locations", "error", err)
+			return "", err
 		}
 	}
 

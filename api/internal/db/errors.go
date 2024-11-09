@@ -27,4 +27,10 @@ var (
 
 	ErrNoRecruiter          = errors.New("recruiter not found")
 	ErrNoStateChangeWaiting = errors.New("no state change waiting")
+
+	ErrInvalidLocation = errors.New("one or more invalid locations specified")
+
+	ErrInvalidRecruiter = errors.New(
+		"one or more invalid recruiter emails specified",
+	)
 )
