@@ -33,4 +33,8 @@ var (
 	ErrInvalidRecruiter = errors.New(
 		"one or more invalid recruiter emails specified",
 	)
+
+	ErrInvalidHiringTeam = errors.New(
+		"one or more invalid hiring team member emails specified or members not in active state",
+	)
 )
