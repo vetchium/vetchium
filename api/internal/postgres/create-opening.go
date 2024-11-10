@@ -63,62 +63,46 @@ func (p *PG) CreateOpening(
 	p.log.Debug("generated opening ID", "id", openingID)
 
 	query := `
-INSERT INTO openings (id, title, positions, jd, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-RETURNING
-    id
+INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id)
+    VALUES ($1, $2, $3, $4, (
+            SELECT
+                id
+            FROM
+                org_users
+            WHERE
+                email = $5
+                AND employer_id = $21),
+            (
+                SELECT
+                    id
+                FROM
+                    org_users
+                WHERE
+                    email = $6
+                    AND employer_id = $21),
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+                $15,
+                $16,
+                $17,
+                $18,
+                $19,
+                $20,
+                $21)
+    RETURNING
+        id
 `
 	err = tx.QueryRow(ctx, query, openingID, createOpeningReq.Title, createOpeningReq.Positions, createOpeningReq.JD, createOpeningReq.HiringManager, costCenterID, createOpeningReq.EmployerNotes, createOpeningReq.RemoteCountryCodes, createOpeningReq.RemoteTimezones, createOpeningReq.OpeningType, createOpeningReq.YoeMin, createOpeningReq.YoeMax, createOpeningReq.MinEducationLevel, createOpeningReq.Salary.MinAmount, createOpeningReq.Salary.MaxAmount, createOpeningReq.Salary.Currency, vetchi.DraftOpening, nil, orgUser.EmployerID).
 		Scan(&openingID)
 	if err != nil {
 		p.log.Error("failed to create opening", "error", err)
 		return "", err
-	}
-
-	if len(createOpeningReq.Recruiters) > 0 {
-		// First verify all recruiters exist
-		verifyRecruitersQuery := `
-SELECT COUNT(*)
-FROM (
-    SELECT UNNEST($1::text[]) AS email
-    EXCEPT
-    SELECT email FROM org_users
-    WHERE employer_id = $2
-) AS invalid_recruiters`
-
-		var invalidCount int
-		err = tx.QueryRow(
-			ctx,
-			verifyRecruitersQuery,
-			createOpeningReq.Recruiters,
-			orgUser.EmployerID,
-		).Scan(&invalidCount)
-		if err != nil {
-			p.log.Error("failed to verify recruiters", "error", err)
-			return "", err
-		}
-		if invalidCount > 0 {
-			p.log.Debug("invalid recruiters found", "count", invalidCount)
-			return "", db.ErrInvalidRecruiter
-		}
-
-		// If all recruiters are valid, proceed with insertion
-		insertRecruitersQuery := `
-INSERT INTO opening_recruiters (opening_id, recruiter_id)
-SELECT $1, id
-FROM org_users
-WHERE email = ANY($2)
-`
-		_, err = tx.Exec(
-			ctx,
-			insertRecruitersQuery,
-			openingID,
-			createOpeningReq.Recruiters,
-		)
-		if err != nil {
-			p.log.Error("failed to insert recruiters", "error", err)
-			return "", err
-		}
 	}
 
 	if len(createOpeningReq.HiringTeam) > 0 {

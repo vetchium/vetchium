@@ -38,47 +38,51 @@ type Salary struct {
 }
 
 type Opening struct {
-	ID                   string          `json:"id"`
-	Title                string          `json:"title"`
-	Positions            int             `json:"positions"`
-	FilledPositions      int             `json:"filled_positions"`
-	JD                   string          `json:"jd"`
-	Recruiters           []OrgUserShort  `json:"recruiters"`
-	HiringManager        OrgUserShort    `json:"hiring_manager"`
-	HiringTeam           []OrgUserShort  `json:"hiring_team,omitempty"`
-	CostCenterName       CostCenterName  `json:"cost_center_name"`
+	ID                 string         `json:"id"`
+	Title              string         `json:"title"`
+	Positions          int            `json:"positions"`
+	FilledPositions    int            `json:"filled_positions"`
+	JD                 string         `json:"jd"`
+	Recruiter          OrgUserShort   `json:"recruiter"`
+	HiringManager      OrgUserShort   `json:"hiring_manager"`
+	HiringTeam         []OrgUserShort `json:"hiring_team,omitempty"`
+	CostCenterName     CostCenterName `json:"cost_center_name"`
+	LocationTitles     []string       `json:"location_titles,omitempty"`
+	RemoteCountryCodes []CountryCode  `json:"remote_country_codes,omitempty"`
+	RemoteTimezones    []TimeZone     `json:"remote_timezones,omitempty"`
+	OpeningType        OpeningType    `json:"opening_type"`
+	YoeMin             int            `json:"yoe_min"`
+	YoeMax             int            `json:"yoe_max"`
+	CurrentState       OpeningState   `json:"current_state"`
+	CreatedAt          time.Time      `json:"created_at"`
+	LastUpdatedAt      time.Time      `json:"last_updated_at"`
+
+	// Optional fields
+	ApprovalWaitingState *OpeningState   `json:"approval_waiting_state,omitempty"`
 	EmployerNotes        *string         `json:"employer_notes,omitempty"`
-	LocationTitles       []string        `json:"location_titles,omitempty"`
-	RemoteCountryCodes   []CountryCode   `json:"remote_country_codes,omitempty"`
-	RemoteTimezones      []TimeZone      `json:"remote_timezones,omitempty"`
-	OpeningType          OpeningType     `json:"opening_type"`
-	YoeMin               int             `json:"yoe_min"`
-	YoeMax               int             `json:"yoe_max"`
 	MinEducationLevel    *EducationLevel `json:"min_education_level,omitempty"`
 	Salary               *Salary         `json:"salary,omitempty"`
-	CurrentState         OpeningState    `json:"current_state"`
-	ApprovalWaitingState *OpeningState   `json:"approval_waiting_state,omitempty"`
-	CreatedAt            time.Time       `json:"created_at"`
-	LastUpdatedAt        time.Time       `json:"last_updated_at"`
 }
 
 type CreateOpeningRequest struct {
-	Title              string          `json:"title"                          validate:"required,min=3,max=32"`
-	Positions          int             `json:"positions"                      validate:"required,min=1,max=20"`
-	JD                 string          `json:"jd"                             validate:"required,min=10,max=1024"`
-	Recruiters         []EmailAddress  `json:"recruiters"                     validate:"required,min=1,max=10"`
-	HiringManager      EmailAddress    `json:"hiring_manager"                 validate:"required"`
-	HiringTeam         []EmailAddress  `json:"hiring_team,omitempty"          validate:"omitempty,max=10"`
-	CostCenterName     CostCenterName  `json:"cost_center_name"               validate:"required"`
-	EmployerNotes      *string         `json:"employer_notes,omitempty"       validate:"omitempty,max=1024"`
-	LocationTitles     []string        `json:"location_titles,omitempty"      validate:"omitempty,max=10"`
-	RemoteCountryCodes []CountryCode   `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
-	RemoteTimezones    []TimeZone      `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
-	OpeningType        OpeningType     `json:"opening_type"                   validate:"required"`
-	YoeMin             int             `json:"yoe_min"                        validate:"min=0,max=100"`
-	YoeMax             int             `json:"yoe_max"                        validate:"min=1,max=100"`
-	MinEducationLevel  *EducationLevel `json:"min_education_level,omitempty"`
-	Salary             *Salary         `json:"salary,omitempty"`
+	Title              string         `json:"title"                          validate:"required,min=3,max=32"`
+	Positions          int            `json:"positions"                      validate:"required,min=1,max=20"`
+	JD                 string         `json:"jd"                             validate:"required,min=10,max=1024"`
+	Recruiter          EmailAddress   `json:"recruiter"                      validate:"required"`
+	HiringManager      EmailAddress   `json:"hiring_manager"                 validate:"required"`
+	HiringTeam         []EmailAddress `json:"hiring_team,omitempty"          validate:"omitempty,max=10"`
+	CostCenterName     CostCenterName `json:"cost_center_name"               validate:"required"`
+	LocationTitles     []string       `json:"location_titles,omitempty"      validate:"omitempty,max=10"`
+	RemoteCountryCodes []CountryCode  `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
+	RemoteTimezones    []TimeZone     `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
+	OpeningType        OpeningType    `json:"opening_type"                   validate:"required"`
+	YoeMin             int            `json:"yoe_min"                        validate:"min=0,max=100"`
+	YoeMax             int            `json:"yoe_max"                        validate:"min=1,max=100"`
+
+	// Optional fields
+	EmployerNotes     *string         `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
+	MinEducationLevel *EducationLevel `json:"min_education_level,omitempty" validate:"omitempty"`
+	Salary            *Salary         `json:"salary,omitempty"              validate:"omitempty"`
 }
 
 type GetOpeningRequest struct {
@@ -93,22 +97,19 @@ type FilterOpeningsRequest struct {
 }
 
 type UpdateOpeningRequest struct {
-	ID                 string          `json:"id"                             validate:"required"`
-	Title              string          `json:"title"                          validate:"required,min=3,max=32"`
-	Positions          int             `json:"positions"                      validate:"required,min=1,max=20"`
-	JD                 string          `json:"jd"                             validate:"required,min=10,max=1024"`
-	Recruiters         []string        `json:"recruiters"                     validate:"required,min=1,max=10"`
-	HiringManager      EmailAddress    `json:"hiring_manager"                 validate:"required"`
-	CostCenterName     CostCenterName  `json:"cost_center_name"               validate:"required"`
-	EmployerNotes      *string         `json:"employer_notes,omitempty"       validate:"omitempty,max=1024"`
-	LocationTitles     []string        `json:"location_titles,omitempty"      validate:"omitempty,max=10"`
-	RemoteCountryCodes []CountryCode   `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
-	RemoteTimezones    []TimeZone      `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
-	OpeningType        OpeningType     `json:"opening_type"                   validate:"required"`
-	YoeMin             int             `json:"yoe_min"                        validate:"min=0,max=100"`
-	YoeMax             int             `json:"yoe_max"                        validate:"min=1,max=100"`
-	MinEducationLevel  *EducationLevel `json:"min_education_level,omitempty"`
-	Salary             *Salary         `json:"salary,omitempty"`
+	ID                string         `json:"id"                            validate:"required"`
+	Title             string         `json:"title"                         validate:"required,min=3,max=32"`
+	Positions         int            `json:"positions"                     validate:"required,min=1,max=20"`
+	JD                string         `json:"jd"                            validate:"required,min=10,max=1024"`
+	Recruiter         EmailAddress   `json:"recruiter"                     validate:"required"`
+	HiringManager     EmailAddress   `json:"hiring_manager"                validate:"required"`
+	CostCenterName    CostCenterName `json:"cost_center_name"              validate:"required"`
+	OpeningType       OpeningType    `json:"opening_type"                  validate:"required"`
+	EmployerNotes     string         `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
+	YoeMin            int            `json:"yoe_min"                       validate:"min=0,max=100"`
+	YoeMax            int            `json:"yoe_max"                       validate:"min=1,max=100"`
+	MinEducationLevel EducationLevel `json:"min_education_level,omitempty"`
+	Salary            Salary         `json:"salary,omitempty"`
 }
 
 type GetOpeningWatchersRequest struct {

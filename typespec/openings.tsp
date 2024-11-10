@@ -142,11 +142,7 @@ model CreateOpeningRequest {
     @maxLength(1024)
     jd: string;
 
-    @doc("List of recruiters assigned to the opening")
-    @minItems(1)
-    @maxItems(10)
-    recruiters: EmailAddress[];
-
+    recruiter: EmailAddress;
     hiring_manager: EmailAddress;
 
     @doc("OrgUser emails of the members of the team for which the opening is created")
@@ -322,7 +318,7 @@ interface GetOpening {
 @route("/employer/filter-openings")
 interface FilterOpenings {
     @tag("Openings")
-    @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} or ${OpeningsViewer} roles")
     @post
     filterOpenings(@body filterOpeningsRequest: FilterOpeningsRequest): {
         @statusCode statusCode: 200;

@@ -42,7 +42,7 @@ SELECT
     o.approval_waiting_state,
     o.created_at,
     o.last_updated_at,
-    ARRAY_AGG(DISTINCT jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle)) FILTER (WHERE r.email IS NOT NULL) AS recruiters,
+	ARRAY_AGG(DISTINCT jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle)) FILTER (WHERE r.email IS NOT NULL) AS recruiters,
     ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) AS locations,
     ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team
 FROM
@@ -91,8 +91,8 @@ GROUP BY
 
 	var opening vetchi.Opening
 	var locations []string
-	var recruitersJSON, hiringTeamJSON [][]byte
-	var hiringManagerJSON []byte
+	var hiringTeamJSON [][]byte
+	var recruiterJSON, hiringManagerJSON []byte
 	var salary vetchi.Salary
 
 	err := pg.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
@@ -117,7 +117,7 @@ GROUP BY
 			&opening.ApprovalWaitingState,
 			&opening.CreatedAt,
 			&opening.LastUpdatedAt,
-			&recruitersJSON,
+			&recruiterJSON,
 			&locations,
 			&hiringTeamJSON,
 		)
@@ -137,14 +137,9 @@ GROUP BY
 		return vetchi.Opening{}, err
 	}
 
-	opening.Recruiters = make([]vetchi.OrgUserShort, 0, len(recruitersJSON))
-	for _, recruiterBytes := range recruitersJSON {
-		var recruiter vetchi.OrgUserShort
-		if err := json.Unmarshal(recruiterBytes, &recruiter); err != nil {
-			pg.log.Error("failed to unmarshal recruiter", "error", err)
-			return vetchi.Opening{}, err
-		}
-		opening.Recruiters = append(opening.Recruiters, recruiter)
+	if err := json.Unmarshal(recruiterJSON, &opening.Recruiter); err != nil {
+		pg.log.Error("failed to unmarshal recruiter", "error", err)
+		return vetchi.Opening{}, err
 	}
 
 	opening.HiringTeam = make([]vetchi.OrgUserShort, 0, len(hiringTeamJSON))

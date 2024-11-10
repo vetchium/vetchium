@@ -192,6 +192,7 @@ CREATE TABLE openings (
     title TEXT NOT NULL,
     positions INTEGER NOT NULL,
     jd TEXT NOT NULL,
+    recruiter UUID REFERENCES org_users(id) NOT NULL,
     hiring_manager UUID REFERENCES org_users(id) NOT NULL,
     cost_center_id UUID REFERENCES org_cost_centers(id),
     employer_notes TEXT NOT NULL,
@@ -209,16 +210,6 @@ CREATE TABLE openings (
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
-);
-
-CREATE TABLE opening_recruiters (
-    employer_id UUID NOT NULL,
-    opening_id TEXT NOT NULL,
-    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
-
-    recruiter_id UUID REFERENCES org_users(id) NOT NULL,
-
-    PRIMARY KEY (employer_id, opening_id, recruiter_id)
 );
 
 CREATE TABLE opening_hiring_team(
