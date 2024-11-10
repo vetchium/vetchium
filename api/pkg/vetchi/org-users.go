@@ -87,6 +87,9 @@ type OrgUser struct {
 	State OrgUserState `json:"state" db:"org_user_state"`
 }
 
+// OrgUserShort is intended to be used in rendering of OrgUsers
+// within the Employer UI, Autocompletion on Employer UI, etc.
+// Not to be used on the Hub UI or even exposed on Hub APIs.
 type OrgUserShort struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -94,7 +97,7 @@ type OrgUserShort struct {
 	// If there is a HubUser (hub_users table in the db) who has the above email
 	// as one of the VERIFIED emails in hub_users_official_emails table,
 	// then this field will contain the handle of that HubUser.
-	VetchiHandle string `json:"vetchi_handle"`
+	VetchiHandle string `json:"vetchi_handle,omitempty"`
 }
 
 type SignupOrgUserRequest struct {
