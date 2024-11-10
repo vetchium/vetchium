@@ -97,19 +97,8 @@ type FilterOpeningsRequest struct {
 }
 
 type UpdateOpeningRequest struct {
-	ID                string         `json:"id"                            validate:"required"`
-	Title             string         `json:"title"                         validate:"required,min=3,max=32"`
-	Positions         int            `json:"positions"                     validate:"required,min=1,max=20"`
-	JD                string         `json:"jd"                            validate:"required,min=10,max=1024"`
-	Recruiter         EmailAddress   `json:"recruiter"                     validate:"required"`
-	HiringManager     EmailAddress   `json:"hiring_manager"                validate:"required"`
-	CostCenterName    CostCenterName `json:"cost_center_name"              validate:"required"`
-	OpeningType       OpeningType    `json:"opening_type"                  validate:"required"`
-	EmployerNotes     string         `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
-	YoeMin            int            `json:"yoe_min"                       validate:"min=0,max=100"`
-	YoeMax            int            `json:"yoe_max"                       validate:"min=1,max=100"`
-	MinEducationLevel EducationLevel `json:"min_education_level,omitempty"`
-	Salary            Salary         `json:"salary,omitempty"`
+	ID string `json:"id" validate:"required"`
+	// TODO: Decide what fields are allowed to be updated
 }
 
 type GetOpeningWatchersRequest struct {

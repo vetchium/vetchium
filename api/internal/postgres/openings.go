@@ -164,7 +164,6 @@ func (pg *PG) FilterOpenings(
 	return nil, nil
 }
 
-// UpdateOpening updates an existing opening
 func (pg *PG) UpdateOpening(
 	ctx context.Context,
 	updateOpeningReq vetchi.UpdateOpeningRequest,
