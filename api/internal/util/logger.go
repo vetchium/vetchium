@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log"
 	"log/slog"
 	"runtime/debug"
 )
@@ -10,7 +11,9 @@ type Logger struct {
 }
 
 func (l *Logger) Err(msg string, args ...any) {
-	l.Log.Error(msg, append(args, "stacktrace", string(debug.Stack()))...)
+	l.Log.Error(msg, args...)
+	debug.PrintStack()
+	log.Println("========")
 }
 
 func (l *Logger) Dbg(msg string, args ...any) {
