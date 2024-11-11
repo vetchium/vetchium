@@ -295,7 +295,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ccb4Update.Name).Should(Equal("CC-update-test-1"))
+		Expect(string(ccb4Update.Name)).Should(Equal("CC-update-test-1"))
 		Expect(ccb4Update.Notes).Should(Equal("This is a test cost center"))
 
 		fmt.Fprintf(GinkgoWriter, "Update Cost Center without Notes\n")
@@ -419,7 +419,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ccAfterRename.Name).Should(Equal("CC-rename-test-2"))
+		Expect(string(ccAfterRename.Name)).Should(Equal("CC-rename-test-2"))
 
 		_, statusCode, err = getCostCenter(
 			adminToken,
