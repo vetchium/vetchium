@@ -344,7 +344,7 @@ LIMIT $5
 		return nil, err
 	}
 
-	orgUsers, err := pgx.CollectRows[vetchi.OrgUser](
+	orgUsers, err := pgx.CollectRows(
 		rows,
 		pgx.RowToStructByName[vetchi.OrgUser],
 	)

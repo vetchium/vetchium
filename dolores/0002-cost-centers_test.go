@@ -250,7 +250,10 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(costCenters).Should(HaveLen(2))
 			Expect(
-				[]string{costCenters[0].Name, costCenters[1].Name},
+				[]string{
+					string(costCenters[0].Name),
+					string(costCenters[1].Name),
+				},
 			).Should(ConsistOf("CC1-Admin", "CC2-Crud"))
 		})
 
@@ -438,7 +441,7 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 		name,
 		expectedStatus,
 	)
-	reqBody := vetchi.AddCostCenterRequest{Name: name}
+	reqBody := vetchi.AddCostCenterRequest{Name: vetchi.CostCenterName(name)}
 	testPOST(token, reqBody, "/employer/add-cost-center", expectedStatus)
 }
 
@@ -450,7 +453,9 @@ func testDefunctCostCenter(token, name string, expectedStatus int) {
 		name,
 		expectedStatus,
 	)
-	reqBody := vetchi.DefunctCostCenterRequest{Name: name}
+	reqBody := vetchi.DefunctCostCenterRequest{
+		Name: vetchi.CostCenterName(name),
+	}
 	testPOST(
 		token,
 		reqBody,
@@ -481,7 +486,10 @@ func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(costCenters).Should(HaveLen(expectedLen))
 	Expect(
-		[]string{costCenters[0].Name, costCenters[1].Name},
+		[]string{
+			string(costCenters[0].Name),
+			string(costCenters[1].Name),
+		},
 	).Should(ConsistOf(expectedNames))
 }
 
@@ -592,7 +600,7 @@ func bulkAddDefunctCC(
 		statusCode, err := addCostCenter(
 			adminToken,
 			vetchi.AddCostCenterRequest{
-				Name: ccName,
+				Name: vetchi.CostCenterName(ccName),
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -605,7 +613,7 @@ func bulkAddDefunctCC(
 	for {
 		getCostCentersReqBody, err := json.Marshal(
 			vetchi.GetCostCentersRequest{
-				PaginationKey: paginationKey,
+				PaginationKey: vetchi.CostCenterName(paginationKey),
 				Limit:         limit,
 			},
 		)
@@ -633,9 +641,9 @@ func bulkAddDefunctCC(
 		}
 
 		for _, costCenter := range costCenters {
-			gotCC = append(gotCC, costCenter.Name)
+			gotCC = append(gotCC, string(costCenter.Name))
 		}
-		paginationKey = costCenters[len(costCenters)-1].Name
+		paginationKey = string(costCenters[len(costCenters)-1].Name)
 
 		if len(costCenters) < limit {
 			break
@@ -650,7 +658,7 @@ func bulkAddDefunctCC(
 
 		defunctCostCenterReqBody, err := json.Marshal(
 			vetchi.DefunctCostCenterRequest{
-				Name: ccName,
+				Name: vetchi.CostCenterName(ccName),
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
