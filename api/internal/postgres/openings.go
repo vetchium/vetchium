@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
@@ -123,7 +122,7 @@ GROUP BY
 			&hiringTeamJSON,
 		)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return vetchi.Opening{}, db.ErrNoOpening
 		}
 		p.log.Err("failed to scan opening", "error", err)

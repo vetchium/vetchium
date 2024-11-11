@@ -2,12 +2,12 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -31,14 +31,17 @@ func (p *PG) CreateOpening(
 	defer tx.Rollback(ctx)
 
 	var costCenterID uuid.UUID
-	ccQuery := `SELECT id FROM org_cost_centers WHERE cost_center_name = $1`
-	err = tx.QueryRow(ctx, ccQuery, createOpeningReq.CostCenterName).
+	ccQuery := `
+SELECT id FROM org_cost_centers WHERE cost_center_name = $1 AND employer_id = $2
+`
+	err = tx.QueryRow(ctx, ccQuery, createOpeningReq.CostCenterName, orgUser.EmployerID).
 		Scan(&costCenterID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			p.log.Dbg("CC not found", "name", createOpeningReq.CostCenterName)
 			return "", db.ErrNoCostCenter
 		}
+		p.log.Err("failed to get cost center", "error", err)
 		return "", err
 	}
 
@@ -47,7 +50,7 @@ func (p *PG) CreateOpening(
 	err = tx.QueryRow(ctx, todayOpeningsCountQuery, orgUser.EmployerID).
 		Scan(&todayOpeningsCount)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			p.log.Dbg("first opening today", "employerID", orgUser.EmployerID)
 			todayOpeningsCount = 0
 		} else {
@@ -171,7 +174,7 @@ FROM (
 			orgUser.EmployerID,
 		).Scan(&invalidCount)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				p.log.Dbg("not found", "team", createOpeningReq.HiringTeam)
 				return "", db.ErrInvalidHiringTeam
 			}
@@ -228,12 +231,16 @@ FROM (
 			orgUser.EmployerID,
 		).Scan(&invalidCount)
 		if err != nil {
+			if err == pgx.ErrNoRows {
+				p.log.Dbg("", "locations", createOpeningReq.LocationTitles)
+				return "", db.ErrNoLocation
+			}
 			p.log.Err("failed to verify locations", "error", err)
 			return "", err
 		}
 		if invalidCount > 0 {
 			p.log.Dbg("invalid locations found", "count", invalidCount)
-			return "", db.ErrInvalidLocation
+			return "", db.ErrNoLocation
 		}
 
 		// If all locations are valid, proceed with insertion
