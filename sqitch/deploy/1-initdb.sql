@@ -181,9 +181,9 @@ CREATE TABLE locations (
 
 ---
 
-CREATE TYPE opening_states AS ENUM ('DRAFT_OPENING', 'ACTIVE_OPENING', 'SUSPENDED_OPENING', 'CLOSED_OPENING');
-CREATE TYPE opening_types AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'UNSPECIFIED');
-CREATE TYPE education_levels AS ENUM ('BACHELOR', 'MASTER', 'DOCTORATE', 'NOT_MATTERS', 'UNSPECIFIED');
+CREATE TYPE opening_states AS ENUM ('DRAFT_OPENING_STATE', 'ACTIVE_OPENING_STATE', 'SUSPENDED_OPENING_STATE', 'CLOSED_OPENING_STATE');
+CREATE TYPE opening_types AS ENUM ('FULL_TIME_OPENING', 'PART_TIME_OPENING', 'CONTRACT_OPENING', 'INTERNSHIP_OPENING', 'UNSPECIFIED_OPENING');
+CREATE TYPE education_levels AS ENUM ('BACHELOR_EDUCATION', 'MASTER_EDUCATION', 'DOCTORATE_EDUCATION', 'NOT_MATTERS_EDUCATION', 'UNSPECIFIED_EDUCATION');
 CREATE TABLE openings (
     employer_id UUID REFERENCES employers(id) NOT NULL,
     id TEXT NOT NULL,
@@ -195,16 +195,16 @@ CREATE TABLE openings (
     recruiter UUID REFERENCES org_users(id) NOT NULL,
     hiring_manager UUID REFERENCES org_users(id) NOT NULL,
     cost_center_id UUID REFERENCES org_cost_centers(id),
-    employer_notes TEXT NOT NULL,
-    remote_country_codes TEXT[] NOT NULL,
-    remote_timezones TEXT[] NOT NULL,
+    employer_notes TEXT,
+    remote_country_codes TEXT[],
+    remote_timezones TEXT[],
     opening_type opening_types NOT NULL,
     yoe_min INTEGER NOT NULL,
     yoe_max INTEGER NOT NULL,
     min_education_level education_levels NOT NULL,
-    salary_min NUMERIC NOT NULL,
-    salary_max NUMERIC NOT NULL,
-    salary_currency TEXT NOT NULL,
+    salary_min NUMERIC,
+    salary_max NUMERIC,
+    salary_currency TEXT,
     current_state opening_states NOT NULL,
     approval_waiting_state opening_states,
 

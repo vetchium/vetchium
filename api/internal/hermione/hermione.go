@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"runtime/debug"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,6 +12,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/postgres"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -81,7 +81,7 @@ type Hermione struct {
 	// These are initialized programmatically in New()
 	hedwig hedwig.Hedwig
 	pg     *postgres.PG
-	log    *slog.Logger
+	log    util.Logger
 	mw     *middleware.Middleware
 	vator  *vetchi.Vator
 }
@@ -97,10 +97,12 @@ func NewHermione() (*Hermione, error) {
 		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level:     slog.LevelDebug,
-		AddSource: true,
-	}))
+	logger := util.Logger{
+		Log: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelDebug,
+			AddSource: true,
+		})),
+	}
 
 	pgConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
@@ -127,7 +129,7 @@ func NewHermione() (*Hermione, error) {
 
 	var hermione *Hermione
 
-	hedwig, err := hedwig.NewHedwig(hermione)
+	hedwig, err := hedwig.NewHedwig(logger)
 	if err != nil {
 		return nil, fmt.Errorf("Hedwig initialisation failure: %w", err)
 	}
@@ -177,18 +179,6 @@ func (h *Hermione) DB() *postgres.PG {
 	return h.pg
 }
 
-func (h *Hermione) Err(msg string, args ...any) {
-	h.log.With("stacktrace", string(debug.Stack())).Error(msg, args...)
-}
-
-func (h *Hermione) Dbg(msg string, args ...any) {
-	h.log.Debug(msg, args...)
-}
-
-func (h *Hermione) Inf(msg string, args ...any) {
-	h.log.Info(msg, args...)
-}
-
 func (h *Hermione) Vator() *vetchi.Vator {
 	return h.vator
 }
@@ -204,11 +194,23 @@ func (h *Hermione) ConfigDuration(key db.TokenType) (time.Duration, error) {
 	case db.EmployerInviteToken:
 		return h.employer.employeeInviteTokLife, nil
 	default:
-		h.log.Error("unknown key", "key", key)
+		h.log.Err("unknown key", "key", key)
 		return 0, fmt.Errorf("unknown key: %s", key)
 	}
 }
 
 func (h *Hermione) Hedwig() hedwig.Hedwig {
 	return h.hedwig
+}
+
+func (h *Hermione) Err(msg string, args ...any) {
+	h.log.Err(msg, args...)
+}
+
+func (h *Hermione) Dbg(msg string, args ...any) {
+	h.log.Dbg(msg, args...)
+}
+
+func (h *Hermione) Inf(msg string, args ...any) {
+	h.log.Inf(msg, args...)
 }

@@ -30,13 +30,15 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoRecruiter) ||
-				errors.Is(err, db.ErrNoLocation) {
+				errors.Is(err, db.ErrNoLocation) ||
+				errors.Is(err, db.ErrNoHiringManager) ||
+				errors.Is(err, db.ErrNoCostCenter) {
 				h.Dbg("location or team or recruiter not found", "error", err)
-				http.Error(w, "", http.StatusUnprocessableEntity)
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 				return
 			}
 
-			h.Dbg("failed to create opening", "error", err)
+			h.Err("failed to create opening", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

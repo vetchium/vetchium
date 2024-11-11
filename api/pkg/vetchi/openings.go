@@ -25,10 +25,10 @@ const (
 type OpeningState string
 
 const (
-	DraftOpening     OpeningState = "DRAFT_OPENING"
-	ActiveOpening    OpeningState = "ACTIVE_OPENING"
-	SuspendedOpening OpeningState = "SUSPENDED_OPENING"
-	ClosedOpening    OpeningState = "CLOSED_OPENING"
+	DraftOpening     OpeningState = "DRAFT_OPENING_STATE"
+	ActiveOpening    OpeningState = "ACTIVE_OPENING_STATE"
+	SuspendedOpening OpeningState = "SUSPENDED_OPENING_STATE"
+	ClosedOpening    OpeningState = "CLOSED_OPENING_STATE"
 )
 
 type Salary struct {

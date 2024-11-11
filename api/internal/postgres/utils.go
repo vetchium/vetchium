@@ -24,7 +24,7 @@ func (p *PG) convertToOrgUserRoles(
 			vetchi.OrgUsersViewer:
 			roles = append(roles, role)
 		default:
-			p.log.Error("invalid role in the database", "role", str)
+			p.log.Err("invalid role in the database", "role", str)
 			return nil, fmt.Errorf("invalid role: %s", str)
 		}
 	}

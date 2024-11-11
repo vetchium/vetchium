@@ -53,7 +53,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 	for {
 		select {
 		case <-quit:
-			g.log.Debug("createOnboardEmails quitting")
+			g.log.Dbg("createOnboardEmails quitting")
 			return
 		case <-time.After(5 * time.Second):
 			ctx := context.Background()
@@ -63,11 +63,11 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			}
 
 			if onboardInfo == nil {
-				g.log.Debug("no pending employer onboard email generation")
+				g.log.Dbg("no pending employer onboard email generation")
 				continue
 			}
 
-			g.log.Info("onboard invites", "onboardInfo", onboardInfo)
+			g.log.Inf("onboard invites", "onboardInfo", onboardInfo)
 
 			// TODO: Should we read the length from a config?
 			token := util.RandomString(vetchi.InviteTokenLenBytes)
@@ -82,7 +82,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 				"Link":   link,
 			})
 			if err != nil {
-				g.log.Error("email text template failed", "error", err)
+				g.log.Err("email text template failed", "error", err)
 				continue
 			}
 
@@ -94,7 +94,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 				"Link":   link,
 			})
 			if err != nil {
-				g.log.Error("email html template failed", "error", err)
+				g.log.Err("email html template failed", "error", err)
 				continue
 			}
 

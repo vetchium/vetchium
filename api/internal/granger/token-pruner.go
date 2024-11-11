@@ -11,7 +11,7 @@ func (g *Granger) pruneTokens(quit chan struct{}) {
 	for {
 		select {
 		case <-quit:
-			g.log.Debug("pruneTokens quitting")
+			g.log.Dbg("pruneTokens quitting")
 			return
 		case <-time.After(1 * time.Minute):
 			_ = g.db.PruneTokens(context.Background())

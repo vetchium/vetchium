@@ -19,7 +19,7 @@ func (p *PG) AddOrgUser(
 ) (orgUserID uuid.UUID, err error) {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return uuid.UUID{}, err
 	}
 
@@ -47,10 +47,10 @@ RETURNING id
 			return uuid.UUID{}, db.ErrOrgUserAlreadyExists
 		}
 
-		p.log.Error("failed to add org user", "error", err)
+		p.log.Err("failed to add org user", "error", err)
 		return uuid.UUID{}, err
 	}
-	p.log.Debug("org user added", "org_user_id", orgUserID)
+	p.log.Dbg("org user added", "org_user_id", orgUserID)
 
 	var tokenQuery = `
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
@@ -72,13 +72,13 @@ RETURNING token
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
 			pgErr.ConstraintName == "org_user_tokens_pkey" {
 			// Unlikely to happen but still handle it
-			p.log.Error("duplicate token generated", "error", err)
+			p.log.Err("duplicate token generated", "error", err)
 			return uuid.UUID{}, err
 		}
-		p.log.Error("failed to add org user token", "error", err)
+		p.log.Err("failed to add org user token", "error", err)
 		return uuid.UUID{}, err
 	}
-	p.log.Debug("org user token added", "token_key", tokenKey)
+	p.log.Dbg("org user token added", "token_key", tokenKey)
 
 	var emailQuery = `
 INSERT INTO emails(email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
@@ -98,14 +98,14 @@ RETURNING email_key
 	)
 	err = row.Scan(&emailKey)
 	if err != nil {
-		p.log.Error("failed to add invite email", "error", err)
+		p.log.Err("failed to add invite email", "error", err)
 		return uuid.UUID{}, err
 	}
-	p.log.Debug("invite email added", "email_key", emailKey)
+	p.log.Dbg("invite email added", "email_key", emailKey)
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return uuid.UUID{}, err
 	}
 
@@ -118,7 +118,7 @@ func (p *PG) DisableOrgUser(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -185,7 +185,7 @@ SELECT
 			return db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to disable org user", "error", err)
+		p.log.Err("failed to disable org user", "error", err)
 		return err
 	}
 
@@ -199,11 +199,11 @@ SELECT
 	default:
 		orgUserID, err := uuid.Parse(result)
 		if err != nil {
-			p.log.Error("failed to parse org user id", "error", err)
+			p.log.Err("failed to parse org user id", "error", err)
 			return err
 		}
 
-		p.log.Debug("org user disabled", "org_user_id", orgUserID)
+		p.log.Dbg("org user disabled", "org_user_id", orgUserID)
 		return nil
 	}
 }
@@ -214,7 +214,7 @@ func (p *PG) EnableOrgUser(
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 
@@ -240,12 +240,12 @@ WHERE
 			return db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to get org user", "error", err)
+		p.log.Err("failed to get org user", "error", err)
 		return err
 	}
 
 	if orgUserState != vetchi.DisabledOrgUserState {
-		p.log.Debug("org user not disabled", "org_user_id", orgUserID)
+		p.log.Dbg("org user not disabled", "org_user_id", orgUserID)
 		return db.ErrOrgUserNotDisabled
 	}
 
@@ -264,10 +264,10 @@ RETURNING id
 	err = tx.QueryRow(ctx, updateOrgUserQuery, vetchi.AddedOrgUserState, orgUserID, vetchi.DisabledOrgUserState).
 		Scan(&updatedOrgUserID)
 	if err != nil {
-		p.log.Error("failed to update org user", "error", err)
+		p.log.Err("failed to update org user", "error", err)
 		return err
 	}
-	p.log.Debug("org user set to Added state", "org_user_id", updatedOrgUserID)
+	p.log.Dbg("org user set to Added state", "org_user_id", updatedOrgUserID)
 
 	var emailQuery = `
 INSERT INTO emails(email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
@@ -286,14 +286,14 @@ RETURNING email_key
 		db.EmailStatePending,
 	).Scan(&emailKey)
 	if err != nil {
-		p.log.Error("failed to add invite email", "error", err)
+		p.log.Err("failed to add invite email", "error", err)
 		return err
 	}
-	p.log.Debug("invite email added", "email_key", emailKey)
+	p.log.Dbg("invite email added", "email_key", emailKey)
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return err
 	}
 
@@ -306,7 +306,7 @@ func (p *PG) FilterOrgUsers(
 ) ([]vetchi.OrgUser, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return nil, db.ErrInternal
 	}
 
@@ -340,7 +340,7 @@ LIMIT $5
 		filterOrgUsersReq.Limit,
 	)
 	if err != nil {
-		p.log.Error("failed to filter org users", "error", err)
+		p.log.Err("failed to filter org users", "error", err)
 		return nil, err
 	}
 
@@ -349,7 +349,7 @@ LIMIT $5
 		pgx.RowToStructByName[vetchi.OrgUser],
 	)
 	if err != nil {
-		p.log.Error("failed to collect org users", "error", err)
+		p.log.Err("failed to collect org users", "error", err)
 		return nil, err
 	}
 
@@ -397,11 +397,11 @@ RETURNING
 			return db.ErrInviteTokenNotFound
 		}
 
-		p.log.Error("failed to signup org user", "error", err)
+		p.log.Err("failed to signup org user", "error", err)
 		return err
 	}
 
-	p.log.Debug("org user signed up", "org_user_id", orgUserID)
+	p.log.Dbg("org user signed up", "org_user_id", orgUserID)
 	return nil
 }
 
@@ -411,7 +411,7 @@ func (p *PG) UpdateOrgUser(
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return uuid.UUID{}, db.ErrInternal
 	}
 
@@ -469,7 +469,7 @@ SELECT
 			return uuid.UUID{}, db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to update org user", "error", err)
+		p.log.Err("failed to update org user", "error", err)
 		return uuid.UUID{}, err
 	}
 
@@ -481,7 +481,7 @@ SELECT
 
 	orgUserID, err := uuid.Parse(orgUserIDStr)
 	if err != nil {
-		p.log.Error("failed to parse org user id", "error", err)
+		p.log.Err("failed to parse org user id", "error", err)
 		return uuid.UUID{}, err
 	}
 

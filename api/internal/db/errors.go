@@ -26,6 +26,7 @@ var (
 	ErrNoOpening = errors.New("opening not found")
 
 	ErrNoRecruiter          = errors.New("recruiter not found")
+	ErrNoHiringManager      = errors.New("hiring manager not found")
 	ErrNoStateChangeWaiting = errors.New("no state change waiting")
 
 	ErrInvalidLocation = errors.New("one or more invalid locations specified")

@@ -15,13 +15,13 @@ func (p *PG) GetDomainNames(
 
 	rows, err := p.pool.Query(ctx, query, employerID)
 	if err != nil {
-		p.log.Error("failed to query domains", "error", err)
+		p.log.Err("failed to query domains", "error", err)
 		return nil, err
 	}
 
 	domains, err := pgx.CollectRows(rows, pgx.RowTo[string])
 	if err != nil {
-		p.log.Error("failed to collect rows", "error", err)
+		p.log.Err("failed to collect rows", "error", err)
 		return nil, err
 	}
 

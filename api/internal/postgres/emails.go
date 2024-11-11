@@ -72,7 +72,7 @@ WHERE
 		emailStateChange.EmailDBKey,
 	)
 	if err != nil {
-		p.log.Error("failed to update email state", "error", err)
+		p.log.Err("failed to update email state", "error", err)
 		return err
 	}
 

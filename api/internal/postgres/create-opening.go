@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -18,7 +20,7 @@ func (p *PG) CreateOpening(
 ) (string, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return "", db.ErrInternal
 	}
 
@@ -29,12 +31,12 @@ func (p *PG) CreateOpening(
 	defer tx.Rollback(ctx)
 
 	var costCenterID uuid.UUID
-	ccQuery := `SELECT id FROM cost_centers WHERE name = $1`
+	ccQuery := `SELECT id FROM org_cost_centers WHERE cost_center_name = $1`
 	err = tx.QueryRow(ctx, ccQuery, createOpeningReq.CostCenterName).
 		Scan(&costCenterID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			p.log.Debug("CC not found", "name", createOpeningReq.CostCenterName)
+			p.log.Dbg("CC not found", "name", createOpeningReq.CostCenterName)
 			return "", db.ErrNoCostCenter
 		}
 		return "", err
@@ -45,8 +47,13 @@ func (p *PG) CreateOpening(
 	err = tx.QueryRow(ctx, todayOpeningsCountQuery, orgUser.EmployerID).
 		Scan(&todayOpeningsCount)
 	if err != nil {
-		p.log.Error("failed to get today's openings count", "error", err)
-		return "", err
+		if err == sql.ErrNoRows {
+			p.log.Dbg("first opening today", "employerID", orgUser.EmployerID)
+			todayOpeningsCount = 0
+		} else {
+			p.log.Err("failed to get today's openings count", "error", err)
+			return "", err
+		}
 	}
 
 	// TODO: Check for max openings allowed per Employer and/or per Day.
@@ -60,7 +67,7 @@ func (p *PG) CreateOpening(
 		t.Day(),
 		todayOpeningsCount+1,
 	)
-	p.log.Debug("generated opening ID", "id", openingID)
+	p.log.Dbg("generated opening ID", "id", openingID)
 
 	query := `
 INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id)
@@ -71,7 +78,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                 org_users
             WHERE
                 email = $5
-                AND employer_id = $21),
+                AND employer_id = $20),
             (
                 SELECT
                     id
@@ -79,7 +86,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                     org_users
                 WHERE
                     email = $6
-                    AND employer_id = $21),
+                    AND employer_id = $20),
                 $7,
                 $8,
                 $9,
@@ -93,15 +100,54 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                 $17,
                 $18,
                 $19,
-                $20,
-                $21)
+                $20)
     RETURNING
         id
 `
-	err = tx.QueryRow(ctx, query, openingID, createOpeningReq.Title, createOpeningReq.Positions, createOpeningReq.JD, createOpeningReq.HiringManager, costCenterID, createOpeningReq.EmployerNotes, createOpeningReq.RemoteCountryCodes, createOpeningReq.RemoteTimezones, createOpeningReq.OpeningType, createOpeningReq.YoeMin, createOpeningReq.YoeMax, createOpeningReq.MinEducationLevel, createOpeningReq.Salary.MinAmount, createOpeningReq.Salary.MaxAmount, createOpeningReq.Salary.Currency, vetchi.DraftOpening, nil, orgUser.EmployerID).
-		Scan(&openingID)
+	err = tx.QueryRow(
+		ctx,
+		query,
+		openingID,
+		createOpeningReq.Title,
+		createOpeningReq.Positions,
+		createOpeningReq.JD,
+		createOpeningReq.Recruiter,
+		createOpeningReq.HiringManager,
+		costCenterID,
+		createOpeningReq.EmployerNotes,
+		createOpeningReq.RemoteCountryCodes,
+		createOpeningReq.RemoteTimezones,
+		createOpeningReq.OpeningType,
+		createOpeningReq.YoeMin,
+		createOpeningReq.YoeMax,
+		createOpeningReq.MinEducationLevel,
+		createOpeningReq.Salary.MinAmount,
+		createOpeningReq.Salary.MaxAmount,
+		createOpeningReq.Salary.Currency,
+		vetchi.DraftOpening,
+		nil,
+		orgUser.EmployerID,
+	).Scan(&openingID)
 	if err != nil {
-		p.log.Error("failed to create opening", "error", err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			// 23502 is not null error code
+			if pgErr.Code == "23502" {
+				if pgErr.ColumnName == "recruiter" {
+					return "", db.ErrNoRecruiter
+				} else if pgErr.ColumnName == "hiring_manager" {
+					return "", db.ErrNoHiringManager
+				} else {
+					p.log.Err("create opening", "error", pgErr.Message)
+					return "", err
+				}
+			}
+
+			p.log.Err("failed to create opening", "error", pgErr.Message)
+			return "", err
+		} else {
+			p.log.Err("failed to create opening", "error", err)
+		}
 		return "", err
 	}
 
@@ -125,11 +171,15 @@ FROM (
 			orgUser.EmployerID,
 		).Scan(&invalidCount)
 		if err != nil {
-			p.log.Error("failed to verify hiring team", "error", err)
+			if err == sql.ErrNoRows {
+				p.log.Dbg("not found", "team", createOpeningReq.HiringTeam)
+				return "", db.ErrInvalidHiringTeam
+			}
+			p.log.Err("failed to verify hiring team", "error", err)
 			return "", err
 		}
 		if invalidCount > 0 {
-			p.log.Debug(
+			p.log.Dbg(
 				"invalid hiring team members found",
 				"count",
 				invalidCount,
@@ -154,7 +204,7 @@ AND org_user_state IN ('ACTIVE_ORG_USER', 'REPLICATED_ORG_USER')
 			createOpeningReq.HiringTeam,
 		)
 		if err != nil {
-			p.log.Error("failed to insert hiring team", "error", err)
+			p.log.Err("failed to insert hiring team", "error", err)
 			return "", err
 		}
 	}
@@ -178,38 +228,38 @@ FROM (
 			orgUser.EmployerID,
 		).Scan(&invalidCount)
 		if err != nil {
-			p.log.Error("failed to verify locations", "error", err)
+			p.log.Err("failed to verify locations", "error", err)
 			return "", err
 		}
 		if invalidCount > 0 {
-			p.log.Debug("invalid locations found", "count", invalidCount)
+			p.log.Dbg("invalid locations found", "count", invalidCount)
 			return "", db.ErrInvalidLocation
 		}
 
 		// If all locations are valid, proceed with insertion
 		locationQuery := `
-INSERT INTO opening_locations (opening_id, location_id)
-SELECT $1, l.id
+INSERT INTO opening_locations (employer_id, opening_id, location_id)
+SELECT $1, $2, l.id
 FROM locations l
-WHERE l.title = ANY($2)
-AND l.employer_id = $3
+WHERE l.title = ANY($3)
+AND l.employer_id = $1
 `
 		_, err = tx.Exec(
 			ctx,
 			locationQuery,
+			orgUser.EmployerID,
 			openingID,
 			createOpeningReq.LocationTitles,
-			orgUser.EmployerID,
 		)
 		if err != nil {
-			p.log.Error("failed to insert locations", "error", err)
+			p.log.Err("failed to insert locations", "error", err)
 			return "", err
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return "", err
 	}
 

@@ -18,7 +18,7 @@ func (p *PG) GetCCByName(
 ) (vetchi.CostCenter, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return vetchi.CostCenter{}, db.ErrInternal
 	}
 
@@ -49,7 +49,7 @@ WHERE
 			return vetchi.CostCenter{}, db.ErrNoCostCenter
 		}
 
-		p.log.Error("failed to get cost center by name", "error", err)
+		p.log.Err("failed to get cost center by name", "error", err)
 		return vetchi.CostCenter{}, err
 	}
 
@@ -62,7 +62,7 @@ func (p *PG) UpdateCostCenter(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -87,11 +87,11 @@ RETURNING id
 			return db.ErrNoCostCenter
 		}
 
-		p.log.Error("failed to update cost center", "error", err)
+		p.log.Err("failed to update cost center", "error", err)
 		return err
 	}
 
-	p.log.Debug("cost center updated", "cost_center_id", costCenterID)
+	p.log.Dbg("cost center updated", "cost_center_id", costCenterID)
 
 	return nil
 }
@@ -102,7 +102,7 @@ func (p *PG) RenameCostCenter(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -134,11 +134,11 @@ RETURNING id
 			return db.ErrDupCostCenterName
 		}
 
-		p.log.Error("failed to rename cost center", "error", err)
+		p.log.Err("failed to rename cost center", "error", err)
 		return err
 	}
 
-	p.log.Debug("cost center renamed", "cost_center_id", costCenterID)
+	p.log.Dbg("cost center renamed", "cost_center_id", costCenterID)
 	return nil
 }
 
@@ -148,7 +148,7 @@ func (p *PG) GetCostCenters(
 ) ([]vetchi.CostCenter, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return nil, db.ErrInternal
 	}
 
@@ -175,7 +175,7 @@ LIMIT $4
 		costCentersList.Limit,
 	)
 	if err != nil {
-		p.log.Error("failed to query cost centers", "error", err)
+		p.log.Err("failed to query cost centers", "error", err)
 		return nil, err
 	}
 
@@ -184,7 +184,7 @@ LIMIT $4
 		pgx.RowToStructByName[vetchi.CostCenter],
 	)
 	if err != nil {
-		p.log.Error("failed to query cost centers", "error", err)
+		p.log.Err("failed to query cost centers", "error", err)
 		return nil, err
 	}
 
@@ -197,7 +197,7 @@ func (p *PG) DefunctCostCenter(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -226,7 +226,7 @@ RETURNING
 			return db.ErrNoCostCenter
 		}
 
-		p.log.Error("failed to defunct cost center", "error", err)
+		p.log.Err("failed to defunct cost center", "error", err)
 		return err
 	}
 
@@ -239,7 +239,7 @@ func (p *PG) CreateCostCenter(
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return uuid.UUID{}, db.ErrInternal
 	}
 
@@ -264,7 +264,7 @@ RETURNING
 			return uuid.UUID{}, db.ErrDupCostCenterName
 		}
 
-		p.log.Error("failed to create cost center", "error", err)
+		p.log.Err("failed to create cost center", "error", err)
 		return uuid.UUID{}, err
 	}
 

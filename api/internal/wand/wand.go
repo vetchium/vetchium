@@ -6,7 +6,6 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/postgres"
-	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -17,6 +16,7 @@ type Wand interface {
 
 	ConfigDuration(key db.TokenType) (time.Duration, error)
 
-	// Embed Err Dbg Inf methods instead of Log().Err() so that code is narrower
-	util.Logger
+	Dbg(msg string, args ...any)
+	Inf(msg string, args ...any)
+	Err(msg string, args ...any)
 }

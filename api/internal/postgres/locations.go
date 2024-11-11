@@ -18,7 +18,7 @@ func (p *PG) AddLocation(
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return uuid.UUID{}, db.ErrInternal
 	}
 
@@ -49,7 +49,7 @@ RETURNING
 			return uuid.UUID{}, db.ErrDupLocationName
 		}
 
-		p.log.Error("failed to create location", "error", err)
+		p.log.Err("failed to create location", "error", err)
 		return uuid.UUID{}, err
 	}
 
@@ -62,7 +62,7 @@ func (p *PG) DefunctLocation(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -90,7 +90,7 @@ RETURNING
 			return db.ErrNoLocation
 		}
 
-		p.log.Error("failed to defunct location", "error", err)
+		p.log.Err("failed to defunct location", "error", err)
 		return err
 	}
 
@@ -103,7 +103,7 @@ func (p *PG) GetLocByName(
 ) (vetchi.Location, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return vetchi.Location{}, db.ErrInternal
 	}
 
@@ -143,7 +143,7 @@ WHERE
 			return vetchi.Location{}, db.ErrNoLocation
 		}
 
-		p.log.Error("failed to get location by name", "error", err)
+		p.log.Err("failed to get location by name", "error", err)
 		return vetchi.Location{}, err
 	}
 
@@ -156,7 +156,7 @@ func (p *PG) GetLocations(
 ) ([]vetchi.Location, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return nil, db.ErrInternal
 	}
 
@@ -189,7 +189,7 @@ LIMIT $4
 		getLocationsReq.Limit,
 	)
 	if err != nil {
-		p.log.Error("failed to get locations", "error", err)
+		p.log.Err("failed to get locations", "error", err)
 		return nil, err
 	}
 
@@ -198,7 +198,7 @@ LIMIT $4
 		pgx.RowToStructByName[vetchi.Location],
 	)
 	if err != nil {
-		p.log.Error("failed to get locations", "error", err)
+		p.log.Err("failed to get locations", "error", err)
 		return nil, err
 	}
 
@@ -211,7 +211,7 @@ func (p *PG) RenameLocation(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -246,11 +246,11 @@ RETURNING
 			return db.ErrDupLocationName
 		}
 
-		p.log.Error("failed to rename location", "error", err)
+		p.log.Err("failed to rename location", "error", err)
 		return err
 	}
 
-	p.log.Debug("location renamed", "location_id", locationID)
+	p.log.Dbg("location renamed", "location_id", locationID)
 
 	return nil
 }
@@ -261,7 +261,7 @@ func (p *PG) UpdateLocation(
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		p.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return db.ErrInternal
 	}
 
@@ -294,11 +294,11 @@ RETURNING
 		orgUser.EmployerID,
 	).Scan(&locationID)
 	if err != nil {
-		p.log.Error("failed to update location", "error", err)
+		p.log.Err("failed to update location", "error", err)
 		return err
 	}
 
-	p.log.Debug("location updated", "location_id", locationID)
+	p.log.Dbg("location updated", "location_id", locationID)
 
 	return nil
 }

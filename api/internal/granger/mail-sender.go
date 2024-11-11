@@ -17,7 +17,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 	for {
 		select {
 		case <-quit:
-			g.log.Debug("mailSender quitting")
+			g.log.Dbg("mailSender quitting")
 			return
 		case <-time.After(5 * time.Second):
 			ctx := context.Background()
@@ -51,7 +51,7 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 
 func (g *Granger) sendEmail(email db.Email) error {
 	if len(email.EmailTo) == 0 {
-		g.log.Error("Email has no recipients", "email", email.EmailKey)
+		g.log.Err("Email has no recipients", "email", email.EmailKey)
 		return errors.New("email has no recipients")
 	}
 
@@ -59,22 +59,22 @@ func (g *Granger) sendEmail(email db.Email) error {
 
 	m := mail.NewMsg()
 	if err = m.From(email.EmailFrom); err != nil {
-		g.log.Error("failed to set From address", "error", err)
+		g.log.Err("failed to set From address", "error", err)
 		return err
 	}
 
 	if err = m.To(email.EmailTo...); err != nil {
-		g.log.Error("failed to set To address", "error", err)
+		g.log.Err("failed to set To address", "error", err)
 		return err
 	}
 
 	if err = m.Cc(email.EmailCC...); err != nil {
-		g.log.Error("failed to set Cc address", "error", err)
+		g.log.Err("failed to set Cc address", "error", err)
 		return err
 	}
 
 	if err = m.Bcc(email.EmailBCC...); err != nil {
-		g.log.Error("failed to set Bcc address", "error", err)
+		g.log.Err("failed to set Bcc address", "error", err)
 		return err
 	}
 
@@ -82,7 +82,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 	m.SetBodyString(mail.TypeTextHTML, email.EmailHTMLBody)
 	m.AddAlternativeString(mail.TypeTextPlain, email.EmailTextBody)
 
-	g.log.Info("sending email", "email", email.EmailKey, "env", g.env)
+	g.log.Inf("sending email", "email", email.EmailKey, "env", g.env)
 	var c *mail.Client
 	if g.env == vetchi.ProdEnv {
 		c, err = mail.NewClient(
@@ -93,7 +93,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 			mail.WithSMTPAuth(mail.SMTPAuthLogin),
 		)
 		if err != nil {
-			g.log.Error("failed to create PROD mail client", "error", err)
+			g.log.Err("failed to create PROD mail client", "error", err)
 			return err
 		}
 	} else {
@@ -104,17 +104,17 @@ func (g *Granger) sendEmail(email db.Email) error {
 			mail.WithSMTPAuth(mail.SMTPAuthCustom),
 		)
 		if err != nil {
-			g.log.Error("failed to create DEV mail client", "error", err)
+			g.log.Err("failed to create DEV mail client", "error", err)
 			return err
 		}
 	}
 
 	if err := c.DialAndSend(m); err != nil {
-		g.log.Error("failed to send mail", "error", err)
+		g.log.Err("failed to send mail", "error", err)
 		return err
 	}
 
-	g.log.Info("email sent", "email", email.EmailKey, "to", email.EmailTo)
+	g.log.Inf("email sent", "email", email.EmailKey, "to", email.EmailTo)
 
 	return nil
 }

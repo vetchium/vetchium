@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/postgres"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -85,7 +86,7 @@ type Granger struct {
 
 	// These are initialized programatically in NewGranger()
 	db  db.DB
-	log *slog.Logger
+	log util.Logger
 	wg  sync.WaitGroup
 }
 
@@ -100,10 +101,12 @@ func NewGranger() (*Granger, error) {
 		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level:     slog.LevelDebug,
-		AddSource: true,
-	}))
+	logger := util.Logger{
+		Log: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     slog.LevelDebug,
+			AddSource: true,
+		})),
+	}
 
 	smtpPassword := os.Getenv("SMTP_PASSWORD")
 	if smtpPassword == "" {
@@ -165,7 +168,7 @@ func (g *Granger) Run() error {
 	go func() {
 		err := http.ListenAndServe(g.port, nil)
 		if err != nil {
-			g.log.Error("Failed to start HTTP server", "error", err)
+			g.log.Err("Failed to start HTTP server", "error", err)
 		}
 	}()
 

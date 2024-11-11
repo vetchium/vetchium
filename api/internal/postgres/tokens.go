@@ -25,7 +25,7 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 	if err != nil {
 		// TODO: Check if the error is due to duplicate key value
 		// and if so retry with a different token
-		p.log.Error("failed to create org user token", "error", err)
+		p.log.Err("failed to create org user token", "error", err)
 		return err
 	}
 

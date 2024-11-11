@@ -2,17 +2,17 @@ package postgres
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/psankar/vetchi/api/internal/util"
 )
 
 type PG struct {
 	pool *pgxpool.Pool
-	log  *slog.Logger
+	log  util.Logger
 }
 
-func New(connStr string, logger *slog.Logger) (*PG, error) {
+func New(connStr string, logger util.Logger) (*PG, error) {
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		return nil, err

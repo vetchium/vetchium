@@ -11,13 +11,13 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func (pg *PG) GetOpening(
+func (p *PG) GetOpening(
 	ctx context.Context,
 	getOpeningReq vetchi.GetOpeningRequest,
 ) (vetchi.Opening, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		pg.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return vetchi.Opening{}, db.ErrInternal
 	}
 
@@ -96,7 +96,7 @@ GROUP BY
 	var recruiterJSON, hiringManagerJSON []byte
 	var salary vetchi.Salary
 
-	err := pg.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
+	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(
 			&opening.ID,
 			&opening.Title,
@@ -126,7 +126,7 @@ GROUP BY
 		if err == sql.ErrNoRows {
 			return vetchi.Opening{}, db.ErrNoOpening
 		}
-		pg.log.Error("failed to scan opening", "error", err)
+		p.log.Err("failed to scan opening", "error", err)
 		return vetchi.Opening{}, err
 	}
 
@@ -134,12 +134,12 @@ GROUP BY
 	opening.LocationTitles = locations
 
 	if err := json.Unmarshal(hiringManagerJSON, &opening.HiringManager); err != nil {
-		pg.log.Error("failed to unmarshal hiring manager", "error", err)
+		p.log.Err("failed to unmarshal hiring manager", "error", err)
 		return vetchi.Opening{}, err
 	}
 
 	if err := json.Unmarshal(recruiterJSON, &opening.Recruiter); err != nil {
-		pg.log.Error("failed to unmarshal recruiter", "error", err)
+		p.log.Err("failed to unmarshal recruiter", "error", err)
 		return vetchi.Opening{}, err
 	}
 
@@ -147,7 +147,7 @@ GROUP BY
 	for _, teamMemberBytes := range hiringTeamJSON {
 		var teamMember vetchi.OrgUserShort
 		if err := json.Unmarshal(teamMemberBytes, &teamMember); err != nil {
-			pg.log.Error("failed to unmarshal team member", "error", err)
+			p.log.Err("failed to unmarshal team member", "error", err)
 			return vetchi.Opening{}, err
 		}
 		opening.HiringTeam = append(opening.HiringTeam, teamMember)
@@ -157,13 +157,13 @@ GROUP BY
 }
 
 // FilterOpenings filters openings based on the given criteria
-func (pg *PG) FilterOpenings(
+func (p *PG) FilterOpenings(
 	ctx context.Context,
 	filterOpeningsReq vetchi.FilterOpeningsRequest,
 ) ([]vetchi.OpeningInfo, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
-		pg.log.Error("failed to get orgUser from context")
+		p.log.Err("failed to get orgUser from context")
 		return []vetchi.OpeningInfo{}, db.ErrInternal
 	}
 
@@ -208,7 +208,7 @@ ORDER BY
 LIMIT $6
 `
 
-	rows, err := pg.pool.Query(
+	rows, err := p.pool.Query(
 		ctx,
 		query,
 		orgUser.EmployerID,
@@ -219,7 +219,7 @@ LIMIT $6
 		filterOpeningsReq.Limit,
 	)
 	if err != nil {
-		pg.log.Error("failed to query openings", "error", err)
+		p.log.Err("failed to query openings", "error", err)
 		return []vetchi.OpeningInfo{}, err
 	}
 
@@ -228,7 +228,7 @@ LIMIT $6
 		pgx.RowToStructByName[vetchi.OpeningInfo],
 	)
 	if err != nil {
-		pg.log.Error("failed to collect rows", "error", err)
+		p.log.Err("failed to collect rows", "error", err)
 		return []vetchi.OpeningInfo{}, err
 	}
 

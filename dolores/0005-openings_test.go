@@ -15,7 +15,7 @@ import (
 
 var bachelorEducation *vetchi.EducationLevel
 
-var _ = XDescribe("Openings", Ordered, func() {
+var _ = FDescribe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string

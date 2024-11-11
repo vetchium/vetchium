@@ -2,7 +2,6 @@ package vetchi
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"net/mail"
 	"reflect"
@@ -10,14 +9,15 @@ import (
 	"runtime/debug"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/psankar/vetchi/api/internal/util"
 )
 
 type Vator struct {
 	validate *validator.Validate
-	log      *slog.Logger
+	log      util.Logger
 }
 
-func InitValidator(log *slog.Logger) (*Vator, error) {
+func InitValidator(log util.Logger) (*Vator, error) {
 	validate := validator.New()
 
 	err := validate.RegisterValidation(
@@ -205,7 +205,7 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 	// Ensure that 'i' is a pointer to a struct
 	val := reflect.ValueOf(i)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
-		v.log.Error(
+		v.log.Err(
 			"provided input is not a pointer to a struct",
 			"stacktrace",
 			string(debug.Stack()),
@@ -217,7 +217,7 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 	err := v.validate.Struct(i)
 	if err != nil {
 		if _, ok := err.(*validator.InvalidValidationError); ok {
-			v.log.Error("invalid validation error", "error", err)
+			v.log.Err("invalid validation error", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return false
 		}
@@ -247,7 +247,7 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 		w.WriteHeader(http.StatusBadRequest)
 		err = json.NewEncoder(w).Encode(ValidationErrors{Errors: failedFields})
 		if err != nil {
-			v.log.Error("failed to encode validation errors", "error", err)
+			v.log.Err("failed to encode validation errors", "error", err)
 			// This would cause a superflous error response, but we'll log it
 			http.Error(w, "", http.StatusInternalServerError)
 			return false

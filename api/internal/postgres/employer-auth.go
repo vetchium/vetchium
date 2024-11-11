@@ -47,7 +47,7 @@ WHERE
 			return db.Employer{}, db.ErrNoEmployer
 		}
 
-		p.log.Error("failed to get employer", "error", err)
+		p.log.Err("failed to get employer", "error", err)
 		return db.Employer{}, err
 	}
 
@@ -61,7 +61,7 @@ func (p *PG) InitEmployerAndDomain(
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
@@ -86,7 +86,7 @@ RETURNING id
 		nil,
 	).Scan(&employerID)
 	if err != nil {
-		p.log.Error("failed to insert employer", "error", err)
+		p.log.Err("failed to insert employer", "error", err)
 		return err
 	}
 
@@ -102,13 +102,13 @@ VALUES ($1, $2, $3, NOW())
 		employerID,
 	)
 	if err != nil {
-		p.log.Error("failed to insert domain", "error", err)
+		p.log.Err("failed to insert domain", "error", err)
 		return err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return err
 	}
 
@@ -147,7 +147,7 @@ LIMIT 1
 			return nil, nil
 		}
 
-		p.log.Error("failed to query employers", "error", err)
+		p.log.Err("failed to query employers", "error", err)
 		return nil, err
 	}
 
@@ -160,7 +160,7 @@ func (p *PG) CreateOnboardEmail(
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(context.Background())
@@ -188,7 +188,7 @@ RETURNING email_key
 		db.EmailStatePending,
 	).Scan(&emailTableKey)
 	if err != nil {
-		p.log.Error("failed to create onboard email", "error", err)
+		p.log.Err("failed to create onboard email", "error", err)
 		return err
 	}
 
@@ -210,14 +210,14 @@ WHERE
 		onboardEmailInfo.EmployerID,
 	)
 	if err != nil {
-		p.log.Error("failed to update employer", "error", err)
+		p.log.Err("failed to update employer", "error", err)
 		return err
 	}
 	// TODO: Ensure that the update query above correctly updates updated_at
 
 	err = tx.Commit(context.Background())
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return err
 	}
 
@@ -257,13 +257,13 @@ WHERE
 			return db.ErrNoEmployer
 		}
 
-		p.log.Error("failed to query employers", "error", err)
+		p.log.Err("failed to query employers", "error", err)
 		return err
 	}
 
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
@@ -298,7 +298,7 @@ VALUES ($1, $2, $3, $4::org_user_roles[], $5, $6)
 			return db.ErrOrgUserAlreadyExists
 		}
 
-		p.log.Error("failed to insert org user", "error", err)
+		p.log.Err("failed to insert org user", "error", err)
 		return err
 	}
 
@@ -312,13 +312,13 @@ UPDATE employers SET employer_state = $1 WHERE id = $2
 		employerID,
 	)
 	if err != nil {
-		p.log.Error("failed to update employer", "error", err)
+		p.log.Err("failed to update employer", "error", err)
 		return err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return err
 	}
 
@@ -341,7 +341,7 @@ func (p *PG) PruneTokens(ctx context.Context) error {
 				continue
 			}
 
-			p.log.Error("failed to execute query", "error", err)
+			p.log.Err("failed to execute query", "error", err)
 			return err
 		}
 	}
@@ -394,7 +394,7 @@ WHERE
 			return db.OrgUserAuth{}, db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to query org user auth", "error", err)
+		p.log.Err("failed to query org user auth", "error", err)
 		return db.OrgUserAuth{}, err
 	}
 
@@ -412,7 +412,7 @@ func (p *PG) InitEmployerTFA(
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
-		p.log.Error("failed to begin transaction", "error", err)
+		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
@@ -429,7 +429,7 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 		db.EmployerTFAToken,
 	)
 	if err != nil {
-		p.log.Error("failed to insert TGT", "error", err)
+		p.log.Err("failed to insert TGT", "error", err)
 		return err
 	}
 
@@ -445,7 +445,7 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 		db.EmployerTFACode,
 	)
 	if err != nil {
-		p.log.Error("failed to insert TFA code", "error", err)
+		p.log.Err("failed to insert TFA code", "error", err)
 		return err
 	}
 
@@ -470,13 +470,13 @@ VALUES ($1, $2, $3, $4, $5, $6)
 		employerTFA.Email.EmailState,
 	)
 	if err != nil {
-		p.log.Error("failed to insert Email", "error", err)
+		p.log.Err("failed to insert Email", "error", err)
 		return err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		p.log.Error("failed to commit transaction", "error", err)
+		p.log.Err("failed to commit transaction", "error", err)
 		return err
 	}
 
@@ -528,7 +528,7 @@ WHERE
 			return db.OrgUserTO{}, db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to query org user by token", "error", err)
+		p.log.Err("failed to query org user by token", "error", err)
 		return db.OrgUserTO{}, err
 	}
 
@@ -582,7 +582,7 @@ WHERE
 			return db.OrgUserTO{}, db.ErrNoOrgUser
 		}
 
-		p.log.Error("failed to query org user", "error", err)
+		p.log.Err("failed to query org user", "error", err)
 		return db.OrgUserTO{}, err
 	}
 
@@ -601,13 +601,13 @@ func (p *PG) GetEmployerByID(
 	query := "SELECT * FROM employers WHERE id = $1::UUID"
 	rows, err := p.pool.Query(ctx, query, employerID)
 	if err != nil {
-		p.log.Error("failed to query employer", "error", err)
+		p.log.Err("failed to query employer", "error", err)
 		return db.Employer{}, err
 	}
 
 	employer, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[db.Employer])
 	if err != nil {
-		p.log.Error("failed to collect one row", "error", err)
+		p.log.Err("failed to collect one row", "error", err)
 		return db.Employer{}, err
 	}
 
