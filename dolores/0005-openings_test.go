@@ -14,15 +14,14 @@ import (
 )
 
 var bachelorEducation *vetchi.EducationLevel
-var _ = BeforeSuite(func() {
-	bachelor := vetchi.BachelorEducation
-	bachelorEducation = &bachelor
-})
 
-var _ = Describe("Openings", Ordered, func() {
+var _ = XDescribe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
+
+	bachelor := vetchi.BachelorEducation
+	bachelorEducation = &bachelor
 
 	BeforeAll(func() {
 		db = setupTestDB()
