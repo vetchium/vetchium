@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -159,9 +160,79 @@ GROUP BY
 func (pg *PG) FilterOpenings(
 	ctx context.Context,
 	filterOpeningsReq vetchi.FilterOpeningsRequest,
-) ([]vetchi.Opening, error) {
-	// TODO: Implement this
-	return nil, nil
+) ([]vetchi.OpeningInfo, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		pg.log.Error("failed to get orgUser from context")
+		return []vetchi.OpeningInfo{}, db.ErrInternal
+	}
+
+	query := `
+WITH parsed_id AS (
+    SELECT 
+        o.*,
+        -- Split the ID into components and cast appropriately
+        CAST(SPLIT_PART(id, '-', 1) AS INTEGER) as year,
+        -- Convert month abbreviation to month number (1-12)
+        CAST(TO_CHAR(TO_DATE(SPLIT_PART(id, '-', 2), 'Mon'), 'MM') AS INTEGER) as month,
+        CAST(SPLIT_PART(id, '-', 3) AS INTEGER) as day,
+        CAST(SPLIT_PART(id, '-', 4) AS INTEGER) as sequence
+    FROM openings o
+    WHERE employer_id = $1
+        AND current_state = ANY($2::opening_state[])
+		AND created_at >= $3
+		AND created_at <= $4
+)
+SELECT 
+    *
+FROM 
+    parsed_id
+WHERE
+    -- Pagination logic
+    CASE 
+        WHEN $3::TEXT IS NOT NULL THEN
+            -- Parse the pagination key the same way
+            (year, month, day, sequence) > (
+                CAST(SPLIT_PART($5, '-', 1) AS INTEGER),
+                CAST(TO_CHAR(TO_DATE(SPLIT_PART($5, '-', 2), 'Mon'), 'MM') AS INTEGER),
+                CAST(SPLIT_PART($5, '-', 3) AS INTEGER),
+                CAST(SPLIT_PART($5, '-', 4) AS INTEGER)
+            )
+        ELSE TRUE
+    END
+ORDER BY 
+    year DESC,
+    month DESC,
+    day DESC,
+    sequence DESC
+LIMIT $6
+`
+
+	rows, err := pg.pool.Query(
+		ctx,
+		query,
+		orgUser.EmployerID,
+		filterOpeningsReq.StatesAsStrings(),
+		filterOpeningsReq.FromDate,
+		filterOpeningsReq.ToDate,
+		filterOpeningsReq.PaginationKey,
+		filterOpeningsReq.Limit,
+	)
+	if err != nil {
+		pg.log.Error("failed to query openings", "error", err)
+		return []vetchi.OpeningInfo{}, err
+	}
+
+	openingInfos, err := pgx.CollectRows(
+		rows,
+		pgx.RowToStructByName[vetchi.OpeningInfo],
+	)
+	if err != nil {
+		pg.log.Error("failed to collect rows", "error", err)
+		return []vetchi.OpeningInfo{}, err
+	}
+
+	return openingInfos, nil
 }
 
 func (pg *PG) UpdateOpening(

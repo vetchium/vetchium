@@ -54,6 +54,21 @@ model Salary {
 @maxLength(64)
 scalar OpeningID extends string;
 
+model OpeningInfo {
+    id: OpeningID;
+    title: string;
+    positions: integer;
+    filled_positions: integer;
+    recruiter: OrgUserShort;
+    hiring_manager: OrgUserShort;
+    cost_center_name: CostCenterName;
+    opening_type: OpeningType;
+    current_state: OpeningState;
+    approval_waiting_state?: OpeningState;
+    created_at: utcDateTime;
+    last_updated_at: utcDateTime;
+}
+
 @doc("The Opening object that should be used within the Employer API. Should not be exposed to the Hub APIs or the Hub UI.")
 model Opening {
     id: OpeningID;
@@ -74,11 +89,7 @@ model Opening {
     @maxLength(1024)
     jd: string;
 
-    @doc("List of recruiters assigned to the opening")
-    @minItems(1)
-    @maxItems(10)
-    recruiters: string[];
-
+    recruiter: OrgUserShort;
     hiring_manager: OrgUserShort;
 
     @doc("OrgUser emails of the members of the team for which the opening is created")
@@ -190,11 +201,18 @@ model GetOpeningRequest {
 }
 
 model FilterOpeningsRequest {
-    @doc("Pagination key to fetch the next page of Openings")
+    @doc("Pagination key to fetch the next page of Openings. The Openings are sorted by the OpeningID in a chronological way")
     pagination_key?: OpeningID;
 
-    @doc("Filter by Opening state")
+    @doc("Filter by Opening state. If nothing is provided all Openings in any of DraftOpening, ActiveOpening or SuspendedOpening states will be returned")
     state?: OpeningState[];
+
+    // TODO: Perhaps we should put a limit on the date range ?
+    @doc("Filter by Opening creation date. If not provided, (currentdate-30days) will be used")
+    from_date?: plainDate;
+
+    @doc("Filter by Opening creation date. If not provided, (currentdate+1day, tomorrow date) will be used")
+    to_date?: plainDate;
 
     @maxValue(40)
     @doc("Number of Openings to return; 40 is the default if not specified")
@@ -270,6 +288,7 @@ interface FilterOpenings {
     @post
     filterOpenings(@body filterOpeningsRequest: FilterOpeningsRequest): {
         @statusCode statusCode: 200;
+        @body opening_infos: OpeningInfo[];
     };
 }
 

@@ -3,6 +3,7 @@ package openings
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -25,6 +26,29 @@ func FilterOpenings(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "filterOpeningsReq", filterOpeningsReq)
 
+		defaultFromDate := time.Now().AddDate(0, 0, -30)
+		if filterOpeningsReq.FromDate == nil {
+			h.Dbg("setting default fromdate", "date", defaultFromDate)
+			filterOpeningsReq.FromDate = &defaultFromDate
+		}
+
+		defaultToDate := time.Now().AddDate(0, 0, 1)
+		if filterOpeningsReq.ToDate == nil {
+			h.Dbg("setting default todate", "date", defaultToDate)
+			filterOpeningsReq.ToDate = &defaultToDate
+		}
+
+		if filterOpeningsReq.FromDate.After(*filterOpeningsReq.ToDate) {
+			h.Dbg("fromdate > todate", "filterOpeningsReq", filterOpeningsReq)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).
+				Encode(vetchi.ValidationErrors{Errors: []string{"fromdate"}})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
 		if filterOpeningsReq.Limit == 0 {
 			filterOpeningsReq.Limit = 40
 			h.Dbg("set default limit", "limit", filterOpeningsReq.Limit)
@@ -33,23 +57,23 @@ func FilterOpenings(h wand.Wand) http.HandlerFunc {
 		if len(filterOpeningsReq.State) == 0 {
 			filterOpeningsReq.State = []vetchi.OpeningState{
 				vetchi.ActiveOpening,
+				vetchi.DraftOpening,
+				vetchi.SuspendedOpening,
 			}
 			h.Dbg("set default state", "state", filterOpeningsReq.State)
 		}
 
-		states := make([]string, len(filterOpeningsReq.State))
-		for i, state := range filterOpeningsReq.State {
-			states[i] = string(state)
-		}
-
-		openings, err := h.DB().FilterOpenings(r.Context(), filterOpeningsReq)
+		openingInfos, err := h.DB().
+			FilterOpenings(r.Context(), filterOpeningsReq)
 		if err != nil {
 			h.Dbg("failed to filter openings", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(openings)
+		h.Dbg("Filtered Openings", "openingInfos", openingInfos)
+
+		err = json.NewEncoder(w).Encode(openingInfos)
 		if err != nil {
 			h.Err("failed to encode openings", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

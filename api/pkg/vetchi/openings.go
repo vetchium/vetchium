@@ -85,15 +85,42 @@ type CreateOpeningRequest struct {
 	Salary            *Salary         `json:"salary,omitempty"              validate:"omitempty"`
 }
 
+type OpeningInfo struct {
+	ID                   string         `json:"id"                               db:"id"`
+	Title                string         `json:"title"                            db:"title"`
+	Positions            int            `json:"positions"                        db:"positions"`
+	FilledPositions      int            `json:"filled_positions"                 db:"filled_positions"`
+	Recruiter            OrgUserShort   `json:"recruiter"                        db:"recruiter"`
+	HiringManager        OrgUserShort   `json:"hiring_manager"                   db:"hiring_manager"`
+	CostCenterName       CostCenterName `json:"cost_center_name"                 db:"cost_center_name"`
+	OpeningType          OpeningType    `json:"opening_type"                     db:"opening_type"`
+	CurrentState         OpeningState   `json:"current_state"                    db:"current_state"`
+	ApprovalWaitingState *OpeningState  `json:"approval_waiting_state,omitempty" db:"approval_waiting_state"`
+	CreatedAt            time.Time      `json:"created_at"                       db:"created_at"`
+	LastUpdatedAt        time.Time      `json:"last_updated_at"                  db:"last_updated_at"`
+}
+
 type GetOpeningRequest struct {
 	ID string `json:"id" validate:"required"`
 }
 
 type FilterOpeningsRequest struct {
-	State []OpeningState `json:"state,omitempty"`
+	State []OpeningState `json:"state,omitempty" validate:"omitempty,validate_opening_state"`
+
+	FromDate *time.Time `json:"from_date,omitempty" validate:"omitempty,validate_opening_filter_start_date"`
+	ToDate   *time.Time `json:"to_date,omitempty"   validate:"omitempty,validate_opening_filter_end_date"`
 
 	PaginationKey string `json:"pagination_key,omitempty"`
 	Limit         int    `json:"limit,omitempty"          validate:"omitempty,max=40"`
+}
+
+func (filterOpeningsReq FilterOpeningsRequest) StatesAsStrings() []string {
+	states := make([]string, len(filterOpeningsReq.State))
+	for i, state := range filterOpeningsReq.State {
+		// Already validated by validate_opening_state Vator
+		states[i] = string(state)
+	}
+	return states
 }
 
 type UpdateOpeningRequest struct {

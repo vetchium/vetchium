@@ -203,34 +203,6 @@ type FilteredCompany struct {
 	CompanyName   string `json:"company_name"`
 }
 
-type FilteredEmployee struct {
-	Name         string `json:"name"`
-	Email        string `json:"email"        validate:"email"`
-	VetchiHandle string `json:"vetchiHandle"`
-}
-
-type FilteredHiringManagers struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-}
-
-type FilteredOpenings struct {
-	DepartmentID       string       `json:"department_id"`
-	DepartmentName     string       `json:"department_name"`
-	HiringManagerEmail string       `json:"hiring_manager_email" validate:"email"`
-	HiringManagerName  string       `json:"hiring_manager_name"`
-	ID                 string       `json:"id"`
-	RecruiterEmail     string       `json:"recruiter_email"      validate:"email"`
-	RecruiterName      string       `json:"recruiter_name"`
-	Status             OpeningState `json:"status"`
-	Title              string       `json:"title"`
-}
-
-type FilteredRecruiters struct {
-	Name  string `json:"name"`
-	Email string `json:"email" validate:"email"`
-}
-
 type ForgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
@@ -344,21 +316,6 @@ const (
 	DomainVerifiedOnboardPending OnboardStatus = "DOMAIN_VERIFIED_ONBOARD_PENDING"
 	DomainOnboarded              OnboardStatus = "DOMAIN_ONBOARDED"
 )
-
-type OpeningInfo struct {
-	DepartmentID       string       `json:"department_id"`
-	DepartmentName     string       `json:"department_name"`
-	FilledCount        int          `json:"filled_count"`
-	HiringManagerEmail string       `json:"hiring_manager_email" validate:"email"`
-	HiringManagerName  string       `json:"hiring_manager_name"`
-	ID                 string       `json:"id"`
-	JobType            string       `json:"job_type"`
-	RecruiterEmail     string       `json:"recruiter_email"      validate:"email"`
-	RecruiterName      string       `json:"recruiter_name"`
-	OpeningState       OpeningState `json:"opening_state"`
-	Title              string       `json:"title"`
-	UnfilledCount      int          `json:"unfilled_count"`
-}
 
 type OpeningPublicInfo struct {
 	OpeningID     string `json:"opening_id"`

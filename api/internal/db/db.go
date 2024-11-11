@@ -61,7 +61,7 @@ type DB interface {
 		createOpeningRequest v.CreateOpeningRequest,
 	) (openingID string, err error)
 	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
-	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.Opening, error)
+	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.OpeningInfo, error)
 	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
 	GetOpeningWatchers(
 		c.Context,
