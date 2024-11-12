@@ -49,7 +49,7 @@ func FilterOpenings(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if filterOpeningsReq.Limit == 0 {
+		if filterOpeningsReq.Limit <= 0 {
 			filterOpeningsReq.Limit = 40
 			h.Dbg("set default limit", "limit", filterOpeningsReq.Limit)
 		}

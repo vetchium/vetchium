@@ -85,6 +85,10 @@ type CreateOpeningRequest struct {
 	Salary            *Salary         `json:"salary,omitempty"              validate:"omitempty"`
 }
 
+type CreateOpeningResponse struct {
+	OpeningID string `json:"opening_id"`
+}
+
 type OpeningInfo struct {
 	ID                   string         `json:"id"                               db:"id"`
 	Title                string         `json:"title"                            db:"title"`
@@ -111,7 +115,7 @@ type FilterOpeningsRequest struct {
 	ToDate   *time.Time `json:"to_date,omitempty"   validate:"omitempty,validate_opening_filter_end_date"`
 
 	PaginationKey string `json:"pagination_key,omitempty"`
-	Limit         int    `json:"limit,omitempty"          validate:"omitempty,max=40"`
+	Limit         int    `json:"limit"                    validate:"max=40"`
 }
 
 func (filterOpeningsReq FilterOpeningsRequest) StatesAsStrings() []string {

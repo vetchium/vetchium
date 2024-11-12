@@ -69,6 +69,12 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		h.Dbg("created opening", "openingID", openingID)
-		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(vetchi.CreateOpeningResponse{
+			OpeningID: openingID,
+		})
+		if err != nil {
+			h.Err("failed to encode create opening response", "error", err)
+			return
+		}
 	}
 }

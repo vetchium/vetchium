@@ -506,11 +506,11 @@ func createTestOpening(token string) string {
 		http.StatusOK,
 	).([]byte)
 
-	var opening vetchi.Opening
+	var opening vetchi.CreateOpeningResponse
 	err := json.Unmarshal(resp, &opening)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	return opening.ID
+	return opening.OpeningID
 }
 
 func createTestOpenings(token string) {
