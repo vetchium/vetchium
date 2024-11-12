@@ -212,10 +212,39 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with invalid salary range",
 					token:       adminToken,
 					request: func() vetchi.CreateOpeningRequest {
-						r := validOpening
-						r.Salary.MinAmount = 200000
-						r.Salary.MaxAmount = 100000
-						return r
+
+						return vetchi.CreateOpeningRequest{
+							Title:         "Software Engineer",
+							Positions:     2,
+							JD:            "Looking for talented software engineers",
+							Recruiter:     "recruiter@openings.example",
+							HiringManager: "hiring-manager@openings.example",
+							HiringTeam: []vetchi.EmailAddress{
+								"crud@openings.example",
+								"viewer@openings.example",
+							},
+							CostCenterName: "Engineering",
+							LocationTitles: []string{
+								"Bangalore Office",
+								"Chennai Office",
+							},
+							RemoteCountryCodes: []vetchi.CountryCode{
+								"IND",
+								"USA",
+							},
+							RemoteTimezones: []vetchi.TimeZone{
+								"IST Indian Standard Time GMT+0530",
+							},
+							OpeningType:       vetchi.FullTimeOpening,
+							YoeMin:            2,
+							YoeMax:            5,
+							MinEducationLevel: bachelorEducation,
+							Salary: &vetchi.Salary{
+								MinAmount: 200000,
+								MaxAmount: 100000,
+								Currency:  "USD",
+							},
+						}
 					}(),
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"salary"},

@@ -27,6 +27,31 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "createOpeningReq", createOpeningReq)
 
+		if createOpeningReq.YoeMax < createOpeningReq.YoeMin {
+			h.Dbg("yoe_max < yoe min", "createOpeningReq", createOpeningReq)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+				Errors: []string{"yoe_min", "yoe_max"},
+			})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
+		if createOpeningReq.Salary != nil &&
+			(createOpeningReq.Salary.MinAmount > createOpeningReq.Salary.MaxAmount) {
+			h.Dbg("salary min > max", "createOpeningReq", createOpeningReq)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+				Errors: []string{"salary"},
+			})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoRecruiter) ||
