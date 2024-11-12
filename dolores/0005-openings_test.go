@@ -304,8 +304,14 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with Viewer token - date filter",
 					token:       viewerToken,
 					request: vetchi.FilterOpeningsRequest{
-						FromDate: &time.Time{},
-						ToDate:   &time.Time{},
+						FromDate: func() *time.Time {
+							t := time.Now().AddDate(0, 0, -30)
+							return &t
+						}(),
+						ToDate: func() *time.Time {
+							t := time.Now()
+							return &t
+						}(),
 					},
 					wantStatus: http.StatusOK,
 				},
@@ -325,6 +331,21 @@ var _ = FDescribe("Openings", Ordered, func() {
 						}(),
 						ToDate: func() *time.Time {
 							t := time.Now()
+							return &t
+						}(),
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "with todate < fromdate",
+					token:       adminToken,
+					request: vetchi.FilterOpeningsRequest{
+						FromDate: func() *time.Time {
+							t := time.Now()
+							return &t
+						}(),
+						ToDate: func() *time.Time {
+							t := time.Now().AddDate(0, 0, -1)
 							return &t
 						}(),
 					},
