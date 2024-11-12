@@ -47,7 +47,7 @@ SELECT
     ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team
 FROM
     openings o
-    LEFT JOIN cost_centers cc ON o.cost_center_id = cc.id
+    LEFT JOIN org_cost_centers cc ON o.cost_center_id = cc.id
     LEFT JOIN org_users hm ON o.hiring_manager = hm.id
     LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
     LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
