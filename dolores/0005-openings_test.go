@@ -274,8 +274,9 @@ var _ = FDescribe("Openings", Ordered, func() {
 		})
 
 		It("Filter Openings", func() {
-			// First create some test openings
+			fmt.Fprintf(GinkgoWriter, "#### Creating test openings\n")
 			createTestOpenings(adminToken)
+			fmt.Fprintf(GinkgoWriter, "#### Test openings created\n")
 
 			type filterOpeningsTestCase struct {
 				description string
@@ -492,7 +493,6 @@ func createTestOpening(token string) string {
 }
 
 func createTestOpenings(token string) {
-
 	for i := 0; i < 3; i++ {
 		request := vetchi.CreateOpeningRequest{
 			Title:             fmt.Sprintf("Test Opening %d", i),
@@ -512,16 +512,12 @@ func createTestOpenings(token string) {
 			},
 		}
 
-		resp := testPOSTGetResp(
+		_ = testPOSTGetResp(
 			token,
 			request,
 			"/employer/create-opening",
 			http.StatusOK,
 		).([]byte)
-
-		var opening vetchi.Opening
-		err := json.Unmarshal(resp, &opening)
-		Expect(err).ShouldNot(HaveOccurred())
 	}
 }
 

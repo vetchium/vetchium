@@ -105,7 +105,7 @@ type GetOpeningRequest struct {
 }
 
 type FilterOpeningsRequest struct {
-	State []OpeningState `json:"state,omitempty" validate:"omitempty,validate_opening_state"`
+	State []OpeningState `json:"state,omitempty" validate:"omitempty,validate_opening_states"`
 
 	FromDate *time.Time `json:"from_date,omitempty" validate:"omitempty,validate_opening_filter_start_date"`
 	ToDate   *time.Time `json:"to_date,omitempty"   validate:"omitempty,validate_opening_filter_end_date"`

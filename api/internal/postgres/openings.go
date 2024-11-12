@@ -27,7 +27,7 @@ SELECT
     o.positions,
     o.jd,
     jsonb_build_object('email', hm.email, 'name', hm.name, 'vetchi_handle', hu_hm.handle) AS hiring_manager,
-    cc.name AS cost_center_name,
+    cc.cost_center_name,
     o.employer_notes,
     o.remote_country_codes,
     o.remote_timezones,
@@ -72,7 +72,7 @@ GROUP BY
     hm.email,
     hm.name,
     hu_hm.handle,
-    cc.name,
+    cc.cost_center_name,
     o.employer_notes,
     o.remote_country_codes,
     o.remote_timezones,
@@ -172,24 +172,53 @@ WITH parsed_id AS (
         o.*,
         -- Split the ID into components and cast appropriately
         CAST(SPLIT_PART(id, '-', 1) AS INTEGER) as year,
-        -- Convert month abbreviation to month number (1-12)
         CAST(TO_CHAR(TO_DATE(SPLIT_PART(id, '-', 2), 'Mon'), 'MM') AS INTEGER) as month,
         CAST(SPLIT_PART(id, '-', 3) AS INTEGER) as day,
         CAST(SPLIT_PART(id, '-', 4) AS INTEGER) as sequence
     FROM openings o
     WHERE employer_id = $1
-        AND current_state = ANY($2::opening_state[])
-		AND created_at >= $3
-		AND created_at <= $4
+        AND current_state = ANY($2::opening_states[])
+        AND created_at >= $3
+        AND created_at <= $4
 )
 SELECT 
-    *
+    o.id,
+    o.title,
+    o.positions,
+    0 as filled_positions, -- TODO Calculate filled positions
+    o.opening_type,
+    o.current_state,
+    o.approval_waiting_state,
+    o.created_at,
+    o.last_updated_at,
+    cc.cost_center_name,
+    -- Recruiter details
+    jsonb_build_object(
+        'name', r.name,
+        'email', r.email,
+        'vetchi_handle', hu_r.handle
+    ) as recruiter,
+    -- Hiring Manager details
+    jsonb_build_object(
+        'name', hm.name,
+        'email', hm.email,
+        'vetchi_handle', hu_hm.handle
+    ) as hiring_manager
 FROM 
-    parsed_id
+    parsed_id o
+    LEFT JOIN org_cost_centers cc ON o.cost_center_id = cc.id
+    -- Join for Recruiter
+    LEFT JOIN org_users r ON o.recruiter = r.id
+    LEFT JOIN hub_users_official_emails hue_r ON r.email = hue_r.official_email
+    LEFT JOIN hub_users hu_r ON hue_r.hub_user_id = hu_r.id
+    -- Join for Hiring Manager
+    LEFT JOIN org_users hm ON o.hiring_manager = hm.id
+    LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
+    LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
 WHERE
     -- Pagination logic
     CASE 
-        WHEN $3::TEXT IS NOT NULL THEN
+        WHEN $5::TEXT IS NOT NULL AND $5::TEXT != '' THEN
             -- Parse the pagination key the same way
             (year, month, day, sequence) > (
                 CAST(SPLIT_PART($5, '-', 1) AS INTEGER),

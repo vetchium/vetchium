@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime/debug"
+	"time"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -189,6 +190,53 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				}
 			}
 			return true
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_opening_states",
+		func(fl validator.FieldLevel) bool {
+			states := fl.Field().Interface().([]OpeningState)
+			for _, state := range states {
+				switch state {
+				case ActiveOpening:
+					continue
+				case ClosedOpening:
+					continue
+				case DraftOpening:
+					continue
+				case SuspendedOpening:
+					continue
+				default:
+					return false
+				}
+			}
+			return true
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_opening_filter_start_date",
+		func(fl validator.FieldLevel) bool {
+			date := fl.Field().Interface().(time.Time)
+			return !date.Before(time.Now().AddDate(-3, 0, 0))
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_opening_filter_end_date",
+		func(fl validator.FieldLevel) bool {
+			date := fl.Field().Interface().(time.Time)
+			return !date.Before(time.Now().AddDate(-3, 0, 0))
 		},
 	)
 	if err != nil {
