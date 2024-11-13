@@ -333,7 +333,7 @@ interface AddOpeningWatchers {
         @statusCode
         statusCode: 404;
     } | {
-        @doc("invalid or non-existant email addresses passed")
+        @doc("invalid or non-existent email addresses passed")
         @statusCode
         statusCode: 400;
     };
