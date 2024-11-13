@@ -213,10 +213,10 @@ WHERE
         ELSE TRUE
     END
 ORDER BY 
-    year DESC,
-    month DESC,
-    day DESC,
-    sequence DESC
+    year,
+    month,
+    day,
+    sequence
 LIMIT $6
 `
 

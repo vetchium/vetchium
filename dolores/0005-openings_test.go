@@ -15,7 +15,7 @@ import (
 
 var bachelorEducation *vetchi.EducationLevel
 
-var _ = FDescribe("Openings", Ordered, func() {
+var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
@@ -575,10 +575,11 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			http.StatusOK,
 		).([]byte)
 
-		var opening vetchi.Opening
+		var opening vetchi.CreateOpeningResponse
 		err := json.Unmarshal(resp, &opening)
 		Expect(err).ShouldNot(HaveOccurred())
-		wantOpenings = append(wantOpenings, opening.ID)
+		fmt.Fprintf(GinkgoWriter, "Appending opening: %+v\n", opening)
+		wantOpenings = append(wantOpenings, opening.OpeningID)
 	}
 
 	paginationKey := ""
