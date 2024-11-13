@@ -240,12 +240,12 @@ model OpeningWatchers {
     emails?: EmailAddress[];
 }
 
-model AddWatchersRequest {
+model AddOpeningWatchersRequest {
     opening_id: OpeningID;
     emails: EmailAddress[];
 }
 
-model RemoveWatcherRequest {
+model RemoveOpeningWatcherRequest {
     opening_id: OpeningID;
     email: EmailAddress;
 }
@@ -326,7 +326,7 @@ interface AddOpeningWatchers {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
-    addOpeningWatchers(@body addWatchersRequest: AddWatchersRequest): {
+    addOpeningWatchers(@body addWatchersRequest: AddOpeningWatchersRequest): {
         @statusCode statusCode: 200;
     } | {
         @doc("invalid opening_id")
@@ -344,7 +344,9 @@ interface RemoveOpeningWatcher {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
-    removeOpeningWatcher(@body removeWatcherRequest: RemoveWatcherRequest): {
+    removeOpeningWatcher(
+        @body removeWatcherRequest: RemoveOpeningWatcherRequest,
+    ): {
         @statusCode statusCode: 200;
     };
 }
