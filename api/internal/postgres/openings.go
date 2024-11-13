@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
@@ -42,7 +41,7 @@ SELECT
     o.approval_waiting_state,
     o.created_at,
     o.last_updated_at,
-	ARRAY_AGG(DISTINCT jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle)) FILTER (WHERE r.email IS NOT NULL) AS recruiters,
+    jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle) AS recruiter,
     ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) AS locations,
     ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team
 FROM
@@ -51,8 +50,7 @@ FROM
     LEFT JOIN org_users hm ON o.hiring_manager = hm.id
     LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
     LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
-    LEFT JOIN opening_recruiters or2 ON o.id = or2.opening_id
-    LEFT JOIN org_users r ON or2.recruiter_id = r.id
+    LEFT JOIN org_users r ON o.recruiter = r.id
     LEFT JOIN hub_users_official_emails hue_r ON r.email = hue_r.official_email
     LEFT JOIN hub_users hu_r ON hue_r.hub_user_id = hu_r.id
     LEFT JOIN opening_locations ol ON o.id = ol.opening_id
@@ -86,13 +84,16 @@ GROUP BY
     o.current_state,
     o.approval_waiting_state,
     o.created_at,
-    o.last_updated_at
+    o.last_updated_at,
+    r.email,
+    r.name,
+    hu_r.handle
 `
 
 	var opening vetchi.Opening
 	var locations []string
-	var hiringTeamJSON [][]byte
-	var recruiterJSON, hiringManagerJSON []byte
+	var hiringTeam []vetchi.OrgUserShort
+	var recruiter, hiringManager vetchi.OrgUserShort
 	var salary vetchi.Salary
 
 	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
@@ -101,7 +102,7 @@ GROUP BY
 			&opening.Title,
 			&opening.Positions,
 			&opening.JD,
-			&hiringManagerJSON,
+			&hiringManager,
 			&opening.CostCenterName,
 			&opening.EmployerNotes,
 			&opening.RemoteCountryCodes,
@@ -117,9 +118,9 @@ GROUP BY
 			&opening.ApprovalWaitingState,
 			&opening.CreatedAt,
 			&opening.LastUpdatedAt,
-			&recruiterJSON,
+			&recruiter,
 			&locations,
-			&hiringTeamJSON,
+			&hiringTeam,
 		)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -131,26 +132,9 @@ GROUP BY
 
 	opening.Salary = &salary
 	opening.LocationTitles = locations
-
-	if err := json.Unmarshal(hiringManagerJSON, &opening.HiringManager); err != nil {
-		p.log.Err("failed to unmarshal hiring manager", "error", err)
-		return vetchi.Opening{}, err
-	}
-
-	if err := json.Unmarshal(recruiterJSON, &opening.Recruiter); err != nil {
-		p.log.Err("failed to unmarshal recruiter", "error", err)
-		return vetchi.Opening{}, err
-	}
-
-	opening.HiringTeam = make([]vetchi.OrgUserShort, 0, len(hiringTeamJSON))
-	for _, teamMemberBytes := range hiringTeamJSON {
-		var teamMember vetchi.OrgUserShort
-		if err := json.Unmarshal(teamMemberBytes, &teamMember); err != nil {
-			p.log.Err("failed to unmarshal team member", "error", err)
-			return vetchi.Opening{}, err
-		}
-		opening.HiringTeam = append(opening.HiringTeam, teamMember)
-	}
+	opening.HiringManager = hiringManager
+	opening.Recruiter = recruiter
+	opening.HiringTeam = hiringTeam
 
 	return opening, nil
 }
