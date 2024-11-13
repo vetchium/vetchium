@@ -35,7 +35,11 @@ func GetOpeningWatchers(h wand.Wand) http.HandlerFunc {
 			GetOpeningWatchers(r.Context(), getOpeningWatchersReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", getOpeningWatchersReq.ID)
+				h.Dbg(
+					"opening not found",
+					"id",
+					getOpeningWatchersReq.OpeningID,
+				)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}

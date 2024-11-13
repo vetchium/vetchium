@@ -195,6 +195,10 @@ model CreateOpeningRequest {
     salary?: Salary;
 }
 
+model CreateOpeningResponse {
+    opening_id: OpeningID;
+}
+
 model GetOpeningRequest {
     @doc("ID of the Opening to fetch")
     id: OpeningID;
@@ -225,11 +229,11 @@ model UpdateOpeningRequest {
 }
 
 model GetOpeningWatchersRequest {
-    id: string;
+    opening_id: OpeningID;
 }
 
 model OpeningWatchers {
-    id: string;
+    opening_id: OpeningID;
 
     @doc("Maximum of 20 OrgUsers can watch an Opening")
     @maxItems(20)
@@ -237,21 +241,21 @@ model OpeningWatchers {
 }
 
 model AddWatchersRequest {
-    id: string;
+    opening_id: OpeningID;
     emails: EmailAddress[];
 }
 
 model RemoveWatcherRequest {
-    id: string;
+    opening_id: OpeningID;
     email: EmailAddress;
 }
 
 model ApproveOpeningStateChangeRequest {
-    id: string;
+    opening_id: OpeningID;
 }
 
 model RejectOpeningStateChangeRequest {
-    id: string;
+    opening_id: OpeningID;
 }
 
 @route("/employer/create-opening")
@@ -308,7 +312,7 @@ interface UpdateOpening {
 @route("/employer/get-opening-watchers")
 interface GetOpeningWatchers {
     @tag("Openings")
-    @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} or ${OpeningsViewer} roles")
     @post
     getOpeningWatchers(
         @body getOpeningWatchersRequest: GetOpeningWatchersRequest,
@@ -324,6 +328,14 @@ interface AddOpeningWatchers {
     @post
     addOpeningWatchers(@body addWatchersRequest: AddWatchersRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("invalid opening_id")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @doc("invalid or non-existant email addresses passed")
+        @statusCode
+        statusCode: 400;
     };
 }
 

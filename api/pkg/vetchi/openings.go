@@ -128,33 +128,33 @@ func (filterOpeningsReq FilterOpeningsRequest) StatesAsStrings() []string {
 }
 
 type UpdateOpeningRequest struct {
-	ID string `json:"id" validate:"required"`
+	OpeningID string `json:"opening_id" validate:"required"`
 	// TODO: Decide what fields are allowed to be updated
 }
 
 type GetOpeningWatchersRequest struct {
-	ID string `json:"id" validate:"required"`
+	OpeningID string `json:"opening_id" validate:"required"`
 }
 
 type OpeningWatchers struct {
-	ID     string         `json:"id"`
-	Emails []EmailAddress `json:"emails,omitempty" validate:"omitempty,max=20"`
+	OpeningID string         `json:"opening_id"`
+	Emails    []EmailAddress `json:"emails,omitempty" validate:"omitempty,max=20"`
 }
 
 type AddOpeningWatchersRequest struct {
-	ID     string         `json:"id"     validate:"required"`
-	Emails []EmailAddress `json:"emails" validate:"required"`
+	OpeningID string         `json:"opening_id" validate:"required"`
+	Emails    []EmailAddress `json:"emails"     validate:"required"`
 }
 
 type RemoveOpeningWatcherRequest struct {
-	ID    string       `json:"id"    validate:"required"`
-	Email EmailAddress `json:"email" validate:"required"`
+	OpeningID string       `json:"opening_id" validate:"required"`
+	Email     EmailAddress `json:"email"      validate:"required"`
 }
 
 type ApproveOpeningStateChangeRequest struct {
-	ID string `json:"id" validate:"required"`
+	OpeningID string `json:"opening_id" validate:"required"`
 }
 
 type RejectOpeningStateChangeRequest struct {
-	ID string `json:"id" validate:"required"`
+	OpeningID string `json:"opening_id" validate:"required"`
 }

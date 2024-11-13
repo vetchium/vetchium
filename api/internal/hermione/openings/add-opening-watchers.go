@@ -27,16 +27,23 @@ func AddOpeningWatchers(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addWatchersReq", addWatchersReq)
 
-		emails := make([]string, len(addWatchersReq.Emails))
-		for i, email := range addWatchersReq.Emails {
-			emails[i] = string(email)
-		}
-
 		err = h.DB().AddOpeningWatchers(r.Context(), addWatchersReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", addWatchersReq.ID)
+				h.Dbg("opening not found", "id", addWatchersReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrNoOrgUser) {
+				h.Dbg("org user not found", "email", addWatchersReq.Emails)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+					Errors: []string{"emails"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
 				return
 			}
 
@@ -45,7 +52,7 @@ func AddOpeningWatchers(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("added watchers", "id", addWatchersReq.ID)
+		h.Dbg("added watchers", "id", addWatchersReq.OpeningID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

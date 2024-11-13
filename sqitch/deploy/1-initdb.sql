@@ -232,4 +232,13 @@ CREATE TABLE opening_locations(
     PRIMARY KEY (employer_id, opening_id, location_id)
 );
 
+CREATE TABLE opening_watchers(
+    employer_id UUID NOT NULL,
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+
+    watcher_id UUID REFERENCES org_users(id) NOT NULL,
+    PRIMARY KEY (employer_id, opening_id, watcher_id)
+);
+
 COMMIT;

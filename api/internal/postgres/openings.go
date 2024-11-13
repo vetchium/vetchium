@@ -264,12 +264,98 @@ func (pg *PG) GetOpeningWatchers(
 	return vetchi.OpeningWatchers{}, nil
 }
 
-// AddOpeningWatchers adds watchers to an opening
-func (pg *PG) AddOpeningWatchers(
+func (p *PG) AddOpeningWatchers(
 	ctx context.Context,
 	addOpeningWatchersReq vetchi.AddOpeningWatchersRequest,
 ) error {
-	// TODO: Implement this
+	// Expectations:
+	// Invalid opening ID → db.ErrNoOpening
+	// Invalid org user emails → db.ErrNoOrgUser
+	// All users already watching → success (nil)
+	// Mix of new and existing watchers → success (nil)
+	// All new watchers → success (nil)
+	// Database errors → db.ErrInternal
+
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
+	query := `
+WITH opening_check AS (
+    -- First verify the opening exists and belongs to this employer
+    SELECT EXISTS (
+        SELECT 1 FROM openings 
+        WHERE id = $2 AND employer_id = $1
+    ) as opening_exists
+),
+input_emails AS (
+    -- Deduplicate input emails
+    SELECT DISTINCT unnest($3::text[]) as email
+),
+org_users_to_add AS (
+    -- Get org_user_ids for the given emails within the same org
+    SELECT id, email
+    FROM org_users 
+    WHERE email IN (SELECT email FROM input_emails)
+    AND employer_id = $1
+),
+existing_watchers AS (
+    -- Find which users are already watching
+    SELECT watcher_id 
+    FROM opening_watchers
+    WHERE employer_id = $1 
+    AND opening_id = $2
+    AND watcher_id IN (SELECT id FROM org_users_to_add)
+),
+validation AS (
+    SELECT 
+        (SELECT opening_exists FROM opening_check) as opening_exists,
+        COUNT(*) = (SELECT COUNT(*) FROM input_emails) as all_emails_valid,
+        (SELECT COUNT(*) FROM existing_watchers) = (SELECT COUNT(*) FROM org_users_to_add) as all_already_watching
+    FROM org_users_to_add
+),
+insertion AS (
+    INSERT INTO opening_watchers (employer_id, opening_id, watcher_id)
+    SELECT $1, $2, org_users_to_add.id
+    FROM org_users_to_add, validation
+    WHERE validation.opening_exists 
+    AND validation.all_emails_valid
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM opening_watchers ow 
+        WHERE ow.employer_id = $1 
+        AND ow.opening_id = $2 
+        AND ow.watcher_id = org_users_to_add.id
+    )
+    ON CONFLICT DO NOTHING
+)
+SELECT opening_exists, all_emails_valid, all_already_watching FROM validation;
+`
+
+	var openingExists, allEmailsValid, allAlreadyWatching bool
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		orgUser.EmployerID,
+		addOpeningWatchersReq.OpeningID,
+		addOpeningWatchersReq.Emails,
+	).Scan(&openingExists, &allEmailsValid, &allAlreadyWatching)
+	if err != nil {
+		p.log.Err("failed to add opening watchers", "error", err)
+		return db.ErrInternal
+	}
+
+	if !openingExists {
+		return db.ErrNoOpening
+	}
+
+	if !allEmailsValid {
+		return db.ErrNoOrgUser
+	}
+
+	// If all users were already watching, that's still a success case
 	return nil
 }
 
