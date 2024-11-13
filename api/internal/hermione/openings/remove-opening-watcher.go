@@ -30,7 +30,7 @@ func RemoveOpeningWatcher(h wand.Wand) http.HandlerFunc {
 		err = h.DB().RemoveOpeningWatcher(r.Context(), removeWatcherReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", removeWatcherReq.ID)
+				h.Dbg("opening not found", "id", removeWatcherReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -40,7 +40,7 @@ func RemoveOpeningWatcher(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("removed watcher", "id", removeWatcherReq.ID)
+		h.Dbg("removed watcher", "id", removeWatcherReq.OpeningID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

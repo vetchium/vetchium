@@ -30,7 +30,7 @@ func UpdateOpening(h wand.Wand) http.HandlerFunc {
 		err = h.DB().UpdateOpening(r.Context(), updateOpeningReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", updateOpeningReq.ID)
+				h.Dbg("opening not found", "id", updateOpeningReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -40,7 +40,7 @@ func UpdateOpening(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("updated opening", "id", updateOpeningReq.ID)
+		h.Dbg("updated opening", "id", updateOpeningReq.OpeningID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

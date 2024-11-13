@@ -30,13 +30,13 @@ func RejectOpeningStateChange(h wand.Wand) http.HandlerFunc {
 		err = h.DB().RejectOpeningStateChange(r.Context(), rejectReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", rejectReq.ID)
+				h.Dbg("opening not found", "id", rejectReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
 			if errors.Is(err, db.ErrNoStateChangeWaiting) {
-				h.Dbg("no state change waiting", "id", rejectReq.ID)
+				h.Dbg("no state change waiting", "id", rejectReq.OpeningID)
 				http.Error(w, "", http.StatusBadRequest)
 				return
 			}
@@ -46,7 +46,7 @@ func RejectOpeningStateChange(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("rejected state change", "id", rejectReq.ID)
+		h.Dbg("rejected state change", "id", rejectReq.OpeningID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

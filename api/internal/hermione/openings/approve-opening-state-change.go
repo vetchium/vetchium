@@ -30,13 +30,13 @@ func ApproveOpeningStateChange(h wand.Wand) http.HandlerFunc {
 		err = h.DB().ApproveOpeningStateChange(r.Context(), approveReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg("opening not found", "id", approveReq.ID)
+				h.Dbg("opening not found", "id", approveReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
 			if errors.Is(err, db.ErrNoStateChangeWaiting) {
-				h.Dbg("no state change waiting", "id", approveReq.ID)
+				h.Dbg("no state change waiting", "id", approveReq.OpeningID)
 				http.Error(w, "", http.StatusBadRequest)
 				return
 			}
@@ -46,7 +46,7 @@ func ApproveOpeningStateChange(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg("approved state change", "id", approveReq.ID)
+		h.Dbg("approved state change", "id", approveReq.OpeningID)
 		w.WriteHeader(http.StatusOK)
 	}
 }
