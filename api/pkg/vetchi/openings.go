@@ -136,11 +136,6 @@ type GetOpeningWatchersRequest struct {
 	OpeningID string `json:"opening_id" validate:"required"`
 }
 
-type OpeningWatchers struct {
-	OpeningID string         `json:"opening_id"`
-	Emails    []EmailAddress `json:"emails,omitempty" validate:"omitempty,max=20"`
-}
-
 type AddOpeningWatchersRequest struct {
 	OpeningID string         `json:"opening_id" validate:"required"`
 	Emails    []EmailAddress `json:"emails"     validate:"required"`

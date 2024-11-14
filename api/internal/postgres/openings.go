@@ -256,12 +256,38 @@ func (pg *PG) UpdateOpening(
 }
 
 // GetOpeningWatchers gets the watchers of an opening
-func (pg *PG) GetOpeningWatchers(
+func (p *PG) GetOpeningWatchers(
 	ctx context.Context,
 	getOpeningWatchersReq vetchi.GetOpeningWatchersRequest,
-) (vetchi.OpeningWatchers, error) {
-	// TODO: Implement this
-	return vetchi.OpeningWatchers{}, nil
+) ([]vetchi.OrgUserShort, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return []vetchi.OrgUserShort{}, db.ErrInternal
+	}
+
+	query := `
+SELECT 
+    jsonb_build_object('email', ou.email, 'name', ou.name, 'vetchi_handle', ou.handle)
+FROM 
+    opening_watchers ow
+    LEFT JOIN org_users ou ON ow.watcher_id = ou.id
+WHERE 
+    ow.employer_id = $1 AND ow.opening_id = $2
+`
+
+	rows, err := p.pool.Query(
+		ctx,
+		query,
+		orgUser.EmployerID,
+		getOpeningWatchersReq.OpeningID,
+	)
+	if err != nil {
+		p.log.Err("failed to query opening watchers", "error", err)
+		return []vetchi.OrgUserShort{}, err
+	}
+
+	return pgx.CollectRows(rows, pgx.RowToStructByName[vetchi.OrgUserShort])
 }
 
 func (p *PG) AddOpeningWatchers(

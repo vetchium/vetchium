@@ -66,7 +66,7 @@ type DB interface {
 	GetOpeningWatchers(
 		c.Context,
 		v.GetOpeningWatchersRequest,
-	) (v.OpeningWatchers, error)
+	) ([]v.OrgUserShort, error)
 	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
 	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
 	ApproveOpeningStateChange(
