@@ -275,6 +275,7 @@ func (p *PG) AddOpeningWatchers(
 	// Mix of new and existing watchers → success (nil)
 	// All new watchers → success (nil)
 	// Database errors → db.ErrInternal
+	// If adding watchers would exceed 25 watchers → db.ErrTooManyWatchers
 
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -313,7 +314,8 @@ validation AS (
     SELECT 
         (SELECT opening_exists FROM opening_check) as opening_exists,
         COUNT(*) = (SELECT COUNT(*) FROM input_emails) as all_emails_valid,
-        (SELECT COUNT(*) FROM existing_watchers) = (SELECT COUNT(*) FROM org_users_to_add) as all_already_watching
+        (SELECT COUNT(*) FROM existing_watchers) = (SELECT COUNT(*) FROM org_users_to_add) as all_already_watching,
+        (SELECT COUNT(*) FROM opening_watchers WHERE employer_id = $1 AND opening_id = $2) as current_watcher_count
     FROM org_users_to_add
 ),
 insertion AS (
@@ -322,6 +324,7 @@ insertion AS (
     FROM org_users_to_add, validation
     WHERE validation.opening_exists 
     AND validation.all_emails_valid
+    AND validation.current_watcher_count + (SELECT COUNT(*) FROM org_users_to_add) <= 25
     AND NOT EXISTS (
         SELECT 1 
         FROM opening_watchers ow 
@@ -331,17 +334,18 @@ insertion AS (
     )
     ON CONFLICT DO NOTHING
 )
-SELECT opening_exists, all_emails_valid, all_already_watching FROM validation;
+SELECT opening_exists, all_emails_valid, all_already_watching, current_watcher_count FROM validation;
 `
 
 	var openingExists, allEmailsValid, allAlreadyWatching bool
+	var currentWatcherCount int
 	err := p.pool.QueryRow(
 		ctx,
 		query,
 		orgUser.EmployerID,
 		addOpeningWatchersReq.OpeningID,
 		addOpeningWatchersReq.Emails,
-	).Scan(&openingExists, &allEmailsValid, &allAlreadyWatching)
+	).Scan(&openingExists, &allEmailsValid, &allAlreadyWatching, &currentWatcherCount)
 	if err != nil {
 		p.log.Err("failed to add opening watchers", "error", err)
 		return db.ErrInternal
@@ -353,6 +357,10 @@ SELECT opening_exists, all_emails_valid, all_already_watching FROM validation;
 
 	if !allEmailsValid {
 		return db.ErrNoOrgUser
+	}
+
+	if currentWatcherCount+len(addOpeningWatchersReq.Emails) > 25 {
+		return db.ErrTooManyWatchers
 	}
 
 	// If all users were already watching, that's still a success case

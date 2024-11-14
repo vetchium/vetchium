@@ -23,7 +23,8 @@ var (
 	ErrDupLocationName = errors.New("location name already exists")
 	ErrNoLocation      = errors.New("location not found")
 
-	ErrNoOpening = errors.New("opening not found")
+	ErrNoOpening       = errors.New("opening not found")
+	ErrTooManyWatchers = errors.New("too many watchers")
 
 	ErrNoRecruiter          = errors.New("recruiter not found")
 	ErrNoHiringManager      = errors.New("hiring manager not found")
