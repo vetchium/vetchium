@@ -22,22 +22,22 @@ var _ = Describe("Openings", Ordered, func() {
 
 	BeforeAll(func() {
 		db = setupTestDB()
-		seedDatabase(db, "0005-create-get-openings-up.pgsql")
+		seedDatabase(db, "0006-watchers-and-filter-openings-up.pgsql")
 
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
-			"admin@openings.example":          &adminToken,
-			"crud@openings.example":           &crudToken,
-			"viewer@openings.example":         &viewerToken,
-			"non-openings@openings.example":   &nonOpeningsToken,
-			"recruiter@openings.example":      &recruiterToken,
-			"hiring-manager@openings.example": &hiringManagerToken,
+			"admin@openings0006.example":          &adminToken,
+			"crud@openings0006.example":           &crudToken,
+			"viewer@openings0006.example":         &viewerToken,
+			"non-openings@openings0006.example":   &nonOpeningsToken,
+			"recruiter@openings0006.example":      &recruiterToken,
+			"hiring-manager@openings0006.example": &hiringManagerToken,
 		}
 
 		for email, token := range tokens {
 			wg.Add(1)
 			employerSigninAsync(
-				"openings.example",
+				"openings0006.example",
 				email,
 				"NewPassword123$",
 				token,
@@ -48,7 +48,7 @@ var _ = Describe("Openings", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		seedDatabase(db, "0005-create-get-openings-down.pgsql")
+		seedDatabase(db, "0006-watchers-and-filter-openings-down.pgsql")
 		db.Close()
 	})
 
