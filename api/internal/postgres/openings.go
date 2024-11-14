@@ -268,10 +268,14 @@ func (p *PG) GetOpeningWatchers(
 
 	query := `
 SELECT
-    jsonb_build_object('email', ou.email, 'name', ou.name, 'vetchi_handle', ou.handle)
+    ou.email,
+    ou.name,
+    COALESCE(hu.handle, '') as vetchi_handle
 FROM
     opening_watchers ow
     LEFT JOIN org_users ou ON ow.watcher_id = ou.id
+    LEFT JOIN hub_users_official_emails hue ON ou.email = hue.official_email
+    LEFT JOIN hub_users hu ON hue.hub_user_id = hu.id
 WHERE
     ow.employer_id = $1 AND ow.opening_id = $2
 `
@@ -287,7 +291,16 @@ WHERE
 		return []vetchi.OrgUserShort{}, err
 	}
 
-	return pgx.CollectRows(rows, pgx.RowToStructByName[vetchi.OrgUserShort])
+	orgUserShorts, err := pgx.CollectRows(
+		rows,
+		pgx.RowToStructByName[vetchi.OrgUserShort],
+	)
+	if err != nil {
+		p.log.Err("failed to collect rows", "error", err)
+		return []vetchi.OrgUserShort{}, err
+	}
+
+	return orgUserShorts, nil
 }
 
 func (p *PG) AddOpeningWatchers(
