@@ -266,7 +266,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 		})
 	})
 
-	Describe("Opening Watchers", func() {
+	FDescribe("Opening Watchers", func() {
 		It("should get opening watchers correctly", func() {
 			type getWatchersTestCase struct {
 				description string

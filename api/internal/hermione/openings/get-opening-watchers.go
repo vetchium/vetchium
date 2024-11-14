@@ -22,11 +22,7 @@ func GetOpeningWatchers(h wand.Wand) http.HandlerFunc {
 		}
 
 		if !h.Vator().Struct(w, &getOpeningWatchersReq) {
-			h.Dbg(
-				"validation failed",
-				"getOpeningWatchersReq",
-				getOpeningWatchersReq,
-			)
+			h.Dbg("validation failed", "req", getOpeningWatchersReq)
 			return
 		}
 		h.Dbg("validated", "getOpeningWatchersReq", getOpeningWatchersReq)
@@ -35,11 +31,7 @@ func GetOpeningWatchers(h wand.Wand) http.HandlerFunc {
 			GetOpeningWatchers(r.Context(), getOpeningWatchersReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
-				h.Dbg(
-					"opening not found",
-					"id",
-					getOpeningWatchersReq.OpeningID,
-				)
+				h.Dbg("not found", "openingID", getOpeningWatchersReq.OpeningID)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}

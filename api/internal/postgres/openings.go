@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
@@ -267,40 +268,60 @@ func (p *PG) GetOpeningWatchers(
 	}
 
 	query := `
+WITH opening_check AS (
+    SELECT EXISTS (
+        SELECT 1 
+        FROM openings 
+        WHERE id = $2 AND employer_id = $1
+    ) as exists
+),
+watchers AS (
+    SELECT
+        ou.email,
+        ou.name,
+        COALESCE(hu.handle, '') as vetchi_handle
+    FROM
+        opening_watchers ow
+        LEFT JOIN org_users ou ON ow.watcher_id = ou.id
+        LEFT JOIN hub_users_official_emails hue ON ou.email = hue.official_email
+        LEFT JOIN hub_users hu ON hue.hub_user_id = hu.id
+    WHERE
+        ow.employer_id = $1 AND ow.opening_id = $2
+)
 SELECT
-    ou.email,
-    ou.name,
-    COALESCE(hu.handle, '') as vetchi_handle
-FROM
-    opening_watchers ow
-    LEFT JOIN org_users ou ON ow.watcher_id = ou.id
-    LEFT JOIN hub_users_official_emails hue ON ou.email = hue.official_email
-    LEFT JOIN hub_users hu ON hue.hub_user_id = hu.id
-WHERE
-    ow.employer_id = $1 AND ow.opening_id = $2
+    oc.exists as opening_exists,
+    COALESCE(
+        (SELECT json_agg(w.* ORDER BY w.email)
+         FROM watchers w),
+        '[]'
+    ) as watchers
+FROM opening_check oc;
 `
 
-	rows, err := p.pool.Query(
+	var openingExists bool
+	var watchersJSON []byte
+	err := p.pool.QueryRow(
 		ctx,
 		query,
 		orgUser.EmployerID,
 		getOpeningWatchersReq.OpeningID,
-	)
+	).Scan(&openingExists, &watchersJSON)
 	if err != nil {
 		p.log.Err("failed to query opening watchers", "error", err)
-		return []vetchi.OrgUserShort{}, err
+		return []vetchi.OrgUserShort{}, db.ErrInternal
 	}
 
-	orgUserShorts, err := pgx.CollectRows(
-		rows,
-		pgx.RowToStructByName[vetchi.OrgUserShort],
-	)
-	if err != nil {
-		p.log.Err("failed to collect rows", "error", err)
-		return []vetchi.OrgUserShort{}, err
+	if !openingExists {
+		return []vetchi.OrgUserShort{}, db.ErrNoOpening
 	}
 
-	return orgUserShorts, nil
+	var watchers []vetchi.OrgUserShort
+	if err := json.Unmarshal(watchersJSON, &watchers); err != nil {
+		p.log.Err("failed to unmarshal watchers", "error", err)
+		return []vetchi.OrgUserShort{}, db.ErrInternal
+	}
+
+	return watchers, nil
 }
 
 func (p *PG) AddOpeningWatchers(
