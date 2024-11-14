@@ -56,7 +56,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 			token       string
 			request     vetchi.FilterOpeningsRequest
 			wantStatus  int
-			wantCount   int
 			wantIDs     []string
 		}
 
@@ -73,7 +72,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  19, // All DRAFT, ACTIVE, SUSPENDED openings
+					// All DRAFT, ACTIVE, SUSPENDED openings
 					wantIDs: []string{
 						"2024-Feb-15-001", // DRAFT
 						"2024-Feb-25-001", // ACTIVE
@@ -108,7 +107,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  6,
 					wantIDs: []string{
 						"2024-Feb-15-001",
 						"2024-Mar-01-002",
@@ -130,7 +128,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  8,
 					wantIDs: []string{
 						"2024-Feb-25-001",
 						"2024-Mar-01-001",
@@ -158,7 +155,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  13,
 					wantIDs: []string{
 						"2024-Mar-06-001",
 						"2024-Mar-06-002",
@@ -187,7 +183,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 						Limit: 5,
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  5,
 					wantIDs: []string{
 						"2024-Feb-15-001",
 						"2024-Feb-25-001",
@@ -209,7 +204,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 						Limit:         5,
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  5,
 					wantIDs: []string{
 						"2024-Mar-01-005",
 						"2024-Mar-06-001",
@@ -245,7 +239,6 @@ var _ = FDescribe("Openings", Ordered, func() {
 					var openings []vetchi.OpeningInfo
 					err := json.Unmarshal(resp.([]byte), &openings)
 					Expect(err).ShouldNot(HaveOccurred())
-					// Expect(len(openings)).Should(Equal(tc.wantCount))
 
 					gotIDs := make([]string, len(openings))
 					for i, opening := range openings {
@@ -253,7 +246,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					}
 					Expect(gotIDs).Should(ConsistOf(tc.wantIDs))
 
-					if tc.wantCount > 0 && len(openings) != tc.wantCount {
+					if len(gotIDs) != len(tc.wantIDs) {
 						fmt.Fprintf(
 							GinkgoWriter,
 							"got %d:%v\n",
@@ -263,7 +256,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 						fmt.Fprintf(
 							GinkgoWriter,
 							"want %d:%v\n",
-							tc.wantCount,
+							len(tc.wantIDs),
 							tc.wantIDs,
 						)
 						Fail("got wrong number of openings")
