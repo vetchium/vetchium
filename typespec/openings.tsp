@@ -282,6 +282,7 @@ interface GetOpening {
     @post
     getOpening(@body getOpeningRequest: GetOpeningRequest): {
         @statusCode statusCode: 200;
+        @body opening: Opening;
     };
 }
 
@@ -318,6 +319,7 @@ interface GetOpeningWatchers {
         @body getOpeningWatchersRequest: GetOpeningWatchersRequest,
     ): {
         @statusCode statusCode: 200;
+        @body org_users: OrgUserShort[];
     };
 }
 
@@ -326,17 +328,25 @@ interface AddOpeningWatchers {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
-    addOpeningWatchers(@body addWatchersRequest: AddOpeningWatchersRequest): {
-        @statusCode statusCode: 200;
-    } | {
-        @doc("invalid opening_id")
-        @statusCode
-        statusCode: 404;
-    } | {
-        @doc("invalid or non-existent email addresses passed")
-        @statusCode
-        statusCode: 400;
-    };
+    addOpeningWatchers(@body addWatchersRequest: AddOpeningWatchersRequest):
+        | {
+              @statusCode statusCode: 200;
+          }
+        | {
+              @doc("invalid opening_id")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("invalid or non-existent email addresses passed")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("adding watchers would exceed 25 watchers")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/employer/remove-opening-watcher")

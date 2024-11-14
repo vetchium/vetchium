@@ -47,6 +47,12 @@ func AddOpeningWatchers(h wand.Wand) http.HandlerFunc {
 				return
 			}
 
+			if errors.Is(err, db.ErrTooManyWatchers) {
+				h.Dbg("too many watchers", "id", addWatchersReq.OpeningID)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to add watchers", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
