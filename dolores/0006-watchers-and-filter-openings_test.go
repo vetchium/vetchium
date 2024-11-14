@@ -69,10 +69,10 @@ var _ = FDescribe("Openings", Ordered, func() {
 					wantStatus:  http.StatusOK,
 					wantCount:   4,
 					wantIDs: []string{
-						"OPENING-001",
-						"OPENING-002",
-						"OPENING-003",
-						"OPENING-004",
+						"2024-Feb-15-001",
+						"2024-Feb-25-001",
+						"2024-Mar-06-001",
+						"2024-Mar-11-001",
 					},
 				},
 				{
@@ -83,7 +83,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					wantCount:  1,
-					wantIDs:    []string{"OPENING-001"},
+					wantIDs:    []string{"2024-Feb-15-001"},
 				},
 				{
 					description: "with date range filter",
@@ -100,7 +100,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					wantCount:  2,
-					wantIDs:    []string{"OPENING-003", "OPENING-004"},
+					wantIDs:    []string{"2024-Mar-06-001", "2024-Mar-11-001"},
 				},
 				{
 					description: "with invalid token",
@@ -155,7 +155,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 				{
 					description: "get watchers for opening with multiple watchers",
 					token:       adminToken,
-					openingID:   "OPENING-001",
+					openingID:   "2024-Feb-15-001",
 					wantStatus:  http.StatusOK,
 					wantEmails: []string{
 						"watcher1@openings0006.example",
@@ -165,21 +165,21 @@ var _ = FDescribe("Openings", Ordered, func() {
 				{
 					description: "get watchers for opening with single watcher",
 					token:       adminToken,
-					openingID:   "OPENING-002",
+					openingID:   "2024-Feb-25-001",
 					wantStatus:  http.StatusOK,
 					wantEmails:  []string{"watcher1@openings0006.example"},
 				},
 				{
 					description: "get watchers for opening with no watchers",
 					token:       adminToken,
-					openingID:   "OPENING-003",
+					openingID:   "2024-Mar-06-001",
 					wantStatus:  http.StatusOK,
 					wantEmails:  []string{},
 				},
 				{
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
-					openingID:   "OPENING-001",
+					openingID:   "2024-Feb-15-001",
 					wantStatus:  http.StatusForbidden,
 				},
 				{
@@ -226,7 +226,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "add new watcher to opening",
 					token:       adminToken,
 					request: vetchi.AddOpeningWatchersRequest{
-						OpeningID: "OPENING-003",
+						OpeningID: "2024-Mar-06-001",
 						Emails: []vetchi.EmailAddress{
 							"watcher1@openings0006.example",
 						},
@@ -237,7 +237,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "add duplicate watcher",
 					token:       adminToken,
 					request: vetchi.AddOpeningWatchersRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Emails: []vetchi.EmailAddress{
 							"watcher1@openings0006.example",
 						},
@@ -248,7 +248,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
 					request: vetchi.AddOpeningWatchersRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Emails: []vetchi.EmailAddress{
 							"watcher1@openings0006.example",
 						},
@@ -270,7 +270,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with non-existent user email",
 					token:       adminToken,
 					request: vetchi.AddOpeningWatchersRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Emails: []vetchi.EmailAddress{
 							"nonexistent@openings0006.example",
 						},
@@ -303,7 +303,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "remove existing watcher",
 					token:       adminToken,
 					request: vetchi.RemoveOpeningWatcherRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Email:     "watcher1@openings0006.example",
 					},
 					wantStatus: http.StatusOK,
@@ -312,7 +312,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "remove non-existent watcher",
 					token:       adminToken,
 					request: vetchi.RemoveOpeningWatcherRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Email:     "nonexistent@openings0006.example",
 					},
 					wantStatus: http.StatusOK,
@@ -321,7 +321,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
 					request: vetchi.RemoveOpeningWatcherRequest{
-						OpeningID: "OPENING-001",
+						OpeningID: "2024-Feb-15-001",
 						Email:     "watcher1@openings0006.example",
 					},
 					wantStatus: http.StatusForbidden,
@@ -350,7 +350,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 			// Verify final state
 			resp := testPOSTGetResp(
 				adminToken,
-				vetchi.GetOpeningWatchersRequest{OpeningID: "OPENING-001"},
+				vetchi.GetOpeningWatchersRequest{OpeningID: "2024-Feb-15-001"},
 				"/employer/get-opening-watchers",
 				http.StatusOK,
 			)

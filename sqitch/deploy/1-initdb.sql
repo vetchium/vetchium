@@ -188,6 +188,7 @@ CREATE TABLE openings (
     employer_id UUID REFERENCES employers(id) NOT NULL,
     id TEXT NOT NULL,
     CONSTRAINT openings_pk PRIMARY KEY (employer_id, id),
+    CONSTRAINT opening_id_format_check CHECK (id ~ '^[0-9]{4}-[A-Z][a-z]{2}-[0-9]{2}-[0-9]+$'),
 
     title TEXT NOT NULL,
     positions INTEGER NOT NULL,
