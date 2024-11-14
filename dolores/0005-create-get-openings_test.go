@@ -25,7 +25,7 @@ var _ = Describe("Openings", Ordered, func() {
 
 	BeforeAll(func() {
 		db = setupTestDB()
-		seedDatabase(db, "0005-openings-up.pgsql")
+		seedDatabase(db, "0005-create-get-openings-up.pgsql")
 
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
@@ -51,7 +51,7 @@ var _ = Describe("Openings", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		seedDatabase(db, "0005-openings-down.pgsql")
+		seedDatabase(db, "0005-create-get-openings-down.pgsql")
 		db.Close()
 	})
 
