@@ -63,44 +63,133 @@ var _ = FDescribe("Openings", Ordered, func() {
 		It("should filter openings correctly", func() {
 			testCases := []filterOpeningsTestCase{
 				{
-					description: "with no filters",
+					description: "with no filters (should only return DRAFT, ACTIVE, SUSPENDED states)",
 					token:       adminToken,
 					request:     vetchi.FilterOpeningsRequest{},
 					wantStatus:  http.StatusOK,
-					wantCount:   4,
+					wantCount:   17, // All DRAFT, ACTIVE, SUSPENDED openings
 					wantIDs: []string{
-						"2024-Feb-15-001",
-						"2024-Feb-25-001",
-						"2024-Mar-06-001",
-						"2024-Mar-11-001",
+						"2024-Feb-15-001", // DRAFT
+						"2024-Feb-25-001", // ACTIVE
+						"2024-Mar-01-001", // ACTIVE
+						"2024-Mar-01-002", // DRAFT
+						"2024-Mar-01-003", // SUSPENDED
+						"2024-Mar-01-005", // ACTIVE
+						"2024-Mar-06-001", // SUSPENDED
+						"2024-Mar-06-002", // ACTIVE
+						"2024-Mar-06-003", // DRAFT
+						"2024-Mar-06-005", // ACTIVE
+						"2024-Mar-06-006", // SUSPENDED
+						"2024-Mar-06-007", // DRAFT
+						"2024-Mar-06-010", // SUSPENDED
+						"2024-Mar-06-011", // ACTIVE
+						"2024-Mar-06-012", // DRAFT
+						"2024-Mar-06-013", // SUSPENDED
+						"2024-Mar-06-014", // ACTIVE
+						"2024-Mar-06-015", // DRAFT
 					},
 				},
 				{
-					description: "with state filter - draft",
+					description: "with state filter - draft only",
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
 						State: []vetchi.OpeningState{vetchi.DraftOpening},
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  1,
-					wantIDs:    []string{"2024-Feb-15-001"},
+					wantCount:  6,
+					wantIDs: []string{
+						"2024-Feb-15-001",
+						"2024-Mar-01-002",
+						"2024-Mar-06-003",
+						"2024-Mar-06-007",
+						"2024-Mar-06-012",
+						"2024-Mar-06-015",
+					},
 				},
 				{
-					description: "with date range filter",
+					description: "with state filter - active only",
+					token:       adminToken,
+					request: vetchi.FilterOpeningsRequest{
+						State: []vetchi.OpeningState{vetchi.ActiveOpening},
+					},
+					wantStatus: http.StatusOK,
+					wantCount:  6,
+					wantIDs: []string{
+						"2024-Feb-25-001",
+						"2024-Mar-01-001",
+						"2024-Mar-01-005",
+						"2024-Mar-06-002",
+						"2024-Mar-06-005",
+						"2024-Mar-06-009",
+						"2024-Mar-06-011",
+						"2024-Mar-06-014",
+					},
+				},
+				{
+					description: "with date range filter - March 6 only",
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
-							t := time.Now().AddDate(0, 0, -15)
+							t := time.Now().AddDate(0, 0, -10)
 							return &t
 						}(),
 						ToDate: func() *time.Time {
-							t := time.Now()
+							t := time.Now().AddDate(0, 0, -9)
 							return &t
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  2,
-					wantIDs:    []string{"2024-Mar-06-001", "2024-Mar-11-001"},
+					wantCount:  15,
+					wantIDs: []string{
+						"2024-Mar-06-001",
+						"2024-Mar-06-002",
+						"2024-Mar-06-003",
+						"2024-Mar-06-004",
+						"2024-Mar-06-005",
+						"2024-Mar-06-006",
+						"2024-Mar-06-007",
+						"2024-Mar-06-008",
+						"2024-Mar-06-009",
+						"2024-Mar-06-010",
+						"2024-Mar-06-011",
+						"2024-Mar-06-012",
+						"2024-Mar-06-013",
+						"2024-Mar-06-014",
+						"2024-Mar-06-015",
+					},
+				},
+				{
+					description: "with pagination - first page",
+					token:       adminToken,
+					request: vetchi.FilterOpeningsRequest{
+						Limit: 5,
+					},
+					wantStatus: http.StatusOK,
+					wantCount:  5,
+					wantIDs: []string{
+						"2024-Feb-15-001",
+						"2024-Feb-25-001",
+						"2024-Mar-01-001",
+						"2024-Mar-01-002",
+						"2024-Mar-01-003",
+					},
+				},
+				{
+					description: "with pagination - using pagination key",
+					token:       adminToken,
+					request: vetchi.FilterOpeningsRequest{
+						PaginationKey: "2024-Mar-01-003",
+						Limit:         5,
+					},
+					wantStatus: http.StatusOK,
+					wantCount:  5,
+					wantIDs: []string{
+						"2024-Mar-01-005",
+						"2024-Mar-06-001",
+						"2024-Mar-06-002",
+						"2024-Mar-06-003",
+						"2024-Mar-06-005",
+					},
 				},
 				{
 					description: "with invalid token",
