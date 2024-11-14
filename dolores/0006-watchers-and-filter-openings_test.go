@@ -63,11 +63,17 @@ var _ = FDescribe("Openings", Ordered, func() {
 		It("should filter openings correctly", func() {
 			testCases := []filterOpeningsTestCase{
 				{
-					description: "with no filters (should only return DRAFT, ACTIVE, SUSPENDED states)",
+					description: "with no filters on state (should only return DRAFT, ACTIVE, SUSPENDED states)",
 					token:       adminToken,
-					request:     vetchi.FilterOpeningsRequest{},
-					wantStatus:  http.StatusOK,
-					wantCount:   17, // All DRAFT, ACTIVE, SUSPENDED openings
+					request: vetchi.FilterOpeningsRequest{
+						FromDate: func() *time.Time {
+							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
+							Expect(err).ShouldNot(HaveOccurred())
+							return &t
+						}(),
+					},
+					wantStatus: http.StatusOK,
+					wantCount:  19, // All DRAFT, ACTIVE, SUSPENDED openings
 					wantIDs: []string{
 						"2024-Feb-15-001", // DRAFT
 						"2024-Feb-25-001", // ACTIVE
@@ -81,6 +87,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 						"2024-Mar-06-005", // ACTIVE
 						"2024-Mar-06-006", // SUSPENDED
 						"2024-Mar-06-007", // DRAFT
+						"2024-Mar-06-009", // ACTIVE
 						"2024-Mar-06-010", // SUSPENDED
 						"2024-Mar-06-011", // ACTIVE
 						"2024-Mar-06-012", // DRAFT
@@ -94,6 +101,11 @@ var _ = FDescribe("Openings", Ordered, func() {
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
 						State: []vetchi.OpeningState{vetchi.DraftOpening},
+						FromDate: func() *time.Time {
+							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
+							Expect(err).ShouldNot(HaveOccurred())
+							return &t
+						}(),
 					},
 					wantStatus: http.StatusOK,
 					wantCount:  6,
@@ -111,9 +123,14 @@ var _ = FDescribe("Openings", Ordered, func() {
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
 						State: []vetchi.OpeningState{vetchi.ActiveOpening},
+						FromDate: func() *time.Time {
+							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
+							Expect(err).ShouldNot(HaveOccurred())
+							return &t
+						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  6,
+					wantCount:  8,
 					wantIDs: []string{
 						"2024-Feb-25-001",
 						"2024-Mar-01-001",
@@ -130,11 +147,13 @@ var _ = FDescribe("Openings", Ordered, func() {
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
-							t := time.Now().AddDate(0, 0, -10)
+							t, err := time.Parse("2006-Jan-2", "2024-Mar-6")
+							Expect(err).ShouldNot(HaveOccurred())
 							return &t
 						}(),
 						ToDate: func() *time.Time {
-							t := time.Now().AddDate(0, 0, -9)
+							t, err := time.Parse("2006-Jan-2", "2024-Mar-6")
+							Expect(err).ShouldNot(HaveOccurred())
 							return &t
 						}(),
 					},
@@ -162,6 +181,11 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with pagination - first page",
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
+						FromDate: func() *time.Time {
+							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
+							Expect(err).ShouldNot(HaveOccurred())
+							return &t
+						}(),
 						Limit: 5,
 					},
 					wantStatus: http.StatusOK,
@@ -178,6 +202,11 @@ var _ = FDescribe("Openings", Ordered, func() {
 					description: "with pagination - using pagination key",
 					token:       adminToken,
 					request: vetchi.FilterOpeningsRequest{
+						FromDate: func() *time.Time {
+							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
+							Expect(err).ShouldNot(HaveOccurred())
+							return &t
+						}(),
 						PaginationKey: "2024-Mar-01-003",
 						Limit:         5,
 					},
@@ -218,13 +247,29 @@ var _ = FDescribe("Openings", Ordered, func() {
 					var openings []vetchi.OpeningInfo
 					err := json.Unmarshal(resp.([]byte), &openings)
 					Expect(err).ShouldNot(HaveOccurred())
-					Expect(openings).Should(HaveLen(tc.wantCount))
+					// Expect(len(openings)).Should(Equal(tc.wantCount))
 
 					gotIDs := make([]string, len(openings))
 					for i, opening := range openings {
 						gotIDs[i] = opening.ID
 					}
 					Expect(gotIDs).Should(ConsistOf(tc.wantIDs))
+
+					if tc.wantCount > 0 && len(openings) != tc.wantCount {
+						fmt.Fprintf(
+							GinkgoWriter,
+							"got %d:%v\n",
+							len(gotIDs),
+							gotIDs,
+						)
+						fmt.Fprintf(
+							GinkgoWriter,
+							"want %d:%v\n",
+							tc.wantCount,
+							tc.wantIDs,
+						)
+						Fail("got wrong number of openings")
+					}
 				}
 			}
 		})
