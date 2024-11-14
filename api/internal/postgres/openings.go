@@ -367,12 +367,42 @@ SELECT opening_exists, all_emails_valid, all_already_watching, current_watcher_c
 	return nil
 }
 
-// RemoveOpeningWatcher removes a watcher from an opening
-func (pg *PG) RemoveOpeningWatcher(
+func (p *PG) RemoveOpeningWatcher(
 	ctx context.Context,
 	removeOpeningWatcherReq vetchi.RemoveOpeningWatcherRequest,
 ) error {
-	// TODO: Implement this
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
+	query := `
+DELETE FROM opening_watchers
+WHERE employer_id = $1
+    AND opening_id = $2
+    AND watcher_id = (
+        SELECT
+            id
+        FROM
+            org_users
+        WHERE
+            email = $3
+            AND employer_id = $1)
+`
+
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		orgUser.EmployerID,
+		removeOpeningWatcherReq.OpeningID,
+		removeOpeningWatcherReq.Email,
+	)
+	if err != nil {
+		p.log.Err("failed to remove opening watcher", "error", err)
+		return db.ErrInternal
+	}
+
 	return nil
 }
 
