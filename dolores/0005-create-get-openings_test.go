@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var bachelorEducation *vetchi.EducationLevel
+var bachelorEducation_0005 *vetchi.EducationLevel
 
 var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
@@ -21,7 +21,7 @@ var _ = Describe("Openings", Ordered, func() {
 	var recruiterToken, hiringManagerToken string
 
 	bachelor := vetchi.BachelorEducation
-	bachelorEducation = &bachelor
+	bachelorEducation_0005 = &bachelor
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -82,7 +82,7 @@ var _ = Describe("Openings", Ordered, func() {
 				OpeningType:       vetchi.FullTimeOpening,
 				YoeMin:            2,
 				YoeMax:            5,
-				MinEducationLevel: bachelorEducation,
+				MinEducationLevel: bachelorEducation_0005,
 				Salary: &vetchi.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
@@ -238,7 +238,7 @@ var _ = Describe("Openings", Ordered, func() {
 							OpeningType:       vetchi.FullTimeOpening,
 							YoeMin:            2,
 							YoeMax:            5,
-							MinEducationLevel: bachelorEducation,
+							MinEducationLevel: bachelorEducation_0005,
 							Salary: &vetchi.Salary{
 								MinAmount: 200000,
 								MaxAmount: 100000,
@@ -491,7 +491,7 @@ func createTestOpening(token string) string {
 		OpeningType:       vetchi.FullTimeOpening,
 		YoeMin:            0,
 		YoeMax:            5,
-		MinEducationLevel: bachelorEducation,
+		MinEducationLevel: bachelorEducation_0005,
 		Salary: &vetchi.Salary{
 			MinAmount: 50000,
 			MaxAmount: 100000,
@@ -525,7 +525,7 @@ func createTestOpenings(token string) {
 			OpeningType:       vetchi.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
-			MinEducationLevel: bachelorEducation,
+			MinEducationLevel: bachelorEducation_0005,
 			Salary: &vetchi.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
@@ -560,7 +560,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			OpeningType:       vetchi.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
-			MinEducationLevel: bachelorEducation,
+			MinEducationLevel: bachelorEducation_0005,
 			Salary: &vetchi.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
