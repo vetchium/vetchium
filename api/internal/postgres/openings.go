@@ -152,7 +152,7 @@ func (p *PG) FilterOpenings(
 
 	query := `
 WITH parsed_id AS (
-    SELECT 
+    SELECT
         o.*,
         -- Split the ID into components and cast appropriately
         CAST(SPLIT_PART(id, '-', 1) AS INTEGER) as year,
@@ -165,7 +165,7 @@ WITH parsed_id AS (
         AND created_at >= $3
         AND created_at <= $4
 )
-SELECT 
+SELECT
     o.id,
     o.title,
     o.positions,
@@ -188,7 +188,7 @@ SELECT
         'email', hm.email,
         'vetchi_handle', hu_hm.handle
     ) as hiring_manager
-FROM 
+FROM
     parsed_id o
     LEFT JOIN org_cost_centers cc ON o.cost_center_id = cc.id
     -- Join for Recruiter
@@ -201,7 +201,7 @@ FROM
     LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
 WHERE
     -- Pagination logic
-    CASE 
+    CASE
         WHEN $5::TEXT IS NOT NULL AND $5::TEXT != '' THEN
             -- Parse the pagination key the same way
             (year, month, day, sequence) > (
@@ -212,7 +212,7 @@ WHERE
             )
         ELSE TRUE
     END
-ORDER BY 
+ORDER BY
     year,
     month,
     day,
@@ -267,12 +267,12 @@ func (p *PG) GetOpeningWatchers(
 	}
 
 	query := `
-SELECT 
+SELECT
     jsonb_build_object('email', ou.email, 'name', ou.name, 'vetchi_handle', ou.handle)
-FROM 
+FROM
     opening_watchers ow
     LEFT JOIN org_users ou ON ow.watcher_id = ou.id
-WHERE 
+WHERE
     ow.employer_id = $1 AND ow.opening_id = $2
 `
 
@@ -313,7 +313,7 @@ func (p *PG) AddOpeningWatchers(
 WITH opening_check AS (
     -- First verify the opening exists and belongs to this employer
     SELECT EXISTS (
-        SELECT 1 FROM openings 
+        SELECT 1 FROM openings
         WHERE id = $2 AND employer_id = $1
     ) as opening_exists
 ),
@@ -324,20 +324,20 @@ input_emails AS (
 org_users_to_add AS (
     -- Get org_user_ids for the given emails within the same org
     SELECT id, email
-    FROM org_users 
+    FROM org_users
     WHERE email IN (SELECT email FROM input_emails)
     AND employer_id = $1
 ),
 existing_watchers AS (
     -- Find which users are already watching
-    SELECT watcher_id 
+    SELECT watcher_id
     FROM opening_watchers
-    WHERE employer_id = $1 
+    WHERE employer_id = $1
     AND opening_id = $2
     AND watcher_id IN (SELECT id FROM org_users_to_add)
 ),
 validation AS (
-    SELECT 
+    SELECT
         (SELECT opening_exists FROM opening_check) as opening_exists,
         COUNT(*) = (SELECT COUNT(*) FROM input_emails) as all_emails_valid,
         (SELECT COUNT(*) FROM existing_watchers) = (SELECT COUNT(*) FROM org_users_to_add) as all_already_watching,
@@ -348,14 +348,14 @@ insertion AS (
     INSERT INTO opening_watchers (employer_id, opening_id, watcher_id)
     SELECT $1, $2, org_users_to_add.id
     FROM org_users_to_add, validation
-    WHERE validation.opening_exists 
+    WHERE validation.opening_exists
     AND validation.all_emails_valid
     AND validation.current_watcher_count + (SELECT COUNT(*) FROM org_users_to_add) <= 25
     AND NOT EXISTS (
-        SELECT 1 
-        FROM opening_watchers ow 
-        WHERE ow.employer_id = $1 
-        AND ow.opening_id = $2 
+        SELECT 1
+        FROM opening_watchers ow
+        WHERE ow.employer_id = $1
+        AND ow.opening_id = $2
         AND ow.watcher_id = org_users_to_add.id
     )
     ON CONFLICT DO NOTHING
