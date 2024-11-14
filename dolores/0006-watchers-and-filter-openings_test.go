@@ -152,22 +152,20 @@ var _ = FDescribe("Openings", Ordered, func() {
 							return &t
 						}(),
 						ToDate: func() *time.Time {
-							t, err := time.Parse("2006-Jan-2", "2024-Mar-6")
+							t, err := time.Parse("2006-Jan-2", "2024-Mar-7")
 							Expect(err).ShouldNot(HaveOccurred())
 							return &t
 						}(),
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  15,
+					wantCount:  13,
 					wantIDs: []string{
 						"2024-Mar-06-001",
 						"2024-Mar-06-002",
 						"2024-Mar-06-003",
-						"2024-Mar-06-004",
 						"2024-Mar-06-005",
 						"2024-Mar-06-006",
 						"2024-Mar-06-007",
-						"2024-Mar-06-008",
 						"2024-Mar-06-009",
 						"2024-Mar-06-010",
 						"2024-Mar-06-011",

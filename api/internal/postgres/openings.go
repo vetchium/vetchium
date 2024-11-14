@@ -163,7 +163,7 @@ WITH parsed_id AS (
     WHERE employer_id = $1
         AND current_state = ANY($2::opening_states[])
         AND created_at >= $3
-        AND created_at <= $4
+        AND created_at < $4
 )
 SELECT
     o.id,
