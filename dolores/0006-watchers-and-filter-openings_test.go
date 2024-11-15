@@ -19,7 +19,7 @@ import (
 
 var bachelorEducation_0006 *vetchi.EducationLevel
 
-var _ = FDescribe("Openings", Ordered, func() {
+var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
@@ -275,7 +275,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 		})
 	})
 
-	FDescribe("Opening Watchers", func() {
+	Describe("Opening Watchers", func() {
 		It("should get opening watchers correctly", func() {
 			type getWatchersTestCase struct {
 				description string
@@ -498,7 +498,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 			).Should(Equal("watcher2@openings0006.example"))
 		})
 
-		FIt("should not allow more than 25 watchers", func() {
+		It("should not allow more than 25 watchers", func() {
 			const maxWatchersAllowed = 25
 
 			request := vetchi.CreateOpeningRequest{
