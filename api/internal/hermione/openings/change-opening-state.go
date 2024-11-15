@@ -39,7 +39,7 @@ func ChangeOpeningState(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if !h.Vator().Struct(w, changeOpeningStateReq) {
+		if !h.Vator().Struct(w, &changeOpeningStateReq) {
 			h.Dbg("invalid", "changeOpeningStateReq", changeOpeningStateReq)
 			return
 		}

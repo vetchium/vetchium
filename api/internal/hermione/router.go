@@ -174,6 +174,11 @@ func (h *Hermione) Run() error {
 		openings.RemoveOpeningWatcher(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
 	)
+	h.mw.Protect(
+		"/employer/change-opening-state",
+		openings.ChangeOpeningState(h),
+		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
 
 	return http.ListenAndServe(h.port, nil)
 }
