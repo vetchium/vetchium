@@ -462,20 +462,72 @@ WHERE employer_id = $1
 	return nil
 }
 
-// ApproveOpeningStateChange approves a pending state change for an opening
-func (pg *PG) ApproveOpeningStateChange(
+func (p *PG) ChangeOpeningState(
 	ctx context.Context,
-	approveOpeningStateChangeReq vetchi.ApproveOpeningStateChangeRequest,
+	changeOpeningStateReq vetchi.ChangeOpeningStateRequest,
 ) error {
-	// TODO: Implement this
-	return nil
-}
+	const (
+		resultNoOpening     = "no_opening"
+		resultStateMismatch = "state_mismatch"
+		resultUpdated       = "updated"
+	)
 
-// RejectOpeningStateChange rejects a pending state change for an opening
-func (pg *PG) RejectOpeningStateChange(
-	ctx context.Context,
-	rejectOpeningStateChangeReq vetchi.RejectOpeningStateChangeRequest,
-) error {
-	// TODO: Implement this
-	return nil
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
+	query := `
+WITH opening_check AS (
+    SELECT state
+    FROM openings
+    WHERE id = $1 AND employer_id = $2
+),
+state_update AS (
+    UPDATE openings
+    SET state = $3
+    WHERE id = $1
+        AND employer_id = $2
+        AND state = $4
+    RETURNING true as updated
+)
+SELECT 
+    CASE
+        WHEN NOT EXISTS (SELECT 1 FROM opening_check) THEN $5
+        WHEN NOT EXISTS (SELECT 1 FROM state_update) THEN $6
+        ELSE $7
+    END as result;
+`
+
+	var result string
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		changeOpeningStateReq.OpeningID,
+		orgUser.EmployerID,
+		changeOpeningStateReq.ToState,
+		changeOpeningStateReq.FromState,
+		resultNoOpening,
+		resultStateMismatch,
+		resultUpdated,
+	).Scan(&result)
+	if err != nil {
+		p.log.Err("failed to change opening state", "error", err)
+		return db.ErrInternal
+	}
+
+	p.log.Dbg("state change result", "result", result)
+
+	switch result {
+	case resultNoOpening:
+		return db.ErrNoOpening
+	case resultStateMismatch:
+		return db.ErrStateMismatch
+	case resultUpdated:
+		return nil
+	default:
+		p.log.Err("unexpected result from state change", "result", result)
+		return db.ErrInternal
+	}
 }

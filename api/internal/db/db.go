@@ -69,9 +69,5 @@ type DB interface {
 	) ([]v.OrgUserShort, error)
 	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
 	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
-	ApproveOpeningStateChange(
-		c.Context,
-		v.ApproveOpeningStateChangeRequest,
-	) error
-	RejectOpeningStateChange(c.Context, v.RejectOpeningStateChangeRequest) error
+	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
 }

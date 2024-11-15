@@ -37,4 +37,6 @@ var (
 	ErrInvalidHiringTeam = errors.New(
 		"one or more invalid hiring team member emails specified or members not in active state",
 	)
+
+	ErrStateMismatch = errors.New("current state does not match expected state")
 )

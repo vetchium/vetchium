@@ -219,6 +219,12 @@ model FilterOpeningsRequest {
     limit?: integer;
 }
 
+model ChangeOpeningStateRequest {
+    opening_id: OpeningID;
+    from_state: OpeningState;
+    to_state: OpeningState;
+}
+
 model UpdateOpeningRequest {
     id: OpeningID;
     // TODO: Decide what fields are allowed to be updated
@@ -346,5 +352,25 @@ interface RemoveOpeningWatcher {
         @body removeWatcherRequest: RemoveOpeningWatcherRequest,
     ): {
         @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/change-opening-state")
+interface ChangeOpeningState {
+    @tag("Openings")
+    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
+    @post
+    changeOpeningState(
+        @body changeOpeningStateRequest: ChangeOpeningStateRequest,
+    ): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("invalid from_state")
+        @statusCode
+        statusCode: 409;
+    } | {
+        @doc("invalid transition from from_state to to_state")
+        @statusCode
+        statusCode: 422;
     };
 }

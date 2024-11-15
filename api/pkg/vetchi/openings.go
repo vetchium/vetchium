@@ -144,10 +144,8 @@ type RemoveOpeningWatcherRequest struct {
 	Email     EmailAddress `json:"email"      validate:"required"`
 }
 
-type ApproveOpeningStateChangeRequest struct {
-	OpeningID string `json:"opening_id" validate:"required"`
-}
-
-type RejectOpeningStateChangeRequest struct {
-	OpeningID string `json:"opening_id" validate:"required"`
+type ChangeOpeningStateRequest struct {
+	OpeningID string       `json:"opening_id" validate:"required"`
+	FromState OpeningState `json:"from_state" validate:"required"`
+	ToState   OpeningState `json:"to_state"   validate:"required"`
 }
