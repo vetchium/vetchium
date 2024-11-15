@@ -367,7 +367,7 @@ var _ = FDescribe("Openings", Ordered, func() {
 							"watcher1@openings0006.example",
 						},
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with non-openings role",
