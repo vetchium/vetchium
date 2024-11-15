@@ -3,6 +3,10 @@ package dolores
 import (
 	"encoding/json"
 	"fmt"
+
+	// math rand is sufficient as we just need a number; no need for crypto
+	"math/rand"
+
 	"net/http"
 	"sync"
 	"time"
@@ -13,12 +17,17 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
+var bachelorEducation_0006 *vetchi.EducationLevel
+
 var _ = FDescribe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
 
 	BeforeAll(func() {
+		bachelor := vetchi.BachelorEducation
+		bachelorEducation_0006 = &bachelor
+
 		db = setupTestDB()
 		seedDatabase(db, "0006-watchers-and-filter-openings-up.pgsql")
 
@@ -487,6 +496,77 @@ var _ = FDescribe("Openings", Ordered, func() {
 			Expect(
 				string(watchers[0].Email),
 			).Should(Equal("watcher2@openings0006.example"))
+		})
+
+		FIt("should not allow more than 25 watchers", func() {
+			const maxWatchersAllowed = 25
+
+			request := vetchi.CreateOpeningRequest{
+				Title:             "Test Opening",
+				Positions:         1,
+				JD:                "Test Job Description",
+				Recruiter:         "admin@openings0006.example",
+				HiringManager:     "admin@openings0006.example",
+				CostCenterName:    "Engineering",
+				OpeningType:       vetchi.FullTimeOpening,
+				YoeMin:            0,
+				YoeMax:            5,
+				MinEducationLevel: bachelorEducation_0006,
+				Salary: &vetchi.Salary{
+					MinAmount: 50000,
+					MaxAmount: 100000,
+					Currency:  "USD",
+				},
+			}
+
+			resp := testPOSTGetResp(
+				adminToken,
+				request,
+				"/employer/create-opening",
+				http.StatusOK,
+			).([]byte)
+
+			var opening vetchi.CreateOpeningResponse
+			err := json.Unmarshal(resp, &opening)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			openingID := opening.OpeningID
+
+			for i := 1; i <= maxWatchersAllowed; {
+				newWatcherCount := rand.Intn(3) + 1
+
+				var newWatchers []vetchi.EmailAddress
+				for j := 0; j < newWatcherCount && i <= maxWatchersAllowed; {
+					newWatchers = append(newWatchers, vetchi.EmailAddress(
+						fmt.Sprintf("maxwatcher%d@openings0006.example", i),
+					))
+					j++
+					i++
+				}
+				fmt.Fprintf(GinkgoWriter, "adding %v watchers\n", newWatchers)
+				testPOST(
+					adminToken,
+					vetchi.AddOpeningWatchersRequest{
+						OpeningID: openingID,
+						Emails:    newWatchers,
+					},
+					"/employer/add-opening-watchers",
+					http.StatusOK,
+				)
+			}
+
+			// Try to add one more watcher
+			testPOST(
+				adminToken,
+				vetchi.AddOpeningWatchersRequest{
+					OpeningID: openingID,
+					Emails: []vetchi.EmailAddress{
+						"maxwatcher26@openings0006.example",
+					},
+				},
+				"/employer/add-opening-watchers",
+				http.StatusUnprocessableEntity,
+			)
 		})
 	})
 })
