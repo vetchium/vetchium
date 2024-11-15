@@ -25,7 +25,7 @@ var _ = Describe("Openings", Ordered, func() {
 
 	BeforeAll(func() {
 		db = setupTestDB()
-		seedDatabase(db, "0005-create-get-openings-up.pgsql")
+		seedDatabase(db, "0005-create-get-statechange-openings-up.pgsql")
 
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
@@ -51,7 +51,7 @@ var _ = Describe("Openings", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		seedDatabase(db, "0005-create-get-openings-down.pgsql")
+		seedDatabase(db, "0005-create-get-statechange-openings-down.pgsql")
 		db.Close()
 	})
 
@@ -457,6 +457,100 @@ var _ = Describe("Openings", Ordered, func() {
 				2,
 				4,
 			) // count less than limit
+		})
+
+		It("Change Opening State", func() {
+			openingID := createTestOpening(adminToken)
+
+			type changeOpeningStateTestCase struct {
+				description string
+				token       string
+				request     vetchi.ChangeOpeningStateRequest
+				wantStatus  int
+			}
+
+			testCases := []changeOpeningStateTestCase{
+				{
+					description: "with Admin token",
+					token:       adminToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.DraftOpening,
+						ToState:   vetchi.ActiveOpening,
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with CRUD token",
+					token:       crudToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.ActiveOpening,
+						ToState:   vetchi.SuspendedOpening,
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "with non-openings token",
+					token:       nonOpeningsToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.SuspendedOpening,
+						ToState:   vetchi.ClosedOpening,
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "with viewer token",
+					token:       viewerToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.SuspendedOpening,
+						ToState:   vetchi.ClosedOpening,
+					},
+					wantStatus: http.StatusForbidden,
+				},
+				{
+					description: "with non-existent opening",
+					token:       adminToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: "non-existent-id",
+						FromState: vetchi.DraftOpening,
+						ToState:   vetchi.ActiveOpening,
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "with invalid transition",
+					token:       adminToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.SuspendedOpening,
+						ToState:   vetchi.DraftOpening,
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
+				{
+					description: "with invalid from state",
+					token:       adminToken,
+					request: vetchi.ChangeOpeningStateRequest{
+						OpeningID: openingID,
+						FromState: vetchi.DraftOpening,
+						ToState:   vetchi.ActiveOpening,
+					},
+					wantStatus: http.StatusConflict,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+				testPOST(
+					tc.token,
+					tc.request,
+					"/employer/change-opening-state",
+					tc.wantStatus,
+				)
+			}
 		})
 	})
 })
