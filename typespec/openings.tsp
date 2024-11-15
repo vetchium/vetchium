@@ -63,8 +63,7 @@ model OpeningInfo {
     hiring_manager: OrgUserShort;
     cost_center_name: CostCenterName;
     opening_type: OpeningType;
-    current_state: OpeningState;
-    approval_waiting_state?: OpeningState;
+    state: OpeningState;
     created_at: utcDateTime;
     last_updated_at: utcDateTime;
 }
@@ -131,10 +130,7 @@ model Opening {
     salary?: Salary;
 
     @doc("Current state of the opening")
-    current_state: OpeningState;
-
-    @doc("If the Opening's state is changed and needs an approval, this field will indicate the state it is waiting for")
-    approval_waiting_state?: OpeningState;
+    state: OpeningState;
 
     created_at: utcDateTime;
     last_updated_at: utcDateTime;
@@ -250,14 +246,6 @@ model RemoveOpeningWatcherRequest {
     email: EmailAddress;
 }
 
-model ApproveOpeningStateChangeRequest {
-    opening_id: OpeningID;
-}
-
-model RejectOpeningStateChangeRequest {
-    opening_id: OpeningID;
-}
-
 @route("/employer/create-opening")
 interface CreateOpening {
     @tag("Openings")
@@ -356,31 +344,6 @@ interface RemoveOpeningWatcher {
     @post
     removeOpeningWatcher(
         @body removeWatcherRequest: RemoveOpeningWatcherRequest,
-    ): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/approve-opening-state-change")
-interface ApproveOpeningStateChange {
-    @tag("Openings")
-    @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
-    @post
-    approveOpeningStateChange(
-        @body
-        approveOpeningStateChangeRequest: ApproveOpeningStateChangeRequest,
-    ): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/reject-opening-state-change")
-interface RejectOpeningStateChange {
-    @tag("Openings")
-    @doc("Requires any of ${Admin}, ${OpeningsCRUD}, ${OpeningsViewer} roles")
-    @post
-    rejectOpeningStateChange(
-        @body rejectOpeningStateChangeRequest: RejectOpeningStateChangeRequest,
     ): {
         @statusCode statusCode: 200;
     };

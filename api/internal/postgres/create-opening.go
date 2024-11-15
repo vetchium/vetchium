@@ -73,7 +73,7 @@ SELECT id FROM org_cost_centers WHERE cost_center_name = $1 AND employer_id = $2
 	p.log.Dbg("generated opening ID", "id", openingID)
 
 	query := `
-INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, current_state, approval_waiting_state, employer_id)
+INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, state, employer_id)
     VALUES ($1, $2, $3, $4, (
             SELECT
                 id
@@ -81,7 +81,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                 org_users
             WHERE
                 email = $5
-                AND employer_id = $20),
+                AND employer_id = $19),
             (
                 SELECT
                     id
@@ -89,7 +89,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                     org_users
                 WHERE
                     email = $6
-                    AND employer_id = $20),
+                    AND employer_id = $19),
                 $7,
                 $8,
                 $9,
@@ -102,8 +102,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
                 $16,
                 $17,
                 $18,
-                $19,
-                $20)
+                $19)
     RETURNING
         id
 `
@@ -128,7 +127,6 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
 		createOpeningReq.Salary.MaxAmount,
 		createOpeningReq.Salary.Currency,
 		vetchi.DraftOpening,
-		nil,
 		orgUser.EmployerID,
 	).Scan(&openingID)
 	if err != nil {

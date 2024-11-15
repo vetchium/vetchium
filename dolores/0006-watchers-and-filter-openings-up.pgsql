@@ -70,7 +70,7 @@ INSERT INTO public.locations (id, title, country_code, postal_address, postal_co
     ('12345678-0006-0006-0006-000000060002'::uuid, 'Chennai Office', 'IND', '456 Anna Salai, Chennai', '600002', NULL, ARRAY['Madras'], 'ACTIVE_LOCATION', '12345678-0006-0006-0006-000000000201'::uuid, timezone('UTC'::text, now()));
 
 -- Insert openings with different states and dates
-INSERT INTO public.openings (employer_id, id, title, positions, jd, recruiter, hiring_manager, cost_center_id, opening_type, yoe_min, yoe_max, min_education_level, current_state, created_at, last_updated_at)
+INSERT INTO public.openings (employer_id, id, title, positions, jd, recruiter, hiring_manager, cost_center_id, opening_type, yoe_min, yoe_max, min_education_level, state, created_at, last_updated_at)
 VALUES
     -- February 15 (1 opening)
     ('12345678-0006-0006-0006-000000000201'::uuid, '2024-Feb-15-001', 'Software Engineer', 2, 'JD for Software Engineer', '12345678-0006-0006-0006-000000040004'::uuid, '12345678-0006-0006-0006-000000040005'::uuid, '12345678-0006-0006-0006-000000050001'::uuid, 'FULL_TIME_OPENING', 2, 5, 'BACHELOR_EDUCATION', 'DRAFT_OPENING_STATE', '2024-02-15 00:00:00+00'::timestamptz, '2024-02-15 00:00:00+00'::timestamptz),

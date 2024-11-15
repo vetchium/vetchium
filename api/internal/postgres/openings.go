@@ -38,8 +38,7 @@ SELECT
     o.salary_min,
     o.salary_max,
     o.salary_currency,
-    o.current_state,
-    o.approval_waiting_state,
+    o.state,
     o.created_at,
     o.last_updated_at,
     jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle) AS recruiter,
@@ -82,8 +81,7 @@ GROUP BY
     o.salary_min,
     o.salary_max,
     o.salary_currency,
-    o.current_state,
-    o.approval_waiting_state,
+    o.state,
     o.created_at,
     o.last_updated_at,
     r.email,
@@ -115,8 +113,7 @@ GROUP BY
 			&salary.MinAmount,
 			&salary.MaxAmount,
 			&salary.Currency,
-			&opening.CurrentState,
-			&opening.ApprovalWaitingState,
+			&opening.State,
 			&opening.CreatedAt,
 			&opening.LastUpdatedAt,
 			&recruiter,
@@ -162,7 +159,7 @@ WITH parsed_id AS (
         CAST(SPLIT_PART(id, '-', 4) AS INTEGER) as sequence
     FROM openings o
     WHERE employer_id = $1
-        AND current_state = ANY($2::opening_states[])
+        AND state = ANY($2::opening_states[])
         AND created_at >= $3
         AND created_at < $4
 )
@@ -172,8 +169,7 @@ SELECT
     o.positions,
     0 as filled_positions, -- TODO Calculate filled positions
     o.opening_type,
-    o.current_state,
-    o.approval_waiting_state,
+    o.state,
     o.created_at,
     o.last_updated_at,
     cc.cost_center_name,

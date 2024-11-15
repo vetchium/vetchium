@@ -53,15 +53,14 @@ type Opening struct {
 	OpeningType        OpeningType    `json:"opening_type"`
 	YoeMin             int            `json:"yoe_min"`
 	YoeMax             int            `json:"yoe_max"`
-	CurrentState       OpeningState   `json:"current_state"`
+	State              OpeningState   `json:"state"`
 	CreatedAt          time.Time      `json:"created_at"`
 	LastUpdatedAt      time.Time      `json:"last_updated_at"`
 
 	// Optional fields
-	ApprovalWaitingState *OpeningState   `json:"approval_waiting_state,omitempty"`
-	EmployerNotes        *string         `json:"employer_notes,omitempty"`
-	MinEducationLevel    *EducationLevel `json:"min_education_level,omitempty"`
-	Salary               *Salary         `json:"salary,omitempty"`
+	EmployerNotes     *string         `json:"employer_notes,omitempty"`
+	MinEducationLevel *EducationLevel `json:"min_education_level,omitempty"`
+	Salary            *Salary         `json:"salary,omitempty"`
 }
 
 type CreateOpeningRequest struct {
@@ -90,18 +89,17 @@ type CreateOpeningResponse struct {
 }
 
 type OpeningInfo struct {
-	ID                   string         `json:"id"                               db:"id"`
-	Title                string         `json:"title"                            db:"title"`
-	Positions            int            `json:"positions"                        db:"positions"`
-	FilledPositions      int            `json:"filled_positions"                 db:"filled_positions"`
-	Recruiter            OrgUserShort   `json:"recruiter"                        db:"recruiter"`
-	HiringManager        OrgUserShort   `json:"hiring_manager"                   db:"hiring_manager"`
-	CostCenterName       CostCenterName `json:"cost_center_name"                 db:"cost_center_name"`
-	OpeningType          OpeningType    `json:"opening_type"                     db:"opening_type"`
-	CurrentState         OpeningState   `json:"current_state"                    db:"current_state"`
-	ApprovalWaitingState *OpeningState  `json:"approval_waiting_state,omitempty" db:"approval_waiting_state"`
-	CreatedAt            time.Time      `json:"created_at"                       db:"created_at"`
-	LastUpdatedAt        time.Time      `json:"last_updated_at"                  db:"last_updated_at"`
+	ID              string         `json:"id"               db:"id"`
+	Title           string         `json:"title"            db:"title"`
+	Positions       int            `json:"positions"        db:"positions"`
+	FilledPositions int            `json:"filled_positions" db:"filled_positions"`
+	Recruiter       OrgUserShort   `json:"recruiter"        db:"recruiter"`
+	HiringManager   OrgUserShort   `json:"hiring_manager"   db:"hiring_manager"`
+	CostCenterName  CostCenterName `json:"cost_center_name" db:"cost_center_name"`
+	OpeningType     OpeningType    `json:"opening_type"     db:"opening_type"`
+	State           OpeningState   `json:"state"            db:"state"`
+	CreatedAt       time.Time      `json:"created_at"       db:"created_at"`
+	LastUpdatedAt   time.Time      `json:"last_updated_at"  db:"last_updated_at"`
 }
 
 type GetOpeningRequest struct {
