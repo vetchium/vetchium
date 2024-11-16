@@ -62,11 +62,16 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		emailTokenString := util.RandomString(vetchi.EmailTokenLenBytes)
+		tfaMailCode, err := util.RandNumString(6)
+		if err != nil {
+			h.Dbg("failed to generate tfa mail code", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		// We can even use the employerSigninReq.Email here but this
 		// feels better. TODO: This needs to migrate to Hedwig package.
-		email, err := generateEmail(orgUserAuth.OrgUserEmail, emailTokenString)
+		email, err := generateEmail(orgUserAuth.OrgUserEmail, tfaMailCode)
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
@@ -101,7 +106,7 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 					OrgUserID:        orgUserAuth.OrgUserID,
 				},
 				TFACode: db.TokenReq{
-					Token:            emailTokenString,
+					Token:            tfaMailCode,
 					TokenType:        db.EmployerTFACode,
 					ValidityDuration: tfaCodeLife,
 					OrgUserID:        orgUserAuth.OrgUserID,
