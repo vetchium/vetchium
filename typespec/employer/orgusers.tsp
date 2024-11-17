@@ -2,7 +2,7 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
-import "./common.tsp";
+import "../common.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;

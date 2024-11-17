@@ -3,10 +3,12 @@ import "@typespec/openapi3";
 import "@typespec/rest";
 
 import "./common.tsp";
-import "./costcenters.tsp";
-import "./locations.tsp";
-import "./orgusers.tsp";
-import "./openings.tsp";
+import "./employer/costcenters.tsp";
+import "./employer/locations.tsp";
+import "./employer/orgusers.tsp";
+import "./employer/openings.tsp";
+
+import "./hub/hubusers.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
