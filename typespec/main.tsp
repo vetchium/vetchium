@@ -2,7 +2,6 @@ import "@typespec/http";
 import "@typespec/openapi3";
 import "@typespec/rest";
 
-import "./common.tsp";
 import "./employer/costcenters.tsp";
 import "./employer/locations.tsp";
 import "./employer/orgusers.tsp";
