@@ -1,4 +1,13 @@
 BEGIN;
+DELETE FROM org_user_invites
+WHERE org_user_id IN (
+    SELECT
+        id
+    FROM
+        org_users
+    WHERE
+        employer_id = '12345678-0004-0004-0004-000000000201'::uuid
+);
 DELETE FROM org_user_tokens
 WHERE org_user_id IN (
     SELECT
