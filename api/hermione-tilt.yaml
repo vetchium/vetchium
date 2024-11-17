@@ -20,7 +20,7 @@ data:
         "session_tok_life": "15m",
         "lts_tok_life": "20m",
 
-        "invite_tok_life": "5m"
+        "hub_user_invite_tok_life": "5m"
       },
       "port": "8080",
       "postgres": {

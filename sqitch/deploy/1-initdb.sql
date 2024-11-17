@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS hub_users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TYPE token_types AS ENUM (
+CREATE TYPE hub_user_token_types AS ENUM (
     'HUB_USER_SESSION',
     'HUB_USER_LTS',
     'HUB_USER_TFA_TOKEN',
-    'HUB_USER_TFA_CODE',
+    'HUB_USER_TFA_CODE'
 );
 
 CREATE TABLE hub_user_tokens (
@@ -32,7 +32,7 @@ CREATE TABLE hub_user_tokens (
     CONSTRAINT hub_user_tokens_pkey PRIMARY KEY (token, hub_user_id),
 
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
-    token_type token_types NOT NULL,
+    token_type hub_user_token_types NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
