@@ -143,24 +143,27 @@ CREATE TABLE org_users (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TYPE token_types AS ENUM (
+CREATE TYPE org_user_token_types AS ENUM (
     'EMPLOYER_SESSION',
     'EMPLOYER_LTS',
     'EMPLOYER_TFA_TOKEN',
-
-    -- Perhaps this alone can be moved to a new table, to minimize collisions !?
-    'EMPLOYER_TFA_CODE',
-
-    'EMPLOYER_INVITE'
+    'EMPLOYER_TFA_CODE'
 );
 CREATE TABLE org_user_tokens (
     token TEXT,
-    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
-    token_type token_types NOT NULL,
-
-    CONSTRAINT org_user_tokens_pkey PRIMARY KEY (token),
     org_user_id UUID REFERENCES org_users(id) NOT NULL,
+    CONSTRAINT org_user_tokens_pkey PRIMARY KEY (token, org_user_id),
 
+    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
+    token_type org_user_token_types NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE org_user_invites (
+    token TEXT PRIMARY KEY,
+    org_user_id UUID REFERENCES org_users(id) NOT NULL,
+    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

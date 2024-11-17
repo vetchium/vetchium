@@ -17,11 +17,11 @@ import (
 
 type invite struct {
 	Mail     db.Email
-	TokenReq db.TokenReq
+	TokenReq db.OrgUserInviteReq
 	OrgUser  db.OrgUserTO
 }
 
-func generateInvite(
+func generateOrgUserInvite(
 	h wand.Wand,
 	r *http.Request,
 	w http.ResponseWriter,
@@ -69,17 +69,9 @@ func generateInvite(
 		return invite{}, err
 	}
 
-	inviteTokenValidityDuration, err := h.ConfigDuration(db.EmployerInviteToken)
-	if err != nil {
-		h.Err("failed to get invite token validity duration", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return invite{}, err
-	}
-
-	inviteTokenReq := db.TokenReq{
+	inviteTokenReq := db.OrgUserInviteReq{
 		Token:            token,
-		TokenType:        db.EmployerInviteToken,
-		ValidityDuration: inviteTokenValidityDuration,
+		ValidityDuration: h.Config().Employer.InviteTokLife,
 	}
 
 	return invite{

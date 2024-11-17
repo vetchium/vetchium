@@ -46,26 +46,16 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 		}
 
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
-		validityDuration, err := h.ConfigDuration(db.EmployerSessionToken)
-		if err != nil {
-			h.Dbg("failed to get session token validity duration", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
+		validityDuration := h.Config().Employer.SessionTokLife
 		tokenType := db.EmployerSessionToken
 
 		if employerTFARequest.RememberMe {
 			tokenType = db.EmployerLTSToken
-			validityDuration, err = h.ConfigDuration(db.EmployerLTSToken)
-			if err != nil {
-				h.Dbg("failed to get LTS token validity duration", "error", err)
-				http.Error(w, "", http.StatusInternalServerError)
-				return
-			}
+			validityDuration = h.Config().Employer.LTSTokLife
 			h.Dbg("remember me", "validityDuration", validityDuration)
 		}
 
-		tokenReq := db.TokenReq{
+		tokenReq := db.EmployerTokenReq{
 			Token:            sessionToken,
 			TokenType:        tokenType,
 			ValidityDuration: validityDuration,

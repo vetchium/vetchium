@@ -8,8 +8,8 @@ import (
 )
 
 type HubUserTFA struct {
-	TFACode  TokenReq
-	TFAToken TokenReq
+	TFACode  HubTokenReq
+	TFAToken HubTokenReq
 	Email    Email
 }
 

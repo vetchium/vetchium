@@ -8,7 +8,7 @@ import (
 
 func (p *PG) CreateOrgUserToken(
 	ctx context.Context,
-	tokenReq db.TokenReq,
+	tokenReq db.EmployerTokenReq,
 ) error {
 	query := `
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)

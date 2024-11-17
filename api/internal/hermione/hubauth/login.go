@@ -73,30 +73,23 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 		// TODO: Should we just email a magic URL instead of a token ? We can
 		// make it longer, so minimize collisions and also more secure.
 
-		tfaTokLife, err := h.ConfigDuration(db.HubUserTFAToken)
-		if err != nil {
-			h.Dbg("failed to get tfa token life", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		// The tfa code & the token should have approx same validity duration
-		tfaCodeLife := tfaTokLife
-
 		err = h.DB().InitHubUserTFA(
 			r.Context(),
 			db.HubUserTFA{
-				TFAToken: db.TokenReq{
+				TFAToken: db.HubTokenReq{
 					Token:            tfaTokenString,
 					TokenType:        db.HubUserTFAToken,
-					ValidityDuration: tfaTokLife,
+					ValidityDuration: h.Config().Hub.TFATokLife,
 					HubUserID:        hubUser.ID,
 				},
-				TFACode: db.TokenReq{
-					Token:            tfaMailCode,
-					TokenType:        db.HubUserTFACode,
-					ValidityDuration: tfaCodeLife,
-					HubUserID:        hubUser.ID,
+				TFACode: db.HubTokenReq{
+					Token:     tfaMailCode,
+					TokenType: db.HubUserTFACode,
+
+					// TFA code should be valid for same duration as TFA token
+					ValidityDuration: h.Config().Hub.TFATokLife,
+
+					HubUserID: hubUser.ID,
 				},
 				Email: email,
 			},

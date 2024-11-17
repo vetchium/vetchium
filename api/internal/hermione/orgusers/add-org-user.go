@@ -28,7 +28,7 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "AddOrgUserReq", addOrgUserReq)
 
-		invite, err := generateInvite(h, r, w, addOrgUserReq.Email)
+		invite, err := generateOrgUserInvite(h, r, w, addOrgUserReq.Email)
 		if err != nil {
 			return
 		}

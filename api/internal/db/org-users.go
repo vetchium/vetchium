@@ -28,7 +28,7 @@ type AddOrgUserReq struct {
 
 	InviteMail Email
 
-	InviteToken TokenReq
+	InviteToken OrgUserInviteReq
 
 	EmployerID uuid.UUID
 
@@ -41,7 +41,8 @@ type EnableOrgUserReq struct {
 	EmployerID uuid.UUID
 
 	InviteMail  Email
-	InviteToken TokenReq
+	InviteToken OrgUserInviteReq
+
 	// Currently unused, but will be used in the future for audit logs
 	EnablingUserID uuid.UUID
 }

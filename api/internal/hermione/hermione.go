@@ -1,13 +1,11 @@
 package hermione
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/psankar/vetchi/api/internal/config"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -16,89 +14,8 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-type Config struct {
-	Employer struct {
-		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
-		SessionTokLife string `json:"session_tok_life" validate:"required"`
-		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
-		InviteTokLife  string `json:"employee_invite_tok_life" validate:"required"`
-	} `json:"employer" validate:"required"`
-
-	Hub struct {
-		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
-		SessionTokLife string `json:"session_tok_life" validate:"required"`
-		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
-		InviteTokLife  string `json:"hub_user_invite_tok_life" validate:"required"`
-	} `json:"hub" validate:"required"`
-
-	Postgres struct {
-		Host string `json:"host" validate:"required,min=1"`
-		Port string `json:"port" validate:"required,min=1"`
-		User string `json:"user" validate:"required,min=1"`
-		DB   string `json:"db" validate:"required,min=1"`
-	} `json:"postgres" validate:"required"`
-
-	Port string `json:"port" validate:"required,min=1,number"`
-}
-
-func LoadConfig() (*Config, error) {
-	data, err := os.ReadFile("/etc/hermione-config/config.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	config := &Config{}
-	if err := json.Unmarshal(data, config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	// Whatever can be validated by the struct tags, is done here. More
-	// validations continue to happen in the New() function
-	validate := validator.New()
-	if err := validate.Struct(config); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-
-	return config, nil
-}
-
-// We can store the token lifetimes as float64 instead of time.Duration and
-// may be able to save some time avoiding the Mins() call everytime we need to
-// refer to these values. But a pretty-printed time.Duration is easier to debug
-// than a random float64 literal.
-type employer struct {
-	// TFA Token is sent as response to the signin request and should be used
-	// in the subsequent tfa request, to get one of the session tokens.
-	tfaTokLife time.Duration
-
-	// One of the below Session Tokens is sent as response to the tfa request
-	// and should be used in subsequent /employer/* requests.
-	sessionTokLife         time.Duration
-	longTermSessionTokLife time.Duration
-
-	// Employee invite token life - Should be used for /employer/add-org-user
-	employeeInviteTokLife time.Duration
-}
-
-type hub struct {
-	// TFA Token is sent as response to the login request and should be used
-	// in the subsequent tfa request, to get one of the session tokens.
-	tfaTokLife time.Duration
-
-	// Session Token is sent as response to the tfa request and should be used
-	// in subsequent /hub/* requests.
-	sessionTokLife         time.Duration
-	longTermSessionTokLife time.Duration
-
-	// Invite token life - Should be used for /hub/invite-hub-user
-	inviteTokLife time.Duration
-}
-
 type Hermione struct {
-	// These are initialized from configmap
-	employer employer
-	hub      hub
-	port     string
+	config *config.Hermione
 
 	// These are initialized programmatically in New()
 	hedwig hedwig.Hedwig
@@ -109,7 +26,7 @@ type Hermione struct {
 }
 
 func NewHermione() (*Hermione, error) {
-	config, err := LoadConfig()
+	config, err := config.LoadHermioneConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -156,79 +73,23 @@ func NewHermione() (*Hermione, error) {
 		return nil, fmt.Errorf("Hedwig initialisation failure: %w", err)
 	}
 
-	ce := config.Employer
-	tfaTokLife1, err := time.ParseDuration(ce.TFATokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse tfa token life: %w", err)
-	}
-
-	sessionTokLife1, err := time.ParseDuration(ce.SessionTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse session token life: %w", err)
-	}
-
-	longTermSessionTokLife1, err := time.ParseDuration(ce.LTSTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse LTS token life: %w", err)
-	}
-
-	employeeInviteTokLife1, err := time.ParseDuration(ce.InviteTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse invite token life : %w", err)
-	}
-
-	employerInHermione := employer{
-		tfaTokLife:             tfaTokLife1,
-		sessionTokLife:         sessionTokLife1,
-		longTermSessionTokLife: longTermSessionTokLife1,
-		employeeInviteTokLife:  employeeInviteTokLife1,
-	}
-
-	ch := config.Hub
-	tfaTokLife2, err := time.ParseDuration(ch.TFATokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse hub tfa token life: %w", err)
-	}
-
-	sessionTokLife2, err := time.ParseDuration(ch.SessionTokLife)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to parse hub session token life: %w",
-			err,
-		)
-	}
-
-	longTermSessionTokLife2, err := time.ParseDuration(ch.LTSTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse hub LTS token life: %w", err)
-	}
-
-	inviteTokLife2, err := time.ParseDuration(ch.InviteTokLife)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse hub invite token life: %w", err)
-	}
-
-	hubInHermione := hub{
-		tfaTokLife:             tfaTokLife2,
-		sessionTokLife:         sessionTokLife2,
-		longTermSessionTokLife: longTermSessionTokLife2,
-		inviteTokLife:          inviteTokLife2,
-	}
-
 	hermione = &Hermione{
-		pg:   pg,
-		port: fmt.Sprintf(":%s", config.Port),
-		log:  logger,
+		config: config,
 
-		mw:       middleware.NewMiddleware(db, logger),
-		vator:    vator,
-		employer: employerInHermione,
-		hub:      hubInHermione,
+		pg:  pg,
+		log: logger,
+
+		mw:    middleware.NewMiddleware(db, logger),
+		vator: vator,
 
 		hedwig: hedwig,
 	}
 
 	return hermione, nil
+}
+
+func (h *Hermione) Config() *config.Hermione {
+	return h.config
 }
 
 func (h *Hermione) DB() *postgres.PG {
@@ -237,26 +98,6 @@ func (h *Hermione) DB() *postgres.PG {
 
 func (h *Hermione) Vator() *vetchi.Vator {
 	return h.vator
-}
-
-func (h *Hermione) ConfigDuration(key db.TokenType) (time.Duration, error) {
-	switch key {
-	case db.EmployerSessionToken:
-		return h.employer.sessionTokLife, nil
-	case db.EmployerLTSToken:
-		return h.employer.longTermSessionTokLife, nil
-	case db.EmployerTFAToken:
-		return h.employer.tfaTokLife, nil
-	case db.EmployerInviteToken:
-		return h.employer.employeeInviteTokLife, nil
-	case db.HubUserTFAToken:
-		return h.hub.tfaTokLife, nil
-	case db.HubUserTFACode:
-		return h.hub.tfaTokLife, nil
-	default:
-		h.log.Err("unknown key", "key", key)
-		return 0, fmt.Errorf("unknown key: %s", key)
-	}
 }
 
 func (h *Hermione) Hedwig() hedwig.Hedwig {

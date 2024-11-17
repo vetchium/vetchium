@@ -86,30 +86,24 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 		// TODO: Should we just email a magic URL instead of a token ? We can
 		// make it longer, so minimize collisions and also more secure.
 
-		tfaTokLife, err := h.ConfigDuration(db.EmployerTFAToken)
-		if err != nil {
-			h.Dbg("failed to get tfa token life", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		// The tfa code & the token should have approx same validity duration
-		tfaCodeLife := tfaTokLife
-
 		err = h.DB().InitEmployerTFA(
 			r.Context(),
 			db.EmployerTFA{
-				TFAToken: db.TokenReq{
+				TFAToken: db.EmployerTokenReq{
 					Token:            tfaTokenString,
 					TokenType:        db.EmployerTFAToken,
-					ValidityDuration: tfaTokLife,
+					ValidityDuration: h.Config().Employer.TFATokLife,
 					OrgUserID:        orgUserAuth.OrgUserID,
 				},
-				TFACode: db.TokenReq{
-					Token:            tfaMailCode,
-					TokenType:        db.EmployerTFACode,
-					ValidityDuration: tfaCodeLife,
-					OrgUserID:        orgUserAuth.OrgUserID,
+				TFACode: db.EmployerTokenReq{
+					Token:     tfaMailCode,
+					TokenType: db.EmployerTFACode,
+
+					// TFA Token (sent in SignInResponse) and TFA Code (sent
+					// via mail) should be valid until same time approximately
+					ValidityDuration: h.Config().Employer.TFATokLife,
+
+					OrgUserID: orgUserAuth.OrgUserID,
 				},
 				Email: email,
 			},

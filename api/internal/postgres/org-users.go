@@ -53,8 +53,8 @@ RETURNING id
 	p.log.Dbg("org user added", "org_user_id", orgUserID)
 
 	var tokenQuery = `
-INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-	VALUES ($1, $2::UUID, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+INSERT INTO org_user_invites(token, org_user_id, token_valid_till)
+	VALUES ($1, $2::UUID, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')))
 RETURNING token
 `
 	var tokenKey string
@@ -64,7 +64,6 @@ RETURNING token
 		addOrgUserReq.InviteToken.Token,
 		orgUserID,
 		addOrgUserReq.InviteToken.ValidityDuration.Minutes(),
-		db.EmployerInviteToken,
 	)
 	err = row.Scan(&tokenKey)
 	if err != nil {
@@ -372,11 +371,11 @@ WHERE
         SELECT
             id
         FROM
-            org_user_tokens
+            org_user_invites
         WHERE
             token = $4
-            AND token_type = $5)
-    AND org_user_state = $6 -- ADDED_ORG_USER
+    )
+    AND org_user_state = $5 -- ADDED_ORG_USER
 RETURNING
     id
 `
@@ -389,7 +388,6 @@ RETURNING
 		signupOrgUserReq.PasswordHash,
 		vetchi.ActiveOrgUserState,
 		signupOrgUserReq.InviteToken,
-		db.EmployerInviteToken,
 		vetchi.AddedOrgUserState,
 	).Scan(&orgUserID)
 	if err != nil {

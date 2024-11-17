@@ -15,7 +15,7 @@ type DB interface {
 
 	// Used by hermione
 	AuthOrgUser(c c.Context, sessionToken string) (OrgUserTO, error)
-	CreateOrgUserToken(c.Context, TokenReq) error
+	CreateOrgUserToken(c.Context, EmployerTokenReq) error
 	GetEmployer(c c.Context, clientID string) (Employer, error)
 	GetEmployerByID(c c.Context, employerID uuid.UUID) (Employer, error)
 	GetDomainNames(c c.Context, employerID uuid.UUID) ([]string, error)

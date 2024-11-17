@@ -1,6 +1,7 @@
 package hermione
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
@@ -180,5 +181,6 @@ func (h *Hermione) Run() error {
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
 	)
 
-	return http.ListenAndServe(h.port, nil)
+	port := fmt.Sprintf(":%d", h.Config().Port)
+	return http.ListenAndServe(port, nil)
 }
