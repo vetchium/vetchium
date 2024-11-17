@@ -9,7 +9,3 @@ type TimeZone string
 type ValidationErrors struct {
 	Errors []string `json:"errors"`
 }
-
-type EmployerSignInResponse struct {
-	Token string `json:"token"`
-}

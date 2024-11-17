@@ -14,6 +14,7 @@ import (
 const (
 	// List of templates. All of these must be parsed, validated in NewHedwig()
 	InviteEmployee = "invite-employee"
+	HubUserTFA     = "hub-user-tfa"
 )
 
 type Hedwig interface {
@@ -25,7 +26,7 @@ type hedwig struct {
 }
 
 func NewHedwig(log util.Logger) (Hedwig, error) {
-	for _, tmpl := range []string{InviteEmployee} {
+	for _, tmpl := range []string{InviteEmployee, HubUserTFA} {
 		fi, err := os.Stat(filepath.Join("hedwig", "templates", tmpl+".txt"))
 		if err != nil {
 			return nil, err

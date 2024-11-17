@@ -6,6 +6,10 @@ type EmployerSignInRequest struct {
 	Password Password     `json:"password"  validate:"required,password"`
 }
 
+type EmployerSignInResponse struct {
+	Token string `json:"token"`
+}
+
 type EmployerTFARequest struct {
 	TFACode    string `json:"tfa_code"              validate:"required"`
 	TFAToken   string `json:"tfa_token"             validate:"required"`

@@ -24,6 +24,8 @@ type DB interface {
 	InitEmployerAndDomain(c.Context, Employer, Domain) error
 	InitEmployerTFA(c.Context, EmployerTFA) error
 	OnboardAdmin(c.Context, OnboardReq) error
+	GetHubUserByEmail(c c.Context, email string) (HubUserTO, error)
+	InitHubUserTFA(c.Context, HubUserTFA) error
 
 	CreateCostCenter(c.Context, v.AddCostCenterRequest) (uuid.UUID, error)
 	DefunctCostCenter(c.Context, v.DefunctCostCenterRequest) error

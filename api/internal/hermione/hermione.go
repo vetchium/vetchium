@@ -24,6 +24,13 @@ type Config struct {
 		InviteTokLife  string `json:"employee_invite_tok_life" validate:"required"`
 	} `json:"employer" validate:"required"`
 
+	Hub struct {
+		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
+		SessionTokLife string `json:"session_tok_life" validate:"required"`
+		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
+		InviteTokLife  string `json:"hub_user_invite_tok_life" validate:"required"`
+	} `json:"hub" validate:"required"`
+
 	Postgres struct {
 		Host string `json:"host" validate:"required,min=1"`
 		Port string `json:"port" validate:"required,min=1"`
@@ -73,9 +80,24 @@ type employer struct {
 	employeeInviteTokLife time.Duration
 }
 
+type hub struct {
+	// TFA Token is sent as response to the login request and should be used
+	// in the subsequent tfa request, to get one of the session tokens.
+	tfaTokLife time.Duration
+
+	// Session Token is sent as response to the tfa request and should be used
+	// in subsequent /hub/* requests.
+	sessionTokLife         time.Duration
+	longTermSessionTokLife time.Duration
+
+	// Invite token life - Should be used for /hub/invite-hub-user
+	inviteTokLife time.Duration
+}
+
 type Hermione struct {
 	// These are initialized from configmap
 	employer employer
+	hub      hub
 	port     string
 
 	// These are initialized programmatically in New()
@@ -135,24 +157,62 @@ func NewHermione() (*Hermione, error) {
 	}
 
 	ce := config.Employer
-	tfaTokLife, err := time.ParseDuration(ce.TFATokLife)
+	tfaTokLife1, err := time.ParseDuration(ce.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse tfa token life: %w", err)
 	}
 
-	sessionTokLife, err := time.ParseDuration(ce.SessionTokLife)
+	sessionTokLife1, err := time.ParseDuration(ce.SessionTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse session token life: %w", err)
 	}
 
-	longTermSessionTokLife, err := time.ParseDuration(ce.LTSTokLife)
+	longTermSessionTokLife1, err := time.ParseDuration(ce.LTSTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse LTS token life: %w", err)
 	}
 
-	employeeInviteTokLife, err := time.ParseDuration(ce.InviteTokLife)
+	employeeInviteTokLife1, err := time.ParseDuration(ce.InviteTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse invite token life : %w", err)
+	}
+
+	employerInHermione := employer{
+		tfaTokLife:             tfaTokLife1,
+		sessionTokLife:         sessionTokLife1,
+		longTermSessionTokLife: longTermSessionTokLife1,
+		employeeInviteTokLife:  employeeInviteTokLife1,
+	}
+
+	ch := config.Hub
+	tfaTokLife2, err := time.ParseDuration(ch.TFATokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse hub tfa token life: %w", err)
+	}
+
+	sessionTokLife2, err := time.ParseDuration(ch.SessionTokLife)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to parse hub session token life: %w",
+			err,
+		)
+	}
+
+	longTermSessionTokLife2, err := time.ParseDuration(ch.LTSTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse hub LTS token life: %w", err)
+	}
+
+	inviteTokLife2, err := time.ParseDuration(ch.InviteTokLife)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse hub invite token life: %w", err)
+	}
+
+	hubInHermione := hub{
+		tfaTokLife:             tfaTokLife2,
+		sessionTokLife:         sessionTokLife2,
+		longTermSessionTokLife: longTermSessionTokLife2,
+		inviteTokLife:          inviteTokLife2,
 	}
 
 	hermione = &Hermione{
@@ -160,14 +220,10 @@ func NewHermione() (*Hermione, error) {
 		port: fmt.Sprintf(":%s", config.Port),
 		log:  logger,
 
-		mw:    middleware.NewMiddleware(db, logger),
-		vator: vator,
-		employer: employer{
-			tfaTokLife:             tfaTokLife,
-			sessionTokLife:         sessionTokLife,
-			longTermSessionTokLife: longTermSessionTokLife,
-			employeeInviteTokLife:  employeeInviteTokLife,
-		},
+		mw:       middleware.NewMiddleware(db, logger),
+		vator:    vator,
+		employer: employerInHermione,
+		hub:      hubInHermione,
 
 		hedwig: hedwig,
 	}
@@ -193,6 +249,10 @@ func (h *Hermione) ConfigDuration(key db.TokenType) (time.Duration, error) {
 		return h.employer.tfaTokLife, nil
 	case db.EmployerInviteToken:
 		return h.employer.employeeInviteTokLife, nil
+	case db.HubUserTFAToken:
+		return h.hub.tfaTokLife, nil
+	case db.HubUserTFACode:
+		return h.hub.tfaTokLife, nil
 	default:
 		h.log.Err("unknown key", "key", key)
 		return 0, fmt.Errorf("unknown key: %s", key)

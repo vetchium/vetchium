@@ -23,22 +23,34 @@ const (
 	// of the session tokens.
 	EmployerTFACode TokenType = "EMPLOYER_TFA_CODE"
 
+	// This is emailed to a potential Employee, on behalf of their Employer,
+	// to invite them to Vetchi so that they could become an OrgUser
 	EmployerInviteToken TokenType = "EMPLOYER_INVITE"
 )
 
-// OrgUserTokenTO should be used to read from the database and NOT to
-// write to the database. Use one of the TokenReq struct for Writes.
-type OrgUserTokenTO struct {
-	Token          string    `db:"token"`
-	OrgUserID      uuid.UUID `db:"org_user_id"`
-	TokenValidTill time.Time `db:"token_valid_till"`
-	TokenType      TokenType `db:"token_type"`
-	CreatedAt      time.Time `db:"created_at"`
-}
+const (
+	// These are the session tokens for the HubUser. LTS refers to
+	// Long Term Session and can be valid for a long time.
+	HubSessionToken TokenType = "HUB_SESSION"
+	HubLTSToken     TokenType = "HUB_LTS"
+
+	// This is sent as a response to the Login request and should be used
+	// in the tfa request, to get one of the session tokens.
+	HubUserTFAToken TokenType = "HUB_USER_TFA_TOKEN"
+
+	// This is emailed to the HubUser after a sucessful signin request and
+	// should be used in the tfa request as part of the body, to get one
+	// of the session tokens.
+	HubUserTFACode TokenType = "HUB_USER_TFA_CODE"
+
+	// This is emailed to a potential HubUser to invite them to the Hub.
+	HubUserInviteToken TokenType = "HUB_USER_INVITE"
+)
 
 type TokenReq struct {
 	Token            string
 	TokenType        TokenType
 	ValidityDuration time.Duration
 	OrgUserID        uuid.UUID
+	HubUserID        uuid.UUID
 }

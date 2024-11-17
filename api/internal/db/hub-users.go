@@ -1,0 +1,25 @@
+package db
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
+)
+
+type HubUserTFA struct {
+	TFACode  TokenReq
+	TFAToken TokenReq
+	Email    Email
+}
+
+type HubUserTO struct {
+	ID           uuid.UUID           `db:"id"`
+	FullName     string              `db:"full_name"`
+	Handle       string              `db:"handle"`
+	Email        Email               `db:"email"`
+	PasswordHash string              `db:"password_hash"`
+	State        vetchi.HubUserState `db:"state"`
+	CreatedAt    time.Time           `db:"created_at"`
+	UpdatedAt    time.Time           `db:"updated_at"`
+}

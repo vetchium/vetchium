@@ -14,6 +14,14 @@ data:
 
         "employee_invite_tok_life": "5m"
       },
+      "hub": {
+        "tfa_tok_life": "5m",
+
+        "session_tok_life": "15m",
+        "lts_tok_life": "20m",
+
+        "invite_tok_life": "5m"
+      },
       "port": "8080",
       "postgres": {
         "db": "vdb",

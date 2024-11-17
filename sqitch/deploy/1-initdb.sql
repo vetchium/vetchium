@@ -7,6 +7,7 @@ SELECT pg_reload_conf();
 
 BEGIN;
 
+CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER');
 CREATE TABLE IF NOT EXISTS hub_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name TEXT NOT NULL,
@@ -17,6 +18,25 @@ CREATE TABLE IF NOT EXISTS hub_users (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
+
+CREATE TYPE token_types AS ENUM (
+    'HUB_USER_SESSION',
+    'HUB_USER_LTS',
+    'HUB_USER_TFA_TOKEN',
+    'HUB_USER_TFA_CODE',
+);
+
+CREATE TABLE hub_user_tokens (
+    token TEXT,
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    CONSTRAINT hub_user_tokens_pkey PRIMARY KEY (token, hub_user_id),
+
+    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
+    token_type token_types NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
 
 CREATE TYPE official_email_states AS ENUM ('PENDING', 'VERIFIED');
 CREATE TABLE hub_users_official_emails (
