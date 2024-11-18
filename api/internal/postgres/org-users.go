@@ -69,7 +69,7 @@ RETURNING token
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
-			pgErr.ConstraintName == "org_user_tokens_pkey" {
+			pgErr.ConstraintName == "org_user_invites_pkey" {
 			// Unlikely to happen but still handle it
 			p.log.Err("duplicate token generated", "error", err)
 			return uuid.UUID{}, err

@@ -76,7 +76,7 @@ type OrgUserCreds struct {
 }
 
 type EmployerTFA struct {
-	TFACode  EmployerTokenReq
+	TFACode  string
 	TFAToken EmployerTokenReq
 	Email    Email
 }

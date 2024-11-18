@@ -28,7 +28,7 @@ func HubTFAHandler(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated request", "hubTFARequest", hubTFARequest)
 
-		hubUser, err := h.DB().GetHubUserByToken(
+		hubUser, err := h.DB().GetHubUserByTFACreds(
 			r.Context(),
 			hubTFARequest.TFACode,
 			hubTFARequest.TFAToken,
@@ -45,6 +45,11 @@ func HubTFAHandler(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// We got the hub user. Now we need to create a session token
+		// for the user. We are not deleting the TFA Code and the
+		// TFA Token because if the /hub/tfa response could not be
+		// delivered then the user will not be able to retry. But
+		// remember to keep the TFA Token lifetime short.
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 		validityDuration := h.Config().Hub.SessionTokLife
 		tokenType := db.HubSessionToken

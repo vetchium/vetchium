@@ -144,24 +144,30 @@ CREATE TABLE org_users (
 );
 
 CREATE TYPE org_user_token_types AS ENUM (
+    -- Sent as response to the TFA API
     'EMPLOYER_SESSION',
     'EMPLOYER_LTS',
-    'EMPLOYER_TFA_TOKEN',
-    'EMPLOYER_TFA_CODE'
+
+    -- Sent as response to the SignIn API
+    'EMPLOYER_TFA_TOKEN'
 );
 CREATE TABLE org_user_tokens (
-    token TEXT,
+    token TEXT CONSTRAINT org_user_tokens_pkey PRIMARY KEY,
     org_user_id UUID REFERENCES org_users(id) NOT NULL,
-    CONSTRAINT org_user_tokens_pkey PRIMARY KEY (token, org_user_id),
-
-    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type org_user_token_types NOT NULL,
 
+    token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE org_user_tfa_codes (
+    code TEXT NOT NULL,
+    org_user_token TEXT REFERENCES org_user_tokens(token) NOT NULL ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE org_user_invites (
-    token TEXT PRIMARY KEY,
+    token TEXT CONSTRAINT org_user_invites_pkey PRIMARY KEY,
     org_user_id UUID REFERENCES org_users(id) NOT NULL,
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())

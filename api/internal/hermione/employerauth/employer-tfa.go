@@ -28,7 +28,7 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated request", "employerTFARequest", employerTFARequest)
 
-		orgUser, err := h.DB().GetOrgUserByToken(
+		orgUser, err := h.DB().GetOrgUserByTFACreds(
 			r.Context(),
 			employerTFARequest.TFACode,
 			employerTFARequest.TFAToken,
@@ -45,6 +45,11 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// We got the org user. Now we need to create a session token
+		// for the user. We are not deleting the TFA Code and the
+		// TFA Token because if the /employer/tfa response could not
+		// be delivered then the user will not be able to retry. But
+		// remember to keep the TFA Token lifetime short.
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 		validityDuration := h.Config().Employer.SessionTokLife
 		tokenType := db.EmployerSessionToken

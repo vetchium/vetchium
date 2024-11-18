@@ -436,13 +436,11 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 	_, err = tx.Exec(
 		ctx,
 		`
-INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
-VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+INSERT INTO org_user_tfa_codes(code, org_user_token)
+VALUES ($1, $2)
 `,
-		employerTFA.TFACode.Token,
-		employerTFA.TFACode.OrgUserID,
-		employerTFA.TFACode.ValidityDuration.Minutes(),
-		db.EmployerTFACode,
+		employerTFA.TFACode,
+		employerTFA.TFAToken.Token,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)
@@ -483,7 +481,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 	return nil
 }
 
-func (p *PG) GetOrgUserByToken(
+func (p *PG) GetOrgUserByTFACreds(
 	ctx context.Context,
 	tfaCode, tfaToken string,
 ) (db.OrgUserTO, error) {
@@ -495,16 +493,15 @@ SELECT
     ou.org_user_roles,
     ou.org_user_state
 FROM
-    org_user_tokens out1,
-    org_user_tokens out2,
-    org_users ou
+	org_user_tfa_codes oc,
+	org_user_tokens ot,
+	org_users ou
 WHERE
-    out1.token = $1
-    AND out1.token_type = $2
-    AND out2.token = $3
-    AND out2.token_type = $4
-    AND ou.id = out1.org_user_id
-    AND ou.id = out2.org_user_id
+	oc.code = $1
+	AND ot.token = $2
+	AND oc.org_user_token = ot.token
+	AND ot.token_type = $3
+	AND ou.id = ot.org_user_id
 `
 
 	var orgUser db.OrgUserTO

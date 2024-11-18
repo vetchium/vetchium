@@ -20,7 +20,7 @@ type DB interface {
 	GetEmployerByID(c c.Context, employerID uuid.UUID) (Employer, error)
 	GetDomainNames(c c.Context, employerID uuid.UUID) ([]string, error)
 	GetOrgUserAuth(c.Context, OrgUserCreds) (OrgUserAuth, error)
-	GetOrgUserByToken(c c.Context, tfaCode, tgt string) (OrgUserTO, error)
+	GetOrgUserByTFACreds(c c.Context, tfaCode, tgt string) (OrgUserTO, error)
 	InitEmployerAndDomain(c.Context, Employer, Domain) error
 	InitEmployerTFA(c.Context, EmployerTFA) error
 	OnboardAdmin(c.Context, OnboardReq) error
@@ -73,5 +73,5 @@ type DB interface {
 
 	// Used by hermione - for Hub users
 	CreateHubUserToken(c.Context, HubTokenReq) error
-	GetHubUserByToken(c.Context, string, string) (HubUserTO, error)
+	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
 }

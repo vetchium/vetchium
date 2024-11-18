@@ -96,22 +96,29 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 	return nil
 }
 
-func (p *PG) GetHubUserByToken(
+func (p *PG) GetHubUserByTFACreds(
 	ctx context.Context,
 	tfaToken string,
 	tfaCode string,
 ) (db.HubUserTO, error) {
 	query := `
 SELECT
-    *
+	hu.id,
+	hu.full_name,
+	hu.handle,
+	hu.email,
+	hu.password_hash,
+	hu.created_at,
+	hu.updated_at
 FROM
-    hub_users hub
-    JOIN hub_user_tokens tfa_token ON tfa_token.hub_user_id = hub.id
-        AND tfa_token.token = $1
-        AND tfa_token.token_type = $2
-    JOIN hub_user_tokens tfa_code ON tfa_code.hub_user_id = hub.id
-        AND tfa_code.token = $3
-        AND tfa_code.token_type = $4
+	hub_users hu,
+	hub_user_tokens hut,
+	hub_user_tfa_codes hutc
+WHERE
+	hut.token = $1
+	AND hut.token_type = $2
+	AND hutc.code = $3
+	AND hutc.hub_user_token = hut.token
 `
 
 	var hubUser db.HubUserTO

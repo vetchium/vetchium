@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 )
 
@@ -23,8 +25,12 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 		tokenReq.TokenType,
 	)
 	if err != nil {
-		// TODO: Check if the error is due to duplicate key value
-		// and if so retry with a different token
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "org_user_tokens_pkey" {
+			p.log.Err("duplicate token generated", "error", err)
+			return err
+		}
 		p.log.Err("failed to create org user token", "error", err)
 		return err
 	}

@@ -95,17 +95,8 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 					ValidityDuration: h.Config().Employer.TFATokLife,
 					OrgUserID:        orgUserAuth.OrgUserID,
 				},
-				TFACode: db.EmployerTokenReq{
-					Token:     tfaMailCode,
-					TokenType: db.EmployerTFACode,
-
-					// TFA Token (sent in SignInResponse) and TFA Code (sent
-					// via mail) should be valid until same time approximately
-					ValidityDuration: h.Config().Employer.TFATokLife,
-
-					OrgUserID: orgUserAuth.OrgUserID,
-				},
-				Email: email,
+				TFACode: tfaMailCode,
+				Email:   email,
 			},
 		)
 		if err != nil {
