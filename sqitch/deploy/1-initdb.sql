@@ -29,7 +29,7 @@ CREATE TYPE hub_user_token_types AS ENUM (
 );
 
 CREATE TABLE hub_user_tokens (
-    token TEXT,
+    token TEXT NOT NULL,
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     CONSTRAINT hub_user_tokens_pkey PRIMARY KEY (token, hub_user_id),
 
@@ -41,10 +41,12 @@ CREATE TABLE hub_user_tokens (
 
 CREATE TABLE hub_user_tfa_codes (
     code TEXT,
-    hub_user_token TEXT REFERENCES hub_user_tokens(token) NOT NULL ON DELETE CASCADE,
+    tfa_token TEXT NOT NULL,
+    hub_user_id UUID NOT NULL,
+    CONSTRAINT fk_hub_user_tfa_codes FOREIGN KEY (tfa_token, hub_user_id)
+        REFERENCES hub_user_tokens(token, hub_user_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
-
 
 CREATE TYPE official_email_states AS ENUM ('PENDING', 'VERIFIED');
 CREATE TABLE hub_users_official_emails (
@@ -170,7 +172,10 @@ CREATE TABLE org_user_tokens (
 
 CREATE TABLE org_user_tfa_codes (
     code TEXT NOT NULL,
-    org_user_token TEXT REFERENCES org_user_tokens(token) NOT NULL ON DELETE CASCADE,
+    tfa_token TEXT NOT NULL,
+    org_user_id UUID NOT NULL,
+    CONSTRAINT fk_org_user_tfa_codes FOREIGN KEY (tfa_token, org_user_id)
+        REFERENCES org_user_tokens(token, org_user_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

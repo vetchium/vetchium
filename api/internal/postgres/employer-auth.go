@@ -436,11 +436,12 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 	_, err = tx.Exec(
 		ctx,
 		`
-INSERT INTO org_user_tfa_codes(code, org_user_token)
-VALUES ($1, $2)
+INSERT INTO org_user_tfa_codes(code, tfa_token, org_user_id)
+VALUES ($1, $2, $3)
 `,
 		employerTFA.TFACode,
 		employerTFA.TFAToken.Token,
+		employerTFA.TFAToken.OrgUserID,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)
@@ -499,7 +500,7 @@ FROM
 WHERE
 	oc.code = $1
 	AND ot.token = $2
-	AND oc.org_user_token = ot.token
+	AND oc.tfa_token = ot.token
 	AND ot.token_type = $3
 	AND ou.id = ot.org_user_id
 `

@@ -41,7 +41,11 @@ func (p *PG) InitHubUserTFA(
 	defer tx.Rollback(ctx)
 
 	tfaTokenQuery := `
-INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)`
+INSERT INTO
+	hub_user_tokens(token, hub_user_id, token_valid_till, token_type)
+VALUES
+	($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+`
 	_, err = tx.Exec(
 		ctx,
 		tfaTokenQuery,
@@ -56,12 +60,17 @@ INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VA
 	}
 
 	tfaCodeQuery := `
-INSERT INTO hub_user_tfa_codes(code, hub_user_token) VALUES ($1, $2)`
+INSERT INTO
+	hub_user_tfa_codes(code, hub_user_token, hub_user_id)
+VALUES
+	($1, $2, $3)
+`
 	_, err = tx.Exec(
 		ctx,
 		tfaCodeQuery,
 		tfa.TFACode,
 		tfa.TFAToken.Token,
+		tfa.TFAToken.HubUserID,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)
@@ -113,19 +122,20 @@ FROM
 	hub_user_tokens hut,
 	hub_user_tfa_codes hutc
 WHERE
-	hut.token = $1
-	AND hut.token_type = $2
-	AND hutc.code = $3
-	AND hutc.hub_user_token = hut.token
+	hutc.code = $1
+	AND hut.token = $2
+	AND hutc.tfa_token = hut.token
+	AND hut.token_type = $3
+	AND hu.id = hutc.hub_user_id
 `
 
 	var hubUser db.HubUserTO
 	if err := p.pool.QueryRow(
 		ctx,
 		query,
+		tfaCode,
 		tfaToken,
 		db.HubUserTFAToken,
-		tfaCode,
 	).Scan(
 		&hubUser.ID,
 		&hubUser.FullName,
