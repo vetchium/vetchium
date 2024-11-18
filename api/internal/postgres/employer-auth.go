@@ -429,19 +429,18 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 		db.EmployerTFAToken,
 	)
 	if err != nil {
-		p.log.Err("failed to insert TGT", "error", err)
+		p.log.Err("failed to insert TFA Token", "error", err)
 		return err
 	}
 
 	_, err = tx.Exec(
 		ctx,
 		`
-INSERT INTO org_user_tfa_codes(code, tfa_token, org_user_id)
-VALUES ($1, $2, $3)
+INSERT INTO org_user_tfa_codes(code, tfa_token)
+VALUES ($1, $2)
 `,
 		employerTFA.TFACode,
 		employerTFA.TFAToken.Token,
-		employerTFA.TFAToken.OrgUserID,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)

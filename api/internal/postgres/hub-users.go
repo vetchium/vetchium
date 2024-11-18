@@ -55,22 +55,21 @@ VALUES
 		db.HubUserTFAToken,
 	)
 	if err != nil {
-		p.log.Err("failed to insert TGT", "error", err)
+		p.log.Err("failed to insert TFA Token", "error", err)
 		return err
 	}
 
 	tfaCodeQuery := `
 INSERT INTO
-	hub_user_tfa_codes(code, hub_user_token, hub_user_id)
+	hub_user_tfa_codes(code, hub_user_token)
 VALUES
-	($1, $2, $3)
+	($1, $2)
 `
 	_, err = tx.Exec(
 		ctx,
 		tfaCodeQuery,
 		tfa.TFACode,
 		tfa.TFAToken.Token,
-		tfa.TFAToken.HubUserID,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)
