@@ -93,7 +93,7 @@ RETURNING email_key
 		addOrgUserReq.InviteMail.EmailSubject,
 		addOrgUserReq.InviteMail.EmailHTMLBody,
 		addOrgUserReq.InviteMail.EmailTextBody,
-		db.EmailStatePending,
+		addOrgUserReq.InviteMail.EmailState,
 	)
 	err = row.Scan(&emailKey)
 	if err != nil {

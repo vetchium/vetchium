@@ -6,6 +6,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
+	"github.com/psankar/vetchi/api/internal/hermione/hubauth"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
@@ -180,6 +181,10 @@ func (h *Hermione) Run() error {
 		openings.ChangeOpeningState(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
 	)
+
+	// Hub related endpoints
+	http.HandleFunc("/hub/login", hubauth.LoginHandler(h))
+	http.HandleFunc("/hub/tfa", hubauth.HubTFAHandler(h))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

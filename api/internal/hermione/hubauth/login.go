@@ -61,6 +61,13 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.HubUserTFA,
 			Args:         map[string]string{"code": tfaMailCode},
+			EmailFrom:    vetchi.EmailFrom,
+			EmailTo:      []string{string(hubUser.Email)},
+
+			// TODO: This subject should be from Hedwig, based on the template
+			// This subject is used in 0007-hub-login_test.go too. Any change
+			// in either place should be synced.
+			Subject: "Vetchi Two Factor Authentication",
 		})
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)

@@ -89,5 +89,6 @@ func (h *hedwig) GenerateEmail(req GenerateEmailReq) (db.Email, error) {
 		EmailSubject:  req.Subject,
 		EmailTextBody: textBody.String(),
 		EmailHTMLBody: htmlBody.String(),
+		EmailState:    db.EmailStatePending,
 	}, nil
 }

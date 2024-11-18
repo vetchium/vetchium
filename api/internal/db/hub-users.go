@@ -17,7 +17,7 @@ type HubUserTO struct {
 	ID           uuid.UUID           `db:"id"`
 	FullName     string              `db:"full_name"`
 	Handle       string              `db:"handle"`
-	Email        Email               `db:"email"`
+	Email        vetchi.EmailAddress `db:"email"`
 	PasswordHash string              `db:"password_hash"`
 	State        vetchi.HubUserState `db:"state"`
 	CreatedAt    time.Time           `db:"created_at"`

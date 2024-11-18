@@ -13,18 +13,31 @@ func (p *PG) GetHubUserByEmail(
 	ctx context.Context,
 	email string,
 ) (db.HubUserTO, error) {
-	query := "SELECT * FROM hub_users WHERE email = $1"
+	query := `
+SELECT
+	hu.id,
+	hu.full_name,
+	hu.handle,
+	hu.email,
+	hu.state,
+	hu.password_hash,
+	hu.created_at,
+	hu.updated_at
+FROM hub_users hu WHERE email = $1`
 
 	var hubUser db.HubUserTO
-	if err := p.pool.QueryRow(ctx, query, email).Scan(
+	err := p.pool.QueryRow(ctx, query, email).Scan(
 		&hubUser.ID,
 		&hubUser.FullName,
 		&hubUser.Handle,
 		&hubUser.Email,
+		&hubUser.State,
 		&hubUser.PasswordHash,
 		&hubUser.CreatedAt,
 		&hubUser.UpdatedAt,
-	); err != nil {
+	)
+	if err != nil {
+		p.log.Err("failed to get hub user", "error", err)
 		return db.HubUserTO{}, err
 	}
 
@@ -68,7 +81,7 @@ VALUES
 
 	tfaCodeQuery := `
 INSERT INTO
-	hub_user_tfa_codes(code, hub_user_token)
+	hub_user_tfa_codes(code, tfa_token)
 VALUES
 	($1, $2)
 `
