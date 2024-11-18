@@ -17,11 +17,6 @@ const (
 	// This is sent as a response to the signin request and should be used
 	// in the tfa request, to get one of the session tokens.
 	EmployerTFAToken EmployerTokenType = "EMPLOYER_TFA_TOKEN"
-
-	// This is emailed to the OrgUser after a sucessful signin request and
-	// should be used in the tfa request as part of the body, to get one
-	// of the session tokens.
-	EmployerTFACode EmployerTokenType = "EMPLOYER_TFA_CODE"
 )
 
 type HubTokenType string

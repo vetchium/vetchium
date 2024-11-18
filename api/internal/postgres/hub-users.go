@@ -122,7 +122,13 @@ WHERE
 `
 
 	var hubUser db.HubUserTO
-	if err := p.pool.QueryRow(ctx, query, tfaToken, db.HubUserTFAToken, tfaCode, db.HubUserTFACode).Scan(
+	if err := p.pool.QueryRow(
+		ctx,
+		query,
+		tfaToken,
+		db.HubUserTFAToken,
+		tfaCode,
+	).Scan(
 		&hubUser.ID,
 		&hubUser.FullName,
 		&hubUser.Handle,

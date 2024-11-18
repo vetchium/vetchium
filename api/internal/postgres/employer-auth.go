@@ -510,7 +510,6 @@ WHERE
 		ctx,
 		query,
 		tfaCode,
-		db.EmployerTFACode,
 		tfaToken,
 		db.EmployerTFAToken,
 	).Scan(
