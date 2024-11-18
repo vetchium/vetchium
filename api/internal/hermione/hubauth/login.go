@@ -2,7 +2,10 @@ package hubauth
 
 import (
 	"encoding/json"
+	"errors"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
@@ -15,6 +18,10 @@ import (
 func LoginHandler(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered hub login")
+
+		// Simulate a random delay to avoid timing attacks
+		<-time.After(time.Duration(rand.Intn(1000)) * time.Millisecond)
+
 		var loginRequest vetchi.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&loginRequest)
 		if err != nil {
@@ -32,6 +39,11 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 		hubUser, err := h.DB().
 			GetHubUserByEmail(r.Context(), string(loginRequest.Email))
 		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
 			h.Dbg("failed to get hub user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

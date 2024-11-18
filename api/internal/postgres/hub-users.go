@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 )
@@ -37,6 +37,9 @@ FROM hub_users hu WHERE email = $1`
 		&hubUser.UpdatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.HubUserTO{}, db.ErrNoHubUser
+		}
 		p.log.Err("failed to get hub user", "error", err)
 		return db.HubUserTO{}, err
 	}
@@ -145,11 +148,11 @@ WHERE
 	AND hut.token = $2
 	AND hutc.tfa_token = hut.token
 	AND hut.token_type = $3
-	AND hu.id = hutc.hub_user_id
+	AND hu.id = hut.hub_user_id
 `
 
 	var hubUser db.HubUserTO
-	if err := p.pool.QueryRow(
+	err := p.pool.QueryRow(
 		ctx,
 		query,
 		tfaCode,
@@ -163,8 +166,10 @@ WHERE
 		&hubUser.PasswordHash,
 		&hubUser.CreatedAt,
 		&hubUser.UpdatedAt,
-	); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no hub user found", "error", err)
 			return db.HubUserTO{}, db.ErrNoHubUser
 		}
 

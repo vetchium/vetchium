@@ -24,8 +24,8 @@ type HubTokenType string
 const (
 	// These are the session tokens for the HubUser. LTS refers to
 	// Long Term Session and can be valid for a long time.
-	HubSessionToken HubTokenType = "HUB_SESSION"
-	HubLTSToken     HubTokenType = "HUB_LTS"
+	HubUserSessionToken HubTokenType = "HUB_USER_SESSION"
+	HubUserLTSToken     HubTokenType = "HUB_USER_LTS"
 
 	// This is sent as a response to the Login request and should be used
 	// in the tfa request, to get one of the session tokens.

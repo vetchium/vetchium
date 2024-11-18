@@ -30,8 +30,8 @@ func HubTFAHandler(h wand.Wand) http.HandlerFunc {
 
 		hubUser, err := h.DB().GetHubUserByTFACreds(
 			r.Context(),
-			hubTFARequest.TFACode,
 			hubTFARequest.TFAToken,
+			hubTFARequest.TFACode,
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoHubUser) {
@@ -52,10 +52,10 @@ func HubTFAHandler(h wand.Wand) http.HandlerFunc {
 		// remember to keep the TFA Token lifetime short.
 		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
 		validityDuration := h.Config().Hub.SessionTokLife
-		tokenType := db.HubSessionToken
+		tokenType := db.HubUserSessionToken
 
 		if hubTFARequest.RememberMe {
-			tokenType = db.HubLTSToken
+			tokenType = db.HubUserLTSToken
 			validityDuration = h.Config().Hub.LTSTokLife
 			h.Dbg("remember me", "validityDuration", validityDuration)
 		}

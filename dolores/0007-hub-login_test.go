@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Hub Login", Ordered, func() {
+var _ = Describe("Hub Login", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -76,7 +77,7 @@ var _ = FDescribe("Hub Login", Ordered, func() {
 						Email:    "nonexistent@hub.example",
 						Password: "NewPassword123$",
 					},
-					wantStatus: http.StatusInternalServerError,
+					wantStatus: http.StatusUnauthorized,
 				},
 				{
 					description: "invalid email format",
@@ -110,6 +111,20 @@ var _ = FDescribe("Hub Login", Ordered, func() {
 					bytes.NewBuffer(loginReqBody),
 				)
 				Expect(err).ShouldNot(HaveOccurred())
+
+				if resp.StatusCode != tc.wantStatus {
+					body, err := io.ReadAll(resp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+					fmt.Fprintf(GinkgoWriter, "#### %s\n", string(body))
+					Fail(
+						fmt.Sprintf(
+							"want status %d, got %d",
+							tc.wantStatus,
+							resp.StatusCode,
+						),
+					)
+					return
+				}
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if len(tc.wantErrFields) > 0 {
@@ -140,8 +155,9 @@ var _ = FDescribe("Hub Login", Ordered, func() {
 
 		It("should handle TFA flow correctly", func() {
 			// First get a valid TFA token through login
+			email := "active@hub.example"
 			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-				Email:    "active@hub.example",
+				Email:    vetchi.EmailAddress(email),
 				Password: "NewPassword123$",
 			})
 			Expect(err).ShouldNot(HaveOccurred())
@@ -159,17 +175,27 @@ var _ = FDescribe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			tfaToken := loginRespObj.Token
 
+			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+			Expect(err).ShouldNot(HaveOccurred())
+			query := url.Values{}
+			query.Add(
+				"query",
+				fmt.Sprintf(
+					"to:%s subject:Vetchi Two Factor Authentication",
+					email,
+				),
+			)
+			baseURL.RawQuery = query.Encode()
+
+			mailURL := baseURL.String()
+
+			fmt.Fprintf(GinkgoWriter, "mailURL: %s\n", mailURL)
 			// Get the TFA code from mailpit
 			var messageID string
 			for i := 0; i < 3; i++ {
 				<-time.After(10 * time.Second)
 
-				mailPitResp, err := http.Get(
-					fmt.Sprintf(
-						"%s/api/v1/search?query=to:active@hub.example subject:Vetchi Two Factor Authentication",
-						mailPitURL,
-					),
-				)
+				mailPitResp, err := http.Get(mailURL)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
 
@@ -197,7 +223,9 @@ var _ = FDescribe("Hub Login", Ordered, func() {
 			body, err := io.ReadAll(mailResp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			re := regexp.MustCompile(`Code:\s*([0-9]+)`)
+			re := regexp.MustCompile(
+				`Your Two Factor authentication code is:\s*([0-9]+)`,
+			)
 			matches := re.FindStringSubmatch(string(body))
 			Expect(len(matches)).Should(BeNumerically(">=", 2))
 			tfaCode := matches[1]
