@@ -56,14 +56,12 @@ INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VA
 	}
 
 	tfaCodeQuery := `
-INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)`
+INSERT INTO hub_user_tfa_codes(code, hub_user_token) VALUES ($1, $2)`
 	_, err = tx.Exec(
 		ctx,
 		tfaCodeQuery,
-		tfa.TFACode.Token,
-		tfa.TFACode.HubUserID,
-		tfa.TFACode.ValidityDuration.Minutes(),
-		db.HubUserTFACode,
+		tfa.TFACode,
+		tfa.TFAToken.Token,
 	)
 	if err != nil {
 		p.log.Err("failed to insert TFA code", "error", err)

@@ -79,16 +79,8 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 					ValidityDuration: h.Config().Hub.TFATokLife,
 					HubUserID:        hubUser.ID,
 				},
-				TFACode: db.HubTokenReq{
-					Token:     tfaMailCode,
-					TokenType: db.HubUserTFACode,
-
-					// TFA code should be valid for same duration as TFA token
-					ValidityDuration: h.Config().Hub.TFATokLife,
-
-					HubUserID: hubUser.ID,
-				},
-				Email: email,
+				TFACode: tfaMailCode,
+				Email:   email,
 			},
 		)
 		if err != nil {

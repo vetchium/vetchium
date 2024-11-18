@@ -20,10 +20,12 @@ CREATE TABLE IF NOT EXISTS hub_users (
 );
 
 CREATE TYPE hub_user_token_types AS ENUM (
+    -- Sent as response to the TFA API
     'HUB_USER_SESSION',
     'HUB_USER_LTS',
-    'HUB_USER_TFA_TOKEN',
-    'HUB_USER_TFA_CODE'
+
+    -- Sent as response to the Login API
+    'HUB_USER_TFA_TOKEN'
 );
 
 CREATE TABLE hub_user_tokens (
@@ -34,6 +36,12 @@ CREATE TABLE hub_user_tokens (
     token_valid_till TIMESTAMP WITH TIME ZONE NOT NULL,
     token_type hub_user_token_types NOT NULL,
 
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE hub_user_tfa_codes (
+    code TEXT,
+    hub_user_token TEXT REFERENCES hub_user_tokens(token) NOT NULL ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 

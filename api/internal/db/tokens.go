@@ -30,11 +30,6 @@ const (
 	// This is sent as a response to the Login request and should be used
 	// in the tfa request, to get one of the session tokens.
 	HubUserTFAToken HubTokenType = "HUB_USER_TFA_TOKEN"
-
-	// This is emailed to the HubUser after a sucessful signin request and
-	// should be used in the tfa request as part of the body, to get one
-	// of the session tokens.
-	HubUserTFACode HubTokenType = "HUB_USER_TFA_CODE"
 )
 
 type HubTokenReq struct {
