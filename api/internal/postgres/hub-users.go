@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 )
 
@@ -55,6 +56,12 @@ VALUES
 		db.HubUserTFAToken,
 	)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "hub_user_tokens_pkey" {
+			p.log.Err("duplicate token generated", "error", err)
+			return err
+		}
 		p.log.Err("failed to insert TFA Token", "error", err)
 		return err
 	}

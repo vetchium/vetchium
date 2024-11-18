@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -429,6 +430,12 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 		db.EmployerTFAToken,
 	)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" &&
+			pgErr.ConstraintName == "org_user_tokens_pkey" {
+			p.log.Err("duplicate token generated", "error", err)
+			return err
+		}
 		p.log.Err("failed to insert TFA Token", "error", err)
 		return err
 	}

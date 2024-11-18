@@ -37,7 +37,7 @@ CREATE TABLE hub_user_tokens (
 );
 
 CREATE TABLE hub_user_tfa_codes (
-    code TEXT,
+    code TEXT NOT NULL,
     tfa_token TEXT NOT NULL REFERENCES hub_user_tokens(token) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
