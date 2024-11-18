@@ -23,7 +23,7 @@ func HubTFAHandler(h wand.Wand) http.HandlerFunc {
 		}
 
 		if !h.Vator().Struct(w, &hubTFARequest) {
-			h.Err("failed to validate request", "error", err)
+			h.Dbg("failed to validate request", "error", err)
 			return
 		}
 		h.Dbg("validated request", "hubTFARequest", hubTFARequest)
