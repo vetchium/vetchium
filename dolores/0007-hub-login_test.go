@@ -353,17 +353,22 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			tfaToken := loginRespObj.Token
 
+			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+			Expect(err).ShouldNot(HaveOccurred())
+			query := url.Values{}
+			query.Add(
+				"query",
+				"to:active@hub.example subject:Vetchi Two Factor Authentication",
+			)
+			baseURL.RawQuery = query.Encode()
+			mailURL := baseURL.String()
+
 			// Get the TFA code from mailpit
 			var messageID string
 			for i := 0; i < 3; i++ {
 				<-time.After(10 * time.Second)
 
-				mailPitResp, err := http.Get(
-					fmt.Sprintf(
-						"%s/api/v1/search?query=to:active@hub.example subject:Vetchi Two Factor Authentication",
-						mailPitURL,
-					),
-				)
+				mailPitResp, err := http.Get(mailURL)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
 
@@ -391,7 +396,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 			body, err := io.ReadAll(mailResp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			re := regexp.MustCompile(`Code:\s*([0-9]+)`)
+			re := regexp.MustCompile(
+				`Your Two Factor authentication code is:\s*([0-9]+)`,
+			)
 			matches := re.FindStringSubmatch(string(body))
 			Expect(len(matches)).Should(BeNumerically(">=", 2))
 			tfaCode := matches[1]
