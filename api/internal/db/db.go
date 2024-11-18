@@ -13,7 +13,7 @@ import (
 type DB interface {
 	// Used by hermione and granger
 
-	// Used by hermione
+	// Used by hermione - Employer Auth related methods
 	AuthOrgUser(c c.Context, sessionToken string) (OrgUserTO, error)
 	CreateOrgUserToken(c.Context, EmployerTokenReq) error
 	GetEmployer(c c.Context, clientID string) (Employer, error)
@@ -27,6 +27,7 @@ type DB interface {
 	GetHubUserByEmail(c c.Context, email string) (HubUserTO, error)
 	InitHubUserTFA(c.Context, HubUserTFA) error
 
+	// Used by hermione - Cost Center related methods
 	CreateCostCenter(c.Context, v.AddCostCenterRequest) (uuid.UUID, error)
 	DefunctCostCenter(c.Context, v.DefunctCostCenterRequest) error
 	GetCCByName(c.Context, v.GetCostCenterRequest) (v.CostCenter, error)
@@ -34,7 +35,7 @@ type DB interface {
 	RenameCostCenter(c.Context, v.RenameCostCenterRequest) error
 	UpdateCostCenter(c.Context, v.UpdateCostCenterRequest) error
 
-	// Locations related methods
+	// Used by hermione - Locations related methods
 	AddLocation(c.Context, v.AddLocationRequest) (uuid.UUID, error)
 	DefunctLocation(c.Context, v.DefunctLocationRequest) error
 	GetLocByName(c.Context, v.GetLocationRequest) (v.Location, error)
@@ -42,7 +43,7 @@ type DB interface {
 	RenameLocation(c.Context, v.RenameLocationRequest) error
 	UpdateLocation(c.Context, v.UpdateLocationRequest) error
 
-	// Org users related methods
+	// Used by hermione - Org users related methods
 	AddOrgUser(c.Context, AddOrgUserReq) (uuid.UUID, error)
 	DisableOrgUser(c.Context, v.DisableOrgUserRequest) error
 	EnableOrgUser(c.Context, EnableOrgUserReq) error
@@ -57,11 +58,8 @@ type DB interface {
 	PruneTokens(c.Context) error
 	UpdateEmailState(c.Context, EmailStateChange) error
 
-	// Openings related methods
-	CreateOpening(
-		ctx c.Context,
-		createOpeningRequest v.CreateOpeningRequest,
-	) (openingID string, err error)
+	// Used by hermione - Openings related methods
+	CreateOpening(c.Context, v.CreateOpeningRequest) (string, error)
 	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
 	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.OpeningInfo, error)
 	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
@@ -72,4 +70,8 @@ type DB interface {
 	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
 	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
 	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
+
+	// Used by hermione - for Hub users
+	CreateHubUserToken(c.Context, HubTokenReq) error
+	GetHubUserByToken(c.Context, string, string) (HubUserTO, error)
 }

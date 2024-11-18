@@ -19,8 +19,8 @@ model LoginResponse {
 }
 
 model HubTFARequest {
-    token: string;
-    code: string;
+    tfa_token: string;
+    tfa_code: string;
 
     @doc("If true, the session will be remembered for a longer duration")
     remember_me: boolean;

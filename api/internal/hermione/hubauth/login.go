@@ -70,9 +70,6 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 
 		tfaTokenString := util.RandomString(vetchi.TGTokenLenBytes)
 
-		// TODO: Should we just email a magic URL instead of a token ? We can
-		// make it longer, so minimize collisions and also more secure.
-
 		err = h.DB().InitHubUserTFA(
 			r.Context(),
 			db.HubUserTFA{

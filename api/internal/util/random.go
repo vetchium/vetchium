@@ -11,6 +11,9 @@ import (
 func RandomString(numBytes int) string {
 	buff := make([]byte, numBytes)
 	rand.Read(buff)
+
+	// The lower case conversion is added to guard against any regression
+	// with hex.EncodeToString returning uppercase.
 	return strings.ToLower(hex.EncodeToString(buff))
 }
 

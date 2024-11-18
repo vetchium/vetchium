@@ -39,4 +39,6 @@ var (
 	)
 
 	ErrStateMismatch = errors.New("current state does not match expected state")
+
+	ErrNoHubUser = errors.New("hub user not found")
 )

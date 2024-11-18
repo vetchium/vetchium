@@ -18,8 +18,8 @@ type LoginResponse struct {
 }
 
 type HubTFARequest struct {
-	Token      string `json:"token"                 validate:"required"`
-	Code       string `json:"code"                  validate:"required"`
+	TFAToken   string `json:"tfa_token"             validate:"required"`
+	TFACode    string `json:"tfa_code"              validate:"required"`
 	RememberMe bool   `json:"remember_me,omitempty"`
 }
 
