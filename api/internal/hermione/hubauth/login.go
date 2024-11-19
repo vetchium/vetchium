@@ -20,7 +20,11 @@ func LoginHandler(h wand.Wand) http.HandlerFunc {
 		h.Dbg("Entered hub login")
 
 		// Simulate a random delay to avoid timing attacks
-		<-time.After(time.Duration(rand.Intn(1000)) * time.Millisecond)
+		<-time.After(
+			time.Millisecond * time.Duration(
+				rand.Intn(int(h.Config().TimingAttackDelay.Milliseconds())),
+			),
+		)
 
 		var loginRequest vetchi.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&loginRequest)

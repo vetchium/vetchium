@@ -28,7 +28,8 @@ data:
         "host": "postgres",
         "port": "5432",
         "user": "user"
-      }
+      },
+      "timing_attack_delay": "1s"
     }
 ---
 apiVersion: apps/v1

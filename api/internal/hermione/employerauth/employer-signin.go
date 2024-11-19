@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
+	"math/rand"
 	"net/http"
 	ttmpl "text/template"
 	"time"
@@ -18,6 +19,13 @@ import (
 
 func EmployerSignin(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Simulate a random delay to avoid timing attacks
+		<-time.After(
+			time.Millisecond * time.Duration(
+				rand.Intn(int(h.Config().TimingAttackDelay.Milliseconds())),
+			),
+		)
+
 		var employerSigninReq vetchi.EmployerSignInRequest
 
 		err := json.NewDecoder(r.Body).Decode(&employerSigninReq)

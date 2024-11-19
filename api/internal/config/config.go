@@ -33,6 +33,8 @@ type HermioneConfigOnDisk struct {
 	} `json:"postgres" validate:"required"`
 
 	Port string `json:"port" validate:"required,min=1,number"`
+
+	TimingAttackDelay string `json:"timing_attack_delay" validate:"required"`
 }
 
 type Hermione struct {
@@ -57,7 +59,8 @@ type Hermione struct {
 		DB   string
 	}
 
-	Port int
+	Port              int
+	TimingAttackDelay time.Duration
 }
 
 func LoadHermioneConfig() (*Hermione, error) {
@@ -66,31 +69,36 @@ func LoadHermioneConfig() (*Hermione, error) {
 		return nil, fmt.Errorf("read config file: %w", err)
 	}
 
-	onDiskConfig := &HermioneConfigOnDisk{}
-	if err := json.Unmarshal(data, onDiskConfig); err != nil {
+	cmap := &HermioneConfigOnDisk{}
+	if err := json.Unmarshal(data, cmap); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
 	// Whatever can be validated by the struct tags, is done here. More
 	// validations continue to happen below
 	validate := validator.New()
-	if err := validate.Struct(onDiskConfig); err != nil {
+	if err := validate.Struct(cmap); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 
 	hc := &Hermione{}
 
-	hc.Postgres.Host = onDiskConfig.Postgres.Host
-	hc.Postgres.Port = onDiskConfig.Postgres.Port
-	hc.Postgres.User = onDiskConfig.Postgres.User
-	hc.Postgres.DB = onDiskConfig.Postgres.DB
+	hc.Postgres.Host = cmap.Postgres.Host
+	hc.Postgres.Port = cmap.Postgres.Port
+	hc.Postgres.User = cmap.Postgres.User
+	hc.Postgres.DB = cmap.Postgres.DB
 
-	hc.Port, err = strconv.Atoi(onDiskConfig.Port)
+	hc.Port, err = strconv.Atoi(cmap.Port)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert port to int: %w", err)
 	}
 
-	emp := onDiskConfig.Employer
+	hc.TimingAttackDelay, err = time.ParseDuration(cmap.TimingAttackDelay)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse timing attack delay: %w", err)
+	}
+
+	emp := cmap.Employer
 	hc.Employer.TFATokLife, err = time.ParseDuration(emp.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("employer tfa token life: %w", err)
@@ -108,7 +116,7 @@ func LoadHermioneConfig() (*Hermione, error) {
 		return nil, fmt.Errorf("employer invite token life: %w", err)
 	}
 
-	hub := onDiskConfig.Hub
+	hub := cmap.Hub
 	hc.Hub.TFATokLife, err = time.ParseDuration(hub.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("hub tfa token life: %w", err)
