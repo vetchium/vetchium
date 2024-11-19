@@ -186,6 +186,7 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/hub/login", ha.LoginHandler(h))
 	http.HandleFunc("/hub/tfa", ha.HubTFAHandler(h))
 	http.Handle("/hub/get-my-handle", h.mw.HubWrap(ha.GetMyHandleHandler(h)))
+	http.HandleFunc("/hub/logout", ha.LogoutHandler(h))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

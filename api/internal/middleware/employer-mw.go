@@ -116,6 +116,12 @@ func (m *Middleware) HubWrap(next http.Handler) http.Handler {
 
 		hubUser, err := m.db.AuthHubUser(r.Context(), authHeader)
 		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				m.log.Dbg("No hub user")
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
 			m.log.Err("Failed to auth hub user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

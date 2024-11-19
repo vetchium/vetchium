@@ -266,6 +266,11 @@ WHERE
 			&hubUser.UpdatedAt,
 		)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no hub user token found", "error", err)
+			return db.HubUserTO{}, db.ErrNoHubUser
+		}
+
 		p.log.Err("failed to auth hub user", "error", err)
 		return db.HubUserTO{}, db.ErrInternal
 	}

@@ -29,6 +29,123 @@ var _ = Describe("Hub Login", Ordered, func() {
 		db.Close()
 	})
 
+	// Helper functions to reduce code duplication
+	getLoginToken := func(email, password string) string {
+		loginReqBody, err := json.Marshal(vetchi.LoginRequest{
+			Email:    vetchi.EmailAddress(email),
+			Password: vetchi.Password(password),
+		})
+		Expect(err).ShouldNot(HaveOccurred())
+
+		loginResp, err := http.Post(
+			serverURL+"/hub/login",
+			"application/json",
+			bytes.NewBuffer(loginReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
+
+		var loginRespObj vetchi.LoginResponse
+		err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
+		Expect(err).ShouldNot(HaveOccurred())
+		return loginRespObj.Token
+	}
+
+	getTFACode := func(email string) (string, string) {
+		baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+		Expect(err).ShouldNot(HaveOccurred())
+		query := url.Values{}
+		query.Add(
+			"query",
+			fmt.Sprintf(
+				"to:%s subject:Vetchi Two Factor Authentication",
+				email,
+			),
+		)
+		baseURL.RawQuery = query.Encode()
+		mailURL := baseURL.String()
+
+		var messageID string
+		for i := 0; i < 3; i++ {
+			<-time.After(10 * time.Second)
+			mailPitResp, err := http.Get(mailURL)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
+
+			body, err := io.ReadAll(mailPitResp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			var mailPitRespObj MailPitResponse
+			err = json.Unmarshal(body, &mailPitRespObj)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			if len(mailPitRespObj.Messages) > 0 {
+				messageID = mailPitRespObj.Messages[0].ID
+				break
+			}
+		}
+		Expect(messageID).ShouldNot(BeEmpty())
+
+		mailResp, err := http.Get(
+			mailPitURL + "/api/v1/message/" + messageID,
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mailResp.StatusCode).Should(Equal(http.StatusOK))
+
+		body, err := io.ReadAll(mailResp.Body)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		re := regexp.MustCompile(
+			`Your Two Factor authentication code is:\s*([0-9]+)`,
+		)
+		matches := re.FindStringSubmatch(string(body))
+		Expect(len(matches)).Should(BeNumerically(">=", 2))
+
+		return matches[1], messageID
+	}
+
+	cleanupEmail := func(messageID string) {
+		deleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+			IDs: []string{messageID},
+		})
+		Expect(err).ShouldNot(HaveOccurred())
+
+		req, err := http.NewRequest(
+			"DELETE",
+			mailPitURL+"/api/v1/messages",
+			bytes.NewBuffer(deleteReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		req.Header.Set("Accept", "application/json")
+		req.Header.Add("Content-Type", "application/json")
+
+		deleteResp, err := http.DefaultClient.Do(req)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
+	}
+
+	getSessionToken := func(tfaToken, tfaCode string, rememberMe bool) string {
+		tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+			TFAToken:   tfaToken,
+			TFACode:    tfaCode,
+			RememberMe: rememberMe,
+		})
+		Expect(err).ShouldNot(HaveOccurred())
+
+		resp, err := http.Post(
+			serverURL+"/hub/tfa",
+			"application/json",
+			bytes.NewBuffer(tfaReqBody),
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+		var tfaResp vetchi.HubTFAResponse
+		err = json.NewDecoder(resp.Body).Decode(&tfaResp)
+		Expect(err).ShouldNot(HaveOccurred())
+		return tfaResp.SessionToken
+	}
+
 	Describe("Hub Login Flow", func() {
 		type loginTestCase struct {
 			description   string
@@ -445,7 +562,57 @@ var _ = Describe("Hub Login", Ordered, func() {
 		})
 
 		It("test Hub user logout", func() {
+			email := "active@hub.example"
+			password := "NewPassword123$"
 
+			// Get login token
+			tfaToken := getLoginToken(email, password)
+
+			// Get TFA code from email
+			tfaCode, messageID := getTFACode(email)
+			defer cleanupEmail(messageID)
+
+			// Get session token
+			sessionToken := getSessionToken(tfaToken, tfaCode, false)
+
+			// Test get-my-handle endpoint with valid session
+			req, err := http.NewRequest(
+				"GET",
+				serverURL+"/hub/get-my-handle",
+				nil,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Set("Authorization", sessionToken)
+
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Test logout
+			logoutReq, err := http.NewRequest(
+				"POST",
+				serverURL+"/hub/logout",
+				nil,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			logoutReq.Header.Set("Authorization", sessionToken)
+
+			logoutResp, err := http.DefaultClient.Do(logoutReq)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(logoutResp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Test get-my-handle endpoint after logout (should fail)
+			req2, err := http.NewRequest(
+				"GET",
+				serverURL+"/hub/get-my-handle",
+				nil,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req2.Header.Set("Authorization", sessionToken)
+
+			resp2, err := http.DefaultClient.Do(req2)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp2.StatusCode).Should(Equal(http.StatusUnauthorized))
 		})
 	})
 })

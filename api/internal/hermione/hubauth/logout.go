@@ -2,7 +2,6 @@ package hubauth
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/psankar/vetchi/api/internal/wand"
 )
@@ -17,8 +16,6 @@ func LogoutHandler(h wand.Wand) http.HandlerFunc {
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
-
-		token = strings.TrimPrefix(token, "Bearer ")
 
 		err := h.DB().Logout(r.Context(), token)
 		if err != nil {
