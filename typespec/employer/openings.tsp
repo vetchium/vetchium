@@ -257,6 +257,7 @@ interface CreateOpening {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
+    @useAuth(BearerAuth)
     createOpening(@body createOpeningRequest: CreateOpeningRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -274,6 +275,7 @@ interface GetOpening {
     @tag("Openings")
     @doc("Requires any of ${Admin}, $${OpeningsCRUD} {OpeningsViewer} roles")
     @post
+    @useAuth(BearerAuth)
     getOpening(@body getOpeningRequest: GetOpeningRequest): {
         @statusCode statusCode: 200;
         @body opening: Opening;
@@ -285,6 +287,7 @@ interface FilterOpenings {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} or ${OpeningsViewer} roles")
     @post
+    @useAuth(BearerAuth)
     filterOpenings(@body filterOpeningsRequest: FilterOpeningsRequest): {
         @statusCode statusCode: 200;
         @body opening_infos: OpeningInfo[];
@@ -296,6 +299,7 @@ interface UpdateOpening {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
+    @useAuth(BearerAuth)
     updateOpening(@body updateOpeningRequest: UpdateOpeningRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -309,6 +313,7 @@ interface GetOpeningWatchers {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} or ${OpeningsViewer} roles")
     @post
+    @useAuth(BearerAuth)
     getOpeningWatchers(
         @body getOpeningWatchersRequest: GetOpeningWatchersRequest,
     ): {
@@ -322,6 +327,7 @@ interface AddOpeningWatchers {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
+    @useAuth(BearerAuth)
     addOpeningWatchers(@body addWatchersRequest: AddOpeningWatchersRequest):
         | {
               @statusCode statusCode: 200;
@@ -348,6 +354,7 @@ interface RemoveOpeningWatcher {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
+    @useAuth(BearerAuth)
     removeOpeningWatcher(
         @body removeWatcherRequest: RemoveOpeningWatcherRequest,
     ): {
@@ -360,6 +367,7 @@ interface ChangeOpeningState {
     @tag("Openings")
     @doc("Requires any of ${Admin}, ${OpeningsCRUD} roles")
     @post
+    @useAuth(BearerAuth)
     changeOpeningState(
         @body changeOpeningStateRequest: ChangeOpeningStateRequest,
     ): {

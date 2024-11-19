@@ -582,7 +582,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				nil,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Set("Authorization", sessionToken)
+			req.Header.Set("Authorization", "Bearer "+sessionToken)
 
 			resp, err := http.DefaultClient.Do(req)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -595,7 +595,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				nil,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			logoutReq.Header.Set("Authorization", sessionToken)
+			logoutReq.Header.Set("Authorization", "Bearer "+sessionToken)
 
 			logoutResp, err := http.DefaultClient.Do(logoutReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -608,7 +608,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				nil,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			req2.Header.Set("Authorization", sessionToken)
+			req2.Header.Set("Authorization", "Bearer "+sessionToken)
 
 			resp2, err := http.DefaultClient.Do(req2)
 			Expect(err).ShouldNot(HaveOccurred())

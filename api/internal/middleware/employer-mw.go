@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -35,6 +36,8 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
+
+		authHeader = strings.TrimPrefix(authHeader, "Bearer ")
 
 		orgUser, err := m.db.AuthOrgUser(r.Context(), authHeader)
 		if err != nil {
@@ -113,6 +116,8 @@ func (m *Middleware) HubWrap(next http.Handler) http.Handler {
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
+
+		authHeader = strings.TrimPrefix(authHeader, "Bearer ")
 
 		hubUser, err := m.db.AuthHubUser(r.Context(), authHeader)
 		if err != nil {

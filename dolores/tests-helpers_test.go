@@ -288,7 +288,7 @@ func doPOST(
 	Expect(err).ShouldNot(HaveOccurred())
 
 	if token != "" {
-		req.Header.Set("Authorization", token)
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

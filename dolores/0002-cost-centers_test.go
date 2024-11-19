@@ -239,7 +239,10 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			getDefunctCostCentersReq.Header.Set("Authorization", adminToken)
+			getDefunctCostCentersReq.Header.Set(
+				"Authorization",
+				"Bearer "+adminToken,
+			)
 
 			resp, err := http.DefaultClient.Do(getDefunctCostCentersReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -406,7 +409,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		req.Header.Set("Authorization", adminToken)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
 
 		resp, err := http.DefaultClient.Do(req)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -475,7 +478,7 @@ func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -513,7 +516,7 @@ func addCostCenter(
 		return -1, err
 	}
 
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -541,7 +544,7 @@ func updateCostCenter(
 		return -1, err
 	}
 
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -565,7 +568,7 @@ func getCostCenter(
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -626,7 +629,10 @@ func bulkAddDefunctCC(
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		getCostCentersReq.Header.Set("Authorization", adminToken)
+		getCostCentersReq.Header.Set(
+			"Authorization",
+			"Bearer "+adminToken,
+		)
 
 		resp, err := http.DefaultClient.Do(getCostCentersReq)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -670,7 +676,10 @@ func bulkAddDefunctCC(
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		defunctCostCenterReq.Header.Set("Authorization", adminToken)
+		defunctCostCenterReq.Header.Set(
+			"Authorization",
+			"Bearer "+adminToken,
+		)
 
 		resp, err := http.DefaultClient.Do(defunctCostCenterReq)
 		Expect(err).ShouldNot(HaveOccurred())
