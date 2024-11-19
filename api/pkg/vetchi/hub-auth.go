@@ -34,3 +34,7 @@ type InviteUserRequest struct {
 type ForgotPasswordRequest struct {
 	Email EmailAddress `json:"email" validate:"required,email"`
 }
+
+type GetMyHandleResponse struct {
+	Handle string `json:"handle"`
+}

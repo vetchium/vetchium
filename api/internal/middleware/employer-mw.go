@@ -10,10 +10,11 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-type orgUserCtx int
+type userCtx int
 
 const (
-	OrgUserCtxKey orgUserCtx = iota
+	OrgUserCtxKey userCtx = iota
+	HubUserCtxKey
 )
 
 type Middleware struct {
@@ -101,4 +102,26 @@ func hasRoles(
 	}
 
 	return false
+}
+
+func (m *Middleware) HubWrap(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		m.log.Dbg("Entered hubAuth middleware")
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			m.log.Dbg("No auth header")
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		hubUser, err := m.db.AuthHubUser(r.Context(), authHeader)
+		if err != nil {
+			m.log.Err("Failed to auth hub user", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), HubUserCtxKey, hubUser)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

@@ -74,4 +74,7 @@ type DB interface {
 	// Used by hermione - for Hub users
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
+	Logout(c c.Context, token string) error
+	AuthHubUser(c c.Context, token string) (HubUserTO, error)
+	GetMyHandle(c.Context) (string, error)
 }

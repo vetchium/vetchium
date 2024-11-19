@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 )
 
 func (p *PG) GetHubUserByEmail(
@@ -219,4 +220,55 @@ func (p *PG) Logout(ctx context.Context, token string) error {
 	}
 
 	return nil
+}
+
+func (p *PG) GetMyHandle(ctx context.Context) (string, error) {
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		p.log.Err("failed to get hubUser from context")
+		return "", db.ErrInternal
+	}
+
+	return hubUser.Handle, nil
+}
+
+func (p *PG) AuthHubUser(
+	ctx context.Context,
+	token string,
+) (db.HubUserTO, error) {
+	query := `
+SELECT
+	hu.id,
+	hu.full_name,
+	hu.handle,
+	hu.email,
+	hu.password_hash,
+	hu.created_at,
+	hu.updated_at
+FROM 
+	hub_user_tokens hut,
+	hub_users hu
+WHERE
+	hut.token = $1
+	AND (hut.token_type = $2 OR hut.token_type = $3)
+	AND hu.id = hut.hub_user_id
+`
+
+	var hubUser db.HubUserTO
+	err := p.pool.QueryRow(ctx, query, token, db.HubUserSessionToken, db.HubUserLTSToken).
+		Scan(
+			&hubUser.ID,
+			&hubUser.FullName,
+			&hubUser.Handle,
+			&hubUser.Email,
+			&hubUser.PasswordHash,
+			&hubUser.CreatedAt,
+			&hubUser.UpdatedAt,
+		)
+	if err != nil {
+		p.log.Err("failed to auth hub user", "error", err)
+		return db.HubUserTO{}, db.ErrInternal
+	}
+
+	return hubUser, nil
 }

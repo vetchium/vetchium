@@ -443,5 +443,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
 		})
+
+		It("test Hub user logout", func() {
+
+		})
 	})
 })

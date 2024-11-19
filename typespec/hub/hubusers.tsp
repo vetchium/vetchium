@@ -115,3 +115,18 @@ interface ResetPassword {
         @statusCode statusCode: 200;
     };
 }
+
+model GetMyHandleResponse {
+    handle: string;
+}
+
+@route("/hub/get-my-handle")
+interface GetMyHandle {
+    @tag("HubUsers")
+    @get
+    @useAuth(BearerAuth)
+    getMyHandle(): {
+        @statusCode statusCode: 200;
+        @body getMyHandleResponse: GetMyHandleResponse;
+    };
+}
