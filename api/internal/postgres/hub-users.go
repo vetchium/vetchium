@@ -202,3 +202,21 @@ INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VA
 
 	return nil
 }
+
+func (p *PG) Logout(ctx context.Context, token string) error {
+	query := "DELETE FROM hub_user_tokens WHERE token = $1"
+
+	_, err := p.pool.Exec(ctx, query, token)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// unlikely to happen
+			p.log.Dbg("no hub user token found", "error", err)
+			return nil
+		}
+
+		p.log.Err("failed to delete hub user token", "error", err)
+		return err
+	}
+
+	return nil
+}
