@@ -369,17 +369,26 @@ WHERE
             hub_user_tokens
         WHERE
             token = $2)
+RETURNING id
 `
-	_, err := p.pool.Exec(
+	var hubUserID uuid.UUID
+	err := p.pool.QueryRow(
 		ctx,
 		query,
 		hubUserPasswordReset.PasswordHash,
 		hubUserPasswordReset.Token,
-	)
+	).Scan(&hubUserID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("invalid password reset token", "error", err)
+			return db.ErrInvalidPasswordResetToken
+		}
+
 		p.log.Err("failed to reset password", "error", err)
 		return err
 	}
+
+	p.log.Dbg("password reset", "hubUserID", hubUserID)
 
 	return nil
 }
