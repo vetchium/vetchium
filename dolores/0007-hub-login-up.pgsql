@@ -45,6 +45,16 @@ VALUES
         'DELETED_HUB_USER',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050004'::uuid,
+        'Password Change User',
+        'password_change_user',
+        'password-change@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
     );
 
 COMMIT;
