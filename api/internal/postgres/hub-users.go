@@ -350,3 +350,36 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 
 	return nil
 }
+
+func (p *PG) ResetHubUserPassword(
+	ctx context.Context,
+	hubUserPasswordReset db.HubUserPasswordReset,
+) error {
+	query := `
+UPDATE
+    hub_users
+SET
+    password_hash = $1,
+    updated_at = NOW() AT TIME ZONE 'utc'
+WHERE
+    id = (
+        SELECT
+            hub_user_id
+        FROM
+            hub_user_tokens
+        WHERE
+            token = $2)
+`
+	_, err := p.pool.Exec(
+		ctx,
+		query,
+		hubUserPasswordReset.PasswordHash,
+		hubUserPasswordReset.Token,
+	)
+	if err != nil {
+		p.log.Err("failed to reset password", "error", err)
+		return err
+	}
+
+	return nil
+}

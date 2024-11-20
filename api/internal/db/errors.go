@@ -40,5 +40,7 @@ var (
 
 	ErrStateMismatch = errors.New("current state does not match expected state")
 
+	ErrInvalidPasswordResetToken = errors.New("invalid password reset token")
+
 	ErrNoHubUser = errors.New("hub user not found")
 )

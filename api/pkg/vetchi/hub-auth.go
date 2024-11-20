@@ -48,7 +48,7 @@ type ForgotPasswordResponse struct {
 	Token string `json:"token"`
 }
 
-type ResetPasswordRequest struct {
+type HubUserResetPasswordRequest struct {
 	Token    string   `json:"token"    validate:"required"`
 	Password Password `json:"password" validate:"required,password"`
 }

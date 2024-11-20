@@ -28,3 +28,8 @@ type HubUserInitPasswordReset struct {
 	Email Email
 	HubTokenReq
 }
+
+type HubUserPasswordReset struct {
+	Token        string
+	PasswordHash string
+}

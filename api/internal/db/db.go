@@ -79,4 +79,5 @@ type DB interface {
 	GetMyHandle(c.Context) (string, error)
 	InitHubUserPasswordReset(c.Context, HubUserInitPasswordReset) error
 	Logout(c c.Context, token string) error
+	ResetHubUserPassword(c.Context, HubUserPasswordReset) error
 }

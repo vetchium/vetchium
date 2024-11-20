@@ -182,15 +182,18 @@ func (h *Hermione) Run() error {
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
 	)
 
+	wrap := func(fn http.Handler) http.Handler {
+		return h.mw.HubWrap(fn)
+	}
 	// Hub related endpoints
 	http.HandleFunc("/hub/login", ha.LoginHandler(h))
 	http.HandleFunc("/hub/tfa", ha.HubTFAHandler(h))
-	http.Handle("/hub/get-my-handle", h.mw.HubWrap(ha.GetMyHandleHandler(h)))
+	http.Handle("/hub/get-my-handle", wrap(ha.GetMyHandleHandler(h)))
 	http.HandleFunc("/hub/logout", ha.LogoutHandler(h))
-	http.Handle(
-		"/hub/change-password",
-		h.mw.HubWrap(ha.ChangePasswordHandler(h)),
-	)
+
+	http.HandleFunc("/hub/forgot-password", ha.ForgotPasswordHandler(h))
+	http.HandleFunc("/hub/reset-password", ha.ResetPasswordHandler(h))
+	http.Handle("/hub/change-password", wrap(ha.ChangePasswordHandler(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
