@@ -1,19 +1,48 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
-	"runtime/debug"
+	"runtime"
+
+	"github.com/fatih/color"
 )
+
+func init() {
+	// Force colorization even when output is not a terminal
+	color.NoColor = false
+}
 
 type Logger struct {
 	Log *slog.Logger
 }
 
+func colorizeStackTrace() string {
+	pc := make([]uintptr, 10)
+	n := runtime.Callers(3, pc)
+	frames := runtime.CallersFrames(pc[:n])
+
+	stackTrace := ""
+	for {
+		frame, more := frames.Next()
+
+		stackTrace += color.BlueString(frame.Function) + "\n"
+		stackTrace += "\t" + color.GreenString(frame.File)
+		stackTrace += ":" + color.YellowString(
+			fmt.Sprintf("%d", frame.Line),
+		) + "\n"
+
+		if !more {
+			break
+		}
+	}
+	return stackTrace + "\n"
+}
+
 func (l *Logger) Err(msg string, args ...any) {
 	l.Log.Error(msg, args...)
-	debug.PrintStack()
-	log.Println("========")
+	log.Println(colorizeStackTrace())
 }
 
 func (l *Logger) Dbg(msg string, args ...any) {
