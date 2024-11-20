@@ -356,20 +356,26 @@ func (p *PG) ResetHubUserPassword(
 	hubUserPasswordReset db.HubUserPasswordReset,
 ) error {
 	query := `
-UPDATE
-    hub_users
-SET
-    password_hash = $1,
-    updated_at = NOW() AT TIME ZONE 'utc'
-WHERE
-    id = (
-        SELECT
-            hub_user_id
-        FROM
-            hub_user_tokens
-        WHERE
-            token = $2)
-RETURNING id
+WITH token_info AS (
+    SELECT hub_user_id, token
+    FROM hub_user_tokens
+    WHERE token = $2
+),
+password_update AS (
+    UPDATE hub_users
+    SET
+        password_hash = $1,
+        updated_at = NOW() AT TIME ZONE 'utc'
+    WHERE id = (SELECT hub_user_id FROM token_info)
+    RETURNING id
+)
+DELETE FROM hub_user_tokens
+WHERE token = (
+    SELECT token
+    FROM token_info
+)
+AND EXISTS (SELECT 1 FROM password_update)
+RETURNING (SELECT id FROM password_update)
 `
 	var hubUserID uuid.UUID
 	err := p.pool.QueryRow(
