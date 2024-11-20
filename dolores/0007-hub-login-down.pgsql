@@ -6,7 +6,10 @@ WHERE hub_user_id IN (
         'active@hub.example',
         'disabled@hub.example', 
         'deleted@hub.example',
-        'password-change@hub.example'
+        'password-change@hub.example',
+        'password-reset@hub.example',
+        'token-expiry@hub.example',
+        'token-reuse@hub.example'
     )
 );
 
@@ -15,6 +18,9 @@ WHERE email IN (
     'active@hub.example',
     'disabled@hub.example',
     'deleted@hub.example',
-    'password-change@hub.example'
+    'password-change@hub.example',
+    'password-reset@hub.example',
+    'token-expiry@hub.example',
+    'token-reuse@hub.example'
 );
 COMMIT;

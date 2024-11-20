@@ -749,5 +749,498 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
+
+		It("Forgot Password and Reset Password", func() {
+			type forgotPasswordTestCase struct {
+				description string
+				request     vetchi.ForgotPasswordRequest
+				wantStatus  int
+				checkEmail  bool // whether to check for email
+			}
+
+			testCases := []forgotPasswordTestCase{
+				{
+					description: "with valid email",
+					request: vetchi.ForgotPasswordRequest{
+						Email: "password-reset@hub.example",
+					},
+					wantStatus: http.StatusOK,
+					checkEmail: true,
+				},
+				{
+					description: "with non-existent email",
+					request: vetchi.ForgotPasswordRequest{
+						Email: "nonexistent@hub.example",
+					},
+					wantStatus: http.StatusOK,
+					checkEmail: false,
+				},
+				{
+					description: "with invalid email format",
+					request: vetchi.ForgotPasswordRequest{
+						Email: "invalid-email",
+					},
+					wantStatus: http.StatusBadRequest,
+					checkEmail: false,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+
+				// Clear any existing emails before test
+				if tc.checkEmail {
+					baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+					Expect(err).ShouldNot(HaveOccurred())
+					query := url.Values{}
+					query.Add(
+						"query",
+						fmt.Sprintf(
+							"to:%s subject:Vetchi Password Reset",
+							tc.request.Email,
+						),
+					)
+					baseURL.RawQuery = query.Encode()
+
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						deleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+							IDs: []string{mailPitRespObj.Messages[0].ID},
+						})
+						Expect(err).ShouldNot(HaveOccurred())
+
+						req, err := http.NewRequest(
+							"DELETE",
+							mailPitURL+"/api/v1/messages",
+							bytes.NewBuffer(deleteReqBody),
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						req.Header.Set("Accept", "application/json")
+						req.Header.Add("Content-Type", "application/json")
+
+						deleteResp, err := http.DefaultClient.Do(req)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							deleteResp.StatusCode,
+						).Should(Equal(http.StatusOK))
+					}
+				}
+
+				// Send forgot password request
+				forgotPasswordReqBody, err := json.Marshal(tc.request)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				resp, err := http.Post(
+					serverURL+"/hub/forgot-password",
+					"application/json",
+					bytes.NewBuffer(forgotPasswordReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
+
+				if !tc.checkEmail {
+					continue
+				}
+
+				// Check for password reset email
+				var messageID string
+				var resetToken string
+
+				baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+				Expect(err).ShouldNot(HaveOccurred())
+				query := url.Values{}
+				query.Add(
+					"query",
+					fmt.Sprintf(
+						"to:%s subject:Vetchi Password Reset",
+						tc.request.Email,
+					),
+				)
+				baseURL.RawQuery = query.Encode()
+
+				// Wait and retry for email
+				for i := 0; i < 3; i++ {
+					<-time.After(10 * time.Second)
+
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						messageID = mailPitRespObj.Messages[0].ID
+						break
+					}
+				}
+				Expect(messageID).ShouldNot(BeEmpty())
+
+				// Get email content and extract reset token
+				mailResp, err := http.Get(
+					mailPitURL + "/api/v1/message/" + messageID,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err := io.ReadAll(mailResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				re := regexp.MustCompile(
+					`/reset-password\?token=([a-zA-Z0-9]+)`,
+				)
+				matches := re.FindStringSubmatch(string(body))
+				Expect(len(matches)).Should(BeNumerically(">=", 2))
+				resetToken = matches[1]
+
+				// Clean up the email
+				deleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+					IDs: []string{messageID},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err := http.NewRequest(
+					"DELETE",
+					mailPitURL+"/api/v1/messages",
+					bytes.NewBuffer(deleteReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Accept", "application/json")
+				req.Header.Add("Content-Type", "application/json")
+
+				deleteResp, err := http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
+
+				// Test reset password scenarios
+				type resetPasswordTestCase struct {
+					description   string
+					request       vetchi.HubUserResetPasswordRequest
+					wantStatus    int
+					wantErrFields []string
+					sleep         time.Duration
+				}
+
+				resetTestCases := []resetPasswordTestCase{
+					{
+						description: "with invalid password format",
+						request: vetchi.HubUserResetPasswordRequest{
+							Token:    resetToken,
+							Password: "weak",
+						},
+						wantStatus:    http.StatusBadRequest,
+						wantErrFields: []string{"password"},
+					},
+					{
+						description: "with invalid token",
+						request: vetchi.HubUserResetPasswordRequest{
+							Token:    "invalid-token",
+							Password: "NewPassword123$",
+						},
+						wantStatus: http.StatusUnauthorized,
+					},
+					{
+						description: "with valid token and password",
+						request: vetchi.HubUserResetPasswordRequest{
+							Token:    resetToken,
+							Password: "NewPassword123$",
+						},
+						wantStatus: http.StatusOK,
+					},
+				}
+
+				for _, rtc := range resetTestCases {
+					fmt.Fprintf(
+						GinkgoWriter,
+						"#### Reset Password: %s\n",
+						rtc.description,
+					)
+
+					if rtc.sleep > 0 {
+						<-time.After(rtc.sleep)
+					}
+
+					resetPasswordReqBody, err := json.Marshal(rtc.request)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					resetResp, err := http.Post(
+						serverURL+"/hub/reset-password",
+						"application/json",
+						bytes.NewBuffer(resetPasswordReqBody),
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(resetResp.StatusCode).Should(Equal(rtc.wantStatus))
+
+					if len(rtc.wantErrFields) > 0 {
+						var validationErrors vetchi.ValidationErrors
+						err = json.NewDecoder(resetResp.Body).
+							Decode(&validationErrors)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(validationErrors.Errors).Should(
+							ContainElements(rtc.wantErrFields),
+						)
+					}
+
+					// If password was successfully reset, verify we can login with new password
+					if rtc.wantStatus == http.StatusOK {
+						// Try logging in with new password
+						tfaToken := getLoginToken(
+							string(tc.request.Email),
+							string(rtc.request.Password),
+						)
+						tfaCode, messageID := getTFACode(
+							string(tc.request.Email),
+						)
+						sessionToken := getSessionToken(
+							tfaToken,
+							tfaCode,
+							false,
+						)
+
+						// Verify session token works
+						req, err := http.NewRequest(
+							"GET",
+							serverURL+"/hub/get-my-handle",
+							nil,
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+						resp, err := http.DefaultClient.Do(req)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+						// Clean up TFA email
+						cleanupEmail(messageID)
+					}
+				}
+			}
+		})
+
+		It("Password Reset Token Expiry", func() {
+			email := "token-expiry@hub.example"
+
+			// Send forgot password request
+			forgotPasswordReqBody, err := json.Marshal(
+				vetchi.ForgotPasswordRequest{
+					Email: vetchi.EmailAddress(email),
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.Post(
+				serverURL+"/hub/forgot-password",
+				"application/json",
+				bytes.NewBuffer(forgotPasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Get the reset token from email
+			var messageID string
+			var resetToken string
+
+			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+			Expect(err).ShouldNot(HaveOccurred())
+			query := url.Values{}
+			query.Add(
+				"query",
+				fmt.Sprintf(
+					"to:%s subject:Vetchi Password Reset",
+					email,
+				),
+			)
+			baseURL.RawQuery = query.Encode()
+
+			// Wait and retry for email
+			for i := 0; i < 3; i++ {
+				<-time.After(10 * time.Second)
+
+				mailPitResp, err := http.Get(baseURL.String())
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err := io.ReadAll(mailPitResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				var mailPitRespObj MailPitResponse
+				err = json.Unmarshal(body, &mailPitRespObj)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				if len(mailPitRespObj.Messages) > 0 {
+					messageID = mailPitRespObj.Messages[0].ID
+					break
+				}
+			}
+			Expect(messageID).ShouldNot(BeEmpty())
+
+			// Get email content and extract reset token
+			mailResp, err := http.Get(
+				mailPitURL + "/api/v1/message/" + messageID,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			body, err := io.ReadAll(mailResp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			re := regexp.MustCompile(`/reset-password\?token=([a-zA-Z0-9]+)`)
+			matches := re.FindStringSubmatch(string(body))
+			Expect(len(matches)).Should(BeNumerically(">=", 2))
+			resetToken = matches[1]
+
+			// Clean up the email
+			cleanupEmail(messageID)
+
+			// Wait for token to expire
+			<-time.After(7 * time.Minute)
+
+			// Try to use expired token
+			resetPasswordReqBody, err := json.Marshal(
+				vetchi.HubUserResetPasswordRequest{
+					Token:    resetToken,
+					Password: "NewPassword123$",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resetResp, err := http.Post(
+				serverURL+"/hub/reset-password",
+				"application/json",
+				bytes.NewBuffer(resetPasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resetResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+		})
+
+		It("Password Reset Token Reuse", func() {
+			email := "token-reuse@hub.example"
+
+			// Send forgot password request
+			forgotPasswordReqBody, err := json.Marshal(
+				vetchi.ForgotPasswordRequest{
+					Email: vetchi.EmailAddress(email),
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resp, err := http.Post(
+				serverURL+"/hub/forgot-password",
+				"application/json",
+				bytes.NewBuffer(forgotPasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Get the reset token from email
+			var messageID string
+			var resetToken string
+
+			baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+			Expect(err).ShouldNot(HaveOccurred())
+			query := url.Values{}
+			query.Add(
+				"query",
+				fmt.Sprintf(
+					"to:%s subject:Vetchi Password Reset",
+					email,
+				),
+			)
+			baseURL.RawQuery = query.Encode()
+
+			// Wait and retry for email
+			for i := 0; i < 3; i++ {
+				<-time.After(10 * time.Second)
+
+				mailPitResp, err := http.Get(baseURL.String())
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err := io.ReadAll(mailPitResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				var mailPitRespObj MailPitResponse
+				err = json.Unmarshal(body, &mailPitRespObj)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				if len(mailPitRespObj.Messages) > 0 {
+					messageID = mailPitRespObj.Messages[0].ID
+					break
+				}
+			}
+			Expect(messageID).ShouldNot(BeEmpty())
+
+			// Get email content and extract reset token
+			mailResp, err := http.Get(
+				mailPitURL + "/api/v1/message/" + messageID,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			body, err := io.ReadAll(mailResp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			re := regexp.MustCompile(`/reset-password\?token=([a-zA-Z0-9]+)`)
+			matches := re.FindStringSubmatch(string(body))
+			Expect(len(matches)).Should(BeNumerically(">=", 2))
+			resetToken = matches[1]
+
+			// Clean up the email
+			cleanupEmail(messageID)
+
+			// First password reset should succeed
+			resetPasswordReqBody, err := json.Marshal(
+				vetchi.HubUserResetPasswordRequest{
+					Token:    resetToken,
+					Password: "NewPassword123$",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resetResp, err := http.Post(
+				serverURL+"/hub/reset-password",
+				"application/json",
+				bytes.NewBuffer(resetPasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resetResp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Verify login works with new password
+			tfaToken := getLoginToken(email, "NewPassword123$")
+			tfaCode, messageID := getTFACode(email)
+			sessionToken := getSessionToken(tfaToken, tfaCode, false)
+
+			req, err := http.NewRequest(
+				"GET",
+				serverURL+"/hub/get-my-handle",
+				nil,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+			resp, err = http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Clean up TFA email
+			cleanupEmail(messageID)
+
+			// Try to reuse the same token - should fail
+			resetPasswordReqBody, err = json.Marshal(
+				vetchi.HubUserResetPasswordRequest{
+					Token:    resetToken,
+					Password: "AnotherPassword123$",
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resetResp, err = http.Post(
+				serverURL+"/hub/reset-password",
+				"application/json",
+				bytes.NewBuffer(resetPasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resetResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+		})
 	})
 })

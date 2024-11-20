@@ -55,6 +55,36 @@ VALUES
         'ACTIVE_HUB_USER',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050005'::uuid,
+        'Password Reset User',
+        'password_reset_user',
+        'password-reset@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050006'::uuid,
+        'Token Expiry Test User',
+        'token_expiry_user',
+        'token-expiry@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050007'::uuid,
+        'Token Reuse Test User',
+        'token_reuse_user',
+        'token-reuse@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
     );
 
 COMMIT;

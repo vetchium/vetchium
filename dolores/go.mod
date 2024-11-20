@@ -7,7 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
-	github.com/psankar/vetchi/api v0.0.0-20241120050203-2334b6666f2a
+	github.com/psankar/vetchi/api v0.0.0-20241120105304-e6d22d097c7d
 )
 
 require (
