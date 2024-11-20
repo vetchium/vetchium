@@ -77,4 +77,6 @@ type DB interface {
 	Logout(c c.Context, token string) error
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)
 	GetMyHandle(c.Context) (string, error)
+
+	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
 }

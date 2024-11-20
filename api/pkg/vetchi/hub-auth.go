@@ -38,3 +38,8 @@ type ForgotPasswordRequest struct {
 type GetMyHandleResponse struct {
 	Handle string `json:"handle"`
 }
+
+type ChangePasswordRequest struct {
+	OldPassword Password `json:"old_password" validate:"required,password"`
+	NewPassword Password `json:"new_password" validate:"required,password"`
+}

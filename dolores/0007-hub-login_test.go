@@ -614,5 +614,140 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp2.StatusCode).Should(Equal(http.StatusUnauthorized))
 		})
+
+		It("should handle password change correctly", func() {
+			email := "password-change@hub.example"
+			oldPassword := "NewPassword123$"
+			newPassword := "UpdatedPassword123$"
+
+			// Get initial session token
+			tfaToken := getLoginToken(email, oldPassword)
+			tfaCode, messageID := getTFACode(email)
+			defer cleanupEmail(messageID)
+			sessionToken := getSessionToken(tfaToken, tfaCode, false)
+
+			// Test invalid password scenarios
+			testCases := []struct {
+				description  string
+				oldPassword  string
+				newPassword  string
+				wantStatus   int
+				wantErrField string
+			}{
+				{
+					description:  "invalid old password format",
+					oldPassword:  "short",
+					newPassword:  "NewPassword123$",
+					wantStatus:   http.StatusBadRequest,
+					wantErrField: "old_password",
+				},
+				{
+					description:  "invalid new password format",
+					oldPassword:  "NewPassword123$",
+					newPassword:  "weak",
+					wantStatus:   http.StatusBadRequest,
+					wantErrField: "new_password",
+				},
+				{
+					description: "incorrect old password",
+					oldPassword: "WrongPassword123$",
+					newPassword: "NewPassword123$",
+					wantStatus:  http.StatusUnauthorized,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "Test case: %s\n", tc.description)
+
+				changePasswordReqBody, err := json.Marshal(
+					vetchi.ChangePasswordRequest{
+						OldPassword: vetchi.Password(tc.oldPassword),
+						NewPassword: vetchi.Password(tc.newPassword),
+					},
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err := http.NewRequest(
+					"POST",
+					serverURL+"/hub/change-password",
+					bytes.NewBuffer(changePasswordReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
+
+				if tc.wantErrField != "" {
+					var validationErrors vetchi.ValidationErrors
+					err = json.NewDecoder(resp.Body).Decode(&validationErrors)
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(
+						validationErrors.Errors,
+					).Should(ContainElement(tc.wantErrField))
+				}
+			}
+
+			// Verify original password still works after failed attempts
+			tfaToken = getLoginToken(email, oldPassword)
+			tfaCode, messageID = getTFACode(email)
+			defer cleanupEmail(messageID)
+			sessionToken = getSessionToken(tfaToken, tfaCode, false)
+
+			// Test successful password change
+			changePasswordReqBody, err := json.Marshal(
+				vetchi.ChangePasswordRequest{
+					OldPassword: vetchi.Password(oldPassword),
+					NewPassword: vetchi.Password(newPassword),
+				},
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			req, err := http.NewRequest(
+				"POST",
+				serverURL+"/hub/change-password",
+				bytes.NewBuffer(changePasswordReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+			// Verify old password no longer works
+			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
+				Email:    vetchi.EmailAddress(email),
+				Password: vetchi.Password(oldPassword),
+			})
+			Expect(err).ShouldNot(HaveOccurred())
+
+			loginResp, err := http.Post(
+				serverURL+"/hub/login",
+				"application/json",
+				bytes.NewBuffer(loginReqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(loginResp.StatusCode).Should(Equal(http.StatusUnauthorized))
+
+			// Verify new password works
+			tfaToken = getLoginToken(email, newPassword)
+			tfaCode, messageID = getTFACode(email)
+			defer cleanupEmail(messageID)
+			sessionToken = getSessionToken(tfaToken, tfaCode, false)
+
+			req, err = http.NewRequest(
+				"GET",
+				serverURL+"/hub/get-my-handle",
+				nil,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+			resp, err = http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+		})
 	})
 })

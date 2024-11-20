@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
@@ -276,4 +277,23 @@ WHERE
 	}
 
 	return hubUser, nil
+}
+
+func (p *PG) ChangeHubUserPassword(
+	ctx context.Context,
+	hubUserID uuid.UUID,
+	newPasswordHash string,
+) error {
+	query := `
+UPDATE hub_users 
+SET password_hash = $1, updated_at = NOW() AT TIME ZONE 'utc'
+WHERE id = $2`
+
+	_, err := p.pool.Exec(ctx, query, newPasswordHash, hubUserID)
+	if err != nil {
+		p.log.Err("failed to update password", "error", err)
+		return err
+	}
+
+	return nil
 }
