@@ -31,10 +31,6 @@ type InviteUserRequest struct {
 	Email EmailAddress `json:"email" validate:"required,email"`
 }
 
-type ForgotPasswordRequest struct {
-	Email EmailAddress `json:"email" validate:"required,email"`
-}
-
 type GetMyHandleResponse struct {
 	Handle string `json:"handle"`
 }
@@ -42,4 +38,17 @@ type GetMyHandleResponse struct {
 type ChangePasswordRequest struct {
 	OldPassword Password `json:"old_password" validate:"required,password"`
 	NewPassword Password `json:"new_password" validate:"required,password"`
+}
+
+type ForgotPasswordRequest struct {
+	Email EmailAddress `json:"email" validate:"required,email"`
+}
+
+type ForgotPasswordResponse struct {
+	Token string `json:"token"`
+}
+
+type ResetPasswordRequest struct {
+	Token    string   `json:"token"    validate:"required"`
+	Password Password `json:"password" validate:"required,password"`
 }

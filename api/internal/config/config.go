@@ -19,10 +19,12 @@ type HermioneConfigOnDisk struct {
 	} `json:"employer" validate:"required"`
 
 	Hub struct {
-		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
-		SessionTokLife string `json:"session_tok_life" validate:"required"`
-		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
-		InviteTokLife  string `json:"hub_user_invite_tok_life" validate:"required"`
+		WebURL               string `json:"web_url" validate:"required"`
+		TFATokLife           string `json:"tfa_tok_life" validate:"required"`
+		SessionTokLife       string `json:"session_tok_life" validate:"required"`
+		LTSTokLife           string `json:"lts_tok_life" validate:"required"`
+		InviteTokLife        string `json:"hub_user_invite_tok_life" validate:"required"`
+		PasswordResetTokLife string `json:"password_reset_tok_life" validate:"required"`
 	} `json:"hub" validate:"required"`
 
 	Postgres struct {
@@ -46,10 +48,12 @@ type Hermione struct {
 	}
 
 	Hub struct {
-		TFATokLife     time.Duration
-		SessionTokLife time.Duration
-		LTSTokLife     time.Duration
-		InviteTokLife  time.Duration
+		WebURL               string
+		TFATokLife           time.Duration
+		SessionTokLife       time.Duration
+		LTSTokLife           time.Duration
+		InviteTokLife        time.Duration
+		PasswordResetTokLife time.Duration
 	}
 
 	Postgres struct {
@@ -117,6 +121,7 @@ func LoadHermioneConfig() (*Hermione, error) {
 	}
 
 	hub := cmap.Hub
+	hc.Hub.WebURL = hub.WebURL
 	hc.Hub.TFATokLife, err = time.ParseDuration(hub.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("hub tfa token life: %w", err)
@@ -132,6 +137,12 @@ func LoadHermioneConfig() (*Hermione, error) {
 	hc.Hub.InviteTokLife, err = time.ParseDuration(hub.InviteTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("hub invite token life: %w", err)
+	}
+	hc.Hub.PasswordResetTokLife, err = time.ParseDuration(
+		hub.PasswordResetTokLife,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("hub password reset token life: %w", err)
 	}
 
 	return hc, nil

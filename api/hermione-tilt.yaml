@@ -15,12 +15,14 @@ data:
         "employee_invite_tok_life": "5m"
       },
       "hub": {
+        "web_url": "https://vetchi.org",
         "tfa_tok_life": "5m",
 
         "session_tok_life": "15m",
         "lts_tok_life": "20m",
 
-        "hub_user_invite_tok_life": "5m"
+        "hub_user_invite_tok_life": "5m",
+        "password_reset_tok_life": "5m"
       },
       "port": "8080",
       "postgres": {

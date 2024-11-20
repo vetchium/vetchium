@@ -30,6 +30,9 @@ const (
 	// This is sent as a response to the Login request and should be used
 	// in the tfa request, to get one of the session tokens.
 	HubUserTFAToken HubTokenType = "HUB_USER_TFA_TOKEN"
+
+	// This is sent as a response to the Reset Password request.
+	HubUserResetPasswordToken HubTokenType = "HUB_USER_RESET_PASSWORD_TOKEN"
 )
 
 type HubTokenReq struct {

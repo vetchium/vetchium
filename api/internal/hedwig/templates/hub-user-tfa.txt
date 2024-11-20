@@ -4,7 +4,7 @@ Someone (hopefully you) has requested to sign in to your account.
 
 Your Two Factor authentication code is: {{.code}}
 
-This code will expire in roughly 15 minutes. If you did not request this, please ignore this email.
+This code will be valid for 15 minutes approximately. If you did not request this, please ignore this email.
 
 Thanks,
 The Vetchi Team

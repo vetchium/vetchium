@@ -23,3 +23,8 @@ type HubUserTO struct {
 	CreatedAt    time.Time           `db:"created_at"`
 	UpdatedAt    time.Time           `db:"updated_at"`
 }
+
+type HubUserPasswordResetReq struct {
+	Email Email
+	HubTokenReq
+}

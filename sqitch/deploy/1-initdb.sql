@@ -26,6 +26,9 @@ CREATE TYPE hub_user_token_types AS ENUM (
 
     -- Sent as response to the Login API
     'HUB_USER_TFA_TOKEN'
+
+    -- Sent as response to the Reset Password API
+    'HUB_USER_RESET_PASSWORD_TOKEN'
 );
 
 CREATE TABLE hub_user_tokens (

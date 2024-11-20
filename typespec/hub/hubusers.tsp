@@ -102,8 +102,7 @@ interface ChangePassword {
 }
 
 model ResetPasswordRequest {
-    email: EmailAddress;
-    code: string;
+    token: string;
     password: Password;
 }
 

@@ -14,6 +14,9 @@ const (
 	// Sent in the email to the org users
 	InviteTokenLenBytes = 16
 
+	// Triggered by the forgot password request and sent to the user's email
+	PasswordResetTokenLenBytes = 16
+
 	// Sent as a response to the signin request
 	// Used for the /employer/tfa request body
 	TGTokenLenBytes = 32

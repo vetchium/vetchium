@@ -72,11 +72,11 @@ type DB interface {
 	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
 
 	// Used by hermione - for Hub users
+	AuthHubUser(c c.Context, token string) (HubUserTO, error)
+	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
-	Logout(c c.Context, token string) error
-	AuthHubUser(c c.Context, token string) (HubUserTO, error)
 	GetMyHandle(c.Context) (string, error)
-
-	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
+	InitHubUserPasswordReset(c.Context, HubUserPasswordResetReq) error
+	Logout(c c.Context, token string) error
 }

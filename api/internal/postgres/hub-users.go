@@ -297,3 +297,56 @@ WHERE id = $2`
 
 	return nil
 }
+
+func (p *PG) InitHubUserPasswordReset(
+	ctx context.Context,
+	hubUserPasswordResetReq db.HubUserPasswordResetReq,
+) error {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	tokensQuery := `
+INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) 
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+`
+	_, err = tx.Exec(
+		ctx,
+		tokensQuery,
+		hubUserPasswordResetReq.Token,
+		hubUserPasswordResetReq.HubUserID,
+		hubUserPasswordResetReq.ValidityDuration.Minutes(),
+		db.HubUserResetPasswordToken,
+	)
+	if err != nil {
+		p.log.Err("failed to insert password reset token", "error", err)
+		return err
+	}
+
+	emailQuery := `
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err = tx.Exec(
+		ctx,
+		emailQuery,
+		hubUserPasswordResetReq.Email.EmailFrom,
+		hubUserPasswordResetReq.Email.EmailTo,
+		hubUserPasswordResetReq.Email.EmailSubject,
+		hubUserPasswordResetReq.Email.EmailHTMLBody,
+		hubUserPasswordResetReq.Email.EmailTextBody,
+		hubUserPasswordResetReq.Email.EmailState,
+	)
+	if err != nil {
+		p.log.Err("failed to insert email", "error", err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
+}
