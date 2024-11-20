@@ -300,7 +300,7 @@ WHERE id = $2`
 
 func (p *PG) InitHubUserPasswordReset(
 	ctx context.Context,
-	hubUserPasswordResetReq db.HubUserPasswordResetReq,
+	initPasswordResetReq db.HubUserInitPasswordReset,
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
@@ -315,9 +315,9 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 	_, err = tx.Exec(
 		ctx,
 		tokensQuery,
-		hubUserPasswordResetReq.Token,
-		hubUserPasswordResetReq.HubUserID,
-		hubUserPasswordResetReq.ValidityDuration.Minutes(),
+		initPasswordResetReq.Token,
+		initPasswordResetReq.HubUserID,
+		initPasswordResetReq.ValidityDuration.Minutes(),
 		db.HubUserResetPasswordToken,
 	)
 	if err != nil {
@@ -330,12 +330,12 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 	_, err = tx.Exec(
 		ctx,
 		emailQuery,
-		hubUserPasswordResetReq.Email.EmailFrom,
-		hubUserPasswordResetReq.Email.EmailTo,
-		hubUserPasswordResetReq.Email.EmailSubject,
-		hubUserPasswordResetReq.Email.EmailHTMLBody,
-		hubUserPasswordResetReq.Email.EmailTextBody,
-		hubUserPasswordResetReq.Email.EmailState,
+		initPasswordResetReq.Email.EmailFrom,
+		initPasswordResetReq.Email.EmailTo,
+		initPasswordResetReq.Email.EmailSubject,
+		initPasswordResetReq.Email.EmailHTMLBody,
+		initPasswordResetReq.Email.EmailTextBody,
+		initPasswordResetReq.Email.EmailState,
 	)
 	if err != nil {
 		p.log.Err("failed to insert email", "error", err)

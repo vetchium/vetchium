@@ -81,7 +81,7 @@ func ForgotPasswordHandler(h wand.Wand) http.HandlerFunc {
 		}
 
 		err = h.DB().
-			InitHubUserPasswordReset(r.Context(), db.HubUserPasswordResetReq{
+			InitHubUserPasswordReset(r.Context(), db.HubUserInitPasswordReset{
 				HubTokenReq: db.HubTokenReq{
 					Token:            passwordResetToken,
 					TokenType:        db.HubUserResetPasswordToken,
