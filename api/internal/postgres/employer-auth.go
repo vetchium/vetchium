@@ -332,6 +332,7 @@ func (p *PG) PruneTokens(ctx context.Context) error {
 
 	queries := []string{
 		`DELETE FROM org_user_tokens WHERE token_valid_till < NOW()`,
+		`DELETE FROM hub_user_tokens WHERE token_valid_till < NOW()`,
 	}
 
 	for _, q := range queries {
