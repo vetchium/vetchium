@@ -85,6 +85,24 @@ VALUES
         'ACTIVE_HUB_USER',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
+    ),(
+        '12345678-0007-0007-0007-000000050008'::uuid,
+        'Remember Me Test User',
+        'rememberme_user',
+        'rememberme@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050009'::uuid,
+        'TFA Test User',
+        'tfatest_user',
+        'tfatest@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        timezone('UTC'::text, now()),
+        timezone('UTC'::text, now())
     );
-
 COMMIT;

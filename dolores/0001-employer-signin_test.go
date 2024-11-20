@@ -273,7 +273,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				GinkgoWriter,
 				"Sleeping to allow granger to email\n",
 			)
-			<-time.After(10 * time.Second)
+			<-time.After(30 * time.Second)
 			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
 			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"

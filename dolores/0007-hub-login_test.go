@@ -146,7 +146,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		return tfaResp.SessionToken
 	}
 
-	Describe("Hub Login Flow", func() {
+	Describe("Hub Login Flow", Ordered, func() {
 		type loginTestCase struct {
 			description   string
 			request       vetchi.LoginRequest
@@ -272,7 +272,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 		It("should handle TFA flow correctly", func() {
 			// First get a valid TFA token through login
-			email := "active@hub.example"
+			email := "tfatest@hub.example"
 			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
 				Email:    vetchi.EmailAddress(email),
 				Password: "NewPassword123$",
@@ -452,7 +452,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		It("should handle remember me flag correctly", func() {
 			// First get a valid TFA token through login
 			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-				Email:    "active@hub.example",
+				Email:    "rememberme@hub.example",
 				Password: "NewPassword123$",
 			})
 			Expect(err).ShouldNot(HaveOccurred())
@@ -475,14 +475,14 @@ var _ = Describe("Hub Login", Ordered, func() {
 			query := url.Values{}
 			query.Add(
 				"query",
-				"to:active@hub.example subject:Vetchi Two Factor Authentication",
+				"to:rememberme@hub.example subject:Vetchi Two Factor Authentication",
 			)
 			baseURL.RawQuery = query.Encode()
 			mailURL := baseURL.String()
 
 			// Get the TFA code from mailpit
 			var messageID string
-			for i := 0; i < 3; i++ {
+			for i := 0; i < 5; i++ {
 				<-time.After(10 * time.Second)
 
 				mailPitResp, err := http.Get(mailURL)

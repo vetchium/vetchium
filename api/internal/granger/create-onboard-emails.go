@@ -55,7 +55,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 		case <-quit:
 			g.log.Dbg("createOnboardEmails quitting")
 			return
-		case <-time.After(5 * time.Second):
+		case <-time.After(3 * time.Second):
 			ctx := context.Background()
 			onboardInfo, err := g.db.DeQOnboard(ctx)
 			if err != nil {

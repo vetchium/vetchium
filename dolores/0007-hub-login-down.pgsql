@@ -9,7 +9,9 @@ WHERE hub_user_id IN (
         'password-change@hub.example',
         'password-reset@hub.example',
         'token-expiry@hub.example',
-        'token-reuse@hub.example'
+        'token-reuse@hub.example',
+        'rememberme@hub.example',
+        'tfatest@hub.example'
     )
 );
 
@@ -21,6 +23,8 @@ WHERE email IN (
     'password-change@hub.example',
     'password-reset@hub.example',
     'token-expiry@hub.example',
-    'token-reuse@hub.example'
+    'token-reuse@hub.example',
+    'rememberme@hub.example',
+    'tfatest@hub.example'
 );
 COMMIT;
