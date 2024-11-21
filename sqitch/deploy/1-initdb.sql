@@ -244,7 +244,9 @@ CREATE TABLE openings (
     state opening_states NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    last_updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
+    pagination_key BIGSERIAL
 );
 
 CREATE TABLE opening_hiring_team(
