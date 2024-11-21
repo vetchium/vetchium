@@ -30,10 +30,6 @@ model HubTFAResponse {
     session_token: string;
 }
 
-model InviteUserRequest {
-    email: EmailAddress;
-}
-
 model ForgotPasswordRequest {
     email: EmailAddress;
 }
@@ -63,16 +59,6 @@ interface Logout {
     @post
     @useAuth(BearerAuth)
     logout(): {
-        @statusCode statusCode: 200;
-    };
-}
-
-@route("/hub/invite-user")
-interface InviteUser {
-    @tag("HubUsers")
-    @post
-    @useAuth(BearerAuth)
-    inviteUser(@body inviteUserRequest: InviteUserRequest): {
         @statusCode statusCode: 200;
     };
 }
