@@ -57,7 +57,7 @@ interface TFA {
 interface Logout {
     @tag("HubUsers")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(HubAuth)
     logout(): {
         @statusCode statusCode: 200;
     };
@@ -81,7 +81,7 @@ model ChangePasswordRequest {
 interface ChangePassword {
     @tag("HubUsers")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(HubAuth)
     changePassword(@body changePasswordRequest: ChangePasswordRequest): {
         @statusCode statusCode: 200;
     };
@@ -109,7 +109,7 @@ model GetMyHandleResponse {
 interface GetMyHandle {
     @tag("HubUsers")
     @get
-    @useAuth(BearerAuth)
+    @useAuth(HubAuth)
     getMyHandle(): {
         @statusCode statusCode: 200;
         @body getMyHandleResponse: GetMyHandleResponse;

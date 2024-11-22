@@ -2,7 +2,7 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
-import "../common.tsp";
+import "../common/common.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
@@ -86,7 +86,7 @@ interface AddOrgUser {
     @tag("OrgUsers")
     @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     addOrgUser(@body addOrgUserRequest: AddOrgUserRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -104,7 +104,7 @@ interface DisableOrgUser {
     @tag("OrgUsers")
     @doc("Requires anyof ${Admin}, ${OrgUsersCRUD} roles. The last OrgUser with an ${Admin} role cannot be updated")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     disableOrgUser(@body disableOrgUserRequest: DisableOrgUserRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -122,7 +122,7 @@ interface EnableOrgUser {
     @tag("OrgUsers")
     @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles. The account must be in ${DisabledOrgUser} state")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     enableOrgUser(@body enableOrgUserRequest: EnableOrgUserRequest): {
         @statusCode statusCode: 200;
     };
@@ -133,7 +133,7 @@ interface FilterOrgUsers {
     @tag("OrgUsers")
     @doc("Requires any of ${Admin}, ${OrgUsersCRUD}, ${OrgUsersViewer} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     filterOrgUsers(@body filterOrgUsersRequest: FilterOrgUsersRequest): {
         @statusCode statusCode: 200;
     };
@@ -149,7 +149,7 @@ model SignupOrgUserRequest {
 interface SignupOrgUser {
     @tag("OrgUsers")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     signupOrgUser(@body signupOrgUserRequest: SignupOrgUserRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -167,7 +167,7 @@ interface UpdateOrgUser {
     @tag("OrgUsers")
     @doc("Requires any of ${Admin}, ${OrgUsersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     updateOrgUser(@body updateOrgUserRequest: UpdateOrgUserRequest):
         | {
               @statusCode statusCode: 200;

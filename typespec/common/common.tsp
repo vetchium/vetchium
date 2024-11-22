@@ -1,3 +1,6 @@
+using TypeSpec.Http;
+using TypeSpec.Rest;
+
 @error
 model ValidationErrors {
     @doc("List of fields that failed validation")
@@ -216,3 +219,19 @@ alias OrgUsersCRUD = "ORG_USERS_CRUD";
 alias OrgUsersViewer = "ORG_USERS_VIEWER";
 alias OpeningsCRUD = "OPENINGS_CRUD";
 alias OpeningsViewer = "OPENINGS_VIEWER";
+
+model HubAuth {
+    @doc("Http authentication")
+    type: AuthType.http;
+
+    @doc("bearer auth scheme")
+    scheme: "bearer";
+}
+
+model EmployerAuth {
+    @doc("Http authentication")
+    type: AuthType.http;
+
+    @doc("bearer auth scheme")
+    scheme: "bearer";
+}

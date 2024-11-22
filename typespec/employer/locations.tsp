@@ -108,7 +108,7 @@ interface AddLocation {
     @tag("Locations")
     @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     addLocation(@body addLocationRequest: AddLocationRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -126,7 +126,7 @@ interface DefunctLocation {
     @tag("Locations")
     @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     defunctLocation(@body defuntLocationRequest: DefunctLocationRequest): {
         @statusCode statusCode: 200;
     };
@@ -137,7 +137,7 @@ interface GetLocation {
     @tag("Locations")
     @doc("Requires any of ${Admin}, ${LocationsCRUD}, ${LocationsViewer} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     getLocation(@body getLocation: GetLocationRequest): {
         @statusCode statusCode: 200;
         @body location: Location;
@@ -149,7 +149,7 @@ interface GetLocations {
     @tag("Locations")
     @doc("Requires any of ${Admin}, ${LocationsCRUD}, ${LocationsViewer} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     getLocations(@body getLocationsRequest: GetLocationsRequest): {
         @statusCode statusCode: 200;
         @body locations: Location[];
@@ -160,7 +160,7 @@ interface GetLocations {
 interface RenameLocation {
     @tag("Locations")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     renameLocation(@body renameLocationRequest: RenameLocationRequest): {
         @statusCode statusCode: 200;
     };
@@ -171,7 +171,7 @@ interface UpdateLocation {
     @tag("Locations")
     @doc("Requires any of ${Admin}, ${LocationsCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     updateLocation(@body updateLocationRequest: UpdateLocationRequest): {
         @statusCode statusCode: 200;
     };

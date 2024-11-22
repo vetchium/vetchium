@@ -8,6 +8,7 @@ import "./employer/orgusers.tsp";
 import "./employer/openings.tsp";
 
 import "./hub/hubusers.tsp";
+import "./hub/openings.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;

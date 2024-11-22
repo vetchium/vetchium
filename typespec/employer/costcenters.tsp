@@ -2,7 +2,7 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
-import "../common.tsp";
+import "../common/common.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
@@ -67,7 +67,7 @@ interface AddCostCenter {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     addCostcenter(@body costcenter: AddCostCenterRequest): {
         @statusCode statusCode: 200;
     } | {
@@ -85,7 +85,7 @@ interface DefunctCostCenter {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     defunctCostCenter(
         @body defunctCostCenterRequest: DefunctCostCenterRequest,
     ): {
@@ -98,7 +98,7 @@ interface GetCostCenter {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD}, ${CostCentersViewer} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     getCostCenter(@body getCostCenterRequest: GetCostCenterRequest): {
         @statusCode statusCode: 200;
         @body costcenter: CostCenter;
@@ -110,7 +110,7 @@ interface GetCostCenters {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD}, ${CostCentersViewer} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     getCostCenters(@body getCostCentersRequest: GetCostCentersRequest): {
         @statusCode statusCode: 200;
         @body costcenters: CostCenter[];
@@ -122,7 +122,7 @@ interface RenameCostCenter {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     renameCostCenter(@body renameCostCenterRequest: RenameCostCenterRequest): {
         @statusCode statusCode: 200;
     };
@@ -133,7 +133,7 @@ interface UpdateCostCenter {
     @tag("Cost Centers")
     @doc("Requires any of ${Admin}, ${CostCentersCRUD} roles")
     @post
-    @useAuth(BearerAuth)
+    @useAuth(EmployerAuth)
     updateCostCenter(@body updateCostCenterRequest: UpdateCostCenterRequest): {
         @statusCode statusCode: 200;
     };

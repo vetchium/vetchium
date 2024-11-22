@@ -32,29 +32,39 @@ model LocationFilter {
 }
 
 model FindOpeningsRequest {
+    @doc("If nothing is passed, all opening types are considered")
     opening_type?: OpeningType;
+
+    @doc("If nothing is passed, all companies are considered")
     companies?: string[];
+
+    @doc("If nothing is passed, all experience ranges are considered")
     experience?: ExperienceRange;
+
+    @doc("If nothing is passed, all salary ranges are considered")
     salary_range?: SalaryRange;
 
-    @doc("If nothing is passed, all countries are considered. If countries and locations are passed, Openings matching either will be considered.")
+    @doc("If nothing is passed, all countries are considered. If countries and locations are passed, Openings that match either of them will be considered.")
     countries?: CountryCode[];
 
-    @doc("If nothing is passed, all jobs in the HubUser's Countries list set in the profile are considered. Remember to set the Countries list during the Hub user signup.")
+    @doc("If nothing is passed, all jobs in the HubUser's Countries list set in the profile are considered. If a city name is passed, only the Openings that explicitly mention this City are considered. TODO: Remember to set the Countries list during the Hub user signup.")
     locations?: LocationFilter[];
 
     @doc("If nothing is passed, all education levels are considered")
     min_education_level?: EducationLevel;
 
+    @doc("If a value is passed, only Openings that explicitly mention this timezone in the description are considered")
     remote_timezones?: TimeZone[];
-    created_at: utcDateTime;
+
     pagination_key?: int64;
 
     @doc("If nothing is passed, 40 Openings are returned")
+    @minValue(1)
+    @maxValue(100)
     limit?: integer;
 }
 
-model Opening {
+model HubOpening {
     opening_id_within_company: string;
     company_domain: string;
     company_name: string;
@@ -62,13 +72,17 @@ model Opening {
     job_title: string;
     locations?: string[];
 
-    /* In future, we will show company avg response time, response rate and some kind of score for how the company treats the applicants */
+    /* In future, we will show company's: 
+        avg response time
+        response rate
+        some kind of score for how the company treats the applicants */
 }
 
-@route("/openings")
-interface FindOpenings {
-    @tag("Openings")
-    @get
+@route("/find-hub-openings")
+interface FindHubOpenings {
+    @tag("HubOpenings")
+    @post
+    @useAuth(HubAuth)
     findOpenings(@query query: FindOpeningsRequest): {
         @statusCode statusCode: 200;
     };
