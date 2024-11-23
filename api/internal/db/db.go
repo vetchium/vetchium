@@ -76,6 +76,10 @@ type DB interface {
 	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
+	FindHubOpenings(
+		c.Context,
+		*v.FindHubOpeningsRequest,
+	) ([]v.HubOpening, error)
 	GetMyHandle(c.Context) (string, error)
 	InitHubUserPasswordReset(c.Context, HubUserInitPasswordReset) error
 	Logout(c c.Context, token string) error

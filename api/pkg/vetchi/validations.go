@@ -86,6 +86,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_country_code",
 		func(fl validator.FieldLevel) bool {
+			// TODO: Validate country code is one of the ISO 3166-1 alpha-3 codes
 			return len(fl.Field().String()) == 3
 		},
 	)
@@ -197,6 +198,20 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	}
 
 	err = validate.RegisterValidation(
+		"validate_opening_type",
+		func(fl validator.FieldLevel) bool {
+			openingType, ok := fl.Field().Interface().(OpeningType)
+			if !ok {
+				return false
+			}
+			return openingType.IsValid()
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
 		"validate_opening_states",
 		func(fl validator.FieldLevel) bool {
 			states := fl.Field().Interface().([]OpeningState)
@@ -242,6 +257,49 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = validate.RegisterValidation(
+		"validate_domain",
+		func(fl validator.FieldLevel) bool {
+			domain, ok := fl.Field().Interface().(string)
+			if !ok {
+				return false
+			}
+
+			return domainReg.MatchString(domain)
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_currency",
+		func(fl validator.FieldLevel) bool {
+			currency, ok := fl.Field().Interface().(Currency)
+			if !ok {
+				return false
+			}
+
+			// TODO: Validate currency code is one of the active ISO 4217 currency codes
+			return len(currency) == 3
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_timezone",
+		func(fl validator.FieldLevel) bool {
+			timezone, ok := fl.Field().Interface().(TimeZone)
+			if !ok {
+				return false
+			}
+
+			return timezone.IsValid()
+		},
+	)
 
 	return &Vator{validate: validate, log: log}, nil
 }

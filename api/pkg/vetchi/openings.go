@@ -2,16 +2,6 @@ package vetchi
 
 import "time"
 
-type OpeningType string
-
-const (
-	FullTimeOpening    OpeningType = "FULL_TIME_OPENING"
-	PartTimeOpening    OpeningType = "PART_TIME_OPENING"
-	ContractOpening    OpeningType = "CONTRACT_OPENING"
-	InternshipOpening  OpeningType = "INTERNSHIP_OPENING"
-	UnspecifiedOpening OpeningType = "UNSPECIFIED_OPENING"
-)
-
 type EducationLevel string
 
 const (
@@ -64,19 +54,22 @@ type Opening struct {
 }
 
 type CreateOpeningRequest struct {
-	Title              string         `json:"title"                          validate:"required,min=3,max=32"`
-	Positions          int            `json:"positions"                      validate:"required,min=1,max=20"`
-	JD                 string         `json:"jd"                             validate:"required,min=10,max=1024"`
-	Recruiter          EmailAddress   `json:"recruiter"                      validate:"required"`
-	HiringManager      EmailAddress   `json:"hiring_manager"                 validate:"required"`
-	HiringTeam         []EmailAddress `json:"hiring_team,omitempty"          validate:"omitempty,max=10"`
-	CostCenterName     CostCenterName `json:"cost_center_name"               validate:"required"`
-	LocationTitles     []string       `json:"location_titles,omitempty"      validate:"omitempty,max=10"`
-	RemoteCountryCodes []CountryCode  `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
-	RemoteTimezones    []TimeZone     `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
-	OpeningType        OpeningType    `json:"opening_type"                   validate:"required"`
-	YoeMin             int            `json:"yoe_min"                        validate:"min=0,max=100"`
-	YoeMax             int            `json:"yoe_max"                        validate:"min=1,max=100"`
+	Title          string         `json:"title"                     validate:"required,min=3,max=32"`
+	Positions      int            `json:"positions"                 validate:"required,min=1,max=20"`
+	JD             string         `json:"jd"                        validate:"required,min=10,max=1024"`
+	Recruiter      EmailAddress   `json:"recruiter"                 validate:"required"`
+	HiringManager  EmailAddress   `json:"hiring_manager"            validate:"required"`
+	HiringTeam     []EmailAddress `json:"hiring_team,omitempty"     validate:"omitempty,max=10"`
+	CostCenterName CostCenterName `json:"cost_center_name"          validate:"required"`
+	LocationTitles []string       `json:"location_titles,omitempty" validate:"omitempty,max=10"`
+
+	// TODO: Add validation for remote_country_codes and remote_timezones
+	RemoteCountryCodes []CountryCode `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
+	RemoteTimezones    []TimeZone    `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
+
+	OpeningType OpeningType `json:"opening_type" validate:"required,validate_opening_type"`
+	YoeMin      int         `json:"yoe_min"      validate:"min=0,max=100"`
+	YoeMax      int         `json:"yoe_max"      validate:"min=1,max=100"`
 
 	// Optional fields
 	EmployerNotes     *string         `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`

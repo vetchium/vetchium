@@ -31,12 +31,12 @@ model LocationFilter {
     city: string;
 }
 
-model FindOpeningsRequest {
+model FindHubOpeningsRequest {
     @doc("If nothing is passed, all opening types are considered")
-    opening_type?: OpeningType;
+    opening_types?: OpeningType[];
 
     @doc("If nothing is passed, all companies are considered")
-    companies?: string[];
+    company_domains?: string[];
 
     @doc("If nothing is passed, all experience ranges are considered")
     experience?: ExperienceRange;
@@ -56,6 +56,9 @@ model FindOpeningsRequest {
     @doc("If a value is passed, only Openings that explicitly mention this timezone in the description are considered")
     remote_timezones?: TimeZone[];
 
+    @doc("If a value is passed, either Openings that explicitly mention this country code in the description (or) globally remote, are considered. If nothing is passed, all Openings irrespective of their remote status are considered.")
+    remote_country_codes?: CountryCode[];
+
     pagination_key?: int64;
 
     @doc("If nothing is passed, 40 Openings are returned")
@@ -70,7 +73,7 @@ model HubOpening {
     company_name: string;
     logo_url?: url;
     job_title: string;
-    locations?: string[];
+    cities?: string[];
 
     /* In future, we will show company's: 
         avg response time
@@ -83,7 +86,7 @@ interface FindHubOpenings {
     @tag("HubOpenings")
     @post
     @useAuth(HubAuth)
-    findOpenings(@query query: FindOpeningsRequest): {
+    findOpenings(@query query: FindHubOpeningsRequest): {
         @statusCode statusCode: 200;
     };
 }
