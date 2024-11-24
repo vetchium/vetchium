@@ -7,6 +7,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
+	ho "github.com/psankar/vetchi/api/internal/hermione/hubopenings"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
@@ -194,6 +195,8 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/hub/forgot-password", ha.ForgotPasswordHandler(h))
 	http.HandleFunc("/hub/reset-password", ha.ResetPasswordHandler(h))
 	http.Handle("/hub/change-password", wrap(ha.ChangePasswordHandler(h)))
+
+	http.HandleFunc("/hub/find-openings", ho.FindHubOpeningsHandler(h))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

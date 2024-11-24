@@ -8,7 +8,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func FindHubOpenings(h wand.Wand) http.HandlerFunc {
+func FindHubOpeningsHandler(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered FindHubOpenings")
 		var findHubOpeningsReq vetchi.FindHubOpeningsRequest
