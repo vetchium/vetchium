@@ -20,7 +20,8 @@ func (p *PG) FindHubOpenings(
 				o.title as job_title,
 				d.domain_name as company_domain,
 				e.onboard_admin_email as company_name,
-				array_agg(DISTINCT l.title) as cities
+				array_agg(DISTINCT l.title) as cities,
+				o.pagination_key
 			FROM openings o
 			JOIN employers e ON o.employer_id = e.id
 			JOIN domains d ON e.id = d.employer_id
@@ -209,6 +210,7 @@ func (p *PG) FindHubOpenings(
 			&opening.CompanyDomain,
 			&opening.CompanyName,
 			&cities,
+			&opening.PaginationKey,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning opening row: %w", err)

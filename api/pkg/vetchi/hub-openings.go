@@ -37,4 +37,5 @@ type HubOpening struct {
 	LogoURL                string   `json:"logo_url"`
 	JobTitle               string   `json:"job_title"`
 	Cities                 []string `json:"cities"`
+	PaginationKey          int64    `json:"pagination_key"`
 }

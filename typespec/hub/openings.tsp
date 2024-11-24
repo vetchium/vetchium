@@ -74,6 +74,7 @@ model HubOpening {
     logo_url?: url;
     job_title: string;
     cities?: string[];
+    pagination_key: int64;
 
     /* In future, we will show company's: 
         avg response time
@@ -88,5 +89,6 @@ interface FindHubOpenings {
     @useAuth(HubAuth)
     findOpenings(@query query: FindHubOpeningsRequest): {
         @statusCode statusCode: 200;
+        @body HubOpening: [];
     };
 }
