@@ -155,7 +155,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 					description: "find all openings with default limit",
 					request:     vetchi.FindHubOpeningsRequest{},
 					wantStatus:  http.StatusOK,
-					wantCount:   40, // Default limit
+					wantCount:   40,
 				},
 				{
 					description: "find openings with custom limit",
@@ -175,7 +175,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 				{
 					description: "find openings with invalid limit (too low)",
 					request: vetchi.FindHubOpeningsRequest{
-						Limit: 0,
+						Limit: -1,
 					},
 					wantStatus: http.StatusBadRequest,
 				},

@@ -235,7 +235,69 @@ SELECT
     timezone('UTC'::text, now())
 FROM generate_series(1, 10);
 
--- Add more companies with different focus areas...
+-- Company 3: Focus on product/design roles
+INSERT INTO openings (
+    employer_id,
+    id,
+    title,
+    positions,
+    jd,
+    recruiter,
+    hiring_manager,
+    cost_center_id,
+    opening_type,
+    yoe_min,
+    yoe_max,
+    min_education_level,
+    salary_min,
+    salary_max,
+    salary_currency,
+    remote_country_codes,
+    remote_timezones,
+    state,
+    created_at,
+    last_updated_at
+)
+SELECT
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '2024-Mar-03-' || LPAD(CAST(generate_series AS text), 3, '0'),
+    CASE (generate_series % 5)
+        WHEN 0 THEN 'Product Manager'
+        WHEN 1 THEN 'UX Designer'
+        WHEN 2 THEN 'Product Designer'
+        WHEN 3 THEN 'UI Developer'
+        WHEN 4 THEN 'Design Systems Engineer'
+    END,
+    CASE (generate_series % 3)
+        WHEN 0 THEN 1
+        WHEN 1 THEN 2
+        WHEN 2 THEN 3
+    END,
+    'Join our product team...',
+    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
+    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
+    (SELECT id FROM org_cost_centers WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
+    'FULL_TIME_OPENING',
+    CASE (generate_series % 3)
+        WHEN 0 THEN 1
+        WHEN 1 THEN 3
+        WHEN 2 THEN 5
+    END,
+    CASE (generate_series % 3)
+        WHEN 0 THEN 4
+        WHEN 1 THEN 6
+        WHEN 2 THEN 8
+    END,
+    'BACHELOR_EDUCATION',
+    70000,
+    130000,
+    'USD',
+    ARRAY['GBR'],
+    ARRAY['GMT Greenwich Mean Time GMT+0000'],
+    'ACTIVE_OPENING_STATE',
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
+FROM generate_series(1, 10);
 
 -- Link openings to locations
 INSERT INTO opening_locations (employer_id, opening_id, location_id)
