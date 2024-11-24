@@ -81,7 +81,7 @@ model HubOpening {
         some kind of score for how the company treats the applicants */
 }
 
-@route("/find-hub-openings")
+@route("/hub/find-hub-openings")
 interface FindHubOpenings {
     @tag("HubOpenings")
     @post

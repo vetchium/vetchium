@@ -60,6 +60,8 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 	})
 }
 
+// Protect provides Authentication and Authorization on the /employer/* routes.
+// For Hub related endpoints use the wrap function within router.go
 // Protect middleware only checks with the roles of the OrgUser. Whether the
 // OrgUser belongs to the Org or not, should be verified via EmployerAuth. We
 // should not take the OrgID/EmployerID on any of the request bodies but should
