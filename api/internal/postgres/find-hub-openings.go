@@ -37,7 +37,7 @@ func (p *PG) FindHubOpenings(
 
 	if len(req.OpeningTypes) > 0 {
 		placeholders := make([]string, len(req.OpeningTypes))
-		for i, _ := range req.OpeningTypes {
+		for i := range req.OpeningTypes {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
 			args = append(args, req.OpeningTypes[i])
 			argCount++
@@ -53,7 +53,7 @@ func (p *PG) FindHubOpenings(
 
 	if len(req.CompanyDomains) > 0 {
 		placeholders := make([]string, len(req.CompanyDomains))
-		for i, _ := range req.CompanyDomains {
+		for i := range req.CompanyDomains {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
 			args = append(args, req.CompanyDomains[i])
 			argCount++
@@ -105,7 +105,7 @@ func (p *PG) FindHubOpenings(
 
 	if len(req.Countries) > 0 {
 		placeholders := make([]string, len(req.Countries))
-		for i, _ := range req.Countries {
+		for i := range req.Countries {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
 			args = append(args, req.Countries[i])
 			argCount++
@@ -147,7 +147,7 @@ func (p *PG) FindHubOpenings(
 
 	if len(req.RemoteTimezones) > 0 {
 		placeholders := make([]string, len(req.RemoteTimezones))
-		for i, _ := range req.RemoteTimezones {
+		for i := range req.RemoteTimezones {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
 			args = append(args, req.RemoteTimezones[i])
 			argCount++
@@ -163,7 +163,7 @@ func (p *PG) FindHubOpenings(
 
 	if len(req.RemoteCountryCodes) > 0 {
 		placeholders := make([]string, len(req.RemoteCountryCodes))
-		for i, _ := range req.RemoteCountryCodes {
+		for i := range req.RemoteCountryCodes {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
 			args = append(args, req.RemoteCountryCodes[i])
 			argCount++
@@ -191,6 +191,8 @@ func (p *PG) FindHubOpenings(
 
 	query += fmt.Sprintf(" ORDER BY o.pagination_key LIMIT $%d", argCount)
 	args = append(args, req.Limit)
+
+	p.log.Dbg("find hub openings query", "query", query, "args", args)
 
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
