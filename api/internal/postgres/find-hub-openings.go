@@ -13,21 +13,19 @@ func (p *PG) FindHubOpenings(
 	req *vetchi.FindHubOpeningsRequest,
 ) ([]vetchi.HubOpening, error) {
 	query := `
-		WITH filtered_openings AS (
-			SELECT DISTINCT
-				o.employer_id,
-				o.id as opening_id,
-				o.title as job_title,
-				d.domain_name as company_domain,
-				e.onboard_admin_email as company_name,
-				array_agg(DISTINCT l.title) as cities,
-				o.pagination_key
-			FROM openings o
-			JOIN employers e ON o.employer_id = e.id
-			JOIN domains d ON e.id = d.employer_id
-			LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
-			LEFT JOIN locations l ON ol.location_id = l.id
-			WHERE o.state = 'ACTIVE_OPENING_STATE'
+		SELECT DISTINCT
+			o.id as opening_id,
+			o.title as job_title,
+			d.domain_name as company_domain,
+			e.onboard_admin_email as company_name,
+			array_agg(DISTINCT l.title) as cities,
+			o.pagination_key
+		FROM openings o
+		JOIN employers e ON o.employer_id = e.id
+		JOIN domains d ON e.id = d.employer_id
+		LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
+		LEFT JOIN locations l ON ol.location_id = l.id
+		WHERE o.state = 'ACTIVE_OPENING_STATE'
 	`
 
 	args := []interface{}{}
@@ -184,15 +182,19 @@ func (p *PG) FindHubOpenings(
 		query += " AND " + strings.Join(whereConditions, " AND ")
 	}
 
-	query += `
-		GROUP BY o.employer_id, o.id, o.title, d.domain_name, e.onboard_admin_email
-	`
-
-	query += fmt.Sprintf(" WHERE o.pagination_key > $%d", argCount)
+	// Add pagination and ordering after WHERE conditions but before GROUP BY
+	query += fmt.Sprintf(" AND o.pagination_key > $%d", argCount)
 	args = append(args, req.PaginationKey)
 	argCount++
 
-	query += fmt.Sprintf(" ORDER BY o.pagination_key LIMIT $%d", argCount)
+	// Add GROUP BY
+	query += `
+		GROUP BY o.id, o.title, d.domain_name, e.onboard_admin_email, o.pagination_key
+		ORDER BY o.pagination_key
+	`
+
+	// Add LIMIT at the end
+	query += fmt.Sprintf(" LIMIT $%d", argCount)
 	args = append(args, req.Limit)
 
 	p.log.Dbg("find hub openings query", "query", query, "args", args)
@@ -209,6 +211,7 @@ func (p *PG) FindHubOpenings(
 		var cities []string
 		err := rows.Scan(
 			&opening.OpeningIDWithinCompany,
+			&opening.JobTitle,
 			&opening.CompanyDomain,
 			&opening.CompanyName,
 			&cities,
