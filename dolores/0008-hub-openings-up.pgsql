@@ -77,7 +77,7 @@ FROM domains;
 INSERT INTO locations (id, title, country_code, postal_address, postal_code, city_aka, location_state, employer_id, created_at)
 VALUES
     -- Company 1 locations
-    ('12345678-0008-0008-0008-000000060001'::uuid, 'Bangalore Office', 'IND', '123 MG Road', '560001', ARRAY['Bengaluru'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000060001'::uuid, 'Bangalore Office', 'IND', '123 MG Road', '560001', ARRAY['Bengaluru', 'Bangalore'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000060002'::uuid, 'Chennai Office', 'IND', '456 Anna Salai', '600002', ARRAY['Madras'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
     
     -- Company 2 locations
