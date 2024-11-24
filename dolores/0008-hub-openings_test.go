@@ -350,7 +350,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 						Countries:         []vetchi.CountryCode{"USA"},
 						MinEducationLevel: &masterEducation,
 						RemoteTimezones: []vetchi.TimeZone{
-							"PST Pacific Standard Time GMT-0800",
+							"PST Pacific Standard Time (North America) GMT-0800",
 						},
 					},
 					wantStatus: http.StatusOK,
