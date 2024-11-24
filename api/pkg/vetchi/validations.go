@@ -307,8 +307,17 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_education_level",
 		func(fl validator.FieldLevel) bool {
+			log.Err(
+				"validate_education_level",
+				"field",
+				fl.Field().Interface(),
+			)
 			educationLevel, ok := fl.Field().Interface().(EducationLevel)
-			return ok && educationLevel.IsValid()
+			if !ok {
+				// If the education level is not provided, it is valid
+				return true
+			}
+			return educationLevel.IsValid()
 		},
 	)
 	if err != nil {

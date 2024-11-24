@@ -20,6 +20,9 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
+	var bachelorEducation = vetchi.BachelorEducation
+	var masterEducation = vetchi.MasterEducation
+
 	BeforeAll(func() {
 		db = setupTestDB()
 		seedDatabase(db, "0008-hub-openings-up.pgsql")
@@ -299,7 +302,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 				{
 					description: "find openings by minimum education level (Bachelor's)",
 					request: vetchi.FindHubOpeningsRequest{
-						MinEducationLevel: vetchi.BachelorEducation,
+						MinEducationLevel: &bachelorEducation,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []vetchi.HubOpening) {
@@ -345,7 +348,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 							Max:      150000,
 						},
 						Countries:         []vetchi.CountryCode{"USA"},
-						MinEducationLevel: vetchi.MasterEducation,
+						MinEducationLevel: &masterEducation,
 						RemoteTimezones: []vetchi.TimeZone{
 							"PST Pacific Standard Time GMT-0800",
 						},
