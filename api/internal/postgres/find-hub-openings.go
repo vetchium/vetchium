@@ -70,9 +70,9 @@ func (p *PG) FindHubOpenings(
 		whereConditions = append(
 			whereConditions,
 			fmt.Sprintf(
-				"o.yoe_min >= $%d AND o.yoe_max <= $%d",
-				argCount,
+				"o.yoe_min <= $%d AND o.yoe_max >= $%d",
 				argCount+1,
+				argCount,
 			),
 		)
 		args = append(
@@ -112,7 +112,7 @@ func (p *PG) FindHubOpenings(
 		whereConditions = append(
 			whereConditions,
 			fmt.Sprintf(
-				"l.country_code = ANY(ARRAY[%s])",
+				"o.remote_country_codes && ARRAY[%s]::text[]",
 				strings.Join(placeholders, ","),
 			),
 		)
@@ -142,7 +142,7 @@ func (p *PG) FindHubOpenings(
 			whereConditions,
 			fmt.Sprintf("o.min_education_level = $%d", argCount),
 		)
-		args = append(args, req.MinEducationLevel)
+		args = append(args, *req.MinEducationLevel)
 		argCount++
 	}
 
@@ -156,23 +156,7 @@ func (p *PG) FindHubOpenings(
 		whereConditions = append(
 			whereConditions,
 			fmt.Sprintf(
-				"o.remote_timezones && ARRAY[%s]",
-				strings.Join(placeholders, ","),
-			),
-		)
-	}
-
-	if len(req.RemoteCountryCodes) > 0 {
-		placeholders := make([]string, len(req.RemoteCountryCodes))
-		for i := range req.RemoteCountryCodes {
-			placeholders[i] = fmt.Sprintf("$%d", argCount)
-			args = append(args, req.RemoteCountryCodes[i])
-			argCount++
-		}
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.remote_country_codes && ARRAY[%s]",
+				"o.remote_timezones && ARRAY[%s]::text[]",
 				strings.Join(placeholders, ","),
 			),
 		)
@@ -197,7 +181,79 @@ func (p *PG) FindHubOpenings(
 	query += fmt.Sprintf(" LIMIT $%d", argCount)
 	args = append(args, req.Limit)
 
-	p.log.Dbg("find hub openings query", "query", query, "args", args)
+	p.log.Dbg(
+		"find hub openings query",
+		"query",
+		query,
+		"args",
+		args,
+		"conditions",
+		whereConditions,
+	)
+
+	// Add this query before applying filters to see what data exists
+	debugQuery := `
+		SELECT DISTINCT
+			o.id,
+			o.title,
+			o.yoe_min,
+			o.yoe_max,
+			o.salary_currency,
+			o.salary_min,
+			o.salary_max,
+			o.min_education_level,
+			o.remote_country_codes,
+			o.remote_timezones
+		FROM openings o
+		WHERE o.state = 'ACTIVE_OPENING_STATE'
+	`
+	debugRows, err := p.pool.Query(ctx, debugQuery)
+	if err == nil {
+		defer debugRows.Close()
+		p.log.Dbg("existing openings in database:")
+		for debugRows.Next() {
+			var id, title string
+			var yoeMin, yoeMax, salaryMin, salaryMax int
+			var salaryCurrency, minEducation string
+			var remoteCountries, remoteTimezones []string
+			err := debugRows.Scan(
+				&id,
+				&title,
+				&yoeMin,
+				&yoeMax,
+				&salaryCurrency,
+				&salaryMin,
+				&salaryMax,
+				&minEducation,
+				&remoteCountries,
+				&remoteTimezones,
+			)
+			if err == nil {
+				p.log.Dbg(
+					"opening",
+					"id",
+					id,
+					"title",
+					title,
+					"yoe",
+					fmt.Sprintf("%d-%d", yoeMin, yoeMax),
+					"salary",
+					fmt.Sprintf(
+						"%s %d-%d",
+						salaryCurrency,
+						salaryMin,
+						salaryMax,
+					),
+					"education",
+					minEducation,
+					"countries",
+					remoteCountries,
+					"timezones",
+					remoteTimezones,
+				)
+			}
+		}
+	}
 
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {

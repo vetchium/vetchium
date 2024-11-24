@@ -229,7 +229,7 @@ SELECT
     150000,
     'USD',
     ARRAY['USA'],
-    ARRAY['PST Pacific Standard Time GMT-0800'],
+    ARRAY['PST Pacific Standard Time (North America) GMT-0800'],
     'ACTIVE_OPENING_STATE',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
