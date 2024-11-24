@@ -401,7 +401,7 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					if tc.wantCount > 0 {
-						Expect(openings).Should(HaveLen(tc.wantCount))
+						Expect(len(openings)).Should(Equal(tc.wantCount))
 					}
 
 					if tc.validate != nil {
