@@ -23,7 +23,7 @@ type FindHubOpeningsRequest struct {
 	SalaryRange        *SalaryRange     `json:"salary_range"`
 	Countries          []CountryCode    `json:"countries"`
 	Locations          []LocationFilter `json:"locations"`
-	MinEducationLevel  EducationLevel   `json:"min_education_level"  validate:"required"`
+	MinEducationLevel  *EducationLevel  `json:"min_education_level"  validate:"validate_education_level"`
 	RemoteTimezones    []TimeZone       `json:"remote_timezones"     validate:"dive,validate_timezone"`
 	RemoteCountryCodes []CountryCode    `json:"remote_country_codes" validate:"dive,validate_country_code"`
 	PaginationKey      int64            `json:"pagination_key"`

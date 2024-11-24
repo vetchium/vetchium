@@ -373,6 +373,23 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
+
+				fmt.Fprintf(
+					GinkgoWriter,
+					"Status, want: %d, got: %d\n",
+					tc.wantStatus,
+					resp.StatusCode,
+				)
+				if resp.StatusCode != tc.wantStatus &&
+					resp.StatusCode == http.StatusBadRequest {
+					body, err := io.ReadAll(resp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+					fmt.Fprintf(
+						GinkgoWriter,
+						"Validation Errors:\n%s\n",
+						string(body),
+					)
+				}
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if tc.wantStatus == http.StatusOK {

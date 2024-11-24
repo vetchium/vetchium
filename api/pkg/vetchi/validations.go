@@ -300,6 +300,20 @@ func InitValidator(log util.Logger) (*Vator, error) {
 			return timezone.IsValid()
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"validate_education_level",
+		func(fl validator.FieldLevel) bool {
+			educationLevel, ok := fl.Field().Interface().(EducationLevel)
+			return ok && educationLevel.IsValid()
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Vator{validate: validate, log: log}, nil
 }

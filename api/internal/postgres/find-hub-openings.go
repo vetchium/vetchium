@@ -139,12 +139,14 @@ func (p *PG) FindHubOpenings(
 			fmt.Sprintf("(%s)", strings.Join(locationConditions, " OR ")))
 	}
 
-	whereConditions = append(
-		whereConditions,
-		fmt.Sprintf("o.min_education_level = $%d", argCount),
-	)
-	args = append(args, req.MinEducationLevel)
-	argCount++
+	if req.MinEducationLevel != nil {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("o.min_education_level = $%d", argCount),
+		)
+		args = append(args, req.MinEducationLevel)
+		argCount++
+	}
 
 	if len(req.RemoteTimezones) > 0 {
 		placeholders := make([]string, len(req.RemoteTimezones))
