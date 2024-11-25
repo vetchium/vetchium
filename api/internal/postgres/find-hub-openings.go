@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
@@ -12,6 +14,12 @@ func (p *PG) FindHubOpenings(
 	ctx context.Context,
 	req *vetchi.FindHubOpeningsRequest,
 ) ([]vetchi.HubOpening, error) {
+	// Get hub user from context
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		return nil, fmt.Errorf("hub user not found in context")
+	}
+
 	query := `
 		SELECT DISTINCT
 			o.id as opening_id,
@@ -25,13 +33,34 @@ func (p *PG) FindHubOpenings(
 		JOIN domains d ON e.id = d.employer_id
 		LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 		LEFT JOIN locations l ON ol.location_id = l.id
+		JOIN hub_users hu ON hu.id = $1
 		WHERE o.state = 'ACTIVE_OPENING_STATE'
+		AND l.country_code = COALESCE($2, hu.resident_country_code)
 	`
 
-	args := []interface{}{}
-	argCount := 1
+	args := []interface{}{hubUser.ID}
+	if req.CountryCode != nil {
+		args = append(args, string(*req.CountryCode))
+	} else {
+		args = append(args, nil)
+	}
+	argCount := 3
 
-	// Add filters
+	// Add city filter if specified
+	if len(req.Cities) > 0 {
+		cityConditions := make([]string, len(req.Cities))
+		for i, city := range req.Cities {
+			cityConditions[i] = fmt.Sprintf(
+				"$%d = ANY(l.city_aka)",
+				argCount,
+			)
+			args = append(args, city)
+			argCount++
+		}
+		query += " AND (" + strings.Join(cityConditions, " OR ") + ")"
+	}
+
+	// Add other filters
 	whereConditions := []string{}
 
 	if len(req.OpeningTypes) > 0 {
@@ -102,11 +131,11 @@ func (p *PG) FindHubOpenings(
 		argCount += 3
 	}
 
-	if len(req.Countries) > 0 {
-		placeholders := make([]string, len(req.Countries))
-		for i := range req.Countries {
+	if len(req.RemoteCountryCodes) > 0 {
+		placeholders := make([]string, len(req.RemoteCountryCodes))
+		for i := range req.RemoteCountryCodes {
 			placeholders[i] = fmt.Sprintf("$%d", argCount)
-			args = append(args, req.Countries[i])
+			args = append(args, req.RemoteCountryCodes[i])
 			argCount++
 		}
 		whereConditions = append(
@@ -116,34 +145,6 @@ func (p *PG) FindHubOpenings(
 				strings.Join(placeholders, ","),
 			),
 		)
-	}
-
-	if len(req.Locations) > 0 {
-		locationConditions := []string{}
-		for _, loc := range req.Locations {
-			locationConditions = append(
-				locationConditions,
-				fmt.Sprintf(
-					"(l.country_code = $%d AND (l.title = $%d OR $%d = ANY(l.city_aka)))",
-					argCount,
-					argCount+1,
-					argCount+1,
-				),
-			)
-			args = append(args, loc.CountryCode, loc.City)
-			argCount += 2
-		}
-		whereConditions = append(whereConditions,
-			fmt.Sprintf("(%s)", strings.Join(locationConditions, " OR ")))
-	}
-
-	if req.MinEducationLevel != nil {
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf("o.min_education_level = $%d", argCount),
-		)
-		args = append(args, *req.MinEducationLevel)
-		argCount++
 	}
 
 	if len(req.RemoteTimezones) > 0 {
@@ -162,11 +163,20 @@ func (p *PG) FindHubOpenings(
 		)
 	}
 
+	if req.MinEducationLevel != nil {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("o.min_education_level = $%d", argCount),
+		)
+		args = append(args, *req.MinEducationLevel)
+		argCount++
+	}
+
 	if len(whereConditions) > 0 {
 		query += " AND " + strings.Join(whereConditions, " AND ")
 	}
 
-	// Add pagination and ordering after WHERE conditions but before GROUP BY
+	// Add pagination and ordering
 	query += fmt.Sprintf(" AND o.pagination_key > $%d", argCount)
 	args = append(args, req.PaginationKey)
 	argCount++
@@ -177,7 +187,7 @@ func (p *PG) FindHubOpenings(
 		ORDER BY o.pagination_key
 	`
 
-	// Add LIMIT at the end
+	// Add LIMIT
 	query += fmt.Sprintf(" LIMIT $%d", argCount)
 	args = append(args, req.Limit)
 
