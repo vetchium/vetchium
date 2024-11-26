@@ -37,7 +37,7 @@ INSERT INTO hub_users (
     resident_city,
     created_at,
     updated_at
-) VALUES 
+) VALUES
 -- User with only resident country
 ('12345678-0008-0008-0008-000000050002'::uuid,
  'India Only User',
@@ -82,28 +82,47 @@ VALUES
 -- Create domains for each employer
 INSERT INTO domains (id, domain_name, domain_state, employer_id, created_at)
 VALUES
-    -- Company 1 domains
+    -- Company with 1 domain
     ('12345678-0008-0008-0008-000000003001'::uuid, 'hubopening1.example', 'VERIFIED', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0008-0008-0008-000000003002'::uuid, 'hubopening1-alt.example', 'VERIFIED', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
-    
-    -- Company 2 domains
-    ('12345678-0008-0008-0008-000000003003'::uuid, 'hubopening2.example', 'VERIFIED', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
-    
-    -- Company 3 domains
+
+    -- Company with 2 domains
+    ('12345678-0008-0008-0008-000000003002'::uuid, 'hubopening2.example', 'VERIFIED', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003003'::uuid, 'hubopening2-alt.example', 'VERIFIED', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
+
+    -- Company with 3 domains
     ('12345678-0008-0008-0008-000000003004'::uuid, 'hubopening3.example', 'VERIFIED', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000003005'::uuid, 'hubopening3-alt.example', 'VERIFIED', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000003006'::uuid, 'hubopening3-alt2.example', 'VERIFIED', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
-    
-    -- Company 4 domains
+
+    -- Company with 4 domains
     ('12345678-0008-0008-0008-000000003007'::uuid, 'hubopening4.example', 'VERIFIED', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000003008'::uuid, 'hubopening4-alt.example', 'VERIFIED', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
-    
-    -- Company 5 domains
-    ('12345678-0008-0008-0008-000000003009'::uuid, 'hubopening5.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0008-0008-0008-000000003009'::uuid, 'hubopening4-alt2.example', 'VERIFIED', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003010'::uuid, 'hubopening4-alt3.example', 'VERIFIED', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
+
+    -- Company with 5 domains
+    ('12345678-0008-0008-0008-000000003011'::uuid, 'hubopening5.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003012'::uuid, 'hubopening5-alt.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003013'::uuid, 'hubopening5-alt2.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003014'::uuid, 'hubopening5-alt3.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000003015'::uuid, 'hubopening5-alt4.example', 'VERIFIED', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now()));
+
+
+INSERT INTO employer_primary_domains (employer_id, domain_id)
+VALUES
+    ('12345678-0008-0008-0008-000000000201'::uuid, '12345678-0008-0008-0008-000000003001'::uuid),
+    ('12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000003002'::uuid),
+    ('12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000003004'::uuid),
+    ('12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000003007'::uuid),
+    ('12345678-0008-0008-0008-000000000205'::uuid,
+    '12345678-0008-0008-0008-000000003011'::uuid);
 
 -- Create org users for each employer
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
-SELECT 
+SELECT
     gen_random_uuid(),
     'admin@' || domain_name,
     'Admin User',
@@ -120,25 +139,25 @@ VALUES
     -- Company 1 locations
     ('12345678-0008-0008-0008-000000060001'::uuid, 'Bangalore Office', 'IND', '123 MG Road', '560001', ARRAY['Bengaluru', 'Bangalore'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000060002'::uuid, 'Chennai Office', 'IND', '456 Anna Salai', '600002', ARRAY['Madras'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
-    
+
     -- Company 2 locations
     ('12345678-0008-0008-0008-000000060003'::uuid, 'New York Office', 'USA', '789 Broadway', '10013', ARRAY['NYC'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000060004'::uuid, 'San Francisco Office', 'USA', '123 Market St', '94105', ARRAY['SF'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
-    
+
     -- Company 3 locations
     ('12345678-0008-0008-0008-000000060005'::uuid, 'London Office', 'GBR', '456 Oxford St', 'W1D 1BS', ARRAY['Central London'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
-    
+
     -- Company 4 locations
     ('12345678-0008-0008-0008-000000060006'::uuid, 'Singapore Office', 'SGP', '789 Orchard Rd', '238839', ARRAY['SG'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000060007'::uuid, 'Tokyo Office', 'JPN', '123 Shibuya', '150-0002', ARRAY['TYO'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
-    
+
     -- Company 5 locations
     ('12345678-0008-0008-0008-000000060008'::uuid, 'Sydney Office', 'AUS', '456 George St', '2000', ARRAY['SYD'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000060009'::uuid, 'Melbourne Office', 'AUS', '789 Collins St', '3000', ARRAY['MEL'], 'ACTIVE_LOCATION', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now()));
 
 -- Create cost centers for each employer
 INSERT INTO org_cost_centers (id, cost_center_name, cost_center_state, notes, employer_id, created_at)
-SELECT 
+SELECT
     gen_random_uuid(),
     'Engineering',
     'ACTIVE_CC',
@@ -150,7 +169,7 @@ FROM employers;
 -- Create openings for each employer
 -- Company 1: Focus on software engineering roles
 INSERT INTO openings (
-    employer_id, 
+    employer_id,
     id,
     title,
     positions,
@@ -214,7 +233,7 @@ FROM generate_series(1, 10);
 
 -- Company 2: Focus on data science roles
 INSERT INTO openings (
-    employer_id, 
+    employer_id,
     id,
     title,
     positions,
@@ -342,7 +361,7 @@ FROM generate_series(1, 10);
 
 -- Link openings to locations
 INSERT INTO opening_locations (employer_id, opening_id, location_id)
-SELECT 
+SELECT
     o.employer_id,
     o.id,
     l.id

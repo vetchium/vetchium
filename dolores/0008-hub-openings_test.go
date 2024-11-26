@@ -16,7 +16,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = XDescribe("Hub Openings", Ordered, func() {
+var _ = FDescribe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
