@@ -26,6 +26,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			value := fl.Field().String()
 			if len(value) < 12 || len(value) > 64 {
+				log.Dbg("Invalid password length", "length", len(value))
 				return false
 			}
 			return true
@@ -43,6 +44,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register domain validation", "error", err)
 		return nil, err
 	}
 
@@ -51,6 +53,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			value := fl.Field().String()
 			if len(value) < 3 || len(value) > 254 {
+				log.Dbg("Invalid email length", "length", len(value))
 				return false
 			}
 
@@ -59,6 +62,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register email validation", "error", err)
 		return nil, err
 	}
 
@@ -73,6 +77,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				case DefunctCC:
 					continue
 				default:
+					log.Dbg("invalid cost center state", "state", state)
 					return false
 				}
 			}
@@ -80,6 +85,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register cc states validation", "error", err)
 		return nil, err
 	}
 
@@ -87,10 +93,15 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		"validate_country_code",
 		func(fl validator.FieldLevel) bool {
 			// TODO: Validate country code is one of the ISO 3166-1 alpha-3 codes
-			return len(fl.Field().String()) == 3
+			result := len(fl.Field().String()) == 3
+			if !result {
+				log.Dbg("invalid country code", "code", fl.Field().String())
+			}
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register country code validation", "error", err)
 		return nil, err
 	}
 
@@ -99,10 +110,12 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			cities := fl.Field().Interface().([]string)
 			if len(cities) > 3 {
+				log.Dbg("invalid city aka count", "count", len(cities))
 				return false
 			}
 			for _, city := range cities {
 				if len(city) < 3 || len(city) > 32 {
+					log.Dbg("invalid city aka length", "city", city)
 					return false
 				}
 			}
@@ -110,6 +123,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register city aka validation", "error", err)
 		return nil, err
 	}
 
@@ -124,6 +138,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				case DefunctLocation:
 					continue
 				default:
+					log.Dbg("invalid location state", "state", state)
 					return false
 				}
 			}
@@ -131,6 +146,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register location state validation", "error", err)
 		return nil, err
 	}
 
@@ -149,6 +165,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				case ReplicatedOrgUserState:
 					continue
 				default:
+					log.Dbg("invalid org user state", "state", state)
 					return false
 				}
 			}
@@ -156,6 +173,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register org user state validation", "error", err)
 		return nil, err
 	}
 
@@ -164,6 +182,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			roles := fl.Field().Interface().(OrgUserRoles)
 			if len(roles) == 0 {
+				log.Dbg("invalid org user roles count", "count", len(roles))
 				return false
 			}
 			for _, role := range roles {
@@ -187,6 +206,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				case OrgUsersViewer:
 					continue
 				default:
+					log.Dbg("invalid org user role", "role", role)
 					return false
 				}
 			}
@@ -194,6 +214,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register org user roles validation", "error", err)
 		return nil, err
 	}
 
@@ -202,12 +223,14 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			openingType, ok := fl.Field().Interface().(OpeningType)
 			if !ok {
+				log.Dbg("invalid opening type", "field", fl.Field().Interface())
 				return false
 			}
 			return openingType.IsValid()
 		},
 	)
 	if err != nil {
+		log.Err("failed to register opening type validation", "error", err)
 		return nil, err
 	}
 
@@ -226,6 +249,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				case SuspendedOpening:
 					continue
 				default:
+					log.Dbg("invalid opening state", "state", state)
 					return false
 				}
 			}
@@ -233,6 +257,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register opening states validation", "error", err)
 		return nil, err
 	}
 
@@ -240,10 +265,15 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		"validate_opening_filter_start_date",
 		func(fl validator.FieldLevel) bool {
 			date := fl.Field().Interface().(time.Time)
-			return !date.Before(time.Now().AddDate(-3, 0, 0))
+			result := !date.Before(time.Now().AddDate(-3, 0, 0))
+			if !result {
+				log.Dbg("invalid opening filter start date", "date", date)
+			}
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register opening filter start date ", "error", err)
 		return nil, err
 	}
 
@@ -255,6 +285,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		},
 	)
 	if err != nil {
+		log.Err("failed to register opening filter end date", "error", err)
 		return nil, err
 	}
 
@@ -263,13 +294,24 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			domain, ok := fl.Field().Interface().(string)
 			if !ok {
+				log.Dbg("invalid domain", "field", fl.Field().Interface())
 				return false
 			}
 
-			return domainReg.MatchString(domain)
+			result := domainReg.MatchString(domain)
+
+			log.Dbg(
+				"Validating domain against regex",
+				"domain",
+				domain,
+				"result",
+				result,
+			)
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register domain validation", "error", err)
 		return nil, err
 	}
 
@@ -282,10 +324,15 @@ func InitValidator(log util.Logger) (*Vator, error) {
 			}
 
 			// TODO: Validate currency code is one of the active ISO 4217 currency codes
-			return len(currency) == 3
+			result := len(currency) == 3
+			if !result {
+				log.Dbg("invalid currency code", "code", currency)
+			}
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register currency validation", "error", err)
 		return nil, err
 	}
 
@@ -297,10 +344,15 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				return false
 			}
 
-			return timezone.IsValid()
+			result := timezone.IsValid()
+			if !result {
+				log.Dbg("invalid timezone", "timezone", timezone)
+			}
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register timezone validation", "error", err)
 		return nil, err
 	}
 
@@ -312,10 +364,15 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				// If the education level is not provided, it is valid
 				return true
 			}
-			return educationLevel.IsValid()
+			result := educationLevel.IsValid()
+			if !result {
+				log.Dbg("invalid education level", "level", educationLevel)
+			}
+			return result
 		},
 	)
 	if err != nil {
+		log.Err("failed to register education level validation", "error", err)
 		return nil, err
 	}
 
