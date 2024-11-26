@@ -36,12 +36,14 @@ model FindHubOpeningsRequest {
     country_code?: CountryCode;
 
     @doc("If nothing is passed, all cities under the country_code are considered. No error will be reported if a passed city does not belong to the country_code.")
+    @maxItems(4)
     cities?: string[];
 
     @doc("If nothing is passed, all opening types are considered")
     opening_types?: OpeningType[];
 
     @doc("If nothing is passed, all companies are considered")
+    @maxItems(4)
     company_domains?: string[];
 
     @doc("If nothing is passed, all experience ranges are considered")
@@ -54,9 +56,11 @@ model FindHubOpeningsRequest {
     min_education_level?: EducationLevel;
 
     @doc("If a value is passed, only Openings that either explicitly mention this timezone in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
+    @maxItems(4)
     remote_timezones?: TimeZone[];
 
     @doc("If a value is passed, either Openings that either explicitly mention this country code in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
+    @maxItems(4)
     remote_country_codes?: CountryCode[];
 
     pagination_key?: int64;
