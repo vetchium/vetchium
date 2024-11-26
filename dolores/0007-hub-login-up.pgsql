@@ -7,6 +7,8 @@ INSERT INTO public.hub_users (
     email,
     password_hash,
     state,
+    resident_country_code,
+    resident_city,
     created_at,
     updated_at
 )
@@ -18,6 +20,8 @@ VALUES
         'active@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'USA',
+        'New York',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -28,6 +32,8 @@ VALUES
         'disabled@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'DISABLED_HUB_USER',
+        'USA',
+        'New York',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -38,6 +44,8 @@ VALUES
         'deleted@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'DELETED_HUB_USER',
+        'USA',
+        'San Francisco',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -48,6 +56,8 @@ VALUES
         'password-change@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'IND',
+        'Bangalore',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -58,6 +68,8 @@ VALUES
         'password-reset@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'IND',
+        'Chennai',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -68,6 +80,8 @@ VALUES
         'token-expiry@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'GER',
+        'Nuremberg',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -78,6 +92,8 @@ VALUES
         'token-reuse@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'PRC',
+        'Shanghai',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),(
@@ -87,6 +103,8 @@ VALUES
         'rememberme@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'FRA',
+        'Paris',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -97,6 +115,8 @@ VALUES
         'tfatest@hub.example',
         '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
         'ACTIVE_HUB_USER',
+        'JPN',
+        'Tokyo',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     );
