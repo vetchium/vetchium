@@ -23,7 +23,7 @@ func (p *PG) FindHubOpenings(
 	query := `
 SELECT
 	o.id as opening_id_within_company,
-	epd.domain_name as company_domain,
+	d.domain_name as company_domain,
 	e.company_name as company_name,
 	o.title as job_title,
 	o.jd as jd,
@@ -32,6 +32,7 @@ FROM openings o
 	JOIN hub_users hu ON hu.id = $1
 	JOIN employers e ON o.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id
+	JOIN domains d ON epd.domain_id = d.id
 	JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	JOIN locations l ON ol.location_id = l.id
 	WHERE o.state = 'ACTIVE_OPENING_STATE'
@@ -202,7 +203,7 @@ FROM openings o
 			o.id, 
 			o.title,
 			o.jd,
-			epd.domain_name,
+			d.domain_name,
 			e.company_name,
 			o.pagination_key
 		ORDER BY o.pagination_key
@@ -226,9 +227,10 @@ FROM openings o
 		var opening vetchi.HubOpening
 		err := rows.Scan(
 			&opening.OpeningIDWithinCompany,
-			&opening.JobTitle,
 			&opening.CompanyDomain,
 			&opening.CompanyName,
+			&opening.JobTitle,
+			&opening.JD,
 			&opening.PaginationKey,
 		)
 		if err != nil {
