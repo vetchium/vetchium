@@ -1,9 +1,4 @@
 BEGIN;
---- email table primary key uuids should end in 2 digits, 11, 12, 13, etc
---- employer table primary key uuids should end in 3 digits, 201, 202, 203, etc
---- domain table primary key uuids should end in 4 digits, 3001, 3002, 3003, etc
---- org_users table primary key uuids should end in 5 digits, 40001, 40002, 40003, etc
---- hub_users table primary key uuids should end in 6 digits, 50001, 50002, 50003, etc
 
 INSERT INTO public.hub_users (
     id,

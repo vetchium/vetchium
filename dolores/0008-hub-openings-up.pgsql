@@ -71,13 +71,13 @@ VALUES
     ('12345678-0008-0008-0008-000000000014'::uuid, 'no-reply@vetchi.org', ARRAY['admin@hubopening4.example'], NULL, NULL, 'Welcome to Vetchi', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
     ('12345678-0008-0008-0008-000000000015'::uuid, 'no-reply@vetchi.org', ARRAY['admin@hubopening5.example'], NULL, NULL, 'Welcome to Vetchi', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
-INSERT INTO employers (id, client_id_type, employer_state, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)
+INSERT INTO employers (id, client_id_type, employer_state, company_name, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)
 VALUES
-    ('12345678-0008-0008-0008-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@hubopening1.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000011'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0008-0008-0008-000000000202'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@hubopening2.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000012'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0008-0008-0008-000000000203'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@hubopening3.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000013'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0008-0008-0008-000000000204'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@hubopening4.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000014'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0008-0008-0008-000000000205'::uuid, 'DOMAIN', 'ONBOARDED', 'admin@hubopening5.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000015'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0008-0008-0008-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'hubopening1.example', 'admin@hubopening1.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000011'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000000202'::uuid, 'DOMAIN', 'ONBOARDED', 'hubopening2.example', 'admin@hubopening2.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000012'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000000203'::uuid, 'DOMAIN', 'ONBOARDED', 'hubopening3.example', 'admin@hubopening3.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000013'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000000204'::uuid, 'DOMAIN', 'ONBOARDED', 'hubopening4.example', 'admin@hubopening4.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000014'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0008-0008-0008-000000000205'::uuid, 'DOMAIN', 'ONBOARDED', 'hubopening5.example', 'admin@hubopening5.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0008-0008-0008-000000000015'::uuid, timezone('UTC'::text, now()));
 
 -- Create domains for each employer
 INSERT INTO domains (id, domain_name, domain_state, employer_id, created_at)
