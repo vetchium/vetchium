@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS hub_users (
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     state hub_user_states NOT NULL,
+    resident_country_code TEXT NOT NULL,
+    resident_city TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -83,6 +85,8 @@ CREATE TABLE employers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id_type client_id_types NOT NULL,
     employer_state employer_states NOT NULL,
+    company_name TEXT NOT NULL,
+
     onboard_admin_email TEXT NOT NULL,
 
     -- TODO: Perhaps we can move this to org_user_tokens ?
@@ -112,9 +116,18 @@ CREATE TABLE domains (
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    CONSTRAINT uniq_employer_domain_id UNIQUE (employer_id, id)
 );
 
+CREATE TABLE employer_primary_domains(
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    domain_id UUID REFERENCES domains(id) NOT NULL,
+
+    PRIMARY KEY (employer_id),
+    CONSTRAINT fk_employer_domain_match FOREIGN KEY (employer_id, domain_id) 
+        REFERENCES domains(employer_id, id)
+);
 ---
 
 CREATE TYPE org_user_roles AS ENUM (

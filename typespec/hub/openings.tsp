@@ -32,6 +32,12 @@ model LocationFilter {
 }
 
 model FindHubOpeningsRequest {
+    @doc("If nothing is passed, the HubUser's resident country will be considered.")
+    country_code?: CountryCode;
+
+    @doc("If nothing is passed, all cities under the country_code are considered. No error will be reported if a passed city does not belong to the country_code.")
+    cities?: string[];
+
     @doc("If nothing is passed, all opening types are considered")
     opening_types?: OpeningType[];
 
@@ -44,19 +50,13 @@ model FindHubOpeningsRequest {
     @doc("If nothing is passed, all salary ranges are considered")
     salary_range?: SalaryRange;
 
-    @doc("If nothing is passed, all countries are considered. If countries and locations are passed, Openings that match either of them will be considered.")
-    countries?: CountryCode[];
-
-    @doc("If nothing is passed, all jobs in the HubUser's Countries list set in the profile are considered. If a city name is passed, only the Openings that explicitly mention this City are considered. TODO: Remember to set the Countries list during the Hub user signup.")
-    locations?: LocationFilter[];
-
     @doc("If nothing is passed, all education levels are considered")
     min_education_level?: EducationLevel;
 
-    @doc("If a value is passed, only Openings that explicitly mention this timezone in the description are considered")
+    @doc("If a value is passed, only Openings that either explicitly mention this timezone in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
     remote_timezones?: TimeZone[];
 
-    @doc("If a value is passed, either Openings that explicitly mention this country code in the description (or) globally remote, are considered. If nothing is passed, all Openings irrespective of their remote status are considered.")
+    @doc("If a value is passed, either Openings that either explicitly mention this country code in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
     remote_country_codes?: CountryCode[];
 
     pagination_key?: int64;
@@ -71,15 +71,15 @@ model HubOpening {
     opening_id_within_company: string;
     company_domain: string;
     company_name: string;
-    logo_url?: url;
     job_title: string;
-    cities?: string[];
+    jd: string;
     pagination_key: int64;
 
     /* In future, we will show company's: 
+        logo urls
         avg response time
         response rate
-        some kind of score for how the company treats the applicants */
+        some kind of score for how the company treats the applicants, etc. */
 }
 
 @route("/hub/find-openings")

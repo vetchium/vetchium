@@ -14,51 +14,60 @@ func (p *PG) FindHubOpenings(
 	ctx context.Context,
 	req *vetchi.FindHubOpeningsRequest,
 ) ([]vetchi.HubOpening, error) {
-	// Get hub user from context
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
-		return nil, fmt.Errorf("hub user not found in context")
+		p.log.Err("hub user not found in context")
+		return nil, db.ErrInternal
 	}
 
 	query := `
-		SELECT DISTINCT
-			o.id as opening_id,
-			o.title as job_title,
-			d.domain_name as company_domain,
-			e.onboard_admin_email as company_name,
-			array_agg(DISTINCT l.title) as cities,
-			o.pagination_key
-		FROM openings o
-		JOIN employers e ON o.employer_id = e.id
-		JOIN domains d ON e.id = d.employer_id
-		LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
-		LEFT JOIN locations l ON ol.location_id = l.id
-		JOIN hub_users hu ON hu.id = $1
-		WHERE o.state = 'ACTIVE_OPENING_STATE'
+SELECT
+	o.id as opening_id_within_company,
+	epd.domain_name as company_domain,
+	e.company_name as company_name,
+	o.title as job_title,
+	o.jd as jd,
+	o.pagination_key
+FROM openings o
+	JOIN hub_users hu ON hu.id = $1
+	JOIN employers e ON o.employer_id = e.id
+	JOIN employer_primary_domains epd ON e.id = epd.employer_id
+	JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
+	JOIN locations l ON ol.location_id = l.id
+	WHERE o.state = 'ACTIVE_OPENING_STATE'
 		AND l.country_code = COALESCE($2, hu.resident_country_code)
 	`
 
+	// $1 is hub_users.id (needed for getting the resident_country_code and
+	// the resident_city of the logged in Hub User)
 	args := []interface{}{hubUser.ID}
+
+	// $2 is for country_code
 	if req.CountryCode != nil {
 		args = append(args, string(*req.CountryCode))
 	} else {
+		// If no country code is passed, we will fallback to the Hub User's resident country
 		args = append(args, nil)
 	}
-	argCount := 3
+
+	// $1 and $2 already filled, so we start from $3
+	argPos := 3
 
 	// Add city filter if specified
 	if len(req.Cities) > 0 {
 		cityConditions := make([]string, len(req.Cities))
 		for i, city := range req.Cities {
+			// TODO: Check if doing this condition in reverse is better
 			cityConditions[i] = fmt.Sprintf(
 				"$%d = ANY(l.city_aka)",
-				argCount,
+				argPos,
 			)
 			args = append(args, city)
-			argCount++
+			argPos++
 		}
 		query += " AND (" + strings.Join(cityConditions, " OR ") + ")"
 	}
+	// Now after exiting the above loop, argPos will be argPos + len(req.Cities)
 
 	// Add other filters
 	whereConditions := []string{}
@@ -66,9 +75,9 @@ func (p *PG) FindHubOpenings(
 	if len(req.OpeningTypes) > 0 {
 		placeholders := make([]string, len(req.OpeningTypes))
 		for i := range req.OpeningTypes {
-			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.OpeningTypes[i])
-			argCount++
+			argPos++
 		}
 		whereConditions = append(
 			whereConditions,
@@ -82,9 +91,9 @@ func (p *PG) FindHubOpenings(
 	if len(req.CompanyDomains) > 0 {
 		placeholders := make([]string, len(req.CompanyDomains))
 		for i := range req.CompanyDomains {
-			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.CompanyDomains[i])
-			argCount++
+			argPos++
 		}
 		whereConditions = append(
 			whereConditions,
@@ -100,8 +109,8 @@ func (p *PG) FindHubOpenings(
 			whereConditions,
 			fmt.Sprintf(
 				"o.yoe_min <= $%d AND o.yoe_max >= $%d",
-				argCount+1,
-				argCount,
+				argPos+1,
+				argPos,
 			),
 		)
 		args = append(
@@ -109,7 +118,7 @@ func (p *PG) FindHubOpenings(
 			req.ExperienceRange.YoeMin,
 			req.ExperienceRange.YoeMax,
 		)
-		argCount += 2
+		argPos += 2
 	}
 
 	if req.SalaryRange != nil {
@@ -117,9 +126,9 @@ func (p *PG) FindHubOpenings(
 			whereConditions,
 			fmt.Sprintf(
 				"o.salary_currency = $%d AND o.salary_min >= $%d AND o.salary_max <= $%d",
-				argCount,
-				argCount+1,
-				argCount+2,
+				argPos,
+				argPos+1,
+				argPos+2,
 			),
 		)
 		args = append(
@@ -128,15 +137,15 @@ func (p *PG) FindHubOpenings(
 			req.SalaryRange.Min,
 			req.SalaryRange.Max,
 		)
-		argCount += 3
+		argPos += 3
 	}
 
 	if len(req.RemoteCountryCodes) > 0 {
 		placeholders := make([]string, len(req.RemoteCountryCodes))
 		for i := range req.RemoteCountryCodes {
-			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.RemoteCountryCodes[i])
-			argCount++
+			argPos++
 		}
 		whereConditions = append(
 			whereConditions,
@@ -150,9 +159,9 @@ func (p *PG) FindHubOpenings(
 	if len(req.RemoteTimezones) > 0 {
 		placeholders := make([]string, len(req.RemoteTimezones))
 		for i := range req.RemoteTimezones {
-			placeholders[i] = fmt.Sprintf("$%d", argCount)
+			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.RemoteTimezones[i])
-			argCount++
+			argPos++
 		}
 		whereConditions = append(
 			whereConditions,
@@ -166,10 +175,10 @@ func (p *PG) FindHubOpenings(
 	if req.MinEducationLevel != nil {
 		whereConditions = append(
 			whereConditions,
-			fmt.Sprintf("o.min_education_level = $%d", argCount),
+			fmt.Sprintf("o.min_education_level = $%d", argPos),
 		)
 		args = append(args, *req.MinEducationLevel)
-		argCount++
+		argPos++
 	}
 
 	if len(whereConditions) > 0 {
@@ -177,9 +186,9 @@ func (p *PG) FindHubOpenings(
 	}
 
 	// Add pagination and ordering
-	query += fmt.Sprintf(" AND o.pagination_key > $%d", argCount)
+	query += fmt.Sprintf(" AND o.pagination_key > $%d", argPos)
 	args = append(args, req.PaginationKey)
-	argCount++
+	argPos++
 
 	// Add GROUP BY
 	query += `
@@ -188,7 +197,7 @@ func (p *PG) FindHubOpenings(
 	`
 
 	// Add LIMIT
-	query += fmt.Sprintf(" LIMIT $%d", argCount)
+	query += fmt.Sprintf(" LIMIT $%d", argPos)
 	args = append(args, req.Limit)
 
 	p.log.Dbg(
@@ -274,20 +283,15 @@ func (p *PG) FindHubOpenings(
 	var openings []vetchi.HubOpening
 	for rows.Next() {
 		var opening vetchi.HubOpening
-		var cities []string
 		err := rows.Scan(
 			&opening.OpeningIDWithinCompany,
 			&opening.JobTitle,
 			&opening.CompanyDomain,
 			&opening.CompanyName,
-			&cities,
 			&opening.PaginationKey,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning opening row: %w", err)
-		}
-		if len(cities) > 0 {
-			opening.Cities = cities
 		}
 		openings = append(openings, opening)
 	}

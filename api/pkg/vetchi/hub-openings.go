@@ -37,11 +37,10 @@ type FindHubOpeningsRequest struct {
 }
 
 type HubOpening struct {
-	OpeningIDWithinCompany string   `json:"opening_id_within_company"`
-	CompanyDomain          string   `json:"company_domain"`
-	CompanyName            string   `json:"company_name"`
-	LogoURL                string   `json:"logo_url"`
-	JobTitle               string   `json:"job_title"`
-	Cities                 []string `json:"cities"`
-	PaginationKey          int64    `json:"pagination_key"`
+	OpeningIDWithinCompany string `json:"opening_id_within_company"`
+	CompanyDomain          string `json:"company_domain"`
+	CompanyName            string `json:"company_name"`
+	JobTitle               string `json:"job_title"`
+	JD                     string `json:"jd"`
+	PaginationKey          int64  `json:"pagination_key"`
 }
