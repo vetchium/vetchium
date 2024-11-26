@@ -121,8 +121,8 @@ CREATE TABLE domains (
 );
 
 CREATE TABLE employer_primary_domains(
-    employer_id UUID REFERENCES employers(id) NOT NULL,
-    domain_id UUID REFERENCES domains(id) NOT NULL,
+    employer_id UUID NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+    domain_id UUID NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
 
     PRIMARY KEY (employer_id),
     CONSTRAINT fk_employer_domain_match FOREIGN KEY (employer_id, domain_id) 
