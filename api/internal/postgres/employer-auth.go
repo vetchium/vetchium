@@ -71,10 +71,11 @@ func (p *PG) InitEmployerAndDomain(
 INSERT INTO employers (
 	client_id_type,
 	employer_state,
+	company_name,
 	onboard_admin_email,
 	onboard_secret_token
 )
-VALUES ($1, $2, $3, $4)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 	var employerID uuid.UUID
@@ -83,6 +84,7 @@ RETURNING id
 		employerInsertQuery,
 		employer.ClientIDType,
 		employer.EmployerState,
+		domain.DomainName,
 		employer.OnboardAdminEmail,
 		nil,
 	).Scan(&employerID)
