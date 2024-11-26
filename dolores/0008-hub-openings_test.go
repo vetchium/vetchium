@@ -470,5 +470,128 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 				Expect(firstPageIDs[o.OpeningIDWithinCompany]).Should(BeFalse())
 			}
 		})
+
+		It("should handle location-based searches correctly", func() {
+			testCases := []findOpeningsTestCase{
+				{
+					description: "find openings in user's resident city and country",
+					request: vetchi.FindHubOpeningsRequest{
+						Limit: 10,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(openings []vetchi.HubOpening) {
+						Expect(len(openings)).Should(BeNumerically(">", 0))
+						for _, o := range openings {
+							found := false
+							for _, city := range o.Cities {
+								if city == "Bangalore" {
+									found = true
+									break
+								}
+							}
+							Expect(found).Should(BeTrue())
+						}
+					},
+				},
+				{
+					description: "find openings in different country",
+					request: vetchi.FindHubOpeningsRequest{
+						CountryCode: vetchi.CountryCodePtr("USA"),
+						Limit:       10,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(openings []vetchi.HubOpening) {
+						Expect(len(openings)).Should(BeNumerically(">", 0))
+					},
+				},
+				{
+					description: "find openings in specific cities",
+					request: vetchi.FindHubOpeningsRequest{
+						CountryCode: vetchi.CountryCodePtr("USA"),
+						Cities:      []string{"New York", "San Francisco"},
+						Limit:       10,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(openings []vetchi.HubOpening) {
+						Expect(len(openings)).Should(BeNumerically(">", 0))
+						for _, o := range openings {
+							found := false
+							for _, city := range o.Cities {
+								if city == "New York" ||
+									city == "San Francisco" {
+									found = true
+									break
+								}
+							}
+							Expect(found).Should(BeTrue())
+						}
+					},
+				},
+				{
+					description: "search for non-existent city in wrong country",
+					request: vetchi.FindHubOpeningsRequest{
+						CountryCode: vetchi.CountryCodePtr("IND"),
+						Cities:      []string{"New York"},
+						Limit:       10,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(openings []vetchi.HubOpening) {
+						Expect(len(openings)).Should(Equal(0))
+					},
+				},
+				// Add more test cases here
+			}
+
+			// Execute test cases
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+
+				reqBody, err := json.Marshal(tc.request)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err := http.NewRequest(
+					"POST",
+					serverURL+"/hub/find-openings",
+					bytes.NewBuffer(reqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer "+hubUserToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				fmt.Fprintf(
+					GinkgoWriter,
+					"Status, want: %d, got: %d\n",
+					tc.wantStatus,
+					resp.StatusCode,
+				)
+				if resp.StatusCode != tc.wantStatus &&
+					resp.StatusCode == http.StatusBadRequest {
+					body, err := io.ReadAll(resp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+					fmt.Fprintf(
+						GinkgoWriter,
+						"Validation Errors:\n%s\n",
+						string(body),
+					)
+				}
+				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
+
+				if tc.wantStatus == http.StatusOK {
+					var openings []vetchi.HubOpening
+					err = json.NewDecoder(resp.Body).Decode(&openings)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if tc.wantCount > 0 {
+						Expect(len(openings)).Should(Equal(tc.wantCount))
+					}
+
+					if tc.validate != nil {
+						tc.validate(openings)
+					}
+				}
+			}
+		})
 	})
 })

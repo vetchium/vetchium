@@ -57,7 +57,8 @@ FROM openings o
 	if len(req.Cities) > 0 {
 		cityConditions := make([]string, len(req.Cities))
 		for i, city := range req.Cities {
-			// TODO: Check if doing this condition in reverse is better
+			// TODO: Check if doing this condition in reverse is better, like we do for company_domains
+			// TODO: We would need some kind of validation or punishment for people who abuse the city_aka field to grab more eyeballs
 			cityConditions[i] = fmt.Sprintf(
 				"$%d = ANY(l.city_aka)",
 				argPos,
@@ -67,7 +68,7 @@ FROM openings o
 		}
 		query += " AND (" + strings.Join(cityConditions, " OR ") + ")"
 	}
-	// Now after exiting the above loop, argPos will be argPos + len(req.Cities)
+	p.log.Dbg("cityfilter", "query", query, "args", args, "argPos", argPos)
 
 	// Add other filters
 	whereConditions := []string{}
@@ -79,14 +80,14 @@ FROM openings o
 			args = append(args, req.OpeningTypes[i])
 			argPos++
 		}
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.opening_type = ANY(ARRAY[%s]::opening_types[])",
-				strings.Join(placeholders, ","),
-			),
+		opTypeConds := fmt.Sprintf(
+			"o.opening_type = ANY(ARRAY[%s]::opening_types[])",
+			strings.Join(placeholders, ","),
 		)
+		whereConditions = append(whereConditions, opTypeConds)
+		p.log.Dbg("opening_type conditions", "opTypeConds", opTypeConds)
 	}
+	p.log.Dbg("opening_type", "query", query, "args", args, "argPos", argPos)
 
 	if len(req.CompanyDomains) > 0 {
 		placeholders := make([]string, len(req.CompanyDomains))
@@ -95,42 +96,40 @@ FROM openings o
 			args = append(args, req.CompanyDomains[i])
 			argPos++
 		}
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"d.domain_name = ANY(ARRAY[%s])",
-				strings.Join(placeholders, ","),
-			),
+		domainConds := fmt.Sprintf(
+			"d.domain_name = ANY(ARRAY[%s])",
+			strings.Join(placeholders, ","),
 		)
+		whereConditions = append(whereConditions, domainConds)
+		p.log.Dbg("company_domain", "domainConds", domainConds)
 	}
+	p.log.Dbg("company_domain", "query", query, "args", args, "argPos", argPos)
 
 	if req.ExperienceRange != nil {
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.yoe_min <= $%d AND o.yoe_max >= $%d",
-				argPos+1,
-				argPos,
-			),
+		expConds := fmt.Sprintf(
+			"o.yoe_min <= $%d AND o.yoe_max >= $%d",
+			argPos+1,
+			argPos,
 		)
+		whereConditions = append(whereConditions, expConds)
 		args = append(
 			args,
 			req.ExperienceRange.YoeMin,
 			req.ExperienceRange.YoeMax,
 		)
 		argPos += 2
+		p.log.Dbg("experience", "expConds", expConds)
 	}
+	p.log.Dbg("experience", "query", query, "args", args, "argPos", argPos)
 
 	if req.SalaryRange != nil {
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.salary_currency = $%d AND o.salary_min >= $%d AND o.salary_max <= $%d",
-				argPos,
-				argPos+1,
-				argPos+2,
-			),
+		salaryConds := fmt.Sprintf(
+			"o.salary_currency = $%d AND o.salary_min >= $%d AND o.salary_max <= $%d",
+			argPos,
+			argPos+1,
+			argPos+2,
 		)
+		whereConditions = append(whereConditions, salaryConds)
 		args = append(
 			args,
 			req.SalaryRange.Currency,
@@ -138,52 +137,58 @@ FROM openings o
 			req.SalaryRange.Max,
 		)
 		argPos += 3
+		p.log.Dbg("salary", "salaryConds", salaryConds)
 	}
+	p.log.Dbg("salary", "query", query, "args", args, "argPos", argPos)
 
 	if len(req.RemoteCountryCodes) > 0 {
+		// TODO: Accomodate Globally Remote Openings
 		placeholders := make([]string, len(req.RemoteCountryCodes))
 		for i := range req.RemoteCountryCodes {
 			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.RemoteCountryCodes[i])
 			argPos++
 		}
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.remote_country_codes && ARRAY[%s]::text[]",
-				strings.Join(placeholders, ","),
-			),
+		remoteCountryConds := fmt.Sprintf(
+			"o.remote_country_codes && ARRAY[%s]::text[]",
+			strings.Join(placeholders, ","),
 		)
+		whereConditions = append(whereConditions, remoteCountryConds)
+		p.log.Dbg("remote_country_codes", "Conds", remoteCountryConds)
 	}
+	p.log.Dbg("remote_country", "query", query, "args", args, "argPos", argPos)
 
 	if len(req.RemoteTimezones) > 0 {
+		// TODO: Accomodate Globally Remote Openings
 		placeholders := make([]string, len(req.RemoteTimezones))
 		for i := range req.RemoteTimezones {
 			placeholders[i] = fmt.Sprintf("$%d", argPos)
 			args = append(args, req.RemoteTimezones[i])
 			argPos++
 		}
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf(
-				"o.remote_timezones && ARRAY[%s]::text[]",
-				strings.Join(placeholders, ","),
-			),
+		remoteTimezoneConds := fmt.Sprintf(
+			"o.remote_timezones && ARRAY[%s]::text[]",
+			strings.Join(placeholders, ","),
 		)
+		whereConditions = append(whereConditions, remoteTimezoneConds)
+		p.log.Dbg("remote_timezone", "remoteTimezoneConds", remoteTimezoneConds)
 	}
+	p.log.Dbg("remote_timezone", "query", query, "args", args, "argPos", argPos)
 
 	if req.MinEducationLevel != nil {
-		whereConditions = append(
-			whereConditions,
-			fmt.Sprintf("o.min_education_level = $%d", argPos),
-		)
+		minEduConds := fmt.Sprintf("o.min_education_level = $%d", argPos)
+		whereConditions = append(whereConditions, minEduConds)
 		args = append(args, *req.MinEducationLevel)
 		argPos++
+		p.log.Dbg("min_education_level", "minEduConds", minEduConds)
 	}
+	p.log.Dbg("min_education", "query", query, "args", args, "argPos", argPos)
+	// End of all the Where clauses. Now we need to append them to the query
 
 	if len(whereConditions) > 0 {
 		query += " AND " + strings.Join(whereConditions, " AND ")
 	}
+	p.log.Dbg("with WHERE", "query", query, "args", args, "argPos", argPos)
 
 	// Add pagination and ordering
 	query += fmt.Sprintf(" AND o.pagination_key > $%d", argPos)
@@ -192,7 +197,14 @@ FROM openings o
 
 	// Add GROUP BY
 	query += `
-		GROUP BY o.id, o.title, d.domain_name, e.onboard_admin_email, o.pagination_key
+		GROUP BY 
+			o.employer_id,
+			o.id, 
+			o.title,
+			o.jd,
+			epd.domain_name,
+			e.company_name,
+			o.pagination_key
 		ORDER BY o.pagination_key
 	`
 
@@ -200,83 +212,12 @@ FROM openings o
 	query += fmt.Sprintf(" LIMIT $%d", argPos)
 	args = append(args, req.Limit)
 
-	p.log.Dbg(
-		"find hub openings query",
-		"query",
-		query,
-		"args",
-		args,
-		"conditions",
-		whereConditions,
-	)
-
-	// Add this query before applying filters to see what data exists
-	debugQuery := `
-		SELECT DISTINCT
-			o.id,
-			o.title,
-			o.yoe_min,
-			o.yoe_max,
-			o.salary_currency,
-			o.salary_min,
-			o.salary_max,
-			o.min_education_level,
-			o.remote_country_codes,
-			o.remote_timezones
-		FROM openings o
-		WHERE o.state = 'ACTIVE_OPENING_STATE'
-	`
-	debugRows, err := p.pool.Query(ctx, debugQuery)
-	if err == nil {
-		defer debugRows.Close()
-		p.log.Dbg("existing openings in database:")
-		for debugRows.Next() {
-			var id, title string
-			var yoeMin, yoeMax, salaryMin, salaryMax int
-			var salaryCurrency, minEducation string
-			var remoteCountries, remoteTimezones []string
-			err := debugRows.Scan(
-				&id,
-				&title,
-				&yoeMin,
-				&yoeMax,
-				&salaryCurrency,
-				&salaryMin,
-				&salaryMax,
-				&minEducation,
-				&remoteCountries,
-				&remoteTimezones,
-			)
-			if err == nil {
-				p.log.Dbg(
-					"opening",
-					"id",
-					id,
-					"title",
-					title,
-					"yoe",
-					fmt.Sprintf("%d-%d", yoeMin, yoeMax),
-					"salary",
-					fmt.Sprintf(
-						"%s %d-%d",
-						salaryCurrency,
-						salaryMin,
-						salaryMax,
-					),
-					"education",
-					minEducation,
-					"countries",
-					remoteCountries,
-					"timezones",
-					remoteTimezones,
-				)
-			}
-		}
-	}
+	p.log.Dbg("Final hub openings query", "query", query, "args", args)
 
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("error querying openings: %w", err)
+		p.log.Err("error querying openings", "err", err)
+		return nil, db.ErrInternal
 	}
 	defer rows.Close()
 
@@ -291,13 +232,15 @@ FROM openings o
 			&opening.PaginationKey,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning opening row: %w", err)
+			p.log.Err("error scanning opening row", "err", err)
+			return nil, db.ErrInternal
 		}
 		openings = append(openings, opening)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating opening rows: %w", err)
+		p.log.Err("error iterating opening rows", "err", err)
+		return nil, db.ErrInternal
 	}
 
 	return openings, nil

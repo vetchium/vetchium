@@ -1,6 +1,6 @@
 BEGIN;
 
--- Create hub user for testing
+-- Create hub user for testing with both resident country and city
 INSERT INTO hub_users (
     id,
     full_name,
@@ -8,6 +8,8 @@ INSERT INTO hub_users (
     email,
     password_hash,
     state,
+    resident_country_code,
+    resident_city,
     created_at,
     updated_at
 ) VALUES (
@@ -17,9 +19,48 @@ INSERT INTO hub_users (
     'hubopening@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'IND',
+    'Bangalore',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
+
+-- Create additional test users with different combinations
+INSERT INTO hub_users (
+    id,
+    full_name,
+    handle,
+    email,
+    password_hash,
+    state,
+    resident_country_code,
+    resident_city,
+    created_at,
+    updated_at
+) VALUES 
+-- User with only resident country
+('12345678-0008-0008-0008-000000050002'::uuid,
+ 'India Only User',
+ 'india_only',
+ 'indiaonly@hub.example',
+ '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+ 'ACTIVE_HUB_USER',
+ 'IND',
+ NULL,
+ timezone('UTC'::text, now()),
+ timezone('UTC'::text, now())),
+
+-- User with different country/city combination
+('12345678-0008-0008-0008-000000050003'::uuid,
+ 'US User',
+ 'us_user',
+ 'ususer@hub.example',
+ '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+ 'ACTIVE_HUB_USER',
+ 'USA',
+ 'New York',
+ timezone('UTC'::text, now()),
+ timezone('UTC'::text, now()));
 
 -- Create test employers (5 companies)
 INSERT INTO emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
