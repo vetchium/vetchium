@@ -16,7 +16,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Hub Openings", Ordered, func() {
+var _ = Describe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
@@ -387,9 +387,10 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 		})
 
 		It("should handle pagination correctly", func() {
-			// Get first page
+			// Get first page with USA country filter
 			firstPageReq := vetchi.FindHubOpeningsRequest{
-				Limit: 10,
+				CountryCode: &usaCountryCode,
+				Limit:       10,
 			}
 			firstPageBody, err := json.Marshal(firstPageReq)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -411,8 +412,9 @@ var _ = FDescribe("Hub Openings", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(firstPage).Should(HaveLen(10))
 
-			// Get second page using pagination key
+			// Get second page using pagination key AND country code
 			secondPageReq := vetchi.FindHubOpeningsRequest{
+				CountryCode:   &usaCountryCode,
 				Limit:         10,
 				PaginationKey: firstPage[len(firstPage)-1].PaginationKey,
 			}

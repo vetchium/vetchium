@@ -231,7 +231,7 @@ SELECT
     timezone('UTC'::text, now())
 FROM generate_series(1, 10);
 
--- Company 2: Focus on data science roles
+-- Company 2: Focus on data science roles (20 openings for USA)
 INSERT INTO openings (
     employer_id,
     id,
@@ -293,7 +293,7 @@ SELECT
     'ACTIVE_OPENING_STATE',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
-FROM generate_series(1, 10);
+FROM generate_series(1, 20);
 
 -- Company 3: Focus on product/design roles
 INSERT INTO openings (
