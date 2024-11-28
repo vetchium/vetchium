@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -65,17 +68,29 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 		filename := string(resumeFileRespBody)
 		h.Dbg("uploaded resume", "filename", filename)
 
+		// Ensures secrecy
+		applicationID := util.RandomString(vetchi.ApplicationIDLenBytes)
+		// Ensures uniqueness. This is not needed mostly, but good to have
+		applicationID = applicationID + strconv.FormatInt(
+			time.Now().UnixNano(),
+			36,
+		)
+
 		err = h.DB().CreateApplication(r.Context(), db.ApplyOpeningReq{
-			OpeningID:        applyForOpeningReq.OpeningIDWithinCompany,
-			CompanyDomain:    applyForOpeningReq.CompanyDomain,
-			CoverLetter:      applyForOpeningReq.CoverLetter,
-			OriginalFilename: applyForOpeningReq.Filename,
-			InternalFilename: filename,
+			ApplicationID:          applicationID,
+			OpeningIDWithinCompany: applyForOpeningReq.OpeningIDWithinCompany,
+			CompanyDomain:          applyForOpeningReq.CompanyDomain,
+			CoverLetter:            applyForOpeningReq.CoverLetter,
+			OriginalFilename:       applyForOpeningReq.Filename,
+			InternalFilename:       filename,
 		})
 		if err != nil {
 			h.Err("failed to create application", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
+
+		h.Dbg("created application", "application_id", applicationID)
+		w.WriteHeader(http.StatusOK)
 	}
 }

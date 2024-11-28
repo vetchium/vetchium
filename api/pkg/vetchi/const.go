@@ -26,6 +26,8 @@ const (
 
 	// Used for the session tokens
 	SessionTokenLenBytes = 8
+
+	ApplicationIDLenBytes = 16
 )
 
 const (

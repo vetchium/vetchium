@@ -291,4 +291,21 @@ CREATE TABLE opening_watchers(
     PRIMARY KEY (employer_id, opening_id, watcher_id)
 );
 
+CREATE TYPE application_states AS ENUM ('APPLIED', 'REJECTED', 'SHORTLISTED', 'WITHDRAWN', 'EXPIRED');
+CREATE TABLE applications (
+    id TEXT PRIMARY KEY,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    opening_id TEXT NOT NULL REFERENCES openings(id) NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+    cover_letter TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    internal_filename TEXT NOT NULL,
+    application_state application_states NOT NULL,
+
+    -- The user who applied for the opening
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
 COMMIT;

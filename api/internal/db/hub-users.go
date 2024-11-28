@@ -35,9 +35,10 @@ type HubUserPasswordReset struct {
 }
 
 type ApplyOpeningReq struct {
-	OpeningID        string
-	CompanyDomain    string
-	CoverLetter      string
-	OriginalFilename string
-	InternalFilename string
+	ApplicationID          string
+	OpeningIDWithinCompany string
+	CompanyDomain          string
+	CoverLetter            string
+	OriginalFilename       string
+	InternalFilename       string
 }
