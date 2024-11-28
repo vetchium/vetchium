@@ -165,6 +165,8 @@ func (g *Granger) Run() error {
 	mailSenderQuit := make(chan struct{})
 	go g.mailSender(mailSenderQuit)
 
+	http.HandleFunc("/internal/upload-resume", g.uploadResumeHandler)
+
 	go func() {
 		err := http.ListenAndServe(g.port, nil)
 		if err != nil {

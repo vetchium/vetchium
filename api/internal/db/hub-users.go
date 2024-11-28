@@ -33,3 +33,11 @@ type HubUserPasswordReset struct {
 	Token        string
 	PasswordHash string
 }
+
+type ApplyOpeningReq struct {
+	OpeningID        string
+	CompanyDomain    string
+	CoverLetter      string
+	OriginalFilename string
+	InternalFilename string
+}

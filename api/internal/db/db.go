@@ -74,6 +74,7 @@ type DB interface {
 	// Used by hermione - for Hub users
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)
 	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
+	CreateApplication(c.Context, ApplyOpeningReq) error
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
 	FindHubOpenings(
