@@ -197,6 +197,7 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/change-password", wrap(ha.ChangePasswordHandler(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpeningsHandler(h)))
+	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpeningHandler(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

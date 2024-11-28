@@ -86,6 +86,18 @@ model HubOpening {
         some kind of score for how the company treats the applicants, etc. */
 }
 
+model ApplyForOpeningRequest {
+    opening_id_within_company: string;
+    company_domain: string;
+    resume: string;
+
+    @maxLength(4096)
+    cover_letter?: string;
+
+    @maxLength(256)
+    filename: string;
+}
+
 @route("/hub/find-openings")
 interface FindHubOpenings {
     @tag("HubOpenings")
@@ -95,4 +107,11 @@ interface FindHubOpenings {
         @statusCode statusCode: 200;
         @body HubOpening: [];
     };
+}
+
+@route("/hub/apply-for-opening")
+interface ApplyForOpening {
+    @post
+    @useAuth(HubAuth)
+    applyForOpening(@body request: ApplyForOpeningRequest): void;
 }
