@@ -2,6 +2,7 @@ package hubopenings
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -31,41 +32,20 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "applyForOpeningReq", applyForOpeningReq)
 
-		resumeFileReq, err := http.NewRequestWithContext(
-			r.Context(),
-			http.MethodPost,
-			"http://granger:8080/internal/upload-resume", // Take this from config ?
-			bytes.NewBuffer([]byte(applyForOpeningReq.Resume)),
-		)
-		if err != nil {
-			h.Err("failed to create resume file request", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
+		// TODO: Validate if this hubUser can apply for this opening
+		// Some essential but not complete list of things to check:
+		// - Has the HubUser already applied for this Opening ?
+		// - Has the HubUser already applied to this Employer in the last X months ?
+		// - Is this an internal opening for the Employer ?
+		// - Has the Employer blocked this HubUser ?
+		// - Should we cross check against the Opening's Years of Experience expectations ?
 
-		resumeFileResp, err := http.DefaultClient.Do(resumeFileReq)
+		filename, err := uploadResume(r.Context(), h, applyForOpeningReq.Resume)
 		if err != nil {
 			h.Err("failed to upload resume", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-
-		defer resumeFileResp.Body.Close()
-
-		if resumeFileResp.StatusCode != http.StatusOK {
-			h.Err("failed to upload resume", "status", resumeFileResp.Status)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		resumeFileRespBody, err := io.ReadAll(resumeFileResp.Body)
-		if err != nil {
-			h.Err("failed to read resume file response", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		filename := string(resumeFileRespBody)
 		h.Dbg("uploaded resume", "filename", filename)
 
 		// Ensures secrecy
@@ -93,4 +73,43 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 		h.Dbg("created application", "application_id", applicationID)
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func uploadResume(
+	ctx context.Context,
+	h wand.Wand,
+	resume string,
+) (string, error) {
+	resumeFileReq, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"http://granger:8080/internal/upload-resume", // Take this from config ?
+		bytes.NewBuffer([]byte(resume)),
+	)
+	if err != nil {
+		h.Err("failed to create resume file request", "error", err)
+		return "", err
+	}
+
+	resumeFileResp, err := http.DefaultClient.Do(resumeFileReq)
+	if err != nil {
+		h.Err("failed to upload resume", "error", err)
+		return "", err
+	}
+
+	defer resumeFileResp.Body.Close()
+
+	if resumeFileResp.StatusCode != http.StatusOK {
+		h.Err("failed to upload resume", "status", resumeFileResp.Status)
+		return "", err
+	}
+
+	resumeFileRespBody, err := io.ReadAll(resumeFileResp.Body)
+	if err != nil {
+		h.Err("failed to read resume file response", "error", err)
+		return "", err
+	}
+
+	filename := string(resumeFileRespBody)
+	return filename, nil
 }
