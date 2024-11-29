@@ -211,6 +211,8 @@ union TimeZone {
 scalar OrgUserRole extends string;
 
 alias Admin = "ADMIN";
+alias ApplicationsCRUD = "APPLICATIONS_CRUD";
+alias ApplicationsViewer = "APPLICATIONS_VIEWER";
 alias CostCentersCRUD = "COST_CENTERS_CRUD";
 alias CostCentersViewer = "COST_CENTERS_VIEWER";
 alias LocationsCRUD = "LOCATIONS_CRUD";
