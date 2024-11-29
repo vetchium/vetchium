@@ -16,7 +16,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Apply For Opening", Ordered, func() {
+var _ = Describe("Apply For Opening", Ordered, func() {
 	var db *pgxpool.Pool
 	var activeHubUserToken string
 

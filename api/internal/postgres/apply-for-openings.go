@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -24,7 +23,7 @@ func (p *PG) CreateApplication(
 WITH employer AS (
     SELECT employer_id
     FROM domains
-    WHERE domain = $2
+    WHERE domain_name = $2
 ),
 valid_opening AS (
     SELECT 1
@@ -42,7 +41,7 @@ WHERE EXISTS (SELECT 1 FROM valid_opening)
 RETURNING id
 `
 
-	var applicationID uuid.UUID
+	var applicationID string
 	err := p.pool.QueryRow(
 		ctx,
 		query,
