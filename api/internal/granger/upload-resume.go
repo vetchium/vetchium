@@ -2,8 +2,8 @@ package granger
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
@@ -17,20 +17,14 @@ type UploadResumeRequest struct {
 func (g *Granger) uploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	g.log.Dbg("Entered uploadResumeHandler")
 
-	var uploadResumeReq UploadResumeRequest
-	err := json.NewDecoder(r.Body).Decode(&uploadResumeReq)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		g.log.Err("failed to decode upload resume request", "error", err)
+		g.log.Err("failed to read request body", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	g.log.Dbg("decoded", "uploadResumeReq", uploadResumeReq)
-
-	// Base64 decode the resume
-	decodedResume, err := base64.StdEncoding.DecodeString(
-		uploadResumeReq.Resume,
-	)
+	decodedResume, err := base64.StdEncoding.DecodeString(string(body))
 	if err != nil {
 		g.log.Err("failed to decode base64 resume", "error", err)
 		http.Error(w, "", http.StatusBadRequest)

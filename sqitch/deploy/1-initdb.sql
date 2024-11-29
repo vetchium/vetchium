@@ -295,7 +295,7 @@ CREATE TYPE application_states AS ENUM ('APPLIED', 'REJECTED', 'SHORTLISTED', 'W
 CREATE TABLE applications (
     id TEXT PRIMARY KEY,
     employer_id UUID REFERENCES employers(id) NOT NULL,
-    opening_id TEXT NOT NULL REFERENCES openings(id) NOT NULL,
+    opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
     cover_letter TEXT NOT NULL,
     original_filename TEXT NOT NULL,

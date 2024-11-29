@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -42,7 +43,15 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 
 		filename, err := uploadResume(r.Context(), h, applyForOpeningReq.Resume)
 		if err != nil {
-			h.Err("failed to upload resume", "error", err)
+			if errors.Is(err, db.ErrBadResume) {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+					Errors: []string{"resume"},
+				})
+				return
+			}
+
+			h.Dbg("failed to upload resume", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -56,6 +65,8 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 			36,
 		)
 
+		h.Dbg("creating application in the db", "application_id", applicationID)
+
 		err = h.DB().CreateApplication(r.Context(), db.ApplyOpeningReq{
 			ApplicationID:          applicationID,
 			OpeningIDWithinCompany: applyForOpeningReq.OpeningIDWithinCompany,
@@ -65,6 +76,12 @@ func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
 			InternalFilename:       filename,
 		})
 		if err != nil {
+			if errors.Is(err, db.ErrNoOpening) {
+				h.Dbg("either domain or opening does not exist", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Err("failed to create application", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
@@ -88,26 +105,32 @@ func uploadResume(
 	)
 	if err != nil {
 		h.Err("failed to create resume file request", "error", err)
-		return "", err
+		return "", db.ErrInternal
 	}
 
 	resumeFileResp, err := http.DefaultClient.Do(resumeFileReq)
 	if err != nil {
 		h.Err("failed to upload resume", "error", err)
-		return "", err
+		return "", db.ErrInternal
 	}
 
 	defer resumeFileResp.Body.Close()
 
-	if resumeFileResp.StatusCode != http.StatusOK {
+	switch resumeFileResp.StatusCode {
+	case http.StatusOK:
+		break
+	case http.StatusBadRequest:
+		h.Dbg("failed to upload resume", "status", resumeFileResp.Status)
+		return "", db.ErrBadResume
+	default:
 		h.Err("failed to upload resume", "status", resumeFileResp.Status)
-		return "", err
+		return "", db.ErrInternal
 	}
 
 	resumeFileRespBody, err := io.ReadAll(resumeFileResp.Body)
 	if err != nil {
 		h.Err("failed to read resume file response", "error", err)
-		return "", err
+		return "", db.ErrInternal
 	}
 
 	filename := string(resumeFileRespBody)

@@ -145,6 +145,21 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 		}
 
 		It("should handle application requests correctly", func() {
+			// Create a sample resume content in base64
+			sampleResume := `JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwog
+IC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAv
+TWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0K
+Pj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAg
+L1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+
+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9u
+dAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2Jq
+Cgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJU
+CjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIFdvcmxkKSBUagpFVAplbmRzdHJlYW0KZW5k
+b2JqCgp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAK
+MDAwMDAwMDA3OSAwMDAwMCBuIAowMDAwMDAwMTczIDAwMDAwIG4gCjAwMDAwMDAzMDEgMDAw
+MDAgbiAKMDAwMDAwMDM4MCAwMDAwMCBuIAp0cmFpbGVyCjw8CiAgL1NpemUgNgogIC9Sb290
+IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PDF
+
 			testCases := []applyForOpeningTestCase{
 				{
 					description: "valid application",
@@ -152,7 +167,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						CoverLetter:            "I am interested in this position",
 						Filename:               "resume.pdf",
 					},
@@ -164,7 +179,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						Filename:               "resume.pdf",
 					},
 					wantStatus: http.StatusUnauthorized,
@@ -175,7 +190,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "invalid-id",
 						CompanyDomain:          "applyopening.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						Filename:               "resume.pdf",
 					},
 					wantStatus: http.StatusNotFound,
@@ -186,7 +201,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "invalid.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						Filename:               "resume.pdf",
 					},
 					wantStatus: http.StatusNotFound,
@@ -208,7 +223,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						Filename:               "",
 					},
 					wantStatus: http.StatusBadRequest,
@@ -219,7 +234,7 @@ var _ = FDescribe("Apply For Opening", Ordered, func() {
 					request: vetchi.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
-						Resume:                 "base64encodedresume",
+						Resume:                 sampleResume,
 						CoverLetter: string(
 							make([]byte, 4097),
 						), // Max is 4096
