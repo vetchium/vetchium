@@ -10,12 +10,21 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+union ApplicationColorTag {
+    Green: "GREEN",
+    Yellow: "YELLOW",
+    Red: "RED",
+}
+
 model GetApplicationsRequest {
     state: ApplicationState;
 
     @doc("If passed, the Applicants whose name matches this query will be returned")
     @maxLength(25)
     search_query?: string;
+
+    @doc("If passed, only Applications of the passed color tag will be returned")
+    color_tag_filter?: ApplicationColorTag;
 
     @doc("The Opening ID for which Applications are to be fetched")
     opening_id: string;
@@ -41,7 +50,7 @@ model Application {
 
 model UpdateApplicationStateRequest {
     id: string;
-    from_datestate: ApplicationState;
+    from_state: ApplicationState;
     to_state: ApplicationState;
 }
 
@@ -80,4 +89,55 @@ interface UpdateApplicationState {
               @statusCode
               statusCode: 409;
           };
+}
+
+model AddApplicationColorTagRequest {
+    application_id: string;
+    color_tag: ApplicationColorTag;
+}
+
+@route("/employer/add-application-color-tag")
+interface AddApplicationColorTag {
+    @tag("Applications")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
+    @post
+    addApplicationColorTag(@body request: AddApplicationColorTagRequest): {};
+}
+
+model RemoveApplicationColorTagRequest {
+    application_id: string;
+}
+
+@route("/employer/remove-application-color-tag")
+interface RemoveApplicationColorTag {
+    @tag("Applications")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
+    @post
+    removeApplicationColorTag(
+        @body request: RemoveApplicationColorTagRequest,
+    ): {};
+}
+
+model ShortlistApplicationRequest {
+    application_id: string;
+}
+
+@route("/employer/shortlist-application")
+interface ShortlistApplication {
+    @tag("Applications")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
+    @post
+    shortlistApplication(@body request: ShortlistApplicationRequest): {};
+}
+
+model RejectApplicationRequest {
+    application_id: string;
+}
+
+@route("/employer/reject-application")
+interface RejectApplication {
+    @tag("Applications")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
+    @post
+    rejectApplication(@body request: RejectApplicationRequest): {};
 }
