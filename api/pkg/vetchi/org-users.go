@@ -15,6 +15,9 @@ func (roles OrgUserRoles) StringArray() []string {
 const (
 	Admin OrgUserRole = "ADMIN"
 
+	ApplicationsCRUD   OrgUserRole = "APPLICATIONS_CRUD"
+	ApplicationsViewer OrgUserRole = "APPLICATIONS_VIEWER"
+
 	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
 	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
 

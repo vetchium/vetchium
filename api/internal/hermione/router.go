@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/hermione/applications"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
@@ -181,6 +182,62 @@ func (h *Hermione) Run() error {
 		"/employer/change-opening-state",
 		openings.ChangeOpeningState(h),
 		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+	)
+
+	// Application related endpoints
+	h.mw.Protect(
+		"/employer/get-applications",
+		applications.GetApplications(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+			vetchi.ApplicationsViewer,
+		},
+	)
+
+	h.mw.Protect(
+		"/employer/update-application-state",
+		applications.UpdateApplicationState(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+		},
+	)
+
+	h.mw.Protect(
+		"/employer/add-application-color-tag",
+		applications.AddApplicationColorTag(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+		},
+	)
+
+	h.mw.Protect(
+		"/employer/remove-application-color-tag",
+		applications.RemoveApplicationColorTag(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+		},
+	)
+
+	h.mw.Protect(
+		"/employer/shortlist-application",
+		applications.ShortlistApplication(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+		},
+	)
+
+	h.mw.Protect(
+		"/employer/reject-application",
+		applications.RejectApplication(h),
+		[]vetchi.OrgUserRole{
+			vetchi.Admin,
+			vetchi.ApplicationsCRUD,
+		},
 	)
 
 	wrap := func(fn http.Handler) http.Handler {
