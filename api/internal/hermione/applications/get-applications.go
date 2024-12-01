@@ -11,12 +11,35 @@ import (
 func GetApplications(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetApplications")
-		var req vetchi.GetApplicationsRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var getApplicationsRequest vetchi.GetApplicationsRequest
+		err := json.NewDecoder(r.Body).Decode(&getApplicationsRequest)
+		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// TODO: Implement handler
+		h.Dbg("GetApplications request", "request", getApplicationsRequest)
+
+		if !h.Vator().Struct(w, &getApplicationsRequest) {
+			h.Dbg("failed to validate request")
+			return
+		}
+		h.Dbg("validated", "getApplicationsReq", getApplicationsRequest)
+
+		applications, err := h.DB().
+			GetApplicationsForEmployer(r.Context(), getApplicationsRequest)
+		if err != nil {
+			h.Dbg("failed to get applications", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+		h.Dbg("got applications", "applications", applications)
+
+		err = json.NewEncoder(w).Encode(applications)
+		if err != nil {
+			h.Err("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }
