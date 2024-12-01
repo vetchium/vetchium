@@ -36,7 +36,7 @@ type GetApplicationsRequest struct {
 	ColorTagFilter *ApplicationColorTag `json:"color_tag_filter" validate:"omitempty"`
 	OpeningID      string               `json:"opening_id"       validate:"required"`
 	PaginationKey  *string              `json:"pagination_key"   validate:"omitempty"`
-	Limit          int64                `json:"limit"            validate:"required,min=1,max=40"`
+	Limit          int64                `json:"limit"            validate:"required,min=0,max=40"`
 }
 
 type Application struct {

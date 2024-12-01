@@ -26,6 +26,12 @@ func GetApplications(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "getApplicationsReq", getApplicationsRequest)
 
+		if getApplicationsRequest.Limit <= 0 {
+			// Set default limit of 40 if not specified
+			// The condition could be == too but <= is safer for future changes
+			getApplicationsRequest.Limit = 40
+		}
+
 		applications, err := h.DB().
 			GetApplicationsForEmployer(r.Context(), getApplicationsRequest)
 		if err != nil {
