@@ -25,10 +25,17 @@ const (
 type ApplicationColorTag string
 
 const (
+	// Any change here should reflect in the IsValid() method too
 	GreenApplicationColorTag  ApplicationColorTag = "GREEN"
 	YellowApplicationColorTag ApplicationColorTag = "YELLOW"
 	RedApplicationColorTag    ApplicationColorTag = "RED"
 )
+
+func (c ApplicationColorTag) IsValid() bool {
+	return c == GreenApplicationColorTag ||
+		c == YellowApplicationColorTag ||
+		c == RedApplicationColorTag
+}
 
 type GetApplicationsRequest struct {
 	State          ApplicationState     `json:"state"            validate:"required"`
@@ -58,7 +65,7 @@ type UpdateApplicationStateRequest struct {
 
 type AddApplicationColorTagRequest struct {
 	ApplicationID string              `json:"application_id" validate:"required"`
-	ColorTag      ApplicationColorTag `json:"color_tag"      validate:"required"`
+	ColorTag      ApplicationColorTag `json:"color_tag"      validate:"required,validate_application_color_tag"`
 }
 
 type RemoveApplicationColorTagRequest struct {

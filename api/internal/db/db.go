@@ -71,15 +71,18 @@ type DB interface {
 	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
 	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
 
+	// Used by hermione - Applications related methods for employers
+	GetApplicationsForEmployer(
+		c.Context,
+		v.GetApplicationsRequest,
+	) ([]v.Application, error)
+	AddApplicationColorTag(c.Context, v.AddApplicationColorTagRequest) error
+
 	// Used by hermione - for Hub users
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)
 	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
 	CreateApplication(c.Context, ApplyOpeningReq) error
 	CreateHubUserToken(c.Context, HubTokenReq) error
-	GetApplicationsForEmployer(
-		c.Context,
-		v.GetApplicationsRequest,
-	) ([]v.Application, error)
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
 	FindHubOpenings(
 		c.Context,

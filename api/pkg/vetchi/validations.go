@@ -376,6 +376,21 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_application_color_tag",
+		func(fl validator.FieldLevel) bool {
+			colorTag, ok := fl.Field().Interface().(ApplicationColorTag)
+			if !ok {
+				return false
+			}
+			return colorTag.IsValid()
+		},
+	)
+	if err != nil {
+		log.Err("application color tag validation", "error", err)
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

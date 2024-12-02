@@ -291,6 +291,7 @@ CREATE TABLE opening_watchers(
     PRIMARY KEY (employer_id, opening_id, watcher_id)
 );
 
+CREATE TYPE application_color_tags AS ENUM ('GREEN', 'YELLOW', 'RED');
 CREATE TYPE application_states AS ENUM ('APPLIED', 'REJECTED', 'SHORTLISTED', 'WITHDRAWN', 'EXPIRED');
 CREATE TABLE applications (
     id TEXT PRIMARY KEY,
@@ -301,6 +302,8 @@ CREATE TABLE applications (
     original_filename TEXT NOT NULL,
     internal_filename TEXT NOT NULL,
     application_state application_states NOT NULL,
+
+    color_tag application_color_tags,
 
     -- The user who applied for the opening
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,

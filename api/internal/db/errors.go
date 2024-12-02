@@ -45,4 +45,7 @@ var (
 	ErrNoHubUser = errors.New("hub user not found")
 
 	ErrBadResume = errors.New("bad resume")
+
+	ErrNoApplication                = errors.New("application not found")
+	ErrApplicationStateInCompatible = errors.New("state incompatible")
 )
