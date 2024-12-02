@@ -63,7 +63,7 @@ type UpdateApplicationStateRequest struct {
 	ToState   ApplicationState `json:"to_state"   validate:"required"`
 }
 
-type AddApplicationColorTagRequest struct {
+type SetApplicationColorTagRequest struct {
 	ApplicationID string              `json:"application_id" validate:"required"`
 	ColorTag      ApplicationColorTag `json:"color_tag"      validate:"required,validate_application_color_tag"`
 }

@@ -96,9 +96,9 @@ func (p *PG) GetApplicationsForEmployer(
 	return applications, nil
 }
 
-func (p *PG) AddApplicationColorTag(
+func (p *PG) SetApplicationColorTag(
 	c context.Context,
-	req vetchi.AddApplicationColorTagRequest,
+	req vetchi.SetApplicationColorTagRequest,
 ) error {
 	const (
 		statusNotFound   = "not_found"

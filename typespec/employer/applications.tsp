@@ -91,17 +91,17 @@ interface UpdateApplicationState {
           };
 }
 
-model AddApplicationColorTagRequest {
+model SetApplicationColorTagRequest {
     application_id: string;
     color_tag: ApplicationColorTag;
 }
 
-@route("/employer/add-application-color-tag")
-interface AddApplicationColorTag {
+@route("/employer/set-application-color-tag")
+interface SetApplicationColorTag {
     @tag("Applications")
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
-    addApplicationColorTag(@body request: AddApplicationColorTagRequest): {};
+    setApplicationColorTag(@body request: SetApplicationColorTagRequest): {};
 }
 
 model RemoveApplicationColorTagRequest {
