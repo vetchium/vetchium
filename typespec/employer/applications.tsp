@@ -101,7 +101,17 @@ interface SetApplicationColorTag {
     @tag("Applications")
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
-    setApplicationColorTag(@body request: SetApplicationColorTagRequest): {};
+    setApplicationColorTag(@body request: SetApplicationColorTagRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Application not found")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @doc("Application state is not ApplicationState.Applied")
+        @statusCode
+        statusCode: 422;
+    };
 }
 
 model RemoveApplicationColorTagRequest {
@@ -115,7 +125,17 @@ interface RemoveApplicationColorTag {
     @post
     removeApplicationColorTag(
         @body request: RemoveApplicationColorTagRequest,
-    ): {};
+    ): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Application not found")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @doc("Application state is not ApplicationState.Applied")
+        @statusCode
+        statusCode: 422;
+    };
 }
 
 model ShortlistApplicationRequest {
@@ -127,7 +147,17 @@ interface ShortlistApplication {
     @tag("Applications")
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
-    shortlistApplication(@body request: ShortlistApplicationRequest): {};
+    shortlistApplication(@body request: ShortlistApplicationRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Application not found")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @doc("Application state is not ApplicationState.Applied")
+        @statusCode
+        statusCode: 422;
+    };
 }
 
 model RejectApplicationRequest {
@@ -139,5 +169,15 @@ interface RejectApplication {
     @tag("Applications")
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
-    rejectApplication(@body request: RejectApplicationRequest): {};
+    rejectApplication(@body request: RejectApplicationRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Application not found")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @doc("Application state is not ApplicationState.Applied")
+        @statusCode
+        statusCode: 422;
+    };
 }

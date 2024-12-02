@@ -77,6 +77,10 @@ type DB interface {
 		v.GetApplicationsRequest,
 	) ([]v.Application, error)
 	SetApplicationColorTag(c.Context, v.SetApplicationColorTagRequest) error
+	RemoveApplicationColorTag(
+		c.Context,
+		v.RemoveApplicationColorTagRequest,
+	) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)
