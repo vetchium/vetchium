@@ -236,3 +236,10 @@ RETURNING (SELECT status FROM application_check);
 		return db.ErrInternal
 	}
 }
+
+func (p *PG) ShortlistApplication(
+	c context.Context,
+	req db.ShortlistRequest,
+) error {
+	return nil
+}

@@ -81,6 +81,7 @@ type DB interface {
 		c.Context,
 		v.RemoveApplicationColorTagRequest,
 	) error
+	ShortlistApplication(c.Context, ShortlistRequest) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)

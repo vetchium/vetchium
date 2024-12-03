@@ -28,6 +28,8 @@ const (
 	SessionTokenLenBytes = 8
 
 	ApplicationIDLenBytes = 16
+
+	CandidacyIDLenBytes = 16
 )
 
 const (
