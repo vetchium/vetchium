@@ -240,8 +240,100 @@ RETURNING (SELECT status FROM application_check);
 
 func (p *PG) ShortlistApplication(
 	c context.Context,
-	req db.ShortlistRequest,
+	shortlistRequest db.ShortlistRequest,
 ) error {
+	orgUser, ok := c.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
+	tx, err := p.pool.Begin(c)
+	if err != nil {
+		p.log.Err("failed to begin transaction", "error", err)
+		return db.ErrInternal
+	}
+	defer tx.Rollback(c)
+
+	// TODO: IMPORTANT Should do some state checks
+	candidacyQuery := `
+INSERT INTO candidacies (id, application_id, employer_id, opening_id, created_by, candidacy_state)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id
+	`
+	var candidacyID string
+	err = tx.QueryRow(
+		c,
+		candidacyQuery,
+		shortlistRequest.CandidacyID,
+		shortlistRequest.ApplicationID,
+		orgUser.EmployerID,
+		shortlistRequest.OpeningID,
+		orgUser.ID,
+		vetchi.InterviewingCandidacyState,
+	).
+		Scan(&candidacyID)
+	if err != nil {
+		p.log.Err("failed to insert candidacy", "error", err)
+		return db.ErrInternal
+	}
+
+	applicationQuery := `
+UPDATE
+    applications
+SET
+    candidacy_id = $1,
+    application_state = $2
+WHERE
+    id = $3
+    AND employer_id = $4
+    AND application_state = $5
+	`
+	result, err := tx.Exec(
+		c,
+		applicationQuery,
+		candidacyID,
+		vetchi.ShortlistedAppState,
+		shortlistRequest.ApplicationID,
+		orgUser.EmployerID,
+		vetchi.AppliedAppState,
+	)
+	if err != nil {
+		p.log.Err("failed to update application", "error", err)
+		return db.ErrInternal
+	}
+	if result.RowsAffected() != 1 {
+		p.log.Err("failed to update application", "error", err)
+		return db.ErrInternal
+	}
+
+	emailQuery := `
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
+	result, err = tx.Exec(
+		c,
+		emailQuery,
+		shortlistRequest.Email.EmailFrom,
+		shortlistRequest.Email.EmailTo,
+		shortlistRequest.Email.EmailSubject,
+		shortlistRequest.Email.EmailHTMLBody,
+		shortlistRequest.Email.EmailTextBody,
+		shortlistRequest.Email.EmailState,
+	)
+	if err != nil {
+		p.log.Err("failed to insert email", "error", err)
+		return db.ErrInternal
+	}
+	if result.RowsAffected() != 1 {
+		p.log.Err("failed to insert email", "error", err)
+		return db.ErrInternal
+	}
+
+	err = tx.Commit(c)
+	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
+		return db.ErrInternal
+	}
+
 	return nil
 }
 
@@ -258,24 +350,27 @@ func (p *PG) GetApplicationMailInfo(
 	var mailInfo db.ApplicationMailInfo
 
 	query := `
-		SELECT 
-			h.id as hub_user_id,
-			h.state as hub_user_state,
-			h.full_name,
-			h.handle,
-			h.email,
-			h.preferred_language,
-			e.id as employer_id,
-			e.company_name,
-			d.domain_name as primary_domain
-		FROM applications a
-		JOIN hub_users h ON h.id = a.hub_user_id
-		JOIN employers e ON e.id = a.employer_id
-		JOIN employer_primary_domains epd ON epd.employer_id = e.id
-		JOIN domains d ON d.id = epd.domain_id
-		WHERE a.id = $1
-		AND a.employer_id = $2
-	`
+SELECT 
+	h.id as hub_user_id,
+	h.state as hub_user_state,
+	h.full_name,
+	h.handle,
+	h.email,
+	h.preferred_language,
+	e.id as employer_id,
+	e.company_name,
+	d.domain_name as primary_domain
+	o.id as opening_id,
+	o.title as opening_title
+FROM applications a
+JOIN openings o ON a.opening_id = o.id
+JOIN hub_users h ON h.id = a.hub_user_id
+JOIN employers e ON e.id = a.employer_id
+JOIN employer_primary_domains epd ON epd.employer_id = e.id
+JOIN domains d ON d.id = epd.domain_id
+WHERE a.id = $1
+AND a.employer_id = $2
+`
 
 	err := p.pool.QueryRow(c, query, applicationID, orgUser.EmployerID).Scan(
 		&mailInfo.HubUser.HubUserID,
@@ -287,6 +382,8 @@ func (p *PG) GetApplicationMailInfo(
 		&mailInfo.Employer.EmployerID,
 		&mailInfo.Employer.CompanyName,
 		&mailInfo.Employer.PrimaryDomain,
+		&mailInfo.Opening.OpeningID,
+		&mailInfo.Opening.Title,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {

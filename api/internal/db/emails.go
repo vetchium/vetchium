@@ -44,6 +44,12 @@ type OnboardEmailInfo struct {
 type ApplicationMailInfo struct {
 	Employer EmployerMailInfo
 	HubUser  HubUserMailInfo
+	Opening  OpeningMailInfo
+}
+
+type OpeningMailInfo struct {
+	OpeningID string
+	Title     string
 }
 
 type HubUserMailInfo struct {

@@ -64,6 +64,7 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 
 		err = h.DB().ShortlistApplication(r.Context(), db.ShortlistRequest{
 			ApplicationID: shortlistRequest.ApplicationID,
+			OpeningID:     mailInfo.Opening.OpeningID,
 			CandidacyID:   candidacyID,
 			Email:         email,
 		})

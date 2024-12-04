@@ -312,4 +312,28 @@ CREATE TABLE applications (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+CREATE TYPE candidacy_states AS ENUM (
+    'INTERVIEWING', 
+    'OFFERED', 'OFFER_DECLINED', 'OFFER_ACCEPTED', 
+    'CANDIDATE_UNSUITABLE',
+    'CANDIDATE_NOT_RESPONDING',
+    'EMPLOYER_DEFUNCT'
+);
+CREATE TABLE candidacies(
+    id TEXT PRIMARY KEY,
+    application_id TEXT REFERENCES applications(id) NOT NULL,
+    CONSTRAINT fk_application FOREIGN KEY (application_id) REFERENCES applications(id),
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES employers(id),
+    CONSTRAINT uniq_application_employer_id UNIQUE (application_id, employer_id),
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+
+    candidacy_state candidacy_states NOT NULL,
+
+    created_by UUID REFERENCES org_users(id) NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
 COMMIT;
