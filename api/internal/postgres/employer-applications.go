@@ -242,6 +242,12 @@ func (p *PG) RejectApplication(
 	c context.Context,
 	rejectRequest db.RejectApplicationRequest,
 ) error {
+	const (
+		statusNotFound   = "not_found"
+		statusWrongState = "wrong_state"
+		statusOK         = "ok"
+	)
+
 	orgUser, ok := c.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -255,36 +261,67 @@ func (p *PG) RejectApplication(
 	}
 	defer tx.Rollback(c)
 
-	// Perhaps we need not do any more state checks on the Opening
-	// since this is a rejection and no flow beyond this.
+	// Modified query to check application existence and state
 	applicationQuery := `
-UPDATE applications
-SET application_state = $1
-WHERE id = $2 AND employer_id = $3 AND application_state = $4
-`
-	_, err = tx.Exec(
+	WITH application_check AS (
+		SELECT CASE
+			WHEN NOT EXISTS (
+				SELECT 1 FROM applications
+				WHERE id = $2 AND employer_id = $3
+			) THEN $4
+			WHEN EXISTS (
+				SELECT 1 FROM applications
+				WHERE id = $2 AND employer_id = $3
+				AND application_state != $1
+			) THEN $5
+			ELSE $6
+		END as status
+	)
+	UPDATE applications
+	SET application_state = $1
+	WHERE id = $2 
+	AND employer_id = $3 
+	AND application_state = $7
+	AND (SELECT status FROM application_check) = $6
+	RETURNING (SELECT status FROM application_check);
+	`
+
+	var status string
+	err = tx.QueryRow(
 		c,
 		applicationQuery,
 		vetchi.RejectedAppState,
 		rejectRequest.ApplicationID,
 		orgUser.EmployerID,
+		statusNotFound,
+		statusWrongState,
+		statusOK,
 		vetchi.AppliedAppState,
-	)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			p.log.Dbg("application not found")
-			return db.ErrNoApplication
-		}
+	).Scan(&status)
 
+	if err != nil {
 		p.log.Err("failed to update application state", "error", err)
 		return db.ErrInternal
 	}
 
+	switch status {
+	case statusNotFound:
+		return db.ErrNoApplication
+	case statusWrongState:
+		return db.ErrApplicationStateInCompatible
+	case statusOK:
+		// continue with the rest of the function
+	default:
+		p.log.Err("unexpected status when updating application", "error", err)
+		return db.ErrInternal
+	}
+
+	// Rest of the email insertion code remains the same
 	emailQuery := `
 INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
-    VALUES ($1, $2, $3, $4, $5, $6)
+	VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING
-    email_key
+	email_key
 `
 	var emailKey string
 	err = tx.QueryRow(
