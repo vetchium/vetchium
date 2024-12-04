@@ -242,6 +242,12 @@ func (p *PG) ShortlistApplication(
 	c context.Context,
 	shortlistRequest db.ShortlistRequest,
 ) error {
+	const (
+		statusNotFound   = "not_found"
+		statusWrongState = "wrong_state"
+		statusOK         = "ok"
+	)
+
 	orgUser, ok := c.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -255,7 +261,6 @@ func (p *PG) ShortlistApplication(
 	}
 	defer tx.Rollback(c)
 
-	// TODO: IMPORTANT Should do some state checks
 	candidacyQuery := `
 INSERT INTO candidacies (id, application_id, employer_id, opening_id, created_by, candidacy_state)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -279,17 +284,33 @@ RETURNING id
 	}
 
 	applicationQuery := `
-UPDATE
-    applications
-SET
-    candidacy_id = $1,
-    application_state = $2
-WHERE
-    id = $3
-    AND employer_id = $4
-    AND application_state = $5
+	WITH application_check AS (
+		SELECT CASE
+			WHEN NOT EXISTS (
+				SELECT 1 FROM applications
+				WHERE id = $3 AND employer_id = $4
+			) THEN $6
+			WHEN EXISTS (
+				SELECT 1 FROM applications
+				WHERE id = $3 AND employer_id = $4
+				AND application_state != $5
+			) THEN $7
+			ELSE $8
+		END as status
+	)
+	UPDATE applications
+	SET
+		candidacy_id = $1,
+		application_state = $2
+	WHERE
+		id = $3
+		AND employer_id = $4
+		AND application_state = $5
+		AND (SELECT status FROM application_check) = $8
+	RETURNING (SELECT status FROM application_check);
 	`
-	result, err := tx.Exec(
+	var status string
+	err = tx.QueryRow(
 		c,
 		applicationQuery,
 		candidacyID,
@@ -297,19 +318,31 @@ WHERE
 		shortlistRequest.ApplicationID,
 		orgUser.EmployerID,
 		vetchi.AppliedAppState,
-	)
+		statusNotFound,
+		statusWrongState,
+		statusOK,
+	).Scan(&status)
+
 	if err != nil {
 		p.log.Err("failed to update application", "error", err)
 		return db.ErrInternal
 	}
-	if result.RowsAffected() != 1 {
-		p.log.Err("failed to update application", "error", err)
+
+	switch status {
+	case statusNotFound:
+		return db.ErrNoApplication
+	case statusWrongState:
+		return db.ErrApplicationStateInCompatible
+	case statusOK:
+		// continue with the rest of the function
+	default:
+		p.log.Err("unexpected status when updating application", "error", err)
 		return db.ErrInternal
 	}
 
 	emailQuery := `
-INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
-	result, err = tx.Exec(
+	INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
+	result, err := tx.Exec(
 		c,
 		emailQuery,
 		shortlistRequest.Email.EmailFrom,
