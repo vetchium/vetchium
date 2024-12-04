@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 // Enums
@@ -38,4 +39,24 @@ type OnboardEmailInfo struct {
 	OnboardSecretToken string
 	TokenValidMins     float64
 	Email              Email
+}
+
+type ApplicationMailInfo struct {
+	Employer EmployerMailInfo
+	HubUser  HubUserMailInfo
+}
+
+type HubUserMailInfo struct {
+	HubUserID         uuid.UUID
+	State             vetchi.HubUserState
+	FullName          string
+	Handle            string
+	Email             string
+	PreferredLanguage string
+}
+
+type EmployerMailInfo struct {
+	EmployerID    uuid.UUID
+	CompanyName   string
+	PrimaryDomain string
 }

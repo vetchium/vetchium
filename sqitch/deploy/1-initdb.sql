@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
     state hub_user_states NOT NULL,
     resident_country_code TEXT NOT NULL,
     resident_city TEXT,
+    preferred_language TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );

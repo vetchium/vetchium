@@ -31,14 +31,13 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "shortlistRequest", shortlistRequest)
 
-		/*
-			Get the primary domain and company name for the given application_id
-			Generate an email to notify the candidate, using the primary domain and company name
-			Generate a CandidacyID
-			In a db transaction,
-				Create a Candidacy for the shortlisted candidate
-				Update the application state to Shortlisted
-		*/
+		mailInfo, err := h.DB().
+			GetApplicationMailInfo(r.Context(), shortlistRequest.ApplicationID)
+		if err != nil {
+			h.Dbg("failed to get application mail info", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		// Ensures secrecy
 		candidacyID := util.RandomString(vetchi.CandidacyIDLenBytes)
@@ -50,7 +49,17 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 
 		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: "shortlist_application",
+			Args: map[string]string{
+				"hub_user_full_name":    mailInfo.HubUser.FullName,
+				"employer_company_name": mailInfo.Employer.CompanyName,
+				"primary_domain":        mailInfo.Employer.PrimaryDomain,
+			},
 		})
+		if err != nil {
+			h.Dbg("failed to generate email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		err = h.DB().ShortlistApplication(r.Context(), db.ShortlistRequest{
 			ApplicationID: shortlistRequest.ApplicationID,
