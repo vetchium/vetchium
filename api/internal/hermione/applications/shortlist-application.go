@@ -2,6 +2,7 @@ package applications
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -69,6 +70,18 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 			Email:         email,
 		})
 		if err != nil {
+			if errors.Is(err, db.ErrNoApplication) {
+				h.Dbg("failed to shortlist application", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrApplicationStateInCompatible) {
+				h.Dbg("failed to shortlist application", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to shortlist application", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

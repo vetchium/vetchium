@@ -15,8 +15,11 @@ type ApplyForOpeningRequest struct {
 type ApplicationState string
 
 const (
-	AppliedAppState     ApplicationState = "APPLIED"
-	RejectedAppState    ApplicationState = "REJECTED"
+	AppliedAppState ApplicationState = "APPLIED"
+
+	// TODO: Remember to Reject all open applications when an Opening is closed
+	RejectedAppState ApplicationState = "REJECTED"
+
 	ShortlistedAppState ApplicationState = "SHORTLISTED"
 	WithdrawnAppState   ApplicationState = "WITHDRAWN"
 	ExpiredAppState     ApplicationState = "EXPIRED"
