@@ -1,0 +1,7 @@
+Hi {{.hub_user_full_name}},
+
+Your Application for {{.employer_company_name}} ({{.employer_primary_domain}}) has been shortlisted for further rounds of interviews.
+Your Candidacy link is {{.candidacy_link}}
+Follow up in the link for further instructions.
+
+The Vetchi Team wishes you all the best. Thanks.

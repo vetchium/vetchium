@@ -13,9 +13,10 @@ import (
 
 const (
 	// List of templates. All of these must be parsed, validated in NewHedwig()
-	InviteEmployee   = "invite-employee"
-	HubUserTFA       = "hub-user-tfa"
-	HubPasswordReset = "hub-password-reset"
+	InviteEmployee       = "invite-employee"
+	HubUserTFA           = "hub-user-tfa"
+	HubPasswordReset     = "hub-password-reset"
+	ShortlistApplication = "shortlist-application"
 )
 
 type Hedwig interface {
@@ -50,6 +51,7 @@ type GenerateEmailReq struct {
 }
 
 func (h *hedwig) GenerateEmail(req GenerateEmailReq) (db.Email, error) {
+	// TODO: We need to get a preferred_lang parameter and use the appropriate template. Right now our email templates are hardcoded on English. We need to support other languages.
 	plainText, err := os.ReadFile(
 		filepath.Join("hedwig", "templates", req.TemplateName+".txt"),
 	)

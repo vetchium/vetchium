@@ -48,11 +48,12 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 		)
 
 		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
-			TemplateName: "shortlist_application",
+			TemplateName: hedwig.ShortlistApplication,
 			Args: map[string]string{
-				"hub_user_full_name":    mailInfo.HubUser.FullName,
-				"employer_company_name": mailInfo.Employer.CompanyName,
-				"primary_domain":        mailInfo.Employer.PrimaryDomain,
+				"hub_user_full_name":      mailInfo.HubUser.FullName,
+				"employer_company_name":   mailInfo.Employer.CompanyName,
+				"employer_primary_domain": mailInfo.Employer.PrimaryDomain,
+				"candidacy_link":          vetchi.HubBaseURL + "/candidacy/" + candidacyID,
 			},
 		})
 		if err != nil {
