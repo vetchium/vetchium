@@ -188,7 +188,7 @@ func (p *PG) RemoveApplicationColorTag(
 WITH application_check AS (
 	SELECT CASE
 		WHEN NOT EXISTS (
-			SELECT 1 FROM applications 
+			SELECT 1 FROM applications
 			WHERE id = $1 AND employer_id = $2
 		) THEN $4
 		WHEN EXISTS (
@@ -281,7 +281,10 @@ WHERE id = $2 AND employer_id = $3 AND application_state = $4
 	}
 
 	emailQuery := `
-INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6) RETURNING email_key
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+    VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING
+    email_key
 `
 	var emailKey string
 	err = tx.QueryRow(
@@ -412,8 +415,11 @@ RETURNING id
 	}
 
 	emailQuery := `
-	INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6) RETURNING email_key
-	`
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+    VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING
+    email_key
+`
 	var emailKey string
 	err = tx.QueryRow(
 		c,
@@ -453,7 +459,7 @@ func (p *PG) GetApplicationMailInfo(
 	var mailInfo db.ApplicationMailInfo
 
 	query := `
-SELECT 
+SELECT
 	h.id as hub_user_id,
 	h.state as hub_user_state,
 	h.full_name,
