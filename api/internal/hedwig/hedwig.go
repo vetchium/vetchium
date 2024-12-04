@@ -17,6 +17,7 @@ const (
 	HubUserTFA           = "hub-user-tfa"
 	HubPasswordReset     = "hub-password-reset"
 	ShortlistApplication = "shortlist-application"
+	RejectApplication    = "reject-application"
 )
 
 type Hedwig interface {

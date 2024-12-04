@@ -3,6 +3,7 @@ package applications
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,6 +57,12 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 				"employer_primary_domain": mailInfo.Employer.PrimaryDomain,
 				"candidacy_link":          vetchi.HubBaseURL + "/candidacy/" + candidacyID,
 			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{mailInfo.HubUser.Email},
+			Subject: fmt.Sprintf(
+				"Shortlisted for %s",
+				mailInfo.Employer.CompanyName,
+			),
 		})
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)

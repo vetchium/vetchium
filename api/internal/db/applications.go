@@ -6,3 +6,8 @@ type ShortlistRequest struct {
 	CandidacyID   string
 	Email         Email
 }
+
+type RejectApplicationRequest struct {
+	ApplicationID string
+	Email         Email
+}

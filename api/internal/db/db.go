@@ -82,6 +82,7 @@ type DB interface {
 		v.RemoveApplicationColorTagRequest,
 	) error
 	ShortlistApplication(c.Context, ShortlistRequest) error
+	RejectApplication(c.Context, RejectApplicationRequest) error
 	GetApplicationMailInfo(
 		c c.Context,
 		applicationID string,

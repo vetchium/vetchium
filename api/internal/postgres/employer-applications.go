@@ -238,6 +238,77 @@ RETURNING (SELECT status FROM application_check);
 	}
 }
 
+func (p *PG) RejectApplication(
+	c context.Context,
+	rejectRequest db.RejectApplicationRequest,
+) error {
+	orgUser, ok := c.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
+	tx, err := p.pool.Begin(c)
+	if err != nil {
+		p.log.Err("failed to begin transaction", "error", err)
+		return db.ErrInternal
+	}
+	defer tx.Rollback(c)
+
+	// Perhaps we need not do any more state checks on the Opening
+	// since this is a rejection and no flow beyond this.
+	applicationQuery := `
+UPDATE applications
+SET application_state = $1
+WHERE id = $2 AND employer_id = $3 AND application_state = $4
+`
+	_, err = tx.Exec(
+		c,
+		applicationQuery,
+		vetchi.RejectedAppState,
+		rejectRequest.ApplicationID,
+		orgUser.EmployerID,
+		vetchi.AppliedAppState,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			p.log.Dbg("application not found")
+			return db.ErrNoApplication
+		}
+
+		p.log.Err("failed to update application state", "error", err)
+		return db.ErrInternal
+	}
+
+	emailQuery := `
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6) RETURNING email_key
+`
+	var emailKey string
+	err = tx.QueryRow(
+		c,
+		emailQuery,
+		rejectRequest.Email.EmailFrom,
+		rejectRequest.Email.EmailTo,
+		rejectRequest.Email.EmailSubject,
+		rejectRequest.Email.EmailHTMLBody,
+		rejectRequest.Email.EmailTextBody,
+		rejectRequest.Email.EmailState,
+	).Scan(&emailKey)
+	if err != nil {
+		p.log.Err("failed to insert email", "error", err)
+		return db.ErrInternal
+	}
+	p.log.Dbg("RejectApplication email added", "email_key", emailKey)
+
+	err = tx.Commit(c)
+	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
+		return db.ErrInternal
+	}
+
+	return nil
+}
+
 func (p *PG) ShortlistApplication(
 	c context.Context,
 	shortlistRequest db.ShortlistRequest,
@@ -341,8 +412,10 @@ RETURNING id
 	}
 
 	emailQuery := `
-	INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
-	result, err := tx.Exec(
+	INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6) RETURNING email_key
+	`
+	var emailKey string
+	err = tx.QueryRow(
 		c,
 		emailQuery,
 		shortlistRequest.Email.EmailFrom,
@@ -351,15 +424,12 @@ RETURNING id
 		shortlistRequest.Email.EmailHTMLBody,
 		shortlistRequest.Email.EmailTextBody,
 		shortlistRequest.Email.EmailState,
-	)
+	).Scan(&emailKey)
 	if err != nil {
 		p.log.Err("failed to insert email", "error", err)
 		return db.ErrInternal
 	}
-	if result.RowsAffected() != 1 {
-		p.log.Err("failed to insert email", "error", err)
-		return db.ErrInternal
-	}
+	p.log.Dbg("ShortlistApplication email added", "email_key", emailKey)
 
 	err = tx.Commit(c)
 	if err != nil {
