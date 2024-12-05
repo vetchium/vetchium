@@ -48,12 +48,6 @@ model Application {
     state: ApplicationState;
 }
 
-model UpdateApplicationStateRequest {
-    id: string;
-    from_state: ApplicationState;
-    to_state: ApplicationState;
-}
-
 @route("/employer/get-applications")
 interface GetApplications {
     @tag("Applications")
@@ -63,32 +57,6 @@ interface GetApplications {
         @statusCode statusCode: 200;
         @body applications: Application[];
     };
-}
-
-@route("/employer/update-application-state")
-interface UpdateApplicationState {
-    @tag("Applications")
-    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
-    @post
-    updateApplicationState(@body request: UpdateApplicationStateRequest):
-        | {
-              @statusCode statusCode: 200;
-          }
-        | {
-              @doc("Invalid state transition requested")
-              @statusCode
-              statusCode: 422;
-          }
-        | {
-              @doc("Application not found")
-              @statusCode
-              statusCode: 404;
-          }
-        | {
-              @doc("Wrong/Obsolete from_state passed")
-              @statusCode
-              statusCode: 409;
-          };
 }
 
 model SetApplicationColorTagRequest {

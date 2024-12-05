@@ -196,15 +196,6 @@ func (h *Hermione) Run() error {
 	)
 
 	h.mw.Protect(
-		"/employer/update-application-state",
-		applications.UpdateApplicationState(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
-		},
-	)
-
-	h.mw.Protect(
 		"/employer/set-application-color-tag",
 		applications.SetApplicationColorTag(h),
 		[]vetchi.OrgUserRole{
