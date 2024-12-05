@@ -10,6 +10,7 @@ INSERT INTO hub_users (
     state,
     resident_country_code,
     resident_city,
+    preferred_language,
     created_at,
     updated_at
 ) VALUES (
@@ -21,6 +22,7 @@ INSERT INTO hub_users (
     'ACTIVE_HUB_USER',
     'IND',
     'Bangalore',
+    'en',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
@@ -35,6 +37,7 @@ INSERT INTO hub_users (
     state,
     resident_country_code,
     resident_city,
+    preferred_language,
     created_at,
     updated_at
 ) VALUES
@@ -47,6 +50,7 @@ INSERT INTO hub_users (
  'ACTIVE_HUB_USER',
  'IND',
  NULL,
+ 'en',
  timezone('UTC'::text, now()),
  timezone('UTC'::text, now())),
 
@@ -59,6 +63,7 @@ INSERT INTO hub_users (
  'ACTIVE_HUB_USER',
  'USA',
  'New York',
+ 'en',
  timezone('UTC'::text, now()),
  timezone('UTC'::text, now()));
 

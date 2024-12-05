@@ -9,6 +9,7 @@ INSERT INTO public.hub_users (
     state,
     resident_country_code,
     resident_city,
+    preferred_language,
     created_at,
     updated_at
 )
@@ -22,6 +23,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'USA',
         'New York',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -34,6 +36,7 @@ VALUES
         'DISABLED_HUB_USER',
         'USA',
         'New York',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -46,6 +49,7 @@ VALUES
         'DELETED_HUB_USER',
         'USA',
         'San Francisco',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -58,6 +62,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'IND',
         'Bangalore',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -70,6 +75,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'IND',
         'Chennai',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -82,6 +88,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'GER',
         'Nuremberg',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -94,6 +101,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'PRC',
         'Shanghai',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),(
@@ -105,6 +113,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'FRA',
         'Paris',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -117,6 +126,7 @@ VALUES
         'ACTIVE_HUB_USER',
         'JPN',
         'Tokyo',
+        'en',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     );
