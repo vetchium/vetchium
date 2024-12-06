@@ -109,11 +109,16 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 			})
 
 			It("should print debug info", func() {
+				// Use a different application ID that hasn't been shortlisted yet
+				const testAppID = "APP-12345678-0010-0010-0010-000000000201-4"
+
 				// First verify the application exists
 				var count int
-				err := db.QueryRow(context.Background(),
+				err := db.QueryRow(
+					context.Background(),
 					"SELECT COUNT(*) FROM applications WHERE id = $1",
-					"APP-12345678-0010-0010-0010-000000000201-3").Scan(&count)
+					testAppID,
+				).Scan(&count)
 				Expect(err).ShouldNot(HaveOccurred())
 				fmt.Fprintf(GinkgoWriter, "Application count: %d\n", count)
 
@@ -122,7 +127,7 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 				err = db.QueryRow(
 					context.Background(),
 					"SELECT employer_id FROM applications WHERE id = $1",
-					"APP-12345678-0010-0010-0010-000000000201-3",
+					testAppID,
 				).Scan(&employerId)
 				Expect(err).ShouldNot(HaveOccurred())
 				fmt.Fprintf(GinkgoWriter, "Employer ID: %s\n", employerId)
@@ -132,7 +137,7 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 
 				// Then verify the admin token works
 				req := vetchi.ShortlistApplicationRequest{
-					ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
+					ApplicationID: testAppID,
 				}
 				resp := testPOSTGetResp(
 					adminToken,
@@ -155,7 +160,7 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 					`SELECT id, employer_id, opening_id, hub_user_id, application_state 
 					 FROM applications 
 					 WHERE id = $1`,
-					"APP-12345678-0010-0010-0010-000000000201-3",
+					testAppID,
 				).Scan(
 					&app.ID,
 					&app.EmployerID,
