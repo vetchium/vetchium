@@ -14,7 +14,7 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-var _ = FDescribe("Applied Openings", Ordered, func() {
+var _ = Describe("Applied Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken, nonAppToken string
 	var hubUser1Token, hubUser2Token string
