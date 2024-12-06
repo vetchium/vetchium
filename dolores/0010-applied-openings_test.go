@@ -340,6 +340,7 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 						token:       hubUser1Token,
 						request: vetchi.MyApplicationsRequest{
 							Limit: 10,
+							State: vetchi.ApplicationState(""),
 						},
 						wantStatus: http.StatusOK,
 						validate: func(apps []vetchi.HubApplication) {
@@ -351,6 +352,7 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 						token:       hubUser1Token,
 						request: vetchi.MyApplicationsRequest{
 							Limit: 5,
+							State: vetchi.ApplicationState(""),
 						},
 						wantStatus: http.StatusOK,
 						validate: func(apps []vetchi.HubApplication) {

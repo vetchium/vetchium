@@ -14,43 +14,184 @@ func (p *PG) MyApplications(
 ) ([]vetchi.HubApplication, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
+		p.log.Err("no hub user in context", "error", db.ErrNoHubUser)
 		return []vetchi.HubApplication{}, db.ErrNoHubUser
 	}
+
+	p.log.Dbg("my applications request",
+		"hubUserID", hubUser.ID,
+		"state", myApplicationsReq.State,
+		"paginationKey", myApplicationsReq.PaginationKey,
+		"limit", myApplicationsReq.Limit)
+
+	// First verify the hub user exists
+	var userExists bool
+	err := p.pool.QueryRow(ctx, `
+		SELECT EXISTS(SELECT 1 FROM hub_users WHERE id = $1)
+	`, hubUser.ID).Scan(&userExists)
+	if err != nil {
+		p.log.Err("failed to check hub user", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("hub user exists check", "exists", userExists)
+
+	// Then check applications count
+	var count int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*) 
+		FROM applications 
+		WHERE hub_user_id = $1
+	`, hubUser.ID).Scan(&count)
+	if err != nil {
+		p.log.Err("failed to count applications", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("found applications count", "count", count)
+
+	// First check the join between applications and openings
+	var joinCount int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM applications a
+		JOIN openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+		WHERE a.hub_user_id = $1
+	`, hubUser.ID).Scan(&joinCount)
+	if err != nil {
+		p.log.Err("failed to check join count", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("applications-openings join count", "count", joinCount)
+
+	// Then check the full join path
+	var fullJoinCount int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM applications a
+		JOIN openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+		JOIN employers e ON o.employer_id = e.id
+		JOIN employer_primary_domains epd ON e.id = epd.employer_id
+		JOIN domains d ON epd.domain_id = d.id
+		WHERE a.hub_user_id = $1
+	`, hubUser.ID).Scan(&fullJoinCount)
+	if err != nil {
+		p.log.Err("failed to check full join count", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("full join count", "count", fullJoinCount)
+
+	// First check just the hub_user_id condition
+	var whereCount int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM applications a
+		JOIN openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+		JOIN employers e ON o.employer_id = e.id
+		JOIN employer_primary_domains epd ON e.id = epd.employer_id
+		JOIN domains d ON epd.domain_id = d.id
+		WHERE a.hub_user_id = $1
+	`, hubUser.ID).Scan(&whereCount)
+	if err != nil {
+		p.log.Err("failed to check where count", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("where count (just hub_user_id)", "count", whereCount)
+
+	// Convert empty state to nil for the database query
+	var stateParam interface{}
+	if myApplicationsReq.State == "" {
+		stateParam = nil
+	} else {
+		stateParam = myApplicationsReq.State
+	}
+
+	// Convert pagination key to empty string if null
+	var paginationParam string
+	if myApplicationsReq.PaginationKey == nil {
+		paginationParam = ""
+	} else {
+		paginationParam = *myApplicationsReq.PaginationKey
+	}
+
+	// Then check with the application state condition
+	var stateCount int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM applications a
+		JOIN openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+		JOIN employers e ON o.employer_id = e.id
+		JOIN employer_primary_domains epd ON e.id = epd.employer_id
+		JOIN domains d ON epd.domain_id = d.id
+		WHERE a.hub_user_id = $1
+		AND ($2::application_states IS NULL OR a.application_state = $2::application_states)
+	`, hubUser.ID, stateParam).Scan(&stateCount)
+	if err != nil {
+		p.log.Err("failed to check state count", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("where count (with state)", "count", stateCount)
+
+	// Finally check with all conditions
+	var finalCount int
+	err = p.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM applications a
+		JOIN openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+		JOIN employers e ON o.employer_id = e.id
+		JOIN employer_primary_domains epd ON e.id = epd.employer_id
+		JOIN domains d ON epd.domain_id = d.id
+		WHERE a.hub_user_id = $1
+		AND ($2::application_states IS NULL OR a.application_state = $2::application_states)
+		AND ($3 = '' OR a.id > $3)
+	`, hubUser.ID, stateParam, paginationParam).Scan(&finalCount)
+	if err != nil {
+		p.log.Err("failed to check final count", "error", err)
+		return []vetchi.HubApplication{}, err
+	}
+	p.log.Dbg("where count (all conditions)", "count", finalCount)
 
 	query := `
 SELECT
     a.id,
-    a.state,
+    a.application_state,
     a.opening_id,
     o.title,
-    o.employer_name,
-    o.employer_domain,
+    e.company_name,
+    d.domain_name as employer_domain,
     a.created_at
 FROM
-    hub_applications a
+    applications a
 JOIN
-    openings o ON a.opening_id = o.id
+    openings o ON a.employer_id = o.employer_id AND a.opening_id = o.id
+JOIN
+    employers e ON o.employer_id = e.id
+JOIN
+    employer_primary_domains epd ON e.id = epd.employer_id
+JOIN
+    domains d ON epd.domain_id = d.id
 WHERE
     a.hub_user_id = $1
-    AND (COALESCE($2, a.state) = a.state)
-	AND a.created_at >= COALESCE(
-		(SELECT created_at FROM hub_applications WHERE id = $3),
-		'1970-01-01'
-	)
-	AND a.id > $3
+    AND ($2::application_states IS NULL OR a.application_state = $2::application_states)
+    AND ($3 = '' OR a.id > $3)
 ORDER BY
     a.created_at DESC,
     a.id ASC
-LIMIT $4
+LIMIT $4;
 `
+
+	p.log.Dbg("executing query",
+		"query", query,
+		"hubUserID", hubUser.ID,
+		"state", myApplicationsReq.State,
+		"paginationKey", myApplicationsReq.PaginationKey,
+		"limit", myApplicationsReq.Limit)
 
 	var hubApplications []vetchi.HubApplication
 	rows, err := p.pool.Query(
 		ctx,
 		query,
 		hubUser.ID,
-		myApplicationsReq.State,
-		myApplicationsReq.PaginationKey,
+		stateParam,
+		paginationParam,
 		myApplicationsReq.Limit,
 	)
 	if err != nil {
@@ -59,7 +200,9 @@ LIMIT $4
 	}
 	defer rows.Close()
 
+	var rowCount int
 	for rows.Next() {
+		rowCount++
 		var hubApplication vetchi.HubApplication
 		if err := rows.Scan(
 			&hubApplication.ApplicationID,
@@ -76,7 +219,9 @@ LIMIT $4
 		hubApplications = append(hubApplications, hubApplication)
 	}
 
-	p.log.Dbg("my applications", "hubApplications", hubApplications)
+	p.log.Dbg("my applications result",
+		"rowCount", rowCount,
+		"hubApplications", hubApplications)
 	return hubApplications, nil
 }
 

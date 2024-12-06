@@ -50,7 +50,7 @@ func (c ApplicationColorTag) IsValid() bool {
 }
 
 type GetApplicationsRequest struct {
-	State          ApplicationState     `json:"state"            validate:"required"`
+	State          ApplicationState     `json:"state"            validate:"validate_application_state"`
 	SearchQuery    *string              `json:"search_query"     validate:"omitempty,max=25"`
 	ColorTagFilter *ApplicationColorTag `json:"color_tag_filter" validate:"omitempty"`
 	OpeningID      string               `json:"opening_id"       validate:"required"`
@@ -93,7 +93,7 @@ type RejectApplicationRequest struct {
 }
 
 type MyApplicationsRequest struct {
-	State         ApplicationState `json:"state"          validate:"required,validate_application_state"`
+	State         ApplicationState `json:"state"          validate:"omitempty,validate_application_state"`
 	PaginationKey *string          `json:"pagination_key" validate:"omitempty"`
 	Limit         int64            `json:"limit"          validate:"required,min=0,max=40"`
 }
