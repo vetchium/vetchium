@@ -40,9 +40,6 @@ func WithdrawApplication(h wand.Wand) http.HandlerFunc {
 			case db.ErrApplicationStateInCompatible:
 				h.Dbg("exiting WithdrawApplication - incompatible state")
 				http.Error(w, err.Error(), http.StatusConflict)
-			case db.ErrNoHubUser:
-				h.Dbg("exiting WithdrawApplication - no hub user")
-				http.Error(w, err.Error(), http.StatusUnauthorized)
 			default:
 				h.Dbg("exiting WithdrawApplication - internal error")
 				http.Error(w, err.Error(), http.StatusInternalServerError)

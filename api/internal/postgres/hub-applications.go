@@ -92,7 +92,8 @@ func (p *PG) WithdrawApplication(
 
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
-		return db.ErrNoHubUser
+		p.log.Err("no hub user in context", "error", db.ErrNoHubUser)
+		return db.ErrInternal
 	}
 
 	query := `
@@ -131,7 +132,6 @@ RETURNING (SELECT status FROM application_check);
 		statusOK,
 		vetchi.WithdrawnAppState,
 	).Scan(&status)
-
 	if err != nil {
 		p.log.Err("failed to withdraw application", "error", err)
 		return db.ErrInternal
@@ -139,17 +139,16 @@ RETURNING (SELECT status FROM application_check);
 
 	switch status {
 	case statusNotFound:
+		p.log.Dbg("application not found", "id", applicationID)
 		return db.ErrNoApplication
 	case statusWrongState:
+		p.log.Dbg("application is in wrong state", "id", applicationID)
 		return db.ErrApplicationStateInCompatible
 	case statusOK:
+		p.log.Dbg("withdrew application", "id", applicationID)
 		return nil
 	default:
-		p.log.Err(
-			"unexpected status when withdrawing application",
-			"status",
-			status,
-		)
+		p.log.Err("unexpected status", "status", status)
 		return db.ErrInternal
 	}
 }
