@@ -386,6 +386,11 @@ func InitValidator(log util.Logger) (*Vator, error) {
 			return state.IsValid()
 		},
 	)
+	if err != nil {
+		log.Err("failed to register application state validation", "error", err)
+		return nil, err
+	}
+
 	err = validate.RegisterValidation(
 		"validate_application_color_tag",
 		func(fl validator.FieldLevel) bool {
