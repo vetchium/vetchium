@@ -15,6 +15,7 @@ type ApplyForOpeningRequest struct {
 type ApplicationState string
 
 const (
+	// Any change here should reflect in the IsValid() method too
 	AppliedAppState ApplicationState = "APPLIED"
 
 	// TODO: Remember to Reject all open applications when an Opening is closed
@@ -24,6 +25,14 @@ const (
 	WithdrawnAppState   ApplicationState = "WITHDRAWN"
 	ExpiredAppState     ApplicationState = "EXPIRED"
 )
+
+func (s ApplicationState) IsValid() bool {
+	return s == AppliedAppState ||
+		s == RejectedAppState ||
+		s == ShortlistedAppState ||
+		s == WithdrawnAppState ||
+		s == ExpiredAppState
+}
 
 type ApplicationColorTag string
 
@@ -84,7 +93,7 @@ type RejectApplicationRequest struct {
 }
 
 type MyApplicationsRequest struct {
-	State         ApplicationState `json:"state"          validate:"required"`
+	State         ApplicationState `json:"state"          validate:"required,validate_application_state"`
 	PaginationKey *string          `json:"pagination_key" validate:"omitempty"`
 	Limit         int64            `json:"limit"          validate:"required,min=0,max=40"`
 }
