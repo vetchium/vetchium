@@ -7,7 +7,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/wand"
 )
 
-func LogoutHandler(h wand.Wand) http.HandlerFunc {
+func Logout(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered hub logout")
 

@@ -8,9 +8,9 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func GetMyHandleHandler(h wand.Wand) http.HandlerFunc {
+func GetMyHandle(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered GetMyHandleHandler")
+		h.Dbg("Entered GetMyHandle")
 
 		handle, err := h.DB().GetMyHandle(r.Context())
 		if err != nil {

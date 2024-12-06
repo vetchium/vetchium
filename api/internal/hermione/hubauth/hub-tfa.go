@@ -11,9 +11,9 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func HubTFAHandler(h wand.Wand) http.HandlerFunc {
+func HubTFA(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered HubTFAHandler")
+		h.Dbg("Entered HubTFA")
 		var hubTFARequest vetchi.HubTFARequest
 		err := json.NewDecoder(r.Body).Decode(&hubTFARequest)
 		if err != nil {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/hermione/applications"
+	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
@@ -187,7 +187,7 @@ func (h *Hermione) Run() error {
 	// Application related endpoints
 	h.mw.Protect(
 		"/employer/get-applications",
-		applications.GetApplications(h),
+		app.GetApplications(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.ApplicationsCRUD,
@@ -197,7 +197,7 @@ func (h *Hermione) Run() error {
 
 	h.mw.Protect(
 		"/employer/set-application-color-tag",
-		applications.SetApplicationColorTag(h),
+		app.SetApplicationColorTag(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.ApplicationsCRUD,
@@ -206,7 +206,7 @@ func (h *Hermione) Run() error {
 
 	h.mw.Protect(
 		"/employer/remove-application-color-tag",
-		applications.RemoveApplicationColorTag(h),
+		app.RemoveApplicationColorTag(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.ApplicationsCRUD,
@@ -215,7 +215,7 @@ func (h *Hermione) Run() error {
 
 	h.mw.Protect(
 		"/employer/shortlist-application",
-		applications.ShortlistApplication(h),
+		app.ShortlistApplication(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.ApplicationsCRUD,
@@ -224,7 +224,7 @@ func (h *Hermione) Run() error {
 
 	h.mw.Protect(
 		"/employer/reject-application",
-		applications.RejectApplication(h),
+		app.RejectApplication(h),
 		[]vetchi.OrgUserRole{
 			vetchi.Admin,
 			vetchi.ApplicationsCRUD,
@@ -235,22 +235,19 @@ func (h *Hermione) Run() error {
 		return h.mw.HubWrap(fn)
 	}
 	// Hub related endpoints
-	http.HandleFunc("/hub/login", ha.LoginHandler(h))
-	http.HandleFunc("/hub/tfa", ha.HubTFAHandler(h))
-	http.Handle("/hub/get-my-handle", wrap(ha.GetMyHandleHandler(h)))
-	http.HandleFunc("/hub/logout", ha.LogoutHandler(h))
+	http.HandleFunc("/hub/login", ha.Login(h))
+	http.HandleFunc("/hub/tfa", ha.HubTFA(h))
+	http.Handle("/hub/get-my-handle", wrap(ha.GetMyHandle(h)))
+	http.HandleFunc("/hub/logout", ha.Logout(h))
 
-	http.HandleFunc("/hub/forgot-password", ha.ForgotPasswordHandler(h))
-	http.HandleFunc("/hub/reset-password", ha.ResetPasswordHandler(h))
-	http.Handle("/hub/change-password", wrap(ha.ChangePasswordHandler(h)))
+	http.HandleFunc("/hub/forgot-password", ha.ForgotPassword(h))
+	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
+	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
-	http.Handle("/hub/find-openings", wrap(ho.FindHubOpeningsHandler(h)))
-	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpeningHandler(h)))
-	http.Handle("/hub/my-applications", wrap(ha.MyApplicationsHandler(h)))
-	http.Handle(
-		"/hub/withdraw-application",
-		wrap(ha.WithdrawApplicationHandler(h)),
-	)
+	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
+	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpening(h)))
+	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
+	http.Handle("/hub/withdraw-application", wrap(app.WithdrawApplication(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

@@ -11,9 +11,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ChangePasswordHandler(h wand.Wand) http.HandlerFunc {
+func ChangePassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered ChangePasswordHandler")
+		h.Dbg("Entered ChangePassword")
 
 		var changePasswordRequest vetchi.ChangePasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&changePasswordRequest)

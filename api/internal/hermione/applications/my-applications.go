@@ -8,9 +8,9 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func MyApplicationsHandler(h wand.Wand) http.HandlerFunc {
+func MyApplications(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered MyApplicationsHandler")
+		h.Dbg("Entered MyApplications")
 		var myApplicationsReq vetchi.MyApplicationsRequest
 		err := json.NewDecoder(r.Body).Decode(&myApplicationsReq)
 		if err != nil {

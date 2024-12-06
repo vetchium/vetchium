@@ -15,8 +15,9 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func ForgotPasswordHandler(h wand.Wand) http.HandlerFunc {
+func ForgotPassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered ForgotPassword")
 		defer func() {
 			h.Dbg("Sleep for random duration to avoid timing attacks")
 			<-time.After(
@@ -25,8 +26,6 @@ func ForgotPasswordHandler(h wand.Wand) http.HandlerFunc {
 				),
 			)
 		}()
-
-		h.Dbg("Entered ForgotPasswordHandler")
 
 		var forgotPasswordRequest vetchi.ForgotPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&forgotPasswordRequest)

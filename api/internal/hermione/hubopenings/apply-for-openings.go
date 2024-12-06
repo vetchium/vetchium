@@ -16,9 +16,9 @@ import (
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
-func ApplyForOpeningHandler(h wand.Wand) http.HandlerFunc {
+func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered ApplyForOpeningHandler")
+		h.Dbg("Entered ApplyForOpening")
 		var applyForOpeningReq vetchi.ApplyForOpeningRequest
 		err := json.NewDecoder(r.Body).Decode(&applyForOpeningReq)
 		if err != nil {

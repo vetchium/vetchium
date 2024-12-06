@@ -11,9 +11,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ResetPasswordHandler(h wand.Wand) http.HandlerFunc {
+func ResetPassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered ResetPasswordHandler")
+		h.Dbg("Entered ResetPassword")
 		var resetPasswordRequest vetchi.HubUserResetPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&resetPasswordRequest)
 		if err != nil {
