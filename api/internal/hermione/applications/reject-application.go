@@ -32,6 +32,11 @@ func RejectApplication(h wand.Wand) http.HandlerFunc {
 		mailInfo, err := h.DB().
 			GetApplicationMailInfo(r.Context(), rejectApplicationReq.ApplicationID)
 		if err != nil {
+			if errors.Is(err, db.ErrNoApplication) {
+				h.Dbg("application not found", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
 			h.Dbg("failed to get application mail info", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

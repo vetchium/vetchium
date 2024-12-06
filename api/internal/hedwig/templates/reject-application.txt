@@ -1,0 +1,5 @@
+Hi {{.hub_user_full_name}},
+
+Your Application for {{.employer_company_name}} ({{.employer_primary_domain}}) for {{.job_title}} has been rejected.
+
+May you find a better opportunity soon. Thanks.

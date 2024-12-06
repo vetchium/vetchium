@@ -31,7 +31,6 @@ func (p *PG) RejectApplication(
 	}
 	defer tx.Rollback(ctx)
 
-	// Modified query to check application existence and state
 	applicationQuery := `
 WITH application_check AS (
 	SELECT CASE
@@ -42,18 +41,20 @@ WITH application_check AS (
 		WHEN EXISTS (
 			SELECT 1 FROM applications
 			WHERE id = $2 AND employer_id = $3
-			AND application_state != $1
+			AND application_state != $7
 		) THEN $5
 		ELSE $6
 	END as status
+),
+update_result AS (
+	UPDATE applications
+	SET application_state = $1
+	WHERE id = $2 
+	AND employer_id = $3 
+	AND application_state = $7
+	AND (SELECT status FROM application_check) = $6
 )
-UPDATE applications
-SET application_state = $1
-WHERE id = $2 
-AND employer_id = $3 
-AND application_state = $7
-AND (SELECT status FROM application_check) = $6
-RETURNING (SELECT status FROM application_check)
+SELECT status FROM application_check;
 `
 
 	var status string
@@ -70,19 +71,25 @@ RETURNING (SELECT status FROM application_check)
 	).Scan(&status)
 
 	if err != nil {
-		p.log.Err("failed to update application state", "error", err)
+		p.log.Err("failed to update application", "error", err)
 		return db.ErrInternal
 	}
 
 	switch status {
 	case statusNotFound:
+		p.log.Dbg("application not found", "id", rejectRequest.ApplicationID)
 		return db.ErrNoApplication
 	case statusWrongState:
+		p.log.Dbg(
+			"application is in wrong state",
+			"id",
+			rejectRequest.ApplicationID,
+		)
 		return db.ErrApplicationStateInCompatible
 	case statusOK:
 		// continue with the rest of the function
 	default:
-		p.log.Err("unexpected status when updating application", "error", err)
+		p.log.Err("unexpected status", "status", status)
 		return db.ErrInternal
 	}
 

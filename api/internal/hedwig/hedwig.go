@@ -57,6 +57,7 @@ func (h *hedwig) GenerateEmail(req GenerateEmailReq) (db.Email, error) {
 		filepath.Join("hedwig", "templates", req.TemplateName+".txt"),
 	)
 	if err != nil {
+		h.Err("Failed to read template", "error", err)
 		return db.Email{}, err
 	}
 
