@@ -39,7 +39,7 @@ func WithdrawApplication(h wand.Wand) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			case db.ErrApplicationStateInCompatible:
 				h.Dbg("exiting WithdrawApplication - incompatible state")
-				http.Error(w, err.Error(), http.StatusConflict)
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			default:
 				h.Dbg("exiting WithdrawApplication - internal error")
 				http.Error(w, err.Error(), http.StatusInternalServerError)
