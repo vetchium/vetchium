@@ -49,6 +49,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/psankar/vetchi/api v0.0.0-20241204174953-c06ba76843a1 h1:lCjJce8ViiHqnWBV8EpFqlRx4EZbbhPPUdE6+LaweWk=
 github.com/psankar/vetchi/api v0.0.0-20241204174953-c06ba76843a1/go.mod h1:D3uwuvOq9e1VOGKagFB65XoryRWnFz4LontE/M3YSbw=
+github.com/psankar/vetchi/api v0.0.0-20241206061703-b12d8664defc h1:80NP5rKP1itZN54mhmDv8v+C0l3NDnBOoJ0u/txH39I=
+github.com/psankar/vetchi/api v0.0.0-20241206061703-b12d8664defc/go.mod h1:D3uwuvOq9e1VOGKagFB65XoryRWnFz4LontE/M3YSbw=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
