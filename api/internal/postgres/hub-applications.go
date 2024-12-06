@@ -79,3 +79,77 @@ LIMIT $4
 	p.log.Dbg("my applications", "hubApplications", hubApplications)
 	return hubApplications, nil
 }
+
+func (p *PG) WithdrawApplication(
+	ctx context.Context,
+	applicationID string,
+) error {
+	const (
+		statusNotFound   = "not_found"
+		statusWrongState = "wrong_state"
+		statusOK         = "ok"
+	)
+
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		return db.ErrNoHubUser
+	}
+
+	query := `
+WITH application_check AS (
+	SELECT CASE
+		WHEN NOT EXISTS (
+			SELECT 1 FROM applications
+			WHERE id = $1 AND hub_user_id = $2
+		) THEN $4
+		WHEN EXISTS (
+			SELECT 1 FROM applications
+			WHERE id = $1 AND hub_user_id = $2
+			AND application_state != $3
+		) THEN $5
+		ELSE $6
+	END as status
+)
+UPDATE applications
+SET application_state = $7
+WHERE id = $1
+AND hub_user_id = $2
+AND application_state = $3
+AND (SELECT status FROM application_check) = $6
+RETURNING (SELECT status FROM application_check);
+`
+
+	var status string
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		applicationID,
+		hubUser.ID,
+		vetchi.AppliedAppState,
+		statusNotFound,
+		statusWrongState,
+		statusOK,
+		vetchi.WithdrawnAppState,
+	).Scan(&status)
+
+	if err != nil {
+		p.log.Err("failed to withdraw application", "error", err)
+		return db.ErrInternal
+	}
+
+	switch status {
+	case statusNotFound:
+		return db.ErrNoApplication
+	case statusWrongState:
+		return db.ErrApplicationStateInCompatible
+	case statusOK:
+		return nil
+	default:
+		p.log.Err(
+			"unexpected status when withdrawing application",
+			"status",
+			status,
+		)
+		return db.ErrInternal
+	}
+}
