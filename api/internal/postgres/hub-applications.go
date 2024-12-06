@@ -38,8 +38,8 @@ func (p *PG) MyApplications(
 	// Then check applications count
 	var count int
 	err = p.pool.QueryRow(ctx, `
-		SELECT COUNT(*) 
-		FROM applications 
+		SELECT COUNT(*)
+		FROM applications
 		WHERE hub_user_id = $1
 	`, hubUser.ID).Scan(&count)
 	if err != nil {
@@ -233,6 +233,7 @@ func (p *PG) WithdrawApplication(
 		statusNotFound   = "not_found"
 		statusWrongState = "wrong_state"
 		statusOK         = "ok"
+		statusUpdated    = "updated"
 	)
 
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
@@ -242,28 +243,33 @@ func (p *PG) WithdrawApplication(
 	}
 
 	query := `
-WITH application_check AS (
-	SELECT CASE
-		WHEN NOT EXISTS (
-			SELECT 1 FROM applications
-			WHERE id = $1 AND hub_user_id = $2
-		) THEN $4
-		WHEN EXISTS (
-			SELECT 1 FROM applications
-			WHERE id = $1 AND hub_user_id = $2
-			AND application_state != $3
-		) THEN $5
-		ELSE $6
-	END as status
-)
-UPDATE applications
-SET application_state = $7
-WHERE id = $1
-AND hub_user_id = $2
-AND application_state = $3
-AND (SELECT status FROM application_check) = $6
-RETURNING (SELECT status FROM application_check);
-`
+	WITH application_check AS (
+		SELECT
+			CASE
+				WHEN NOT EXISTS (
+					SELECT 1 FROM applications
+					WHERE id = $1 AND hub_user_id = $2
+				) THEN $4::text
+				WHEN EXISTS (
+					SELECT 1 FROM applications
+					WHERE id = $1 AND hub_user_id = $2
+					AND application_state != $3
+				) THEN $5::text
+				ELSE $6::text
+			END as status
+	), state_update AS (
+		UPDATE applications a
+		SET application_state = $7
+		WHERE id = $1
+		AND hub_user_id = $2
+		AND application_state = $3
+		AND EXISTS (SELECT 1 FROM application_check WHERE status = $6)
+		RETURNING $8::text
+	)
+	SELECT COALESCE(
+		(SELECT $8::text FROM state_update LIMIT 1),
+		(SELECT status FROM application_check)
+	);`
 
 	var status string
 	err := p.pool.QueryRow(
@@ -276,6 +282,7 @@ RETURNING (SELECT status FROM application_check);
 		statusWrongState,
 		statusOK,
 		vetchi.WithdrawnAppState,
+		statusUpdated,
 	).Scan(&status)
 	if err != nil {
 		p.log.Err("failed to withdraw application", "error", err)
@@ -289,7 +296,7 @@ RETURNING (SELECT status FROM application_check);
 	case statusWrongState:
 		p.log.Dbg("application is in wrong state", "id", applicationID)
 		return db.ErrApplicationStateInCompatible
-	case statusOK:
+	case statusUpdated:
 		p.log.Dbg("withdrew application", "id", applicationID)
 		return nil
 	default:

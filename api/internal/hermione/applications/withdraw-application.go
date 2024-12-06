@@ -32,7 +32,6 @@ func WithdrawApplication(h wand.Wand) http.HandlerFunc {
 			withdrawApplicationReq.ApplicationID,
 		)
 		if err != nil {
-			h.Err("failed to withdraw application", "error", err)
 			switch err {
 			case db.ErrNoApplication:
 				h.Dbg("exiting WithdrawApplication - application not found")
