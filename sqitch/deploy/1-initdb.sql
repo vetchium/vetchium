@@ -321,11 +321,13 @@ CREATE TYPE candidacy_states AS ENUM (
 );
 CREATE TABLE candidacies(
     id TEXT PRIMARY KEY,
+
     application_id TEXT REFERENCES applications(id) NOT NULL,
     CONSTRAINT fk_application FOREIGN KEY (application_id) REFERENCES applications(id),
+
     employer_id UUID REFERENCES employers(id) NOT NULL,
     CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES employers(id),
-    CONSTRAINT uniq_application_employer_id UNIQUE (application_id, employer_id),
+
     opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
 

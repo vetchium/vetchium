@@ -1,6 +1,16 @@
 BEGIN;
 
--- Delete applications
+-- Delete candidacies first (new)
+DELETE FROM candidacies 
+WHERE application_id IN (
+    SELECT id FROM applications 
+    WHERE employer_id IN (
+        SELECT id FROM employers 
+        WHERE onboard_admin_email LIKE '%@applied%.example'
+    )
+);
+
+-- Delete applications (existing)
 DELETE FROM applications 
 WHERE employer_id IN (
     SELECT id FROM employers 
@@ -33,6 +43,13 @@ WHERE employer_id IN (
 
 -- Delete domains
 DELETE FROM domains 
+WHERE employer_id IN (
+    SELECT id FROM employers 
+    WHERE onboard_admin_email LIKE '%@applied%.example'
+);
+
+-- Delete employer primary domains
+DELETE FROM employer_primary_domains 
 WHERE employer_id IN (
     SELECT id FROM employers 
     WHERE onboard_admin_email LIKE '%@applied%.example'

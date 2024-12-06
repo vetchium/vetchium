@@ -87,6 +87,18 @@ INSERT INTO domains (
     NOW()
 );
 
+-- Create employer primary domains
+INSERT INTO employer_primary_domains (
+    employer_id,
+    domain_id
+) VALUES (
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '12345678-0010-0010-0010-000000000301'::uuid
+), (
+    '12345678-0010-0010-0010-000000000202'::uuid,
+    '12345678-0010-0010-0010-000000000302'::uuid
+);
+
 -- Create org_users
 INSERT INTO org_users (
     id,
@@ -123,33 +135,6 @@ INSERT INTO org_users (
     ARRAY[]::org_user_roles[],
     'ACTIVE_ORG_USER',
     '12345678-0010-0010-0010-000000000201'::uuid,
-    NOW()
-);
-
--- Create org_user_tokens
-INSERT INTO org_user_tokens (
-    token,
-    org_user_id,
-    token_type,
-    token_valid_till,
-    created_at
-) VALUES (
-    'admin-token',
-    '12345678-0010-0010-0010-000000000401'::uuid,
-    'EMPLOYER_SESSION',
-    NOW() + INTERVAL '1 day',
-    NOW()
-), (
-    'viewer-token',
-    '12345678-0010-0010-0010-000000000402'::uuid,
-    'EMPLOYER_SESSION',
-    NOW() + INTERVAL '1 day',
-    NOW()
-), (
-    'non-app-token',
-    '12345678-0010-0010-0010-000000000403'::uuid,
-    'EMPLOYER_SESSION',
-    NOW() + INTERVAL '1 day',
     NOW()
 );
 
@@ -296,12 +281,67 @@ INSERT INTO applications (
     '12345678-0010-0010-0010-000000050002'::uuid,
     NOW()
 ), (
-    'APP-12345678-0010-0010-0010-000000000202-1',
+    'APP-12345678-0010-0010-0010-000000000201-3',
     '12345678-0010-0010-0010-000000000201'::uuid,
-    '2024-Mar-06-2',
+    '2024-Mar-06-1',
     'Cover Letter 3',
     'resume3.pdf',
     'internal-3.pdf',
+    'APPLIED',
+    NULL,
+    '12345678-0010-0010-0010-000000050001'::uuid,
+    NOW()
+), (
+    'APP-12345678-0010-0010-0010-000000000201-4',
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '2024-Mar-06-1',
+    'Cover Letter 4',
+    'resume4.pdf',
+    'internal-4.pdf',
+    'APPLIED',
+    NULL,
+    '12345678-0010-0010-0010-000000050001'::uuid,
+    NOW()
+), (
+    'APP-12345678-0010-0010-0010-000000000201-5',
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '2024-Mar-06-2',
+    'Cover Letter 5',
+    'resume5.pdf',
+    'internal-5.pdf',
+    'APPLIED',
+    NULL,
+    '12345678-0010-0010-0010-000000050001'::uuid,
+    NOW()
+), (
+    'APP-12345678-0010-0010-0010-000000000201-6',
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '2024-Mar-06-2',
+    'Cover Letter 6',
+    'resume6.pdf',
+    'internal-6.pdf',
+    'APPLIED',
+    NULL,
+    '12345678-0010-0010-0010-000000050001'::uuid,
+    NOW()
+), (
+    'APP-12345678-0010-0010-0010-000000000201-7',
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '2024-Mar-06-2',
+    'Cover Letter 7',
+    'resume7.pdf',
+    'internal-7.pdf',
+    'APPLIED',
+    NULL,
+    '12345678-0010-0010-0010-000000050001'::uuid,
+    NOW()
+), (
+    'APP-12345678-0010-0010-0010-000000000201-8',
+    '12345678-0010-0010-0010-000000000201'::uuid,
+    '2024-Mar-06-2',
+    'Cover Letter 8',
+    'resume8.pdf',
+    'internal-8.pdf',
     'APPLIED',
     NULL,
     '12345678-0010-0010-0010-000000050001'::uuid,

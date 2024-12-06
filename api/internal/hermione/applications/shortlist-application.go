@@ -36,6 +36,12 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 		mailInfo, err := h.DB().
 			GetApplicationMailInfo(r.Context(), shortlistRequest.ApplicationID)
 		if err != nil {
+			if errors.Is(err, db.ErrNoApplication) {
+				h.Dbg("not found", "id", shortlistRequest.ApplicationID)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("failed to get application mail info", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
@@ -48,6 +54,7 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 			time.Now().UnixNano(),
 			36,
 		)
+		h.Dbg("New candidacyID generated", "id", candidacyID)
 
 		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.ShortlistApplication,

@@ -2,6 +2,7 @@ package dolores
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,6 +53,126 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 	})
 
 	Describe("Employer Application Management", func() {
+		Context("Application State Changes", func() {
+			It("should handle shortlisting applications", func() {
+				type shortlistTestCase struct {
+					description string
+					token       string
+					request     vetchi.ShortlistApplicationRequest
+					wantStatus  int
+				}
+
+				testCases := []shortlistTestCase{
+					{
+						description: "shortlist with admin token",
+						token:       adminToken,
+						request: vetchi.ShortlistApplicationRequest{
+							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
+						},
+						wantStatus: http.StatusOK,
+					},
+					{
+						description: "shortlist already shortlisted application",
+						token:       adminToken,
+						request: vetchi.ShortlistApplicationRequest{
+							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
+						},
+						wantStatus: http.StatusUnprocessableEntity,
+					},
+					{
+						description: "shortlist with viewer token",
+						token:       viewerToken,
+						request: vetchi.ShortlistApplicationRequest{
+							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-4",
+						},
+						wantStatus: http.StatusForbidden,
+					},
+					{
+						description: "shortlist non-existent application",
+						token:       adminToken,
+						request: vetchi.ShortlistApplicationRequest{
+							ApplicationID: "non-existent",
+						},
+						wantStatus: http.StatusNotFound,
+					},
+				}
+
+				for _, tc := range testCases {
+					fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
+					testPOST(
+						tc.token,
+						tc.request,
+						"/employer/shortlist-application",
+						tc.wantStatus,
+					)
+				}
+			})
+
+			It("should print debug info", func() {
+				// First verify the application exists
+				var count int
+				err := db.QueryRow(context.Background(),
+					"SELECT COUNT(*) FROM applications WHERE id = $1",
+					"APP-12345678-0010-0010-0010-000000000201-3").Scan(&count)
+				Expect(err).ShouldNot(HaveOccurred())
+				fmt.Fprintf(GinkgoWriter, "Application count: %d\n", count)
+
+				// Let's also check the employer_id
+				var employerId string
+				err = db.QueryRow(
+					context.Background(),
+					"SELECT employer_id FROM applications WHERE id = $1",
+					"APP-12345678-0010-0010-0010-000000000201-3",
+				).Scan(&employerId)
+				Expect(err).ShouldNot(HaveOccurred())
+				fmt.Fprintf(GinkgoWriter, "Employer ID: %s\n", employerId)
+
+				// Print admin token for debugging
+				fmt.Fprintf(GinkgoWriter, "Admin token: %s\n", adminToken)
+
+				// Then verify the admin token works
+				req := vetchi.ShortlistApplicationRequest{
+					ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
+				}
+				resp := testPOSTGetResp(
+					adminToken,
+					req,
+					"/employer/shortlist-application",
+					http.StatusOK,
+				)
+				fmt.Fprintf(GinkgoWriter, "Response: %s\n", resp)
+
+				// Print full application details
+				var app struct {
+					ID               string
+					EmployerID       string
+					OpeningID        string
+					HubUserID        string
+					ApplicationState string
+				}
+				err = db.QueryRow(
+					context.Background(),
+					`SELECT id, employer_id, opening_id, hub_user_id, application_state 
+					 FROM applications 
+					 WHERE id = $1`,
+					"APP-12345678-0010-0010-0010-000000000201-3",
+				).Scan(
+					&app.ID,
+					&app.EmployerID,
+					&app.OpeningID,
+					&app.HubUserID,
+					&app.ApplicationState,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				fmt.Fprintf(GinkgoWriter, "Application details:\n")
+				fmt.Fprintf(GinkgoWriter, "  ID: %s\n", app.ID)
+				fmt.Fprintf(GinkgoWriter, "  EmployerID: %s\n", app.EmployerID)
+				fmt.Fprintf(GinkgoWriter, "  OpeningID: %s\n", app.OpeningID)
+				fmt.Fprintf(GinkgoWriter, "  HubUserID: %s\n", app.HubUserID)
+				fmt.Fprintf(GinkgoWriter, "  State: %s\n", app.ApplicationState)
+			})
+		})
+
 		Context("Color Tag Management", func() {
 			It("should handle color tag operations", func() {
 				type colorTagTestCase struct {
@@ -149,52 +270,6 @@ var _ = FDescribe("Applied Openings", Ordered, func() {
 		})
 
 		Context("Application State Changes", func() {
-			It("should handle shortlisting applications", func() {
-				type shortlistTestCase struct {
-					description string
-					token       string
-					request     vetchi.ShortlistApplicationRequest
-					wantStatus  int
-				}
-
-				testCases := []shortlistTestCase{
-					{
-						description: "shortlist with admin token",
-						token:       adminToken,
-						request: vetchi.ShortlistApplicationRequest{
-							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
-						},
-						wantStatus: http.StatusOK,
-					},
-					{
-						description: "shortlist with viewer token",
-						token:       viewerToken,
-						request: vetchi.ShortlistApplicationRequest{
-							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-4",
-						},
-						wantStatus: http.StatusForbidden,
-					},
-					{
-						description: "shortlist non-existent application",
-						token:       adminToken,
-						request: vetchi.ShortlistApplicationRequest{
-							ApplicationID: "non-existent",
-						},
-						wantStatus: http.StatusNotFound,
-					},
-				}
-
-				for _, tc := range testCases {
-					fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
-					testPOST(
-						tc.token,
-						tc.request,
-						"/employer/shortlist-application",
-						tc.wantStatus,
-					)
-				}
-			})
-
 			It("should handle rejecting applications", func() {
 				type rejectTestCase struct {
 					description string
