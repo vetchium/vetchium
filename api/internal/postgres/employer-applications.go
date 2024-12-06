@@ -119,7 +119,7 @@ SELECT
 	h.preferred_language,
 	e.id as employer_id,
 	e.company_name,
-	d.domain_name as primary_domain
+	d.domain_name as primary_domain,
 	o.id as opening_id,
 	o.title as opening_title
 FROM applications a
