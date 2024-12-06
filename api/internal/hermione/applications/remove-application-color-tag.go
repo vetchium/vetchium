@@ -2,8 +2,10 @@ package applications
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
@@ -30,6 +32,18 @@ func RemoveApplicationColorTag(h wand.Wand) http.HandlerFunc {
 			rmApplicationColorTagReq,
 		)
 		if err != nil {
+			if errors.Is(err, db.ErrNoApplication) {
+				h.Dbg("not found", "id", rmApplicationColorTagReq.ApplicationID)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrApplicationStateInCompatible) {
+				h.Dbg("state", "id", rmApplicationColorTagReq.ApplicationID)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to remove application color tag", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

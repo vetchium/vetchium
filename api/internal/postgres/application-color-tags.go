@@ -38,14 +38,18 @@ func (p *PG) SetApplicationColorTag(
 				) THEN $6
 				ELSE $7
 			END as status
+		),
+		update_result AS (
+			UPDATE applications
+			SET color_tag = CASE 
+				WHEN (SELECT status FROM application_check) = $7 THEN $1 
+				ELSE color_tag 
+			END
+			WHERE id = $2 
+			AND employer_id = $3
+			AND application_state = $4
 		)
-		UPDATE applications
-		SET color_tag = $1
-		WHERE id = $2
-		AND employer_id = $3
-		AND application_state = $4
-		AND (SELECT status FROM application_check) = $7
-		RETURNING (SELECT status FROM application_check);
+		SELECT status FROM application_check;
 	`
 
 	var status string
@@ -96,28 +100,32 @@ func (p *PG) RemoveApplicationColorTag(
 	)
 
 	query := `
-WITH application_check AS (
-	SELECT CASE
-		WHEN NOT EXISTS (
-			SELECT 1 FROM applications
-			WHERE id = $1 AND employer_id = $2
-		) THEN $4
-		WHEN EXISTS (
-			SELECT 1 FROM applications
-			WHERE id = $1 AND employer_id = $2
-			AND application_state != $3
-		) THEN $5
-		ELSE $6
-	END as status
-)
-UPDATE applications
-SET color_tag = NULL
-WHERE id = $1
-AND employer_id = $2
-AND application_state = $3
-AND (SELECT status FROM application_check) = $6
-RETURNING (SELECT status FROM application_check);
-`
+		WITH application_check AS (
+			SELECT CASE
+				WHEN NOT EXISTS (
+					SELECT 1 FROM applications
+					WHERE id = $1 AND employer_id = $2
+				) THEN $4
+				WHEN EXISTS (
+					SELECT 1 FROM applications
+					WHERE id = $1 AND employer_id = $2
+					AND application_state != $3
+				) THEN $5
+				ELSE $6
+			END as status
+		),
+		update_result AS (
+			UPDATE applications
+			SET color_tag = CASE 
+				WHEN (SELECT status FROM application_check) = $6 THEN NULL 
+				ELSE color_tag 
+			END
+			WHERE id = $1 
+			AND employer_id = $2
+			AND application_state = $3
+		)
+		SELECT status FROM application_check;
+	`
 
 	var status string
 	err := p.pool.QueryRow(
