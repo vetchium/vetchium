@@ -24,7 +24,7 @@ model MyApplicationsRequest {
 }
 
 model HubApplication {
-    id: string;
+    application_id: string;
     state: ApplicationState;
     opening_id: string;
     opening_title: string;
@@ -45,7 +45,7 @@ interface MyApplications {
 }
 
 model WithdrawApplicationRequest {
-    id: string;
+    application_id: string;
 }
 
 @route("/hub/withdraw-application")

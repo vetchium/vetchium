@@ -246,6 +246,11 @@ func (h *Hermione) Run() error {
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpeningsHandler(h)))
 	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpeningHandler(h)))
+	http.Handle("/hub/my-applications", wrap(ha.MyApplicationsHandler(h)))
+	http.Handle(
+		"/hub/withdraw-application",
+		wrap(ha.WithdrawApplicationHandler(h)),
+	)
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

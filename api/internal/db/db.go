@@ -92,6 +92,10 @@ type DB interface {
 	AuthHubUser(c c.Context, token string) (HubUserTO, error)
 	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
 	CreateApplication(c.Context, ApplyOpeningReq) error
+	MyApplications(
+		c.Context,
+		v.MyApplicationsRequest,
+	) ([]v.HubApplication, error)
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
 	FindHubOpenings(
