@@ -1,0 +1,19 @@
+Create HTML UIs for the following with some sample data. No need for any backend code to be generated. Hardcode the data and the users. Use React components and tailwind as needed.
+
+I am trying to build a jobs site. There will be a landing page. From the landing page, there will be two links. One for an Employer site and another a Hub.
+
+The Employer site will have a SignIn page. Users will be able to sign in with three input fields: domain, email address, password. There will be various roles availables for these users. These users of the Employer site are called OrgUsers. There will be a page to add or remove more OrgUsers. There will be a page to add/remove Locations for the Employer. There will be a page to add/remove Departments for the Employer. There will be a page to Create an Opening for the Employer. The other fields that we created such as Locations, Departments will be used here. Every Opening will have a HiringManager and a Recruiter for the Opening who are OrgUsers under that Employer.
+
+The Hub will have a Login page. Users who have signed up will be logging in to the Hub via two fields: email address and password. Once a Hub user logs in, they will have a page to Find Openings. They will be able to filter based on Company Names, Locations in a country. A hub user must choose a country before they can filter based on Locations. Only one country can be selected at a time. Once they find an Opening that they like, they can Apply for the Opening along with a resume and a cover letter, which would create an Application.
+
+Once an Application is created, the Hub user will be able to see the status of the Application. The Employer will be able to see all the Applications for an Opening and can either Shortlist or Reject them. The OrgUser will be able to look at the Resume and Cover Letter of the Applicants.
+
+Once an Application is Shortlisted, a Candidacy is created. The Candidacy will have a status. The status will be updated as the Candidacy progresses. The Candidacy will have a timeline of events associated with it. There will be multiple rounds of Interviews created for a Candidacy. The Recruiter and the Candidate will be able to chat on the Candidacy page. They will be able to co-ordinate and schedule the Interviews. Each Interview will have one or more Interviewers who are OrgUsers under that Employer.
+
+Once an Interview is completed, the Interviewers will be able to rate the Candidates under three sections: Positives, Negatives and Overall. They should choose an Option among: Strong Yes, Yes, No, Strong No. They can also add a "Feedback to the Candidate" section too as part of their Interview Feedback.
+
+Once all the Interviews are completed, the Hiring Manager will be able to make a Hiring Decision. They can either Offer a job or Reject the Candidate. If a job is offered, the Candidate can either Accept or Decline the Offer. The candidate can also Withdraw their Application or Candidacy at any time.
+
+In addition to the above screens, there should be a screen to see the list of all the Openings, Applications, Candidacies, Interviews, etc. for an Employer. A Hub user should be able to see the list of all the Openings, Applications, Candidacies, Interviews, etc. that they have applied to.
+
+The Employer site and the Hub should have a common landing page but different colorschemes. The UI should be rich, responsive and beautiful. Any component library such as ant.design can be used if needed. But do not mix two different component libraries. Use one component library for the whole project. The UI should be fluid to use on both desktop and mobile devices. There should be a settings page, change password, and other usual pages.
