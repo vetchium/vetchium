@@ -7,9 +7,11 @@ import "./employer/costcenters.tsp";
 import "./employer/locations.tsp";
 import "./employer/orgusers.tsp";
 import "./employer/openings.tsp";
+import "./employer/candidacy.tsp";
 
 import "./hub/hubusers.tsp";
 import "./hub/openings.tsp";
+import "./hub/candidacy.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
