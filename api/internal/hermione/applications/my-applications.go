@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func MyApplications(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered MyApplications")
-		var myApplicationsReq vetchi.MyApplicationsRequest
+		var myApplicationsReq hub.MyApplicationsRequest
 		err := json.NewDecoder(r.Body).Decode(&myApplicationsReq)
 		if err != nil {
 			h.Dbg("failed to decode my applications request", "error", err)
