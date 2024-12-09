@@ -1,6 +1,10 @@
-package vetchi
+package employer
 
-import "time"
+import (
+	"time"
+
+	"github.com/psankar/vetchi/typespec/common"
+)
 
 type OpeningState string
 
@@ -12,9 +16,25 @@ const (
 )
 
 type Salary struct {
-	MinAmount float64  `json:"min_amount" validate:"required,min=0"`
-	MaxAmount float64  `json:"max_amount" validate:"required,min=1"`
-	Currency  Currency `json:"currency"   validate:"required"`
+	MinAmount float64         `json:"min_amount" validate:"required,min=0"`
+	MaxAmount float64         `json:"max_amount" validate:"required,min=1"`
+	Currency  common.Currency `json:"currency"   validate:"required"`
+}
+
+type OpeningID string
+
+type OpeningInfo struct {
+	ID              string         `json:"id"               db:"id"`
+	Title           string         `json:"title"            db:"title"`
+	Positions       int            `json:"positions"        db:"positions"`
+	FilledPositions int            `json:"filled_positions" db:"filled_positions"`
+	Recruiter       OrgUserShort   `json:"recruiter"        db:"recruiter"`
+	HiringManager   OrgUserShort   `json:"hiring_manager"   db:"hiring_manager"`
+	CostCenterName  CostCenterName `json:"cost_center_name" db:"cost_center_name"`
+	OpeningType     OpeningType    `json:"opening_type"     db:"opening_type"`
+	State           OpeningState   `json:"state"            db:"state"`
+	CreatedAt       time.Time      `json:"created_at"       db:"created_at"`
+	LastUpdatedAt   time.Time      `json:"last_updated_at"  db:"last_updated_at"`
 }
 
 type Opening struct {
@@ -71,20 +91,6 @@ type CreateOpeningResponse struct {
 	OpeningID string `json:"opening_id"`
 }
 
-type OpeningInfo struct {
-	ID              string         `json:"id"               db:"id"`
-	Title           string         `json:"title"            db:"title"`
-	Positions       int            `json:"positions"        db:"positions"`
-	FilledPositions int            `json:"filled_positions" db:"filled_positions"`
-	Recruiter       OrgUserShort   `json:"recruiter"        db:"recruiter"`
-	HiringManager   OrgUserShort   `json:"hiring_manager"   db:"hiring_manager"`
-	CostCenterName  CostCenterName `json:"cost_center_name" db:"cost_center_name"`
-	OpeningType     OpeningType    `json:"opening_type"     db:"opening_type"`
-	State           OpeningState   `json:"state"            db:"state"`
-	CreatedAt       time.Time      `json:"created_at"       db:"created_at"`
-	LastUpdatedAt   time.Time      `json:"last_updated_at"  db:"last_updated_at"`
-}
-
 type GetOpeningRequest struct {
 	ID string `json:"id" validate:"required"`
 }
@@ -108,6 +114,12 @@ func (filterOpeningsReq FilterOpeningsRequest) StatesAsStrings() []string {
 	return states
 }
 
+type ChangeOpeningStateRequest struct {
+	OpeningID string       `json:"opening_id" validate:"required"`
+	FromState OpeningState `json:"from_state" validate:"required"`
+	ToState   OpeningState `json:"to_state"   validate:"required"`
+}
+
 type UpdateOpeningRequest struct {
 	OpeningID string `json:"opening_id" validate:"required"`
 	// TODO: Decide what fields are allowed to be updated
@@ -125,10 +137,4 @@ type AddOpeningWatchersRequest struct {
 type RemoveOpeningWatcherRequest struct {
 	OpeningID string       `json:"opening_id" validate:"required"`
 	Email     EmailAddress `json:"email"      validate:"required"`
-}
-
-type ChangeOpeningStateRequest struct {
-	OpeningID string       `json:"opening_id" validate:"required"`
-	FromState OpeningState `json:"from_state" validate:"required"`
-	ToState   OpeningState `json:"to_state"   validate:"required"`
 }
