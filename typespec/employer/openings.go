@@ -6,15 +6,6 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-type OpeningState string
-
-const (
-	DraftOpening     OpeningState = "DRAFT_OPENING_STATE"
-	ActiveOpening    OpeningState = "ACTIVE_OPENING_STATE"
-	SuspendedOpening OpeningState = "SUSPENDED_OPENING_STATE"
-	ClosedOpening    OpeningState = "CLOSED_OPENING_STATE"
-)
-
 type Salary struct {
 	MinAmount float64         `json:"min_amount" validate:"required,min=0"`
 	MaxAmount float64         `json:"max_amount" validate:"required,min=1"`
@@ -24,17 +15,17 @@ type Salary struct {
 type OpeningID string
 
 type OpeningInfo struct {
-	ID              string             `json:"id"               db:"id"`
-	Title           string             `json:"title"            db:"title"`
-	Positions       int                `json:"positions"        db:"positions"`
-	FilledPositions int                `json:"filled_positions" db:"filled_positions"`
-	Recruiter       OrgUserShort       `json:"recruiter"        db:"recruiter"`
-	HiringManager   OrgUserShort       `json:"hiring_manager"   db:"hiring_manager"`
-	CostCenterName  CostCenterName     `json:"cost_center_name" db:"cost_center_name"`
-	OpeningType     common.OpeningType `json:"opening_type"     db:"opening_type"`
-	State           OpeningState       `json:"state"            db:"state"`
-	CreatedAt       time.Time          `json:"created_at"       db:"created_at"`
-	LastUpdatedAt   time.Time          `json:"last_updated_at"  db:"last_updated_at"`
+	ID              string              `json:"id"               db:"id"`
+	Title           string              `json:"title"            db:"title"`
+	Positions       int                 `json:"positions"        db:"positions"`
+	FilledPositions int                 `json:"filled_positions" db:"filled_positions"`
+	Recruiter       OrgUserShort        `json:"recruiter"        db:"recruiter"`
+	HiringManager   OrgUserShort        `json:"hiring_manager"   db:"hiring_manager"`
+	CostCenterName  CostCenterName      `json:"cost_center_name" db:"cost_center_name"`
+	OpeningType     common.OpeningType  `json:"opening_type"     db:"opening_type"`
+	State           common.OpeningState `json:"state"            db:"state"`
+	CreatedAt       time.Time           `json:"created_at"       db:"created_at"`
+	LastUpdatedAt   time.Time           `json:"last_updated_at"  db:"last_updated_at"`
 }
 
 type Opening struct {
@@ -53,7 +44,7 @@ type Opening struct {
 	OpeningType        common.OpeningType   `json:"opening_type"`
 	YoeMin             int                  `json:"yoe_min"`
 	YoeMax             int                  `json:"yoe_max"`
-	State              OpeningState         `json:"state"`
+	State              common.OpeningState  `json:"state"`
 	CreatedAt          time.Time            `json:"created_at"`
 	LastUpdatedAt      time.Time            `json:"last_updated_at"`
 
@@ -96,7 +87,7 @@ type GetOpeningRequest struct {
 }
 
 type FilterOpeningsRequest struct {
-	State []OpeningState `json:"state,omitempty" validate:"omitempty,validate_opening_states"`
+	State []common.OpeningState `json:"state,omitempty" validate:"omitempty,validate_opening_states"`
 
 	FromDate *time.Time `json:"from_date,omitempty" validate:"omitempty,validate_opening_filter_start_date"`
 	ToDate   *time.Time `json:"to_date,omitempty"   validate:"omitempty,validate_opening_filter_end_date"`
@@ -115,9 +106,9 @@ func (filterOpeningsReq FilterOpeningsRequest) StatesAsStrings() []string {
 }
 
 type ChangeOpeningStateRequest struct {
-	OpeningID string       `json:"opening_id" validate:"required"`
-	FromState OpeningState `json:"from_state" validate:"required"`
-	ToState   OpeningState `json:"to_state"   validate:"required"`
+	OpeningID string              `json:"opening_id" validate:"required"`
+	FromState common.OpeningState `json:"from_state" validate:"required"`
+	ToState   common.OpeningState `json:"to_state"   validate:"required"`
 }
 
 type UpdateOpeningRequest struct {

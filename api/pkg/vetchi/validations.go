@@ -11,6 +11,8 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/psankar/vetchi/api/internal/util"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 type Vator struct {
@@ -69,12 +71,12 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_cc_states",
 		func(fl validator.FieldLevel) bool {
-			states := fl.Field().Interface().([]CostCenterState)
+			states := fl.Field().Interface().([]employer.CostCenterState)
 			for _, state := range states {
 				switch state {
-				case ActiveCC:
+				case employer.ActiveCC:
 					continue
-				case DefunctCC:
+				case employer.DefunctCC:
 					continue
 				default:
 					log.Dbg("invalid cost center state", "state", state)
@@ -130,12 +132,12 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_location_state",
 		func(fl validator.FieldLevel) bool {
-			states := fl.Field().Interface().([]LocationState)
+			states := fl.Field().Interface().([]employer.LocationState)
 			for _, state := range states {
 				switch state {
-				case ActiveLocation:
+				case employer.ActiveLocation:
 					continue
-				case DefunctLocation:
+				case employer.DefunctLocation:
 					continue
 				default:
 					log.Dbg("invalid location state", "state", state)
@@ -153,16 +155,16 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_org_user_state",
 		func(fl validator.FieldLevel) bool {
-			states := fl.Field().Interface().([]OrgUserState)
+			states := fl.Field().Interface().([]employer.OrgUserState)
 			for _, state := range states {
 				switch state {
-				case ActiveOrgUserState:
+				case employer.ActiveOrgUserState:
 					continue
-				case AddedOrgUserState:
+				case employer.AddedOrgUserState:
 					continue
-				case DisabledOrgUserState:
+				case employer.DisabledOrgUserState:
 					continue
-				case ReplicatedOrgUserState:
+				case employer.ReplicatedOrgUserState:
 					continue
 				default:
 					log.Dbg("invalid org user state", "state", state)
@@ -180,30 +182,30 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_org_user_roles",
 		func(fl validator.FieldLevel) bool {
-			roles := fl.Field().Interface().(OrgUserRoles)
+			roles := fl.Field().Interface().(common.OrgUserRoles)
 			if len(roles) == 0 {
 				log.Dbg("invalid org user roles count", "count", len(roles))
 				return false
 			}
 			for _, role := range roles {
 				switch role {
-				case Admin:
+				case common.Admin:
 					continue
-				case CostCentersCRUD:
+				case common.CostCentersCRUD:
 					continue
-				case CostCentersViewer:
+				case common.CostCentersViewer:
 					continue
-				case LocationsCRUD:
+				case common.LocationsCRUD:
 					continue
-				case LocationsViewer:
+				case common.LocationsViewer:
 					continue
-				case OpeningsCRUD:
+				case common.OpeningsCRUD:
 					continue
-				case OpeningsViewer:
+				case common.OpeningsViewer:
 					continue
-				case OrgUsersCRUD:
+				case common.OrgUsersCRUD:
 					continue
-				case OrgUsersViewer:
+				case common.OrgUsersViewer:
 					continue
 				default:
 					log.Dbg("invalid org user role", "role", role)
@@ -221,7 +223,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_opening_type",
 		func(fl validator.FieldLevel) bool {
-			openingType, ok := fl.Field().Interface().(OpeningType)
+			openingType, ok := fl.Field().Interface().(common.OpeningType)
 			if !ok {
 				log.Dbg("invalid opening type", "field", fl.Field().Interface())
 				return false
@@ -237,16 +239,16 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_opening_states",
 		func(fl validator.FieldLevel) bool {
-			states := fl.Field().Interface().([]OpeningState)
+			states := fl.Field().Interface().([]common.OpeningState)
 			for _, state := range states {
 				switch state {
-				case ActiveOpening:
+				case common.ActiveOpening:
 					continue
-				case ClosedOpening:
+				case common.ClosedOpening:
 					continue
-				case DraftOpening:
+				case common.DraftOpening:
 					continue
-				case SuspendedOpening:
+				case common.SuspendedOpening:
 					continue
 				default:
 					log.Dbg("invalid opening state", "state", state)
@@ -318,7 +320,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_currency",
 		func(fl validator.FieldLevel) bool {
-			currency, ok := fl.Field().Interface().(Currency)
+			currency, ok := fl.Field().Interface().(common.Currency)
 			if !ok {
 				return false
 			}
@@ -339,7 +341,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_timezone",
 		func(fl validator.FieldLevel) bool {
-			timezone, ok := fl.Field().Interface().(TimeZone)
+			timezone, ok := fl.Field().Interface().(common.TimeZone)
 			if !ok {
 				return false
 			}
@@ -359,7 +361,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_education_level",
 		func(fl validator.FieldLevel) bool {
-			educationLevel, ok := fl.Field().Interface().(EducationLevel)
+			educationLevel, ok := fl.Field().Interface().(common.EducationLevel)
 			if !ok {
 				// If the education level is not provided, it is valid
 				return true
@@ -379,7 +381,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_application_state",
 		func(fl validator.FieldLevel) bool {
-			state, ok := fl.Field().Interface().(ApplicationState)
+			state, ok := fl.Field().Interface().(common.ApplicationState)
 			if !ok {
 				return false
 			}
@@ -394,7 +396,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_application_color_tag",
 		func(fl validator.FieldLevel) bool {
-			colorTag, ok := fl.Field().Interface().(ApplicationColorTag)
+			colorTag, ok := fl.Field().Interface().(employer.ApplicationColorTag)
 			if !ok {
 				return false
 			}
@@ -456,7 +458,8 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		err = json.NewEncoder(w).Encode(ValidationErrors{Errors: failedFields})
+		err = json.NewEncoder(w).
+			Encode(common.ValidationErrors{Errors: failedFields})
 		if err != nil {
 			v.log.Err("failed to encode validation errors", "error", err)
 			// This would cause a superflous error response, but we'll log it
