@@ -6,13 +6,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func WithdrawApplication(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered WithdrawApplication")
-		var withdrawApplicationReq vetchi.WithdrawApplicationRequest
+		var withdrawApplicationReq hub.WithdrawApplicationRequest
 		if err := json.NewDecoder(r.Body).Decode(&withdrawApplicationReq); err != nil {
 			h.Err("failed to decode withdraw application request", "error", err)
 			h.Dbg("exiting WithdrawApplication - decode error")

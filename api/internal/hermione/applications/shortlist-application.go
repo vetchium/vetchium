@@ -13,12 +13,13 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered ShortlistApplication")
-		var shortlistRequest vetchi.ShortlistApplicationRequest
+		var shortlistRequest employer.ShortlistApplicationRequest
 		err := json.NewDecoder(r.Body).Decode(&shortlistRequest)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
