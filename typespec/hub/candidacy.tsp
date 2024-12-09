@@ -17,14 +17,6 @@ model AddHubCandidacyCommentRequest {
     comment: string;
 }
 
-@route("/hub/add-candidacy-comment")
-interface AddHubCandidacyComment {
-    @post
-    addComment(@body request: AddHubCandidacyCommentRequest): {
-        @statusCode statusCode: 200;
-    };
-}
-
 model MyCandidacy {
     candidacy_id: string;
     company_name: string;
@@ -33,6 +25,14 @@ model MyCandidacy {
     opening_title: string;
     opening_description: string;
     candidacy_state: CandidacyState;
+}
+
+@route("/hub/add-candidacy-comment")
+interface AddHubCandidacyComment {
+    @post
+    addComment(@body request: AddHubCandidacyCommentRequest): {
+        @statusCode statusCode: 200;
+    };
 }
 
 @route("/hub/get-my-candidacies")
