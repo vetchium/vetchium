@@ -36,28 +36,11 @@ model Candidacy {
     applicant_handle: string;
 }
 
-@route("/employer/get-candidacies-info")
-interface GetCandidaciesInfo {
-    @post
-    getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
-        @statusCode statusCode: 200;
-        @body response: Candidacy[];
-    };
-}
-
 model AddEmployerCandidacyCommentRequest {
     candidacy_id: string;
 
     @maxLength(2048)
     comment: string;
-}
-
-@route("/employer/add-candidacy-comment")
-interface AddEmployerCandidacyComment {
-    @post
-    addComment(@body request: AddEmployerCandidacyCommentRequest): {
-        @statusCode statusCode: 200;
-    };
 }
 
 union InterviewType {
@@ -79,15 +62,6 @@ model AddInterviewRequest {
 
     @doc("List of email addresses of the OrgUsers who will be interviewing the candidate")
     interviewers?: EmailAddress[];
-}
-
-@route("/employer/add-interview")
-interface AddInterview {
-    @doc("Need one of $OrgUserRole.Admin or $OrgUserRole.ApplicationsCRUD")
-    @post
-    addInterview(@body request: AddInterviewRequest): {
-        @statusCode statusCode: 200;
-    };
 }
 
 model Interview {
@@ -122,6 +96,32 @@ model GetInterviewsRequest {
     @doc("Number of interviews to return. Defaults to 40.")
     @maxValue(100)
     limit?: integer;
+}
+
+@route("/employer/get-candidacies-info")
+interface GetCandidaciesInfo {
+    @post
+    getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
+        @statusCode statusCode: 200;
+        @body response: Candidacy[];
+    };
+}
+
+@route("/employer/add-candidacy-comment")
+interface AddEmployerCandidacyComment {
+    @post
+    addComment(@body request: AddEmployerCandidacyCommentRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/add-interview")
+interface AddInterview {
+    @doc("Need one of $OrgUserRole.Admin or $OrgUserRole.ApplicationsCRUD")
+    @post
+    addInterview(@body request: AddInterviewRequest): {
+        @statusCode statusCode: 200;
+    };
 }
 
 @route("/employer/get-interviews")
