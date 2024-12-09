@@ -81,6 +81,12 @@ model UpdateOrgUserRequest {
     roles: OrgUserRole[];
 }
 
+model SignupOrgUserRequest {
+    email: EmailAddress;
+    name: string;
+    password: Password;
+}
+
 @route("/employer/add-org-user")
 interface AddOrgUser {
     @tag("OrgUsers")
@@ -137,12 +143,6 @@ interface FilterOrgUsers {
     filterOrgUsers(@body filterOrgUsersRequest: FilterOrgUsersRequest): {
         @statusCode statusCode: 200;
     };
-}
-
-model SignupOrgUserRequest {
-    email: EmailAddress;
-    name: string;
-    password: Password;
 }
 
 @route("/employer/signup-orguser")
