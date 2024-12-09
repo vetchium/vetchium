@@ -1,4 +1,4 @@
-package vetchi
+package common
 
 type CandidacyState string
 

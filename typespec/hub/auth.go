@@ -1,4 +1,8 @@
-package vetchi
+package hub
+
+import (
+	"github.com/psankar/vetchi/typespec/common"
+)
 
 type HubUserState string
 
@@ -9,8 +13,8 @@ const (
 )
 
 type LoginRequest struct {
-	Email    EmailAddress `json:"email"    validate:"required,email"`
-	Password Password     `json:"password" validate:"required,password"`
+	Email    common.EmailAddress `json:"email"    validate:"required,email"`
+	Password common.Password     `json:"password" validate:"required,password"`
 }
 
 type LoginResponse struct {
@@ -28,7 +32,7 @@ type HubTFAResponse struct {
 }
 
 type InviteUserRequest struct {
-	Email EmailAddress `json:"email" validate:"required,email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type GetMyHandleResponse struct {
@@ -36,12 +40,12 @@ type GetMyHandleResponse struct {
 }
 
 type ChangePasswordRequest struct {
-	OldPassword Password `json:"old_password" validate:"required,password"`
-	NewPassword Password `json:"new_password" validate:"required,password"`
+	OldPassword common.Password `json:"old_password" validate:"required,password"`
+	NewPassword common.Password `json:"new_password" validate:"required,password"`
 }
 
 type ForgotPasswordRequest struct {
-	Email EmailAddress `json:"email" validate:"required,email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type ForgotPasswordResponse struct {
@@ -49,6 +53,6 @@ type ForgotPasswordResponse struct {
 }
 
 type HubUserResetPasswordRequest struct {
-	Token    string   `json:"token"    validate:"required"`
-	Password Password `json:"password" validate:"required,password"`
+	Token    string          `json:"token"    validate:"required"`
+	Password common.Password `json:"password" validate:"required,password"`
 }

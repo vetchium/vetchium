@@ -1,4 +1,4 @@
-package vetchi
+package employer
 
 type LocationState string
 
@@ -44,7 +44,6 @@ type GetLocationsRequest struct {
 func (r *GetLocationsRequest) StatesAsStrings() []string {
 	states := []string{}
 	for _, state := range r.States {
-		// already validated by vator
 		states = append(states, string(state))
 	}
 	if len(states) == 0 {

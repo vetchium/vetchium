@@ -4,7 +4,8 @@ import (
 	c "context"
 
 	"github.com/google/uuid"
-	v "github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 // Do not name parameters when passing objects. Name parameters when passing
@@ -28,28 +29,46 @@ type DB interface {
 	InitHubUserTFA(c.Context, HubUserTFA) error
 
 	// Used by hermione - Cost Center related methods
-	CreateCostCenter(c.Context, v.AddCostCenterRequest) (uuid.UUID, error)
-	DefunctCostCenter(c.Context, v.DefunctCostCenterRequest) error
-	GetCCByName(c.Context, v.GetCostCenterRequest) (v.CostCenter, error)
-	GetCostCenters(c.Context, v.GetCostCentersRequest) ([]v.CostCenter, error)
-	RenameCostCenter(c.Context, v.RenameCostCenterRequest) error
-	UpdateCostCenter(c.Context, v.UpdateCostCenterRequest) error
+	CreateCostCenter(
+		c.Context,
+		employer.AddCostCenterRequest,
+	) (uuid.UUID, error)
+	DefunctCostCenter(c.Context, employer.DefunctCostCenterRequest) error
+	GetCCByName(
+		c.Context,
+		employer.GetCostCenterRequest,
+	) (employer.CostCenter, error)
+	GetCostCenters(
+		c.Context,
+		employer.GetCostCentersRequest,
+	) ([]employer.CostCenter, error)
+	RenameCostCenter(c.Context, employer.RenameCostCenterRequest) error
+	UpdateCostCenter(c.Context, employer.UpdateCostCenterRequest) error
 
 	// Used by hermione - Locations related methods
-	AddLocation(c.Context, v.AddLocationRequest) (uuid.UUID, error)
-	DefunctLocation(c.Context, v.DefunctLocationRequest) error
-	GetLocByName(c.Context, v.GetLocationRequest) (v.Location, error)
-	GetLocations(c.Context, v.GetLocationsRequest) ([]v.Location, error)
-	RenameLocation(c.Context, v.RenameLocationRequest) error
-	UpdateLocation(c.Context, v.UpdateLocationRequest) error
+	AddLocation(c.Context, employer.AddLocationRequest) (uuid.UUID, error)
+	DefunctLocation(c.Context, employer.DefunctLocationRequest) error
+	GetLocByName(
+		c.Context,
+		employer.GetLocationRequest,
+	) (employer.Location, error)
+	GetLocations(
+		c.Context,
+		employer.GetLocationsRequest,
+	) ([]employer.Location, error)
+	RenameLocation(c.Context, employer.RenameLocationRequest) error
+	UpdateLocation(c.Context, employer.UpdateLocationRequest) error
 
 	// Used by hermione - Org users related methods
 	AddOrgUser(c.Context, AddOrgUserReq) (uuid.UUID, error)
-	DisableOrgUser(c.Context, v.DisableOrgUserRequest) error
+	DisableOrgUser(c.Context, employer.DisableOrgUserRequest) error
 	EnableOrgUser(c.Context, EnableOrgUserReq) error
-	FilterOrgUsers(c.Context, v.FilterOrgUsersRequest) ([]v.OrgUser, error)
+	FilterOrgUsers(
+		c.Context,
+		employer.FilterOrgUsersRequest,
+	) ([]employer.OrgUser, error)
 	SignupOrgUser(c.Context, SignupOrgUserReq) error
-	UpdateOrgUser(c.Context, v.UpdateOrgUserRequest) (uuid.UUID, error)
+	UpdateOrgUser(c.Context, employer.UpdateOrgUserRequest) (uuid.UUID, error)
 
 	// Used by granger
 	CreateOnboardEmail(c.Context, OnboardEmailInfo) error
@@ -59,27 +78,33 @@ type DB interface {
 	UpdateEmailState(c.Context, EmailStateChange) error
 
 	// Used by hermione - Openings related methods
-	CreateOpening(c.Context, v.CreateOpeningRequest) (string, error)
-	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
-	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.OpeningInfo, error)
-	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
+	CreateOpening(c.Context, employer.CreateOpeningRequest) (string, error)
+	GetOpening(c.Context, employer.GetOpeningRequest) (employer.Opening, error)
+	FilterOpenings(
+		c.Context,
+		employer.FilterOpeningsRequest,
+	) ([]employer.OpeningInfo, error)
+	UpdateOpening(c.Context, employer.UpdateOpeningRequest) error
 	GetOpeningWatchers(
 		c.Context,
-		v.GetOpeningWatchersRequest,
-	) ([]v.OrgUserShort, error)
-	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
-	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
-	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
+		employer.GetOpeningWatchersRequest,
+	) ([]employer.OrgUserShort, error)
+	AddOpeningWatchers(c.Context, employer.AddOpeningWatchersRequest) error
+	RemoveOpeningWatcher(c.Context, employer.RemoveOpeningWatcherRequest) error
+	ChangeOpeningState(c.Context, employer.ChangeOpeningStateRequest) error
 
 	// Used by hermione - Applications related methods for employers
 	GetApplicationsForEmployer(
 		c.Context,
-		v.GetApplicationsRequest,
-	) ([]v.Application, error)
-	SetApplicationColorTag(c.Context, v.SetApplicationColorTagRequest) error
+		employer.GetApplicationsRequest,
+	) ([]employer.Application, error)
+	SetApplicationColorTag(
+		c.Context,
+		employer.SetApplicationColorTagRequest,
+	) error
 	RemoveApplicationColorTag(
 		c.Context,
-		v.RemoveApplicationColorTagRequest,
+		employer.RemoveApplicationColorTagRequest,
 	) error
 	ShortlistApplication(c.Context, ShortlistRequest) error
 	RejectApplication(c.Context, RejectApplicationRequest) error
@@ -94,14 +119,14 @@ type DB interface {
 	CreateApplication(c.Context, ApplyOpeningReq) error
 	MyApplications(
 		c.Context,
-		v.MyApplicationsRequest,
-	) ([]v.HubApplication, error)
+		hub.MyApplicationsRequest,
+	) ([]hub.HubApplication, error)
 	CreateHubUserToken(c.Context, HubTokenReq) error
 	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
 	FindHubOpenings(
 		c.Context,
-		*v.FindHubOpeningsRequest,
-	) ([]v.HubOpening, error)
+		*hub.FindHubOpeningsRequest,
+	) ([]hub.HubOpening, error)
 	GetMyHandle(c.Context) (string, error)
 	InitHubUserPasswordReset(c.Context, HubUserInitPasswordReset) error
 	Logout(c c.Context, token string) error

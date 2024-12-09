@@ -1,4 +1,4 @@
-package vetchi
+package common
 
 type CountryCode string
 type Currency string

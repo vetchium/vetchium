@@ -1,6 +1,4 @@
-package vetchi
-
-// Should match typespec/costcenters.tsp
+package employer
 
 type CostCenterName string
 
@@ -43,7 +41,6 @@ func (g *GetCostCentersRequest) StatesAsStrings() []string {
 
 	states := []string{}
 	for _, state := range g.States {
-		// already validated by vator
 		states = append(states, string(state))
 	}
 	return states

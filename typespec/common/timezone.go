@@ -1,14 +1,10 @@
-package vetchi
+package common
 
 type TimeZone string
 
-var validTimezones map[TimeZone]struct{}
-
-func init() {
-	validTimezones = make(map[TimeZone]struct{})
-
-	for _, timezone := range []string{
-		"ACDT Australian Central Daylight Time GMT+1030",
+func (t TimeZone) IsValid() bool {
+	switch t {
+	case "ACDT Australian Central Daylight Time GMT+1030",
 		"ACST Australian Central Standard Time GMT+0930",
 		"AEDT Australian Eastern Daylight Time GMT+1100",
 		"AEST Australian Eastern Standard Time GMT+1000",
@@ -181,13 +177,8 @@ func init() {
 		"WST Western Standard Time (Australia) GMT+0800",
 		"WT Western Sahara Standard Time GMT+0000",
 		"YAKT Yakutsk Time GMT+0900",
-		"YEKT Yekaterinburg Time GMT+0500",
-	} {
-		validTimezones[TimeZone(timezone)] = struct{}{}
+		"YEKT Yekaterinburg Time GMT+0500":
+		return true
 	}
-}
-
-func (t TimeZone) IsValid() bool {
-	_, ok := validTimezones[t]
-	return ok
+	return false
 }

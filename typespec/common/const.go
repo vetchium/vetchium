@@ -1,4 +1,4 @@
-package vetchi
+package common
 
 const (
 	HubBaseURL      = "https://vetchi.org"
