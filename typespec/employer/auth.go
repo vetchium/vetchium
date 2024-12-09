@@ -1,4 +1,6 @@
-package vetchi
+package employer
+
+import "github.com/psankar/vetchi/typespec/common"
 
 type GetOnboardStatusRequest struct {
 	ClientID string `json:"client_id" validate:"required,client_id"`
@@ -17,15 +19,15 @@ type GetOnboardStatusResponse struct {
 }
 
 type SetOnboardPasswordRequest struct {
-	ClientID string   `json:"client_id" validate:"required,client_id"`
-	Password Password `json:"password"  validate:"required,password"`
-	Token    string   `json:"token"     validate:"required"`
+	ClientID string          `json:"client_id" validate:"required,client_id"`
+	Password common.Password `json:"password"  validate:"required,password"`
+	Token    string          `json:"token"     validate:"required"`
 }
 
 type EmployerSignInRequest struct {
-	ClientID string       `json:"client_id" validate:"required,client_id"`
-	Email    EmailAddress `json:"email"     validate:"required,email"`
-	Password Password     `json:"password"  validate:"required,password"`
+	ClientID string              `json:"client_id" validate:"required,client_id"`
+	Email    common.EmailAddress `json:"email"     validate:"required,email"`
+	Password common.Password     `json:"password"  validate:"required,password"`
 }
 
 type EmployerSignInResponse struct {
