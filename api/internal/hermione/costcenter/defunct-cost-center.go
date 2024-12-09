@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func DefunctCostCenter(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered DefunctCostCenter")
-		var defunctCostCenterRequest vetchi.DefunctCostCenterRequest
+		var defunctCostCenterRequest employer.DefunctCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&defunctCostCenterRequest)
 		if err != nil {
 			h.Dbg("failed to decode defunct cost center request", "error", err)

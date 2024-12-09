@@ -8,7 +8,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 type userCtx int
@@ -69,7 +69,7 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 func (m *Middleware) Protect(
 	route string,
 	handlerFunc http.HandlerFunc,
-	allowedRoles []vetchi.OrgUserRole,
+	allowedRoles []common.OrgUserRole,
 ) {
 	http.Handle(route, m.employerAuth(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,8 +94,8 @@ func (m *Middleware) Protect(
 }
 
 func hasRoles(
-	orgUserRoles []vetchi.OrgUserRole,
-	allowedRoles []vetchi.OrgUserRole,
+	orgUserRoles []common.OrgUserRole,
+	allowedRoles []common.OrgUserRole,
 ) bool {
 	// TODO: Can potentially cache this ifF there is a performance issue
 	for _, orgUserRole := range orgUserRoles {

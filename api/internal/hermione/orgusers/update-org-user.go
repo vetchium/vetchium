@@ -7,14 +7,14 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func UpdateOrgUser(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered UpdateOrgUser")
 
-		var updateOrgUserReq vetchi.UpdateOrgUserRequest
+		var updateOrgUserReq employer.UpdateOrgUserRequest
 		if err := json.NewDecoder(r.Body).Decode(&updateOrgUserReq); err != nil {
 			h.Dbg("failed to decode update org user request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)

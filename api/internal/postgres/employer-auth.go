@@ -5,11 +5,13 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (p *PG) GetEmployer(
@@ -292,8 +294,8 @@ VALUES ($1, $2, $3, $4::org_user_roles[], $5, $6)
 
 		adminEmailAddr,
 		onboardReq.Password,
-		[]string{string(vetchi.Admin)},
-		vetchi.ActiveOrgUserState,
+		[]string{string(common.Admin)},
+		employer.ActiveOrgUserState,
 		employerID,
 	)
 	if err != nil {

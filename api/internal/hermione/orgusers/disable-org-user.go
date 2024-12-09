@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func DisableOrgUser(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered DisableOrgUser")
-		var disableOrgUserReq vetchi.DisableOrgUserRequest
+		var disableOrgUserReq employer.DisableOrgUserRequest
 		err := json.NewDecoder(r.Body).Decode(&disableOrgUserReq)
 		if err != nil {
 			h.Dbg("DisableOrgUserReq JSON decode failed", "err", err)

@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func DefunctLocation(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered DefunctLocation")
-		var defunctLocationRequest vetchi.DefunctLocationRequest
+		var defunctLocationRequest employer.DefunctLocationRequest
 		err := json.NewDecoder(r.Body).Decode(&defunctLocationRequest)
 		if err != nil {
 			h.Dbg("failed to decode defunct location request", "error", err)

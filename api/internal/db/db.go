@@ -1,10 +1,12 @@
 package db
 
 import (
-	c "context"
+	"context"
+
+	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
 
 	"github.com/google/uuid"
-	v "github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 // Do not name parameters when passing objects. Name parameters when passing
@@ -14,96 +16,141 @@ type DB interface {
 	// Used by hermione and granger
 
 	// Used by hermione - Employer Auth related methods
-	AuthOrgUser(c c.Context, sessionToken string) (OrgUserTO, error)
-	CreateOrgUserToken(c.Context, EmployerTokenReq) error
-	GetEmployer(c c.Context, clientID string) (Employer, error)
-	GetEmployerByID(c c.Context, employerID uuid.UUID) (Employer, error)
-	GetDomainNames(c c.Context, employerID uuid.UUID) ([]string, error)
-	GetOrgUserAuth(c.Context, OrgUserCreds) (OrgUserAuth, error)
-	GetOrgUserByTFACreds(c c.Context, tfaCode, tgt string) (OrgUserTO, error)
-	InitEmployerAndDomain(c.Context, Employer, Domain) error
-	InitEmployerTFA(c.Context, EmployerTFA) error
-	OnboardAdmin(c.Context, OnboardReq) error
-	GetHubUserByEmail(c c.Context, email string) (HubUserTO, error)
-	InitHubUserTFA(c.Context, HubUserTFA) error
+	AuthOrgUser(c context.Context, sessionToken string) (OrgUserTO, error)
+	CreateOrgUserToken(context.Context, EmployerTokenReq) error
+	GetEmployer(c context.Context, clientID string) (Employer, error)
+	GetEmployerByID(c context.Context, employerID uuid.UUID) (Employer, error)
+	GetDomainNames(c context.Context, employerID uuid.UUID) ([]string, error)
+	GetOrgUserAuth(context.Context, OrgUserCreds) (OrgUserAuth, error)
+	GetOrgUserByTFACreds(
+		c context.Context,
+		tfaCode, tgt string,
+	) (OrgUserTO, error)
+	InitEmployerAndDomain(context.Context, Employer, Domain) error
+	InitEmployerTFA(context.Context, EmployerTFA) error
+	OnboardAdmin(context.Context, OnboardReq) error
+	GetHubUserByEmail(c context.Context, email string) (HubUserTO, error)
+	InitHubUserTFA(context.Context, HubUserTFA) error
 
 	// Used by hermione - Cost Center related methods
-	CreateCostCenter(c.Context, v.AddCostCenterRequest) (uuid.UUID, error)
-	DefunctCostCenter(c.Context, v.DefunctCostCenterRequest) error
-	GetCCByName(c.Context, v.GetCostCenterRequest) (v.CostCenter, error)
-	GetCostCenters(c.Context, v.GetCostCentersRequest) ([]v.CostCenter, error)
-	RenameCostCenter(c.Context, v.RenameCostCenterRequest) error
-	UpdateCostCenter(c.Context, v.UpdateCostCenterRequest) error
+	CreateCostCenter(
+		context.Context,
+		employer.AddCostCenterRequest,
+	) (uuid.UUID, error)
+	DefunctCostCenter(context.Context, employer.DefunctCostCenterRequest) error
+	GetCCByName(
+		context.Context,
+		employer.GetCostCenterRequest,
+	) (employer.CostCenter, error)
+	GetCostCenters(
+		context.Context,
+		employer.GetCostCentersRequest,
+	) ([]employer.CostCenter, error)
+	RenameCostCenter(context.Context, employer.RenameCostCenterRequest) error
+	UpdateCostCenter(context.Context, employer.UpdateCostCenterRequest) error
 
 	// Used by hermione - Locations related methods
-	AddLocation(c.Context, v.AddLocationRequest) (uuid.UUID, error)
-	DefunctLocation(c.Context, v.DefunctLocationRequest) error
-	GetLocByName(c.Context, v.GetLocationRequest) (v.Location, error)
-	GetLocations(c.Context, v.GetLocationsRequest) ([]v.Location, error)
-	RenameLocation(c.Context, v.RenameLocationRequest) error
-	UpdateLocation(c.Context, v.UpdateLocationRequest) error
+	AddLocation(context.Context, employer.AddLocationRequest) (uuid.UUID, error)
+	DefunctLocation(context.Context, employer.DefunctLocationRequest) error
+	GetLocByName(
+		context.Context,
+		employer.GetLocationRequest,
+	) (employer.Location, error)
+	GetLocations(
+		context.Context,
+		employer.GetLocationsRequest,
+	) ([]employer.Location, error)
+	RenameLocation(context.Context, employer.RenameLocationRequest) error
+	UpdateLocation(context.Context, employer.UpdateLocationRequest) error
 
 	// Used by hermione - Org users related methods
-	AddOrgUser(c.Context, AddOrgUserReq) (uuid.UUID, error)
-	DisableOrgUser(c.Context, v.DisableOrgUserRequest) error
-	EnableOrgUser(c.Context, EnableOrgUserReq) error
-	FilterOrgUsers(c.Context, v.FilterOrgUsersRequest) ([]v.OrgUser, error)
-	SignupOrgUser(c.Context, SignupOrgUserReq) error
-	UpdateOrgUser(c.Context, v.UpdateOrgUserRequest) (uuid.UUID, error)
+	AddOrgUser(context.Context, AddOrgUserReq) (uuid.UUID, error)
+	DisableOrgUser(context.Context, employer.DisableOrgUserRequest) error
+	EnableOrgUser(context.Context, EnableOrgUserReq) error
+	FilterOrgUsers(
+		context.Context,
+		employer.FilterOrgUsersRequest,
+	) ([]employer.OrgUser, error)
+	SignupOrgUser(context.Context, SignupOrgUserReq) error
+	UpdateOrgUser(
+		context.Context,
+		employer.UpdateOrgUserRequest,
+	) (uuid.UUID, error)
 
 	// Used by granger
-	CreateOnboardEmail(c.Context, OnboardEmailInfo) error
-	DeQOnboard(c.Context) (*OnboardInfo, error)
-	GetOldestUnsentEmails(c.Context) ([]Email, error)
-	PruneTokens(c.Context) error
-	UpdateEmailState(c.Context, EmailStateChange) error
+	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
+	DeQOnboard(context.Context) (*OnboardInfo, error)
+	GetOldestUnsentEmails(context.Context) ([]Email, error)
+	PruneTokens(context.Context) error
+	UpdateEmailState(context.Context, EmailStateChange) error
 
 	// Used by hermione - Openings related methods
-	CreateOpening(c.Context, v.CreateOpeningRequest) (string, error)
-	GetOpening(c.Context, v.GetOpeningRequest) (v.Opening, error)
-	FilterOpenings(c.Context, v.FilterOpeningsRequest) ([]v.OpeningInfo, error)
-	UpdateOpening(c.Context, v.UpdateOpeningRequest) error
+	CreateOpening(
+		context.Context,
+		employer.CreateOpeningRequest,
+	) (string, error)
+	GetOpening(
+		context.Context,
+		employer.GetOpeningRequest,
+	) (employer.Opening, error)
+	FilterOpenings(
+		context.Context,
+		employer.FilterOpeningsRequest,
+	) ([]employer.OpeningInfo, error)
+	UpdateOpening(context.Context, employer.UpdateOpeningRequest) error
 	GetOpeningWatchers(
-		c.Context,
-		v.GetOpeningWatchersRequest,
-	) ([]v.OrgUserShort, error)
-	AddOpeningWatchers(c.Context, v.AddOpeningWatchersRequest) error
-	RemoveOpeningWatcher(c.Context, v.RemoveOpeningWatcherRequest) error
-	ChangeOpeningState(c.Context, v.ChangeOpeningStateRequest) error
+		context.Context,
+		employer.GetOpeningWatchersRequest,
+	) ([]employer.OrgUserShort, error)
+	AddOpeningWatchers(
+		context.Context,
+		employer.AddOpeningWatchersRequest,
+	) error
+	RemoveOpeningWatcher(
+		context.Context,
+		employer.RemoveOpeningWatcherRequest,
+	) error
+	ChangeOpeningState(
+		context.Context,
+		employer.ChangeOpeningStateRequest,
+	) error
 
 	// Used by hermione - Applications related methods for employers
 	GetApplicationsForEmployer(
-		c.Context,
-		v.GetApplicationsRequest,
-	) ([]v.Application, error)
-	SetApplicationColorTag(c.Context, v.SetApplicationColorTagRequest) error
-	RemoveApplicationColorTag(
-		c.Context,
-		v.RemoveApplicationColorTagRequest,
+		context.Context,
+		employer.GetApplicationsRequest,
+	) ([]employer.Application, error)
+	SetApplicationColorTag(
+		context.Context,
+		employer.SetApplicationColorTagRequest,
 	) error
-	ShortlistApplication(c.Context, ShortlistRequest) error
-	RejectApplication(c.Context, RejectApplicationRequest) error
+	RemoveApplicationColorTag(
+		context.Context,
+		employer.RemoveApplicationColorTagRequest,
+	) error
+	ShortlistApplication(context.Context, ShortlistRequest) error
+	RejectApplication(context.Context, RejectApplicationRequest) error
 	GetApplicationMailInfo(
-		c c.Context,
+		c context.Context,
 		applicationID string,
 	) (ApplicationMailInfo, error)
 
 	// Used by hermione - for Hub users
-	AuthHubUser(c c.Context, token string) (HubUserTO, error)
-	ChangeHubUserPassword(c.Context, uuid.UUID, string) error
-	CreateApplication(c.Context, ApplyOpeningReq) error
+	AuthHubUser(c context.Context, token string) (HubUserTO, error)
+	ChangeHubUserPassword(context.Context, uuid.UUID, string) error
+	CreateApplication(context.Context, ApplyOpeningReq) error
 	MyApplications(
-		c.Context,
-		v.MyApplicationsRequest,
-	) ([]v.HubApplication, error)
-	CreateHubUserToken(c.Context, HubTokenReq) error
-	GetHubUserByTFACreds(c.Context, string, string) (HubUserTO, error)
+		context.Context,
+		hub.MyApplicationsRequest,
+	) ([]hub.HubApplication, error)
+	CreateHubUserToken(context.Context, HubTokenReq) error
+	GetHubUserByTFACreds(context.Context, string, string) (HubUserTO, error)
 	FindHubOpenings(
-		c.Context,
-		*v.FindHubOpeningsRequest,
-	) ([]v.HubOpening, error)
-	GetMyHandle(c.Context) (string, error)
-	InitHubUserPasswordReset(c.Context, HubUserInitPasswordReset) error
-	Logout(c c.Context, token string) error
-	ResetHubUserPassword(c.Context, HubUserPasswordReset) error
+		context.Context,
+		*hub.FindHubOpeningsRequest,
+	) ([]hub.HubOpening, error)
+	GetMyHandle(context.Context) (string, error)
+	InitHubUserPasswordReset(context.Context, HubUserInitPasswordReset) error
+	Logout(c context.Context, token string) error
+	ResetHubUserPassword(context.Context, HubUserPasswordReset) error
 }

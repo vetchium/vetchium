@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func GetMyHandle(h wand.Wand) http.HandlerFunc {
@@ -19,7 +19,7 @@ func GetMyHandle(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(vetchi.GetMyHandleResponse{
+		err = json.NewEncoder(w).Encode(hub.GetMyHandleResponse{
 			Handle: handle,
 		})
 		if err != nil {

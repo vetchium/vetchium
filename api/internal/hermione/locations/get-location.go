@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func GetLocation(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetLocation")
-		var getLocationReq vetchi.GetLocationRequest
+		var getLocationReq employer.GetLocationRequest
 		err := json.NewDecoder(r.Body).Decode(&getLocationReq)
 		if err != nil {
 			h.Dbg("failed to decode get location request", "error", err)

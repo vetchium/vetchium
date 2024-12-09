@@ -13,6 +13,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func ForgotPassword(h wand.Wand) http.HandlerFunc {
@@ -27,7 +28,7 @@ func ForgotPassword(h wand.Wand) http.HandlerFunc {
 			)
 		}()
 
-		var forgotPasswordRequest vetchi.ForgotPasswordRequest
+		var forgotPasswordRequest hub.ForgotPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&forgotPasswordRequest)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)

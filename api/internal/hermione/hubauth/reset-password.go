@@ -7,14 +7,15 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func ResetPassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered ResetPassword")
-		var resetPasswordRequest vetchi.HubUserResetPasswordRequest
+		var resetPasswordRequest hub.ResetPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&resetPasswordRequest)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)

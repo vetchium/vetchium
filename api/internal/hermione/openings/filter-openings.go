@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func FilterOpenings(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered FilterOpenings")
-		var filterOpeningsReq vetchi.FilterOpeningsRequest
+		var filterOpeningsReq employer.FilterOpeningsRequest
 		err := json.NewDecoder(r.Body).Decode(&filterOpeningsReq)
 		if err != nil {
 			h.Dbg("failed to decode filter openings request", "error", err)
@@ -42,7 +43,7 @@ func FilterOpenings(h wand.Wand) http.HandlerFunc {
 			h.Dbg("fromdate > todate", "filterOpeningsReq", filterOpeningsReq)
 			w.WriteHeader(http.StatusBadRequest)
 			err = json.NewEncoder(w).
-				Encode(vetchi.ValidationErrors{Errors: []string{"fromdate"}})
+				Encode(common.ValidationErrors{Errors: []string{"fromdate"}})
 			if err != nil {
 				h.Err("failed to encode validation errors", "error", err)
 			}
@@ -55,10 +56,10 @@ func FilterOpenings(h wand.Wand) http.HandlerFunc {
 		}
 
 		if len(filterOpeningsReq.State) == 0 {
-			filterOpeningsReq.State = []vetchi.OpeningState{
-				vetchi.ActiveOpening,
-				vetchi.DraftOpening,
-				vetchi.SuspendedOpening,
+			filterOpeningsReq.State = []common.OpeningState{
+				common.ActiveOpening,
+				common.DraftOpening,
+				common.SuspendedOpening,
 			}
 			h.Dbg("set default state", "state", filterOpeningsReq.State)
 		}

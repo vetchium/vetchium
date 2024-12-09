@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func FilterOrgUsers(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered FilterOrgUsers")
-		var filterOrgUsersReq vetchi.FilterOrgUsersRequest
+		var filterOrgUsersReq employer.FilterOrgUsersRequest
 		if err := json.NewDecoder(r.Body).Decode(&filterOrgUsersReq); err != nil {
 			h.Err("failed to decode filter org users request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -26,9 +26,9 @@ func FilterOrgUsers(h wand.Wand) http.HandlerFunc {
 
 		if len(filterOrgUsersReq.State) == 0 {
 			h.Dbg("no state specified, defaulting to ActiveOrgUserState")
-			filterOrgUsersReq.State = []vetchi.OrgUserState{
-				vetchi.ActiveOrgUserState,
-				vetchi.AddedOrgUserState,
+			filterOrgUsersReq.State = []employer.OrgUserState{
+				employer.ActiveOrgUserState,
+				employer.AddedOrgUserState,
 			}
 		}
 

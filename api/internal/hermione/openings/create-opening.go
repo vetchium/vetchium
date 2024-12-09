@@ -7,13 +7,14 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func CreateOpening(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered CreateOpening")
-		var createOpeningReq vetchi.CreateOpeningRequest
+		var createOpeningReq employer.CreateOpeningRequest
 		err := json.NewDecoder(r.Body).Decode(&createOpeningReq)
 		if err != nil {
 			h.Dbg("failed to decode create opening request", "error", err)
@@ -30,7 +31,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		if createOpeningReq.YoeMax < createOpeningReq.YoeMin {
 			h.Dbg("yoe_max < yoe min", "createOpeningReq", createOpeningReq)
 			w.WriteHeader(http.StatusBadRequest)
-			err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+			err = json.NewEncoder(w).Encode(common.ValidationErrors{
 				Errors: []string{"yoe_min", "yoe_max"},
 			})
 			if err != nil {
@@ -43,7 +44,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			(createOpeningReq.Salary.MinAmount > createOpeningReq.Salary.MaxAmount) {
 			h.Dbg("salary min > max", "createOpeningReq", createOpeningReq)
 			w.WriteHeader(http.StatusBadRequest)
-			err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+			err = json.NewEncoder(w).Encode(common.ValidationErrors{
 				Errors: []string{"salary"},
 			})
 			if err != nil {
@@ -69,7 +70,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		h.Dbg("created opening", "openingID", openingID)
-		err = json.NewEncoder(w).Encode(vetchi.CreateOpeningResponse{
+		err = json.NewEncoder(w).Encode(employer.CreateOpeningResponse{
 			OpeningID: openingID,
 		})
 		if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 func (p *PG) CreateApplication(
@@ -52,7 +52,7 @@ RETURNING id
 		req.OriginalFilename,
 		req.InternalFilename,
 		hubUser.ID,
-		vetchi.AppliedAppState,
+		common.AppliedAppState,
 	).Scan(&applicationID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

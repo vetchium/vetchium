@@ -14,12 +14,14 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered ApplyForOpening")
-		var applyForOpeningReq vetchi.ApplyForOpeningRequest
+		var applyForOpeningReq hub.ApplyForOpeningRequest
 		err := json.NewDecoder(r.Body).Decode(&applyForOpeningReq)
 		if err != nil {
 			h.Dbg("failed to decode apply for opening request", "error", err)
@@ -45,7 +47,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, db.ErrBadResume) {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+				json.NewEncoder(w).Encode(common.ValidationErrors{
 					Errors: []string{"resume"},
 				})
 				return

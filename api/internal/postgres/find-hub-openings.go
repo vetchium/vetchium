@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) FindHubOpenings(
 	ctx context.Context,
-	req *vetchi.FindHubOpeningsRequest,
-) ([]vetchi.HubOpening, error) {
+	req *hub.FindHubOpeningsRequest,
+) ([]hub.HubOpening, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
 		p.log.Err("hub user not found in context")
@@ -222,9 +222,9 @@ FROM openings o
 	}
 	defer rows.Close()
 
-	var openings []vetchi.HubOpening
+	var openings []hub.HubOpening
 	for rows.Next() {
-		var opening vetchi.HubOpening
+		var opening hub.HubOpening
 		err := rows.Scan(
 			&opening.OpeningIDWithinCompany,
 			&opening.CompanyDomain,

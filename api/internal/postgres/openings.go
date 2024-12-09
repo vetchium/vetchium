@@ -7,17 +7,17 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) GetOpening(
 	ctx context.Context,
-	getOpeningReq vetchi.GetOpeningRequest,
-) (vetchi.Opening, error) {
+	getOpeningReq employer.GetOpeningRequest,
+) (employer.Opening, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return vetchi.Opening{}, db.ErrInternal
+		return employer.Opening{}, db.ErrInternal
 	}
 
 	query := `
@@ -89,11 +89,11 @@ GROUP BY
     hu_r.handle
 `
 
-	var opening vetchi.Opening
+	var opening employer.Opening
 	var locations []string
-	var hiringTeam []vetchi.OrgUserShort
-	var recruiter, hiringManager vetchi.OrgUserShort
-	var salary vetchi.Salary
+	var hiringTeam []employer.OrgUserShort
+	var recruiter, hiringManager employer.OrgUserShort
+	var salary employer.Salary
 
 	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(
@@ -122,10 +122,10 @@ GROUP BY
 		)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return vetchi.Opening{}, db.ErrNoOpening
+			return employer.Opening{}, db.ErrNoOpening
 		}
 		p.log.Err("failed to scan opening", "error", err)
-		return vetchi.Opening{}, err
+		return employer.Opening{}, err
 	}
 
 	opening.Salary = &salary
@@ -140,12 +140,12 @@ GROUP BY
 // FilterOpenings filters openings based on the given criteria
 func (p *PG) FilterOpenings(
 	ctx context.Context,
-	filterOpeningsReq vetchi.FilterOpeningsRequest,
-) ([]vetchi.OpeningInfo, error) {
+	filterOpeningsReq employer.FilterOpeningsRequest,
+) ([]employer.OpeningInfo, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return []vetchi.OpeningInfo{}, db.ErrInternal
+		return []employer.OpeningInfo{}, db.ErrInternal
 	}
 
 	query := `
@@ -229,16 +229,16 @@ LIMIT $6
 	)
 	if err != nil {
 		p.log.Err("failed to query openings", "error", err)
-		return []vetchi.OpeningInfo{}, err
+		return []employer.OpeningInfo{}, err
 	}
 
 	openingInfos, err := pgx.CollectRows(
 		rows,
-		pgx.RowToStructByName[vetchi.OpeningInfo],
+		pgx.RowToStructByName[employer.OpeningInfo],
 	)
 	if err != nil {
 		p.log.Err("failed to collect rows", "error", err)
-		return []vetchi.OpeningInfo{}, err
+		return []employer.OpeningInfo{}, err
 	}
 
 	return openingInfos, nil
@@ -246,7 +246,7 @@ LIMIT $6
 
 func (pg *PG) UpdateOpening(
 	ctx context.Context,
-	updateOpeningReq vetchi.UpdateOpeningRequest,
+	updateOpeningReq employer.UpdateOpeningRequest,
 ) error {
 	// TODO: Implement this
 	return nil
@@ -255,12 +255,12 @@ func (pg *PG) UpdateOpening(
 // GetOpeningWatchers gets the watchers of an opening
 func (p *PG) GetOpeningWatchers(
 	ctx context.Context,
-	getOpeningWatchersReq vetchi.GetOpeningWatchersRequest,
-) ([]vetchi.OrgUserShort, error) {
+	getOpeningWatchersReq employer.GetOpeningWatchersRequest,
+) ([]employer.OrgUserShort, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return []vetchi.OrgUserShort{}, db.ErrInternal
+		return []employer.OrgUserShort{}, db.ErrInternal
 	}
 
 	query := `
@@ -304,17 +304,17 @@ FROM opening_check oc;
 	).Scan(&openingExists, &watchersJSON)
 	if err != nil {
 		p.log.Err("failed to query opening watchers", "error", err)
-		return []vetchi.OrgUserShort{}, db.ErrInternal
+		return []employer.OrgUserShort{}, db.ErrInternal
 	}
 
 	if !openingExists {
-		return []vetchi.OrgUserShort{}, db.ErrNoOpening
+		return []employer.OrgUserShort{}, db.ErrNoOpening
 	}
 
-	var watchers []vetchi.OrgUserShort
+	var watchers []employer.OrgUserShort
 	if err := json.Unmarshal(watchersJSON, &watchers); err != nil {
 		p.log.Err("failed to unmarshal watchers", "error", err)
-		return []vetchi.OrgUserShort{}, db.ErrInternal
+		return []employer.OrgUserShort{}, db.ErrInternal
 	}
 
 	return watchers, nil
@@ -322,7 +322,7 @@ FROM opening_check oc;
 
 func (p *PG) AddOpeningWatchers(
 	ctx context.Context,
-	addOpeningWatchersReq vetchi.AddOpeningWatchersRequest,
+	addOpeningWatchersReq employer.AddOpeningWatchersRequest,
 ) error {
 	// Expectations:
 	// Invalid opening ID → db.ErrNoOpening
@@ -425,7 +425,7 @@ SELECT opening_exists, all_emails_valid, all_already_watching, current_watcher_c
 
 func (p *PG) RemoveOpeningWatcher(
 	ctx context.Context,
-	removeOpeningWatcherReq vetchi.RemoveOpeningWatcherRequest,
+	removeOpeningWatcherReq employer.RemoveOpeningWatcherRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -464,7 +464,7 @@ WHERE employer_id = $1
 
 func (p *PG) ChangeOpeningState(
 	ctx context.Context,
-	changeOpeningStateReq vetchi.ChangeOpeningStateRequest,
+	changeOpeningStateReq employer.ChangeOpeningStateRequest,
 ) error {
 	const (
 		resultNoOpening     = "no_opening"

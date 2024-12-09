@@ -7,13 +7,14 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func SetOnboardPassword(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var setOnboardPasswordReq vetchi.SetOnboardPasswordRequest
+		var setOnboardPasswordReq employer.SetOnboardPasswordRequest
 		err := json.NewDecoder(r.Body).Decode(&setOnboardPasswordReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

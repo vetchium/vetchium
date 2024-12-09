@@ -12,6 +12,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,7 +27,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 			),
 		)
 
-		var loginRequest vetchi.LoginRequest
+		var loginRequest hub.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&loginRequest)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
@@ -53,7 +54,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if hubUser.State != vetchi.ActiveHubUserState {
+		if hubUser.State != hub.ActiveHubUserState {
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return
 		}
@@ -111,7 +112,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		loginResponse := vetchi.LoginResponse{
+		loginResponse := hub.LoginResponse{
 			Token: tfaTokenString,
 		}
 		if err := json.NewEncoder(w).Encode(loginResponse); err != nil {

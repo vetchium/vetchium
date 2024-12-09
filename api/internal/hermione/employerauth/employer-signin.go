@@ -14,6 +14,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,7 +27,7 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			),
 		)
 
-		var employerSigninReq vetchi.EmployerSignInRequest
+		var employerSigninReq employer.EmployerSignInRequest
 
 		err := json.NewDecoder(r.Body).Decode(&employerSigninReq)
 		if err != nil {
@@ -55,7 +56,7 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if orgUserAuth.OrgUserState != vetchi.ActiveOrgUserState ||
+		if orgUserAuth.OrgUserState != employer.ActiveOrgUserState ||
 			orgUserAuth.EmployerState != db.OnboardedEmployerState {
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return
@@ -112,7 +113,7 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(vetchi.EmployerSignInResponse{
+		err = json.NewEncoder(w).Encode(employer.EmployerSignInResponse{
 			Token: tfaTokenString,
 		})
 		if err != nil {

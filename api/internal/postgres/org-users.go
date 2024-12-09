@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) AddOrgUser(
@@ -113,7 +113,7 @@ RETURNING email_key
 
 func (p *PG) DisableOrgUser(
 	ctx context.Context,
-	disableOrgUserRequest vetchi.DisableOrgUserRequest,
+	disableOrgUserRequest employer.DisableOrgUserRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -173,8 +173,8 @@ SELECT
 		query,
 		orgUser.EmployerID,
 		disableOrgUserRequest.Email,
-		vetchi.ActiveOrgUserState,
-		vetchi.DisabledOrgUserState,
+		employer.ActiveOrgUserState,
+		employer.DisabledOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
 		alreadyDisabled,
@@ -231,7 +231,7 @@ WHERE
 `
 
 	var orgUserID uuid.UUID
-	var orgUserState vetchi.OrgUserState
+	var orgUserState employer.OrgUserState
 	err = tx.QueryRow(ctx, getOrgUserQuery, enableOrgUserReq.Email, enableOrgUserReq.EmployerID).
 		Scan(&orgUserID, &orgUserState)
 	if err != nil {
@@ -243,7 +243,7 @@ WHERE
 		return err
 	}
 
-	if orgUserState != vetchi.DisabledOrgUserState {
+	if orgUserState != employer.DisabledOrgUserState {
 		p.log.Dbg("org user not disabled", "org_user_id", orgUserID)
 		return db.ErrOrgUserNotDisabled
 	}
@@ -260,8 +260,13 @@ RETURNING id
 `
 
 	var updatedOrgUserID uuid.UUID
-	err = tx.QueryRow(ctx, updateOrgUserQuery, vetchi.AddedOrgUserState, orgUserID, vetchi.DisabledOrgUserState).
-		Scan(&updatedOrgUserID)
+	err = tx.QueryRow(
+		ctx,
+		updateOrgUserQuery,
+		employer.AddedOrgUserState,
+		orgUserID,
+		employer.DisabledOrgUserState,
+	).Scan(&updatedOrgUserID)
 	if err != nil {
 		p.log.Err("failed to update org user", "error", err)
 		return err
@@ -301,8 +306,8 @@ RETURNING email_key
 
 func (p *PG) FilterOrgUsers(
 	ctx context.Context,
-	filterOrgUsersReq vetchi.FilterOrgUsersRequest,
-) ([]vetchi.OrgUser, error) {
+	filterOrgUsersReq employer.FilterOrgUsersRequest,
+) ([]employer.OrgUser, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -345,7 +350,7 @@ LIMIT $5
 
 	orgUsers, err := pgx.CollectRows(
 		rows,
-		pgx.RowToStructByName[vetchi.OrgUser],
+		pgx.RowToStructByName[employer.OrgUser],
 	)
 	if err != nil {
 		p.log.Err("failed to collect org users", "error", err)
@@ -386,9 +391,9 @@ RETURNING
 		query,
 		signupOrgUserReq.Name,
 		signupOrgUserReq.PasswordHash,
-		vetchi.ActiveOrgUserState,
+		employer.ActiveOrgUserState,
 		signupOrgUserReq.InviteToken,
-		vetchi.AddedOrgUserState,
+		employer.AddedOrgUserState,
 	).Scan(&orgUserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -405,7 +410,7 @@ RETURNING
 
 func (p *PG) UpdateOrgUser(
 	ctx context.Context,
-	updateOrgUserReq vetchi.UpdateOrgUserRequest,
+	updateOrgUserReq employer.UpdateOrgUserRequest,
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -458,7 +463,7 @@ SELECT
 		updateOrgUserReq.Name,
 		updateOrgUserReq.Roles.StringArray(),
 		orgUser.EmployerID,
-		vetchi.ActiveOrgUserState,
+		employer.ActiveOrgUserState,
 		userNotFound,
 		lastActiveAdmin,
 	).Scan(&orgUserIDStr)

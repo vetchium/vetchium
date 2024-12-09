@@ -9,12 +9,12 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var getOnboardStatusReq vetchi.GetOnboardStatusRequest
+		var getOnboardStatusReq employer.GetOnboardStatusRequest
 		err := json.NewDecoder(r.Body).Decode(&getOnboardStatusReq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -25,9 +25,9 @@ func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		var status vetchi.OnboardStatus
+		var status employer.OnboardStatus
 
-		employer, err := h.DB().GetEmployer(
+		employerObj, err := h.DB().GetEmployer(
 			r.Context(),
 			getOnboardStatusReq.ClientID,
 		)
@@ -47,26 +47,26 @@ func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 			}
 		}
 
-		switch employer.EmployerState {
+		switch employerObj.EmployerState {
 		case db.OnboardPendingEmployerState:
-			status = vetchi.DomainVerifiedOnboardPending
+			status = employer.DomainVerifiedOnboardPending
 		case db.OnboardedEmployerState:
-			status = vetchi.DomainOnboarded
+			status = employer.DomainOnboarded
 		case db.DeboardedEmployerState:
-			status = vetchi.DomainNotVerified
+			status = employer.DomainNotVerified
 		default:
 			h.Err(
 				"unknown employer state",
 				"client_id",
 				getOnboardStatusReq.ClientID,
 				"state",
-				employer.EmployerState,
+				employerObj.EmployerState,
 			)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		resp := vetchi.GetOnboardStatusResponse{Status: status}
+		resp := employer.GetOnboardStatusResponse{Status: status}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			h.Err("failed to encode response", "error", err)
@@ -87,8 +87,8 @@ func newDomainProcess(
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
 		h.Dbg("lookup TXT records", "domain", domain, "error", err)
-		resp := vetchi.GetOnboardStatusResponse{
-			Status: vetchi.DomainNotVerified,
+		resp := employer.GetOnboardStatusResponse{
+			Status: employer.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
@@ -105,8 +105,8 @@ func newDomainProcess(
 	}
 
 	if admin == "" {
-		resp := vetchi.GetOnboardStatusResponse{
-			Status: vetchi.DomainNotVerified,
+		resp := employer.GetOnboardStatusResponse{
+			Status: employer.DomainNotVerified,
 		}
 		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
@@ -130,8 +130,8 @@ func newDomainProcess(
 		return
 	}
 
-	resp := vetchi.GetOnboardStatusResponse{
-		Status: vetchi.DomainVerifiedOnboardPending,
+	resp := employer.GetOnboardStatusResponse{
+		Status: employer.DomainVerifiedOnboardPending,
 	}
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {

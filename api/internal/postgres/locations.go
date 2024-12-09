@@ -9,12 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) AddLocation(
 	ctx context.Context,
-	addLocationRequest vetchi.AddLocationRequest,
+	addLocationRequest employer.AddLocationRequest,
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -40,7 +40,7 @@ RETURNING
 		addLocationRequest.OpenStreetMapURL,
 		addLocationRequest.CityAka,
 		orgUser.EmployerID,
-		vetchi.ActiveLocation,
+		employer.ActiveLocation,
 	).Scan(&locationID)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -58,7 +58,7 @@ RETURNING
 
 func (p *PG) DefunctLocation(
 	ctx context.Context,
-	defunctLocationReq vetchi.DefunctLocationRequest,
+	defunctLocationReq employer.DefunctLocationRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -81,7 +81,7 @@ RETURNING
 	_, err := p.pool.Exec(
 		ctx,
 		query,
-		vetchi.DefunctLocation,
+		employer.DefunctLocation,
 		defunctLocationReq.Title,
 		orgUser.EmployerID,
 	)
@@ -99,12 +99,12 @@ RETURNING
 
 func (p *PG) GetLocByName(
 	ctx context.Context,
-	getLocationReq vetchi.GetLocationRequest,
-) (vetchi.Location, error) {
+	getLocationReq employer.GetLocationRequest,
+) (employer.Location, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return vetchi.Location{}, db.ErrInternal
+		return employer.Location{}, db.ErrInternal
 	}
 
 	query := `
@@ -123,7 +123,7 @@ WHERE
     AND employer_id = $2
 `
 
-	var location vetchi.Location
+	var location employer.Location
 	err := p.pool.QueryRow(
 		ctx,
 		query,
@@ -140,11 +140,11 @@ WHERE
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return vetchi.Location{}, db.ErrNoLocation
+			return employer.Location{}, db.ErrNoLocation
 		}
 
 		p.log.Err("failed to get location by name", "error", err)
-		return vetchi.Location{}, err
+		return employer.Location{}, err
 	}
 
 	return location, nil
@@ -152,8 +152,8 @@ WHERE
 
 func (p *PG) GetLocations(
 	ctx context.Context,
-	getLocationsReq vetchi.GetLocationsRequest,
-) ([]vetchi.Location, error) {
+	getLocationsReq employer.GetLocationsRequest,
+) ([]employer.Location, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -195,7 +195,7 @@ LIMIT $4
 
 	locations, err := pgx.CollectRows(
 		rows,
-		pgx.RowToStructByName[vetchi.Location],
+		pgx.RowToStructByName[employer.Location],
 	)
 	if err != nil {
 		p.log.Err("failed to get locations", "error", err)
@@ -207,7 +207,7 @@ LIMIT $4
 
 func (p *PG) RenameLocation(
 	ctx context.Context,
-	renameLocationReq vetchi.RenameLocationRequest,
+	renameLocationReq employer.RenameLocationRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -257,7 +257,7 @@ RETURNING
 
 func (p *PG) UpdateLocation(
 	ctx context.Context,
-	updateLocationReq vetchi.UpdateLocationRequest,
+	updateLocationReq employer.UpdateLocationRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {

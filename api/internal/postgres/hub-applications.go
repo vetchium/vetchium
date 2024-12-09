@@ -5,17 +5,18 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) MyApplications(
 	ctx context.Context,
-	myApplicationsReq vetchi.MyApplicationsRequest,
-) ([]vetchi.HubApplication, error) {
+	myApplicationsReq hub.MyApplicationsRequest,
+) ([]hub.HubApplication, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
 		p.log.Err("no hub user in context", "error", db.ErrNoHubUser)
-		return []vetchi.HubApplication{}, db.ErrNoHubUser
+		return []hub.HubApplication{}, db.ErrNoHubUser
 	}
 
 	p.log.Dbg("my applications request",
@@ -31,7 +32,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID).Scan(&userExists)
 	if err != nil {
 		p.log.Err("failed to check hub user", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("hub user exists check", "exists", userExists)
 
@@ -44,7 +45,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID).Scan(&count)
 	if err != nil {
 		p.log.Err("failed to count applications", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("found applications count", "count", count)
 
@@ -58,7 +59,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID).Scan(&joinCount)
 	if err != nil {
 		p.log.Err("failed to check join count", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("applications-openings join count", "count", joinCount)
 
@@ -75,7 +76,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID).Scan(&fullJoinCount)
 	if err != nil {
 		p.log.Err("failed to check full join count", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("full join count", "count", fullJoinCount)
 
@@ -92,7 +93,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID).Scan(&whereCount)
 	if err != nil {
 		p.log.Err("failed to check where count", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("where count (just hub_user_id)", "count", whereCount)
 
@@ -126,7 +127,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID, stateParam).Scan(&stateCount)
 	if err != nil {
 		p.log.Err("failed to check state count", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("where count (with state)", "count", stateCount)
 
@@ -145,7 +146,7 @@ func (p *PG) MyApplications(
 	`, hubUser.ID, stateParam, paginationParam).Scan(&finalCount)
 	if err != nil {
 		p.log.Err("failed to check final count", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	p.log.Dbg("where count (all conditions)", "count", finalCount)
 
@@ -185,7 +186,7 @@ LIMIT $4;
 		"paginationKey", myApplicationsReq.PaginationKey,
 		"limit", myApplicationsReq.Limit)
 
-	var hubApplications []vetchi.HubApplication
+	var hubApplications []hub.HubApplication
 	rows, err := p.pool.Query(
 		ctx,
 		query,
@@ -196,14 +197,14 @@ LIMIT $4;
 	)
 	if err != nil {
 		p.log.Err("failed to get my applications", "error", err)
-		return []vetchi.HubApplication{}, err
+		return []hub.HubApplication{}, err
 	}
 	defer rows.Close()
 
 	var rowCount int
 	for rows.Next() {
 		rowCount++
-		var hubApplication vetchi.HubApplication
+		var hubApplication hub.HubApplication
 		if err := rows.Scan(
 			&hubApplication.ApplicationID,
 			&hubApplication.State,
@@ -214,7 +215,7 @@ LIMIT $4;
 			&hubApplication.CreatedAt,
 		); err != nil {
 			p.log.Err("failed to scan my applications", "error", err)
-			return []vetchi.HubApplication{}, err
+			return []hub.HubApplication{}, err
 		}
 		hubApplications = append(hubApplications, hubApplication)
 	}
@@ -277,11 +278,11 @@ func (p *PG) WithdrawApplication(
 		query,
 		applicationID,
 		hubUser.ID,
-		vetchi.AppliedAppState,
+		common.AppliedAppState,
 		statusNotFound,
 		statusWrongState,
 		statusOK,
-		vetchi.WithdrawnAppState,
+		common.WithdrawnAppState,
 		statusUpdated,
 	).Scan(&status)
 	if err != nil {
