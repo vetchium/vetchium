@@ -30,8 +30,30 @@ model HubTFAResponse {
     session_token: string;
 }
 
+model ChangePasswordRequest {
+    old_password: Password;
+    new_password: Password;
+}
+
 model ForgotPasswordRequest {
     email: EmailAddress;
+}
+
+model ForgotPasswordResponse {
+    token: string;
+}
+
+model ResetPasswordRequest {
+    token: string;
+    password: Password;
+}
+
+model GetMyHandleResponse {
+    handle: string;
+}
+
+union HubUserState {
+    ActiveHubUserState: "ACTIVE_HUB_USER",
 }
 
 @route("/hub/login")
@@ -40,6 +62,10 @@ interface Login {
     @post
     login(@body loginRequest: LoginRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("The User account is not in a valid state to login")
+        @statusCode
+        statusCode: 422;
     };
 }
 
@@ -69,12 +95,8 @@ interface ForgotPassword {
     @post
     forgotPassword(@body forgotPasswordRequest: ForgotPasswordRequest): {
         @statusCode statusCode: 200;
+        @body forgotPasswordResponse: ForgotPasswordResponse;
     };
-}
-
-model ChangePasswordRequest {
-    old_password: Password;
-    new_password: Password;
 }
 
 @route("/hub/change-password")
@@ -87,11 +109,6 @@ interface ChangePassword {
     };
 }
 
-model ResetPasswordRequest {
-    token: string;
-    password: Password;
-}
-
 @route("/hub/reset-password")
 interface ResetPassword {
     @tag("HubUsers")
@@ -99,10 +116,6 @@ interface ResetPassword {
     resetPassword(@body resetPasswordRequest: ResetPasswordRequest): {
         @statusCode statusCode: 200;
     };
-}
-
-model GetMyHandleResponse {
-    handle: string;
 }
 
 @route("/hub/get-my-handle")
