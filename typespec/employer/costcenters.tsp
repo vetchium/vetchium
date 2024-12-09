@@ -13,7 +13,7 @@ namespace Vetchi;
 @maxLength(64)
 scalar CostCenterName extends string;
 
-enum CostCenterState {
+union CostCenterState {
     ActiveCC: "ACTIVE_CC",
     DefunctCC: "DEFUNCT_CC",
 }

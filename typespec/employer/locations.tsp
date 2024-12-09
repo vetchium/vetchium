@@ -9,7 +9,7 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-enum LocationState {
+union LocationState {
     ActiveLocation: "ACTIVE_LOCATION",
     DefunctLocation: "DEFUNCT_LOCATION",
 }

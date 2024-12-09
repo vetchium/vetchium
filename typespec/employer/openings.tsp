@@ -219,14 +219,6 @@ model GetOpeningWatchersRequest {
     opening_id: OpeningID;
 }
 
-model OpeningWatchers {
-    opening_id: OpeningID;
-
-    @doc("Maximum of 20 OrgUsers can watch an Opening")
-    @maxItems(20)
-    emails?: EmailAddress[];
-}
-
 model AddOpeningWatchersRequest {
     opening_id: OpeningID;
     emails: EmailAddress[];
