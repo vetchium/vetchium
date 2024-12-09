@@ -1,5 +1,14 @@
 package common
 
+type OpeningState string
+
+const (
+	DraftOpening     OpeningState = "DRAFT_OPENING_STATE"
+	ActiveOpening    OpeningState = "ACTIVE_OPENING_STATE"
+	SuspendedOpening OpeningState = "SUSPENDED_OPENING_STATE"
+	ClosedOpening    OpeningState = "CLOSED_OPENING_STATE"
+)
+
 type OpeningType string
 
 const (
