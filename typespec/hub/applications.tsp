@@ -33,6 +33,10 @@ model HubApplication {
     created_at: string;
 }
 
+model WithdrawApplicationRequest {
+    application_id: string;
+}
+
 @route("/hub/my-applications")
 interface MyApplications {
     @tag("Applications")
@@ -42,10 +46,6 @@ interface MyApplications {
         @statusCode statusCode: 200;
         @body applications: HubApplication[];
     };
-}
-
-model WithdrawApplicationRequest {
-    application_id: string;
 }
 
 @route("/hub/withdraw-application")
