@@ -1,4 +1,6 @@
-package vetchi
+package employer
+
+import "github.com/psankar/vetchi/typespec/common"
 
 type OrgUserState string
 
@@ -16,10 +18,17 @@ const (
 	ReplicatedOrgUserState OrgUserState = "REPLICATED_ORG_USER"
 )
 
+type OrgUser struct {
+	Name  string              `json:"name"  db:"name"`
+	Email string              `json:"email" db:"email"`
+	Roles common.OrgUserRoles `json:"roles" db:"org_user_roles"`
+	State OrgUserState        `json:"state" db:"org_user_state"`
+}
+
 type AddOrgUserRequest struct {
-	Name  string       `json:"name"  validate:"required,min=3,max=255"`
-	Email string       `json:"email" validate:"required,email,min=3,max=255"`
-	Roles OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
+	Name  string              `json:"name"  validate:"required,min=3,max=255"`
+	Email string              `json:"email" validate:"required,email,min=3,max=255"`
+	Roles common.OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
 }
 
 type DisableOrgUserRequest struct {
@@ -52,13 +61,6 @@ func (filterOrgUsersReq *FilterOrgUsersRequest) StatesAsStrings() []string {
 	return states
 }
 
-type OrgUser struct {
-	Name  string       `json:"name"  db:"name"`
-	Email string       `json:"email" db:"email"`
-	Roles OrgUserRoles `json:"roles" db:"org_user_roles"`
-	State OrgUserState `json:"state" db:"org_user_state"`
-}
-
 // OrgUserShort is intended to be used in rendering of OrgUsers
 // within the Employer UI, Autocompletion on Employer UI, etc.
 // Not to be used on the Hub UI or even exposed on Hub APIs.
@@ -72,14 +74,14 @@ type OrgUserShort struct {
 	VetchiHandle string `json:"vetchi_handle,omitempty" db:"vetchi_handle"`
 }
 
+type UpdateOrgUserRequest struct {
+	Email string              `json:"email" validate:"required,email,min=3,max=255"`
+	Name  string              `json:"name"  validate:"required,min=3,max=255"`
+	Roles common.OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
+}
+
 type SignupOrgUserRequest struct {
 	Name        string `json:"name"         validate:"required,min=3,max=255"`
 	Password    string `json:"password"     validate:"required,password"`
 	InviteToken string `json:"invite_token" validate:"required,min=1,max=255"`
-}
-
-type UpdateOrgUserRequest struct {
-	Email string       `json:"email" validate:"required,email,min=3,max=255"`
-	Name  string       `json:"name"  validate:"required,min=3,max=255"`
-	Roles OrgUserRoles `json:"roles" validate:"required,validate_org_user_roles"`
 }

@@ -24,67 +24,67 @@ type Salary struct {
 type OpeningID string
 
 type OpeningInfo struct {
-	ID              string         `json:"id"               db:"id"`
-	Title           string         `json:"title"            db:"title"`
-	Positions       int            `json:"positions"        db:"positions"`
-	FilledPositions int            `json:"filled_positions" db:"filled_positions"`
-	Recruiter       OrgUserShort   `json:"recruiter"        db:"recruiter"`
-	HiringManager   OrgUserShort   `json:"hiring_manager"   db:"hiring_manager"`
-	CostCenterName  CostCenterName `json:"cost_center_name" db:"cost_center_name"`
-	OpeningType     OpeningType    `json:"opening_type"     db:"opening_type"`
-	State           OpeningState   `json:"state"            db:"state"`
-	CreatedAt       time.Time      `json:"created_at"       db:"created_at"`
-	LastUpdatedAt   time.Time      `json:"last_updated_at"  db:"last_updated_at"`
+	ID              string             `json:"id"               db:"id"`
+	Title           string             `json:"title"            db:"title"`
+	Positions       int                `json:"positions"        db:"positions"`
+	FilledPositions int                `json:"filled_positions" db:"filled_positions"`
+	Recruiter       OrgUserShort       `json:"recruiter"        db:"recruiter"`
+	HiringManager   OrgUserShort       `json:"hiring_manager"   db:"hiring_manager"`
+	CostCenterName  CostCenterName     `json:"cost_center_name" db:"cost_center_name"`
+	OpeningType     common.OpeningType `json:"opening_type"     db:"opening_type"`
+	State           OpeningState       `json:"state"            db:"state"`
+	CreatedAt       time.Time          `json:"created_at"       db:"created_at"`
+	LastUpdatedAt   time.Time          `json:"last_updated_at"  db:"last_updated_at"`
 }
 
 type Opening struct {
-	ID                 string         `json:"id"`
-	Title              string         `json:"title"`
-	Positions          int            `json:"positions"`
-	FilledPositions    int            `json:"filled_positions"`
-	JD                 string         `json:"jd"`
-	Recruiter          OrgUserShort   `json:"recruiter"`
-	HiringManager      OrgUserShort   `json:"hiring_manager"`
-	HiringTeam         []OrgUserShort `json:"hiring_team,omitempty"`
-	CostCenterName     CostCenterName `json:"cost_center_name"`
-	LocationTitles     []string       `json:"location_titles,omitempty"`
-	RemoteCountryCodes []CountryCode  `json:"remote_country_codes,omitempty"`
-	RemoteTimezones    []TimeZone     `json:"remote_timezones,omitempty"`
-	OpeningType        OpeningType    `json:"opening_type"`
-	YoeMin             int            `json:"yoe_min"`
-	YoeMax             int            `json:"yoe_max"`
-	State              OpeningState   `json:"state"`
-	CreatedAt          time.Time      `json:"created_at"`
-	LastUpdatedAt      time.Time      `json:"last_updated_at"`
+	ID                 string               `json:"id"`
+	Title              string               `json:"title"`
+	Positions          int                  `json:"positions"`
+	FilledPositions    int                  `json:"filled_positions"`
+	JD                 string               `json:"jd"`
+	Recruiter          OrgUserShort         `json:"recruiter"`
+	HiringManager      OrgUserShort         `json:"hiring_manager"`
+	HiringTeam         []OrgUserShort       `json:"hiring_team,omitempty"`
+	CostCenterName     CostCenterName       `json:"cost_center_name"`
+	LocationTitles     []string             `json:"location_titles,omitempty"`
+	RemoteCountryCodes []common.CountryCode `json:"remote_country_codes,omitempty"`
+	RemoteTimezones    []common.TimeZone    `json:"remote_timezones,omitempty"`
+	OpeningType        common.OpeningType   `json:"opening_type"`
+	YoeMin             int                  `json:"yoe_min"`
+	YoeMax             int                  `json:"yoe_max"`
+	State              OpeningState         `json:"state"`
+	CreatedAt          time.Time            `json:"created_at"`
+	LastUpdatedAt      time.Time            `json:"last_updated_at"`
 
 	// Optional fields
-	EmployerNotes     *string         `json:"employer_notes,omitempty"`
-	MinEducationLevel *EducationLevel `json:"min_education_level,omitempty"`
-	Salary            *Salary         `json:"salary,omitempty"`
+	EmployerNotes     *string                `json:"employer_notes,omitempty"`
+	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty"`
+	Salary            *Salary                `json:"salary,omitempty"`
 }
 
 type CreateOpeningRequest struct {
-	Title          string         `json:"title"                     validate:"required,min=3,max=32"`
-	Positions      int            `json:"positions"                 validate:"required,min=1,max=20"`
-	JD             string         `json:"jd"                        validate:"required,min=10,max=1024"`
-	Recruiter      EmailAddress   `json:"recruiter"                 validate:"required"`
-	HiringManager  EmailAddress   `json:"hiring_manager"            validate:"required"`
-	HiringTeam     []EmailAddress `json:"hiring_team,omitempty"     validate:"omitempty,max=10"`
-	CostCenterName CostCenterName `json:"cost_center_name"          validate:"required"`
-	LocationTitles []string       `json:"location_titles,omitempty" validate:"omitempty,max=10"`
+	Title          string                `json:"title"                     validate:"required,min=3,max=32"`
+	Positions      int                   `json:"positions"                 validate:"required,min=1,max=20"`
+	JD             string                `json:"jd"                        validate:"required,min=10,max=1024"`
+	Recruiter      common.EmailAddress   `json:"recruiter"                 validate:"required"`
+	HiringManager  common.EmailAddress   `json:"hiring_manager"            validate:"required"`
+	HiringTeam     []common.EmailAddress `json:"hiring_team,omitempty"     validate:"omitempty,max=10"`
+	CostCenterName CostCenterName        `json:"cost_center_name"          validate:"required"`
+	LocationTitles []string              `json:"location_titles,omitempty" validate:"omitempty,max=10"`
 
 	// TODO: Add validation for remote_country_codes and remote_timezones
-	RemoteCountryCodes []CountryCode `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
-	RemoteTimezones    []TimeZone    `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
+	RemoteCountryCodes []common.CountryCode `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
+	RemoteTimezones    []common.TimeZone    `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
 
-	OpeningType OpeningType `json:"opening_type" validate:"required,validate_opening_type"`
-	YoeMin      int         `json:"yoe_min"      validate:"min=0,max=100"`
-	YoeMax      int         `json:"yoe_max"      validate:"min=1,max=100"`
+	OpeningType common.OpeningType `json:"opening_type" validate:"required,validate_opening_type"`
+	YoeMin      int                `json:"yoe_min"      validate:"min=0,max=100"`
+	YoeMax      int                `json:"yoe_max"      validate:"min=1,max=100"`
 
 	// Optional fields
-	EmployerNotes     *string         `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
-	MinEducationLevel *EducationLevel `json:"min_education_level,omitempty" validate:"omitempty"`
-	Salary            *Salary         `json:"salary,omitempty"              validate:"omitempty"`
+	EmployerNotes     *string                `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
+	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty" validate:"omitempty"`
+	Salary            *Salary                `json:"salary,omitempty"              validate:"omitempty"`
 }
 
 type CreateOpeningResponse struct {
@@ -130,11 +130,11 @@ type GetOpeningWatchersRequest struct {
 }
 
 type AddOpeningWatchersRequest struct {
-	OpeningID string         `json:"opening_id" validate:"required"`
-	Emails    []EmailAddress `json:"emails"     validate:"required"`
+	OpeningID string                `json:"opening_id" validate:"required"`
+	Emails    []common.EmailAddress `json:"emails"     validate:"required"`
 }
 
 type RemoveOpeningWatcherRequest struct {
-	OpeningID string       `json:"opening_id" validate:"required"`
-	Email     EmailAddress `json:"email"      validate:"required"`
+	OpeningID string              `json:"opening_id" validate:"required"`
+	Email     common.EmailAddress `json:"email"      validate:"required"`
 }
