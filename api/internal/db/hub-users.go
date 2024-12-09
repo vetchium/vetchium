@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 type HubUserTFA struct {
@@ -17,9 +18,9 @@ type HubUserTO struct {
 	ID           uuid.UUID           `db:"id"`
 	FullName     string              `db:"full_name"`
 	Handle       string              `db:"handle"`
-	Email        vetchi.EmailAddress `db:"email"`
+	Email        common.EmailAddress `db:"email"`
 	PasswordHash string              `db:"password_hash"`
-	State        vetchi.HubUserState `db:"state"`
+	State        hub.HubUserState    `db:"state"`
 	CreatedAt    time.Time           `db:"created_at"`
 	UpdatedAt    time.Time           `db:"updated_at"`
 }

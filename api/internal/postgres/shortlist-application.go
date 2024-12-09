@@ -5,7 +5,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 func (p *PG) ShortlistApplication(
@@ -45,7 +45,7 @@ RETURNING id
 		orgUser.EmployerID,
 		shortlistRequest.OpeningID,
 		orgUser.ID,
-		vetchi.InterviewingCandidacyState,
+		common.InterviewingCandidacyState,
 	).
 		Scan(&candidacyID)
 	if err != nil {
@@ -84,8 +84,8 @@ SELECT status FROM application_check;
 		applicationQuery,
 		shortlistRequest.ApplicationID,
 		orgUser.EmployerID,
-		vetchi.ShortlistedAppState,
-		vetchi.AppliedAppState,
+		common.ShortlistedAppState,
+		common.AppliedAppState,
 		statusNotFound,
 		statusWrongState,
 		statusOK,

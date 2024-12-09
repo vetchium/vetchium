@@ -7,13 +7,14 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func AddOpeningWatchers(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered AddOpeningWatchers")
-		var addWatchersReq vetchi.AddOpeningWatchersRequest
+		var addWatchersReq employer.AddOpeningWatchersRequest
 		err := json.NewDecoder(r.Body).Decode(&addWatchersReq)
 		if err != nil {
 			h.Dbg("failed to decode add watchers request", "error", err)
@@ -38,7 +39,7 @@ func AddOpeningWatchers(h wand.Wand) http.HandlerFunc {
 			if errors.Is(err, db.ErrNoOrgUser) {
 				h.Dbg("org user not found", "email", addWatchersReq.Emails)
 				w.WriteHeader(http.StatusBadRequest)
-				err = json.NewEncoder(w).Encode(vetchi.ValidationErrors{
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
 					Errors: []string{"emails"},
 				})
 				if err != nil {

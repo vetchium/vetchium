@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func UpdateOpening(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered UpdateOpening")
-		var updateOpeningReq vetchi.UpdateOpeningRequest
+		var updateOpeningReq employer.UpdateOpeningRequest
 		err := json.NewDecoder(r.Body).Decode(&updateOpeningReq)
 		if err != nil {
 			h.Dbg("failed to decode update opening request", "error", err)

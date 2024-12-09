@@ -9,17 +9,17 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) GetCCByName(
 	ctx context.Context,
-	getCCByNameReq vetchi.GetCostCenterRequest,
-) (vetchi.CostCenter, error) {
+	getCCByNameReq employer.GetCostCenterRequest,
+) (employer.CostCenter, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return vetchi.CostCenter{}, db.ErrInternal
+		return employer.CostCenter{}, db.ErrInternal
 	}
 
 	query := `
@@ -36,7 +36,7 @@ WHERE
 
 	// TODO: Perhaps in the future we will want to use sqlx.ScanStruct
 	// but for now this is fine.
-	var costCenter vetchi.CostCenter
+	var costCenter employer.CostCenter
 	err := p.pool.QueryRow(ctx, query,
 		getCCByNameReq.Name,
 		orgUser.EmployerID,
@@ -46,11 +46,11 @@ WHERE
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return vetchi.CostCenter{}, db.ErrNoCostCenter
+			return employer.CostCenter{}, db.ErrNoCostCenter
 		}
 
 		p.log.Err("failed to get cost center by name", "error", err)
-		return vetchi.CostCenter{}, err
+		return employer.CostCenter{}, err
 	}
 
 	return costCenter, nil
@@ -58,7 +58,7 @@ WHERE
 
 func (p *PG) UpdateCostCenter(
 	ctx context.Context,
-	updateCCReq vetchi.UpdateCostCenterRequest,
+	updateCCReq employer.UpdateCostCenterRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -98,7 +98,7 @@ RETURNING id
 
 func (p *PG) RenameCostCenter(
 	ctx context.Context,
-	renameCostCenterReq vetchi.RenameCostCenterRequest,
+	renameCostCenterReq employer.RenameCostCenterRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -144,8 +144,8 @@ RETURNING id
 
 func (p *PG) GetCostCenters(
 	ctx context.Context,
-	costCentersList vetchi.GetCostCentersRequest,
-) ([]vetchi.CostCenter, error) {
+	costCentersList employer.GetCostCentersRequest,
+) ([]employer.CostCenter, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -181,7 +181,7 @@ LIMIT $4
 
 	costCenters, err := pgx.CollectRows(
 		rows,
-		pgx.RowToStructByName[vetchi.CostCenter],
+		pgx.RowToStructByName[employer.CostCenter],
 	)
 	if err != nil {
 		p.log.Err("failed to query cost centers", "error", err)
@@ -193,7 +193,7 @@ LIMIT $4
 
 func (p *PG) DefunctCostCenter(
 	ctx context.Context,
-	defunctCostCenterReq vetchi.DefunctCostCenterRequest,
+	defunctCostCenterReq employer.DefunctCostCenterRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -217,7 +217,7 @@ RETURNING
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		vetchi.DefunctCC,
+		employer.DefunctCC,
 		defunctCostCenterReq.Name,
 		orgUser.EmployerID,
 	).Scan(&costCenterID)
@@ -235,7 +235,7 @@ RETURNING
 
 func (p *PG) CreateCostCenter(
 	ctx context.Context,
-	costCenterReq vetchi.AddCostCenterRequest,
+	costCenterReq employer.AddCostCenterRequest,
 ) (uuid.UUID, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -253,7 +253,7 @@ RETURNING
 	err := p.pool.QueryRow(
 		ctx, query,
 		costCenterReq.Name,
-		vetchi.ActiveCC,
+		employer.ActiveCC,
 		costCenterReq.Notes,
 		orgUser.EmployerID,
 	).Scan(&costCenterID)

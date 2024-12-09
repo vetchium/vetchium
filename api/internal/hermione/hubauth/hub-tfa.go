@@ -9,12 +9,13 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func HubTFA(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered HubTFA")
-		var hubTFARequest vetchi.HubTFARequest
+		var hubTFARequest hub.HubTFARequest
 		err := json.NewDecoder(r.Body).Decode(&hubTFARequest)
 		if err != nil {
 			h.Err("failed to decode request", "error", err)
@@ -74,7 +75,7 @@ func HubTFA(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(vetchi.HubTFAResponse{
+		err = json.NewEncoder(w).Encode(hub.HubTFAResponse{
 			SessionToken: sessionToken,
 		})
 		if err != nil {

@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func RemoveOpeningWatcher(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered RemoveOpeningWatcher")
-		var removeWatcherReq vetchi.RemoveOpeningWatcherRequest
+		var removeWatcherReq employer.RemoveOpeningWatcherRequest
 		err := json.NewDecoder(r.Body).Decode(&removeWatcherReq)
 		if err != nil {
 			h.Dbg("failed to decode remove watcher request", "error", err)

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 // Enums
@@ -54,7 +54,7 @@ type OpeningMailInfo struct {
 
 type HubUserMailInfo struct {
 	HubUserID         uuid.UUID
-	State             vetchi.HubUserState
+	State             hub.HubUserState
 	FullName          string
 	Handle            string
 	Email             string

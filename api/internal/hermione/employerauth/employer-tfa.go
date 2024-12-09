@@ -9,12 +9,13 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func EmployerTFA(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered employer tfa")
-		var employerTFARequest vetchi.EmployerTFARequest
+		var employerTFARequest employer.EmployerTFARequest
 		err := json.NewDecoder(r.Body).Decode(&employerTFARequest)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
@@ -75,7 +76,7 @@ func EmployerTFA(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(vetchi.EmployerTFAResponse{
+		err = json.NewEncoder(w).Encode(employer.EmployerTFAResponse{
 			SessionToken: sessionToken,
 		})
 		if err != nil {

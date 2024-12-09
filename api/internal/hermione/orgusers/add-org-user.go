@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func AddOrgUser(h wand.Wand) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered AddOrgUser")
-		var addOrgUserReq vetchi.AddOrgUserRequest
+		var addOrgUserReq employer.AddOrgUserRequest
 		err := json.NewDecoder(r.Body).Decode(&addOrgUserReq)
 		if err != nil {
 			h.Dbg("AddOrgUserReq JSON decode failed", "err", err)
@@ -37,7 +37,7 @@ func AddOrgUser(h wand.Wand) http.HandlerFunc {
 			Name:         addOrgUserReq.Name,
 			Email:        addOrgUserReq.Email,
 			OrgUserRoles: addOrgUserReq.Roles,
-			OrgUserState: vetchi.AddedOrgUserState,
+			OrgUserState: employer.AddedOrgUserState,
 
 			InviteMail:  invite.Mail,
 			InviteToken: invite.TokenReq,

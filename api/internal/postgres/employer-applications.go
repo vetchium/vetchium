@@ -7,13 +7,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) GetApplicationsForEmployer(
 	c context.Context,
-	req vetchi.GetApplicationsRequest,
-) ([]vetchi.Application, error) {
+	req employer.GetApplicationsRequest,
+) ([]employer.Application, error) {
 	orgUser, ok := c.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -64,9 +64,9 @@ func (p *PG) GetApplicationsForEmployer(
 	}
 	defer rows.Close()
 
-	var applications []vetchi.Application
+	var applications []employer.Application
 	for rows.Next() {
-		var app vetchi.Application
+		var app employer.Application
 		var internalFilename string
 
 		err := rows.Scan(

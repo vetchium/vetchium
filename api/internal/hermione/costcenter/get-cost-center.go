@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func GetCostCenter(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetCostCenter")
-		var getCostCenterReq vetchi.GetCostCenterRequest
+		var getCostCenterReq employer.GetCostCenterRequest
 		err := json.NewDecoder(r.Body).Decode(&getCostCenterReq)
 		if err != nil {
 			h.Dbg("failed to decode get cost center request", "error", err)

@@ -7,31 +7,32 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func ChangeOpeningState(h wand.Wand) http.HandlerFunc {
 	type Key struct {
-		From vetchi.OpeningState
-		To   vetchi.OpeningState
+		From common.OpeningState
+		To   common.OpeningState
 	}
 	validTransitions := map[Key]bool{
 		// Basically one cannot revert to draft state after publishing and
 		// close state is final
 
-		{From: vetchi.DraftOpening, To: vetchi.ActiveOpening}: true,
-		{From: vetchi.DraftOpening, To: vetchi.ClosedOpening}: true,
+		{From: common.DraftOpening, To: common.ActiveOpening}: true,
+		{From: common.DraftOpening, To: common.ClosedOpening}: true,
 
-		{From: vetchi.ActiveOpening, To: vetchi.SuspendedOpening}: true,
-		{From: vetchi.ActiveOpening, To: vetchi.ClosedOpening}:    true,
+		{From: common.ActiveOpening, To: common.SuspendedOpening}: true,
+		{From: common.ActiveOpening, To: common.ClosedOpening}:    true,
 
-		{From: vetchi.SuspendedOpening, To: vetchi.ActiveOpening}: true,
-		{From: vetchi.SuspendedOpening, To: vetchi.ClosedOpening}: true,
+		{From: common.SuspendedOpening, To: common.ActiveOpening}: true,
+		{From: common.SuspendedOpening, To: common.ClosedOpening}: true,
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered ChangeOpeningState")
-		var changeOpeningStateReq vetchi.ChangeOpeningStateRequest
+		var changeOpeningStateReq employer.ChangeOpeningStateRequest
 		err := json.NewDecoder(r.Body).Decode(&changeOpeningStateReq)
 		if err != nil {
 			h.Dbg("failed to decode change opening state request", "error", err)

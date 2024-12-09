@@ -3,9 +3,11 @@ package db
 import (
 	"time"
 
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type ClientIDType string
@@ -64,10 +66,10 @@ type OrgUserAuth struct {
 	OrgUserID     uuid.UUID
 	OrgUserEmail  string
 	EmployerID    uuid.UUID
-	OrgUserRoles  []vetchi.OrgUserRole
+	OrgUserRoles  []common.OrgUserRole
 	PasswordHash  string
 	EmployerState EmployerState
-	OrgUserState  vetchi.OrgUserState
+	OrgUserState  employer.OrgUserState
 }
 
 type OrgUserCreds struct {

@@ -11,12 +11,13 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) CreateOpening(
 	ctx context.Context,
-	createOpeningReq vetchi.CreateOpeningRequest,
+	createOpeningReq employer.CreateOpeningRequest,
 ) (string, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -126,7 +127,7 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
 		createOpeningReq.Salary.MinAmount,
 		createOpeningReq.Salary.MaxAmount,
 		createOpeningReq.Salary.Currency,
-		vetchi.DraftOpening,
+		common.DraftOpening,
 		orgUser.EmployerID,
 	).Scan(&openingID)
 	if err != nil {

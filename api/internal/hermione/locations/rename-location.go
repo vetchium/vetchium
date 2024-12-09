@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func RenameLocation(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered RenameLocation")
-		var renameLocationReq vetchi.RenameLocationRequest
+		var renameLocationReq employer.RenameLocationRequest
 		err := json.NewDecoder(r.Body).Decode(&renameLocationReq)
 		if err != nil {
 			h.Dbg("failed to decode rename location request", "error", err)

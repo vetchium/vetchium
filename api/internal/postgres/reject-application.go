@@ -5,7 +5,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 func (p *PG) RejectApplication(
@@ -61,13 +61,13 @@ SELECT status FROM application_check;
 	err = tx.QueryRow(
 		ctx,
 		applicationQuery,
-		vetchi.RejectedAppState,
+		common.RejectedAppState,
 		rejectRequest.ApplicationID,
 		orgUser.EmployerID,
 		statusNotFound,
 		statusWrongState,
 		statusOK,
-		vetchi.AppliedAppState,
+		common.AppliedAppState,
 	).Scan(&status)
 
 	if err != nil {

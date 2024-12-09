@@ -12,7 +12,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 func (h *Hermione) Run() error {
@@ -26,106 +26,106 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/add-cost-center",
 		costcenter.AddCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
+		[]common.OrgUserRole{common.Admin, common.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-cost-centers",
 		costcenter.GetCostCenters(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.CostCentersCRUD,
-			vetchi.CostCentersViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.CostCentersCRUD,
+			common.CostCentersViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/defunct-cost-center",
 		costcenter.DefunctCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
+		[]common.OrgUserRole{common.Admin, common.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/rename-cost-center",
 		costcenter.RenameCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
+		[]common.OrgUserRole{common.Admin, common.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/update-cost-center",
 		costcenter.UpdateCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersCRUD},
+		[]common.OrgUserRole{common.Admin, common.CostCentersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-cost-center",
 		costcenter.GetCostCenter(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.CostCentersViewer},
+		[]common.OrgUserRole{common.Admin, common.CostCentersViewer},
 	)
 
 	// Location related endpoints
 	h.mw.Protect(
 		"/employer/add-location",
 		locations.AddLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+		[]common.OrgUserRole{common.Admin, common.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/defunct-location",
 		locations.DefunctLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+		[]common.OrgUserRole{common.Admin, common.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-locations",
 		locations.GetLocations(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.LocationsCRUD,
-			vetchi.LocationsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.LocationsCRUD,
+			common.LocationsViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/get-location",
 		locations.GetLocation(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.LocationsCRUD,
-			vetchi.LocationsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.LocationsCRUD,
+			common.LocationsViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/rename-location",
 		locations.RenameLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+		[]common.OrgUserRole{common.Admin, common.LocationsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/update-location",
 		locations.UpdateLocation(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.LocationsCRUD},
+		[]common.OrgUserRole{common.Admin, common.LocationsCRUD},
 	)
 
 	// OrgUser related endpoints
 	h.mw.Protect(
 		"/employer/add-org-user",
 		orgusers.AddOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+		[]common.OrgUserRole{common.Admin, common.OrgUsersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/update-org-user",
 		orgusers.UpdateOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+		[]common.OrgUserRole{common.Admin, common.OrgUsersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/disable-org-user",
 		orgusers.DisableOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+		[]common.OrgUserRole{common.Admin, common.OrgUsersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/enable-org-user",
 		orgusers.EnableOrgUser(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OrgUsersCRUD},
+		[]common.OrgUserRole{common.Admin, common.OrgUsersCRUD},
 	)
 	h.mw.Protect(
 		"/employer/filter-org-users",
 		orgusers.FilterOrgUsers(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.OrgUsersCRUD,
-			vetchi.OrgUsersViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.OrgUsersCRUD,
+			common.OrgUsersViewer,
 		},
 	)
 	http.HandleFunc("/employer/signup-org-user", orgusers.SignupOrgUser(h))
@@ -134,100 +134,100 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/create-opening",
 		openings.CreateOpening(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-opening",
 		openings.GetOpening(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.OpeningsCRUD,
-			vetchi.OpeningsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/filter-openings",
 		openings.FilterOpenings(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.OpeningsCRUD,
-			vetchi.OpeningsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/update-opening",
 		openings.UpdateOpening(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/get-opening-watchers",
 		openings.GetOpeningWatchers(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.OpeningsCRUD,
-			vetchi.OpeningsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
 		},
 	)
 	h.mw.Protect(
 		"/employer/add-opening-watchers",
 		openings.AddOpeningWatchers(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/remove-opening-watcher",
 		openings.RemoveOpeningWatcher(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 	h.mw.Protect(
 		"/employer/change-opening-state",
 		openings.ChangeOpeningState(h),
-		[]vetchi.OrgUserRole{vetchi.Admin, vetchi.OpeningsCRUD},
+		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 
 	// Application related endpoints
 	h.mw.Protect(
 		"/employer/get-applications",
 		app.GetApplications(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
-			vetchi.ApplicationsViewer,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
+			common.ApplicationsViewer,
 		},
 	)
 
 	h.mw.Protect(
 		"/employer/set-application-color-tag",
 		app.SetApplicationColorTag(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
 		},
 	)
 
 	h.mw.Protect(
 		"/employer/remove-application-color-tag",
 		app.RemoveApplicationColorTag(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
 		},
 	)
 
 	h.mw.Protect(
 		"/employer/shortlist-application",
 		app.ShortlistApplication(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
 		},
 	)
 
 	h.mw.Protect(
 		"/employer/reject-application",
 		app.RejectApplication(h),
-		[]vetchi.OrgUserRole{
-			vetchi.Admin,
-			vetchi.ApplicationsCRUD,
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
 		},
 	)
 

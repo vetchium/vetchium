@@ -3,25 +3,25 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 func (p *PG) convertToOrgUserRoles(
 	dbRoles []string,
-) ([]vetchi.OrgUserRole, error) {
-	var roles []vetchi.OrgUserRole
+) ([]common.OrgUserRole, error) {
+	var roles []common.OrgUserRole
 	for _, str := range dbRoles {
-		role := vetchi.OrgUserRole(str)
+		role := common.OrgUserRole(str)
 		switch role {
-		case vetchi.Admin,
-			vetchi.CostCentersCRUD,
-			vetchi.CostCentersViewer,
-			vetchi.LocationsCRUD,
-			vetchi.LocationsViewer,
-			vetchi.OpeningsCRUD,
-			vetchi.OpeningsViewer,
-			vetchi.OrgUsersCRUD,
-			vetchi.OrgUsersViewer:
+		case common.Admin,
+			common.CostCentersCRUD,
+			common.CostCentersViewer,
+			common.LocationsCRUD,
+			common.LocationsViewer,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
+			common.OrgUsersCRUD,
+			common.OrgUsersViewer:
 			roles = append(roles, role)
 		default:
 			p.log.Err("invalid role in the database", "role", str)

@@ -7,13 +7,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func GetOpeningWatchers(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetOpeningWatchers")
-		var getOpeningWatchersReq vetchi.GetOpeningWatchersRequest
+		var getOpeningWatchersReq employer.GetOpeningWatchersRequest
 		err := json.NewDecoder(r.Body).Decode(&getOpeningWatchersReq)
 		if err != nil {
 			h.Dbg("failed to decode get opening watchers request", "error", err)

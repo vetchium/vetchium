@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func FindHubOpenings(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered FindHubOpenings")
-		var findHubOpeningsReq vetchi.FindHubOpeningsRequest
+		var findHubOpeningsReq hub.FindHubOpeningsRequest
 		err := json.NewDecoder(r.Body).Decode(&findHubOpeningsReq)
 		if err != nil {
 			h.Dbg("failed to decode find hub openings request", "error", err)

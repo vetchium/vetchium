@@ -7,14 +7,15 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func SignupOrgUser(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered SignupOrgUser")
-		var signupOrgUserRequest vetchi.SignupOrgUserRequest
+		var signupOrgUserRequest employer.SignupOrgUserRequest
 		err := json.NewDecoder(r.Body).Decode(&signupOrgUserRequest)
 		if err != nil {
 			h.Dbg("failed to decode signup org user request", "err", err)

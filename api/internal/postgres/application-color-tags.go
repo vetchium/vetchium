@@ -5,12 +5,13 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) SetApplicationColorTag(
 	ctx context.Context,
-	req vetchi.SetApplicationColorTagRequest,
+	req employer.SetApplicationColorTagRequest,
 ) error {
 	const (
 		statusNotFound   = "not_found"
@@ -59,7 +60,7 @@ func (p *PG) SetApplicationColorTag(
 		req.ColorTag,
 		req.ApplicationID,
 		orgUser.EmployerID,
-		vetchi.AppliedAppState,
+		common.AppliedAppState,
 		statusNotFound,
 		statusWrongState,
 		statusOK,
@@ -85,7 +86,7 @@ func (p *PG) SetApplicationColorTag(
 
 func (p *PG) RemoveApplicationColorTag(
 	ctx context.Context,
-	req vetchi.RemoveApplicationColorTagRequest,
+	req employer.RemoveApplicationColorTagRequest,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -133,7 +134,7 @@ func (p *PG) RemoveApplicationColorTag(
 		query,
 		req.ApplicationID,
 		orgUser.EmployerID,
-		vetchi.AppliedAppState,
+		common.AppliedAppState,
 		statusNotFound,
 		statusWrongState,
 		statusOK,
