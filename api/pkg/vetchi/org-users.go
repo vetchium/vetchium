@@ -1,36 +1,5 @@
 package vetchi
 
-type OrgUserRole string
-
-type OrgUserRoles []OrgUserRole
-
-func (roles OrgUserRoles) StringArray() []string {
-	var rolesStr []string
-	for _, role := range roles {
-		rolesStr = append(rolesStr, string(role))
-	}
-	return rolesStr
-}
-
-const (
-	Admin OrgUserRole = "ADMIN"
-
-	ApplicationsCRUD   OrgUserRole = "APPLICATIONS_CRUD"
-	ApplicationsViewer OrgUserRole = "APPLICATIONS_VIEWER"
-
-	CostCentersCRUD   OrgUserRole = "COST_CENTERS_CRUD"
-	CostCentersViewer OrgUserRole = "COST_CENTERS_VIEWER"
-
-	LocationsCRUD   OrgUserRole = "LOCATIONS_CRUD"
-	LocationsViewer OrgUserRole = "LOCATIONS_VIEWER"
-
-	OpeningsCRUD   OrgUserRole = "OPENINGS_CRUD"
-	OpeningsViewer OrgUserRole = "OPENINGS_VIEWER"
-
-	OrgUsersCRUD   OrgUserRole = "ORG_USERS_CRUD"
-	OrgUsersViewer OrgUserRole = "ORG_USERS_VIEWER"
-)
-
 type OrgUserState string
 
 const (

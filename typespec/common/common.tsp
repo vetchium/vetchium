@@ -217,10 +217,10 @@ alias CostCentersCRUD = "COST_CENTERS_CRUD";
 alias CostCentersViewer = "COST_CENTERS_VIEWER";
 alias LocationsCRUD = "LOCATIONS_CRUD";
 alias LocationsViewer = "LOCATIONS_VIEWER";
-alias OrgUsersCRUD = "ORG_USERS_CRUD";
-alias OrgUsersViewer = "ORG_USERS_VIEWER";
 alias OpeningsCRUD = "OPENINGS_CRUD";
 alias OpeningsViewer = "OPENINGS_VIEWER";
+alias OrgUsersCRUD = "ORG_USERS_CRUD";
+alias OrgUsersViewer = "ORG_USERS_VIEWER";
 
 model HubAuth {
     @doc("Http authentication")
