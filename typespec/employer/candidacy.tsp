@@ -11,6 +11,40 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+model GetCandidaciesInfoRequest {
+    @doc("If provided, will return only the candidacies for the given recruiter. If not provided, all Candidacies under the given employer will be returned.")
+    recruiter_id?: string;
+
+    @doc("If provided, will return only the Candidacies in the given state. Otherwise all Candidacies will be returned.")
+    state?: CandidacyState;
+
+    @doc("If provided, will return only the Candidacies after the given pagination_key. Otherwise all Candidacies will be returned. The Candidacies will be returned in reverse chronological order. If two Candidacies are created at the same time, the Candidacies will be further ordered by the candidacy_id. Pass the last candidacy_id fetched to get the next set of Candidacies.")
+    pagination_key?: string;
+
+    @doc("Number of Candidacies to return. Defaults to 40.")
+    @maxValue(40)
+    limit?: integer;
+}
+
+model Candidacy {
+    candidacy_id: string;
+    opening_id: string;
+    opening_title: string;
+    opening_description: string;
+    candidacy_state: CandidacyState;
+    applicant_name: string;
+    applicant_handle: string;
+}
+
+@route("/employer/get-candidacies-info")
+interface GetCandidaciesInfo {
+    @post
+    getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
+        @statusCode statusCode: 200;
+        @body response: Candidacy[];
+    };
+}
+
 model AddEmployerCandidacyCommentRequest {
     candidacy_id: string;
 
@@ -58,6 +92,7 @@ interface AddInterview {
 
 model Interview {
     interview_id: string;
+    interview_state: InterviewState;
     start_time: utcDateTime;
     end_time: utcDateTime;
     interview_type: InterviewType;
@@ -71,7 +106,6 @@ model Interview {
     @maxLength(4096)
     feedback_to_candidate?: string;
 
-    state: InterviewState;
     created_at: utcDateTime;
 }
 
