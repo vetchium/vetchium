@@ -48,6 +48,23 @@ model Application {
     state: ApplicationState;
 }
 
+model SetApplicationColorTagRequest {
+    application_id: string;
+    color_tag: ApplicationColorTag;
+}
+
+model RemoveApplicationColorTagRequest {
+    application_id: string;
+}
+
+model ShortlistApplicationRequest {
+    application_id: string;
+}
+
+model RejectApplicationRequest {
+    application_id: string;
+}
+
 @route("/employer/get-applications")
 interface GetApplications {
     @tag("Applications")
@@ -57,11 +74,6 @@ interface GetApplications {
         @statusCode statusCode: 200;
         @body applications: Application[];
     };
-}
-
-model SetApplicationColorTagRequest {
-    application_id: string;
-    color_tag: ApplicationColorTag;
 }
 
 @route("/employer/set-application-color-tag")
@@ -80,10 +92,6 @@ interface SetApplicationColorTag {
         @statusCode
         statusCode: 422;
     };
-}
-
-model RemoveApplicationColorTagRequest {
-    application_id: string;
 }
 
 @route("/employer/remove-application-color-tag")
@@ -106,10 +114,6 @@ interface RemoveApplicationColorTag {
     };
 }
 
-model ShortlistApplicationRequest {
-    application_id: string;
-}
-
 @route("/employer/shortlist-application")
 interface ShortlistApplication {
     @tag("Applications")
@@ -126,10 +130,6 @@ interface ShortlistApplication {
         @statusCode
         statusCode: 422;
     };
-}
-
-model RejectApplicationRequest {
-    application_id: string;
 }
 
 @route("/employer/reject-application")
