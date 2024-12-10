@@ -2,6 +2,7 @@ import "@typespec/http";
 import "@typespec/openapi3";
 import "@typespec/rest";
 
+import "./employer/applications.tsp";
 import "./employer/auth.tsp";
 import "./employer/costcenters.tsp";
 import "./employer/locations.tsp";
@@ -9,6 +10,7 @@ import "./employer/orgusers.tsp";
 import "./employer/openings.tsp";
 import "./employer/candidacy.tsp";
 
+import "./hub/applications.tsp";
 import "./hub/hubusers.tsp";
 import "./hub/openings.tsp";
 import "./hub/candidacy.tsp";

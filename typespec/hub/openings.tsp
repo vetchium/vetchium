@@ -103,7 +103,7 @@ interface FindHubOpenings {
     @tag("Openings")
     @post
     @useAuth(HubAuth)
-    findOpenings(@query query: FindHubOpeningsRequest): {
+    findOpenings(request: FindHubOpeningsRequest): {
         @statusCode statusCode: 200;
         @body HubOpening: [];
     };
