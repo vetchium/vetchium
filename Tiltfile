@@ -11,11 +11,11 @@ k8s_yaml('sqitch/sqitch-tilt.yaml')
 k8s_yaml('sqitch/postgres-tilt.yaml')
 
 # Define Docker builds with root context to include typespec
-docker_build('psankar/granger', '.', 
+docker_build('psankar/granger', '.',
     dockerfile='api/Dockerfile-granger',
 )
 
-docker_build('psankar/hermione', '.', 
+docker_build('psankar/hermione', '.',
     dockerfile='api/Dockerfile-hermione',
 )
 
