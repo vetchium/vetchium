@@ -363,18 +363,86 @@ var _ = Describe("Applied Openings", Ordered, func() {
 						},
 					},
 					{
-						description: "get applications with state filter",
+						description: "get applications with no state filter",
 						token:       hubUser1Token,
 						request: hub.MyApplicationsRequest{
 							State: common.ApplicationState(""),
-							Limit: 10,
+							Limit: 20,
 						},
 						wantStatus: http.StatusOK,
 						validate: func(apps []hub.HubApplication) {
+							// Should get all applications regardless of state
+							Expect(
+								len(apps),
+							).Should(BeNumerically(">=", 4))
+							// We have at least 4 different states
+						},
+					},
+					{
+						description: "get only APPLIED applications",
+						token:       hubUser1Token,
+						request: hub.MyApplicationsRequest{
+							State: common.ApplicationState("APPLIED"),
+							Limit: 20,
+						},
+						wantStatus: http.StatusOK,
+						validate: func(apps []hub.HubApplication) {
+							Expect(len(apps)).Should(BeNumerically(">", 0))
 							for _, app := range apps {
 								Expect(
 									app.State,
-								).Should(Equal(common.ApplicationState("")))
+								).Should(Equal(common.ApplicationState("APPLIED")))
+							}
+						},
+					},
+					{
+						description: "get only SHORTLISTED applications",
+						token:       hubUser1Token,
+						request: hub.MyApplicationsRequest{
+							State: common.ApplicationState("SHORTLISTED"),
+							Limit: 20,
+						},
+						wantStatus: http.StatusOK,
+						validate: func(apps []hub.HubApplication) {
+							Expect(len(apps)).Should(BeNumerically(">", 0))
+							for _, app := range apps {
+								Expect(
+									app.State,
+								).Should(Equal(common.ApplicationState("SHORTLISTED")))
+							}
+						},
+					},
+					{
+						description: "get only REJECTED applications",
+						token:       hubUser1Token,
+						request: hub.MyApplicationsRequest{
+							State: common.ApplicationState("REJECTED"),
+							Limit: 20,
+						},
+						wantStatus: http.StatusOK,
+						validate: func(apps []hub.HubApplication) {
+							Expect(len(apps)).Should(BeNumerically(">", 0))
+							for _, app := range apps {
+								Expect(
+									app.State,
+								).Should(Equal(common.ApplicationState("REJECTED")))
+							}
+						},
+					},
+					{
+						description: "get only WITHDRAWN applications",
+						token:       hubUser1Token,
+						request: hub.MyApplicationsRequest{
+							State: common.ApplicationState("WITHDRAWN"),
+							Limit: 20,
+						},
+						wantStatus: http.StatusOK,
+						validate: func(apps []hub.HubApplication) {
+							Expect(len(apps)).Should(BeNumerically(">", 0))
+							for _, app := range apps {
+								Expect(
+									app.State,
+								).Should(Equal(common.ApplicationState("WITHDRAWN")))
 							}
 						},
 					},
