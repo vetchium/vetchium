@@ -13,12 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/psankar/vetchi/api/pkg/vetchi"
-
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 var _ = Describe("Org Users", Ordered, func() {
@@ -60,7 +59,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			type addOrgUserTestCase struct {
 				description   string
 				token         string
-				request       vetchi.AddOrgUserRequest
+				request       employer.AddOrgUserRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -69,60 +68,60 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Admin token",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "new1@orgusers.example",
 						Name:  "New User One",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with CRUD token",
 					token:       crudToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "new2@orgusers.example",
 						Name:  "New User Two",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with Viewer token",
 					token:       viewerToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "new3@orgusers.example",
 						Name:  "New User Three",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "with non-orgusers token",
 					token:       nonOrgUsersToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "new4@orgusers.example",
 						Name:  "New User Four",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "with duplicate email",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "new1@orgusers.example",
 						Name:  "Duplicate User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusConflict,
 				},
 				{
 					description: "with invalid email",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "invalid-email",
 						Name:  "Invalid Email User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"email"},
@@ -130,10 +129,10 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with short name",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "short@orgusers.example",
 						Name:  "ab",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"name"},
@@ -141,10 +140,10 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with long name",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "long@orgusers.example",
 						Name:  strings.Repeat("a", 257),
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"name"},
@@ -152,10 +151,10 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with empty roles",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "noroles@orgusers.example",
 						Name:  "No Roles User",
-						Roles: []vetchi.OrgUserRole{},
+						Roles: []common.OrgUserRole{},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"roles"},
@@ -163,10 +162,10 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with invalid role",
 					token:       adminToken,
-					request: vetchi.AddOrgUserRequest{
+					request: employer.AddOrgUserRequest{
 						Email: "invalid@orgusers.example",
 						Name:  "Invalid Role User",
-						Roles: []vetchi.OrgUserRole{"INVALID_ROLE"},
+						Roles: []common.OrgUserRole{"INVALID_ROLE"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"roles"},
@@ -194,7 +193,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			type updateOrgUserTestCase struct {
 				description   string
 				token         string
-				request       vetchi.UpdateOrgUserRequest
+				request       employer.UpdateOrgUserRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -203,20 +202,20 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Admin token - update name",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "Updated CRUD User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with Admin token - update roles",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "Updated CRUD User",
-						Roles: []vetchi.OrgUserRole{
+						Roles: []common.OrgUserRole{
 							"ORG_USERS_CRUD",
 							"COST_CENTERS_CRUD",
 						},
@@ -226,50 +225,50 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with CRUD token",
 					token:       crudToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "viewer@orgusers.example",
 						Name:  "Updated Viewer User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with Viewer token",
 					token:       viewerToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "Should Not Update",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "update non-existent user",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "nonexistent@orgusers.example",
 						Name:  "Non-existent User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusNotFound,
 				},
 				{
 					description: "update last admin",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "admin@orgusers.example",
 						Name:  "Last Admin",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "with invalid email format",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "invalid-email",
 						Name:  "Invalid Email User",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"email"},
@@ -277,10 +276,10 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with short name",
 					token:       adminToken,
-					request: vetchi.UpdateOrgUserRequest{
+					request: employer.UpdateOrgUserRequest{
 						Email: "crud@orgusers.example",
 						Name:  "ab",
-						Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"name"},
@@ -306,16 +305,16 @@ var _ = Describe("Org Users", Ordered, func() {
 
 		It("Disable OrgUser", func() {
 			// First create some test users that we can disable
-			testUsers := []vetchi.AddOrgUserRequest{
+			testUsers := []employer.AddOrgUserRequest{
 				{
 					Email: "to-disable1@orgusers.example",
 					Name:  "To Disable User 1",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+					Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 				},
 				{
 					Email: "to-disable2@orgusers.example",
 					Name:  "To Disable User 2",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 			}
 
@@ -331,7 +330,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			type disableOrgUserTestCase struct {
 				description string
 				token       string
-				request     vetchi.DisableOrgUserRequest
+				request     employer.DisableOrgUserRequest
 				wantStatus  int
 			}
 
@@ -339,7 +338,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Admin token",
 					token:       adminToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "to-disable1@orgusers.example",
 					},
 					wantStatus: http.StatusOK,
@@ -347,7 +346,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with CRUD token",
 					token:       crudToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "to-disable2@orgusers.example",
 					},
 					wantStatus: http.StatusOK,
@@ -355,7 +354,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Viewer token",
 					token:       viewerToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "crud@orgusers.example",
 					},
 					wantStatus: http.StatusForbidden,
@@ -363,7 +362,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "disable last admin",
 					token:       adminToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "admin@orgusers.example",
 					},
 					wantStatus: http.StatusForbidden,
@@ -371,7 +370,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "disable non-existent user",
 					token:       adminToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "nonexistent@orgusers.example",
 					},
 					wantStatus: http.StatusNotFound,
@@ -379,7 +378,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "disable already disabled user",
 					token:       adminToken,
-					request: vetchi.DisableOrgUserRequest{
+					request: employer.DisableOrgUserRequest{
 						Email: "to-disable1@orgusers.example",
 					},
 					wantStatus: http.StatusBadRequest,
@@ -421,7 +420,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			type filterOrgUsersTestCase struct {
 				description   string
 				token         string
-				request       vetchi.FilterOrgUsersRequest
+				request       employer.FilterOrgUsersRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -430,13 +429,13 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Admin token - no filters",
 					token:       adminToken,
-					request:     vetchi.FilterOrgUsersRequest{},
+					request:     employer.FilterOrgUsersRequest{},
 					wantStatus:  http.StatusOK,
 				},
 				{
 					description: "with CRUD token - prefix filter",
 					token:       crudToken,
-					request: vetchi.FilterOrgUsersRequest{
+					request: employer.FilterOrgUsersRequest{
 						Prefix: "admin",
 					},
 					wantStatus: http.StatusOK,
@@ -444,21 +443,21 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Viewer token - state filter",
 					token:       viewerToken,
-					request: vetchi.FilterOrgUsersRequest{
-						State: []vetchi.OrgUserState{"DISABLED_ORG_USER"},
+					request: employer.FilterOrgUsersRequest{
+						State: []employer.OrgUserState{"DISABLED_ORG_USER"},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with non-orgusers token",
 					token:       nonOrgUsersToken,
-					request:     vetchi.FilterOrgUsersRequest{},
+					request:     employer.FilterOrgUsersRequest{},
 					wantStatus:  http.StatusForbidden,
 				},
 				{
 					description: "with invalid limit",
 					token:       adminToken,
-					request: vetchi.FilterOrgUsersRequest{
+					request: employer.FilterOrgUsersRequest{
 						Limit: 41,
 					},
 					wantStatus:    http.StatusBadRequest,
@@ -467,8 +466,8 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with invalid state",
 					token:       adminToken,
-					request: vetchi.FilterOrgUsersRequest{
-						State: []vetchi.OrgUserState{"INVALID_STATE"},
+					request: employer.FilterOrgUsersRequest{
+						State: []employer.OrgUserState{"INVALID_STATE"},
 					},
 					wantStatus:    http.StatusBadRequest,
 					wantErrFields: []string{"state"},
@@ -476,7 +475,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with pagination",
 					token:       adminToken,
-					request: vetchi.FilterOrgUsersRequest{
+					request: employer.FilterOrgUsersRequest{
 						Limit:         2,
 						PaginationKey: "crud@orgusers.example",
 					},
@@ -503,21 +502,21 @@ var _ = Describe("Org Users", Ordered, func() {
 
 		It("Filter OrgUsers with Prefix Search", func() {
 			// First create test users with specific prefixes
-			prefixUsers := []vetchi.AddOrgUserRequest{
+			prefixUsers := []employer.AddOrgUserRequest{
 				{
 					Email: "alpha1@orgusers.example",
 					Name:  "Beta User One",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 				{
 					Email: "beta1@orgusers.example",
 					Name:  "Alpha User One",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 				{
 					Email: "gamma1@orgusers.example",
 					Name:  "Alpha User Two",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 			}
 
@@ -562,12 +561,12 @@ var _ = Describe("Org Users", Ordered, func() {
 
 				resp := testPOSTGetResp(
 					adminToken,
-					vetchi.FilterOrgUsersRequest{Prefix: tc.prefix},
+					employer.FilterOrgUsersRequest{Prefix: tc.prefix},
 					"/employer/filter-org-users",
 					http.StatusOK,
 				).([]byte)
 
-				var users []vetchi.OrgUser
+				var users []employer.OrgUser
 				err := json.Unmarshal(resp, &users)
 				Expect(err).ShouldNot(HaveOccurred())
 
@@ -613,7 +612,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
 				testPOST(
 					tc.token,
-					vetchi.FilterOrgUsersRequest{Prefix: "alpha"},
+					employer.FilterOrgUsersRequest{Prefix: "alpha"},
 					"/employer/filter-org-users",
 					tc.wantStatus,
 				)
@@ -622,21 +621,21 @@ var _ = Describe("Org Users", Ordered, func() {
 
 		It("Enable OrgUser", func() {
 			// First create and disable some test users that we can enable
-			testUsers := []vetchi.AddOrgUserRequest{
+			testUsers := []employer.AddOrgUserRequest{
 				{
 					Email: "to-enable1@orgusers.example",
 					Name:  "To Enable User 1",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_CRUD"},
+					Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 				},
 				{
 					Email: "to-enable2@orgusers.example",
 					Name:  "To Enable User 2",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 				{
 					Email: "active-user@orgusers.example",
 					Name:  "Active User",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 			}
 
@@ -709,7 +708,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			for _, email := range disableUsers {
 				testPOST(
 					adminToken,
-					vetchi.DisableOrgUserRequest{Email: email},
+					employer.DisableOrgUserRequest{Email: email},
 					"/employer/disable-org-user",
 					http.StatusOK,
 				)
@@ -718,7 +717,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			type enableOrgUserTestCase struct {
 				description string
 				token       string
-				request     vetchi.EnableOrgUserRequest
+				request     employer.EnableOrgUserRequest
 				wantStatus  int
 			}
 
@@ -726,7 +725,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Admin token - enable disabled user",
 					token:       adminToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "to-enable1@orgusers.example",
 					},
 					wantStatus: http.StatusOK,
@@ -734,7 +733,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with CRUD token - enable disabled user",
 					token:       crudToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "to-enable2@orgusers.example",
 					},
 					wantStatus: http.StatusOK,
@@ -742,7 +741,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with Viewer token - should fail",
 					token:       viewerToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "to-enable2@orgusers.example",
 					},
 					wantStatus: http.StatusForbidden,
@@ -750,7 +749,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with non-orgusers token - should fail",
 					token:       nonOrgUsersToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "to-enable2@orgusers.example",
 					},
 					wantStatus: http.StatusForbidden,
@@ -758,7 +757,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "enable non-existent user",
 					token:       adminToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "nonexistent@orgusers.example",
 					},
 					wantStatus: http.StatusNotFound,
@@ -766,7 +765,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "enable already active user",
 					token:       adminToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "active-user@orgusers.example",
 					},
 					wantStatus: http.StatusBadRequest,
@@ -774,7 +773,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "enable already enabled user",
 					token:       adminToken,
-					request: vetchi.EnableOrgUserRequest{
+					request: employer.EnableOrgUserRequest{
 						Email: "to-enable1@orgusers.example",
 					},
 					wantStatus: http.StatusBadRequest,
@@ -794,15 +793,15 @@ var _ = Describe("Org Users", Ordered, func() {
 			// Verify the enabled users are actually enabled by trying to filter them
 			resp := testPOSTGetResp(
 				adminToken,
-				vetchi.FilterOrgUsersRequest{
-					State:  []vetchi.OrgUserState{vetchi.AddedOrgUserState},
+				employer.FilterOrgUsersRequest{
+					State:  []employer.OrgUserState{employer.AddedOrgUserState},
 					Prefix: "to-enable",
 				},
 				"/employer/filter-org-users",
 				http.StatusOK,
 			).([]byte)
 
-			var users []vetchi.OrgUser
+			var users []employer.OrgUser
 			err := json.Unmarshal(resp, &users)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -817,7 +816,7 @@ var _ = Describe("Org Users", Ordered, func() {
 						found = true
 						Expect(
 							user.State,
-						).Should(Equal(vetchi.AddedOrgUserState))
+						).Should(Equal(employer.AddedOrgUserState))
 						break
 					}
 				}
@@ -895,7 +894,7 @@ var _ = Describe("Org Users", Ordered, func() {
 		It("Test SignUp of OrgUsers", func() {
 			type signupOrgUserTestCase struct {
 				description   string
-				request       vetchi.SignupOrgUserRequest
+				request       employer.SignupOrgUserRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -903,10 +902,10 @@ var _ = Describe("Org Users", Ordered, func() {
 			// First create an org user that we can use to get an invite token
 			testPOST(
 				adminToken,
-				vetchi.AddOrgUserRequest{
+				employer.AddOrgUserRequest{
 					Email: "to-signup@orgusers.example",
 					Name:  "To Signup User",
-					Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+					Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 				},
 				"/employer/add-org-user",
 				http.StatusOK,
@@ -975,7 +974,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			// Extract the invite token from the email body
-			// The link format is: vetchi.example/signup-orguser/<token>
+			// The link format is: employer.example/signup-orguser/<token>
 			re := regexp.MustCompile(`/signup-orguser/([a-zA-Z0-9]+)`)
 			matches := re.FindStringSubmatch(string(body))
 			Expect(len(matches)).Should(BeNumerically(">=", 2))
@@ -1005,7 +1004,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			testCases := []signupOrgUserTestCase{
 				{
 					description: "valid signup",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: inviteToken,
 						Name:        "Signed Up User",
 						Password:    "ValidPassword123$",
@@ -1014,7 +1013,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with non-existent token",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "non-existent-token",
 						Name:        "Invalid Token User",
 						Password:    "ValidPassword123$",
@@ -1023,7 +1022,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with already used token",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: inviteToken, // Using the same token again
 						Name:        "Duplicate Token User",
 						Password:    "ValidPassword123$",
@@ -1032,7 +1031,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with empty token",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "",
 						Name:        "Empty Token User",
 						Password:    "ValidPassword123$",
@@ -1042,7 +1041,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with short name",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "some-token",
 						Name:        "ab", // Too short
 						Password:    "ValidPassword123$",
@@ -1052,7 +1051,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with long name",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "some-token",
 						Name:        strings.Repeat("a", 257), // Too long
 						Password:    "ValidPassword123$",
@@ -1062,7 +1061,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with empty password",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "some-token",
 						Name:        "Valid Name",
 						Password:    "",
@@ -1072,7 +1071,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				},
 				{
 					description: "with short password",
-					request: vetchi.SignupOrgUserRequest{
+					request: employer.SignupOrgUserRequest{
 						InviteToken: "some-token",
 						Name:        "Valid Name",
 						Password:    "short",
@@ -1121,11 +1120,11 @@ var _ = Describe("Org Users", Ordered, func() {
 
 func testAddOrgUserGetResp(
 	token string,
-	request vetchi.AddOrgUserRequest,
+	request employer.AddOrgUserRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(token, request, "/employer/add-org-user", wantStatus).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
@@ -1133,11 +1132,11 @@ func testAddOrgUserGetResp(
 
 func testUpdateOrgUserGetResp(
 	token string,
-	request vetchi.UpdateOrgUserRequest,
+	request employer.UpdateOrgUserRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(token, request, "/employer/update-org-user", wantStatus).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
@@ -1145,52 +1144,52 @@ func testUpdateOrgUserGetResp(
 
 func testFilterOrgUsersGetResp(
 	token string,
-	request vetchi.FilterOrgUsersRequest,
+	request employer.FilterOrgUsersRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(token, request, "/employer/filter-org-users", wantStatus).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
 }
 
 func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
-	wantUsers := []vetchi.OrgUser{}
+	wantUsers := []employer.OrgUser{}
 
 	for i := 0; i < count; i++ {
 		email := fmt.Sprintf("bulk-%s-%d@orgusers.example", runID, i)
 		name := fmt.Sprintf("Bulk User %s-%d", runID, i)
 
-		request := vetchi.AddOrgUserRequest{
+		request := employer.AddOrgUserRequest{
 			Email: email,
 			Name:  name,
-			Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
+			Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 		}
 
 		fmt.Fprintf(GinkgoWriter, "Adding user %q %q\n", email, name)
 		testPOST(token, request, "/employer/add-org-user", http.StatusOK)
 
-		wantUsers = append(wantUsers, vetchi.OrgUser{
+		wantUsers = append(wantUsers, employer.OrgUser{
 			Email: email,
 			Name:  name,
-			Roles: []vetchi.OrgUserRole{"ORG_USERS_VIEWER"},
-			State: vetchi.AddedOrgUserState,
+			Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
+			State: employer.AddedOrgUserState,
 		})
 	}
 
 	paginationKey := ""
-	gotUsers := []vetchi.OrgUser{}
+	gotUsers := []employer.OrgUser{}
 
 	for {
-		request := vetchi.FilterOrgUsersRequest{
+		request := employer.FilterOrgUsersRequest{
 			PaginationKey: paginationKey,
 			Limit:         limit,
 		}
 
 		resp := testPOSTGetResp(token, request, "/employer/filter-org-users", http.StatusOK).([]byte)
 
-		var users []vetchi.OrgUser
+		var users []employer.OrgUser
 		err := json.Unmarshal(resp, &users)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -1227,9 +1226,9 @@ func bulkAddFilterOrgUsers(token string, runID string, count int, limit int) {
 
 // Helper function for signup validation error responses
 func testSignupOrgUserGetResp(
-	request vetchi.SignupOrgUserRequest,
+	request employer.SignupOrgUserRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	jsonBytes, err := json.Marshal(request)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -1245,7 +1244,7 @@ func testSignupOrgUserGetResp(
 	Expect(err).ShouldNot(HaveOccurred())
 	defer resp.Body.Close()
 
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err = json.Unmarshal(body, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors

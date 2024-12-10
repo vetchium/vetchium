@@ -10,7 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 var _ = Describe("Employer Locations", Ordered, func() {
@@ -19,7 +20,7 @@ var _ = Describe("Employer Locations", Ordered, func() {
 	var crud1Token, crud2Token string
 	var nonLocationToken, multipleNonLocationRolesToken string
 
-	dummyLocation := vetchi.AddLocationRequest{
+	dummyLocation := employer.AddLocationRequest{
 		Title:         "Location-dummy",
 		CountryCode:   "SCO",
 		PostalCode:    "TN-1234",
@@ -27,7 +28,7 @@ var _ = Describe("Employer Locations", Ordered, func() {
 		CityAka:       []string{"Hogwarts", "School"},
 	}
 
-	location1 := vetchi.AddLocationRequest{
+	location1 := employer.AddLocationRequest{
 		Title:       "Location-1",
 		CountryCode: "UAE",
 		PostalCode:  "12345",
@@ -40,7 +41,7 @@ PIN: 12345`,
 		CityAka: []string{"Saarja", "Beghireen", "Abidhaabi"},
 	}
 
-	location2 := vetchi.AddLocationRequest{
+	location2 := employer.AddLocationRequest{
 		Title:            "Location-2",
 		CountryCode:      "IND",
 		PostalCode:       "12345",
@@ -49,7 +50,7 @@ PIN: 12345`,
 		CityAka:          []string{"Dursleys"},
 	}
 
-	location3 := vetchi.AddLocationRequest{
+	location3 := employer.AddLocationRequest{
 		Title:         "Location-3",
 		CountryCode:   "USA",
 		PostalCode:    "12345",
@@ -57,7 +58,7 @@ PIN: 12345`,
 		CityAka:       []string{},
 	}
 
-	location4 := vetchi.AddLocationRequest{
+	location4 := employer.AddLocationRequest{
 		Title:         "Location-4",
 		CountryCode:   "GBR",
 		PostalCode:    "23456",
@@ -104,7 +105,7 @@ PIN: 12345`,
 			type locationTestCase struct {
 				description string
 				token       string
-				location    vetchi.AddLocationRequest
+				location    employer.AddLocationRequest
 				wantStatus  int
 			}
 
@@ -191,7 +192,7 @@ PIN: 12345`,
 			type locationValidationTestCase struct {
 				description   string
 				token         string
-				location      vetchi.AddLocationRequest
+				location      employer.AddLocationRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -199,7 +200,7 @@ PIN: 12345`,
 				{
 					description: "with missing title",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -212,7 +213,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid title",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "a",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -225,7 +226,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid title",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         strings.Repeat("a", 33),
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -238,7 +239,7 @@ PIN: 12345`,
 				{
 					description: "with missing country code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "",
 						PostalCode:    "12345",
@@ -251,7 +252,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid country code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IN",
 						PostalCode:    "12345",
@@ -264,7 +265,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid country code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "INDIA",
 						PostalCode:    "12345",
@@ -277,7 +278,7 @@ PIN: 12345`,
 				{
 					description: "with missing postal code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "",
@@ -290,7 +291,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid postal code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "1",
@@ -303,7 +304,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid postal code",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    strings.Repeat("1", 17),
@@ -316,7 +317,7 @@ PIN: 12345`,
 				{
 					description: "with missing postal address",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -329,7 +330,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid postal address",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -342,7 +343,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid postal address",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -355,7 +356,7 @@ PIN: 12345`,
 				{
 					description: "with invalid city aka",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -368,7 +369,7 @@ PIN: 12345`,
 				{
 					description: "with long city aka",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -384,7 +385,7 @@ PIN: 12345`,
 				{
 					description: "with invalid number of city aka",
 					token:       adminToken,
-					location: vetchi.AddLocationRequest{
+					location: employer.AddLocationRequest{
 						Title:         "Location-6",
 						CountryCode:   "IND",
 						PostalCode:    "12345",
@@ -421,7 +422,7 @@ PIN: 12345`,
 			type testGetLocationsTestCase struct {
 				description         string
 				token               string
-				getLocationsRequest vetchi.GetLocationsRequest
+				getLocationsRequest employer.GetLocationsRequest
 				wantStatus          int
 			}
 
@@ -429,33 +430,33 @@ PIN: 12345`,
 				{
 					description:         "with Admin token and no filters",
 					token:               adminToken,
-					getLocationsRequest: vetchi.GetLocationsRequest{},
+					getLocationsRequest: employer.GetLocationsRequest{},
 					wantStatus:          http.StatusOK,
 				},
 				{
 					description:         "with Viewer token and no filters",
 					token:               viewerToken,
-					getLocationsRequest: vetchi.GetLocationsRequest{},
+					getLocationsRequest: employer.GetLocationsRequest{},
 					wantStatus:          http.StatusOK,
 				},
 				{
 					description:         "with Crud1 token and no filters",
 					token:               crud1Token,
-					getLocationsRequest: vetchi.GetLocationsRequest{},
+					getLocationsRequest: employer.GetLocationsRequest{},
 					wantStatus:          http.StatusOK,
 				},
 				{
 					description: "with invalid state",
 					token:       adminToken,
-					getLocationsRequest: vetchi.GetLocationsRequest{
-						States: []vetchi.LocationState{"invalid-state"},
+					getLocationsRequest: employer.GetLocationsRequest{
+						States: []employer.LocationState{"invalid-state"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "with invalid low limit",
 					token:       adminToken,
-					getLocationsRequest: vetchi.GetLocationsRequest{
+					getLocationsRequest: employer.GetLocationsRequest{
 						Limit: -1,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -463,7 +464,7 @@ PIN: 12345`,
 				{
 					description: "with invalid high limit",
 					token:       adminToken,
-					getLocationsRequest: vetchi.GetLocationsRequest{
+					getLocationsRequest: employer.GetLocationsRequest{
 						Limit: 101,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -471,13 +472,13 @@ PIN: 12345`,
 				{
 					description:         "with invalid token",
 					token:               "invalid-token",
-					getLocationsRequest: vetchi.GetLocationsRequest{},
+					getLocationsRequest: employer.GetLocationsRequest{},
 					wantStatus:          http.StatusUnauthorized,
 				},
 				{
 					description:         "with empty token",
 					token:               "",
-					getLocationsRequest: vetchi.GetLocationsRequest{},
+					getLocationsRequest: employer.GetLocationsRequest{},
 					wantStatus:          http.StatusUnauthorized,
 				},
 			}
@@ -492,10 +493,10 @@ PIN: 12345`,
 				if testCase.wantStatus == http.StatusOK {
 					Expect(locations).Should(HaveLen(4))
 					Expect(locations).Should(ContainElements(
-						makeLocation(location1, vetchi.ActiveLocation),
-						makeLocation(location2, vetchi.ActiveLocation),
-						makeLocation(location3, vetchi.ActiveLocation),
-						makeLocation(location4, vetchi.ActiveLocation),
+						makeLocation(location1, employer.ActiveLocation),
+						makeLocation(location2, employer.ActiveLocation),
+						makeLocation(location3, employer.ActiveLocation),
+						makeLocation(location4, employer.ActiveLocation),
 					))
 				}
 			}
@@ -505,7 +506,7 @@ PIN: 12345`,
 			type testDefunctLocationTestCase struct {
 				description string
 				token       string
-				location    vetchi.DefunctLocationRequest
+				location    employer.DefunctLocationRequest
 				wantStatus  int
 			}
 
@@ -513,7 +514,7 @@ PIN: 12345`,
 				{
 					description: "with Admin token",
 					token:       adminToken,
-					location: vetchi.DefunctLocationRequest{
+					location: employer.DefunctLocationRequest{
 						Title: location1.Title,
 					},
 					wantStatus: http.StatusOK,
@@ -521,7 +522,7 @@ PIN: 12345`,
 				{
 					description: "with Crud1 token",
 					token:       crud1Token,
-					location: vetchi.DefunctLocationRequest{
+					location: employer.DefunctLocationRequest{
 						Title: location2.Title,
 					},
 					wantStatus: http.StatusOK,
@@ -529,7 +530,7 @@ PIN: 12345`,
 				{
 					description: "with invalid token",
 					token:       "invalid-token",
-					location: vetchi.DefunctLocationRequest{
+					location: employer.DefunctLocationRequest{
 						Title: location3.Title,
 					},
 					wantStatus: http.StatusUnauthorized,
@@ -537,7 +538,7 @@ PIN: 12345`,
 				{
 					description: "with empty token",
 					token:       "",
-					location: vetchi.DefunctLocationRequest{
+					location: employer.DefunctLocationRequest{
 						Title: location4.Title,
 					},
 					wantStatus: http.StatusUnauthorized,
@@ -556,35 +557,35 @@ PIN: 12345`,
 			// Verify that the defunct location is not returned in the list
 			locations := testGetLocations(
 				adminToken,
-				vetchi.GetLocationsRequest{},
+				employer.GetLocationsRequest{},
 				http.StatusOK,
 			)
 			Expect(locations).Should(HaveLen(2))
 			Expect(locations).Should(ContainElements(
-				makeLocation(location3, vetchi.ActiveLocation),
-				makeLocation(location4, vetchi.ActiveLocation),
+				makeLocation(location3, employer.ActiveLocation),
+				makeLocation(location4, employer.ActiveLocation),
 			))
 
 			// Verify that the defunct location is returned in the list
 			locations = testGetLocations(
 				adminToken,
-				vetchi.GetLocationsRequest{
-					States: []vetchi.LocationState{vetchi.DefunctLocation},
+				employer.GetLocationsRequest{
+					States: []employer.LocationState{employer.DefunctLocation},
 				},
 				http.StatusOK,
 			)
 			Expect(locations).Should(HaveLen(2))
 			Expect(locations).Should(ContainElements(
-				makeLocation(location1, vetchi.DefunctLocation),
-				makeLocation(location2, vetchi.DefunctLocation),
+				makeLocation(location1, employer.DefunctLocation),
+				makeLocation(location2, employer.DefunctLocation),
 			))
 		})
 
 		It("Update and Get Location", func() {
-			location3Updated := makeLocation(location1, vetchi.ActiveLocation)
+			location3Updated := makeLocation(location1, employer.ActiveLocation)
 			location3Updated.Title = location3.Title
 
-			updateLocationRequest := vetchi.UpdateLocationRequest{
+			updateLocationRequest := employer.UpdateLocationRequest{
 				Title:         location3.Title,
 				CountryCode:   location3Updated.CountryCode,
 				PostalCode:    location3Updated.PostalCode,
@@ -600,7 +601,7 @@ PIN: 12345`,
 				false,
 			)
 
-			getLocationRequest := vetchi.GetLocationRequest{
+			getLocationRequest := employer.GetLocationRequest{
 				Title: location3.Title,
 			}
 			locationRaw := doPOST(
@@ -610,7 +611,7 @@ PIN: 12345`,
 				http.StatusOK,
 				true,
 			).([]byte)
-			var location vetchi.Location
+			var location employer.Location
 			err := json.Unmarshal(locationRaw, &location)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -621,7 +622,7 @@ PIN: 12345`,
 			type testUpdateLocationValidationTestCase struct {
 				description   string
 				token         string
-				location      vetchi.UpdateLocationRequest
+				location      employer.UpdateLocationRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -630,7 +631,7 @@ PIN: 12345`,
 				{
 					description: "with missing title",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title: "",
 					},
 					wantStatus:    http.StatusBadRequest,
@@ -639,7 +640,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid title",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title: "a",
 					},
 					wantStatus:    http.StatusBadRequest,
@@ -648,7 +649,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid title",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title: strings.Repeat("a", 33),
 					},
 					wantStatus:    http.StatusBadRequest,
@@ -657,7 +658,7 @@ PIN: 12345`,
 				{
 					description: "with missing country code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   "",
 						PostalCode:    location3.PostalCode,
@@ -670,7 +671,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid country code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   "IN",
 						PostalCode:    location3.PostalCode,
@@ -683,7 +684,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid country code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   "INDIA",
 						PostalCode:    location3.PostalCode,
@@ -696,7 +697,7 @@ PIN: 12345`,
 				{
 					description: "with missing postal code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    "",
@@ -709,7 +710,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid postal code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    "1",
@@ -722,7 +723,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid postal code",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    strings.Repeat("1", 17),
@@ -735,7 +736,7 @@ PIN: 12345`,
 				{
 					description: "with missing postal address",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -748,7 +749,7 @@ PIN: 12345`,
 				{
 					description: "with small invalid postal address",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -761,7 +762,7 @@ PIN: 12345`,
 				{
 					description: "with long invalid postal address",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -774,7 +775,7 @@ PIN: 12345`,
 				{
 					description: "with invalid city aka",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -787,7 +788,7 @@ PIN: 12345`,
 				{
 					description: "with long city aka",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -803,7 +804,7 @@ PIN: 12345`,
 				{
 					description: "with invalid number of city aka",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:         location3.Title,
 						CountryCode:   location3.CountryCode,
 						PostalCode:    location3.PostalCode,
@@ -824,7 +825,7 @@ PIN: 12345`,
 				{
 					description: "with invalid small openstreetmap url",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:            location3.Title,
 						CountryCode:      location3.CountryCode,
 						PostalCode:       location3.PostalCode,
@@ -838,7 +839,7 @@ PIN: 12345`,
 				{
 					description: "with invalid long openstreetmap url",
 					token:       adminToken,
-					location: vetchi.UpdateLocationRequest{
+					location: employer.UpdateLocationRequest{
 						Title:            location3.Title,
 						CountryCode:      location3.CountryCode,
 						PostalCode:       location3.PostalCode,
@@ -882,7 +883,7 @@ PIN: 12345`,
 
 func testAddLocation(
 	token string,
-	location vetchi.AddLocationRequest,
+	location employer.AddLocationRequest,
 	wantStatus int,
 ) {
 	fmt.Fprintf(
@@ -890,7 +891,7 @@ func testAddLocation(
 		"testAddLocation: token=%s, location=%v, wantStatus=%d\n",
 		token, location, wantStatus,
 	)
-	reqBody := vetchi.AddLocationRequest{
+	reqBody := employer.AddLocationRequest{
 		Title:            location.Title,
 		CountryCode:      location.CountryCode,
 		PostalCode:       location.PostalCode,
@@ -903,16 +904,16 @@ func testAddLocation(
 
 func testAddLocationGetResp(
 	token string,
-	location vetchi.AddLocationRequest,
+	location employer.AddLocationRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(
 		token,
 		location,
 		"/employer/add-location",
 		wantStatus,
 	).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
@@ -920,9 +921,9 @@ func testAddLocationGetResp(
 
 func testGetLocations(
 	token string,
-	getLocationsRequest vetchi.GetLocationsRequest,
+	getLocationsRequest employer.GetLocationsRequest,
 	wantStatus int,
-) []vetchi.Location {
+) []employer.Location {
 	resp := testPOSTGetResp(
 		token,
 		getLocationsRequest,
@@ -930,7 +931,7 @@ func testGetLocations(
 		wantStatus,
 	).([]byte)
 
-	var locations []vetchi.Location
+	var locations []employer.Location
 	if wantStatus == http.StatusOK {
 		err := json.Unmarshal(resp, &locations)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -939,10 +940,10 @@ func testGetLocations(
 }
 
 func makeLocation(
-	req vetchi.AddLocationRequest,
-	state vetchi.LocationState,
-) vetchi.Location {
-	return vetchi.Location{
+	req employer.AddLocationRequest,
+	state employer.LocationState,
+) employer.Location {
+	return employer.Location{
 		Title:            req.Title,
 		CountryCode:      req.CountryCode,
 		PostalCode:       req.PostalCode,
@@ -955,7 +956,7 @@ func makeLocation(
 
 func testDefunctLocation(
 	token string,
-	defunctLocationRequest vetchi.DefunctLocationRequest,
+	defunctLocationRequest employer.DefunctLocationRequest,
 	wantStatus int,
 ) {
 	fmt.Fprintf(
@@ -965,7 +966,7 @@ func testDefunctLocation(
 		defunctLocationRequest,
 		wantStatus,
 	)
-	reqBody := vetchi.DefunctLocationRequest{
+	reqBody := employer.DefunctLocationRequest{
 		Title: defunctLocationRequest.Title,
 	}
 	testPOST(token, reqBody, "/employer/defunct-location", wantStatus)
@@ -973,16 +974,16 @@ func testDefunctLocation(
 
 func testUpdateLocationGetResp(
 	token string,
-	location vetchi.UpdateLocationRequest,
+	location employer.UpdateLocationRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(
 		token,
 		location,
 		"/employer/update-location",
 		wantStatus,
 	).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
@@ -994,9 +995,9 @@ func bulkAddDefunctLocation(
 	count int,
 	limit int,
 ) {
-	wantLocations := []vetchi.Location{}
+	wantLocations := []employer.Location{}
 
-	dummyLocation := vetchi.AddLocationRequest{
+	dummyLocation := employer.AddLocationRequest{
 		Title:         "dummy-location",
 		CountryCode:   "IND",
 		PostalCode:    "123456",
@@ -1005,11 +1006,11 @@ func bulkAddDefunctLocation(
 	}
 
 	for i := 0; i < count; i++ {
-		newLocation := makeLocation(dummyLocation, vetchi.ActiveLocation)
+		newLocation := makeLocation(dummyLocation, employer.ActiveLocation)
 		newLocation.Title = fmt.Sprintf("LOC-%s-%d", runID, i)
 		wantLocations = append(wantLocations, newLocation)
 
-		newLocationReq := vetchi.AddLocationRequest{
+		newLocationReq := employer.AddLocationRequest{
 			Title:         newLocation.Title,
 			CountryCode:   newLocation.CountryCode,
 			PostalCode:    newLocation.PostalCode,
@@ -1020,9 +1021,9 @@ func bulkAddDefunctLocation(
 	}
 
 	paginationKey := ""
-	gotLocations := []vetchi.Location{}
+	gotLocations := []employer.Location{}
 	for {
-		getLocationsRequest := vetchi.GetLocationsRequest{
+		getLocationsRequest := employer.GetLocationsRequest{
 			PaginationKey: paginationKey,
 			Limit:         limit,
 		}
@@ -1042,7 +1043,7 @@ func bulkAddDefunctLocation(
 	Expect(gotLocations).Should(ContainElements(wantLocations))
 
 	for _, location := range gotLocations {
-		testDefunctLocation(token, vetchi.DefunctLocationRequest{
+		testDefunctLocation(token, employer.DefunctLocationRequest{
 			Title: location.Title,
 		}, http.StatusOK)
 	}

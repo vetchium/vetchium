@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 var _ = Describe("Applied Openings", Ordered, func() {
@@ -58,7 +61,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type shortlistTestCase struct {
 					description string
 					token       string
-					request     vetchi.ShortlistApplicationRequest
+					request     employer.ShortlistApplicationRequest
 					wantStatus  int
 				}
 
@@ -66,7 +69,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "shortlist with admin token",
 						token:       adminToken,
-						request: vetchi.ShortlistApplicationRequest{
+						request: employer.ShortlistApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
 						},
 						wantStatus: http.StatusOK,
@@ -74,7 +77,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "shortlist already shortlisted application",
 						token:       adminToken,
-						request: vetchi.ShortlistApplicationRequest{
+						request: employer.ShortlistApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-3",
 						},
 						wantStatus: http.StatusUnprocessableEntity,
@@ -82,7 +85,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "shortlist with viewer token",
 						token:       viewerToken,
-						request: vetchi.ShortlistApplicationRequest{
+						request: employer.ShortlistApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-4",
 						},
 						wantStatus: http.StatusForbidden,
@@ -90,7 +93,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "shortlist non-existent application",
 						token:       adminToken,
-						request: vetchi.ShortlistApplicationRequest{
+						request: employer.ShortlistApplicationRequest{
 							ApplicationID: "non-existent",
 						},
 						wantStatus: http.StatusNotFound,
@@ -136,7 +139,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				fmt.Fprintf(GinkgoWriter, "Admin token: %s\n", adminToken)
 
 				// Then verify the admin token works
-				req := vetchi.ShortlistApplicationRequest{
+				req := employer.ShortlistApplicationRequest{
 					ApplicationID: testAppID,
 				}
 				resp := testPOSTGetResp(
@@ -183,7 +186,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type colorTagTestCase struct {
 					description string
 					token       string
-					request     vetchi.SetApplicationColorTagRequest
+					request     employer.SetApplicationColorTagRequest
 					wantStatus  int
 				}
 
@@ -191,27 +194,27 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "set color tag with admin token",
 						token:       adminToken,
-						request: vetchi.SetApplicationColorTagRequest{
+						request: employer.SetApplicationColorTagRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-1",
-							ColorTag:      vetchi.GreenApplicationColorTag,
+							ColorTag:      employer.GreenApplicationColorTag,
 						},
 						wantStatus: http.StatusOK,
 					},
 					{
 						description: "set color tag with viewer token",
 						token:       viewerToken,
-						request: vetchi.SetApplicationColorTagRequest{
+						request: employer.SetApplicationColorTagRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-2",
-							ColorTag:      vetchi.YellowApplicationColorTag,
+							ColorTag:      employer.YellowApplicationColorTag,
 						},
 						wantStatus: http.StatusForbidden,
 					},
 					{
 						description: "set color tag for non-existent application",
 						token:       adminToken,
-						request: vetchi.SetApplicationColorTagRequest{
+						request: employer.SetApplicationColorTagRequest{
 							ApplicationID: "non-existent",
-							ColorTag:      vetchi.RedApplicationColorTag,
+							ColorTag:      employer.RedApplicationColorTag,
 						},
 						wantStatus: http.StatusNotFound,
 					},
@@ -231,7 +234,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type removeColorTagTestCase struct {
 					description string
 					token       string
-					request     vetchi.RemoveApplicationColorTagRequest
+					request     employer.RemoveApplicationColorTagRequest
 					wantStatus  int
 				}
 
@@ -239,7 +242,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "remove color tag with admin token",
 						token:       adminToken,
-						request: vetchi.RemoveApplicationColorTagRequest{
+						request: employer.RemoveApplicationColorTagRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-1",
 						},
 						wantStatus: http.StatusOK,
@@ -247,7 +250,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "remove color tag with viewer token",
 						token:       viewerToken,
-						request: vetchi.RemoveApplicationColorTagRequest{
+						request: employer.RemoveApplicationColorTagRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-2",
 						},
 						wantStatus: http.StatusForbidden,
@@ -255,7 +258,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "remove color tag for non-existent application",
 						token:       adminToken,
-						request: vetchi.RemoveApplicationColorTagRequest{
+						request: employer.RemoveApplicationColorTagRequest{
 							ApplicationID: "non-existent",
 						},
 						wantStatus: http.StatusNotFound,
@@ -279,7 +282,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type rejectTestCase struct {
 					description string
 					token       string
-					request     vetchi.RejectApplicationRequest
+					request     employer.RejectApplicationRequest
 					wantStatus  int
 				}
 
@@ -287,7 +290,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "reject with admin token",
 						token:       adminToken,
-						request: vetchi.RejectApplicationRequest{
+						request: employer.RejectApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-5",
 						},
 						wantStatus: http.StatusOK,
@@ -295,7 +298,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "reject with viewer token",
 						token:       viewerToken,
-						request: vetchi.RejectApplicationRequest{
+						request: employer.RejectApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-6",
 						},
 						wantStatus: http.StatusForbidden,
@@ -303,7 +306,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "reject non-existent application",
 						token:       adminToken,
-						request: vetchi.RejectApplicationRequest{
+						request: employer.RejectApplicationRequest{
 							ApplicationID: "non-existent",
 						},
 						wantStatus: http.StatusNotFound,
@@ -329,49 +332,49 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type myAppsTestCase struct {
 					description string
 					token       string
-					request     vetchi.MyApplicationsRequest
+					request     hub.MyApplicationsRequest
 					wantStatus  int
-					validate    func([]vetchi.HubApplication)
+					validate    func([]hub.HubApplication)
 				}
 
 				testCases := []myAppsTestCase{
 					{
 						description: "get all applications",
 						token:       hubUser1Token,
-						request: vetchi.MyApplicationsRequest{
+						request: hub.MyApplicationsRequest{
 							Limit: 10,
-							State: vetchi.ApplicationState(""),
+							State: common.ApplicationState(""),
 						},
 						wantStatus: http.StatusOK,
-						validate: func(apps []vetchi.HubApplication) {
+						validate: func(apps []hub.HubApplication) {
 							Expect(len(apps)).Should(BeNumerically(">", 0))
 						},
 					},
 					{
 						description: "get applications with pagination",
 						token:       hubUser1Token,
-						request: vetchi.MyApplicationsRequest{
+						request: hub.MyApplicationsRequest{
 							Limit: 5,
-							State: vetchi.ApplicationState(""),
+							State: common.ApplicationState(""),
 						},
 						wantStatus: http.StatusOK,
-						validate: func(apps []vetchi.HubApplication) {
+						validate: func(apps []hub.HubApplication) {
 							Expect(len(apps)).Should(Equal(5))
 						},
 					},
 					{
 						description: "get applications with state filter",
 						token:       hubUser1Token,
-						request: vetchi.MyApplicationsRequest{
-							State: vetchi.AppliedAppState,
+						request: hub.MyApplicationsRequest{
+							State: common.ApplicationState(""),
 							Limit: 10,
 						},
 						wantStatus: http.StatusOK,
-						validate: func(apps []vetchi.HubApplication) {
+						validate: func(apps []hub.HubApplication) {
 							for _, app := range apps {
 								Expect(
 									app.State,
-								).Should(Equal(vetchi.AppliedAppState))
+								).Should(Equal(common.ApplicationState("")))
 							}
 						},
 					},
@@ -387,7 +390,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					).([]byte)
 
 					if tc.wantStatus == http.StatusOK {
-						var apps []vetchi.HubApplication
+						var apps []hub.HubApplication
 						err := json.Unmarshal(resp, &apps)
 						Expect(err).ShouldNot(HaveOccurred())
 						tc.validate(apps)
@@ -401,7 +404,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 				type withdrawTestCase struct {
 					description string
 					token       string
-					request     vetchi.WithdrawApplicationRequest
+					request     hub.WithdrawApplicationRequest
 					wantStatus  int
 				}
 
@@ -409,7 +412,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "withdraw own application",
 						token:       hubUser1Token,
-						request: vetchi.WithdrawApplicationRequest{
+						request: hub.WithdrawApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-7",
 						},
 						wantStatus: http.StatusOK,
@@ -417,7 +420,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "withdraw another user's application",
 						token:       hubUser2Token,
-						request: vetchi.WithdrawApplicationRequest{
+						request: hub.WithdrawApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-8",
 						},
 						wantStatus: http.StatusNotFound,
@@ -425,7 +428,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 					{
 						description: "withdraw non-existent application",
 						token:       hubUser1Token,
-						request: vetchi.WithdrawApplicationRequest{
+						request: hub.WithdrawApplicationRequest{
 							ApplicationID: "non-existent",
 						},
 						wantStatus: http.StatusNotFound,
@@ -448,9 +451,9 @@ var _ = Describe("Applied Openings", Ordered, func() {
 
 // Helper function to login a hub user and get their token
 func loginHubUser(email, password string) string {
-	loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-		Email:    vetchi.EmailAddress(email),
-		Password: vetchi.Password(password),
+	loginReqBody, err := json.Marshal(hub.LoginRequest{
+		Email:    common.EmailAddress(email),
+		Password: common.Password(password),
 	})
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -462,7 +465,7 @@ func loginHubUser(email, password string) string {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-	var loginRespObj vetchi.LoginResponse
+	var loginRespObj hub.LoginResponse
 	err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 	Expect(err).ShouldNot(HaveOccurred())
 

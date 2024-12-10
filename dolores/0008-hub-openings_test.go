@@ -10,27 +10,29 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 var _ = Describe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
-	var bachelorEducation = vetchi.BachelorEducation
-	var masterEducation = vetchi.MasterEducation
+	var bachelorEducation = common.BachelorEducation
+	var masterEducation = common.MasterEducation
 
-	var usaCountryCode = vetchi.CountryCode("USA")
+	var usaCountryCode = common.CountryCode("USA")
 
 	BeforeAll(func() {
 		db = setupTestDB()
 		seedDatabase(db, "0008-hub-openings-up.pgsql")
 
 		// Login as hub user
-		loginReqBody, err := json.Marshal(vetchi.LoginRequest{
+		loginReqBody, err := json.Marshal(hub.LoginRequest{
 			Email:    "hubopening@hub.example",
 			Password: "NewPassword123$",
 		})
@@ -44,7 +46,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-		var loginRespObj vetchi.LoginResponse
+		var loginRespObj hub.LoginResponse
 		err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 		Expect(err).ShouldNot(HaveOccurred())
 		tfaToken := loginRespObj.Token
@@ -115,7 +117,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 		Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
 
 		// Complete TFA flow
-		tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+		tfaReqBody, err := json.Marshal(hub.HubTFARequest{
 			TFAToken:   tfaToken,
 			TFACode:    tfaCode,
 			RememberMe: false,
@@ -130,7 +132,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(tfaResp.StatusCode).Should(Equal(http.StatusOK))
 
-		var tfaRespObj vetchi.HubTFAResponse
+		var tfaRespObj hub.HubTFAResponse
 		err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 		Expect(err).ShouldNot(HaveOccurred())
 		hubUserToken = tfaRespObj.SessionToken
@@ -144,10 +146,10 @@ var _ = Describe("Hub Openings", Ordered, func() {
 	Describe("Find Hub Openings", func() {
 		type findOpeningsTestCase struct {
 			description string
-			request     vetchi.FindHubOpeningsRequest
+			request     hub.FindHubOpeningsRequest
 			wantStatus  int
 			wantCount   int
-			validate    func([]vetchi.HubOpening)
+			validate    func([]hub.HubOpening)
 		}
 
 		It("should find openings with various filters", func() {
@@ -155,13 +157,13 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Basic pagination and limit tests
 				{
 					description: "find all openings with default limit",
-					request:     vetchi.FindHubOpeningsRequest{},
+					request:     hub.FindHubOpeningsRequest{},
 					wantStatus:  http.StatusOK,
 					wantCount:   10,
 				},
 				{
 					description: "find openings with custom limit",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
@@ -169,14 +171,14 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				},
 				{
 					description: "find openings with invalid limit (too high)",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						Limit: 101,
 					},
 					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "find openings with invalid limit (too low)",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						Limit: -1,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -185,11 +187,11 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Company domain filters
 				{
 					description: "find openings by single company domain",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						CompanyDomains: []string{"hubopening1.example"},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						for _, o := range openings {
 							Expect(
 								o.CompanyDomain,
@@ -199,14 +201,14 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				},
 				{
 					description: "find openings by multiple company domains",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						CompanyDomains: []string{
 							"hubopening1.example",
 							"hubopening2.example",
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						for _, o := range openings {
 							Expect(o.CompanyDomain).Should(Or(
 								Equal("hubopening1.example"),
@@ -219,40 +221,40 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Experience range filters
 				{
 					description: "find openings by experience range (entry level)",
-					request: vetchi.FindHubOpeningsRequest{
-						ExperienceRange: &vetchi.ExperienceRange{
+					request: hub.FindHubOpeningsRequest{
+						ExperienceRange: &hub.ExperienceRange{
 							YoeMin: 0,
 							YoeMax: 3,
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
 				{
 					description: "find openings by experience range (mid level)",
-					request: vetchi.FindHubOpeningsRequest{
-						ExperienceRange: &vetchi.ExperienceRange{
+					request: hub.FindHubOpeningsRequest{
+						ExperienceRange: &hub.ExperienceRange{
 							YoeMin: 3,
 							YoeMax: 6,
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
 				{
 					description: "find openings by experience range (senior level)",
-					request: vetchi.FindHubOpeningsRequest{
-						ExperienceRange: &vetchi.ExperienceRange{
+					request: hub.FindHubOpeningsRequest{
+						ExperienceRange: &hub.ExperienceRange{
 							YoeMin: 6,
 							YoeMax: 10,
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
@@ -260,15 +262,15 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Salary range filters
 				{
 					description: "find openings by salary range (USD)",
-					request: vetchi.FindHubOpeningsRequest{
-						SalaryRange: &vetchi.SalaryRange{
+					request: hub.FindHubOpeningsRequest{
+						SalaryRange: &hub.SalaryRange{
 							Currency: "USD",
 							Min:      50000,
 							Max:      100000,
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
@@ -276,11 +278,11 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Education level filters
 				{
 					description: "find openings by minimum education level (Bachelor's)",
-					request: vetchi.FindHubOpeningsRequest{
+					request: hub.FindHubOpeningsRequest{
 						MinEducationLevel: &bachelorEducation,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
@@ -288,23 +290,23 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Remote work filters
 				{
 					description: "find openings by remote timezone",
-					request: vetchi.FindHubOpeningsRequest{
-						RemoteTimezones: []vetchi.TimeZone{
+					request: hub.FindHubOpeningsRequest{
+						RemoteTimezones: []common.TimeZone{
 							"IST Indian Standard Time GMT+0530",
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
 				{
 					description: "find openings by remote country",
-					request: vetchi.FindHubOpeningsRequest{
-						RemoteCountryCodes: []vetchi.CountryCode{"IND"},
+					request: hub.FindHubOpeningsRequest{
+						RemoteCountryCodes: []common.CountryCode{"IND"},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
@@ -312,24 +314,24 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Combined filters
 				{
 					description: "find openings with multiple filters",
-					request: vetchi.FindHubOpeningsRequest{
-						ExperienceRange: &vetchi.ExperienceRange{
+					request: hub.FindHubOpeningsRequest{
+						ExperienceRange: &hub.ExperienceRange{
 							YoeMin: 3,
 							YoeMax: 6,
 						},
-						SalaryRange: &vetchi.SalaryRange{
+						SalaryRange: &hub.SalaryRange{
 							Currency: "USD",
 							Min:      80000,
 							Max:      150000,
 						},
 						CountryCode:       &usaCountryCode,
 						MinEducationLevel: &masterEducation,
-						RemoteTimezones: []vetchi.TimeZone{
+						RemoteTimezones: []common.TimeZone{
 							"PST Pacific Standard Time (North America) GMT-0800",
 						},
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
@@ -371,7 +373,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if tc.wantStatus == http.StatusOK {
-					var openings []vetchi.HubOpening
+					var openings []hub.HubOpening
 					err = json.NewDecoder(resp.Body).Decode(&openings)
 					Expect(err).ShouldNot(HaveOccurred())
 
@@ -388,7 +390,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 
 		It("should handle pagination correctly", func() {
 			// Get first page with USA country filter
-			firstPageReq := vetchi.FindHubOpeningsRequest{
+			firstPageReq := hub.FindHubOpeningsRequest{
 				CountryCode: &usaCountryCode,
 				Limit:       10,
 			}
@@ -407,13 +409,13 @@ var _ = Describe("Hub Openings", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var firstPage []vetchi.HubOpening
+			var firstPage []hub.HubOpening
 			err = json.NewDecoder(resp.Body).Decode(&firstPage)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(firstPage).Should(HaveLen(10))
 
 			// Get second page using pagination key AND country code
-			secondPageReq := vetchi.FindHubOpeningsRequest{
+			secondPageReq := hub.FindHubOpeningsRequest{
 				CountryCode:   &usaCountryCode,
 				Limit:         10,
 				PaginationKey: firstPage[len(firstPage)-1].PaginationKey,
@@ -433,7 +435,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var secondPage []vetchi.HubOpening
+			var secondPage []hub.HubOpening
 			err = json.NewDecoder(resp.Body).Decode(&secondPage)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(secondPage).Should(HaveLen(10))
@@ -452,24 +454,24 @@ var _ = Describe("Hub Openings", Ordered, func() {
 			testCases := []findOpeningsTestCase{
 				{
 					description: "find openings in different country",
-					request: vetchi.FindHubOpeningsRequest{
-						CountryCode: vetchi.CountryCodePtr("USA"),
+					request: hub.FindHubOpeningsRequest{
+						CountryCode: hub.CountryCodePtr("USA"),
 						Limit:       10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(BeNumerically(">", 0))
 					},
 				},
 				{
 					description: "search for non-existent city in wrong country",
-					request: vetchi.FindHubOpeningsRequest{
-						CountryCode: vetchi.CountryCodePtr("IND"),
+					request: hub.FindHubOpeningsRequest{
+						CountryCode: hub.CountryCodePtr("IND"),
 						Cities:      []string{"New York"},
 						Limit:       10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(openings []vetchi.HubOpening) {
+					validate: func(openings []hub.HubOpening) {
 						Expect(len(openings)).Should(Equal(0))
 					},
 				},
@@ -513,7 +515,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if tc.wantStatus == http.StatusOK {
-					var openings []vetchi.HubOpening
+					var openings []hub.HubOpening
 					err = json.NewDecoder(resp.Body).Decode(&openings)
 					Expect(err).ShouldNot(HaveOccurred())
 

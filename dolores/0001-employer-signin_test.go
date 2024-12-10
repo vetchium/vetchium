@@ -13,8 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 var _ = Describe("Employer Signin", Ordered, func() {
@@ -36,19 +36,19 @@ var _ = Describe("Employer Signin", Ordered, func() {
 		It("returns the onboard status", func() {
 			var tests = []struct {
 				clientID string
-				want     vetchi.OnboardStatus
+				want     employer.OnboardStatus
 			}{
 				{
 					clientID: "domain-onboarded.example",
-					want:     vetchi.DomainOnboarded,
+					want:     employer.DomainOnboarded,
 				},
 				{
 					clientID: "example.com",
-					want:     vetchi.DomainNotVerified,
+					want:     employer.DomainNotVerified,
 				},
 				{
 					clientID: "secretsapp.com",
-					want:     vetchi.DomainVerifiedOnboardPending,
+					want:     employer.DomainVerifiedOnboardPending,
 				},
 			}
 
@@ -58,7 +58,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 					"Testing for domain %s\n",
 					test.clientID,
 				)
-				getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
+				getOnboardStatusRequest := employer.GetOnboardStatusRequest{
 					ClientID: test.clientID,
 				}
 
@@ -73,7 +73,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-				var got vetchi.GetOnboardStatusResponse
+				var got employer.GetOnboardStatusResponse
 				err = json.NewDecoder(resp.Body).Decode(&got)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(got.Status).Should(Equal(test.want))
@@ -140,7 +140,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 
 				// Test with an invalid password
 				setOnboardPasswordBody, err := json.Marshal(
-					vetchi.SetOnboardPasswordRequest{
+					employer.SetOnboardPasswordRequest{
 						ClientID: "secretsapp.com",
 						Password: "pass",
 						Token:    token,
@@ -158,7 +158,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 					setOnboardPasswordResp.StatusCode,
 				).Should(Equal(http.StatusBadRequest))
 
-				var v vetchi.ValidationErrors
+				var v common.ValidationErrors
 				err = json.NewDecoder(setOnboardPasswordResp.Body).
 					Decode(&v)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -167,7 +167,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 
 				// Set password for the admin
 				setOnboardPasswordBody, err = json.Marshal(
-					vetchi.SetOnboardPasswordRequest{
+					employer.SetOnboardPasswordRequest{
 						ClientID: "secretsapp.com",
 						Password: "NewPassword123$",
 						Token:    token,
@@ -186,7 +186,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				).Should(Equal(http.StatusOK))
 
 				// Get Onboard Status should now return DomainOnboarded
-				getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
+				getOnboardStatusRequest := employer.GetOnboardStatusRequest{
 					ClientID: "secretsapp.com",
 				}
 				getOnboardStatusBody, err := json.Marshal(
@@ -204,11 +204,11 @@ var _ = Describe("Employer Signin", Ordered, func() {
 					getOnboardStatusResp.StatusCode,
 				).Should(Equal(http.StatusOK))
 
-				var got vetchi.GetOnboardStatusResponse
+				var got employer.GetOnboardStatusResponse
 				err = json.NewDecoder(getOnboardStatusResp.Body).
 					Decode(&got)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(got.Status).Should(Equal(vetchi.DomainOnboarded))
+				Expect(got.Status).Should(Equal(employer.DomainOnboarded))
 
 				log.Println("Test if the same token can be used again")
 
@@ -247,7 +247,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 		)
 
 		It("test if invite token can be used after validity", func() {
-			getOnboardStatusRequest := vetchi.GetOnboardStatusRequest{
+			getOnboardStatusRequest := employer.GetOnboardStatusRequest{
 				ClientID: "aadal.in",
 			}
 
@@ -262,12 +262,12 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var got vetchi.GetOnboardStatusResponse
+			var got employer.GetOnboardStatusResponse
 			err = json.NewDecoder(resp.Body).Decode(&got)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(
 				got.Status,
-			).Should(Equal(vetchi.DomainVerifiedOnboardPending))
+			).Should(Equal(employer.DomainVerifiedOnboardPending))
 
 			fmt.Fprintf(
 				GinkgoWriter,
@@ -330,7 +330,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			// (grangerconfig.onboard_token_life*2) is a good wait time
 			<-time.After(5 * time.Minute)
 
-			setPasswordRequest := vetchi.SetOnboardPasswordRequest{
+			setPasswordRequest := employer.SetOnboardPasswordRequest{
 				ClientID: "aadal.in",
 				Password: "NewPassword123$",
 				Token:    token,
@@ -374,7 +374,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 		fmt.Fprintf(GinkgoWriter, "Describe Employer Signin is called\n")
 		It("various invalid inputs", func() {
 			signinReqBody, err := json.Marshal(
-				vetchi.EmployerSignInRequest{
+				employer.EmployerSignInRequest{
 					ClientID: "test",
 					Email:    "test",
 					Password: "test",
@@ -394,7 +394,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
 
-			var validationErr vetchi.ValidationErrors
+			var validationErr common.ValidationErrors
 			err = json.NewDecoder(resp.Body).Decode(&validationErr)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(validationErr.Errors).Should(HaveLen(3))
@@ -405,7 +405,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 
 		It("non-existent client_id", func() {
 			signinReqBody, err := json.Marshal(
-				vetchi.EmployerSignInRequest{
+				employer.EmployerSignInRequest{
 					ClientID: "bad-client-id.example",
 					Email:    "admin@domain-onboarded.example",
 					Password: "NewPassword123$",
@@ -428,7 +428,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 
 		It("good client_id, non-existent email, bad password", func() {
 			signinReqBody, err := json.Marshal(
-				vetchi.EmployerSignInRequest{
+				employer.EmployerSignInRequest{
 					ClientID: "domain-onboarded.example",
 					Email:    "non-existent-email@domain-onboarded.example",
 					Password: "BadPassword11234$",
@@ -451,7 +451,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 
 		It("good client_id, good email, bad password", func() {
 			signinReqBody, err := json.Marshal(
-				vetchi.EmployerSignInRequest{
+				employer.EmployerSignInRequest{
 					ClientID: "domain-onboarded.example",
 					Email:    "admin@domain-onboarded.example",
 					Password: "BadPassword11234$",

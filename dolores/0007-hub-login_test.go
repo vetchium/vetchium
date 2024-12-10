@@ -13,7 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 var _ = Describe("Hub Login", Ordered, func() {
@@ -31,9 +32,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 	// Helper functions to reduce code duplication
 	getLoginToken := func(email, password string) string {
-		loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-			Email:    vetchi.EmailAddress(email),
-			Password: vetchi.Password(password),
+		loginReqBody, err := json.Marshal(hub.LoginRequest{
+			Email:    common.EmailAddress(email),
+			Password: common.Password(password),
 		})
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -45,7 +46,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-		var loginRespObj vetchi.LoginResponse
+		var loginRespObj hub.LoginResponse
 		err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 		Expect(err).ShouldNot(HaveOccurred())
 		return loginRespObj.Token
@@ -125,7 +126,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 	}
 
 	getSessionToken := func(tfaToken, tfaCode string, rememberMe bool) string {
-		tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+		tfaReqBody, err := json.Marshal(hub.HubTFARequest{
 			TFAToken:   tfaToken,
 			TFACode:    tfaCode,
 			RememberMe: rememberMe,
@@ -140,7 +141,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-		var tfaResp vetchi.HubTFAResponse
+		var tfaResp hub.HubTFAResponse
 		err = json.NewDecoder(resp.Body).Decode(&tfaResp)
 		Expect(err).ShouldNot(HaveOccurred())
 		return tfaResp.SessionToken
@@ -149,7 +150,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 	Describe("Hub Login Flow", Ordered, func() {
 		type loginTestCase struct {
 			description   string
-			request       vetchi.LoginRequest
+			request       hub.LoginRequest
 			wantStatus    int
 			wantErrFields []string
 		}
@@ -158,7 +159,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			testCases := []loginTestCase{
 				{
 					description: "valid credentials for active user",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "active@hub.example",
 						Password: "NewPassword123$",
 					},
@@ -166,7 +167,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "invalid password for active user",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "active@hub.example",
 						Password: "WrongPassword123$",
 					},
@@ -174,7 +175,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "disabled user",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "disabled@hub.example",
 						Password: "NewPassword123$",
 					},
@@ -182,7 +183,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "deleted user",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "deleted@hub.example",
 						Password: "NewPassword123$",
 					},
@@ -190,7 +191,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "non-existent user",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "nonexistent@hub.example",
 						Password: "NewPassword123$",
 					},
@@ -198,7 +199,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "invalid email format",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "invalid-email",
 						Password: "NewPassword123$",
 					},
@@ -207,7 +208,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "empty password",
-					request: vetchi.LoginRequest{
+					request: hub.LoginRequest{
 						Email:    "active@hub.example",
 						Password: "",
 					},
@@ -245,7 +246,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if len(tc.wantErrFields) > 0 {
-					var validationErrors vetchi.ValidationErrors
+					var validationErrors common.ValidationErrors
 					err = json.NewDecoder(resp.Body).Decode(&validationErrors)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(
@@ -255,7 +256,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				}
 
 				if tc.wantStatus == http.StatusOK {
-					var loginResp vetchi.LoginResponse
+					var loginResp hub.LoginResponse
 					err = json.NewDecoder(resp.Body).Decode(&loginResp)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(loginResp.Token).ShouldNot(BeEmpty())
@@ -265,7 +266,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 		type tfaTestCase struct {
 			description   string
-			request       vetchi.HubTFARequest
+			request       hub.HubTFARequest
 			wantStatus    int
 			wantErrFields []string
 		}
@@ -273,8 +274,8 @@ var _ = Describe("Hub Login", Ordered, func() {
 		It("should handle TFA flow correctly", func() {
 			// First get a valid TFA token through login
 			email := "tfatest@hub.example"
-			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-				Email:    vetchi.EmailAddress(email),
+			loginReqBody, err := json.Marshal(hub.LoginRequest{
+				Email:    common.EmailAddress(email),
 				Password: "NewPassword123$",
 			})
 			Expect(err).ShouldNot(HaveOccurred())
@@ -287,7 +288,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-			var loginRespObj vetchi.LoginResponse
+			var loginRespObj hub.LoginResponse
 			err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 			Expect(err).ShouldNot(HaveOccurred())
 			tfaToken := loginRespObj.Token
@@ -350,7 +351,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			testCases := []tfaTestCase{
 				{
 					description: "valid TFA token and code",
-					request: vetchi.HubTFARequest{
+					request: hub.HubTFARequest{
 						TFAToken:   tfaToken,
 						TFACode:    tfaCode,
 						RememberMe: false,
@@ -359,7 +360,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "invalid TFA token",
-					request: vetchi.HubTFARequest{
+					request: hub.HubTFARequest{
 						TFAToken:   "invalid-token",
 						TFACode:    tfaCode,
 						RememberMe: false,
@@ -368,7 +369,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "invalid TFA code",
-					request: vetchi.HubTFARequest{
+					request: hub.HubTFARequest{
 						TFAToken:   tfaToken,
 						TFACode:    "000000",
 						RememberMe: false,
@@ -377,7 +378,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "empty TFA token",
-					request: vetchi.HubTFARequest{
+					request: hub.HubTFARequest{
 						TFAToken:   "",
 						TFACode:    tfaCode,
 						RememberMe: false,
@@ -387,7 +388,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "empty TFA code",
-					request: vetchi.HubTFARequest{
+					request: hub.HubTFARequest{
 						TFAToken:   tfaToken,
 						TFACode:    "",
 						RememberMe: false,
@@ -412,7 +413,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if len(tc.wantErrFields) > 0 {
-					var validationErrors vetchi.ValidationErrors
+					var validationErrors common.ValidationErrors
 					err = json.NewDecoder(resp.Body).Decode(&validationErrors)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(
@@ -422,7 +423,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				}
 
 				if tc.wantStatus == http.StatusOK {
-					var tfaResp vetchi.HubTFAResponse
+					var tfaResp hub.HubTFAResponse
 					err = json.NewDecoder(resp.Body).Decode(&tfaResp)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(tfaResp.SessionToken).ShouldNot(BeEmpty())
@@ -451,7 +452,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 		It("should handle remember me flag correctly", func() {
 			// First get a valid TFA token through login
-			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
+			loginReqBody, err := json.Marshal(hub.LoginRequest{
 				Email:    "rememberme@hub.example",
 				Password: "NewPassword123$",
 			})
@@ -465,7 +466,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-			var loginRespObj vetchi.LoginResponse
+			var loginRespObj hub.LoginResponse
 			err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 			Expect(err).ShouldNot(HaveOccurred())
 			tfaToken := loginRespObj.Token
@@ -521,7 +522,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			tfaCode := matches[1]
 
 			// Test with remember_me flag
-			tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+			tfaReqBody, err := json.Marshal(hub.HubTFARequest{
 				TFAToken:   tfaToken,
 				TFACode:    tfaCode,
 				RememberMe: true,
@@ -536,7 +537,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var tfaResp vetchi.HubTFAResponse
+			var tfaResp hub.HubTFAResponse
 			err = json.NewDecoder(resp.Body).Decode(&tfaResp)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(tfaResp.SessionToken).ShouldNot(BeEmpty())
@@ -660,9 +661,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 				fmt.Fprintf(GinkgoWriter, "Test case: %s\n", tc.description)
 
 				changePasswordReqBody, err := json.Marshal(
-					vetchi.ChangePasswordRequest{
-						OldPassword: vetchi.Password(tc.oldPassword),
-						NewPassword: vetchi.Password(tc.newPassword),
+					hub.ChangePasswordRequest{
+						OldPassword: common.Password(tc.oldPassword),
+						NewPassword: common.Password(tc.newPassword),
 					},
 				)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -680,7 +681,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if tc.wantErrField != "" {
-					var validationErrors vetchi.ValidationErrors
+					var validationErrors common.ValidationErrors
 					err = json.NewDecoder(resp.Body).Decode(&validationErrors)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(
@@ -697,9 +698,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// Test successful password change
 			changePasswordReqBody, err := json.Marshal(
-				vetchi.ChangePasswordRequest{
-					OldPassword: vetchi.Password(oldPassword),
-					NewPassword: vetchi.Password(newPassword),
+				hub.ChangePasswordRequest{
+					OldPassword: common.Password(oldPassword),
+					NewPassword: common.Password(newPassword),
 				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -717,9 +718,9 @@ var _ = Describe("Hub Login", Ordered, func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			// Verify old password no longer works
-			loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-				Email:    vetchi.EmailAddress(email),
-				Password: vetchi.Password(oldPassword),
+			loginReqBody, err := json.Marshal(hub.LoginRequest{
+				Email:    common.EmailAddress(email),
+				Password: common.Password(oldPassword),
 			})
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -753,7 +754,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		It("Forgot Password and Reset Password", func() {
 			type forgotPasswordTestCase struct {
 				description string
-				request     vetchi.ForgotPasswordRequest
+				request     hub.ForgotPasswordRequest
 				wantStatus  int
 				checkEmail  bool // whether to check for email
 			}
@@ -761,7 +762,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			testCases := []forgotPasswordTestCase{
 				{
 					description: "with valid email",
-					request: vetchi.ForgotPasswordRequest{
+					request: hub.ForgotPasswordRequest{
 						Email: "password-reset@hub.example",
 					},
 					wantStatus: http.StatusOK,
@@ -769,7 +770,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "with non-existent email",
-					request: vetchi.ForgotPasswordRequest{
+					request: hub.ForgotPasswordRequest{
 						Email: "nonexistent@hub.example",
 					},
 					wantStatus: http.StatusOK,
@@ -777,7 +778,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				},
 				{
 					description: "with invalid email format",
-					request: vetchi.ForgotPasswordRequest{
+					request: hub.ForgotPasswordRequest{
 						Email: "invalid-email",
 					},
 					wantStatus: http.StatusBadRequest,
@@ -923,7 +924,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				// Test reset password scenarios
 				type resetPasswordTestCase struct {
 					description   string
-					request       vetchi.HubUserResetPasswordRequest
+					request       hub.ResetPasswordRequest
 					wantStatus    int
 					wantErrFields []string
 					sleep         time.Duration
@@ -932,7 +933,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				resetTestCases := []resetPasswordTestCase{
 					{
 						description: "with invalid password format",
-						request: vetchi.HubUserResetPasswordRequest{
+						request: hub.ResetPasswordRequest{
 							Token:    resetToken,
 							Password: "weak",
 						},
@@ -941,7 +942,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 					},
 					{
 						description: "with invalid token",
-						request: vetchi.HubUserResetPasswordRequest{
+						request: hub.ResetPasswordRequest{
 							Token:    "invalid-token",
 							Password: "NewPassword123$",
 						},
@@ -949,7 +950,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 					},
 					{
 						description: "with valid token and password",
-						request: vetchi.HubUserResetPasswordRequest{
+						request: hub.ResetPasswordRequest{
 							Token:    resetToken,
 							Password: "NewPassword123$",
 						},
@@ -980,7 +981,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 					Expect(resetResp.StatusCode).Should(Equal(rtc.wantStatus))
 
 					if len(rtc.wantErrFields) > 0 {
-						var validationErrors vetchi.ValidationErrors
+						var validationErrors common.ValidationErrors
 						err = json.NewDecoder(resetResp.Body).
 							Decode(&validationErrors)
 						Expect(err).ShouldNot(HaveOccurred())
@@ -1030,8 +1031,8 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// Send forgot password request
 			forgotPasswordReqBody, err := json.Marshal(
-				vetchi.ForgotPasswordRequest{
-					Email: vetchi.EmailAddress(email),
+				hub.ForgotPasswordRequest{
+					Email: common.EmailAddress(email),
 				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -1101,7 +1102,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// Try to use expired token
 			resetPasswordReqBody, err := json.Marshal(
-				vetchi.HubUserResetPasswordRequest{
+				hub.ResetPasswordRequest{
 					Token:    resetToken,
 					Password: "NewPassword123$",
 				},
@@ -1122,8 +1123,8 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// Send forgot password request
 			forgotPasswordReqBody, err := json.Marshal(
-				vetchi.ForgotPasswordRequest{
-					Email: vetchi.EmailAddress(email),
+				hub.ForgotPasswordRequest{
+					Email: common.EmailAddress(email),
 				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -1190,7 +1191,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// First password reset should succeed
 			resetPasswordReqBody, err := json.Marshal(
-				vetchi.HubUserResetPasswordRequest{
+				hub.ResetPasswordRequest{
 					Token:    resetToken,
 					Password: "NewPassword123$",
 				},
@@ -1227,7 +1228,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 
 			// Try to reuse the same token - should fail
 			resetPasswordReqBody, err = json.Marshal(
-				vetchi.HubUserResetPasswordRequest{
+				hub.ResetPasswordRequest{
 					Token:    resetToken,
 					Password: "AnotherPassword123$",
 				},

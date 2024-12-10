@@ -10,10 +10,12 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 var _ = Describe("Apply For Opening", Ordered, func() {
@@ -25,7 +27,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		seedDatabase(db, "0009-apply-for-opening-up.pgsql")
 
 		// Login as active hub user
-		loginReqBody, err := json.Marshal(vetchi.LoginRequest{
+		loginReqBody, err := json.Marshal(hub.LoginRequest{
 			Email:    "active@applyopening.example",
 			Password: "NewPassword123$",
 		})
@@ -39,7 +41,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-		var loginRespObj vetchi.LoginResponse
+		var loginRespObj hub.LoginResponse
 		err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 		Expect(err).ShouldNot(HaveOccurred())
 		tfaToken := loginRespObj.Token
@@ -110,7 +112,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
 
 		// Complete TFA flow
-		tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+		tfaReqBody, err := json.Marshal(hub.HubTFARequest{
 			TFAToken:   tfaToken,
 			TFACode:    tfaCode,
 			RememberMe: false,
@@ -125,7 +127,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(tfaResp.StatusCode).Should(Equal(http.StatusOK))
 
-		var tfaRespObj vetchi.HubTFAResponse
+		var tfaRespObj hub.HubTFAResponse
 		err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 		Expect(err).ShouldNot(HaveOccurred())
 		activeHubUserToken = tfaRespObj.SessionToken
@@ -140,7 +142,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		type applyForOpeningTestCase struct {
 			description string
 			token       string
-			request     vetchi.ApplyForOpeningRequest
+			request     hub.ApplyForOpeningRequest
 			wantStatus  int
 		}
 
@@ -164,7 +166,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "valid application",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 sampleResume,
@@ -176,7 +178,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "without auth token",
 					token:       "",
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 sampleResume,
@@ -187,7 +189,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "with invalid opening ID",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "invalid-id",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 sampleResume,
@@ -198,7 +200,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "with invalid company domain",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "invalid.example",
 						Resume:                 sampleResume,
@@ -209,7 +211,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "with empty resume",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 "",
@@ -220,7 +222,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "with empty filename",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 sampleResume,
@@ -231,7 +233,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				{
 					description: "with too long cover letter",
 					token:       activeHubUserToken,
-					request: vetchi.ApplyForOpeningRequest{
+					request: hub.ApplyForOpeningRequest{
 						OpeningIDWithinCompany: "2024-Mar-09-001",
 						CompanyDomain:          "applyopening.example",
 						Resume:                 sampleResume,
@@ -266,7 +268,7 @@ IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTIKJSVFT0YK` // This is a base64 encoded minimal PD
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
 				if resp.StatusCode == http.StatusBadRequest {
-					var validationErrors vetchi.ValidationErrors
+					var validationErrors common.ValidationErrors
 					err = json.NewDecoder(resp.Body).Decode(&validationErrors)
 					Expect(err).ShouldNot(HaveOccurred())
 					Expect(validationErrors.Errors).ShouldNot(BeEmpty())

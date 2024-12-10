@@ -15,9 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -106,10 +108,10 @@ func employerSignin(clientID, email, password string) (string, error) {
 		password,
 	)
 	signinReqBody, err := json.Marshal(
-		vetchi.EmployerSignInRequest{
+		employer.EmployerSignInRequest{
 			ClientID: clientID,
-			Email:    vetchi.EmailAddress(email),
-			Password: vetchi.Password(password),
+			Email:    common.EmailAddress(email),
+			Password: common.Password(password),
 		})
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -129,7 +131,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 		return "", SigninError{StatusCode: resp.StatusCode}
 	}
 
-	var signinResp vetchi.EmployerSignInResponse
+	var signinResp employer.EmployerSignInResponse
 	err = json.NewDecoder(resp.Body).Decode(&signinResp)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(signinResp.Token).ShouldNot(BeEmpty())
@@ -204,7 +206,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 
 	// TFA with the two tokens
 	tfaReqBody, err := json.Marshal(
-		vetchi.EmployerTFARequest{
+		employer.EmployerTFARequest{
 			TFAToken: signinResp.Token,
 			TFACode:  tfaCode,
 		},
@@ -223,7 +225,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(tfaResp.StatusCode).Should(Equal(http.StatusOK))
 
-	var tfaRespObj vetchi.EmployerTFAResponse
+	var tfaRespObj employer.EmployerTFAResponse
 	err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(tfaRespObj.SessionToken).ShouldNot(BeEmpty())
@@ -323,9 +325,9 @@ func doPOST(
 
 // getLoginToken gets a TFA token by logging in with the given credentials
 func getLoginToken(email, password string) string {
-	loginReqBody, err := json.Marshal(vetchi.LoginRequest{
-		Email:    vetchi.EmailAddress(email),
-		Password: vetchi.Password(password),
+	loginReqBody, err := json.Marshal(hub.LoginRequest{
+		Email:    common.EmailAddress(email),
+		Password: common.Password(password),
 	})
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -337,7 +339,7 @@ func getLoginToken(email, password string) string {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
 
-	var loginRespObj vetchi.LoginResponse
+	var loginRespObj hub.LoginResponse
 	err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -400,7 +402,7 @@ func getTFACode(email string) (string, string) {
 
 // getSessionToken completes the TFA flow and returns a session token
 func getSessionToken(tfaToken, tfaCode string, rememberMe bool) string {
-	tfaReqBody, err := json.Marshal(vetchi.HubTFARequest{
+	tfaReqBody, err := json.Marshal(hub.HubTFARequest{
 		TFAToken:   tfaToken,
 		TFACode:    tfaCode,
 		RememberMe: rememberMe,
@@ -415,7 +417,7 @@ func getSessionToken(tfaToken, tfaCode string, rememberMe bool) string {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(tfaResp.StatusCode).Should(Equal(http.StatusOK))
 
-	var tfaRespObj vetchi.HubTFAResponse
+	var tfaRespObj hub.HubTFAResponse
 	err = json.NewDecoder(tfaResp.Body).Decode(&tfaRespObj)
 	Expect(err).ShouldNot(HaveOccurred())
 

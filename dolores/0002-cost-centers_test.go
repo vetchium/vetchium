@@ -11,8 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 type costCenterTestCase struct {
@@ -224,9 +223,9 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 		It("get the list of defunct cost centers", func() {
 			getDefunctCostCentersReqBody, err := json.Marshal(
-				vetchi.GetCostCentersRequest{
-					States: []vetchi.CostCenterState{
-						vetchi.DefunctCC,
+				employer.GetCostCentersRequest{
+					States: []employer.CostCenterState{
+						employer.DefunctCC,
 					},
 				},
 			)
@@ -248,7 +247,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var costCenters []vetchi.CostCenter
+			var costCenters []employer.CostCenter
 			err = json.NewDecoder(resp.Body).Decode(&costCenters)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(costCenters).Should(HaveLen(2))
@@ -284,7 +283,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 	It("update a cost center", func() {
 		statusCode, err := addCostCenter(
 			adminToken,
-			vetchi.AddCostCenterRequest{
+			employer.AddCostCenterRequest{
 				Name:  "CC-update-test-1",
 				Notes: "This is a test cost center",
 			})
@@ -293,7 +292,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 		ccb4Update, _, err := getCostCenter(
 			adminToken,
-			vetchi.GetCostCenterRequest{
+			employer.GetCostCenterRequest{
 				Name: "CC-update-test-1",
 			},
 		)
@@ -304,7 +303,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		fmt.Fprintf(GinkgoWriter, "Update Cost Center without Notes\n")
 		statusCode, err = updateCostCenter(
 			adminToken,
-			vetchi.UpdateCostCenterRequest{
+			employer.UpdateCostCenterRequest{
 				Name: "CC-update-test-1",
 			},
 		)
@@ -314,7 +313,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		fmt.Fprintf(GinkgoWriter, "Update Cost Center with invalid notes\n")
 		statusCode, err = updateCostCenter(
 			adminToken,
-			vetchi.UpdateCostCenterRequest{
+			employer.UpdateCostCenterRequest{
 				Name:  "CC-update-test-1",
 				Notes: strings.Repeat("A", 1025),
 			},
@@ -325,7 +324,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		fmt.Fprintf(GinkgoWriter, "Updating cost center with new notes\n")
 		statusCode, err = updateCostCenter(
 			adminToken,
-			vetchi.UpdateCostCenterRequest{
+			employer.UpdateCostCenterRequest{
 				Name:  "CC-update-test-1",
 				Notes: "This is an updated test cost center",
 			},
@@ -335,7 +334,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 		ccAfterUpdate, _, err := getCostCenter(
 			adminToken,
-			vetchi.GetCostCenterRequest{
+			employer.GetCostCenterRequest{
 				Name: "CC-update-test-1",
 			},
 		)
@@ -348,7 +347,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 	It("update a cost center with a viewer session token", func() {
 		statusCode, err := updateCostCenter(
 			viewerToken,
-			vetchi.UpdateCostCenterRequest{
+			employer.UpdateCostCenterRequest{
 				Name:  "CC-update-test-1",
 				Notes: "This is an updated test cost center",
 			},
@@ -360,7 +359,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 	It("update a cost center with a non-cost-center session token", func() {
 		statusCode, err := updateCostCenter(
 			nonCostCenterToken,
-			vetchi.UpdateCostCenterRequest{
+			employer.UpdateCostCenterRequest{
 				Name:  "CC-update-test-1",
 				Notes: "This is an updated test cost center",
 			},
@@ -374,7 +373,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 		func() {
 			statusCode, err := updateCostCenter(
 				multipleNonCostCenterRolesToken,
-				vetchi.UpdateCostCenterRequest{
+				employer.UpdateCostCenterRequest{
 					Name:  "CC-update-test-1",
 					Notes: "This is an updated test cost center",
 				},
@@ -387,14 +386,14 @@ var _ = Describe("Cost Centers", Ordered, func() {
 	It("rename a cost center", func() {
 		statusCode, err := addCostCenter(
 			adminToken,
-			vetchi.AddCostCenterRequest{
+			employer.AddCostCenterRequest{
 				Name: "CC-rename-test-1",
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(statusCode).Should(Equal(http.StatusOK))
 
-		renameCostCenterReq := vetchi.RenameCostCenterRequest{
+		renameCostCenterReq := employer.RenameCostCenterRequest{
 			OldName: "CC-rename-test-1",
 			NewName: "CC-rename-test-2",
 		}
@@ -417,7 +416,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 		ccAfterRename, _, err := getCostCenter(
 			adminToken,
-			vetchi.GetCostCenterRequest{
+			employer.GetCostCenterRequest{
 				Name: "CC-rename-test-2",
 			},
 		)
@@ -426,7 +425,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 
 		_, statusCode, err = getCostCenter(
 			adminToken,
-			vetchi.GetCostCenterRequest{
+			employer.GetCostCenterRequest{
 				Name: "CC-rename-test-1",
 			},
 		)
@@ -444,7 +443,9 @@ func testAddCostCenter(token, name string, expectedStatus int) {
 		name,
 		expectedStatus,
 	)
-	reqBody := vetchi.AddCostCenterRequest{Name: vetchi.CostCenterName(name)}
+	reqBody := employer.AddCostCenterRequest{
+		Name: employer.CostCenterName(name),
+	}
 	testPOST(token, reqBody, "/employer/add-cost-center", expectedStatus)
 }
 
@@ -456,8 +457,8 @@ func testDefunctCostCenter(token, name string, expectedStatus int) {
 		name,
 		expectedStatus,
 	)
-	reqBody := vetchi.DefunctCostCenterRequest{
-		Name: vetchi.CostCenterName(name),
+	reqBody := employer.DefunctCostCenterRequest{
+		Name: employer.CostCenterName(name),
 	}
 	testPOST(
 		token,
@@ -468,7 +469,7 @@ func testDefunctCostCenter(token, name string, expectedStatus int) {
 }
 
 func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
-	getCostCentersReqBody, err := json.Marshal(vetchi.GetCostCentersRequest{})
+	getCostCentersReqBody, err := json.Marshal(employer.GetCostCentersRequest{})
 	Expect(err).ShouldNot(HaveOccurred())
 
 	req, err := http.NewRequest(
@@ -484,7 +485,7 @@ func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-	var costCenters []vetchi.CostCenter
+	var costCenters []employer.CostCenter
 	err = json.NewDecoder(resp.Body).Decode(&costCenters)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(costCenters).Should(HaveLen(expectedLen))
@@ -500,7 +501,7 @@ func testGetCostCenters(token string, expectedLen int, expectedNames []string) {
 // code should be used only if err is nil.
 func addCostCenter(
 	token string,
-	addCostCenterReq vetchi.AddCostCenterRequest,
+	addCostCenterReq employer.AddCostCenterRequest,
 ) (int, error) {
 	addCostCenterReqBody, err := json.Marshal(addCostCenterReq)
 	if err != nil {
@@ -528,7 +529,7 @@ func addCostCenter(
 
 func updateCostCenter(
 	token string,
-	updateCostCenterReq vetchi.UpdateCostCenterRequest,
+	updateCostCenterReq employer.UpdateCostCenterRequest,
 ) (int, error) {
 	updateCostCenterReqBody, err := json.Marshal(updateCostCenterReq)
 	if err != nil {
@@ -556,8 +557,8 @@ func updateCostCenter(
 
 func getCostCenter(
 	token string,
-	getCostCenterReq vetchi.GetCostCenterRequest,
-) (vetchi.CostCenter, int, error) {
+	getCostCenterReq employer.GetCostCenterRequest,
+) (employer.CostCenter, int, error) {
 	getCostCenterReqBody, err := json.Marshal(getCostCenterReq)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -573,12 +574,12 @@ func getCostCenter(
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).ShouldNot(HaveOccurred())
 	if resp.StatusCode != http.StatusOK {
-		return vetchi.CostCenter{}, resp.StatusCode, nil
+		return employer.CostCenter{}, resp.StatusCode, nil
 	}
 
 	Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-	var costCenter vetchi.CostCenter
+	var costCenter employer.CostCenter
 	err = json.NewDecoder(resp.Body).Decode(&costCenter)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -602,8 +603,8 @@ func bulkAddDefunctCC(
 
 		statusCode, err := addCostCenter(
 			adminToken,
-			vetchi.AddCostCenterRequest{
-				Name: vetchi.CostCenterName(ccName),
+			employer.AddCostCenterRequest{
+				Name: employer.CostCenterName(ccName),
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -615,8 +616,8 @@ func bulkAddDefunctCC(
 
 	for {
 		getCostCentersReqBody, err := json.Marshal(
-			vetchi.GetCostCentersRequest{
-				PaginationKey: vetchi.CostCenterName(paginationKey),
+			employer.GetCostCentersRequest{
+				PaginationKey: employer.CostCenterName(paginationKey),
 				Limit:         limit,
 			},
 		)
@@ -638,7 +639,7 @@ func bulkAddDefunctCC(
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-		var costCenters []vetchi.CostCenter
+		var costCenters []employer.CostCenter
 		err = json.NewDecoder(resp.Body).Decode(&costCenters)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -663,8 +664,8 @@ func bulkAddDefunctCC(
 		ccName := fmt.Sprintf("CC-%s-%d", runID, i)
 
 		defunctCostCenterReqBody, err := json.Marshal(
-			vetchi.DefunctCostCenterRequest{
-				Name: vetchi.CostCenterName(ccName),
+			employer.DefunctCostCenterRequest{
+				Name: employer.CostCenterName(ccName),
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())

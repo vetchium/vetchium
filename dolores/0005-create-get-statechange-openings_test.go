@@ -10,17 +10,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
-var bachelorEducation_0005 *vetchi.EducationLevel
+var bachelorEducation_0005 *common.EducationLevel
 
 var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
 
-	bachelor := vetchi.BachelorEducation
+	bachelor := common.BachelorEducation
 	bachelorEducation_0005 = &bachelor
 
 	BeforeAll(func() {
@@ -57,13 +58,13 @@ var _ = Describe("Openings", Ordered, func() {
 
 	Describe("Openings Tests", func() {
 		It("Create Opening", func() {
-			validOpening := vetchi.CreateOpeningRequest{
+			validOpening := employer.CreateOpeningRequest{
 				Title:         "Software Engineer",
 				Positions:     2,
 				JD:            "Looking for talented software engineers",
 				Recruiter:     "recruiter@openings.example",
 				HiringManager: "hiring-manager@openings.example",
-				HiringTeam: []vetchi.EmailAddress{
+				HiringTeam: []common.EmailAddress{
 					"crud@openings.example",
 					"viewer@openings.example",
 				},
@@ -72,18 +73,18 @@ var _ = Describe("Openings", Ordered, func() {
 					"Bangalore Office",
 					"Chennai Office",
 				},
-				RemoteCountryCodes: []vetchi.CountryCode{
+				RemoteCountryCodes: []common.CountryCode{
 					"IND",
 					"USA",
 				},
-				RemoteTimezones: []vetchi.TimeZone{
+				RemoteTimezones: []common.TimeZone{
 					"IST Indian Standard Time GMT+0530",
 				},
-				OpeningType:       vetchi.FullTimeOpening,
+				OpeningType:       common.FullTimeOpening,
 				YoeMin:            2,
 				YoeMax:            5,
 				MinEducationLevel: bachelorEducation_0005,
-				Salary: &vetchi.Salary{
+				Salary: &employer.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
 					Currency:  "USD",
@@ -93,7 +94,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type createOpeningTestCase struct {
 				description   string
 				token         string
-				request       vetchi.CreateOpeningRequest
+				request       employer.CreateOpeningRequest
 				wantStatus    int
 				wantErrFields []string
 			}
@@ -126,7 +127,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with missing title",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.Title = ""
 						return r
@@ -137,7 +138,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid positions",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.Positions = 0
 						return r
@@ -148,7 +149,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid JD",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.JD = "short"
 						return r
@@ -159,7 +160,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent recruiter",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.Recruiter = "nonexistent@openings.example"
 						return r
@@ -169,7 +170,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent hiring manager",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.HiringManager = "nonexistent@openings.example"
 						return r
@@ -179,7 +180,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent cost center",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.CostCenterName = "NonExistent"
 						return r
@@ -189,7 +190,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent location",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.LocationTitles = []string{"NonExistent"}
 						return r
@@ -199,7 +200,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid YOE range",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 						r := validOpening
 						r.YoeMin = 6
 						r.YoeMax = 5
@@ -211,15 +212,15 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid salary range",
 					token:       adminToken,
-					request: func() vetchi.CreateOpeningRequest {
+					request: func() employer.CreateOpeningRequest {
 
-						return vetchi.CreateOpeningRequest{
+						return employer.CreateOpeningRequest{
 							Title:         "Software Engineer",
 							Positions:     2,
 							JD:            "Looking for talented software engineers",
 							Recruiter:     "recruiter@openings.example",
 							HiringManager: "hiring-manager@openings.example",
-							HiringTeam: []vetchi.EmailAddress{
+							HiringTeam: []common.EmailAddress{
 								"crud@openings.example",
 								"viewer@openings.example",
 							},
@@ -228,18 +229,18 @@ var _ = Describe("Openings", Ordered, func() {
 								"Bangalore Office",
 								"Chennai Office",
 							},
-							RemoteCountryCodes: []vetchi.CountryCode{
+							RemoteCountryCodes: []common.CountryCode{
 								"IND",
 								"USA",
 							},
-							RemoteTimezones: []vetchi.TimeZone{
+							RemoteTimezones: []common.TimeZone{
 								"IST Indian Standard Time GMT+0530",
 							},
-							OpeningType:       vetchi.FullTimeOpening,
+							OpeningType:       common.FullTimeOpening,
 							YoeMin:            2,
 							YoeMax:            5,
 							MinEducationLevel: bachelorEducation_0005,
-							Salary: &vetchi.Salary{
+							Salary: &employer.Salary{
 								MinAmount: 200000,
 								MaxAmount: 100000,
 								Currency:  "USD",
@@ -281,7 +282,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type filterOpeningsTestCase struct {
 				description string
 				token       string
-				request     vetchi.FilterOpeningsRequest
+				request     employer.FilterOpeningsRequest
 				wantStatus  int
 			}
 
@@ -289,21 +290,21 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with Admin token - no filters",
 					token:       adminToken,
-					request:     vetchi.FilterOpeningsRequest{},
+					request:     employer.FilterOpeningsRequest{},
 					wantStatus:  http.StatusOK,
 				},
 				{
 					description: "with CRUD token - state filter",
 					token:       crudToken,
-					request: vetchi.FilterOpeningsRequest{
-						State: []vetchi.OpeningState{vetchi.DraftOpening},
+					request: employer.FilterOpeningsRequest{
+						State: []common.OpeningState{common.DraftOpening},
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with Viewer token - date filter",
 					token:       viewerToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t := time.Now().AddDate(0, 0, -30)
 							return &t
@@ -318,13 +319,13 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-openings token",
 					token:       nonOpeningsToken,
-					request:     vetchi.FilterOpeningsRequest{},
+					request:     employer.FilterOpeningsRequest{},
 					wantStatus:  http.StatusForbidden,
 				},
 				{
 					description: "with invalid date range",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t := time.Now().AddDate(0, 0, 1)
 							return &t
@@ -339,7 +340,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with todate < fromdate",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t := time.Now()
 							return &t
@@ -354,7 +355,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid limit",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						Limit: 41,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -379,7 +380,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type getOpeningTestCase struct {
 				description string
 				token       string
-				request     vetchi.GetOpeningRequest
+				request     employer.GetOpeningRequest
 				wantStatus  int
 			}
 
@@ -387,7 +388,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with Admin token",
 					token:       adminToken,
-					request: vetchi.GetOpeningRequest{
+					request: employer.GetOpeningRequest{
 						ID: openingID,
 					},
 					wantStatus: http.StatusOK,
@@ -395,7 +396,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with CRUD token",
 					token:       crudToken,
-					request: vetchi.GetOpeningRequest{
+					request: employer.GetOpeningRequest{
 						ID: openingID,
 					},
 					wantStatus: http.StatusOK,
@@ -403,7 +404,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with Viewer token",
 					token:       viewerToken,
-					request: vetchi.GetOpeningRequest{
+					request: employer.GetOpeningRequest{
 						ID: openingID,
 					},
 					wantStatus: http.StatusOK,
@@ -411,7 +412,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-openings token",
 					token:       nonOpeningsToken,
-					request: vetchi.GetOpeningRequest{
+					request: employer.GetOpeningRequest{
 						ID: openingID,
 					},
 					wantStatus: http.StatusForbidden,
@@ -419,7 +420,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent ID",
 					token:       adminToken,
-					request: vetchi.GetOpeningRequest{
+					request: employer.GetOpeningRequest{
 						ID: "non-existent-id",
 					},
 					wantStatus: http.StatusNotFound,
@@ -465,7 +466,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type changeOpeningStateTestCase struct {
 				description string
 				token       string
-				request     vetchi.ChangeOpeningStateRequest
+				request     employer.ChangeOpeningStateRequest
 				wantStatus  int
 			}
 
@@ -473,70 +474,70 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with Admin token",
 					token:       adminToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.DraftOpening,
-						ToState:   vetchi.ActiveOpening,
+						FromState: common.DraftOpening,
+						ToState:   common.ActiveOpening,
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with CRUD token",
 					token:       crudToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.ActiveOpening,
-						ToState:   vetchi.SuspendedOpening,
+						FromState: common.ActiveOpening,
+						ToState:   common.SuspendedOpening,
 					},
 					wantStatus: http.StatusOK,
 				},
 				{
 					description: "with non-openings token",
 					token:       nonOpeningsToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.SuspendedOpening,
-						ToState:   vetchi.ClosedOpening,
+						FromState: common.SuspendedOpening,
+						ToState:   common.ClosedOpening,
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "with viewer token",
 					token:       viewerToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.SuspendedOpening,
-						ToState:   vetchi.ClosedOpening,
+						FromState: common.SuspendedOpening,
+						ToState:   common.ClosedOpening,
 					},
 					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "with non-existent opening",
 					token:       adminToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: "non-existent-id",
-						FromState: vetchi.DraftOpening,
-						ToState:   vetchi.ActiveOpening,
+						FromState: common.DraftOpening,
+						ToState:   common.ActiveOpening,
 					},
 					wantStatus: http.StatusNotFound,
 				},
 				{
 					description: "with invalid transition",
 					token:       adminToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.SuspendedOpening,
-						ToState:   vetchi.DraftOpening,
+						FromState: common.SuspendedOpening,
+						ToState:   common.DraftOpening,
 					},
 					wantStatus: http.StatusUnprocessableEntity,
 				},
 				{
 					description: "with invalid from state",
 					token:       adminToken,
-					request: vetchi.ChangeOpeningStateRequest{
+					request: employer.ChangeOpeningStateRequest{
 						OpeningID: openingID,
-						FromState: vetchi.DraftOpening,
-						ToState:   vetchi.ActiveOpening,
+						FromState: common.DraftOpening,
+						ToState:   common.ActiveOpening,
 					},
 					wantStatus: http.StatusConflict,
 				},
@@ -559,34 +560,34 @@ var _ = Describe("Openings", Ordered, func() {
 
 func testCreateOpeningGetResp(
 	token string,
-	request vetchi.CreateOpeningRequest,
+	request employer.CreateOpeningRequest,
 	wantStatus int,
-) vetchi.ValidationErrors {
+) common.ValidationErrors {
 	resp := testPOSTGetResp(
 		token,
 		request,
 		"/employer/create-opening",
 		wantStatus,
 	).([]byte)
-	var validationErrors vetchi.ValidationErrors
+	var validationErrors common.ValidationErrors
 	err := json.Unmarshal(resp, &validationErrors)
 	Expect(err).ShouldNot(HaveOccurred())
 	return validationErrors
 }
 
 func createTestOpening(token string) string {
-	request := vetchi.CreateOpeningRequest{
+	request := employer.CreateOpeningRequest{
 		Title:             "Test Opening",
 		Positions:         1,
 		JD:                "Test Job Description",
 		Recruiter:         "recruiter@openings.example",
 		HiringManager:     "hiring-manager@openings.example",
 		CostCenterName:    "Engineering",
-		OpeningType:       vetchi.FullTimeOpening,
+		OpeningType:       common.FullTimeOpening,
 		YoeMin:            0,
 		YoeMax:            5,
 		MinEducationLevel: bachelorEducation_0005,
-		Salary: &vetchi.Salary{
+		Salary: &employer.Salary{
 			MinAmount: 50000,
 			MaxAmount: 100000,
 			Currency:  "USD",
@@ -600,7 +601,7 @@ func createTestOpening(token string) string {
 		http.StatusOK,
 	).([]byte)
 
-	var opening vetchi.CreateOpeningResponse
+	var opening employer.CreateOpeningResponse
 	err := json.Unmarshal(resp, &opening)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -609,18 +610,18 @@ func createTestOpening(token string) string {
 
 func createTestOpenings(token string) {
 	for i := 0; i < 3; i++ {
-		request := vetchi.CreateOpeningRequest{
+		request := employer.CreateOpeningRequest{
 			Title:             fmt.Sprintf("Test Opening %d", i),
 			Positions:         1,
 			JD:                fmt.Sprintf("Test Job Description %d", i),
 			Recruiter:         "recruiter@openings.example",
 			HiringManager:     "hiring-manager@openings.example",
 			CostCenterName:    "Engineering",
-			OpeningType:       vetchi.FullTimeOpening,
+			OpeningType:       common.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
 			MinEducationLevel: bachelorEducation_0005,
-			Salary: &vetchi.Salary{
+			Salary: &employer.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",
@@ -640,7 +641,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 	wantOpenings := []string{}
 
 	for i := 0; i < count; i++ {
-		request := vetchi.CreateOpeningRequest{
+		request := employer.CreateOpeningRequest{
 			Title:     fmt.Sprintf("Bulk Opening %s-%d", runID, i),
 			Positions: 1,
 			JD: fmt.Sprintf(
@@ -651,11 +652,11 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			Recruiter:         "recruiter@openings.example",
 			HiringManager:     "hiring-manager@openings.example",
 			CostCenterName:    "Engineering",
-			OpeningType:       vetchi.FullTimeOpening,
+			OpeningType:       common.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
 			MinEducationLevel: bachelorEducation_0005,
-			Salary: &vetchi.Salary{
+			Salary: &employer.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",
@@ -669,7 +670,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			http.StatusOK,
 		).([]byte)
 
-		var opening vetchi.CreateOpeningResponse
+		var opening employer.CreateOpeningResponse
 		err := json.Unmarshal(resp, &opening)
 		Expect(err).ShouldNot(HaveOccurred())
 		fmt.Fprintf(GinkgoWriter, "Appending opening: %+v\n", opening)
@@ -680,7 +681,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 	gotOpenings := []string{}
 
 	for {
-		request := vetchi.FilterOpeningsRequest{
+		request := employer.FilterOpeningsRequest{
 			PaginationKey: paginationKey,
 			Limit:         limit,
 		}
@@ -692,7 +693,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			http.StatusOK,
 		).([]byte)
 
-		var openings []vetchi.OpeningInfo
+		var openings []employer.OpeningInfo
 		err := json.Unmarshal(resp, &openings)
 		Expect(err).ShouldNot(HaveOccurred())
 

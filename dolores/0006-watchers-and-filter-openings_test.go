@@ -14,10 +14,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
-var bachelorEducation_0006 *vetchi.EducationLevel
+var bachelorEducation_0006 *common.EducationLevel
 
 var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
@@ -25,7 +26,7 @@ var _ = Describe("Openings", Ordered, func() {
 	var recruiterToken, hiringManagerToken string
 
 	BeforeAll(func() {
-		bachelor := vetchi.BachelorEducation
+		bachelor := common.BachelorEducation
 		bachelorEducation_0006 = &bachelor
 
 		db = setupTestDB()
@@ -63,7 +64,7 @@ var _ = Describe("Openings", Ordered, func() {
 		type filterOpeningsTestCase struct {
 			description string
 			token       string
-			request     vetchi.FilterOpeningsRequest
+			request     employer.FilterOpeningsRequest
 			wantStatus  int
 			wantIDs     []string
 		}
@@ -73,7 +74,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with no filters on state (should only return DRAFT, ACTIVE, SUSPENDED states)",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -107,8 +108,8 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with state filter - draft only",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
-						State: []vetchi.OpeningState{vetchi.DraftOpening},
+					request: employer.FilterOpeningsRequest{
+						State: []common.OpeningState{common.DraftOpening},
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -128,8 +129,8 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with state filter - active only",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
-						State: []vetchi.OpeningState{vetchi.ActiveOpening},
+					request: employer.FilterOpeningsRequest{
+						State: []common.OpeningState{common.ActiveOpening},
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -151,7 +152,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with date range filter - March 6 only",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Mar-6")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -183,7 +184,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with pagination - first page",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -203,7 +204,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with pagination - using pagination key",
 					token:       adminToken,
-					request: vetchi.FilterOpeningsRequest{
+					request: employer.FilterOpeningsRequest{
 						FromDate: func() *time.Time {
 							t, err := time.Parse("2006-Jan-2", "2024-Feb-1")
 							Expect(err).ShouldNot(HaveOccurred())
@@ -224,13 +225,13 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid token",
 					token:       "invalid-token",
-					request:     vetchi.FilterOpeningsRequest{},
+					request:     employer.FilterOpeningsRequest{},
 					wantStatus:  http.StatusUnauthorized,
 				},
 				{
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
-					request:     vetchi.FilterOpeningsRequest{},
+					request:     employer.FilterOpeningsRequest{},
 					wantStatus:  http.StatusForbidden,
 				},
 			}
@@ -245,7 +246,7 @@ var _ = Describe("Openings", Ordered, func() {
 				)
 
 				if tc.wantStatus == http.StatusOK {
-					var openings []vetchi.OpeningInfo
+					var openings []employer.OpeningInfo
 					err := json.Unmarshal(resp.([]byte), &openings)
 					Expect(err).ShouldNot(HaveOccurred())
 
@@ -328,13 +329,13 @@ var _ = Describe("Openings", Ordered, func() {
 				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
 				resp := testPOSTGetResp(
 					tc.token,
-					vetchi.GetOpeningWatchersRequest{OpeningID: tc.openingID},
+					employer.GetOpeningWatchersRequest{OpeningID: tc.openingID},
 					"/employer/get-opening-watchers",
 					tc.wantStatus,
 				)
 
 				if tc.wantStatus == http.StatusOK {
-					var watchers []vetchi.OrgUserShort
+					var watchers []employer.OrgUserShort
 					err := json.Unmarshal(resp.([]byte), &watchers)
 					Expect(err).ShouldNot(HaveOccurred())
 
@@ -351,7 +352,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type addWatchersTestCase struct {
 				description string
 				token       string
-				request     vetchi.AddOpeningWatchersRequest
+				request     employer.AddOpeningWatchersRequest
 				wantStatus  int
 			}
 
@@ -359,9 +360,9 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "add new watcher to opening",
 					token:       adminToken,
-					request: vetchi.AddOpeningWatchersRequest{
+					request: employer.AddOpeningWatchersRequest{
 						OpeningID: "2024-Mar-06-001",
-						Emails: []vetchi.EmailAddress{
+						Emails: []common.EmailAddress{
 							"watcher1@openings0006.example",
 						},
 					},
@@ -370,9 +371,9 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "add duplicate watcher",
 					token:       adminToken,
-					request: vetchi.AddOpeningWatchersRequest{
+					request: employer.AddOpeningWatchersRequest{
 						OpeningID: "2024-Feb-15-001",
-						Emails: []vetchi.EmailAddress{
+						Emails: []common.EmailAddress{
 							"watcher1@openings0006.example",
 						},
 					},
@@ -381,9 +382,9 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
-					request: vetchi.AddOpeningWatchersRequest{
+					request: employer.AddOpeningWatchersRequest{
 						OpeningID: "2024-Feb-15-001",
-						Emails: []vetchi.EmailAddress{
+						Emails: []common.EmailAddress{
 							"watcher1@openings0006.example",
 						},
 					},
@@ -392,9 +393,9 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid opening ID",
 					token:       adminToken,
-					request: vetchi.AddOpeningWatchersRequest{
+					request: employer.AddOpeningWatchersRequest{
 						OpeningID: "INVALID-ID",
-						Emails: []vetchi.EmailAddress{
+						Emails: []common.EmailAddress{
 							"watcher1@openings0006.example",
 						},
 					},
@@ -403,9 +404,9 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-existent user email",
 					token:       adminToken,
-					request: vetchi.AddOpeningWatchersRequest{
+					request: employer.AddOpeningWatchersRequest{
 						OpeningID: "2024-Feb-15-001",
-						Emails: []vetchi.EmailAddress{
+						Emails: []common.EmailAddress{
 							"nonexistent@openings0006.example",
 						},
 					},
@@ -428,7 +429,7 @@ var _ = Describe("Openings", Ordered, func() {
 			type removeWatcherTestCase struct {
 				description string
 				token       string
-				request     vetchi.RemoveOpeningWatcherRequest
+				request     employer.RemoveOpeningWatcherRequest
 				wantStatus  int
 			}
 
@@ -436,7 +437,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "remove existing watcher",
 					token:       adminToken,
-					request: vetchi.RemoveOpeningWatcherRequest{
+					request: employer.RemoveOpeningWatcherRequest{
 						OpeningID: "2024-Feb-15-001",
 						Email:     "watcher1@openings0006.example",
 					},
@@ -445,7 +446,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "remove non-existent watcher",
 					token:       adminToken,
-					request: vetchi.RemoveOpeningWatcherRequest{
+					request: employer.RemoveOpeningWatcherRequest{
 						OpeningID: "2024-Feb-15-001",
 						Email:     "nonexistent@openings0006.example",
 					},
@@ -454,7 +455,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
-					request: vetchi.RemoveOpeningWatcherRequest{
+					request: employer.RemoveOpeningWatcherRequest{
 						OpeningID: "2024-Feb-15-001",
 						Email:     "watcher1@openings0006.example",
 					},
@@ -463,7 +464,7 @@ var _ = Describe("Openings", Ordered, func() {
 				{
 					description: "with invalid opening ID",
 					token:       adminToken,
-					request: vetchi.RemoveOpeningWatcherRequest{
+					request: employer.RemoveOpeningWatcherRequest{
 						OpeningID: "INVALID-ID",
 						Email:     "watcher1@openings0006.example",
 					},
@@ -484,12 +485,14 @@ var _ = Describe("Openings", Ordered, func() {
 			// Verify final state
 			resp := testPOSTGetResp(
 				adminToken,
-				vetchi.GetOpeningWatchersRequest{OpeningID: "2024-Feb-15-001"},
+				employer.GetOpeningWatchersRequest{
+					OpeningID: "2024-Feb-15-001",
+				},
 				"/employer/get-opening-watchers",
 				http.StatusOK,
 			)
 
-			var watchers []vetchi.OrgUserShort
+			var watchers []employer.OrgUserShort
 			err := json.Unmarshal(resp.([]byte), &watchers)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(watchers).Should(HaveLen(1))
@@ -501,18 +504,18 @@ var _ = Describe("Openings", Ordered, func() {
 		It("should not allow more than 25 watchers", func() {
 			const maxWatchersAllowed = 25
 
-			request := vetchi.CreateOpeningRequest{
+			request := employer.CreateOpeningRequest{
 				Title:             "Test Opening",
 				Positions:         1,
 				JD:                "Test Job Description",
 				Recruiter:         "admin@openings0006.example",
 				HiringManager:     "admin@openings0006.example",
 				CostCenterName:    "Engineering",
-				OpeningType:       vetchi.FullTimeOpening,
+				OpeningType:       common.FullTimeOpening,
 				YoeMin:            0,
 				YoeMax:            5,
 				MinEducationLevel: bachelorEducation_0006,
-				Salary: &vetchi.Salary{
+				Salary: &employer.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
 					Currency:  "USD",
@@ -526,7 +529,7 @@ var _ = Describe("Openings", Ordered, func() {
 				http.StatusOK,
 			).([]byte)
 
-			var opening vetchi.CreateOpeningResponse
+			var opening employer.CreateOpeningResponse
 			err := json.Unmarshal(resp, &opening)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -535,9 +538,9 @@ var _ = Describe("Openings", Ordered, func() {
 			for i := 1; i <= maxWatchersAllowed; {
 				newWatcherCount := rand.Intn(3) + 1
 
-				var newWatchers []vetchi.EmailAddress
+				var newWatchers []common.EmailAddress
 				for j := 0; j < newWatcherCount && i <= maxWatchersAllowed; {
-					newWatchers = append(newWatchers, vetchi.EmailAddress(
+					newWatchers = append(newWatchers, common.EmailAddress(
 						fmt.Sprintf("maxwatcher%d@openings0006.example", i),
 					))
 					j++
@@ -546,7 +549,7 @@ var _ = Describe("Openings", Ordered, func() {
 				fmt.Fprintf(GinkgoWriter, "adding %v watchers\n", newWatchers)
 				testPOST(
 					adminToken,
-					vetchi.AddOpeningWatchersRequest{
+					employer.AddOpeningWatchersRequest{
 						OpeningID: openingID,
 						Emails:    newWatchers,
 					},
@@ -558,9 +561,9 @@ var _ = Describe("Openings", Ordered, func() {
 			// Try to add one more watcher
 			testPOST(
 				adminToken,
-				vetchi.AddOpeningWatchersRequest{
+				employer.AddOpeningWatchersRequest{
 					OpeningID: openingID,
-					Emails: []vetchi.EmailAddress{
+					Emails: []common.EmailAddress{
 						"maxwatcher26@openings0006.example",
 					},
 				},
