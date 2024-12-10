@@ -29,6 +29,7 @@ model MyCandidacy {
 
 @route("/hub/add-candidacy-comment")
 interface AddHubCandidacyComment {
+    @tag("Candidacies")
     @post
     addComment(@body request: AddHubCandidacyCommentRequest): {
         @statusCode statusCode: 200;
@@ -37,6 +38,7 @@ interface AddHubCandidacyComment {
 
 @route("/hub/get-my-candidacies")
 interface GetMyCandidacies {
+    @tag("Candidacies")
     @get
     getMyCandidacies(): {
         @statusCode statusCode: 200;

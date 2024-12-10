@@ -100,7 +100,7 @@ model ApplyForOpeningRequest {
 
 @route("/hub/find-openings")
 interface FindHubOpenings {
-    @tag("HubOpenings")
+    @tag("Openings")
     @post
     @useAuth(HubAuth)
     findOpenings(@query query: FindHubOpeningsRequest): {
@@ -111,6 +111,7 @@ interface FindHubOpenings {
 
 @route("/hub/apply-for-opening")
 interface ApplyForOpening {
+    @tag("Openings")
     @post
     @useAuth(HubAuth)
     applyForOpening(@body request: ApplyForOpeningRequest): void;

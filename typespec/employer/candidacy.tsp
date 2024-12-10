@@ -100,6 +100,7 @@ model GetInterviewsRequest {
 
 @route("/employer/get-candidacies-info")
 interface GetCandidaciesInfo {
+    @tag("Candidacies")
     @post
     getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
         @statusCode statusCode: 200;
@@ -109,6 +110,7 @@ interface GetCandidaciesInfo {
 
 @route("/employer/add-candidacy-comment")
 interface AddEmployerCandidacyComment {
+    @tag("Candidacies")
     @post
     addComment(@body request: AddEmployerCandidacyCommentRequest): {
         @statusCode statusCode: 200;
@@ -117,6 +119,7 @@ interface AddEmployerCandidacyComment {
 
 @route("/employer/add-interview")
 interface AddInterview {
+    @tag("Interviews")
     @doc("Need one of $OrgUserRole.Admin or $OrgUserRole.ApplicationsCRUD")
     @post
     addInterview(@body request: AddInterviewRequest): {
@@ -126,6 +129,7 @@ interface AddInterview {
 
 @route("/employer/get-interviews")
 interface GetInterviews {
+    @tag("Interviews")
     @post
     getInterviews(@body request: GetInterviewsRequest): {
         @statusCode statusCode: 200;
