@@ -10,9 +10,15 @@ k8s_yaml('ronweasly/ronweasly-tilt.yaml')
 k8s_yaml('sqitch/sqitch-tilt.yaml')
 k8s_yaml('sqitch/postgres-tilt.yaml')
 
-# Define Docker builds
-docker_build('psankar/granger', 'api', dockerfile='api/Dockerfile-granger')
-docker_build('psankar/hermione', 'api', dockerfile='api/Dockerfile-hermione')
+# Define Docker builds with root context to include typespec
+docker_build('psankar/granger', '.', 
+    dockerfile='api/Dockerfile-granger',
+)
+
+docker_build('psankar/hermione', '.', 
+    dockerfile='api/Dockerfile-hermione',
+)
+
 docker_build('psankar/harrypotter', 'harrypotter', dockerfile='harrypotter/Dockerfile')
 docker_build('psankar/ronweasly', 'ronweasly', dockerfile='ronweasly/Dockerfile')
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')

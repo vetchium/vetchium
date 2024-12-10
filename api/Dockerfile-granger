@@ -1,8 +1,10 @@
 FROM golang:1.23.2-bullseye AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY api/go.mod api/go.sum ./
+RUN test -d typespec || go mod edit -dropreplace github.com/psankar/vetchi/typespec
 RUN go mod download
-COPY . .
+COPY api/ .
+COPY typespec/ ../typespec/
 RUN go build -o granger ./cmd/granger
 
 # build a minimal container

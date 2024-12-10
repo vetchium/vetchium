@@ -1,13 +1,16 @@
 FROM golang:1.23.2-bullseye AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY api/go.mod api/go.sum ./
+# For production builds, remove the replace directive
+RUN test -d typespec || go mod edit -dropreplace github.com/psankar/vetchi/typespec
 RUN go mod download
-COPY . .
+COPY api/ .
+COPY typespec/ ../typespec/
 RUN go build -o hermione ./cmd/hermione
 
 # build a minimal container
 FROM gcr.io/distroless/base-debian10
 WORKDIR /app
-COPY /internal/hedwig/templates ./hedwig/templates
+COPY --from=builder /app/internal/hedwig/templates ./hedwig/templates
 COPY --from=builder /app/hermione .
 CMD ["./hermione"]
