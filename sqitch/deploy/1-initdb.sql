@@ -133,6 +133,8 @@ CREATE TABLE employer_primary_domains(
 
 CREATE TYPE org_user_roles AS ENUM (
     'ADMIN',
+    'APPLICATIONS_CRUD',
+    'APPLICATIONS_VIEWER',
     'COST_CENTERS_CRUD',
     'COST_CENTERS_VIEWER',
     'LOCATIONS_CRUD',
