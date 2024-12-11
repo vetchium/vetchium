@@ -28,7 +28,7 @@ WITH access_check AS (
 	)
 )
 SELECT 
-	cc.comment_id,
+	cc.id,
 	COALESCE(ou.name, hu.full_name) as commenter_name,
 	cc.author_type,
 	cc.comment_text as content,
