@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
+	"github.com/psankar/vetchi/api/internal/hermione/candidacy"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
@@ -229,6 +230,12 @@ func (h *Hermione) Run() error {
 			common.Admin,
 			common.ApplicationsCRUD,
 		},
+	)
+
+	h.mw.Protect(
+		"/employer/add-candidacy-comment",
+		candidacy.EmployerAddComment(h),
+		[]common.OrgUserRole{common.Any},
 	)
 
 	wrap := func(fn http.Handler) http.Handler {

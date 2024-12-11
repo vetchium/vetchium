@@ -48,4 +48,11 @@ var (
 
 	ErrNoApplication                = errors.New("application not found")
 	ErrApplicationStateInCompatible = errors.New("state incompatible")
+
+	ErrUnauthorizedComment = errors.New(
+		"user not authorized to comment on candidacy",
+	)
+	ErrInvalidCandidacyState = errors.New(
+		"candidacy not in valid state for comments",
+	)
 )

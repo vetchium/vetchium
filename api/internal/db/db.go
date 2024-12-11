@@ -135,6 +135,12 @@ type DB interface {
 		applicationID string,
 	) (ApplicationMailInfo, error)
 
+	// Used by hermione - Candidacies related methods
+	AddEmployerCandidacyComment(
+		context.Context,
+		employer.AddEmployerCandidacyCommentRequest,
+	) (uuid.UUID, error)
+
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
 	ChangeHubUserPassword(context.Context, uuid.UUID, string) error

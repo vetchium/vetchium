@@ -313,6 +313,9 @@ CREATE TABLE applications (
 );
 
 CREATE TYPE candidacy_states AS ENUM (
+    -- What should be the state when a position is filled but a different
+    -- candidate is in pipeline ? Or if the opening is no longer available for
+    -- budget reasons ? Should we have a new state for it ?
     'INTERVIEWING', 
     'OFFERED', 'OFFER_DECLINED', 'OFFER_ACCEPTED', 
     'CANDIDATE_UNSUITABLE',
@@ -337,5 +340,36 @@ CREATE TABLE candidacies(
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
+
+CREATE TYPE comment_author_types AS ENUM ('ORG_USER', 'HUB_USER');
+CREATE TABLE candidacy_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Discriminator field to identify the type of user
+    author_type comment_author_types NOT NULL,
+    
+    -- Only one of these will be populated based on author_type
+    org_user_id UUID REFERENCES org_users(id),
+    hub_user_id UUID REFERENCES hub_users(id),
+    
+    comment_text TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    
+    -- Ensure exactly one user type is specified
+    CONSTRAINT check_single_author CHECK (
+        (author_type = 'ORG_USER' AND org_user_id IS NOT NULL AND hub_user_id IS NULL) OR
+        (author_type = 'HUB_USER' AND hub_user_id IS NOT NULL AND org_user_id IS NULL)
+    ),
+
+    candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
+    CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
+
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES employers(id)
+
+);
+
+-- Index for chronological fetching
+CREATE INDEX idx_candidacy_comments_chronological ON candidacy_comments(candidacy_id, created_at DESC);
 
 COMMIT;

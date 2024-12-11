@@ -217,6 +217,11 @@ func (roles OrgUserRoles) StringArray() []string {
 const (
 	Admin OrgUserRole = "ADMIN"
 
+	// This ANY role is not saved in database. If this role is the value for
+	// the allowedRoles in the middleware, then any OrgUser in that Org can
+	// access that route.
+	Any OrgUserRole = "ANY"
+
 	ApplicationsCRUD   OrgUserRole = "APPLICATIONS_CRUD"
 	ApplicationsViewer OrgUserRole = "APPLICATIONS_VIEWER"
 

@@ -114,6 +114,14 @@ interface AddEmployerCandidacyComment {
     @post
     addComment(@body request: AddEmployerCandidacyCommentRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("Comment cannot be added to the candidacy as it has reached a final state")
+        @statusCode
+        statusCode: 422;
+    } | {
+        @doc("User is not authorized to add a comment to the candidacy")
+        @statusCode
+        statusCode: 403;
     };
 }
 
