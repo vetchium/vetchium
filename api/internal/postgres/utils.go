@@ -14,6 +14,8 @@ func (p *PG) convertToOrgUserRoles(
 		role := common.OrgUserRole(str)
 		switch role {
 		case common.Admin,
+			common.ApplicationsCRUD,
+			common.ApplicationsViewer,
 			common.CostCentersCRUD,
 			common.CostCentersViewer,
 			common.LocationsCRUD,

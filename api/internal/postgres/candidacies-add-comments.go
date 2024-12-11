@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
@@ -30,129 +32,57 @@ func (p *PG) AddEmployerCandidacyComment(
 	}
 
 	query := `
-WITH candidacy_check AS (
-    SELECT
-        c.candidacy_state,
-        c.employer_id,
-        c.opening_id,
-        CASE WHEN c.id IS NULL THEN
-            $5
-        WHEN c.candidacy_state NOT IN ('INTERVIEWING', 'OFFERED') THEN
-            $6
-        ELSE
-            $7
-        END AS error_code
-    FROM
-        candidacies c
-    WHERE
-        c.id = $1
-),
-auth_check AS (
-    SELECT
-        cc.*,
-        EXISTS (
-            SELECT
-                1
-            FROM
-                openings o
-            WHERE
-                o.employer_id = cc.employer_id
-                AND o.id = cc.opening_id
-                AND (o.recruiter = $3
-                    OR o.hiring_manager = $3
-                    OR EXISTS (
-                        SELECT
-                            1
-                        FROM
-                            opening_watchers w
-                        WHERE
-                            w.employer_id = cc.employer_id
-                            AND w.opening_id = cc.opening_id
-                            AND w.watcher_id = $3))) AS is_authorized
-        FROM
-            candidacy_check cc
-        WHERE
-            cc.employer_id = $2
-),
-insert_comment AS (
-INSERT INTO candidacy_comments (candidacy_id, employer_id, author_type, org_user_id, comment_text)
-    SELECT
-        $1,
-        ac.employer_id,
-        $4,
-        $3,
-        $8
-    FROM
-        auth_check ac
-    WHERE
-        ac.is_authorized
-        AND ac.error_code = $7
-    RETURNING
-        id,
-        ac.error_code,
-        ac.is_authorized
-)
-SELECT
-    id,
-    error_code,
-    is_authorized
-FROM
-    insert_comment
-UNION ALL
-SELECT
-    NULL::uuid,
-    ac.error_code,
-    ac.is_authorized
-FROM
-    auth_check ac
-WHERE
-    NOT EXISTS (
-        SELECT
-            1
-        FROM
-            insert_comment)
-LIMIT 1
-`
+	WITH valid_user AS (
+		SELECT 1 AS is_authorized
+		FROM openings o
+		LEFT JOIN opening_watchers ow ON o.employer_id = ow.employer_id AND o.id = ow.opening_id
+		WHERE o.employer_id = $1
+		  AND o.id = (SELECT opening_id FROM candidacies WHERE id = $2)
+		  AND ($3 = o.hiring_manager OR $3 = o.recruiter OR $3 = ow.watcher_id)
+	),
+	valid_candidacy AS (
+		SELECT 1 AS is_valid_state
+		FROM candidacies c
+		WHERE c.id = $2
+		  AND c.candidacy_state = ANY($4)
+	)
+	INSERT INTO candidacy_comments (id, author_type, org_user_id, comment_text, candidacy_id, employer_id, created_at)
+	SELECT gen_random_uuid(), 'ORG_USER', $3, $5, $2, $1, timezone('UTC', now())
+	WHERE EXISTS (SELECT 1 FROM valid_user)
+	  AND EXISTS (SELECT 1 FROM valid_candidacy)
+	RETURNING id, (SELECT is_authorized FROM valid_user), (SELECT is_valid_state FROM valid_candidacy);
+	`
 
 	var (
 		commentID    uuid.UUID
-		errorCode    string
-		isAuthorized bool
+		isAuthorized sql.NullBool
+		isValidState sql.NullBool
 	)
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		empCommentReq.CandidacyID,
 		orgUser.EmployerID,
+		empCommentReq.CandidacyID,
 		orgUser.ID,
-		db.OrgUserAuthorType,
-		errorCandidacyNotFound,
-		errorInvalidState,
-		errorValidState,
+		[]string{
+			string(common.InterviewingCandidacyState),
+			string(common.OfferedCandidacyState),
+		},
 		empCommentReq.Comment,
-	).Scan(&commentID, &errorCode, &isAuthorized)
+	).Scan(&commentID, &isAuthorized, &isValidState)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return uuid.UUID{}, db.ErrNoOpening
-		}
-		p.log.Err("failed to add candidacy comment", "error", err)
-		return uuid.UUID{}, db.ErrInternal
-	}
-
-	// If comment wasn't inserted, determine why based on error_code and is_authorized
-	if commentID == uuid.Nil {
-		switch errorCode {
-		case errorCandidacyNotFound:
-			return uuid.UUID{}, db.ErrNoOpening
-		case errorInvalidState:
-			return uuid.UUID{}, db.ErrInvalidCandidacyState
-		default:
-			if !isAuthorized {
+		if errors.Is(err, pgx.ErrNoRows) {
+			if !isAuthorized.Bool {
 				return uuid.UUID{}, db.ErrUnauthorizedComment
 			}
-			return uuid.UUID{}, db.ErrInternal
+			if !isValidState.Bool {
+				return uuid.UUID{}, db.ErrInvalidCandidacyState
+			}
+			return uuid.UUID{}, db.ErrNoOpening
 		}
+		p.log.Err("failed to add employer candidacy comment", "error", err)
+		return uuid.UUID{}, db.ErrInternal
 	}
 
 	return commentID, nil

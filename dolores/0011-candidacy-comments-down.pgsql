@@ -15,7 +15,8 @@ WHERE org_user_id IN (
 );
 
 DELETE FROM org_users
-WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
+WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid
+AND email IN ('admin@candidacy-comments.example', 'hiringmanager@candidacy-comments.example', 'recruiter@candidacy-comments.example', 'watcher@candidacy-comments.example', 'regular@candidacy-comments.example');
 
 DELETE FROM domains
 WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
@@ -29,10 +30,10 @@ WHERE email_key = '12345678-0011-0011-0011-000000000011'::uuid;
 DELETE FROM hub_user_tokens
 WHERE hub_user_id IN (
     SELECT id FROM hub_users
-    WHERE email IN ('0011-active@hub.example', '0011-disabled@hub.example', '0011-deleted@hub.example')
+    WHERE email IN ('0011-active@hub.example')
 );
 
 DELETE FROM hub_users
-WHERE email IN ('0011-active@hub.example', '0011-disabled@hub.example', '0011-deleted@hub.example');
+WHERE email IN ('0011-active@hub.example');
 
 COMMIT;

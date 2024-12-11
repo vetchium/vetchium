@@ -368,7 +368,6 @@ CREATE TABLE candidacy_comments (
 
     employer_id UUID REFERENCES employers(id) NOT NULL,
     CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES employers(id)
-
 );
 
 -- Index for chronological fetching

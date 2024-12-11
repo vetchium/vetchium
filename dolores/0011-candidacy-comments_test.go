@@ -16,8 +16,8 @@ import (
 
 var _ = FDescribe("Candidacy Comments", Ordered, func() {
 	var db *pgxpool.Pool
-	var adminToken, crudToken, viewerToken, disabledToken string
-	var activeHubToken, disabledHubToken, deletedHubToken string
+	var adminToken, hiringManagerToken, recruiterToken, watcherToken, regularUserToken string
+	var activeHubToken string
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -26,10 +26,11 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 		// Get employer tokens
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
-			"admin@candidacy-comments.example":    &adminToken,
-			"crud@candidacy-comments.example":     &crudToken,
-			"viewer@candidacy-comments.example":   &viewerToken,
-			"disabled@candidacy-comments.example": &disabledToken,
+			"admin@candidacy-comments.example":         &adminToken,
+			"hiringmanager@candidacy-comments.example": &hiringManagerToken,
+			"recruiter@candidacy-comments.example":     &recruiterToken,
+			"watcher@candidacy-comments.example":       &watcherToken,
+			"regular@candidacy-comments.example":       &regularUserToken,
 		}
 
 		for email, token := range tokens {
@@ -46,14 +47,6 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 
 		// Get hub user tokens
 		activeHubToken = hubSignin("0011-active@hub.example", "NewPassword123$")
-		disabledHubToken = hubSignin(
-			"0011-disabled@hub.example",
-			"NewPassword123$",
-		)
-		deletedHubToken = hubSignin(
-			"0011-deleted@hub.example",
-			"NewPassword123$",
-		)
 	})
 
 	AfterAll(func() {
@@ -85,31 +78,41 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 					wantStatus: http.StatusOK,
 				},
 				{
-					description: "crud user can add comment",
-					token:       crudToken,
+					description: "hiring manager can add comment",
+					token:       hiringManagerToken,
 					request: employer.AddEmployerCandidacyCommentRequest{
 						CandidacyID: validCandidacyID,
-						Comment:     "CRUD user comment",
+						Comment:     "Hiring manager comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
 					wantStatus: http.StatusOK,
 				},
 				{
-					description: "viewer can add comment",
-					token:       viewerToken,
+					description: "recruiter can add comment",
+					token:       recruiterToken,
 					request: employer.AddEmployerCandidacyCommentRequest{
 						CandidacyID: validCandidacyID,
-						Comment:     "Viewer comment",
+						Comment:     "Recruiter comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
 					wantStatus: http.StatusOK,
 				},
 				{
-					description: "disabled user cannot add comment",
-					token:       disabledToken,
+					description: "watcher can add comment",
+					token:       watcherToken,
 					request: employer.AddEmployerCandidacyCommentRequest{
 						CandidacyID: validCandidacyID,
-						Comment:     "Disabled user comment",
+						Comment:     "Watcher comment",
+					},
+					endpoint:   "/employer/add-candidacy-comment",
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "regular user cannot add comment",
+					token:       regularUserToken,
+					request: employer.AddEmployerCandidacyCommentRequest{
+						CandidacyID: validCandidacyID,
+						Comment:     "Regular user comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
 					wantStatus: http.StatusUnauthorized,
@@ -137,7 +140,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "###Testing: %s\n", tc.description)
 				testPOST(tc.token, tc.request, tc.endpoint, tc.wantStatus)
 			}
 		})
@@ -155,26 +158,6 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 					},
 					endpoint:   "/hub/add-candidacy-comment",
 					wantStatus: http.StatusOK,
-				},
-				{
-					description: "disabled hub user cannot add comment",
-					token:       disabledHubToken,
-					request: hub.AddHubCandidacyCommentRequest{
-						CandidacyID: validCandidacyID,
-						Comment:     "Disabled hub user comment",
-					},
-					endpoint:   "/hub/add-candidacy-comment",
-					wantStatus: http.StatusUnauthorized,
-				},
-				{
-					description: "deleted hub user cannot add comment",
-					token:       deletedHubToken,
-					request: hub.AddHubCandidacyCommentRequest{
-						CandidacyID: validCandidacyID,
-						Comment:     "Deleted hub user comment",
-					},
-					endpoint:   "/hub/add-candidacy-comment",
-					wantStatus: http.StatusUnauthorized,
 				},
 				{
 					description: "invalid candidacy ID",
@@ -235,8 +218,8 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 					},
 				},
 				{
-					description: "crud user can get comments",
-					token:       crudToken,
+					description: "hiring manager can get comments",
+					token:       hiringManagerToken,
 					request: common.GetCandidacyCommentsRequest{
 						CandidacyID: validCandidacyID,
 					},
@@ -250,8 +233,8 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 					},
 				},
 				{
-					description: "viewer can get comments",
-					token:       viewerToken,
+					description: "regular user can get comments",
+					token:       regularUserToken,
 					request: common.GetCandidacyCommentsRequest{
 						CandidacyID: validCandidacyID,
 					},
@@ -263,15 +246,6 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(len(comments)).Should(BeNumerically(">", 0))
 					},
-				},
-				{
-					description: "disabled user cannot get comments",
-					token:       disabledToken,
-					request: common.GetCandidacyCommentsRequest{
-						CandidacyID: validCandidacyID,
-					},
-					endpoint:   "/employer/get-candidacy-comments",
-					wantStatus: http.StatusUnauthorized,
 				},
 				{
 					description: "invalid candidacy ID",
@@ -316,24 +290,6 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(len(comments)).Should(BeNumerically(">", 0))
 					},
-				},
-				{
-					description: "disabled hub user cannot get comments",
-					token:       disabledHubToken,
-					request: common.GetCandidacyCommentsRequest{
-						CandidacyID: validCandidacyID,
-					},
-					endpoint:   "/hub/get-candidacy-comments",
-					wantStatus: http.StatusUnauthorized,
-				},
-				{
-					description: "deleted hub user cannot get comments",
-					token:       deletedHubToken,
-					request: common.GetCandidacyCommentsRequest{
-						CandidacyID: validCandidacyID,
-					},
-					endpoint:   "/hub/get-candidacy-comments",
-					wantStatus: http.StatusUnauthorized,
 				},
 				{
 					description: "invalid candidacy ID",

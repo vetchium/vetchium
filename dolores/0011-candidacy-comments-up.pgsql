@@ -12,30 +12,70 @@ VALUES ('12345678-0011-0011-0011-000000003001'::uuid, 'candidacy-comments.exampl
 
 -- Create org users with different roles
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
-VALUES 
+VALUES
     ('12345678-0011-0011-0011-000000040001'::uuid, 'admin@candidacy-comments.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000040002'::uuid, 'crud@candidacy-comments.example', 'CRUD User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000040003'::uuid, 'viewer@candidacy-comments.example', 'Viewer User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_VIEWER']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000040004'::uuid, 'disabled@candidacy-comments.example', 'Disabled User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'DISABLED_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0011-0011-0011-000000040002'::uuid, 'hiringmanager@candidacy-comments.example', 'Hiring Manager', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0011-0011-0011-000000040003'::uuid, 'recruiter@candidacy-comments.example', 'Recruiter', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0011-0011-0011-000000040004'::uuid, 'watcher@candidacy-comments.example', 'Watcher', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0011-0011-0011-000000040005'::uuid, 'regular@candidacy-comments.example', 'Regular User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
 
 -- Create hub users for testing
 INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, resident_country_code, resident_city, preferred_language, created_at, updated_at)
 VALUES
-    ('12345678-0011-0011-0011-000000050001'::uuid, 'Active Hub User', 'active_hub_user', '0011-active@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'USA', 'New York', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000050002'::uuid, 'Disabled Hub User', 'disabled_hub_user', '0011-disabled@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DISABLED_HUB_USER', 'USA', 'New York', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000050003'::uuid, 'Deleted Hub User', 'deleted_hub_user', '0011-deleted@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DELETED_HUB_USER', 'USA', 'New York', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+    ('12345678-0011-0011-0011-000000050001'::uuid, 'Active Hub User', 'active_hub_user', '0011-active@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'USA', 'New York', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+
+-- Create cost center for openings
+INSERT INTO org_cost_centers (id, cost_center_name, cost_center_state, notes, employer_id, created_at)
+VALUES ('12345678-0011-0011-0011-000000060001'::uuid, 'Engineering', 'ACTIVE_CC', 'Engineering Department', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
+
+-- Create test openings
+INSERT INTO openings (
+    id,
+    employer_id,
+    title,
+    positions,
+    jd,
+    recruiter,
+    hiring_manager,
+    cost_center_id,
+    opening_type,
+    yoe_min,
+    yoe_max,
+    min_education_level,
+    state,
+    created_at
+)
+VALUES (
+    '2024-Mar-11-001',
+    '12345678-0011-0011-0011-000000000201'::uuid,
+    'Software Engineer',
+    1,
+    'Test Opening',
+    '12345678-0011-0011-0011-000000040002'::uuid,
+    '12345678-0011-0011-0011-000000040001'::uuid,
+    '12345678-0011-0011-0011-000000060001'::uuid,
+    'FULL_TIME_OPENING',
+    2,
+    5,
+    'BACHELOR_EDUCATION',
+    'ACTIVE_OPENING_STATE',
+    timezone('UTC'::text, now())
+);
+
+-- Create test applications
+INSERT INTO applications (id, employer_id, opening_id, cover_letter, original_filename, internal_filename, application_state, hub_user_id, created_at)
+VALUES
+    ('2024-Dec-01-1', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-11-001', 'Test Cover Letter', 'resume.pdf', 'internal-resume.pdf', 'APPLIED', '12345678-0011-0011-0011-000000050001'::uuid, timezone('UTC'::text, now()));
 
 -- Create test candidacies
-INSERT INTO candidacies (id, employer_id, hub_user_id, created_at)
+INSERT INTO candidacies (id, application_id, employer_id, opening_id, candidacy_state, created_by, created_at)
 VALUES
-    ('12345678-0011-0011-0011-000000060001'::uuid, '12345678-0011-0011-0011-000000000201'::uuid, '12345678-0011-0011-0011-000000050001'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000060002'::uuid, '12345678-0011-0011-0011-000000000201'::uuid, '12345678-0011-0011-0011-000000050002'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000060003'::uuid, '12345678-0011-0011-0011-000000000201'::uuid, '12345678-0011-0011-0011-000000050003'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0011-0011-0011-000000060001', '2024-Dec-01-1', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-11-001', 'INTERVIEWING', '12345678-0011-0011-0011-000000040001'::uuid, timezone('UTC'::text, now()));
 
--- Create some initial comments
-INSERT INTO candidacy_comments (id, candidacy_id, commenter_type, commenter_id, comment_text, created_at)
-VALUES
-    ('12345678-0011-0011-0011-000000070001'::uuid, '12345678-0011-0011-0011-000000060001'::uuid, 'EMPLOYER', '12345678-0011-0011-0011-000000040001'::uuid, 'Initial employer comment', timezone('UTC'::text, now())),
-    ('12345678-0011-0011-0011-000000070002'::uuid, '12345678-0011-0011-0011-000000060001'::uuid, 'HUB_USER', '12345678-0011-0011-0011-000000050001'::uuid, 'Initial hub user comment', timezone('UTC'::text, now()));
+-- -- Create some initial comments
+-- INSERT INTO candidacy_comments (id, author_type, org_user_id, hub_user_id, comment_text, candidacy_id, employer_id, created_at)
+-- VALUES
+--     ('12345678-0011-0011-0011-000000070001'::uuid, 'ORG_USER', '12345678-0011-0011-0011-000000040001'::uuid, NULL, 'Initial employer comment', '12345678-0011-0011-0011-000000060001', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
+--     ('12345678-0011-0011-0011-000000070002'::uuid, 'HUB_USER', NULL, '12345678-0011-0011-0011-000000050001'::uuid, 'Initial hub user comment', '12345678-0011-0011-0011-000000060001', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
 
 COMMIT;
