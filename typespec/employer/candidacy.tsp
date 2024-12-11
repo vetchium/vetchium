@@ -4,6 +4,7 @@ import "@typespec/openapi3";
 
 import "../common/common.tsp";
 import "../common/applications.tsp";
+import "../common/candidacies.tsp";
 import "../common/interviews.tsp";
 
 using TypeSpec.Http;
@@ -142,5 +143,15 @@ interface GetInterviews {
     getInterviews(@body request: GetInterviewsRequest): {
         @statusCode statusCode: 200;
         @body response: Interview[];
+    };
+}
+
+@route("/employer/get-candidacy-comments")
+interface GetCandidacyComments {
+    @tag("Candidacies")
+    @post
+    getEmployerCandidacyComments(@body request: GetCandidacyCommentsRequest): {
+        @statusCode statusCode: 200;
+        @body response: CandidacyComment[];
     };
 }

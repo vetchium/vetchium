@@ -44,3 +44,12 @@ interface GetMyCandidacies {
         @statusCode statusCode: 200;
     };
 }
+
+@route("/hub/get-candidacy-comments")
+interface GetHubCandidacyComments {
+    @tag("Candidacies")
+    @post
+    getCandidacyComments(@body request: GetCandidacyCommentsRequest): {
+        @statusCode statusCode: 200;
+    };
+}

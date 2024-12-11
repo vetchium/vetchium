@@ -238,6 +238,12 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Any},
 	)
 
+	h.mw.Protect(
+		"/employer/get-candidacy-comments",
+		candidacy.EmployerGetComments(h),
+		[]common.OrgUserRole{common.Any},
+	)
+
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)
 	}
@@ -256,6 +262,10 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
 	http.Handle("/hub/withdraw-application", wrap(app.WithdrawApplication(h)))
 	http.Handle("/hub/add-candidacy-comment", wrap(candidacy.HubAddComment(h)))
+	http.Handle(
+		"/hub/get-candidacy-comments",
+		wrap(candidacy.HubGetComments(h)),
+	)
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 
@@ -144,6 +145,14 @@ type DB interface {
 		context.Context,
 		hub.AddHubCandidacyCommentRequest,
 	) (uuid.UUID, error)
+	GetEmployerCandidacyComments(
+		context.Context,
+		common.GetCandidacyCommentsRequest,
+	) ([]common.CandidacyComment, error)
+	GetHubCandidacyComments(
+		context.Context,
+		common.GetCandidacyCommentsRequest,
+	) ([]common.CandidacyComment, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

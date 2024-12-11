@@ -6,6 +6,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
@@ -48,5 +49,40 @@ func EmployerAddComment(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("Added comment", "commentID", commentID)
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func EmployerGetComments(h wand.Wand) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered EmployerGetComments")
+		var getCommentsReq common.GetCandidacyCommentsRequest
+		err := json.NewDecoder(r.Body).Decode(&getCommentsReq)
+		if err != nil {
+			h.Dbg("Error decoding request body: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !h.Vator().Struct(w, &getCommentsReq) {
+			h.Dbg("Validation failed")
+			return
+		}
+		h.Dbg("validated", "getCommentsReq", getCommentsReq)
+
+		comments, err := h.DB().
+			GetEmployerCandidacyComments(r.Context(), getCommentsReq)
+		if err != nil {
+			h.Dbg("Internal error while getting comments", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		h.Dbg("Got comments", "comments", comments)
+		err = json.NewEncoder(w).Encode(comments)
+		if err != nil {
+			h.Err("Error encoding response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }

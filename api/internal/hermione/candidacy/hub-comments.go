@@ -51,3 +51,10 @@ func HubAddComment(h wand.Wand) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+func HubGetComments(h wand.Wand) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered HubGetComments")
+
+	}
+}
