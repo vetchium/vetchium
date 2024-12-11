@@ -196,7 +196,7 @@ LIMIT 1
 	).Scan(&commentID, &errorCode, &isAuthorized)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return uuid.UUID{}, db.ErrNoOpening
 		}
 		p.log.Err("failed to add hub candidacy comment", "error", err)

@@ -115,7 +115,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						Comment:     "Regular user comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
-					wantStatus: http.StatusUnauthorized,
+					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "invalid candidacy ID",
@@ -125,7 +125,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						Comment:     "Invalid candidacy comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
-					wantStatus: http.StatusBadRequest,
+					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "empty comment",
@@ -167,7 +167,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						Comment:     "Invalid candidacy comment",
 					},
 					endpoint:   "/hub/add-candidacy-comment",
-					wantStatus: http.StatusBadRequest,
+					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "empty comment",

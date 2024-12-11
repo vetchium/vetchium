@@ -1,4 +1,5 @@
 BEGIN;
+
 DELETE FROM candidacy_comments
 WHERE candidacy_id IN (
     SELECT id FROM candidacies 
@@ -8,11 +9,27 @@ WHERE candidacy_id IN (
 DELETE FROM candidacies
 WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
 
+DELETE FROM applications
+WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
+
+DELETE FROM opening_watchers
+WHERE opening_id IN (
+    SELECT id FROM openings 
+    WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid
+);
+
+DELETE FROM org_cost_centers
+WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
+
+DELETE FROM openings 
+WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid;
+
 DELETE FROM org_user_tokens
 WHERE org_user_id IN (
     SELECT id FROM org_users 
     WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid
 );
+
 
 DELETE FROM org_users
 WHERE employer_id = '12345678-0011-0011-0011-000000000201'::uuid

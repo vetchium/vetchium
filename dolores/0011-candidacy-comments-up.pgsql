@@ -62,6 +62,18 @@ VALUES (
     timezone('UTC'::text, now())
 );
 
+-- Add watcher to the test opening
+INSERT INTO opening_watchers (
+    employer_id,
+    opening_id,
+    watcher_id
+)
+VALUES (
+    '12345678-0011-0011-0011-000000000201'::uuid,
+    '2024-Mar-11-001',
+    '12345678-0011-0011-0011-000000040004'::uuid  -- watcher@candidacy-comments.example
+);
+
 -- Create test applications
 INSERT INTO applications (id, employer_id, opening_id, cover_letter, original_filename, internal_filename, application_state, hub_user_id, created_at)
 VALUES
@@ -71,11 +83,5 @@ VALUES
 INSERT INTO candidacies (id, application_id, employer_id, opening_id, candidacy_state, created_by, created_at)
 VALUES
     ('12345678-0011-0011-0011-000000060001', '2024-Dec-01-1', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-11-001', 'INTERVIEWING', '12345678-0011-0011-0011-000000040001'::uuid, timezone('UTC'::text, now()));
-
--- -- Create some initial comments
--- INSERT INTO candidacy_comments (id, author_type, org_user_id, hub_user_id, comment_text, candidacy_id, employer_id, created_at)
--- VALUES
---     ('12345678-0011-0011-0011-000000070001'::uuid, 'ORG_USER', '12345678-0011-0011-0011-000000040001'::uuid, NULL, 'Initial employer comment', '12345678-0011-0011-0011-000000060001', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now())),
---     ('12345678-0011-0011-0011-000000070002'::uuid, 'HUB_USER', NULL, '12345678-0011-0011-0011-000000050001'::uuid, 'Initial hub user comment', '12345678-0011-0011-0011-000000060001', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
 
 COMMIT;
