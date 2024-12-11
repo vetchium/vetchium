@@ -28,67 +28,89 @@ func (p *PG) AddEmployerCandidacyComment(
 	}
 
 	query := `
-		WITH candidacy_check AS (
-			SELECT 
-				c.candidacy_state, 
-				c.employer_id, 
-				c.opening_id,
-				CASE 
-					WHEN c.id IS NULL THEN $5
-					WHEN c.candidacy_state NOT IN ('INTERVIEWING', 'OFFERED') THEN $6
-					ELSE $7
-				END as error_code
-			FROM candidacies c
-			WHERE c.id = $1
-		),
-		auth_check AS (
-			SELECT 
-				cc.*,
-				EXISTS (
-					SELECT 1
-					FROM openings o 
-					WHERE o.employer_id = cc.employer_id 
-					AND o.id = cc.opening_id
-					AND (
-						o.recruiter = $3
-						OR o.hiring_manager = $3
-						OR EXISTS (
-							SELECT 1 FROM opening_watchers w
-							WHERE w.employer_id = cc.employer_id
-							AND w.opening_id = cc.opening_id
-							AND w.watcher_id = $3
-						)
-					)
-				) as is_authorized
-			FROM candidacy_check cc
-			WHERE cc.employer_id = $2
-		),
-		insert_comment AS (
-			INSERT INTO candidacy_comments (
-				candidacy_id,
-				employer_id,
-				author_type,
-				org_user_id,
-				comment_text
-			)
-			SELECT 
-				$1,
-				ac.employer_id,
-				$4,
-				$3,
-				$8
-			FROM auth_check ac
-			WHERE ac.is_authorized AND ac.error_code = $7
-			RETURNING id, ac.error_code, ac.is_authorized
-		)
-		SELECT id, error_code, is_authorized 
-		FROM insert_comment
-		UNION ALL
-		SELECT NULL::uuid, ac.error_code, ac.is_authorized
-		FROM auth_check ac
-		WHERE NOT EXISTS (SELECT 1 FROM insert_comment)
-		LIMIT 1;
-	`
+WITH candidacy_check AS (
+    SELECT
+        c.candidacy_state,
+        c.employer_id,
+        c.opening_id,
+        CASE WHEN c.id IS NULL THEN
+            $5
+        WHEN c.candidacy_state NOT IN ('INTERVIEWING', 'OFFERED') THEN
+            $6
+        ELSE
+            $7
+        END AS error_code
+    FROM
+        candidacies c
+    WHERE
+        c.id = $1
+),
+auth_check AS (
+    SELECT
+        cc.*,
+        EXISTS (
+            SELECT
+                1
+            FROM
+                openings o
+            WHERE
+                o.employer_id = cc.employer_id
+                AND o.id = cc.opening_id
+                AND (o.recruiter = $3
+                    OR o.hiring_manager = $3
+                    OR EXISTS (
+                        SELECT
+                            1
+                        FROM
+                            opening_watchers w
+                        WHERE
+                            w.employer_id = cc.employer_id
+                            AND w.opening_id = cc.opening_id
+                            AND w.watcher_id = $3))) AS is_authorized
+        FROM
+            candidacy_check cc
+        WHERE
+            cc.employer_id = $2
+),
+insert_comment AS (
+INSERT INTO candidacy_comments (candidacy_id, employer_id, author_type, org_user_id, comment_text)
+    SELECT
+        $1,
+        ac.employer_id,
+        $4,
+        $3,
+        $8
+    FROM
+        auth_check ac
+    WHERE
+        ac.is_authorized
+        AND ac.error_code = $7
+    RETURNING
+        id,
+        ac.error_code,
+        ac.is_authorized
+)
+SELECT
+    id,
+    error_code,
+    is_authorized
+FROM
+    insert_comment
+UNION ALL
+SELECT
+    NULL::uuid,
+    ac.error_code,
+    ac.is_authorized
+FROM
+    auth_check ac
+WHERE
+    NOT EXISTS (
+        SELECT
+            1
+        FROM
+            insert_comment)
+LIMIT 1
+`
 
 	var (
 		commentID    uuid.UUID
