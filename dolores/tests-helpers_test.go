@@ -444,3 +444,29 @@ func cleanupEmail(messageID string) {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
 }
+
+// Add this function after employerSigninAsync
+func hubSignin(email, password string) string {
+	loginReqBody, err := json.Marshal(hub.LoginRequest{
+		Email:    common.EmailAddress(email),
+		Password: common.Password(password),
+	})
+	Expect(err).ShouldNot(HaveOccurred())
+
+	loginResp, err := http.Post(
+		serverURL+"/hub/login",
+		"application/json",
+		bytes.NewBuffer(loginReqBody),
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
+
+	var loginRespObj hub.LoginResponse
+	err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	tfaCode, messageID := getTFACode(email)
+	defer cleanupEmail(messageID)
+
+	return getSessionToken(loginRespObj.Token, tfaCode, false)
+}
