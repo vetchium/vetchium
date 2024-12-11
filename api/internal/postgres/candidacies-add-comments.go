@@ -34,31 +34,67 @@ func (p *PG) AddEmployerCandidacyComment(
 	}
 
 	query := `
-	WITH valid_user AS (
-		SELECT 1 AS is_authorized
-		FROM openings o
-		LEFT JOIN opening_watchers ow ON o.employer_id = ow.employer_id AND o.id = ow.opening_id
-		WHERE o.employer_id = $1
-		  AND o.id = (SELECT opening_id FROM candidacies WHERE id = $2)
-		  AND (
-			  $3 = o.hiring_manager OR 
-			  $3 = o.recruiter OR 
-			  $3 = ow.watcher_id OR 
-			  $4 = true
-		  )
-	),
-	valid_candidacy AS (
-		SELECT 1 AS is_valid_state
-		FROM candidacies c
-		WHERE c.id = $2
-		  AND c.candidacy_state = ANY($5)
-	)
-	INSERT INTO candidacy_comments (id, author_type, org_user_id, comment_text, candidacy_id, employer_id, created_at)
-	SELECT gen_random_uuid(), 'ORG_USER', $3, $6, $2, $1, timezone('UTC', now())
-	WHERE EXISTS (SELECT 1 FROM valid_user)
-	  AND EXISTS (SELECT 1 FROM valid_candidacy)
-	RETURNING id, (SELECT is_authorized FROM valid_user), (SELECT is_valid_state FROM valid_candidacy);
-	`
+WITH valid_user AS (
+    SELECT
+        1 AS is_authorized
+    FROM
+        openings o
+        LEFT JOIN opening_watchers ow ON o.employer_id = ow.employer_id
+            AND o.id = ow.opening_id
+    WHERE
+        o.employer_id = $1
+        AND o.id = (
+            SELECT
+                opening_id
+            FROM
+                candidacies
+            WHERE
+                id = $2)
+            AND ($3 = o.hiring_manager
+                OR $3 = o.recruiter
+                OR $3 = ow.watcher_id
+                OR $4 = TRUE)
+),
+valid_candidacy AS (
+    SELECT
+        1 AS is_valid_state
+    FROM
+        candidacies c
+    WHERE
+        c.id = $2
+        AND c.candidacy_state = ANY ($5))
+INSERT INTO candidacy_comments (author_type, org_user_id, comment_text, candidacy_id, employer_id, created_at)
+SELECT
+    $6,
+    $3,
+    $7,
+    $2,
+    $1,
+    timezone('UTC', now())
+WHERE
+    EXISTS (
+        SELECT
+            1
+        FROM
+            valid_user)
+    AND EXISTS (
+        SELECT
+            1
+        FROM
+            valid_candidacy)
+RETURNING
+    id,
+    (
+        SELECT
+            is_authorized
+        FROM
+            valid_user),
+    (
+        SELECT
+            is_valid_state
+        FROM
+            valid_candidacy)
+`
 
 	var (
 		commentID    uuid.UUID
@@ -76,6 +112,7 @@ func (p *PG) AddEmployerCandidacyComment(
 			string(common.InterviewingCandidacyState),
 			string(common.OfferedCandidacyState),
 		},
+		db.OrgUserAuthorType,
 		empCommentReq.Comment,
 	).Scan(&commentID, &isAuthorized, &isValidState)
 
@@ -100,13 +137,6 @@ func (p *PG) AddHubCandidacyComment(
 	ctx context.Context,
 	hubCommentReq hub.AddHubCandidacyCommentRequest,
 ) (uuid.UUID, error) {
-	const (
-		errorCandidacyNotFound = "candidacy_not_found"
-		errorInvalidState      = "invalid_state"
-		errorValidState        = "valid_state"
-		errorUnauthorized      = "unauthorized"
-	)
-
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
 		p.log.Err("failed to get hubUser from context")
@@ -114,108 +144,91 @@ func (p *PG) AddHubCandidacyComment(
 	}
 
 	query := `
-WITH candidacy_check AS (
+WITH valid_candidacy AS (
     SELECT
-        c.candidacy_state,
-        c.hub_user_id,
-        CASE WHEN c.id IS NULL THEN
-            $3
-        WHEN c.candidacy_state NOT IN ($8, $9) THEN
-            $4
-        ELSE
-            $5
-        END AS error_code
+        1 AS is_valid_state
     FROM
         candidacies c
+        JOIN applications a ON c.application_id = a.id
     WHERE
         c.id = $1
+        AND c.candidacy_state = ANY ($4)
+        AND a.hub_user_id = $2
 ),
-auth_check AS (
+valid_candidacy_id AS (
     SELECT
-        cc.*,
-        cc.hub_user_id = $2 AS is_authorized
+        1 AS is_valid_id
     FROM
-        candidacy_check cc
-),
-insert_comment AS (
-    INSERT INTO candidacy_comments (candidacy_id, hub_user_id, author_type, comment_text)
-    SELECT
-        $1,
-        ac.hub_user_id,
-        $6,
-        $7
-    FROM
-        auth_check ac
+        candidacies
     WHERE
-        ac.is_authorized
-        AND ac.error_code = $5
-    RETURNING
-        id,
-        ac.error_code,
-        ac.is_authorized
+        id = $1
 )
+INSERT INTO candidacy_comments (author_type, hub_user_id, comment_text, candidacy_id, employer_id, created_at)
 SELECT
-    id,
-    error_code,
-    is_authorized
+    $3,
+    $2,
+    $5,
+    $1,
+    c.employer_id,
+    timezone('UTC', now())
 FROM
-    insert_comment
-UNION ALL
-SELECT
-    NULL::uuid,
-    ac.error_code,
-    ac.is_authorized
-FROM
-    auth_check ac
+    candidacies c
 WHERE
-    NOT EXISTS (
+    c.id = $1
+    AND EXISTS (
         SELECT
             1
         FROM
-            insert_comment)
-LIMIT 1
+            valid_candidacy)
+    AND EXISTS (
+        SELECT
+            1
+        FROM
+            valid_candidacy_id)
+RETURNING
+    id,
+    (
+        SELECT
+            is_valid_state
+        FROM
+            valid_candidacy),
+    (
+        SELECT
+            is_valid_id
+        FROM
+            valid_candidacy_id)
 `
 
 	var (
 		commentID    uuid.UUID
-		errorCode    string
-		isAuthorized bool
+		isValidState sql.NullBool
+		isValidID    sql.NullBool
 	)
 	err := p.pool.QueryRow(
 		ctx,
 		query,
 		hubCommentReq.CandidacyID,
 		hubUser.ID,
-		errorCandidacyNotFound,
-		errorInvalidState,
-		errorValidState,
 		db.HubUserAuthorType,
+		[]string{
+			string(common.InterviewingCandidacyState),
+			string(common.OfferedCandidacyState),
+		},
 		hubCommentReq.Comment,
-		common.InterviewingCandidacyState,
-		common.OfferedCandidacyState,
-	).Scan(&commentID, &errorCode, &isAuthorized)
+	).Scan(&commentID, &isValidState, &isValidID)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			if !isValidID.Bool {
+				return uuid.UUID{}, db.ErrUnauthorizedComment
+			}
+			if !isValidState.Bool {
+				return uuid.UUID{}, db.ErrInvalidCandidacyState
+			}
 			return uuid.UUID{}, db.ErrNoOpening
 		}
 		p.log.Err("failed to add hub candidacy comment", "error", err)
 		return uuid.UUID{}, db.ErrInternal
-	}
-
-	// If comment wasn't inserted, determine why based on error_code and is_authorized
-	if commentID == uuid.Nil {
-		switch errorCode {
-		case errorCandidacyNotFound:
-			return uuid.UUID{}, db.ErrNoOpening
-		case errorInvalidState:
-			return uuid.UUID{}, db.ErrInvalidCandidacyState
-		default:
-			if !isAuthorized {
-				return uuid.UUID{}, db.ErrUnauthorizedComment
-			}
-			return uuid.UUID{}, db.ErrInternal
-		}
 	}
 
 	return commentID, nil
