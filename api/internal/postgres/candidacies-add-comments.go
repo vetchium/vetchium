@@ -18,17 +18,19 @@ func (p *PG) AddEmployerCandidacyComment(
 	ctx context.Context,
 	empCommentReq employer.AddEmployerCandidacyCommentRequest,
 ) (uuid.UUID, error) {
-	const (
-		errorCandidacyNotFound = "candidacy_not_found"
-		errorInvalidState      = "invalid_state"
-		errorValidState        = "valid_state"
-		statusUnauthorized     = "unauthorized"
-	)
-
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
 		return uuid.UUID{}, db.ErrInternal
+	}
+
+	// Check if the user has the 'Admin' role
+	isAdmin := false
+	for _, role := range orgUser.OrgUserRoles {
+		if role == common.Admin {
+			isAdmin = true
+			break
+		}
 	}
 
 	query := `
@@ -38,16 +40,21 @@ func (p *PG) AddEmployerCandidacyComment(
 		LEFT JOIN opening_watchers ow ON o.employer_id = ow.employer_id AND o.id = ow.opening_id
 		WHERE o.employer_id = $1
 		  AND o.id = (SELECT opening_id FROM candidacies WHERE id = $2)
-		  AND ($3 = o.hiring_manager OR $3 = o.recruiter OR $3 = ow.watcher_id)
+		  AND (
+			  $3 = o.hiring_manager OR 
+			  $3 = o.recruiter OR 
+			  $3 = ow.watcher_id OR 
+			  $4 = true
+		  )
 	),
 	valid_candidacy AS (
 		SELECT 1 AS is_valid_state
 		FROM candidacies c
 		WHERE c.id = $2
-		  AND c.candidacy_state = ANY($4)
+		  AND c.candidacy_state = ANY($5)
 	)
 	INSERT INTO candidacy_comments (id, author_type, org_user_id, comment_text, candidacy_id, employer_id, created_at)
-	SELECT gen_random_uuid(), 'ORG_USER', $3, $5, $2, $1, timezone('UTC', now())
+	SELECT gen_random_uuid(), 'ORG_USER', $3, $6, $2, $1, timezone('UTC', now())
 	WHERE EXISTS (SELECT 1 FROM valid_user)
 	  AND EXISTS (SELECT 1 FROM valid_candidacy)
 	RETURNING id, (SELECT is_authorized FROM valid_user), (SELECT is_valid_state FROM valid_candidacy);
@@ -64,6 +71,7 @@ func (p *PG) AddEmployerCandidacyComment(
 		orgUser.EmployerID,
 		empCommentReq.CandidacyID,
 		orgUser.ID,
+		isAdmin,
 		[]string{
 			string(common.InterviewingCandidacyState),
 			string(common.OfferedCandidacyState),

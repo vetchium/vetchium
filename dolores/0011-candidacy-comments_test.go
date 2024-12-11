@@ -140,7 +140,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "###Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
 				testPOST(tc.token, tc.request, tc.endpoint, tc.wantStatus)
 			}
 		})
