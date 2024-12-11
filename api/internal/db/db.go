@@ -140,6 +140,10 @@ type DB interface {
 		context.Context,
 		employer.AddEmployerCandidacyCommentRequest,
 	) (uuid.UUID, error)
+	AddHubCandidacyComment(
+		context.Context,
+		hub.AddHubCandidacyCommentRequest,
+	) (uuid.UUID, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

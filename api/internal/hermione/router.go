@@ -255,21 +255,16 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpening(h)))
 	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
 	http.Handle("/hub/withdraw-application", wrap(app.WithdrawApplication(h)))
+	http.Handle("/hub/add-candidacy-comment", wrap(candidacy.HubAddComment(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
 
-	/*
-
-		TODO:
-
-		   - /employer/add-candidacy-comment
-		   - /employer/get-candidacies-info
-		   - /hub/add-candidacy-comment
-		   - /hub/get-my-candidacies
-
-		   - /employer/add-interview
-		   - /employer/get-interviews
+	/* TODO:
+	   - /employer/get-candidacies-info
+	   - /hub/get-my-candidacies
+	   - /employer/add-interview
+	   - /employer/get-interviews
 
 	*/
 

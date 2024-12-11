@@ -82,6 +82,11 @@ func (m *Middleware) Protect(
 				return
 			}
 
+			if allowedRoles[0] == common.Any {
+				handlerFunc(w, r)
+				return
+			}
+
 			if !hasRoles(orgUser.OrgUserRoles, allowedRoles) {
 				http.Error(w, "", http.StatusForbidden)
 				return
