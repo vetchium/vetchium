@@ -153,6 +153,10 @@ type DB interface {
 		context.Context,
 		common.GetCandidacyCommentsRequest,
 	) ([]common.CandidacyComment, error)
+	GetCandidaciesInfo(
+		context.Context,
+		employer.GetCandidaciesInfoRequest,
+	) ([]employer.Candidacy, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

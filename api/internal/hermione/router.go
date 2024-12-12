@@ -232,6 +232,7 @@ func (h *Hermione) Run() error {
 		},
 	)
 
+	// Used by employer - Candidacies
 	h.mw.Protect(
 		"/employer/add-candidacy-comment",
 		candidacy.EmployerAddComment(h),
@@ -241,6 +242,12 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/get-candidacy-comments",
 		candidacy.EmployerGetComments(h),
+		[]common.OrgUserRole{common.Any},
+	)
+
+	h.mw.Protect(
+		"/employer/get-candidacies-info",
+		candidacy.GetCandidaciesInfo(h),
 		[]common.OrgUserRole{common.Any},
 	)
 
