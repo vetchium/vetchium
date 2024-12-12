@@ -14,7 +14,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Candidacy Comments", Ordered, func() {
+var _ = Describe("Candidacy Comments", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, hiringManagerToken, recruiterToken, watcherToken, regularUserToken string
 	var activeHubToken string
