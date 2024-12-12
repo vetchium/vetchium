@@ -53,5 +53,7 @@ interface GetHubCandidacyComments {
         @doc("If an invalid candidacy ID is provided, an empty list is returned.")
         @statusCode
         statusCode: 200;
+
+        @body response: CandidacyComment[];
     };
 }
