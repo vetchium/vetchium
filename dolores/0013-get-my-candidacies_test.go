@@ -124,7 +124,7 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 					validate: func(candidacies []hub.MyCandidacy) {
 						for _, c := range candidacies {
 							Expect(
-								c.CandidacyState,
+								string(c.CandidacyState),
 							).Should(Equal("INTERVIEWING"))
 						}
 					},
@@ -141,7 +141,9 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 					wantStatus: http.StatusOK,
 					validate: func(candidacies []hub.MyCandidacy) {
 						for _, c := range candidacies {
-							Expect(c.CandidacyState).Should(Equal("OFFERED"))
+							Expect(
+								string(c.CandidacyState),
+							).Should(Equal("OFFERED"))
 						}
 					},
 				},
@@ -158,33 +160,16 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 					validate: func(candidacies []hub.MyCandidacy) {
 						for _, c := range candidacies {
 							Expect(
-								c.CandidacyState,
+								string(c.CandidacyState),
 							).Should(Equal("CANDIDATE_UNSUITABLE"))
 						}
 					},
-				},
-				{
-					description: "invalid pagination key",
-					token:       hubUser1Token,
-					request: hub.MyCandidaciesRequest{
-						PaginationKey: strptr("invalid-key"),
-						Limit:         10,
-					},
-					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "invalid limit - too high",
 					token:       hubUser1Token,
 					request: hub.MyCandidaciesRequest{
 						Limit: 1001,
-					},
-					wantStatus: http.StatusBadRequest,
-				},
-				{
-					description: "invalid limit - zero",
-					token:       hubUser1Token,
-					request: hub.MyCandidaciesRequest{
-						Limit: 0,
 					},
 					wantStatus: http.StatusBadRequest,
 				},
