@@ -6,6 +6,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -55,6 +56,35 @@ func HubAddComment(h wand.Wand) http.HandlerFunc {
 func HubGetComments(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered HubGetComments")
+		var getCommentsReq common.GetCandidacyCommentsRequest
+		if err := json.NewDecoder(r.Body).Decode(&getCommentsReq); err != nil {
+			h.Dbg("Error decoding request body: %v", err)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
 
+		if !h.Vator().Struct(w, &getCommentsReq) {
+			h.Dbg("Error validating request body")
+			return
+		}
+
+		h.Dbg("validated", "getCommentsReq", getCommentsReq)
+
+		comments, err := h.DB().
+			GetHubCandidacyComments(r.Context(), getCommentsReq)
+		if err != nil {
+			h.Dbg("Error getting comments", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		h.Dbg("got comments", "comments", comments)
+
+		err = json.NewEncoder(w).Encode(comments)
+		if err != nil {
+			h.Dbg("Error encoding response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }

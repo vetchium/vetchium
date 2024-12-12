@@ -25,7 +25,7 @@ WITH access_check AS (
 	SELECT EXISTS (
 		SELECT 1 FROM candidacies 
 		WHERE id = $1 AND employer_id = $2
-	)
+	) as has_access
 )
 SELECT 
 	cc.id,
@@ -38,15 +38,13 @@ LEFT JOIN org_users ou ON cc.org_user_id = ou.id
 LEFT JOIN hub_users hu ON cc.hub_user_id = hu.id,
 access_check
 WHERE cc.candidacy_id = $1
-AND access_check
+AND access_check.has_access
 ORDER BY cc.created_at DESC
 `
 
 	rows, err := p.pool.Query(ctx, query,
 		empGetCommentsReq.CandidacyID,
 		orgUser.EmployerID,
-		db.OrgUserAuthorType,
-		db.HubUserAuthorType,
 	)
 	if err != nil {
 		p.log.Err("failed to query candidacy comments", "error", err)
@@ -93,12 +91,14 @@ func (p *PG) GetHubCandidacyComments(
 
 	query := `
 SELECT 
-	cc.comment_id,
+	cc.id,
 	COALESCE(ou.name, hu.full_name) as commenter_name,
 	cc.author_type,
 	cc.comment_text as content,
 	cc.created_at
 FROM candidacy_comments cc
+LEFT JOIN org_users ou ON cc.org_user_id = ou.id
+LEFT JOIN hub_users hu ON cc.hub_user_id = hu.id
 WHERE cc.candidacy_id = $1
 AND cc.hub_user_id = $2
 ORDER BY cc.created_at DESC
@@ -136,5 +136,6 @@ ORDER BY cc.created_at DESC
 		return nil, db.ErrInternal
 	}
 
+	p.log.Dbg("got candidacy comments", "comments", candidacyComments)
 	return candidacyComments, nil
 }

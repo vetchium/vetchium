@@ -182,7 +182,7 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
 				testPOST(tc.token, tc.request, tc.endpoint, tc.wantStatus)
 			}
 		})
@@ -254,12 +254,18 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						CandidacyID: "invalid-id",
 					},
 					endpoint:   "/employer/get-candidacy-comments",
-					wantStatus: http.StatusBadRequest,
+					wantStatus: http.StatusOK,
+					validate: func(resp []byte) {
+						var comments []common.CandidacyComment
+						err := json.Unmarshal(resp, &comments)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(len(comments)).Should(BeZero())
+					},
 				},
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
 				resp := testPOSTGetResp(
 					tc.token,
 					tc.request,
@@ -286,6 +292,11 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
 						var comments []common.CandidacyComment
+						fmt.Fprintf(
+							GinkgoWriter,
+							"Response Body: %s\n",
+							string(resp),
+						)
 						err := json.Unmarshal(resp, &comments)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(len(comments)).Should(BeNumerically(">", 0))
@@ -298,12 +309,18 @@ var _ = FDescribe("Candidacy Comments", Ordered, func() {
 						CandidacyID: "invalid-id",
 					},
 					endpoint:   "/hub/get-candidacy-comments",
-					wantStatus: http.StatusBadRequest,
+					wantStatus: http.StatusOK,
+					validate: func(resp []byte) {
+						var comments []common.CandidacyComment
+						err := json.Unmarshal(resp, &comments)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(len(comments)).Should(BeZero())
+					},
 				},
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
 				resp := testPOSTGetResp(
 					tc.token,
 					tc.request,

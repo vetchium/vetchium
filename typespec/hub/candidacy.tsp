@@ -50,6 +50,8 @@ interface GetHubCandidacyComments {
     @tag("Candidacies")
     @post
     getCandidacyComments(@body request: GetCandidacyCommentsRequest): {
-        @statusCode statusCode: 200;
+        @doc("If an invalid candidacy ID is provided, an empty list is returned.")
+        @statusCode
+        statusCode: 200;
     };
 }
