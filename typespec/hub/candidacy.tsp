@@ -27,6 +27,15 @@ model MyCandidacy {
     candidacy_state: CandidacyState;
 }
 
+model MyCandidaciesRequest {
+    @doc("The candidacy_id of the last candidacy. Candidacies are returned in reverse chronological order and if two candidacies have the same timestamp, they are further ordered by id.")
+    pagination_key?: string;
+
+    @doc("The maximum number of candidacies to return. Defaults to 40.")
+    @maxValue(40)
+    limit?: integer;
+}
+
 @route("/hub/add-candidacy-comment")
 interface AddHubCandidacyComment {
     @tag("Candidacies")
@@ -39,9 +48,10 @@ interface AddHubCandidacyComment {
 @route("/hub/get-my-candidacies")
 interface GetMyCandidacies {
     @tag("Candidacies")
-    @get
-    getMyCandidacies(): {
+    @post
+    getMyCandidacies(@body request: MyCandidaciesRequest): {
         @statusCode statusCode: 200;
+        @body response: MyCandidacy[];
     };
 }
 

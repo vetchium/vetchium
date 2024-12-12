@@ -173,6 +173,10 @@ type DB interface {
 		*hub.FindHubOpeningsRequest,
 	) ([]hub.HubOpening, error)
 	GetMyHandle(context.Context) (string, error)
+	GetMyCandidacies(
+		context.Context,
+		hub.MyCandidaciesRequest,
+	) ([]hub.MyCandidacy, error)
 	InitHubUserPasswordReset(context.Context, HubUserInitPasswordReset) error
 	Logout(c context.Context, token string) error
 	ResetHubUserPassword(context.Context, HubUserPasswordReset) error

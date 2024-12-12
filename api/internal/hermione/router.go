@@ -248,6 +248,7 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/get-candidacies-info",
 		candidacy.GetCandidaciesInfo(h),
+		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
 
@@ -273,13 +274,12 @@ func (h *Hermione) Run() error {
 		"/hub/get-candidacy-comments",
 		wrap(candidacy.HubGetComments(h)),
 	)
+	http.Handle("/hub/get-my-candidacies", wrap(candidacy.MyCandidacies(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
 
 	/* TODO:
-	   - /employer/get-candidacies-info
-	   - /hub/get-my-candidacies
 	   - /employer/add-interview
 	   - /employer/get-interviews
 

@@ -7,6 +7,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) GetCandidaciesInfo(
@@ -93,4 +94,11 @@ WHERE c.employer_id = $1
 	p.log.Dbg("candidacies", "candidacies", candidacies)
 
 	return candidacies, nil
+}
+
+func (p *PG) GetMyCandidacies(
+	ctx context.Context,
+	getMyCandidaciesReq hub.MyCandidaciesRequest,
+) ([]hub.MyCandidacy, error) {
+	return []hub.MyCandidacy{}, nil
 }
