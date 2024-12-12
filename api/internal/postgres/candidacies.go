@@ -107,10 +107,12 @@ func (p *PG) GetMyCandidacies(
 	}
 
 	query := `
-SELECT c.id, e.name, e.domain, o.id, o.title, o.jd, c.candidacy_state
+SELECT c.id, e.company_name, d.domain_name, o.id, o.title, o.jd, c.candidacy_state
 FROM candidacies c
 JOIN openings o ON c.opening_id = o.id
 JOIN employers e ON o.employer_id = e.id
+JOIN domains d ON e.id = d.employer_id
+JOIN employer_primary_domains epd ON d.id = epd.domain_id AND epd.employer_id = e.id
 JOIN applications a ON c.application_id = a.id
 WHERE a.hub_user_id = $1
 `

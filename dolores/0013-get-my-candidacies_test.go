@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Get My Candidacies", Ordered, func() {
+var _ = FDescribe("Get My Candidacies", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUser1Token, hubUser2Token, hubUser3Token string
 
@@ -85,7 +85,7 @@ var _ = Describe("Get My Candidacies", Ordered, func() {
 					description: "get all candidacies for user1",
 					token:       hubUser1Token,
 					request: hub.MyCandidaciesRequest{
-						Limit: 50,
+						Limit: 40,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(candidacies []hub.MyCandidacy) {
@@ -193,6 +193,14 @@ var _ = Describe("Get My Candidacies", Ordered, func() {
 					token:       hubUser1Token,
 					request: hub.MyCandidaciesRequest{
 						Limit: -1,
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "invalid limit - exceeds maximum",
+					token:       hubUser1Token,
+					request: hub.MyCandidaciesRequest{
+						Limit: 41,
 					},
 					wantStatus: http.StatusBadRequest,
 				},

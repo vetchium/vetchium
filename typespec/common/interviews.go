@@ -9,6 +9,17 @@ const (
 	EmployerWithdrewInterviewState  InterviewState = "EMPLOYER_WITHDREW"
 )
 
+func (s InterviewState) IsValid() bool {
+	switch s {
+	case ScheduledInterviewState,
+		CompletedInterviewState,
+		CandidateWithdrewInterviewState,
+		EmployerWithdrewInterviewState:
+		return true
+	}
+	return false
+}
+
 type CandidacyState string
 
 const (
@@ -20,6 +31,20 @@ const (
 	CandidateNotRespondingCandidacyState CandidacyState = "CANDIDATE_NOT_RESPONDING"
 	EmployerDefunctCandidacyState        CandidacyState = "EMPLOYER_DEFUNCT"
 )
+
+func (s CandidacyState) IsValid() bool {
+	switch s {
+	case InterviewingCandidacyState,
+		OfferedCandidacyState,
+		OfferDeclinedCandidacyState,
+		OfferAcceptedCandidacyState,
+		CandidateUnsuitableCandidacyState,
+		CandidateNotRespondingCandidacyState,
+		EmployerDefunctCandidacyState:
+		return true
+	}
+	return false
+}
 
 type InterviewersDecision string
 

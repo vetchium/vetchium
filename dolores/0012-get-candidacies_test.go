@@ -47,7 +47,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 		db.Close()
 	})
 
-	FDescribe("Get Candidacies Info", func() {
+	Describe("Get Candidacies Info", func() {
 		type getCandidaciesTestCase struct {
 			description string
 			token       string
@@ -89,7 +89,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					description: "filter by recruiter1",
 					token:       adminToken,
 					request: employer.GetCandidaciesInfoRequest{
-						RecruiterEmail: stringPtr(
+						RecruiterEmail: strptr(
 							"recruiter1@get-candidates.example",
 						),
 						Limit: 10,
@@ -108,7 +108,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					description: "filter by recruiter2",
 					token:       adminToken,
 					request: employer.GetCandidaciesInfoRequest{
-						RecruiterEmail: stringPtr(
+						RecruiterEmail: strptr(
 							"recruiter2@get-candidates.example",
 						),
 						Limit: 10,
@@ -125,7 +125,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					description: "filter by state INTERVIEWING",
 					token:       adminToken,
 					request: employer.GetCandidaciesInfoRequest{
-						State: stringPtr(
+						State: strptr(
 							string(common.InterviewingCandidacyState),
 						),
 						Limit: 10,
@@ -144,7 +144,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					description: "filter by state OFFERED",
 					token:       adminToken,
 					request: employer.GetCandidaciesInfoRequest{
-						State: stringPtr(string(common.OfferedCandidacyState)),
+						State: strptr(string(common.OfferedCandidacyState)),
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
@@ -241,7 +241,3 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 		})
 	})
 })
-
-func stringPtr(s string) *string {
-	return &s
-}
