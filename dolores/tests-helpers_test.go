@@ -470,3 +470,27 @@ func hubSignin(email, password string) string {
 
 	return getSessionToken(loginRespObj.Token, tfaCode, false)
 }
+
+// Add this function after hubSignin
+func hubSigninAsync(
+	email, password string,
+	token *string,
+	wg *sync.WaitGroup,
+) {
+	go func(email, password string, token *string, wg *sync.WaitGroup) {
+		defer GinkgoRecover()
+		defer wg.Done()
+		*token = hubSignin(email, password)
+		fmt.Fprintf(
+			GinkgoWriter,
+			"Hub user email: %s, password: %s, gotToken: %s\n",
+			email,
+			password,
+			*token,
+		)
+	}(email, password, token, wg)
+}
+
+func strptr(s string) *string {
+	return &s
+}
