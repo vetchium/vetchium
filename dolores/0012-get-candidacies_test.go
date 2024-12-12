@@ -179,11 +179,15 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					validate: func(candidacies []employer.Candidacy) {
+						fmt.Fprintf(GinkgoWriter, "page1: %+v\n", candidacies)
 						Expect(candidacies).Should(HaveLen(2))
+
+						paginationKey := &candidacies[1].CandidacyID
+						fmt.Fprintf(GinkgoWriter, "pkey: %s\n", *paginationKey)
 
 						// Get next page
 						nextPageReq := employer.GetCandidaciesInfoRequest{
-							PaginationKey: &candidacies[1].CandidacyID,
+							PaginationKey: paginationKey,
 							Limit:         2,
 						}
 						resp := testPOSTGetResp(
@@ -197,6 +201,8 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						err := json.Unmarshal(resp, &nextPage)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(nextPage).Should(HaveLen(1))
+
+						fmt.Fprintf(GinkgoWriter, "page2: %+v\n", nextPage)
 
 						// Verify no duplicates
 						firstPageIDs := make(map[string]bool)

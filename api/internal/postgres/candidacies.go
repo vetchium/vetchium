@@ -51,7 +51,7 @@ WHERE c.employer_id = $1
 		i++
 	}
 
-	query += " ORDER BY c.created_at DESC, c.id DESC "
+	query += " ORDER BY c.created_at DESC, c.id ASC "
 
 	query += fmt.Sprintf(" LIMIT %d", getCandidaciesInfoReq.Limit)
 
