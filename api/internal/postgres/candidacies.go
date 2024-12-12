@@ -100,5 +100,82 @@ func (p *PG) GetMyCandidacies(
 	ctx context.Context,
 	getMyCandidaciesReq hub.MyCandidaciesRequest,
 ) ([]hub.MyCandidacy, error) {
-	return []hub.MyCandidacy{}, nil
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		p.log.Err("failed to get hubUser from context")
+		return []hub.MyCandidacy{}, db.ErrInternal
+	}
+
+	query := `
+SELECT c.id, e.name, e.domain, o.id, o.title, o.jd, c.candidacy_state
+FROM candidacies c
+JOIN openings o ON c.opening_id = o.id
+JOIN employers e ON o.employer_id = e.id
+JOIN applications a ON c.application_id = a.id
+WHERE a.hub_user_id = $1
+`
+
+	var args []interface{}
+	args = append(args, hubUser.ID)
+	i := 2
+
+	if getMyCandidaciesReq.CandidacyStates != nil {
+		var filterStates []string
+		for _, state := range getMyCandidaciesReq.CandidacyStates {
+			filterStates = append(filterStates, string(state))
+		}
+		query += fmt.Sprintf(` AND c.candidacy_state IN ($%d)`, i)
+		args = append(args, filterStates)
+		i++
+	}
+
+	if getMyCandidaciesReq.PaginationKey != nil {
+		query += fmt.Sprintf(` AND c.id > $%d`, i)
+		args = append(args, *getMyCandidaciesReq.PaginationKey)
+		i++
+	}
+
+	query += " ORDER BY c.created_at DESC, c.id ASC "
+
+	query += fmt.Sprintf(" LIMIT $%d", i)
+	args = append(args, getMyCandidaciesReq.Limit)
+	i++
+
+	p.log.Dbg("query", "query", query, "args", args)
+
+	rows, err := p.pool.Query(ctx, query, args...)
+	if err != nil {
+		p.log.Err("failed to query candidacies", "error", err)
+		return []hub.MyCandidacy{}, db.ErrInternal
+	}
+	defer rows.Close()
+
+	candidacies := []hub.MyCandidacy{}
+	for rows.Next() {
+		var candidacy hub.MyCandidacy
+		err := rows.Scan(
+			&candidacy.CandidacyID,
+			&candidacy.CompanyName,
+			&candidacy.CompanyDomain,
+			&candidacy.OpeningID,
+			&candidacy.OpeningTitle,
+			&candidacy.OpeningDescription,
+			&candidacy.CandidacyState,
+		)
+		if err != nil {
+			p.log.Err("failed to scan candidacy", "error", err)
+			return []hub.MyCandidacy{}, db.ErrInternal
+		}
+
+		candidacies = append(candidacies, candidacy)
+	}
+
+	if err := rows.Err(); err != nil {
+		p.log.Err("failed to iterate over candidacies", "error", err)
+		return []hub.MyCandidacy{}, db.ErrInternal
+	}
+
+	p.log.Dbg("candidacies", "candidacies", candidacies)
+
+	return candidacies, nil
 }
