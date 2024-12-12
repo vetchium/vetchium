@@ -74,6 +74,16 @@ VALUES
     ('12345678-0013-0013-0013-000000003002'::uuid, 'my-candidacies-2.example', 'VERIFIED', '12345678-0013-0013-0013-000000000202'::uuid, timezone('UTC'::text, now())),
     ('12345678-0013-0013-0013-000000003003'::uuid, 'my-candidacies-3.example', 'VERIFIED', '12345678-0013-0013-0013-000000000203'::uuid, timezone('UTC'::text, now()));
 
+-- After creating domains, add:
+INSERT INTO employer_primary_domains (employer_id, domain_id)
+SELECT employer_id, id 
+FROM domains 
+WHERE domain_name IN (
+    'my-candidacies-1.example',
+    'my-candidacies-2.example',
+    'my-candidacies-3.example'
+);
+
 -- Create org users
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
 VALUES
