@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -122,13 +123,24 @@ WHERE a.hub_user_id = $1
 	i := 2
 
 	if getMyCandidaciesReq.CandidacyStates != nil {
-		var filterStates []string
-		for _, state := range getMyCandidaciesReq.CandidacyStates {
-			filterStates = append(filterStates, string(state))
+		stateParams := make(
+			[]string,
+			0,
+			len(getMyCandidaciesReq.CandidacyStates),
+		)
+		for j, state := range getMyCandidaciesReq.CandidacyStates {
+			paramNum := i + j
+			stateParams = append(
+				stateParams,
+				fmt.Sprintf("$%d::candidacy_states", paramNum),
+			)
+			args = append(args, string(state))
 		}
-		query += fmt.Sprintf(` AND c.candidacy_state IN ($%d)`, i)
-		args = append(args, filterStates)
-		i++
+		query += fmt.Sprintf(
+			" AND c.candidacy_state = ANY(ARRAY[%s])",
+			strings.Join(stateParams, ","),
+		)
+		i += len(getMyCandidaciesReq.CandidacyStates)
 	}
 
 	if getMyCandidaciesReq.PaginationKey != nil {
