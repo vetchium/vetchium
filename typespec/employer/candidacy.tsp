@@ -14,7 +14,7 @@ namespace Vetchi;
 
 model GetCandidaciesInfoRequest {
     @doc("If provided, will return only the candidacies for the given recruiter. If not provided, all Candidacies under the given employer will be returned.")
-    recruiter_id?: string;
+    recruiter_email?: string;
 
     @doc("If provided, will return only the Candidacies in the given state. Otherwise all Candidacies will be returned.")
     state?: CandidacyState;

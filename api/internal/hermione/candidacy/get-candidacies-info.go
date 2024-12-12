@@ -27,6 +27,10 @@ func GetCandidaciesInfo(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("validated", "getCandidaciesInfoReq", getCandidaciesInfoReq)
 
+		if getCandidaciesInfoReq.Limit == 0 {
+			getCandidaciesInfoReq.Limit = 40
+		}
+
 		candidaciesInfo, err := h.DB().
 			GetCandidaciesInfo(r.Context(), getCandidaciesInfoReq)
 		if err != nil {

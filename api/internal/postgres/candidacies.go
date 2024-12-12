@@ -22,35 +22,38 @@ func (p *PG) GetCandidaciesInfo(
 	var args []interface{}
 
 	query := `
-SELECT c.id, o.id, o.title, o.description, c.candidacy_state, a.name, a.handle
+SELECT c.id, o.id, o.title, o.jd, c.candidacy_state, hu.full_name, hu.handle
 FROM candidacies c
-JOIN openings o ON c.opening_id = o.id
-JOIN applicants a ON c.applicant_id = a.id
+JOIN openings o ON c.employer_id = o.employer_id AND c.opening_id = o.id 
+JOIN applications a ON c.application_id = a.id
+JOIN hub_users hu ON a.hub_user_id = hu.id
+JOIN org_users ou ON o.recruiter = ou.id
 WHERE c.employer_id = $1
 	`
 	args = append(args, orgUser.EmployerID)
 	i := 2
 
-	if getCandidaciesInfoReq.RecruiterID != nil {
-		query += fmt.Sprintf(` AND recruiter_id = $%d`, i)
-		args = append(args, *getCandidaciesInfoReq.RecruiterID)
+	if getCandidaciesInfoReq.RecruiterEmail != nil {
+		query += fmt.Sprintf(` AND ou.email = $%d`, i)
+		args = append(args, *getCandidaciesInfoReq.RecruiterEmail)
 		i++
 	}
 
 	if getCandidaciesInfoReq.State != nil {
-		query += fmt.Sprintf(` AND candidacy_state = $%d`, i)
+		query += fmt.Sprintf(` AND c.candidacy_state = $%d`, i)
 		args = append(args, *getCandidaciesInfoReq.State)
 		i++
 	}
 
 	if getCandidaciesInfoReq.PaginationKey != nil {
-		query += fmt.Sprintf(` AND id > $%d`, i)
+		query += fmt.Sprintf(` AND c.id > $%d`, i)
 		args = append(args, *getCandidaciesInfoReq.PaginationKey)
 		i++
 	}
 
-	query += " ORDER BY created_at DESC, id DESC "
-	query += fmt.Sprintf("LIMIT %d", getCandidaciesInfoReq.Limit)
+	query += " ORDER BY c.created_at DESC, c.id DESC "
+
+	query += fmt.Sprintf(" LIMIT %d", getCandidaciesInfoReq.Limit)
 
 	p.log.Dbg("query", "query", query)
 
