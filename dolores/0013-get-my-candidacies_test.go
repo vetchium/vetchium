@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Get My Candidacies", Ordered, func() {
+var _ = Describe("Get My Candidacies", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUser1Token, hubUser2Token, hubUser3Token string
 
@@ -192,7 +192,7 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "Testing: %s\n", tc.description)
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
 
 				reqBody, err := json.Marshal(tc.request)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -227,6 +227,7 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 			pageSize := 3
 
 			for {
+				fmt.Fprintf(GinkgoWriter, "Pagination key: %s\n", paginationKey)
 				request := hub.MyCandidaciesRequest{
 					PaginationKey: &paginationKey,
 					Limit:         pageSize,
@@ -261,7 +262,7 @@ var _ = FDescribe("Get My Candidacies", Ordered, func() {
 					break
 				}
 
-				paginationKey = candidacies[len(candidacies)-1].OpeningID
+				paginationKey = candidacies[len(candidacies)-1].CandidacyID
 			}
 
 			// Verify we got all candidacies and they're unique

@@ -1,5 +1,11 @@
 BEGIN;
 
+DELETE FROM candidacies
+WHERE employer_id IN (
+    SELECT id FROM employers
+    WHERE onboard_admin_email LIKE '%@my-candidacies-%.example'
+);
+
 -- Delete applications
 DELETE FROM applications
 WHERE hub_user_id IN (
