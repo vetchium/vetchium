@@ -373,4 +373,100 @@ CREATE TABLE candidacy_comments (
 -- Index for chronological fetching
 CREATE INDEX idx_candidacy_comments_chronological ON candidacy_comments(candidacy_id, created_at DESC);
 
+---
+
+CREATE TYPE interview_types AS ENUM (
+    'IN_PERSON',
+    'VIDEO_CALL',
+    'TAKE_HOME',
+    'UNSPECIFIED'
+);
+CREATE TYPE interview_states AS ENUM (
+    'SCHEDULED',
+    'COMPLETED',
+    'CANCELLED',
+    'UNSPECIFIED'
+);
+CREATE TYPE interviewers_decisions AS ENUM (
+    'STRONG_YES',
+    'YES',
+    'NO',
+    'STRONG_NO'
+);
+CREATE TYPE interview_response_states AS ENUM (
+    'PENDING',      -- Initial state when interview is created
+    'ACCEPTED',     -- Candidate accepted the interview slot
+    'DECLINED',     -- Candidate declined the interview slot
+    'NO_RESPONSE'   -- Candidate didn't respond within expected time
+);
+CREATE TABLE interviews(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
+    CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
+    CONSTRAINT fk_candidacy_employer FOREIGN KEY (candidacy_id, employer_id) 
+        REFERENCES candidacies(id, employer_id),
+
+    interview_type interview_types NOT NULL,
+    interview_state interview_states NOT NULL,
+    candidate_response interview_response_states NOT NULL DEFAULT 'PENDING',
+    
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT valid_interview_duration CHECK (end_time > start_time),
+    
+    description TEXT,
+    location TEXT,  -- For in-person interviews
+    meeting_link TEXT, -- For video interviews
+    
+    created_by UUID REFERENCES org_users(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    CONSTRAINT fk_creator_employer FOREIGN KEY (employer_id, created_by) 
+        REFERENCES org_users(employer_id, id),
+    
+    interviewers_decision interviewers_decisions,
+    interviewers_assessment TEXT,
+    feedback_to_candidate TEXT,
+    feedback_submitted_by UUID REFERENCES org_users(id),
+    feedback_submitted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT fk_feedback_submitter_employer FOREIGN KEY (employer_id, feedback_submitted_by) 
+        REFERENCES org_users(employer_id, id),
+    CONSTRAINT valid_feedback_submitter CHECK (
+        feedback_submitted_by IS NULL OR 
+        feedback_submitted_by = ANY(SELECT interviewer_id FROM interview_interviewers WHERE interview_id = id)
+    ),
+    CONSTRAINT valid_feedback CHECK (
+        (feedback_submitted_by IS NULL AND feedback_submitted_at IS NULL AND interviewers_decision IS NULL) OR
+        (feedback_submitted_by IS NOT NULL AND feedback_submitted_at IS NOT NULL AND interviewers_decision IS NOT NULL)
+    ),
+    
+    candidate_response_time TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT valid_completion CHECK (
+        (interview_state = 'COMPLETED' AND completed_at IS NOT NULL) OR
+        (interview_state != 'COMPLETED' AND completed_at IS NULL)
+    ),
+    
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE interview_interviewers (
+    interview_id UUID REFERENCES interviews(id) NOT NULL,
+    interviewer_id UUID REFERENCES org_users(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    
+    PRIMARY KEY (interview_id, interviewer_id),
+    CONSTRAINT valid_interviewer_employer FOREIGN KEY (employer_id, interviewer_id) 
+        REFERENCES org_users(employer_id, id),
+    CONSTRAINT fk_interview_employer FOREIGN KEY (interview_id, employer_id) 
+        REFERENCES interviews(id, employer_id)
+);
+
+-- Add indices for common query patterns
+CREATE INDEX idx_interviews_candidacy ON interviews(candidacy_id);
+CREATE INDEX idx_interviews_employer ON interviews(employer_id);
+CREATE INDEX idx_interviews_state ON interviews(interview_state);
+
 COMMIT;

@@ -10,6 +10,7 @@ import (
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
 	ho "github.com/psankar/vetchi/api/internal/hermione/hubopenings"
+	"github.com/psankar/vetchi/api/internal/hermione/interview"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
@@ -250,6 +251,12 @@ func (h *Hermione) Run() error {
 		candidacy.GetCandidaciesInfo(h),
 		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
+	)
+
+	h.mw.Protect(
+		"/employer/add-interview",
+		interview.AddInterview(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
 
 	wrap := func(fn http.Handler) http.Handler {

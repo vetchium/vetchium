@@ -41,7 +41,7 @@ type AddInterviewRequest struct {
 	CandidacyID   string                `json:"candidacy_id"   validate:"required"`
 	StartTime     time.Time             `json:"start_time"     validate:"required"`
 	EndTime       time.Time             `json:"end_time"       validate:"required"`
-	InterviewType InterviewType         `json:"interview_type" validate:"required"`
+	InterviewType InterviewType         `json:"interview_type" validate:"required,validate_interview_type"`
 	Description   string                `json:"description"    validate:"omitempty,max=2048"`
 	Interviewers  []common.EmailAddress `json:"interviewers"   validate:"omitempty"`
 }
