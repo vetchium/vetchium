@@ -2,8 +2,10 @@ package interview
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/employer"
 )
@@ -26,8 +28,20 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 
 		interviewID, err := h.DB().AddInterview(r.Context(), addInterviewReq)
 		if err != nil {
+			if errors.Is(err, db.ErrNoCandidacy) {
+				h.Dbg("no candidacy found", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrInvalidCandidacyState) {
+				h.Dbg("candidacy not in valid state", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to add interview", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
