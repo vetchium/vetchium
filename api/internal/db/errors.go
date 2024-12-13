@@ -55,4 +55,5 @@ var (
 	ErrInvalidCandidacyState = errors.New(
 		"candidacy not in valid state for comments",
 	)
+	ErrNoCandidacy = errors.New("candidacy not found")
 )

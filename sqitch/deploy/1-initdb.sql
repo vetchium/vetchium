@@ -415,8 +415,6 @@ CREATE TABLE interviews(
     CONSTRAINT valid_interview_duration CHECK (end_time > start_time),
     
     description TEXT,
-    location TEXT,  -- For in-person interviews
-    meeting_link TEXT, -- For video interviews
     
     created_by UUID REFERENCES org_users(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,

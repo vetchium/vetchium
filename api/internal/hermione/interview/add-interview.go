@@ -22,7 +22,16 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 			h.Dbg("validation failed", "addInterviewReq", addInterviewReq)
 			return
 		}
-
 		h.Dbg("validated", "addInterviewReq", addInterviewReq)
+
+		interviewID, err := h.DB().AddInterview(r.Context(), addInterviewReq)
+		if err != nil {
+			h.Dbg("failed to add interview", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		h.Dbg("added interview", "interviewID", interviewID)
+		w.WriteHeader(http.StatusOK)
 	})
 }

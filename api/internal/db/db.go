@@ -157,6 +157,10 @@ type DB interface {
 		context.Context,
 		employer.GetCandidaciesInfoRequest,
 	) ([]employer.Candidacy, error)
+	AddInterview(
+		context.Context,
+		employer.AddInterviewRequest,
+	) (uuid.UUID, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
