@@ -1,7 +1,7 @@
 package db
 
 type AddInterviewersRequest struct {
-	InterviewID string
-	OrgUserIDs  []string
-	Email       Email
+	InterviewID  string
+	Interviewers []string
+	Email        Email
 }

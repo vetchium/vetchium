@@ -24,13 +24,13 @@ func (p *PG) AddInterviewers(
 		FROM (
 			SELECT id 
 			FROM org_users 
-			WHERE id = ANY($1::uuid[])
+			WHERE email = ANY($1::text[])
 			AND org_user_state NOT IN ('ACTIVE_ORG_USER', 'REPLICATED_ORG_USER')
 		) inactive_users
 	`
 
 	var allActive bool
-	err = tx.QueryRow(ctx, verifyQuery, addInterviewersReq.OrgUserIDs).
+	err = tx.QueryRow(ctx, verifyQuery, addInterviewersReq.Interviewers).
 		Scan(&allActive)
 	if err != nil {
 		p.log.Err("failed to verify interviewer states", "error", err)
@@ -44,18 +44,17 @@ func (p *PG) AddInterviewers(
 
 	// Insert interviewers
 	insertQuery := `
-		INSERT INTO interview_interviewers 
-		(interview_id, interviewer_id, employer_id, rsvp_status)
-		SELECT $1, unnest($2::uuid[]), i.employer_id, $3::rsvp_status
-		FROM interviews i
-		WHERE i.id = $1
-	`
-
+INSERT INTO interview_interviewers 
+(interview_id, interviewer_id, employer_id, rsvp_status)
+SELECT $1, unnest($2::uuid[]), i.employer_id, $3::rsvp_status
+FROM interviews i
+WHERE i.id = $1
+`
 	_, err = tx.Exec(
 		ctx,
 		insertQuery,
 		addInterviewersReq.InterviewID,
-		addInterviewersReq.OrgUserIDs,
+		addInterviewersReq.Interviewers,
 		common.NotSetRSVP,
 	)
 	if err != nil {
@@ -74,7 +73,6 @@ func (p *PG) AddInterviewers(
 			email_state
 		) VALUES ($1, $2, $3, $4, $5, $6)
 	`
-
 	_, err = tx.Exec(
 		ctx,
 		emailQuery,

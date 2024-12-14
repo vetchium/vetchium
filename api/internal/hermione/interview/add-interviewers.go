@@ -28,23 +28,6 @@ func AddInterviewers(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addInterviewersReq", addInterviewersReq)
 
-		orgUsers, err := h.DB().
-			GetOrgUsersByEmails(r.Context(), addInterviewersReq.OrgUserEmails)
-		if err != nil {
-			h.Dbg("failed to get org users by email", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		interviewerIDs := make([]string, 0, len(orgUsers))
-		for _, orgUser := range orgUsers {
-			if orgUser.OrgUserState != employer.ActiveOrgUserState {
-				http.Error(w, orgUser.Email, http.StatusForbidden)
-				return
-			}
-			interviewerIDs = append(interviewerIDs, orgUser.ID.String())
-		}
-
 		notificationEmail, err := h.Hedwig().
 			GenerateEmail(hedwig.GenerateEmailReq{
 				TemplateName: hedwig.AddInterviewers,
@@ -65,7 +48,6 @@ func AddInterviewers(h wand.Wand) http.HandlerFunc {
 
 		err = h.DB().AddInterviewers(r.Context(), db.AddInterviewersRequest{
 			InterviewID: addInterviewersReq.InterviewID,
-			OrgUserIDs:  interviewerIDs,
 			Email:       notificationEmail,
 		})
 		if err != nil {
