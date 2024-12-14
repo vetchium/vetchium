@@ -258,6 +258,16 @@ func (h *Hermione) Run() error {
 		interview.AddInterview(h),
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
+	h.mw.Protect(
+		"/employer/add-interviewers",
+		interview.AddInterviewers(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	)
+	// h.mw.Protect(
+	// 	"/employer/remove-interviewer",
+	// 	interview.RemoveInterviewer(h),
+	// 	[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	// )
 
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)
@@ -287,7 +297,9 @@ func (h *Hermione) Run() error {
 	return http.ListenAndServe(port, nil)
 
 	/* TODO:
-	   - /employer/get-interviews
+	- /employer/rsvp-interview
+	- /hub/rsvp-interview
+	- /employer/get-interviews
 	*/
 
 }

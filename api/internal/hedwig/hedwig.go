@@ -18,6 +18,7 @@ const (
 	HubPasswordReset     = "hub-password-reset"
 	ShortlistApplication = "shortlist-application"
 	RejectApplication    = "reject-application"
+	AddInterviewers      = "add-interviewers"
 )
 
 type Hedwig interface {

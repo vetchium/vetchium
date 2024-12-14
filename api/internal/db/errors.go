@@ -56,4 +56,8 @@ var (
 		"candidacy not in valid state for comments",
 	)
 	ErrNoCandidacy = errors.New("candidacy not found")
+
+	ErrInterviewNotActive = errors.New(
+		"one or more interviewers not in active state",
+	)
 )

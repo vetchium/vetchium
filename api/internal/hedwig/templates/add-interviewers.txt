@@ -1,0 +1,9 @@
+Hi,
+
+You have been added as an interviewer for an Interview by your employer.
+
+Please RSVP your availability for the interview at the following link:
+{{.InterviewURL}}
+
+Thanks,
+Vetchi Team
