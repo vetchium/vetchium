@@ -47,8 +47,9 @@ func AddInterviewers(h wand.Wand) http.HandlerFunc {
 		}
 
 		err = h.DB().AddInterviewers(r.Context(), db.AddInterviewersRequest{
-			InterviewID: addInterviewersReq.InterviewID,
-			Email:       notificationEmail,
+			InterviewID:  addInterviewersReq.InterviewID,
+			Interviewers: addInterviewersReq.OrgUserEmails,
+			Email:        notificationEmail,
 		})
 		if err != nil {
 			h.Dbg("adding interviewers failed", "error", err)
