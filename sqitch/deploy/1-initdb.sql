@@ -393,11 +393,10 @@ CREATE TYPE interviewers_decisions AS ENUM (
     'NO',
     'STRONG_NO'
 );
-CREATE TYPE interview_response_states AS ENUM (
-    'PENDING',      -- Initial state when interview is created
-    'ACCEPTED',     -- Candidate accepted the interview slot
-    'DECLINED',     -- Candidate declined the interview slot
-    'NO_RESPONSE'   -- Candidate didn't respond within expected time
+CREATE TYPE rsvp_status AS ENUM (
+    'YES',
+    'NO',
+    'NOT_SET'
 );
 CREATE TABLE interviews(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -408,7 +407,7 @@ CREATE TABLE interviews(
 
     interview_type interview_types NOT NULL,
     interview_state interview_states NOT NULL,
-    candidate_response interview_response_states NOT NULL DEFAULT 'PENDING',
+    candidate_rsvp rsvp_status NOT NULL DEFAULT 'NOT_SET',
     
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -452,6 +451,7 @@ CREATE TABLE interview_interviewers (
     interview_id UUID REFERENCES interviews(id) NOT NULL,
     interviewer_id UUID REFERENCES org_users(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
+    rsvp_status rsvp_status NOT NULL DEFAULT 'NOT_SET',
     
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     

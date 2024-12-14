@@ -59,7 +59,8 @@ interview_insert AS (
 		end_time,
 		description,
 		created_by,
-		employer_id
+		employer_id,
+		candidate_rsvp
 	)
 	SELECT 
 		$1,                             -- candidacy_id
@@ -69,7 +70,8 @@ interview_insert AS (
 		$6::timestamptz,               -- end_time
 		$7,                            -- description
 		$8,                            -- created_by
-		$2                             -- employer_id
+		$2,                            -- employer_id
+		'NOT_SET'::rsvp_status         -- candidate_rsvp default
 	WHERE (SELECT status FROM state_validation) = $14
 	RETURNING id
 )
