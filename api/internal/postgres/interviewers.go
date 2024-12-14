@@ -18,48 +18,46 @@ func (p *PG) AddInterviewers(
 	}
 	defer tx.Rollback(ctx)
 
-	// First verify all interviewers exist and are in active state
-	verifyQuery := `
-		SELECT COUNT(*) = 0
-		FROM (
-			SELECT id 
-			FROM org_users 
-			WHERE email = ANY($1::text[])
-			AND org_user_state NOT IN ('ACTIVE_ORG_USER', 'REPLICATED_ORG_USER')
-		) inactive_users
-	`
-
-	var allActive bool
-	err = tx.QueryRow(ctx, verifyQuery, addInterviewersReq.Interviewers).
-		Scan(&allActive)
-	if err != nil {
-		p.log.Err("failed to verify interviewer states", "error", err)
-		return db.ErrInternal
-	}
-
-	if !allActive {
-		p.log.Dbg("one or more interviewers not in active state")
-		return db.ErrInterviewNotActive
-	}
-
-	// Insert interviewers
+	// Combined verification and insertion query
 	insertQuery := `
-INSERT INTO interview_interviewers 
-(interview_id, interviewer_id, employer_id, rsvp_status)
-SELECT $1, unnest($2::uuid[]), i.employer_id, $3::rsvp_status
-FROM interviews i
-WHERE i.id = $1
+WITH active_interviewers AS (
+	SELECT id, email
+	FROM org_users
+	WHERE email = ANY($2::text[])
+	AND org_user_state IN ('ACTIVE_ORG_USER', 'REPLICATED_ORG_USER')
+),
+verification AS (
+	SELECT COUNT(*) = array_length($2::text[], 1) as all_active
+	FROM active_interviewers
+),
+insertion AS (
+	INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
+	SELECT $1, ai.id, i.employer_id, $3::rsvp_status
+	FROM interviews i
+	CROSS JOIN active_interviewers ai
+	WHERE i.id = $1
+	AND (SELECT all_active FROM verification)
+	RETURNING 1
+)
+SELECT EXISTS (SELECT 1 FROM insertion) as inserted
 `
-	_, err = tx.Exec(
+
+	var inserted bool
+	err = tx.QueryRow(
 		ctx,
 		insertQuery,
 		addInterviewersReq.InterviewID,
 		addInterviewersReq.Interviewers,
 		common.NotSetRSVP,
-	)
+	).Scan(&inserted)
 	if err != nil {
 		p.log.Err("failed to insert interviewers", "error", err)
 		return db.ErrInternal
+	}
+
+	if !inserted {
+		p.log.Dbg("one or more interviewers not in active state")
+		return db.ErrInterviewNotActive
 	}
 
 	// Insert email
