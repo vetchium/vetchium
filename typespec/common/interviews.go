@@ -54,3 +54,32 @@ const (
 	NoInterviewersDecision        InterviewersDecision = "NO"
 	StrongNoInterviewersDecision  InterviewersDecision = "STRONG_NO"
 )
+
+type RSVPStatus string
+
+const (
+	YesRSVP    RSVPStatus = "YES"
+	NoRSVP     RSVPStatus = "NO"
+	NotSetRSVP RSVPStatus = "NOT_SET"
+)
+
+func (s RSVPStatus) IsValid() bool {
+	switch s {
+	case YesRSVP, NoRSVP, NotSetRSVP:
+		return true
+	}
+	return false
+}
+
+type RSVPInterviewRequest struct {
+	InterviewID string     `json:"interview_id" validate:"required"`
+	RSVPStatus  RSVPStatus `json:"rsvp_status"  validate:"required,validate_rsvp_status"`
+}
+
+func (r RSVPInterviewRequest) IsValid() bool {
+	switch r.RSVPStatus {
+	case YesRSVP, NoRSVP, NotSetRSVP:
+		return true
+	}
+	return false
+}

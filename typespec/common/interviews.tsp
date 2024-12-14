@@ -34,3 +34,14 @@ union InterviewersDecision {
     No: "NO",
     StrongNo: "STRONG_NO",
 }
+
+union RSVPStatus {
+    Yes: "YES",
+    No: "NO",
+    NotSet: "NOT_SET",
+}
+
+model RSVPInterviewRequest {
+    interview_id: string;
+    rsvp_status: RSVPStatus;
+}

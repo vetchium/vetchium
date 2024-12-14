@@ -287,9 +287,7 @@ func (h *Hermione) Run() error {
 	return http.ListenAndServe(port, nil)
 
 	/* TODO:
-	   - /employer/add-interview
 	   - /employer/get-interviews
-
 	*/
 
 }

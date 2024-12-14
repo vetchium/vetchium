@@ -9,11 +9,13 @@ import "./employer/locations.tsp";
 import "./employer/orgusers.tsp";
 import "./employer/openings.tsp";
 import "./employer/candidacy.tsp";
+import "./employer/interviews.tsp";
 
 import "./hub/applications.tsp";
 import "./hub/hubusers.tsp";
 import "./hub/openings.tsp";
 import "./hub/candidacy.tsp";
+import "./hub/interviews.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
