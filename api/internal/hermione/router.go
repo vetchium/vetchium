@@ -263,11 +263,12 @@ func (h *Hermione) Run() error {
 		interview.AddInterviewers(h),
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
-	// h.mw.Protect(
-	// 	"/employer/remove-interviewer",
-	// 	interview.RemoveInterviewer(h),
-	// 	[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
-	// )
+
+	h.mw.Protect(
+		"/employer/remove-interviewer",
+		interview.RemoveInterviewer(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	)
 
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)
