@@ -9,6 +9,16 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+model AddInterviewersRequest {
+    interview_id: string;
+    org_user_emails: string[];
+}
+
+model RemoveInterviewerRequest {
+    interview_id: string;
+    org_user_email: string;
+}
+
 @route("/employer/rsvp-interview")
 interface EmployerRSVPInterview {
     @tag("Interviews")
@@ -24,5 +34,27 @@ interface EmployerRSVPInterview {
         @doc("The Interview is not in the correct state for this action")
         @statusCode
         statusCode: 422;
+    };
+}
+
+@route("/employer/add-interviewers")
+interface EmployerAddInterviewers {
+    @tag("Interviews")
+    @doc("The OrgUser doing this must be an Admin")
+    @post
+    @useAuth(EmployerAuth)
+    employerAddInterviewers(@body request: AddInterviewersRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/remove-interviewer")
+interface EmployerRemoveInterviewer {
+    @tag("Interviews")
+    @doc("The OrgUser doing this must be an Admin")
+    @post
+    @useAuth(EmployerAuth)
+    employerRemoveInterviewer(@body request: RemoveInterviewerRequest): {
+        @statusCode statusCode: 200;
     };
 }
