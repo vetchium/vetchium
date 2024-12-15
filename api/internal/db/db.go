@@ -163,7 +163,7 @@ type DB interface {
 		employer.AddInterviewRequest,
 	) (uuid.UUID, error)
 	AddInterviewers(context.Context, AddInterviewersRequest) error
-	RemoveInterviewer(context.Context, employer.RemoveInterviewerRequest) error
+	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

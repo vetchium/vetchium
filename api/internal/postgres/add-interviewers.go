@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) AddInterviewers(
@@ -95,83 +93,4 @@ SELECT EXISTS (SELECT 1 FROM insertion) as inserted
 	}
 
 	return nil
-}
-
-func (p *PG) RemoveInterviewer(
-	ctx context.Context,
-	removeInterviewerReq employer.RemoveInterviewerRequest,
-) error {
-	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
-	if !ok {
-		p.log.Err("failed to get orgUser from context")
-		return db.ErrInternal
-	}
-
-	const (
-		statusNoInterview = "no_interview"
-		statusWrongState  = "wrong_state"
-		statusOK          = "ok"
-	)
-
-	query := `
-WITH interview_check AS (
-    SELECT 
-        CASE
-            WHEN NOT EXISTS (
-                SELECT 1 FROM interviews 
-                WHERE id = $1 AND employer_id = $2
-            ) THEN $4
-            WHEN EXISTS (
-                SELECT 1 FROM interviews
-                WHERE id = $1 AND employer_id = $2
-                AND interview_state != $7
-            ) THEN $5
-            ELSE $6
-        END as status
-),
-delete_result AS (
-    DELETE FROM interview_interviewers
-    WHERE interview_id = $1
-    AND employer_id = $2
-    AND interviewer_id = (
-        SELECT id FROM org_users 
-        WHERE email = $3 AND employer_id = $2
-    )
-    AND EXISTS (
-        SELECT 1 FROM interview_check 
-        WHERE status = $6
-    )
-)
-SELECT status FROM interview_check;
-`
-
-	var status string
-	err := p.pool.QueryRow(
-		ctx,
-		query,
-		removeInterviewerReq.InterviewID,
-		orgUser.EmployerID,
-		removeInterviewerReq.OrgUserEmail,
-		statusNoInterview,
-		statusWrongState,
-		statusOK,
-		common.ScheduledInterviewState,
-	).Scan(&status)
-
-	if err != nil {
-		p.log.Err("failed to remove interviewer", "error", err)
-		return db.ErrInternal
-	}
-
-	switch status {
-	case statusNoInterview:
-		return db.ErrNoInterview
-	case statusWrongState:
-		return db.ErrInvalidInterviewState
-	case statusOK:
-		return nil
-	default:
-		p.log.Err("unexpected status", "status", status)
-		return db.ErrInternal
-	}
 }
