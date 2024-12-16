@@ -2,10 +2,12 @@ package interview
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/employer"
@@ -28,8 +30,17 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addInterviewerReq", addInterviewerReq)
 
+		ctx := r.Context()
+
+		orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+		if !ok {
+			h.Err("failed to get orgUser from context")
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 		interviewer, err := h.DB().
-			GetOrgUserByEmail(r.Context(), addInterviewerReq.OrgUserEmail)
+			GetOrgUserByEmail(ctx, addInterviewerReq.OrgUserEmail)
 		if err != nil {
 			h.Err("failed to get org user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
@@ -84,11 +95,19 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = h.DB().AddInterviewer(r.Context(), db.AddInterviewerRequest{
+		candidacyComment := fmt.Sprintf(
+			"%s added %s as an interviewer for %s TODO: i18n",
+			orgUser.Name,
+			interviewer.Name,
+			addInterviewerReq.InterviewID,
+		)
+
+		err = h.DB().AddInterviewer(ctx, db.AddInterviewerRequest{
 			InterviewID:                  addInterviewerReq.InterviewID,
 			InterviewerEmailAddr:         addInterviewerReq.OrgUserEmail,
 			InterviewerNotificationEmail: interviewerNotification,
 			WatcherNotificationEmail:     watcherNotification,
+			CandidacyComment:             candidacyComment,
 		})
 		if err != nil {
 			h.Dbg("adding interviewers failed", "error", err)
