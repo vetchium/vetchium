@@ -51,9 +51,25 @@ interface EmployerAddInterviewer {
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
     @useAuth(EmployerAuth)
-    employerAddInterviewer(@body request: AddInterviewerRequest): {
-        @statusCode statusCode: 200;
-    };
+    employerAddInterviewer(@body request: AddInterviewerRequest):
+        | {
+              @statusCode statusCode: 200;
+          }
+        | {
+              @doc("The interview_id is invalid")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("The interview is not in the correct state for this action")
+              @statusCode
+              statusCode: 422;
+          }
+        | {
+              @doc("The user corresponding to org_user_email cannot become an interviewer, possibly because they are no longer a valid employee and disabled")
+              @statusCode
+              statusCode: 403;
+          };
 }
 
 @route("/employer/remove-interviewer")

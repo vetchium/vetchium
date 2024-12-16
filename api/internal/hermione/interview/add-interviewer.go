@@ -2,6 +2,7 @@ package interview
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -132,6 +133,24 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 			CandidacyComment:             candidacyComment,
 		})
 		if err != nil {
+			// TODO: The error codes needs to be standardized across *.tsp files
+			// and all the endpoints
+			if errors.Is(err, db.ErrNoOrgUser) {
+				http.Error(w, "", http.StatusForbidden)
+				return
+			}
+
+			if errors.Is(err, db.ErrInterviewNotActive) ||
+				errors.Is(err, db.ErrInvalidCandidacyState) {
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
+			if errors.Is(err, db.ErrNoInterview) {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("adding interviewers failed", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
