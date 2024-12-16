@@ -129,7 +129,7 @@ interface AddEmployerCandidacyComment {
 @route("/employer/add-interview")
 interface AddInterview {
     @tag("Interviews")
-    @doc("Need one of $OrgUserRole.Admin or $OrgUserRole.ApplicationsCRUD")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
     addInterview(@body request: AddInterviewRequest): {
         @statusCode statusCode: 200;
