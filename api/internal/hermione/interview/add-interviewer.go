@@ -55,8 +55,49 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Perhaps we should add the Opening title to the emails
-		// for the interviewer and the watchers, for usability.
+		watchersInfo, err := h.DB().
+			GetWatchersInfoByInterviewID(ctx, addInterviewerReq.InterviewID)
+		if err != nil {
+			h.Err("failed to get watchers", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		watcherEmailMap := make(map[string]struct{})
+		watcherEmailMap[addInterviewerReq.OrgUserEmail] = struct{}{}
+		watcherEmailMap[watchersInfo.HiringManager.Email] = struct{}{}
+		watcherEmailMap[watchersInfo.Recruiter.Email] = struct{}{}
+
+		// Should we notify the Applicant also ? Perhaps not, let us not
+		// distract them with too many emails, when they should be preparing
+		// for the interview
+		for _, watcher := range watchersInfo.Watchers {
+			watcherEmailMap[watcher.Email] = struct{}{}
+		}
+
+		watcherEmailRecipients := make([]string, 0, len(watcherEmailMap))
+		for email := range watcherEmailMap {
+			watcherEmailRecipients = append(watcherEmailRecipients, email)
+		}
+
+		watcherNotification, err := h.Hedwig().
+			GenerateEmail(hedwig.GenerateEmailReq{
+				TemplateName: hedwig.NotifyNewInterviewer,
+				Args: map[string]string{
+					"InterviewerName": interviewer.Name,
+					"InterviewURL":    "TODO",
+				},
+				EmailFrom: vetchi.EmailFrom,
+				EmailTo:   watcherEmailRecipients,
+
+				// TODO: This should be dynamic and come from hedwig
+				Subject: "New Interviewer Added",
+			})
+		if err != nil {
+			h.Dbg("generating email failed", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		interviewerNotification, err := h.Hedwig().
 			GenerateEmail(hedwig.GenerateEmailReq{
@@ -69,25 +110,6 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 
 				// TODO: This should be dynamic and come from hedwig
 				Subject: "Added as an Interviewer",
-			})
-		if err != nil {
-			h.Dbg("generating email failed", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		watcherNotification, err := h.Hedwig().
-			GenerateEmail(hedwig.GenerateEmailReq{
-				TemplateName: hedwig.NotifyNewInterviewer,
-				Args: map[string]string{
-					"InterviewerName": interviewer.Name,
-					"InterviewURL":    "TODO",
-				},
-				EmailFrom: vetchi.EmailFrom,
-				EmailTo:   []string{addInterviewerReq.OrgUserEmail},
-
-				// TODO: This should be dynamic and come from hedwig
-				Subject: "New Interviewer Added",
 			})
 		if err != nil {
 			h.Dbg("generating email failed", "error", err)

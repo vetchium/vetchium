@@ -21,15 +21,10 @@ func (p *PG) AddInterviewer(
 
 	// Insert email
 	emailQuery := `
-		INSERT INTO emails (
-			email_from,
-			email_to,
-			email_subject,
-			email_html_body,
-			email_text_body,
-			email_state
-		) VALUES ($1, $2, $3, $4, $5, $6)
-	`
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+    VALUES ($1, $2, $3, $4, $5, $6),
+    ($7, $8, $9, $10, $11, $12)
+`
 	_, err = tx.Exec(
 		ctx,
 		emailQuery,
@@ -39,6 +34,13 @@ func (p *PG) AddInterviewer(
 		addInterviewerReq.InterviewerNotificationEmail.EmailHTMLBody,
 		addInterviewerReq.InterviewerNotificationEmail.EmailTextBody,
 		addInterviewerReq.InterviewerNotificationEmail.EmailState,
+		// -- End of interviewer notification email
+		addInterviewerReq.WatcherNotificationEmail.EmailFrom,
+		addInterviewerReq.WatcherNotificationEmail.EmailTo,
+		addInterviewerReq.WatcherNotificationEmail.EmailSubject,
+		addInterviewerReq.WatcherNotificationEmail.EmailHTMLBody,
+		addInterviewerReq.WatcherNotificationEmail.EmailTextBody,
+		addInterviewerReq.WatcherNotificationEmail.EmailState,
 	)
 	if err != nil {
 		p.log.Err("failed to insert email", "error", err)
@@ -52,4 +54,11 @@ func (p *PG) AddInterviewer(
 	}
 
 	return nil
+}
+
+func (p *PG) GetWatchersInfoByInterviewID(
+	ctx context.Context,
+	interviewID string,
+) (db.WatchersInfo, error) {
+	return db.WatchersInfo{}, nil
 }

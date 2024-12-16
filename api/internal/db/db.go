@@ -164,6 +164,10 @@ type DB interface {
 	) (uuid.UUID, error)
 	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
+	GetWatchersInfoByInterviewID(
+		ctx context.Context,
+		interviewID string,
+	) (WatchersInfo, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

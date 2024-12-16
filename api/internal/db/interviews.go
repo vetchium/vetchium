@@ -17,5 +17,5 @@ type RemoveInterviewerRequest struct {
 	RemovedInterviewerEmailAddr         string
 	RemovedInterviewerEmailNotification Email
 
-	// TODO: Add EmailNotification for watchers
+	// TODO: Add EmailNotification for watchers ?
 }
