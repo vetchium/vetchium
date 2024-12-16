@@ -59,7 +59,7 @@ func RemoveInterviewer(h wand.Wand) http.HandlerFunc {
 		}
 
 		removedInterviewer, err := h.DB().
-			GetOrgUsersByEmails(ctx, []string{removeInterviewerReq.OrgUserEmail})
+			GetOrgUserByEmail(ctx, removeInterviewerReq.OrgUserEmail)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
 				h.Err("failed to get removed interviewer name", "err", err)
@@ -72,18 +72,12 @@ func RemoveInterviewer(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if len(removedInterviewer) == 0 {
-			h.Err("failed to get removed interviewer name")
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
 		// No need to check if the removed interviewer is active
 
 		candidacyComment := fmt.Sprintf(
 			"%s removed %s as an interviewer",
 			orgUser.Name,
-			removedInterviewer[0].Name,
+			removedInterviewer.Name,
 		)
 
 		err = h.DB().RemoveInterviewer(ctx, db.RemoveInterviewerRequest{

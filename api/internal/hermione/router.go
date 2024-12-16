@@ -260,7 +260,7 @@ func (h *Hermione) Run() error {
 	)
 	h.mw.Protect(
 		"/employer/add-interviewers",
-		interview.AddInterviewers(h),
+		interview.AddInterviewer(h),
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
 

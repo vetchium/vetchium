@@ -9,9 +9,9 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-model AddInterviewersRequest {
+model AddInterviewerRequest {
     interview_id: string;
-    org_user_emails: string[];
+    org_user_email: string;
 }
 
 model RemoveInterviewerRequest {
@@ -45,13 +45,13 @@ interface EmployerRSVPInterview {
           };
 }
 
-@route("/employer/add-interviewers")
-interface EmployerAddInterviewers {
+@route("/employer/add-interviewer")
+interface EmployerAddInterviewer {
     @tag("Interviews")
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
     @useAuth(EmployerAuth)
-    employerAddInterviewers(@body request: AddInterviewersRequest): {
+    employerAddInterviewer(@body request: AddInterviewerRequest): {
         @statusCode statusCode: 200;
     };
 }

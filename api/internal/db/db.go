@@ -77,7 +77,7 @@ type DB interface {
 		context.Context,
 		employer.UpdateOrgUserRequest,
 	) (uuid.UUID, error)
-	GetOrgUsersByEmails(context.Context, []string) ([]OrgUserTO, error)
+	GetOrgUserByEmail(context.Context, string) (OrgUserTO, error)
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error
@@ -162,7 +162,7 @@ type DB interface {
 		context.Context,
 		employer.AddInterviewRequest,
 	) (uuid.UUID, error)
-	AddInterviewers(context.Context, AddInterviewersRequest) error
+	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
 
 	// Used by hermione - for Hub users

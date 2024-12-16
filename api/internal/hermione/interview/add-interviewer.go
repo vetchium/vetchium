@@ -11,22 +11,22 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-func AddInterviewers(h wand.Wand) http.HandlerFunc {
+func AddInterviewer(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered AddInterviewers")
-		var addInterviewersReq employer.AddInterviewersRequest
-		err := json.NewDecoder(r.Body).Decode(&addInterviewersReq)
+		var addInterviewerReq employer.AddInterviewerRequest
+		err := json.NewDecoder(r.Body).Decode(&addInterviewerReq)
 		if err != nil {
 			h.Dbg("decoding failed", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !h.Vator().Struct(w, &addInterviewersReq) {
-			h.Dbg("validation failed", "addInterviewersReq", addInterviewersReq)
+		if !h.Vator().Struct(w, &addInterviewerReq) {
+			h.Dbg("validation failed", "addInterviewerReq", addInterviewerReq)
 			return
 		}
-		h.Dbg("validated", "addInterviewersReq", addInterviewersReq)
+		h.Dbg("validated", "addInterviewerReq", addInterviewerReq)
 
 		notificationEmail, err := h.Hedwig().
 			GenerateEmail(hedwig.GenerateEmailReq{
@@ -35,7 +35,7 @@ func AddInterviewers(h wand.Wand) http.HandlerFunc {
 					"InterviewURL": "TODO",
 				},
 				EmailFrom: vetchi.EmailFrom,
-				EmailTo:   addInterviewersReq.OrgUserEmails,
+				EmailTo:   []string{addInterviewerReq.OrgUserEmail},
 
 				// TODO: This should be dynamic and come from hedwig
 				Subject: "Added as an Interviewer",
@@ -46,10 +46,10 @@ func AddInterviewers(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err = h.DB().AddInterviewers(r.Context(), db.AddInterviewersRequest{
-			InterviewID:  addInterviewersReq.InterviewID,
-			Interviewers: addInterviewersReq.OrgUserEmails,
-			Email:        notificationEmail,
+		err = h.DB().AddInterviewer(r.Context(), db.AddInterviewerRequest{
+			InterviewID:                  addInterviewerReq.InterviewID,
+			InterviewerEmailAddr:         addInterviewerReq.OrgUserEmail,
+			InterviewerNotificationEmail: notificationEmail,
 		})
 		if err != nil {
 			h.Dbg("adding interviewers failed", "error", err)

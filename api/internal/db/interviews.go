@@ -1,12 +1,13 @@
 package db
 
-type AddInterviewersRequest struct {
-	InterviewID  string
-	Interviewers []string
-	Email        Email
+type AddInterviewerRequest struct {
+	InterviewID string
 
-	// TODO: Add EmailNotification for watchers
-	// TODO: Add CandidacyComment
+	InterviewerEmailAddr string
+	CandidacyComment     string
+
+	InterviewerNotificationEmail Email
+	WatcherNotificationEmail     Email
 }
 
 type RemoveInterviewerRequest struct {
