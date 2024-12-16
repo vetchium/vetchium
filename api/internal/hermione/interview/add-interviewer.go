@@ -28,9 +28,28 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addInterviewerReq", addInterviewerReq)
 
-		notificationEmail, err := h.Hedwig().
+		interviewer, err := h.DB().
+			GetOrgUserByEmail(r.Context(), addInterviewerReq.OrgUserEmail)
+		if err != nil {
+			h.Err("failed to get org user", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		if interviewer.OrgUserState != employer.ActiveOrgUserState &&
+			interviewer.OrgUserState != employer.AddedOrgUserState &&
+			interviewer.OrgUserState != employer.ReplicatedOrgUserState {
+			h.Err("interviewer is not active", "interviewer", interviewer)
+			http.Error(w, "", http.StatusUnprocessableEntity)
+			return
+		}
+
+		// TODO: Perhaps we should add the Opening title to the emails
+		// for the interviewer and the watchers, for usability.
+
+		interviewerNotification, err := h.Hedwig().
 			GenerateEmail(hedwig.GenerateEmailReq{
-				TemplateName: hedwig.AddInterviewers,
+				TemplateName: hedwig.NotifyNewInterviewer,
 				Args: map[string]string{
 					"InterviewURL": "TODO",
 				},
@@ -46,10 +65,30 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		watcherNotification, err := h.Hedwig().
+			GenerateEmail(hedwig.GenerateEmailReq{
+				TemplateName: hedwig.NotifyNewInterviewer,
+				Args: map[string]string{
+					"InterviewerName": interviewer.Name,
+					"InterviewURL":    "TODO",
+				},
+				EmailFrom: vetchi.EmailFrom,
+				EmailTo:   []string{addInterviewerReq.OrgUserEmail},
+
+				// TODO: This should be dynamic and come from hedwig
+				Subject: "New Interviewer Added",
+			})
+		if err != nil {
+			h.Dbg("generating email failed", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 		err = h.DB().AddInterviewer(r.Context(), db.AddInterviewerRequest{
 			InterviewID:                  addInterviewerReq.InterviewID,
 			InterviewerEmailAddr:         addInterviewerReq.OrgUserEmail,
-			InterviewerNotificationEmail: notificationEmail,
+			InterviewerNotificationEmail: interviewerNotification,
+			WatcherNotificationEmail:     watcherNotification,
 		})
 		if err != nil {
 			h.Dbg("adding interviewers failed", "error", err)

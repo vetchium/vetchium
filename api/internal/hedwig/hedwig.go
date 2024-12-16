@@ -13,13 +13,14 @@ import (
 
 const (
 	// List of templates. All of these must be parsed, validated in NewHedwig()
-	InviteEmployee           = "invite-employee"
-	HubUserTFA               = "hub-user-tfa"
-	HubPasswordReset         = "hub-password-reset"
-	ShortlistApplication     = "shortlist-application"
-	RejectApplication        = "reject-application"
-	AddInterviewers          = "add-interviewers"
-	RemovedInterviewerNotify = "removed-interviewer-notify"
+	InviteEmployee               = "invite-employee"
+	HubUserTFA                   = "hub-user-tfa"
+	HubPasswordReset             = "hub-password-reset"
+	ShortlistApplication         = "shortlist-application"
+	RejectApplication            = "reject-application"
+	NotifyNewInterviewer         = "notify-new-interviewer"
+	NotifyWatchersNewInterviewer = "notify-watchers-new-interviewer"
+	RemovedInterviewerNotify     = "removed-interviewer-notify"
 )
 
 type Hedwig interface {
