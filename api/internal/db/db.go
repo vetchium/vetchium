@@ -191,4 +191,5 @@ type DB interface {
 	InitHubUserPasswordReset(context.Context, HubUserInitPasswordReset) error
 	Logout(c context.Context, token string) error
 	ResetHubUserPassword(context.Context, HubUserPasswordReset) error
+	HubRSVPInterview(context.Context, hub.HubRSVPInterviewRequest) error
 }

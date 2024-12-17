@@ -15,14 +15,22 @@ interface HubRSVPInterview {
     @doc("The OrgUser doing this must be an Interviewer in the Interview")
     @post
     @useAuth(HubAuth)
-    hubRSVPInterview(@body request: RSVPInterviewRequest): {
-        @statusCode statusCode: 200;
-    } | {
-        @statusCode statusCode: 400;
-        @body error: ValidationErrors;
-    } | {
-        @doc("The Interview is not in the correct state for this action")
-        @statusCode
-        statusCode: 422;
-    };
+    hubRSVPInterview(@body request: RSVPInterviewRequest):
+        | {
+              @statusCode statusCode: 200;
+          }
+        | {
+              @statusCode statusCode: 400;
+              @body error: ValidationErrors;
+          }
+        | {
+              @doc("The Interview is not in the correct state for this action")
+              @statusCode
+              statusCode: 422;
+          }
+        | {
+              @doc("The interview_id is invalid")
+              @statusCode
+              statusCode: 404;
+          };
 }

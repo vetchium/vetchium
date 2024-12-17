@@ -8,6 +8,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) AddInterview(
@@ -119,4 +120,12 @@ SELECT
 		}
 		return interviewID, nil
 	}
+}
+
+func (p *PG) HubRSVPInterview(
+	ctx context.Context,
+	req hub.HubRSVPInterviewRequest,
+) error {
+	// TODO: Implement this
+	return nil
 }
