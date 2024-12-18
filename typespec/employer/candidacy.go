@@ -47,15 +47,17 @@ type AddInterviewRequest struct {
 }
 
 type Interview struct {
-	InterviewID            string                      `json:"interview_id"`
-	InterviewState         common.InterviewState       `json:"interview_state"`
-	StartTime              time.Time                   `json:"start_time"`
-	EndTime                time.Time                   `json:"end_time"`
-	InterviewType          InterviewType               `json:"interview_type"`
-	Description            string                      `json:"description"`
-	Interviewers           []common.EmailAddress       `json:"interviewers"`
-	InterviewersDecision   common.InterviewersDecision `json:"interviewers_decision"`
-	InterviewersAssessment string                      `json:"interviewers_assessment" validate:"omitempty,max=4096"`
-	FeedbackToCandidate    string                      `json:"feedback_to_candidate"   validate:"omitempty,max=4096"`
-	CreatedAt              time.Time                   `json:"created_at"`
+	InterviewID          string                      `json:"interview_id"`
+	InterviewState       common.InterviewState       `json:"interview_state"`
+	StartTime            time.Time                   `json:"start_time"`
+	EndTime              time.Time                   `json:"end_time"`
+	InterviewType        InterviewType               `json:"interview_type"`
+	Description          string                      `json:"description"`
+	Interviewers         []common.EmailAddress       `json:"interviewers"`
+	InterviewersDecision common.InterviewersDecision `json:"interviewers_decision"`
+	Positives            string                      `json:"positives"             validate:"omitempty,max=4096"`
+	Negatives            string                      `json:"negatives"             validate:"omitempty,max=4096"`
+	OverallAssessment    string                      `json:"overall_assessment"    validate:"omitempty,max=4096"`
+	FeedbackToCandidate  string                      `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
+	CreatedAt            time.Time                   `json:"created_at"`
 }

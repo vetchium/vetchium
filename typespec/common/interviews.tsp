@@ -24,6 +24,9 @@ union CandidacyState {
     @doc("The candidate is not responding")
     CandidateNotResponding: "CANDIDATE_NOT_RESPONDING",
 
+    @doc("The candidate withdrew from the interview")
+    CandidateWithdrew: "CANDIDATE_WITHDREW",
+
     @doc("The Employer is defunct")
     EmployerDefunct: "EMPLOYER_DEFUNCT",
 }
@@ -31,6 +34,7 @@ union CandidacyState {
 union InterviewersDecision {
     StrongYes: "STRONG_YES",
     Yes: "YES",
+    Neutral: "NEUTRAL",
     No: "NO",
     StrongNo: "STRONG_NO",
 }

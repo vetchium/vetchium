@@ -76,7 +76,13 @@ model Interview {
     interviewers_decision?: InterviewersDecision;
 
     @maxLength(4096)
-    interviewers_assessment?: string;
+    positives?: string;
+
+    @maxLength(4096)
+    negatives?: string;
+
+    @maxLength(4096)
+    overall_assessment?: string;
 
     @maxLength(4096)
     feedback_to_candidate?: string;

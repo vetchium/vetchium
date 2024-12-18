@@ -3,18 +3,16 @@ package common
 type InterviewState string
 
 const (
-	ScheduledInterviewState         InterviewState = "SCHEDULED"
-	CompletedInterviewState         InterviewState = "COMPLETED"
-	CandidateWithdrewInterviewState InterviewState = "CANDIDATE_WITHDREW"
-	EmployerWithdrewInterviewState  InterviewState = "EMPLOYER_WITHDREW"
+	ScheduledInterviewState InterviewState = "SCHEDULED"
+	CompletedInterviewState InterviewState = "COMPLETED"
+	CancelledInterviewState InterviewState = "CANCELLED"
 )
 
 func (s InterviewState) IsValid() bool {
 	switch s {
 	case ScheduledInterviewState,
 		CompletedInterviewState,
-		CandidateWithdrewInterviewState,
-		EmployerWithdrewInterviewState:
+		CancelledInterviewState:
 		return true
 	}
 	return false
@@ -23,13 +21,18 @@ func (s InterviewState) IsValid() bool {
 type CandidacyState string
 
 const (
-	InterviewingCandidacyState           CandidacyState = "INTERVIEWING"
-	OfferedCandidacyState                CandidacyState = "OFFERED"
-	OfferDeclinedCandidacyState          CandidacyState = "OFFER_DECLINED"
-	OfferAcceptedCandidacyState          CandidacyState = "OFFER_ACCEPTED"
-	CandidateUnsuitableCandidacyState    CandidacyState = "CANDIDATE_UNSUITABLE"
+	InterviewingCandidacyState CandidacyState = "INTERVIEWING"
+
+	OfferedCandidacyState       CandidacyState = "OFFERED"
+	OfferDeclinedCandidacyState CandidacyState = "OFFER_DECLINED"
+	OfferAcceptedCandidacyState CandidacyState = "OFFER_ACCEPTED"
+
+	CandidateUnsuitableCandidacyState CandidacyState = "CANDIDATE_UNSUITABLE"
+
 	CandidateNotRespondingCandidacyState CandidacyState = "CANDIDATE_NOT_RESPONDING"
-	EmployerDefunctCandidacyState        CandidacyState = "EMPLOYER_DEFUNCT"
+	CandidateWithdrewCandidacyState      CandidacyState = "CANDIDATE_WITHDREW"
+
+	EmployerDefunctCandidacyState CandidacyState = "EMPLOYER_DEFUNCT"
 )
 
 func (s CandidacyState) IsValid() bool {
@@ -51,6 +54,7 @@ type InterviewersDecision string
 const (
 	StrongYesInterviewersDecision InterviewersDecision = "STRONG_YES"
 	YesInterviewersDecision       InterviewersDecision = "YES"
+	NeutralInterviewersDecision   InterviewersDecision = "NEUTRAL"
 	NoInterviewersDecision        InterviewersDecision = "NO"
 	StrongNoInterviewersDecision  InterviewersDecision = "STRONG_NO"
 )
