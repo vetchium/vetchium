@@ -127,3 +127,10 @@ func (p *PG) GetInterviewsByOpening(
 ) ([]employer.Interview, error) {
 	return nil, nil
 }
+
+func (p *PG) GetInterviewsByCandidacy(
+	ctx context.Context,
+	req employer.GetInterviewsByCandidacyRequest,
+) ([]employer.Interview, error) {
+	return nil, nil
+}

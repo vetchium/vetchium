@@ -282,6 +282,12 @@ func (h *Hermione) Run() error {
 		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
+	h.mw.Protect(
+		"/employer/get-interviews-by-candidacy",
+		interview.GetInterviewsByCandidacy(h),
+		// TODO: It is unclear what roles should be required here
+		[]common.OrgUserRole{common.Any},
+	)
 
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)

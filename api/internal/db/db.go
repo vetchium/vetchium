@@ -173,6 +173,10 @@ type DB interface {
 		context.Context,
 		employer.GetInterviewsByOpeningRequest,
 	) ([]employer.Interview, error)
+	GetInterviewsByCandidacy(
+		context.Context,
+		employer.GetInterviewsByCandidacyRequest,
+	) ([]employer.Interview, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
