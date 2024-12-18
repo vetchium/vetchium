@@ -24,11 +24,15 @@ type GetInterviewsByCandidacyRequest struct {
 	States      []common.InterviewState `json:"states"       validate:"omitempty"`
 }
 
-type PutAssesmentRequest struct {
+type Assessment struct {
 	InterviewID         string                      `json:"interview_id"          validate:"required"`
 	Decision            common.InterviewersDecision `json:"decision"              validate:"required"`
 	Positives           string                      `json:"positives"             validate:"omitempty,max=4096"`
 	Negatives           string                      `json:"negatives"             validate:"omitempty,max=4096"`
 	OverallAssessment   string                      `json:"overall_assessment"    validate:"omitempty,max=4096"`
 	FeedbackToCandidate string                      `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
+}
+
+type GetAssessmentRequest struct {
+	InterviewID string `json:"interview_id" validate:"required"`
 }

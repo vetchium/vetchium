@@ -40,13 +40,17 @@ model GetInterviewsByCandidacyRequest {
     states?: InterviewState[];
 }
 
-model PutAssesmentRequest {
+model Assessment {
     interview_id: string;
     decision?: InterviewersDecision;
     positives?: string;
     negatives?: string;
     overall_assessment?: string;
     feedback_to_candidate?: string;
+}
+
+model GetAssessmentRequest {
+    interview_id: string;
 }
 
 @route("/employer/rsvp-interview")
@@ -151,7 +155,17 @@ interface GetInterviewsByCandidacy {
 interface PutAssesment {
     @tag("Interviews")
     @post
-    putAssesment(@body request: PutAssesmentRequest): {
+    putAssesment(@body request: Assessment): {
         @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/get-assessment")
+interface GetAssessment {
+    @tag("Interviews")
+    @post
+    getAssessment(@body request: GetAssessmentRequest): {
+        @statusCode statusCode: 200;
+        @body response: Assessment;
     };
 }
