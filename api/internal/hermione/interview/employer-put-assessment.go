@@ -2,8 +2,10 @@ package interview
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/employer"
 )
@@ -25,8 +27,26 @@ func EmployerPutAssessment(h wand.Wand) http.HandlerFunc {
 		}
 
 		if err := h.DB().PutAssessment(r.Context(), assessment); err != nil {
+			if errors.Is(err, db.ErrNoInterview) {
+				h.Dbg("no interview found", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrNotAnInterviewer) {
+				h.Dbg("not an interviewer", "error", err)
+				http.Error(w, "", http.StatusForbidden)
+				return
+			}
+
+			if errors.Is(err, db.ErrStateMismatch) {
+				h.Dbg("interview state mismatch", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("error putting assessment", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 

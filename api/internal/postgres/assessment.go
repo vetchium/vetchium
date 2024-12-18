@@ -5,6 +5,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
@@ -27,19 +28,52 @@ func (p *PG) PutAssessment(
 		return db.ErrInternal
 	}
 
-	// TODO: Add checks for interviewer, interview state, etc.
+	const (
+		noInterview    = "NO_INTERVIEW"
+		notInterviewer = "NOT_INTERVIEWER"
+		wrongState     = "WRONG_STATE"
+		success        = "SUCCESS"
+	)
+
 	query := `
-UPDATE interviews
+WITH validation AS (
+	SELECT
+		i.id,
+		i.interview_state,
+		EXISTS (
+			SELECT 1 FROM interview_interviewers ii
+			WHERE ii.interview_id = i.id
+			AND ii.interviewer_id = $7
+		) as is_interviewer
+	FROM interviews i
+	WHERE i.id = $1
+)
+UPDATE interviews i
 SET
 	positives = $2,
 	negatives = $3,
 	overall_assessment = $4,
 	feedback_to_candidate = $5,
-	decision = $6,
-WHERE id = $1
-	`
+	interviewers_decision = $6,
+	feedback_submitted_by = $7,
+	feedback_submitted_at = NOW(),
+	updated_at = NOW()
+FROM validation v
+WHERE i.id = v.id
+AND v.is_interviewer = true
+AND v.interview_state = $8
+RETURNING
+	CASE
+		WHEN v.id IS NULL THEN '` + noInterview + `'
+		WHEN v.is_interviewer = false THEN '` + notInterviewer + `'
+		WHEN v.interview_state != $8 THEN '` + wrongState + `'
+		ELSE '` + success + `'
+	END as result
+`
 
-	var status string
+	p.log.Dbg("query", "query", query)
+
+	var result string
 	err := p.pool.QueryRow(
 		ctx,
 		query,
@@ -50,11 +84,23 @@ WHERE id = $1
 		req.FeedbackToCandidate,
 		req.Decision,
 		orgUser.ID,
-	).Scan(&status)
+		string(common.ScheduledInterviewState),
+	).Scan(&result)
 	if err != nil {
 		p.log.Err("error putting assessment", "error", err)
-		return err
+		return db.ErrInternal
 	}
 
-	return nil
+	switch result {
+	case success:
+		return nil
+	case noInterview:
+		return db.ErrNoInterview
+	case notInterviewer:
+		return db.ErrNotAnInterviewer
+	case wrongState:
+		return db.ErrStateMismatch
+	default:
+		return db.ErrInternal
+	}
 }

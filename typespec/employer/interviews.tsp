@@ -155,9 +155,27 @@ interface GetInterviewsByCandidacy {
 interface PutAssesment {
     @tag("Interviews")
     @post
-    putAssesment(@body request: Assessment): {
-        @statusCode statusCode: 200;
-    };
+    putAssesment(@body request: Assessment):
+        | {
+              @doc("Assessment updated successfully")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Interview not found")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("The OrgUser is not an interviewer on this interview. As of now even Admin is forbidden (intentionally) from updating the assessment. This may change in the future.")
+              @statusCode
+              statusCode: 403;
+          }
+        | {
+              @doc("Interview is not in the correct state for this action")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/employer/get-assessment")

@@ -64,4 +64,8 @@ var (
 	ErrInterviewNotActive = errors.New(
 		"one or more interviewers not in active state",
 	)
+
+	ErrNotAnInterviewer = errors.New(
+		"user is not an interviewer for this interview",
+	)
 )
