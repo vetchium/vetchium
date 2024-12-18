@@ -270,6 +270,12 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
 
+	h.mw.Protect(
+		"/employer/rsvp-interview",
+		interview.EmployerRSVPInterview(h),
+		[]common.OrgUserRole{common.Any},
+	)
+
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)
 	}
