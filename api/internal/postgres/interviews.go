@@ -120,3 +120,10 @@ SELECT
 		return interviewID, nil
 	}
 }
+
+func (p *PG) GetInterviewsByOpening(
+	ctx context.Context,
+	req employer.GetInterviewsByOpeningRequest,
+) ([]employer.Interview, error) {
+	return nil, nil
+}

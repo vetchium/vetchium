@@ -253,6 +253,7 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Any},
 	)
 
+	// Used by employer - Interviews
 	h.mw.Protect(
 		"/employer/add-interview",
 		interview.AddInterview(h),
@@ -273,6 +274,12 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/rsvp-interview",
 		interview.EmployerRSVPInterview(h),
+		[]common.OrgUserRole{common.Any},
+	)
+	h.mw.Protect(
+		"/employer/get-interviews-by-opening",
+		interview.GetInterviewsByOpening(h),
+		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
 

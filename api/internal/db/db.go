@@ -169,6 +169,10 @@ type DB interface {
 		interviewID string,
 	) (WatchersInfo, error)
 	EmployerRSVPInterview(context.Context, common.RSVPInterviewRequest) error
+	GetInterviewsByOpening(
+		context.Context,
+		employer.GetInterviewsByOpeningRequest,
+	) ([]employer.Interview, error)
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
