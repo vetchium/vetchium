@@ -59,10 +59,3 @@ type Interview struct {
 	FeedbackToCandidate    string                      `json:"feedback_to_candidate"   validate:"omitempty,max=4096"`
 	CreatedAt              time.Time                   `json:"created_at"`
 }
-
-type GetInterviewsRequest struct {
-	CandidacyID   *string `json:"candidacy_id"   validate:"omitempty"`
-	OpeningID     *string `json:"opening_id"     validate:"omitempty"`
-	PaginationKey *string `json:"pagination_key" validate:"omitempty"`
-	Limit         int64   `json:"limit"          validate:"required,min=0,max=100"`
-}

@@ -84,21 +84,6 @@ model Interview {
     created_at: utcDateTime;
 }
 
-model GetInterviewsRequest {
-    @doc("If provided, will return only the interviews for the given candidacy. If not provided, all Interviews under the given employer will be returned.")
-    candidacy_id?: string;
-
-    @doc("If provided, will return only the interviews for the given opening. If not provided, all Interviews under the given employer will be returned. If a mismatching opening_id and candidacy_id are provided, the results are unpredictable. Use only one of the two parameters at a time.")
-    opening_id?: string;
-
-    @doc("Results will be ordered based on the created_at timestamp. If more than one interview is created at the sametime, then the interview_id is used for further ordering. This should match the last interview_id fetched. Interviews that are after the value of this parameter will be returned.")
-    pagination_key?: string;
-
-    @doc("Number of interviews to return. Defaults to 40.")
-    @maxValue(100)
-    limit?: integer;
-}
-
 @route("/employer/get-candidacies-info")
 interface GetCandidaciesInfo {
     @tag("Candidacies")
@@ -133,16 +118,6 @@ interface AddInterview {
     @post
     addInterview(@body request: AddInterviewRequest): {
         @statusCode statusCode: 200;
-    };
-}
-
-@route("/employer/get-interviews")
-interface GetInterviews {
-    @tag("Interviews")
-    @post
-    getInterviews(@body request: GetInterviewsRequest): {
-        @statusCode statusCode: 200;
-        @body response: Interview[];
     };
 }
 

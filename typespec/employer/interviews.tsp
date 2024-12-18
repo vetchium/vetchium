@@ -19,6 +19,27 @@ model RemoveInterviewerRequest {
     org_user_email: string;
 }
 
+model GetInterviewsByOpeningRequest {
+    opening_id: string;
+
+    @doc("If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.")
+    states?: InterviewState[];
+
+    @doc("If provided, will return only the Interviews after the given pagination_key. Otherwise all Interviews will be returned. The interviews will be ordered by their start_time, and then the interview_id. Pass the last interview_id fetched to get the next set of Interviews.")
+    pagination_key?: string;
+
+    @doc("Number of Interviews to return. Defaults to 40.")
+    @maxValue(100)
+    limit?: integer;
+}
+
+model GetInterviewsByCandidacyRequest {
+    candidacy_id: string;
+
+    @doc("If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.")
+    states?: InterviewState[];
+}
+
 @route("/employer/rsvp-interview")
 interface EmployerRSVPInterview {
     @tag("Interviews")
@@ -88,5 +109,31 @@ interface EmployerRemoveInterviewer {
         @doc("Interview is not in the correct state for this action")
         @statusCode
         statusCode: 422;
+    };
+}
+
+@route("/employer/get-interviews-by-opening")
+interface GetInterviewsByOpening {
+    @tag("Interviews")
+    @post
+    getInterviewsByOpening(@body request: GetInterviewsByOpeningRequest): {
+        @doc("All Interviews of an Opening are returned, ordered by their start_time")
+        @statusCode
+        statusCode: 200;
+
+        @body response: Interview[];
+    };
+}
+
+@route("/employer/get-interviews-by-candidacy")
+interface GetInterviewsByCandidacy {
+    @tag("Interviews")
+    @post
+    getInterviewsByCandidacy(@body request: GetInterviewsByCandidacyRequest): {
+        @doc("All Interviews of a Candidacy are returned, ordered by their start_time")
+        @statusCode
+        statusCode: 200;
+
+        @body response: Interview[];
     };
 }

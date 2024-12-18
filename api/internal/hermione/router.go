@@ -305,9 +305,8 @@ func (h *Hermione) Run() error {
 	return http.ListenAndServe(port, nil)
 
 	/* TODO:
-	- /employer/rsvp-interview
-	- /hub/rsvp-interview
-	- /employer/get-interviews
+	- /employer/get-interviews-by-opening
+	- /employer/get-interviews-by-candidacy
 	*/
 
 }
