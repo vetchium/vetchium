@@ -168,6 +168,7 @@ type DB interface {
 		ctx context.Context,
 		interviewID string,
 	) (WatchersInfo, error)
+	EmployerRSVPInterview(context.Context, common.RSVPInterviewRequest) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
