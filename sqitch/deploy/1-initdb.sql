@@ -430,12 +430,6 @@ CREATE TABLE interviews(
         REFERENCES org_users(employer_id, id),
 
     feedback_submitted_at TIMESTAMP WITH TIME ZONE,
-    CONSTRAINT fk_feedback_submitter_employer FOREIGN KEY (employer_id, feedback_submitted_by) 
-        REFERENCES org_users(employer_id, id),
-    CONSTRAINT valid_feedback_submitter CHECK (
-        feedback_submitted_by IS NULL OR 
-        feedback_submitted_by = ANY(SELECT interviewer_id FROM interview_interviewers WHERE interview_id = id)
-    ),
     CONSTRAINT valid_feedback CHECK (
         (feedback_submitted_by IS NULL AND feedback_submitted_at IS NULL AND interviewers_decision IS NULL) OR
         (feedback_submitted_by IS NOT NULL AND feedback_submitted_at IS NOT NULL AND interviewers_decision IS NOT NULL)
