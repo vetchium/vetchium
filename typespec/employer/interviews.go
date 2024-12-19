@@ -1,6 +1,10 @@
 package employer
 
-import "github.com/psankar/vetchi/typespec/common"
+import (
+	"time"
+
+	"github.com/psankar/vetchi/typespec/common"
+)
 
 type AddInterviewerRequest struct {
 	InterviewID  string `json:"interview_id"   validate:"required"`
@@ -31,6 +35,8 @@ type Assessment struct {
 	Negatives           string                      `json:"negatives"             validate:"omitempty,max=4096"`
 	OverallAssessment   string                      `json:"overall_assessment"    validate:"omitempty,max=4096"`
 	FeedbackToCandidate string                      `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
+	FeedbackSubmittedBy string                      `json:"feedback_submitted_by" validate:"omitempty,email"`
+	FeedbackSubmittedAt time.Time                   `json:"feedback_submitted_at" validate:"omitempty"`
 }
 
 type GetAssessmentRequest struct {

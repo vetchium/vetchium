@@ -47,6 +47,8 @@ model Assessment {
     negatives?: string;
     overall_assessment?: string;
     feedback_to_candidate?: string;
+    feedback_submitted_by?: string;
+    feedback_submitted_at?: string;
 }
 
 model GetAssessmentRequest {
@@ -153,6 +155,7 @@ interface GetInterviewsByCandidacy {
 
 @route("/employer/put-assesment")
 interface PutAssesment {
+    @doc("Any old feedback will be overwritten")
     @tag("Interviews")
     @post
     putAssesment(@body request: Assessment):

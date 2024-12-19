@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
@@ -13,7 +15,54 @@ func (p *PG) GetAssessment(
 	ctx context.Context,
 	req employer.GetAssessmentRequest,
 ) (employer.Assessment, error) {
-	return employer.Assessment{}, nil
+	p.log.Dbg("GetAssessment", "req", req)
+
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("error getting org user")
+		return employer.Assessment{}, db.ErrInternal
+	}
+
+	query := `
+SELECT
+	id,
+	positives,
+	negatives,
+	overall_assessment,
+	feedback_to_candidate,
+	interviewers_decision,
+	feedback_submitted_by,
+	feedback_submitted_at
+FROM interviews
+WHERE id = $1
+AND employer_id = $2
+`
+
+	p.log.Dbg("query", "query", query)
+
+	var assessment employer.Assessment
+	err := p.pool.QueryRow(ctx, query, req.InterviewID, orgUser.EmployerID).
+		Scan(
+			&assessment.InterviewID,
+			&assessment.Decision,
+			&assessment.Positives,
+			&assessment.Negatives,
+			&assessment.OverallAssessment,
+			&assessment.FeedbackToCandidate,
+			&assessment.FeedbackSubmittedBy,
+			&assessment.FeedbackSubmittedAt,
+		)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no interview found", "interview_id", req.InterviewID)
+			return employer.Assessment{}, db.ErrNoInterview
+		}
+
+		p.log.Err("error getting assessment", "error", err)
+		return employer.Assessment{}, db.ErrInternal
+	}
+
+	return assessment, nil
 }
 
 func (p *PG) PutAssessment(

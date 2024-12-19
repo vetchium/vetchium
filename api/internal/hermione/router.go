@@ -291,6 +291,7 @@ func (h *Hermione) Run() error {
 	h.mw.Protect(
 		"/employer/get-assessment",
 		interview.EmployerGetAssessment(h),
+		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
 	h.mw.Protect(
