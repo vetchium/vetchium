@@ -416,18 +416,12 @@ CREATE TABLE interviews(
     candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
     
-    CONSTRAINT fk_creator_employer FOREIGN KEY (employer_id, created_by) 
-        REFERENCES org_users(employer_id, id),
     CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
-    CONSTRAINT fk_candidacy_employer FOREIGN KEY (candidacy_id, employer_id) 
-        REFERENCES candidacies(id, employer_id),
-    
+
     interviewers_decision interviewers_decisions,
     interviewers_assessment TEXT,
     feedback_to_candidate TEXT,
     feedback_submitted_by UUID REFERENCES org_users(id),
-    CONSTRAINT fk_feedback_submitter_employer FOREIGN KEY (employer_id, feedback_submitted_by) 
-        REFERENCES org_users(employer_id, id),
 
     feedback_submitted_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT valid_feedback CHECK (
@@ -453,11 +447,7 @@ CREATE TABLE interview_interviewers (
     
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     
-    PRIMARY KEY (interview_id, interviewer_id),
-    CONSTRAINT valid_interviewer_employer FOREIGN KEY (employer_id, interviewer_id) 
-        REFERENCES org_users(employer_id, id),
-    CONSTRAINT fk_interview_employer FOREIGN KEY (interview_id, employer_id) 
-        REFERENCES interviews(id, employer_id)
+    PRIMARY KEY (interview_id, interviewer_id)
 );
 
 -- Add indices for common query patterns
