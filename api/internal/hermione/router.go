@@ -327,10 +327,4 @@ func (h *Hermione) Run() error {
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
-
-	/* TODO:
-	- /employer/get-interviews-by-opening
-	- /employer/get-interviews-by-candidacy
-	*/
-
 }
