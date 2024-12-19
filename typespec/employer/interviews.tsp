@@ -153,7 +153,7 @@ interface GetInterviewsByCandidacy {
     };
 }
 
-@route("/employer/put-assesment")
+@route("/employer/put-assessment")
 interface PutAssesment {
     @doc("Any old feedback will be overwritten")
     @tag("Interviews")
