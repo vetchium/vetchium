@@ -1,7 +1,4 @@
 BEGIN;
-DELETE FROM interview_assessments
-WHERE employer_id = '12345678-0014-0014-0014-000000000201'::uuid;
-
 DELETE FROM interview_interviewers
 WHERE employer_id = '12345678-0014-0014-0014-000000000201'::uuid;
 
