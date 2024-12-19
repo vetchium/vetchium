@@ -72,7 +72,7 @@ model Interview {
     end_time: utcDateTime;
     interview_type: InterviewType;
     description?: string;
-    interviewers?: EmailAddress[];
+    interviewers?: OrgUserShort[];
     interviewers_decision?: InterviewersDecision;
 
     @maxLength(4096)
@@ -87,6 +87,8 @@ model Interview {
     @maxLength(4096)
     feedback_to_candidate?: string;
 
+    feedback_submitted_by?: OrgUserShort;
+    feedback_submitted_at?: utcDateTime;
     created_at: utcDateTime;
 }
 

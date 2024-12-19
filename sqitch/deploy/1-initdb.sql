@@ -384,8 +384,7 @@ CREATE TYPE interview_types AS ENUM (
 CREATE TYPE interview_states AS ENUM (
     'SCHEDULED',
     'COMPLETED',
-    'CANCELLED',
-    'UNSPECIFIED'
+    'CANCELLED'
 );
 CREATE TYPE interviewers_decisions AS ENUM (
     'STRONG_YES',
@@ -399,11 +398,8 @@ CREATE TYPE rsvp_status AS ENUM (
     'NOT_SET'
 );
 CREATE TABLE interviews(
+    
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
-    CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
-    CONSTRAINT fk_candidacy_employer FOREIGN KEY (candidacy_id, employer_id) 
-        REFERENCES candidacies(id, employer_id),
 
     interview_type interview_types NOT NULL,
     interview_state interview_states NOT NULL,
@@ -412,18 +408,27 @@ CREATE TABLE interviews(
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT valid_interview_duration CHECK (end_time > start_time),
-    
+
     description TEXT,
     
     created_by UUID REFERENCES org_users(id) NOT NULL,
+
+    candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
+    
     CONSTRAINT fk_creator_employer FOREIGN KEY (employer_id, created_by) 
         REFERENCES org_users(employer_id, id),
+    CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
+    CONSTRAINT fk_candidacy_employer FOREIGN KEY (candidacy_id, employer_id) 
+        REFERENCES candidacies(id, employer_id),
     
     interviewers_decision interviewers_decisions,
     interviewers_assessment TEXT,
     feedback_to_candidate TEXT,
     feedback_submitted_by UUID REFERENCES org_users(id),
+    CONSTRAINT fk_feedback_submitter_employer FOREIGN KEY (employer_id, feedback_submitted_by) 
+        REFERENCES org_users(employer_id, id),
+
     feedback_submitted_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT fk_feedback_submitter_employer FOREIGN KEY (employer_id, feedback_submitted_by) 
         REFERENCES org_users(employer_id, id),
@@ -436,7 +441,6 @@ CREATE TABLE interviews(
         (feedback_submitted_by IS NOT NULL AND feedback_submitted_at IS NOT NULL AND interviewers_decision IS NOT NULL)
     ),
     
-    candidate_response_time TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT valid_completion CHECK (
         (interview_state = 'COMPLETED' AND completed_at IS NOT NULL) OR

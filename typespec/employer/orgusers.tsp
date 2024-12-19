@@ -62,6 +62,13 @@ model FilterOrgUsersRequest {
     state?: OrgUserState[];
 }
 
+model OrgUserTiny {
+    name: string;
+
+    @doc("The email address of the org user. Not to be confused with the email address of the HubUser.")
+    email: EmailAddress;
+}
+
 model OrgUserShort {
     name: string;
     email: EmailAddress;

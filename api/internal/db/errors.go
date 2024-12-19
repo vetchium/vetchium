@@ -68,4 +68,6 @@ var (
 	ErrNotAnInterviewer = errors.New(
 		"user is not an interviewer for this interview",
 	)
+
+	ErrInvalidPaginationKey = errors.New("invalid pagination key")
 )

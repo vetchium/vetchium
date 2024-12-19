@@ -331,8 +331,6 @@ func (h *Hermione) Run() error {
 	/* TODO:
 	- /employer/get-interviews-by-opening
 	- /employer/get-interviews-by-candidacy
-	- /employer/get-assessment
-	- /employer/put-assessment
 	*/
 
 }
