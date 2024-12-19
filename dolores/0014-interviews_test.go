@@ -16,7 +16,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = XDescribe("Interviews", Ordered, func() {
+var _ = FDescribe("Interviews", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, recruiterToken, hiringManagerToken string
 	var interviewer1Token, interviewer2Token, interviewer3Token string
