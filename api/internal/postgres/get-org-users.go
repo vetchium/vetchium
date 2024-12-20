@@ -20,6 +20,7 @@ func (p *PG) GetOrgUserByEmail(
 		return db.OrgUserTO{}, errors.New("org user not found in context")
 	}
 
+	var roles []string
 	var orgUser db.OrgUserTO
 	err := p.pool.QueryRow(ctx, `
 SELECT id, name, email, password_hash, employer_id, org_user_roles, org_user_state, created_at
@@ -32,7 +33,7 @@ AND employer_id = $2
 		&orgUser.Email,
 		&orgUser.PasswordHash,
 		&orgUser.EmployerID,
-		&orgUser.OrgUserRoles,
+		&roles,
 		&orgUser.OrgUserState,
 		&orgUser.CreatedAt,
 	)
@@ -43,6 +44,12 @@ AND employer_id = $2
 		}
 
 		p.log.Err("failed to scan org user", "error", err)
+		return db.OrgUserTO{}, db.ErrInternal
+	}
+
+	orgUser.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
+	if err != nil {
+		p.log.Err("failed to convert to org user roles", "error", err)
 		return db.OrgUserTO{}, db.ErrInternal
 	}
 

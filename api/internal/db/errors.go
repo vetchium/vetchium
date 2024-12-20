@@ -56,14 +56,9 @@ var (
 		"candidacy not in valid state for comments",
 	)
 	ErrNoInterview           = errors.New("interview not found")
-	ErrInvalidInterviewState = errors.New(
-		"interview not in valid state for Interviews",
-	)
-	ErrNoCandidacy = errors.New("candidacy not found")
-
-	ErrInterviewNotActive = errors.New(
-		"one or more interviewers not in active state",
-	)
+	ErrInvalidInterviewState = errors.New("interview not in valid state")
+	ErrNoCandidacy           = errors.New("candidacy not found")
+	ErrInterviewerNotActive  = errors.New("interviewer is not in active state")
 
 	ErrNotAnInterviewer = errors.New(
 		"user is not an interviewer for this interview",

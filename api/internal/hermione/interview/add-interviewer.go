@@ -43,7 +43,12 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 		interviewer, err := h.DB().
 			GetOrgUserByEmail(ctx, addInterviewerReq.OrgUserEmail)
 		if err != nil {
-			h.Err("failed to get org user", "error", err)
+			if errors.Is(err, db.ErrNoOrgUser) {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			h.Dbg("failed to get org user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -140,8 +145,8 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 				return
 			}
 
-			if errors.Is(err, db.ErrInterviewNotActive) ||
-				errors.Is(err, db.ErrInvalidCandidacyState) {
+			if errors.Is(err, db.ErrInterviewerNotActive) ||
+				errors.Is(err, db.ErrInvalidInterviewState) {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}

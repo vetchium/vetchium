@@ -8,6 +8,14 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
+const (
+	validationOK                  = "OK"
+	validationInterviewNotFound   = "INTERVIEW_NOT_FOUND"
+	validationInvalidInterview    = "INVALID_INTERVIEW_STATE"
+	validationInterviewerNotFound = "INTERVIEWER_NOT_FOUND"
+	validationInvalidInterviewer  = "INVALID_INTERVIEWER_STATE"
+)
+
 func (p *PG) AddInterviewer(
 	ctx context.Context,
 	addInterviewerReq db.AddInterviewerRequest,
@@ -19,63 +27,76 @@ func (p *PG) AddInterviewer(
 	}
 	defer tx.Rollback(ctx)
 
-	var state struct {
-		candidacyState  string
-		orgUserState    string
-		interviewExists bool
-	}
+	interviewersQuery := `
+WITH interview_check AS (
+	SELECT i.id, i.interview_state, i.employer_id
+	FROM interviews i
+	WHERE i.id = $1
+),
+interviewer_check AS (
+	SELECT ou.id, ou.org_user_state 
+	FROM org_users ou, interview_check ic
+	WHERE ou.email = $2 
+	AND ou.employer_id = ic.employer_id
+),
+state_validation AS (
+	SELECT 
+		CASE 
+			WHEN ic.id IS NULL THEN $5
+			WHEN ic.interview_state != $3 THEN $6
+			WHEN iw.id IS NULL THEN $7
+			WHEN NOT (iw.org_user_state = ANY($4::org_user_states[])) THEN $8
+			ELSE $9
+		END as validation_result
+	FROM interview_check ic
+	LEFT JOIN interviewer_check iw ON true
+)
+INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
+SELECT 
+	$1,
+	iw.id,
+	ic.employer_id,
+	$10::rsvp_status
+FROM interview_check ic, interviewer_check iw
+WHERE EXISTS (
+	SELECT 1 FROM state_validation WHERE validation_result = $9
+)
+RETURNING (SELECT validation_result FROM state_validation)`
 
-	// Insert into interview_interviewers table with state checks
-	err = tx.QueryRow(ctx, `
-		WITH valid_states AS (
-			SELECT i.interview_id, 
-				   c.candidacy_state, 
-				   ou.org_user_state,
-				   true as interview_exists
-			FROM interviews i
-			LEFT JOIN candidacies c ON i.candidacy_id = c.candidacy_id
-			LEFT JOIN org_users ou ON ou.email = $2
-			WHERE i.interview_id = $1
-		)
-		INSERT INTO interview_interviewers (
-			interview_id,
-			interviewer_email,
-			created_at
-		) 
-		SELECT 
-			$1, 
-			$2, 
-			NOW()
-		FROM valid_states
-		WHERE candidacy_state = $3
-		AND org_user_state IN ($4, $5, $6)
-		RETURNING 
-			(SELECT candidacy_state FROM valid_states),
-			(SELECT org_user_state FROM valid_states),
-			(SELECT interview_exists FROM valid_states)
-	`,
+	var validationResult string
+	err = tx.QueryRow(
+		ctx,
+		interviewersQuery,
 		addInterviewerReq.InterviewID,
 		addInterviewerReq.InterviewerEmailAddr,
-		common.InterviewingCandidacyState,
-		employer.ActiveOrgUserState,
-		employer.AddedOrgUserState,
-		employer.ReplicatedOrgUserState,
-	).Scan(&state.candidacyState, &state.orgUserState, &state.interviewExists)
+		string(common.ScheduledInterviewState),
+		[]string{
+			string(employer.ActiveOrgUserState),
+			string(employer.AddedOrgUserState),
+			string(employer.ReplicatedOrgUserState),
+		},
+		validationInterviewNotFound,
+		validationInvalidInterview,
+		validationInterviewerNotFound,
+		validationInvalidInterviewer,
+		validationOK,
+		common.NotSetRSVP,
+	).Scan(&validationResult)
 
-	if err != nil {
-		p.log.Err("failed to insert interviewer", "error", err)
-		if !state.interviewExists {
+	if err != nil || validationResult != validationOK {
+		switch validationResult {
+		case validationInterviewNotFound:
 			return db.ErrNoInterview
-		}
-		if state.orgUserState == "" {
+		case validationInvalidInterview:
+			return db.ErrInvalidInterviewState
+		case validationInterviewerNotFound:
 			return db.ErrNoOrgUser
+		case validationInvalidInterviewer:
+			return db.ErrInterviewerNotActive
+		default:
+			p.log.Err("failed to insert interviewer", "error", err)
+			return db.ErrInternal
 		}
-		if state.orgUserState != string(employer.ActiveOrgUserState) &&
-			state.orgUserState != string(employer.AddedOrgUserState) &&
-			state.orgUserState != string(employer.ReplicatedOrgUserState) {
-			return db.ErrNoOrgUser
-		}
-		return db.ErrInvalidCandidacyState
 	}
 
 	// Insert into candidacy_comments table
@@ -90,7 +111,7 @@ func (p *PG) AddInterviewer(
 			NOW()
 		FROM interviews i
 		JOIN candidacies c ON i.candidacy_id = c.candidacy_id
-		WHERE i.interview_id = $2
+		WHERE i.id = $2
 	`, addInterviewerReq.CandidacyComment, addInterviewerReq.InterviewID)
 	if err != nil {
 		p.log.Err("failed to insert comment", "error", err)
