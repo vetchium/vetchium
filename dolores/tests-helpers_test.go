@@ -323,29 +323,6 @@ func doPOST(
 	return respBody
 }
 
-// getLoginToken gets a TFA token by logging in with the given credentials
-func getLoginToken(email, password string) string {
-	loginReqBody, err := json.Marshal(hub.LoginRequest{
-		Email:    common.EmailAddress(email),
-		Password: common.Password(password),
-	})
-	Expect(err).ShouldNot(HaveOccurred())
-
-	loginResp, err := http.Post(
-		serverURL+"/hub/login",
-		"application/json",
-		bytes.NewBuffer(loginReqBody),
-	)
-	Expect(err).ShouldNot(HaveOccurred())
-	Expect(loginResp.StatusCode).Should(Equal(http.StatusOK))
-
-	var loginRespObj hub.LoginResponse
-	err = json.NewDecoder(loginResp.Body).Decode(&loginRespObj)
-	Expect(err).ShouldNot(HaveOccurred())
-
-	return loginRespObj.Token
-}
-
 // getTFACode retrieves the TFA code from the email sent to the specified address
 func getTFACode(email string) (string, string) {
 	baseURL, err := url.Parse(mailPitURL + "/api/v1/search")

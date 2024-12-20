@@ -230,9 +230,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			// 7. Get assessment
-			getAssessmentReq := employer.GetAssessmentRequest{
-				InterviewID: addInterviewResp.InterviewID,
-			}
+			getAssessmentReq := employer.GetAssessmentRequest(addInterviewResp)
 
 			reqBody, err = json.Marshal(getAssessmentReq)
 			Expect(err).ShouldNot(HaveOccurred())
