@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
@@ -26,7 +28,12 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "addInterviewReq", addInterviewReq)
 
-		interviewID, err := h.DB().AddInterview(r.Context(), addInterviewReq)
+		interviewID := util.RandomUniqueID(vetchi.InterviewIDLenBytes)
+
+		err := h.DB().AddInterview(r.Context(), db.AddInterviewRequest{
+			AddInterviewRequest: addInterviewReq,
+			InterviewID:         interviewID,
+		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoCandidacy) {
 				h.Dbg("no candidacy found", "error", err)
@@ -47,7 +54,7 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("added interview", "interviewID", interviewID)
 		err = json.NewEncoder(w).Encode(employer.AddInterviewResponse{
-			InterviewID: interviewID.String(),
+			InterviewID: interviewID,
 		})
 		if err != nil {
 			h.Err("failed to encode response", "error", err)

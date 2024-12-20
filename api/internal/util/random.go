@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/rs/xid"
 )
 
+// TODO: Usage of this should be deprecated and replaced with RandomUniqueID
 func RandomString(numBytes int) string {
 	buff := make([]byte, numBytes)
 	rand.Read(buff)
@@ -33,4 +36,16 @@ func RandNumString(numDigits int) (string, error) {
 
 	// Convert to string
 	return fmt.Sprintf("%d", randomNumber), nil
+}
+
+// RandomUniqueID generates a random unique ID of the form
+// <xid>.<random-string-of-numBytes> The xid is a 12 character string that is
+// not cryptographically secure but can help with sorting and uniqueness.
+func RandomUniqueID(numBytes int) string {
+	buff := make([]byte, numBytes)
+	rand.Read(buff)
+
+	// The lower case conversion is added to guard against any regression
+	// with hex.EncodeToString returning uppercase.
+	return strings.ToLower(xid.New().String() + hex.EncodeToString(buff))
 }

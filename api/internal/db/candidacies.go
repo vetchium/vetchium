@@ -22,3 +22,8 @@ type WatchersInfo struct {
 
 	Watchers []employer.OrgUserShort
 }
+
+type AddInterviewRequest struct {
+	employer.AddInterviewRequest
+	InterviewID string
+}

@@ -158,10 +158,7 @@ type DB interface {
 		context.Context,
 		employer.GetCandidaciesInfoRequest,
 	) ([]employer.Candidacy, error)
-	AddInterview(
-		context.Context,
-		employer.AddInterviewRequest,
-	) (uuid.UUID, error)
+	AddInterview(context.Context, AddInterviewRequest) error
 	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
 	GetWatchersInfoByInterviewID(

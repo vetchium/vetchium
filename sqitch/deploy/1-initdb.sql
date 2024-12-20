@@ -398,8 +398,7 @@ CREATE TYPE rsvp_status AS ENUM (
     'NOT_SET'
 );
 CREATE TABLE interviews(
-    
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
 
     interview_type interview_types NOT NULL,
     interview_state interview_states NOT NULL,
@@ -440,7 +439,7 @@ CREATE TABLE interviews(
 );
 
 CREATE TABLE interview_interviewers (
-    interview_id UUID REFERENCES interviews(id) NOT NULL,
+    interview_id TEXT REFERENCES interviews(id) NOT NULL,
     interviewer_id UUID REFERENCES org_users(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
     rsvp_status rsvp_status NOT NULL DEFAULT 'NOT_SET',

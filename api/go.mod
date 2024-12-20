@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/psankar/vetchi/typespec v0.0.0-20241209152937-76127bd6d17a
+	github.com/rs/xid v1.6.0
 	github.com/wneessen/go-mail v0.5.0
 	golang.org/x/crypto v0.28.0
 )

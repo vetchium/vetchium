@@ -3,21 +3,19 @@ package postgres
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) AddInterview(
 	ctx context.Context,
-	req employer.AddInterviewRequest,
-) (uuid.UUID, error) {
+	req db.AddInterviewRequest,
+) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return uuid.UUID{}, db.ErrInternal
+		return db.ErrInternal
 	}
 
 	const (
@@ -45,6 +43,7 @@ WITH candidacy_check AS (
 ),
 interview_insert AS (
 	INSERT INTO interviews (
+		id,
 		candidacy_id,
 		interview_type,
 		interview_state,
@@ -56,6 +55,7 @@ interview_insert AS (
 		candidate_rsvp
 	)
 	SELECT
+		$14,
 		$1,                             -- candidacy_id
 		$3::interview_types,            -- interview_type
 		$4::interview_states,           -- interview_state
@@ -91,23 +91,19 @@ SELECT
 		statusInvalidState,                // $11
 		statusOK,                          // $12
 		common.NotSetRSVP,                 // $13
+		req.InterviewID,                   // $14
 	).Scan(&result)
 	if err != nil {
 		p.log.Err("failed to add interview", "error", err)
-		return uuid.UUID{}, db.ErrInternal
+		return db.ErrInternal
 	}
 
 	switch result {
 	case statusNoCandidacy:
-		return uuid.UUID{}, db.ErrNoCandidacy
+		return db.ErrNoCandidacy
 	case statusInvalidState:
-		return uuid.UUID{}, db.ErrInvalidCandidacyState
+		return db.ErrInvalidCandidacyState
 	default:
-		interviewID, err := uuid.Parse(result)
-		if err != nil {
-			p.log.Err("failed to parse interview id", "error", err)
-			return uuid.UUID{}, db.ErrInternal
-		}
-		return interviewID, nil
+		return nil
 	}
 }
