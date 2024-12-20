@@ -77,6 +77,14 @@ func (p *PG) PutAssessment(
 		return db.ErrInternal
 	}
 
+	p.log.Dbg(
+		"PutAssessment context",
+		"org_user_id",
+		orgUser.ID,
+		"email",
+		orgUser.Email,
+	)
+
 	const (
 		noInterview    = "NO_INTERVIEW"
 		notInterviewer = "NOT_INTERVIEWER"
@@ -85,7 +93,13 @@ func (p *PG) PutAssessment(
 	)
 
 	query := `
-WITH validation AS (
+WITH interviewer_debug AS (
+	SELECT ii.interviewer_id, ou.id as org_user_id, ou.email
+	FROM interview_interviewers ii
+	JOIN org_users ou ON ou.id = ii.interviewer_id
+	WHERE ii.interview_id = $1
+),
+validation AS (
 	SELECT
 		i.id,
 		i.interview_state,
@@ -94,10 +108,25 @@ WITH validation AS (
 			SELECT 1 FROM interview_interviewers ii
 			WHERE ii.interview_id = i.id
 			AND ii.interviewer_id = $7
-		) as is_interviewer
+		) as is_interviewer,
+		(SELECT json_agg(row_to_json(d)) FROM interviewer_debug d) as debug_interviewers
 	FROM interviews i
 	WHERE i.id = $1
 	AND i.employer_id = $9
+),
+validation_result AS (
+	SELECT
+		id,
+		interview_state,
+		is_interviewer,
+		debug_interviewers,
+		CASE
+			WHEN id IS NULL THEN '` + noInterview + `'
+			WHEN is_interviewer = false THEN '` + notInterviewer + `'
+			WHEN interview_state != $8 THEN '` + wrongState + `'
+			ELSE '` + success + `'
+		END as validation_status
+	FROM validation
 ),
 update_result AS (
 	UPDATE interviews i
@@ -110,25 +139,30 @@ update_result AS (
 		feedback_submitted_by = $7,
 		feedback_submitted_at = NOW(),
 		updated_at = NOW()
-	FROM validation v
+	FROM validation_result v
 	WHERE i.id = v.id
-	AND v.is_interviewer = true
-	AND v.interview_state = $8
+	AND v.validation_status = '` + success + `'
 	RETURNING i.id
 )
 SELECT
-	CASE
-		WHEN NOT EXISTS (SELECT 1 FROM validation) THEN '` + noInterview + `'
-		WHEN EXISTS (SELECT 1 FROM validation WHERE is_interviewer = false) THEN '` + notInterviewer + `'
-		WHEN EXISTS (SELECT 1 FROM validation WHERE interview_state != $8) THEN '` + wrongState + `'
-		WHEN EXISTS (SELECT 1 FROM update_result) THEN '` + success + `'
-		ELSE '` + noInterview + `'
-	END as result
+	v.validation_status as result,
+	v.interview_state as debug_state,
+	v.is_interviewer as debug_is_interviewer,
+	$8 as debug_expected_state,
+	v.debug_interviewers as debug_interviewers
+FROM validation_result v
+LIMIT 1
 `
 
 	p.log.Dbg("query", "query", query)
 
-	var result string
+	var (
+		result             string
+		debugState         string
+		debugIsInterviewer bool
+		debugExpectedState string
+		debugInterviewers  []byte
+	)
 	err := p.pool.QueryRow(
 		ctx,
 		query,
@@ -141,11 +175,18 @@ SELECT
 		orgUser.ID,
 		string(common.ScheduledInterviewState),
 		orgUser.EmployerID,
-	).Scan(&result)
+	).Scan(&result, &debugState, &debugIsInterviewer, &debugExpectedState, &debugInterviewers)
 	if err != nil {
 		p.log.Err("error putting assessment", "error", err)
 		return db.ErrInternal
 	}
+
+	p.log.Dbg("assessment validation result",
+		"result", result,
+		"state", debugState,
+		"is_interviewer", debugIsInterviewer,
+		"expected_state", debugExpectedState,
+		"debug_interviewers", string(debugInterviewers))
 
 	switch result {
 	case success:

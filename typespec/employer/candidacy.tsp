@@ -60,9 +60,6 @@ model AddInterviewRequest {
     @doc("Should contain details like location, meeting URLs, etc.")
     @maxLength(2048)
     description: string;
-
-    @doc("List of email addresses of the OrgUsers who will be interviewing the candidate")
-    interviewers?: EmailAddress[];
 }
 
 model AddInterviewResponse {

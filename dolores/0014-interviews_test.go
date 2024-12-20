@@ -66,10 +66,6 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				EndTime:       time.Now().Add(25 * time.Hour),
 				InterviewType: employer.InPersonInterviewType,
 				Description:   "Technical Interview Round",
-				Interviewers: []common.EmailAddress{
-					"interviewer1@0014-interview.example",
-					"interviewer2@0014-interview.example",
-				},
 			}
 
 			reqBody, err := json.Marshal(addInterviewReq)
@@ -93,25 +89,31 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(addInterviewResp.InterviewID).ShouldNot(BeEmpty())
 
 			// 2. Add another interviewer
-			addInterviewerReq := employer.AddInterviewerRequest{
-				InterviewID:  addInterviewResp.InterviewID,
-				OrgUserEmail: "interviewer3@0014-interview.example",
+			for _, interviewer := range []string{
+				"interviewer1@0014-interview.example",
+				"interviewer2@0014-interview.example",
+				"interviewer3@0014-interview.example",
+			} {
+				addInterviewerReq := employer.AddInterviewerRequest{
+					InterviewID:  addInterviewResp.InterviewID,
+					OrgUserEmail: interviewer,
+				}
+
+				reqBody, err = json.Marshal(addInterviewerReq)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err = http.NewRequest(
+					"POST",
+					serverURL+"/employer/add-interviewer",
+					bytes.NewBuffer(reqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer "+recruiterToken)
+
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 			}
-
-			reqBody, err = json.Marshal(addInterviewerReq)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			req, err = http.NewRequest(
-				"POST",
-				serverURL+"/employer/add-interviewer",
-				bytes.NewBuffer(reqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Set("Authorization", "Bearer "+recruiterToken)
-
-			resp, err = http.DefaultClient.Do(req)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			// 2.1 Add an interviewer with invalid UUID as interview ID
 			addInterviewerReq2 := employer.AddInterviewerRequest{
@@ -284,9 +286,6 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				EndTime:       time.Now().Add(2 * time.Hour),
 				InterviewType: "TECHNICAL",
 				Description:   "Technical Interview Round",
-				Interviewers: []common.EmailAddress{
-					"interviewer1@0014-interview.example",
-				},
 			}
 
 			reqBody, err := json.Marshal(addInterviewReq)
@@ -351,9 +350,6 @@ var _ = FDescribe("Interviews", Ordered, func() {
 						"Technical Interview Round %d",
 						i+1,
 					),
-					Interviewers: []common.EmailAddress{
-						"interviewer1@0014-interview.example",
-					},
 				}
 
 				reqBody, err := json.Marshal(addInterviewReq)
@@ -416,9 +412,6 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				EndTime:       time.Now().Add(25 * time.Hour),
 				InterviewType: "INVALID_TYPE",
 				Description:   "Invalid Interview Type",
-				Interviewers: []common.EmailAddress{
-					"interviewer1@0014-interview.example",
-				},
 			}
 
 			reqBody, err := json.Marshal(invalidTypeReq)
