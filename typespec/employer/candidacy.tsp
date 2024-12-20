@@ -60,6 +60,8 @@ model AddInterviewRequest {
     @doc("Should contain details like location, meeting URLs, etc.")
     @maxLength(2048)
     description: string;
+
+    // TODO: Perhaps should not allow more than 25 interviews per Candidacy
 }
 
 model AddInterviewResponse {

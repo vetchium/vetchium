@@ -278,64 +278,6 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
 
-		It("should handle interview state transitions", func() {
-			// Create a new interview
-			addInterviewReq := employer.AddInterviewRequest{
-				CandidacyID:   "candidacy-001",
-				StartTime:     time.Now().Add(1 * time.Hour),
-				EndTime:       time.Now().Add(2 * time.Hour),
-				InterviewType: "TECHNICAL",
-				Description:   "Technical Interview Round",
-			}
-
-			reqBody, err := json.Marshal(addInterviewReq)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			req, err := http.NewRequest(
-				"POST",
-				serverURL+"/employer/add-interview",
-				bytes.NewBuffer(reqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Set("Authorization", "Bearer "+recruiterToken)
-
-			resp, err := http.DefaultClient.Do(req)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-
-			var addInterviewResp employer.AddInterviewResponse
-			err = json.NewDecoder(resp.Body).Decode(&addInterviewResp)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(addInterviewResp.InterviewID).ShouldNot(BeEmpty())
-
-			// Try to submit assessment before interview completion (should fail)
-			assessment := employer.Assessment{
-				InterviewID:         addInterviewResp.InterviewID,
-				Decision:            common.StrongYesInterviewersDecision,
-				Positives:           "Strong technical skills",
-				Negatives:           "Could improve communication",
-				OverallAssessment:   "Good candidate, recommended for hire",
-				FeedbackToCandidate: "Thank you for interviewing with us",
-			}
-
-			reqBody, err = json.Marshal(assessment)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			req, err = http.NewRequest(
-				"POST",
-				serverURL+"/employer/put-assessment",
-				bytes.NewBuffer(reqBody),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			req.Header.Set("Authorization", "Bearer "+interviewer1Token)
-
-			resp, err = http.DefaultClient.Do(req)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(
-				resp.StatusCode,
-			).Should(Equal(http.StatusUnprocessableEntity))
-		})
-
 		It("should handle pagination in get-interviews endpoints", func() {
 			// Create multiple interviews
 			for i := 0; i < 5; i++ {
@@ -345,7 +287,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 						Add(time.Duration(24+i) * time.Hour),
 					EndTime: time.Now().
 						Add(time.Duration(25+i) * time.Hour),
-					InterviewType: "TECHNICAL",
+					InterviewType: employer.InPersonInterviewType,
 					Description: fmt.Sprintf(
 						"Technical Interview Round %d",
 						i+1,

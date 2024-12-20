@@ -26,18 +26,35 @@ func (p *PG) HubRSVPInterview(
 	}
 
 	query := `
-WITH updated_interview AS (
-    UPDATE interviews
+WITH interview_hub_user AS (
+    SELECT i.id as interview_id, a.hub_user_id
+    FROM interviews i
+    JOIN candidacies c ON i.candidacy_id = c.id
+    JOIN applications a ON c.application_id = a.id
+),
+updated_interview AS (
+    UPDATE interviews i
     SET candidate_rsvp = $1
-    WHERE id = $2
-      AND hub_user_id = $3
-      AND interview_state = $4
-    RETURNING *
+    FROM interview_hub_user ihu
+    WHERE i.id = $2
+      AND ihu.interview_id = i.id
+      AND ihu.hub_user_id = $3
+      AND i.interview_state = $4
+    RETURNING i.*
 )
 SELECT
     CASE
-        WHEN NOT EXISTS (SELECT 1 FROM interviews WHERE id = $2 AND hub_user_id = $3) THEN $5
-        WHEN NOT EXISTS (SELECT 1 FROM interviews WHERE id = $2 AND hub_user_id = $3 AND interview_state = $4) THEN $6
+        WHEN NOT EXISTS (
+            SELECT 1 FROM interview_hub_user 
+            WHERE interview_id = $2 AND hub_user_id = $3
+        ) THEN $5
+        WHEN NOT EXISTS (
+            SELECT 1 FROM interviews i
+            JOIN interview_hub_user ihu ON i.id = ihu.interview_id
+            WHERE i.id = $2 
+            AND ihu.hub_user_id = $3 
+            AND i.interview_state = $4
+        ) THEN $6
         WHEN EXISTS (SELECT 1 FROM updated_interview) THEN $7
     END AS result
 `
