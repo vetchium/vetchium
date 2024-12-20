@@ -113,6 +113,27 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
+			// 2.1 Add an interviewer with invalid UUID as interview ID
+			addInterviewerReq2 := employer.AddInterviewerRequest{
+				InterviewID:  "invalid-uuid",
+				OrgUserEmail: "interviewer3@0014-interview.example",
+			}
+
+			reqBody, err = json.Marshal(addInterviewerReq2)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			req, err = http.NewRequest(
+				"POST",
+				serverURL+"/employer/add-interviewer",
+				bytes.NewBuffer(reqBody),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer "+recruiterToken)
+
+			resp, err = http.DefaultClient.Do(req)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
+
 			// 3. Remove an interviewer
 			removeInterviewerReq := employer.RemoveInterviewerRequest{
 				InterviewID:  addInterviewResp.InterviewID,

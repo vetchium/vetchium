@@ -7,12 +7,12 @@ import (
 )
 
 type AddInterviewerRequest struct {
-	InterviewID  string `json:"interview_id"   validate:"required"`
+	InterviewID  string `json:"interview_id"   validate:"required,uuid"`
 	OrgUserEmail string `json:"org_user_email" validate:"required,email"`
 }
 
 type RemoveInterviewerRequest struct {
-	InterviewID  string `json:"interview_id"   validate:"required"`
+	InterviewID  string `json:"interview_id"   validate:"required,uuid"`
 	OrgUserEmail string `json:"org_user_email" validate:"required,email"`
 }
 
