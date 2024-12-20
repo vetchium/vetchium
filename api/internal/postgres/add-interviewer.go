@@ -55,20 +55,24 @@ state_validation AS (
 			WHEN NOT (iw.org_user_state = ANY($4::org_user_states[])) THEN $8
 			ELSE $9
 		END as validation_result
-	FROM interview_check ic
+	FROM (SELECT 1) AS dummy
+	LEFT JOIN interview_check ic ON true
 	LEFT JOIN interviewer_check iw ON true
+),
+insert_interviewer AS (
+	INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
+	SELECT 
+		$1,
+		iw.id,
+		ic.employer_id,
+		$10::rsvp_status
+	FROM interview_check ic, interviewer_check iw
+	WHERE EXISTS (
+		SELECT 1 FROM state_validation WHERE validation_result = $9
+	)
+	RETURNING true
 )
-INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
-SELECT 
-	$1,
-	iw.id,
-	ic.employer_id,
-	$10::rsvp_status
-FROM interview_check ic, interviewer_check iw
-WHERE EXISTS (
-	SELECT 1 FROM state_validation WHERE validation_result = $9
-)
-RETURNING (SELECT validation_result FROM state_validation)`
+SELECT validation_result FROM state_validation`
 
 	var validationResult string
 	err = tx.QueryRow(

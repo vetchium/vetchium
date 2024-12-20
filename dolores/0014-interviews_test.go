@@ -115,7 +115,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			// 2.1 Add an interviewer with invalid UUID as interview ID
 			addInterviewerReq2 := employer.AddInterviewerRequest{
-				InterviewID:  "invalid-uuid",
+				InterviewID:  "invalid-id",
 				OrgUserEmail: "interviewer3@0014-interview.example",
 			}
 
@@ -132,7 +132,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			resp, err = http.DefaultClient.Do(req)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
+			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 
 			// 3. Remove an interviewer
 			removeInterviewerReq := employer.RemoveInterviewerRequest{
