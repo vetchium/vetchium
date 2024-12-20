@@ -37,6 +37,17 @@ const (
 	UnspecifiedInterviewType InterviewType = "UNSPECIFIED"
 )
 
+func (i InterviewType) IsValid() bool {
+	switch i {
+	case InPersonInterviewType,
+		VideoCallInterviewType,
+		TakeHomeInterviewType,
+		UnspecifiedInterviewType:
+		return true
+	}
+	return false
+}
+
 type AddInterviewRequest struct {
 	CandidacyID   string                `json:"candidacy_id"   validate:"required"`
 	StartTime     time.Time             `json:"start_time"     validate:"required"`

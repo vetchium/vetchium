@@ -438,6 +438,17 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_interview_type",
+		func(fl validator.FieldLevel) bool {
+			state, ok := fl.Field().Interface().(employer.InterviewType)
+			if !ok {
+				return false
+			}
+			return state.IsValid()
+		},
+	)
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

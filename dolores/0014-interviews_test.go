@@ -28,18 +28,18 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
-			"admin@interview.example":          &adminToken,
-			"recruiter@interview.example":      &recruiterToken,
-			"hiring-manager@interview.example": &hiringManagerToken,
-			"interviewer1@interview.example":   &interviewer1Token,
-			"interviewer2@interview.example":   &interviewer2Token,
-			"interviewer3@interview.example":   &interviewer3Token,
+			"admin@0014-interview.example":          &adminToken,
+			"recruiter@0014-interview.example":      &recruiterToken,
+			"hiring-manager@0014-interview.example": &hiringManagerToken,
+			"interviewer1@0014-interview.example":   &interviewer1Token,
+			"interviewer2@0014-interview.example":   &interviewer2Token,
+			"interviewer3@0014-interview.example":   &interviewer3Token,
 		}
 
 		for email, token := range tokens {
 			wg.Add(1)
 			employerSigninAsync(
-				"interview.example",
+				"0014-interview.example",
 				email,
 				"NewPassword123$",
 				token,
@@ -64,11 +64,11 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				CandidacyID:   "candidacy-001",
 				StartTime:     time.Now().Add(24 * time.Hour),
 				EndTime:       time.Now().Add(25 * time.Hour),
-				InterviewType: "TECHNICAL",
+				InterviewType: employer.InPersonInterviewType,
 				Description:   "Technical Interview Round",
 				Interviewers: []common.EmailAddress{
-					"interviewer1@interview.example",
-					"interviewer2@interview.example",
+					"interviewer1@0014-interview.example",
+					"interviewer2@0014-interview.example",
 				},
 			}
 
@@ -90,7 +90,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			// 2. Add another interviewer
 			addInterviewerReq := employer.AddInterviewerRequest{
 				InterviewID:  "interview-001",
-				OrgUserEmail: "interviewer3@interview.example",
+				OrgUserEmail: "interviewer3@0014-interview.example",
 			}
 
 			reqBody, err = json.Marshal(addInterviewerReq)
@@ -111,7 +111,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			// 3. Remove an interviewer
 			removeInterviewerReq := employer.RemoveInterviewerRequest{
 				InterviewID:  "interview-001",
-				OrgUserEmail: "interviewer2@interview.example",
+				OrgUserEmail: "interviewer2@0014-interview.example",
 			}
 
 			reqBody, err = json.Marshal(removeInterviewerReq)
@@ -259,7 +259,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				InterviewType: "TECHNICAL",
 				Description:   "Technical Interview Round",
 				Interviewers: []common.EmailAddress{
-					"interviewer1@interview.example",
+					"interviewer1@0014-interview.example",
 				},
 			}
 
@@ -321,7 +321,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 						i+1,
 					),
 					Interviewers: []common.EmailAddress{
-						"interviewer1@interview.example",
+						"interviewer1@0014-interview.example",
 					},
 				}
 
@@ -381,7 +381,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				InterviewType: "INVALID_TYPE",
 				Description:   "Invalid Interview Type",
 				Interviewers: []common.EmailAddress{
-					"interviewer1@interview.example",
+					"interviewer1@0014-interview.example",
 				},
 			}
 
