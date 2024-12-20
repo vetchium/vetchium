@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -50,9 +49,9 @@ func (p *PG) GetInterviewsByOpening(
 			i.end_time,
 			i.description,
 			i.interviewers_decision,
-			i.interviewers_assessment as positives,
-			i.interviewers_assessment as negatives,
-			i.interviewers_assessment as overall_assessment,
+			i.positives,
+			i.negatives,
+			i.overall_assessment,
 			i.feedback_to_candidate,
 			i.created_at,
 			i.feedback_submitted_at,
@@ -81,7 +80,7 @@ func (p *PG) GetInterviewsByOpening(
 		LEFT JOIN org_users fb ON i.feedback_submitted_by = fb.id
 		WHERE c.opening_id = $1
 		AND i.employer_id = $2
-		AND ($3::uuid IS NULL OR i.id::text > $3)
+		AND i.id > $3
 		GROUP BY 
 			i.id,
 			i.interview_type,
@@ -90,7 +89,9 @@ func (p *PG) GetInterviewsByOpening(
 			i.end_time,
 			i.description,
 			i.interviewers_decision,
-			i.interviewers_assessment,
+			i.positives,
+			i.negatives,
+			i.overall_assessment,
 			i.feedback_to_candidate,
 			i.created_at,
 			fb.id,
@@ -119,23 +120,18 @@ func (p *PG) GetInterviewsByOpening(
 	FROM interview_data
 	`
 
-	var paginationKey *uuid.UUID
-	if req.PaginationKey != "" {
-		parsed, err := uuid.Parse(req.PaginationKey)
-		if err != nil {
-			p.log.Err("failed to parse pagination key", "error", err)
-			return nil, db.ErrInvalidPaginationKey
-		}
-		paginationKey = &parsed
-	}
-
 	rows, err := p.pool.Query(ctx, query,
 		req.OpeningID,      // $1
 		orgUser.EmployerID, // $2
-		paginationKey,      // $3
+		req.PaginationKey,  // $3
 		req.Limit,          // $4
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no interviews found", "opening_id", req.OpeningID)
+			return []employer.Interview{}, nil
+		}
+
 		p.log.Err("failed to get interviews by opening", "error", err)
 		return nil, db.ErrInternal
 	}
@@ -209,9 +205,9 @@ func (p *PG) GetInterviewsByCandidacy(
 			i.end_time,
 			i.description,
 			i.interviewers_decision,
-			i.interviewers_assessment as positives,
-			i.interviewers_assessment as negatives,
-			i.interviewers_assessment as overall_assessment,
+			i.positives,
+			i.negatives,
+			i.overall_assessment,
 			i.feedback_to_candidate,
 			i.created_at,
 			i.feedback_submitted_at,
@@ -247,7 +243,9 @@ func (p *PG) GetInterviewsByCandidacy(
 			i.end_time,
 			i.description,
 			i.interviewers_decision,
-			i.interviewers_assessment,
+			i.positives,
+			i.negatives,
+			i.overall_assessment,
 			i.feedback_to_candidate,
 			i.created_at,
 			fb.id,

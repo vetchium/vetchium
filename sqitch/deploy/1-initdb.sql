@@ -418,7 +418,9 @@ CREATE TABLE interviews(
     CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
 
     interviewers_decision interviewers_decisions,
-    interviewers_assessment TEXT,
+    positives TEXT,
+    negatives TEXT,
+    overall_assessment TEXT,
     feedback_to_candidate TEXT,
     feedback_submitted_by UUID REFERENCES org_users(id),
 

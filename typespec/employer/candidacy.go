@@ -73,7 +73,7 @@ type Interview struct {
 	Positives            *string                      `json:"positives"             validate:"omitempty,max=4096"`
 	Negatives            *string                      `json:"negatives"             validate:"omitempty,max=4096"`
 	OverallAssessment    *string                      `json:"overall_assessment"    validate:"omitempty,max=4096"`
-	FeedbackToCandidate  string                       `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
+	FeedbackToCandidate  *string                      `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
 	FeedbackSubmittedBy  *OrgUserTiny                 `json:"feedback_submitted_by"`
 	FeedbackSubmittedAt  *time.Time                   `json:"feedback_submitted_at"`
 	CreatedAt            time.Time                    `json:"created_at"`

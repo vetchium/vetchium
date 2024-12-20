@@ -26,11 +26,11 @@ func (p *PG) GetAssessment(
 	query := `
 SELECT
 	id,
+	interviewers_decision,
 	positives,
 	negatives,
 	overall_assessment,
 	feedback_to_candidate,
-	interviewers_decision,
 	feedback_submitted_by,
 	feedback_submitted_at
 FROM interviews
@@ -89,6 +89,7 @@ WITH validation AS (
 	SELECT
 		i.id,
 		i.interview_state,
+		i.employer_id,
 		EXISTS (
 			SELECT 1 FROM interview_interviewers ii
 			WHERE ii.interview_id = i.id
@@ -96,27 +97,32 @@ WITH validation AS (
 		) as is_interviewer
 	FROM interviews i
 	WHERE i.id = $1
+	AND i.employer_id = $9
+),
+update_result AS (
+	UPDATE interviews i
+	SET
+		positives = $2,
+		negatives = $3,
+		overall_assessment = $4,
+		feedback_to_candidate = $5,
+		interviewers_decision = $6,
+		feedback_submitted_by = $7,
+		feedback_submitted_at = NOW(),
+		updated_at = NOW()
+	FROM validation v
+	WHERE i.id = v.id
+	AND v.is_interviewer = true
+	AND v.interview_state = $8
+	RETURNING i.id
 )
-UPDATE interviews i
-SET
-	positives = $2,
-	negatives = $3,
-	overall_assessment = $4,
-	feedback_to_candidate = $5,
-	interviewers_decision = $6,
-	feedback_submitted_by = $7,
-	feedback_submitted_at = NOW(),
-	updated_at = NOW()
-FROM validation v
-WHERE i.id = v.id
-AND v.is_interviewer = true
-AND v.interview_state = $8
-RETURNING
+SELECT
 	CASE
-		WHEN v.id IS NULL THEN '` + noInterview + `'
-		WHEN v.is_interviewer = false THEN '` + notInterviewer + `'
-		WHEN v.interview_state != $8 THEN '` + wrongState + `'
-		ELSE '` + success + `'
+		WHEN NOT EXISTS (SELECT 1 FROM validation) THEN '` + noInterview + `'
+		WHEN EXISTS (SELECT 1 FROM validation WHERE is_interviewer = false) THEN '` + notInterviewer + `'
+		WHEN EXISTS (SELECT 1 FROM validation WHERE interview_state != $8) THEN '` + wrongState + `'
+		WHEN EXISTS (SELECT 1 FROM update_result) THEN '` + success + `'
+		ELSE '` + noInterview + `'
 	END as result
 `
 
@@ -134,6 +140,7 @@ RETURNING
 		req.Decision,
 		orgUser.ID,
 		string(common.ScheduledInterviewState),
+		orgUser.EmployerID,
 	).Scan(&result)
 	if err != nil {
 		p.log.Err("error putting assessment", "error", err)
