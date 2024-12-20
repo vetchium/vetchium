@@ -46,6 +46,13 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 		}
 
 		h.Dbg("added interview", "interviewID", interviewID)
-		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(employer.AddInterviewResponse{
+			InterviewID: interviewID.String(),
+		})
+		if err != nil {
+			h.Err("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	})
 }

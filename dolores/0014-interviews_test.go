@@ -87,9 +87,14 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
+			var addInterviewResp employer.AddInterviewResponse
+			err = json.NewDecoder(resp.Body).Decode(&addInterviewResp)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(addInterviewResp.InterviewID).ShouldNot(BeEmpty())
+
 			// 2. Add another interviewer
 			addInterviewerReq := employer.AddInterviewerRequest{
-				InterviewID:  "interview-001",
+				InterviewID:  addInterviewResp.InterviewID,
 				OrgUserEmail: "interviewer3@0014-interview.example",
 			}
 
@@ -110,7 +115,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			// 3. Remove an interviewer
 			removeInterviewerReq := employer.RemoveInterviewerRequest{
-				InterviewID:  "interview-001",
+				InterviewID:  addInterviewResp.InterviewID,
 				OrgUserEmail: "interviewer2@0014-interview.example",
 			}
 
@@ -178,7 +183,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			// 6. Submit assessment
 			assessment := employer.Assessment{
-				InterviewID:         "interview-001",
+				InterviewID:         addInterviewResp.InterviewID,
 				Decision:            common.StrongYesInterviewersDecision,
 				Positives:           "Strong technical skills",
 				Negatives:           "Could improve communication",
@@ -203,7 +208,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			// 7. Get assessment
 			getAssessmentReq := employer.GetAssessmentRequest{
-				InterviewID: "interview-001",
+				InterviewID: addInterviewResp.InterviewID,
 			}
 
 			reqBody, err = json.Marshal(getAssessmentReq)
@@ -230,7 +235,7 @@ var _ = FDescribe("Interviews", Ordered, func() {
 
 			// 8. Hub user RSVP
 			rsvpReq := hub.HubRSVPInterviewRequest{
-				InterviewID: "interview-001",
+				InterviewID: addInterviewResp.InterviewID,
 				RSVP:        common.YesRSVP,
 			}
 
@@ -278,9 +283,14 @@ var _ = FDescribe("Interviews", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
+			var addInterviewResp employer.AddInterviewResponse
+			err = json.NewDecoder(resp.Body).Decode(&addInterviewResp)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(addInterviewResp.InterviewID).ShouldNot(BeEmpty())
+
 			// Try to submit assessment before interview completion (should fail)
 			assessment := employer.Assessment{
-				InterviewID:         "interview-002", // New interview ID
+				InterviewID:         addInterviewResp.InterviewID,
 				Decision:            common.StrongYesInterviewersDecision,
 				Positives:           "Strong technical skills",
 				Negatives:           "Could improve communication",
@@ -339,6 +349,11 @@ var _ = FDescribe("Interviews", Ordered, func() {
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+				var addInterviewResp employer.AddInterviewResponse
+				err = json.NewDecoder(resp.Body).Decode(&addInterviewResp)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(addInterviewResp.InterviewID).ShouldNot(BeEmpty())
 			}
 
 			// Test pagination with limit

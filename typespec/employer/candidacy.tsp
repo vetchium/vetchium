@@ -65,6 +65,10 @@ model AddInterviewRequest {
     interviewers?: EmailAddress[];
 }
 
+model AddInterviewResponse {
+    interview_id: string;
+}
+
 model Interview {
     interview_id: string;
     interview_state: InterviewState;
@@ -125,6 +129,7 @@ interface AddInterview {
     @doc("Requires any of ${Admin}, ${ApplicationsCRUD} roles")
     @post
     addInterview(@body request: AddInterviewRequest): {
+        @body response: AddInterviewResponse;
         @statusCode statusCode: 200;
     };
 }

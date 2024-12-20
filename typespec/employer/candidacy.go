@@ -57,6 +57,10 @@ type AddInterviewRequest struct {
 	Interviewers  []common.EmailAddress `json:"interviewers"   validate:"omitempty"`
 }
 
+type AddInterviewResponse struct {
+	InterviewID string `json:"interview_id"`
+}
+
 type Interview struct {
 	InterviewID          string                       `json:"interview_id"`
 	InterviewState       common.InterviewState        `json:"interview_state"`

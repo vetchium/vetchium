@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
@@ -20,6 +21,12 @@ func (p *PG) AddInterviewer(
 	ctx context.Context,
 	addInterviewerReq db.AddInterviewerRequest,
 ) error {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.ErrInternal
+	}
+
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
 		p.log.Err("failed to begin transaction", "error", err)
@@ -100,19 +107,32 @@ RETURNING (SELECT validation_result FROM state_validation)`
 	}
 
 	// Insert into candidacy_comments table
-	_, err = tx.Exec(ctx, `
+	_, err = tx.Exec(
+		ctx,
+		`
 		INSERT INTO candidacy_comments (
-			candidacy_id,
+			author_type,
+			org_user_id,
 			comment_text,
-			created_at
+			created_at,
+			candidacy_id,
+			employer_id
 		) SELECT 
-			c.candidacy_id,
+			$3,
+			$4,
 			$1,
-			NOW()
+			timezone('UTC', now()),
+			c.id,
+			c.employer_id
 		FROM interviews i
-		JOIN candidacies c ON i.candidacy_id = c.candidacy_id
+		JOIN candidacies c ON i.candidacy_id = c.id
 		WHERE i.id = $2
-	`, addInterviewerReq.CandidacyComment, addInterviewerReq.InterviewID)
+	`,
+		addInterviewerReq.CandidacyComment,
+		addInterviewerReq.InterviewID,
+		string(db.OrgUserAuthorType),
+		orgUser.ID,
+	)
 	if err != nil {
 		p.log.Err("failed to insert comment", "error", err)
 		return db.ErrInternal
