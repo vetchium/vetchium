@@ -1,0 +1,2977 @@
+openapi: 3.0.0
+info:
+  title: Vetchi API
+  version: 0.0.0
+tags:
+  - name: Applications
+  - name: Employer Auth
+  - name: Cost Centers
+  - name: Locations
+  - name: OrgUsers
+  - name: Openings
+  - name: Candidacies
+  - name: Interviews
+  - name: HubUsers
+paths:
+  /employer/add-candidacy-comment:
+    post:
+      operationId: AddEmployerCandidacyComment_addComment
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '403':
+          description: Access is forbidden.
+        '422':
+          description: Client error
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEmployerCandidacyCommentRequest'
+  /employer/add-cost-center:
+    post:
+      operationId: AddCostCenter_addCostcenter
+      description: Requires any of ADMIN, COST_CENTERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '409':
+          description: The request conflicts with the current state of the server.
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCostCenterRequest'
+      security:
+        - EmployerAuth: []
+  /employer/add-interview:
+    post:
+      operationId: AddInterview_addInterview
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddInterviewResponse'
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddInterviewRequest'
+  /employer/add-interviewer:
+    post:
+      operationId: EmployerAddInterviewer_employerAddInterviewer
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '403':
+          description: Access is forbidden.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddInterviewerRequest'
+      security:
+        - EmployerAuth: []
+  /employer/add-location:
+    post:
+      operationId: AddLocation_addLocation
+      description: Requires any of ADMIN, LOCATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '409':
+          description: The request conflicts with the current state of the server.
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddLocationRequest'
+      security:
+        - EmployerAuth: []
+  /employer/add-opening-watchers:
+    post:
+      operationId: AddOpeningWatchers_addOpeningWatchers
+      description: Requires any of ADMIN, OPENINGS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddOpeningWatchersRequest'
+      security:
+        - EmployerAuth: []
+  /employer/add-org-user:
+    post:
+      operationId: AddOrgUser_addOrgUser
+      description: Requires any of ADMIN, ORG_USERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '409':
+          description: The request conflicts with the current state of the server.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddOrgUserRequest'
+      security:
+        - EmployerAuth: []
+  /employer/change-opening-state:
+    post:
+      operationId: ChangeOpeningState_changeOpeningState
+      description: Requires any of ADMIN, OPENINGS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '409':
+          description: The request conflicts with the current state of the server.
+        '422':
+          description: Client error
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeOpeningStateRequest'
+      security:
+        - EmployerAuth: []
+  /employer/create-opening:
+    post:
+      operationId: CreateOpening_createOpening
+      description: Requires any of ADMIN, OPENINGS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '422':
+          description: Client error
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOpeningRequest'
+      security:
+        - EmployerAuth: []
+  /employer/defunct-cost-center:
+    post:
+      operationId: DefunctCostCenter_defunctCostCenter
+      description: Requires any of ADMIN, COST_CENTERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefunctCostCenterRequest'
+      security:
+        - EmployerAuth: []
+  /employer/defunct-location:
+    post:
+      operationId: DefunctLocation_defunctLocation
+      description: Requires any of ADMIN, LOCATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefunctLocationRequest'
+      security:
+        - EmployerAuth: []
+  /employer/disable-org-user:
+    post:
+      operationId: DisableOrgUser_disableOrgUser
+      description: Requires anyof ADMIN, ORG_USERS_CRUD roles. The last OrgUser with an ADMIN role cannot be updated
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '403':
+          description: Access is forbidden.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisableOrgUserRequest'
+      security:
+        - EmployerAuth: []
+  /employer/enable-org-user:
+    post:
+      operationId: EnableOrgUser_enableOrgUser
+      description: Requires any of ADMIN, ORG_USERS_CRUD roles. The account must be in DISABLED_ORG_USER state
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnableOrgUserRequest'
+      security:
+        - EmployerAuth: []
+  /employer/filter-openings:
+    post:
+      operationId: FilterOpenings_filterOpenings
+      description: Requires any of ADMIN, OPENINGS_CRUD or OPENINGS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpeningInfo'
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterOpeningsRequest'
+      security:
+        - EmployerAuth: []
+  /employer/filter-org-users:
+    post:
+      operationId: FilterOrgUsers_filterOrgUsers
+      description: Requires any of ADMIN, ORG_USERS_CRUD, ORG_USERS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterOrgUsersRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-applications:
+    post:
+      operationId: GetApplications_getApplications
+      description: Requires any of ADMIN, APPLICATIONS_CRUD or APPLICATIONS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetApplicationsRequest'
+  /employer/get-assessment:
+    post:
+      operationId: GetAssessment_getAssessment
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetAssessmentRequest'
+  /employer/get-candidacies-info:
+    post:
+      operationId: GetCandidaciesInfo_getCandidaciesInfo
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Candidacy'
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCandidaciesInfoRequest'
+  /employer/get-candidacy-comments:
+    post:
+      operationId: GetCandidacyComments_getEmployerCandidacyComments
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CandidacyComment'
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCandidacyCommentsRequest'
+  /employer/get-cost-center:
+    post:
+      operationId: GetCostCenter_getCostCenter
+      description: Requires any of ADMIN, COST_CENTERS_CRUD, COST_CENTERS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostCenter'
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCostCenterRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-cost-centers:
+    post:
+      operationId: GetCostCenters_getCostCenters
+      description: Requires any of ADMIN, COST_CENTERS_CRUD, COST_CENTERS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CostCenter'
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCostCentersRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-interviews-by-candidacy:
+    post:
+      operationId: GetInterviewsByCandidacy_getInterviewsByCandidacy
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetInterviewsByCandidacyRequest'
+  /employer/get-interviews-by-opening:
+    post:
+      operationId: GetInterviewsByOpening_getInterviewsByOpening
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetInterviewsByOpeningRequest'
+  /employer/get-location:
+    post:
+      operationId: GetLocation_getLocation
+      description: Requires any of ADMIN, LOCATIONS_CRUD, LOCATIONS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLocationRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-locations:
+    post:
+      operationId: GetLocations_getLocations
+      description: Requires any of ADMIN, LOCATIONS_CRUD, LOCATIONS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLocationsRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-onboard-status:
+    post:
+      operationId: GetOnboardStatus_GetOnboardStatus
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOnboardStatusResponse'
+      tags:
+        - Employer Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetOnboardStatusRequest'
+  /employer/get-opening:
+    post:
+      operationId: GetOpening_getOpening
+      description: Requires any of ADMIN, $OPENINGS_CRUD {OpeningsViewer} roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opening'
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetOpeningRequest'
+      security:
+        - EmployerAuth: []
+  /employer/get-opening-watchers:
+    post:
+      operationId: GetOpeningWatchers_getOpeningWatchers
+      description: Requires any of ADMIN, OPENINGS_CRUD or OPENINGS_VIEWER roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrgUserShort'
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetOpeningWatchersRequest'
+      security:
+        - EmployerAuth: []
+  /employer/put-assessment:
+    post:
+      operationId: PutAssesment_putAssesment
+      description: Any old feedback will be overwritten
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '403':
+          description: Access is forbidden.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+  /employer/reject-application:
+    post:
+      operationId: RejectApplication_rejectApplication
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectApplicationRequest'
+  /employer/remove-application-color-tag:
+    post:
+      operationId: RemoveApplicationColorTag_removeApplicationColorTag
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveApplicationColorTagRequest'
+  /employer/remove-interviewer:
+    post:
+      operationId: EmployerRemoveInterviewer_employerRemoveInterviewer
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveInterviewerRequest'
+      security:
+        - EmployerAuth: []
+  /employer/remove-opening-watcher:
+    post:
+      operationId: RemoveOpeningWatcher_removeOpeningWatcher
+      description: Requires any of ADMIN, OPENINGS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveOpeningWatcherRequest'
+      security:
+        - EmployerAuth: []
+  /employer/rename-cost-center:
+    post:
+      operationId: RenameCostCenter_renameCostCenter
+      description: Requires any of ADMIN, COST_CENTERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameCostCenterRequest'
+      security:
+        - EmployerAuth: []
+  /employer/rename-location:
+    post:
+      operationId: RenameLocation_renameLocation
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameLocationRequest'
+      security:
+        - EmployerAuth: []
+  /employer/rsvp-interview:
+    post:
+      operationId: EmployerRSVPInterview_employerRSVPInterview
+      description: The OrgUser doing this must be an Interviewer in the Interview
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RSVPInterviewRequest'
+      security:
+        - EmployerAuth: []
+  /employer/set-application-color-tag:
+    post:
+      operationId: SetApplicationColorTag_setApplicationColorTag
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetApplicationColorTagRequest'
+  /employer/set-onboard-password:
+    post:
+      operationId: SetOnboardPassword_SetOnboardPassword
+      parameters: []
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+      tags:
+        - Employer Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetOnboardPasswordRequest'
+  /employer/shortlist-application:
+    post:
+      operationId: ShortlistApplication_shortlistApplication
+      description: Requires any of ADMIN, APPLICATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShortlistApplicationRequest'
+  /employer/signin:
+    post:
+      operationId: EmployerSignin_EmployerSignin
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerSigninResponse'
+      tags:
+        - Employer Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployerSigninRequest'
+  /employer/signup-orguser:
+    post:
+      operationId: SignupOrgUser_signupOrgUser
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '403':
+          description: Access is forbidden.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupOrgUserRequest'
+      security:
+        - EmployerAuth: []
+  /employer/tfa:
+    post:
+      operationId: EmployerTFA_EmployerTFA
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerTFAResponse'
+      tags:
+        - Employer Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployerTFARequest'
+  /employer/update-cost-center:
+    post:
+      operationId: UpdateCostCenter_updateCostCenter
+      description: Requires any of ADMIN, COST_CENTERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Cost Centers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCostCenterRequest'
+      security:
+        - EmployerAuth: []
+  /employer/update-location:
+    post:
+      operationId: UpdateLocation_updateLocation
+      description: Requires any of ADMIN, LOCATIONS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLocationRequest'
+      security:
+        - EmployerAuth: []
+  /employer/update-opening:
+    post:
+      operationId: UpdateOpening_updateOpening
+      description: Requires any of ADMIN, OPENINGS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOpeningRequest'
+      security:
+        - EmployerAuth: []
+  /employer/update-org-user:
+    post:
+      operationId: UpdateOrgUser_updateOrgUser
+      description: Requires any of ADMIN, ORG_USERS_CRUD roles
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '403':
+          description: Access is forbidden.
+        '409':
+          description: The request conflicts with the current state of the server.
+      tags:
+        - OrgUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUserRequest'
+      security:
+        - EmployerAuth: []
+  /hub/add-candidacy-comment:
+    post:
+      operationId: AddHubCandidacyComment_addComment
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddHubCandidacyCommentRequest'
+  /hub/apply-for-opening:
+    post:
+      operationId: ApplyForOpening_applyForOpening
+      parameters: []
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyForOpeningRequest'
+      security:
+        - HubAuth: []
+  /hub/change-password:
+    post:
+      operationId: ChangePassword_changePassword
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - HubUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      security:
+        - HubAuth: []
+  /hub/find-openings:
+    post:
+      operationId: FindHubOpenings_findOpenings
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+      tags:
+        - Openings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request:
+                  $ref: '#/components/schemas/FindHubOpeningsRequest'
+              required:
+                - request
+      security:
+        - HubAuth: []
+  /hub/forgot-password:
+    post:
+      operationId: ForgotPassword_forgotPassword
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+      tags:
+        - HubUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+  /hub/get-candidacy-comments:
+    post:
+      operationId: GetHubCandidacyComments_getCandidacyComments
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CandidacyComment'
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCandidacyCommentsRequest'
+  /hub/get-my-candidacies:
+    post:
+      operationId: GetMyCandidacies_getMyCandidacies
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyCandidacy'
+      tags:
+        - Candidacies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MyCandidaciesRequest'
+  /hub/get-my-handle:
+    get:
+      operationId: GetMyHandle_getMyHandle
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMyHandleResponse'
+      tags:
+        - HubUsers
+      security:
+        - HubAuth: []
+  /hub/login:
+    post:
+      operationId: Login_login
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '422':
+          description: Client error
+      tags:
+        - HubUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+  /hub/logout:
+    post:
+      operationId: Logout_logout
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - HubUsers
+      security:
+        - HubAuth: []
+  /hub/my-applications:
+    post:
+      operationId: MyApplications_myApplications
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HubApplication'
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MyApplicationsRequest'
+      security:
+        - HubAuth: []
+  /hub/reset-password:
+    post:
+      operationId: ResetPassword_resetPassword
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      tags:
+        - HubUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+  /hub/rsvp-interview:
+    post:
+      operationId: HubRSVPInterview_hubRSVPInterview
+      description: The OrgUser doing this must be an Interviewer in the Interview
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Interviews
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RSVPInterviewRequest'
+      security:
+        - HubAuth: []
+  /hub/tfa:
+    post:
+      operationId: TFA_tfa
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubTFAResponse'
+      tags:
+        - HubUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HubTFARequest'
+  /hub/withdraw-application:
+    post:
+      operationId: WithdrawApplication_withdrawApplication
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+        '404':
+          description: The server cannot find the requested resource.
+        '422':
+          description: Client error
+      tags:
+        - Applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawApplicationRequest'
+      security:
+        - HubAuth: []
+components:
+  schemas:
+    AddCostCenterRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/CostCenterName'
+        notes:
+          type: string
+          maxLength: 1024
+    AddEmployerCandidacyCommentRequest:
+      type: object
+      required:
+        - candidacy_id
+        - comment
+      properties:
+        candidacy_id:
+          type: string
+        comment:
+          type: string
+          maxLength: 2048
+    AddHubCandidacyCommentRequest:
+      type: object
+      required:
+        - candidacy_id
+        - comment
+      properties:
+        candidacy_id:
+          type: string
+        comment:
+          type: string
+          maxLength: 2048
+    AddInterviewRequest:
+      type: object
+      required:
+        - candidacy_id
+        - start_time
+        - end_time
+        - interview_type
+        - description
+      properties:
+        candidacy_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        interview_type:
+          $ref: '#/components/schemas/InterviewType'
+        description:
+          type: string
+          maxLength: 2048
+          description: Should contain details like location, meeting URLs, etc.
+    AddInterviewResponse:
+      type: object
+      required:
+        - interview_id
+      properties:
+        interview_id:
+          type: string
+    AddInterviewerRequest:
+      type: object
+      required:
+        - interview_id
+        - org_user_email
+      properties:
+        interview_id:
+          type: string
+        org_user_email:
+          type: string
+    AddLocationRequest:
+      type: object
+      required:
+        - title
+        - country_code
+        - postal_address
+        - postal_code
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        country_code:
+          $ref: '#/components/schemas/CountryCode'
+        postal_address:
+          type: string
+          maxLength: 1024
+        postal_code:
+          type: string
+        openstreetmap_url:
+          type: string
+          format: uri
+        city_aka:
+          type: array
+          items:
+            $ref: '#/components/schemas/City'
+          maxItems: 3
+    AddOpeningWatchersRequest:
+      type: object
+      required:
+        - opening_id
+        - emails
+      properties:
+        opening_id:
+          $ref: '#/components/schemas/OpeningID'
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAddress'
+    AddOrgUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - roles
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        name:
+          type: string
+          minLength: 3
+          maxLength: 256
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserRole'
+          minItems: 1
+    Application:
+      type: object
+      required:
+        - id
+        - created_at
+        - filename
+        - hub_user_handle
+        - resume
+        - state
+      properties:
+        id:
+          type: string
+        cover_letter:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        filename:
+          type: string
+        hub_user_handle:
+          type: string
+        hub_user_last_employer_domain:
+          type: string
+        resume:
+          type: string
+        state:
+          $ref: '#/components/schemas/ApplicationState'
+    ApplicationColorTag:
+      type: string
+      enum:
+        - GREEN
+        - YELLOW
+        - RED
+    ApplicationState:
+      type: string
+      enum:
+        - APPLIED
+        - REJECTED
+        - SHORTLISTED
+        - WITHDRAWN
+        - EXPIRED
+    ApplyForOpeningRequest:
+      type: object
+      required:
+        - opening_id_within_company
+        - company_domain
+        - resume
+        - filename
+      properties:
+        opening_id_within_company:
+          type: string
+        company_domain:
+          type: string
+        resume:
+          type: string
+        cover_letter:
+          type: string
+          maxLength: 4096
+        filename:
+          type: string
+          maxLength: 256
+    Assessment:
+      type: object
+      required:
+        - interview_id
+      properties:
+        interview_id:
+          type: string
+        decision:
+          $ref: '#/components/schemas/InterviewersDecision'
+        positives:
+          type: string
+        negatives:
+          type: string
+        overall_assessment:
+          type: string
+        feedback_to_candidate:
+          type: string
+        feedback_submitted_by:
+          type: string
+        feedback_submitted_at:
+          type: string
+    Candidacy:
+      type: object
+      required:
+        - candidacy_id
+        - opening_id
+        - opening_title
+        - opening_description
+        - candidacy_state
+        - applicant_name
+        - applicant_handle
+      properties:
+        candidacy_id:
+          type: string
+        opening_id:
+          type: string
+        opening_title:
+          type: string
+        opening_description:
+          type: string
+        candidacy_state:
+          $ref: '#/components/schemas/CandidacyState'
+        applicant_name:
+          type: string
+        applicant_handle:
+          type: string
+    CandidacyComment:
+      type: object
+      required:
+        - commentID
+        - commenterName
+        - commenterType
+        - content
+        - createdAt
+      properties:
+        commentID:
+          type: string
+        commenterName:
+          type: string
+        commenterType:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CandidacyState:
+      type: string
+      enum:
+        - INTERVIEWING
+        - OFFERED
+        - OFFER_DECLINED
+        - OFFER_ACCEPTED
+        - CANDIDATE_UNSUITABLE
+        - CANDIDATE_NOT_RESPONDING
+        - CANDIDATE_WITHDREW
+        - EMPLOYER_DEFUNCT
+    ChangeOpeningStateRequest:
+      type: object
+      required:
+        - opening_id
+        - from_state
+        - to_state
+      properties:
+        opening_id:
+          $ref: '#/components/schemas/OpeningID'
+        from_state:
+          $ref: '#/components/schemas/OpeningState'
+        to_state:
+          $ref: '#/components/schemas/OpeningState'
+    ChangePasswordRequest:
+      type: object
+      required:
+        - old_password
+        - new_password
+      properties:
+        old_password:
+          $ref: '#/components/schemas/Password'
+        new_password:
+          $ref: '#/components/schemas/Password'
+    City:
+      type: string
+      minLength: 3
+      maxLength: 32
+    CostCenter:
+      type: object
+      required:
+        - name
+        - state
+      properties:
+        name:
+          $ref: '#/components/schemas/CostCenterName'
+        notes:
+          type: string
+          maxLength: 1024
+        state:
+          $ref: '#/components/schemas/CostCenterState'
+    CostCenterName:
+      type: string
+      minLength: 3
+      maxLength: 64
+    CostCenterState:
+      type: string
+      enum:
+        - ACTIVE_CC
+        - DEFUNCT_CC
+    CountryCode:
+      type: string
+      minLength: 3
+      maxLength: 3
+      description: ISO 3166-1 alpha-3 code for the Country; Special value ZZG to indicate Global
+    CreateOpeningRequest:
+      type: object
+      required:
+        - title
+        - positions
+        - jd
+        - recruiter
+        - hiring_manager
+        - cost_center_name
+        - opening_type
+        - yoe_min
+        - yoe_max
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        positions:
+          type: integer
+          minimum: 1
+          maximum: 20
+        jd:
+          type: string
+          minLength: 10
+          maxLength: 1024
+        recruiter:
+          $ref: '#/components/schemas/EmailAddress'
+        hiring_manager:
+          $ref: '#/components/schemas/EmailAddress'
+        hiring_team_members:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAddress'
+          maxItems: 10
+          description: OrgUser emails of the members of the team for which the opening is created
+        cost_center_name:
+          allOf:
+            - $ref: '#/components/schemas/CostCenterName'
+          description: Cost Center name under which the opening is created
+        employer_notes:
+          type: string
+          maxLength: 1024
+          description: Privates notes about the opening visible only to the employer
+        location_titles:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: List of pre-configured Location titles where the opening is available
+        remote_country_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CountryCode'
+          maxItems: 100
+          description: List of ISO 3166-1 alpha-3 country codes where the opening is available for remote work. Special value ZZG to indicate Global
+        remote_timezones:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeZone'
+          maxItems: 200
+          description: List of timezones where the opening is available for remote work
+        opening_type:
+          $ref: '#/components/schemas/OpeningType'
+        yoe_min:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Minimum years of experience required for the opening
+        yoe_max:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum years of experience allowed for the opening
+        min_education_level:
+          $ref: '#/components/schemas/EducationLevel'
+        salary:
+          $ref: '#/components/schemas/Salary'
+    CreateOpeningResponse:
+      type: object
+      required:
+        - opening_id
+      properties:
+        opening_id:
+          $ref: '#/components/schemas/OpeningID'
+    Currency:
+      type: string
+      minLength: 3
+      maxLength: 3
+      description: One of the active ISO 4217 currency codes
+    DefunctCostCenterRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/CostCenterName'
+    DefunctLocationRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+    DisableOrgUserRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+    EducationLevel:
+      type: string
+      enum:
+        - BACHELOR_EDUCATION
+        - MASTER_EDUCATION
+        - DOCTORATE_EDUCATION
+        - NOT_MATTERS_EDUCATION
+        - UNSPECIFIED_EDUCATION
+    EmailAddress:
+      type: string
+      minLength: 3
+      maxLength: 256
+      description: A valid email address
+    EmployerSigninRequest:
+      type: object
+      required:
+        - client_id
+        - email
+        - password
+      properties:
+        client_id:
+          type: string
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        password:
+          $ref: '#/components/schemas/Password'
+    EmployerSigninResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    EmployerTFARequest:
+      type: object
+      required:
+        - tfa_code
+        - tfa_token
+      properties:
+        tfa_code:
+          type: string
+        tfa_token:
+          type: string
+        remember_me:
+          type: boolean
+    EmployerTFAResponse:
+      type: object
+      required:
+        - session_token
+      properties:
+        session_token:
+          type: string
+    EnableOrgUserRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+    ExperienceRange:
+      type: object
+      required:
+        - yoe_min
+        - yoe_max
+      properties:
+        yoe_min:
+          type: integer
+          minimum: 0
+          maximum: 99
+        yoe_max:
+          type: integer
+          minimum: 1
+          maximum: 100
+    FilterOpeningsRequest:
+      type: object
+      properties:
+        pagination_key:
+          allOf:
+            - $ref: '#/components/schemas/OpeningID'
+          description: Pagination key to fetch the next page of Openings. The Openings are sorted by the OpeningID in a chronological way
+        state:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningState'
+          description: Filter by Opening state. If nothing is provided all Openings in any of DraftOpening, ActiveOpening or SuspendedOpening states will be returned
+        from_date:
+          type: string
+          format: date
+          description: Filter by Opening creation date. If not provided, (currentdate-30days) will be used
+        to_date:
+          type: string
+          format: date
+          description: Filter by Opening creation date. If not provided, (currentdate+1day, tomorrow date) will be used
+        limit:
+          type: integer
+          maximum: 40
+          description: Number of Openings to return; 40 is the default if not specified
+    FilterOrgUsersRequest:
+      type: object
+      properties:
+        prefix:
+          type: string
+          description: If specified, only org users with an email address or name that starts with this prefix will be returned, ordered by the email addresses
+        pagination_key:
+          allOf:
+            - $ref: '#/components/schemas/EmailAddress'
+          minLength: 3
+          maxLength: 256
+        limit:
+          type: integer
+          maximum: 40
+          description: The maximum number of org users to return; 40 is the default if not specified
+        state:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserState'
+          description: If specified, only org users with this state will be returned. If not specified, all users in either of ACTIVE_ORG_USER or ADDED_ORG_USER states will be returned
+    FindHubOpeningsRequest:
+      type: object
+      properties:
+        country_code:
+          allOf:
+            - $ref: '#/components/schemas/CountryCode'
+          description: If nothing is passed, the HubUser's resident country will be considered.
+        cities:
+          type: array
+          items:
+            type: string
+          maxItems: 4
+          description: If nothing is passed, all cities under the country_code are considered. No error will be reported if a passed city does not belong to the country_code.
+        opening_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningType'
+          description: If nothing is passed, all opening types are considered
+        company_domains:
+          type: array
+          items:
+            type: string
+          maxItems: 4
+          description: If nothing is passed, all companies are considered
+        experience:
+          allOf:
+            - $ref: '#/components/schemas/ExperienceRange'
+          description: If nothing is passed, all experience ranges are considered
+        salary_range:
+          allOf:
+            - $ref: '#/components/schemas/SalaryRange'
+          description: If nothing is passed, all salary ranges are considered
+        min_education_level:
+          allOf:
+            - $ref: '#/components/schemas/EducationLevel'
+          description: If nothing is passed, all education levels are considered
+        remote_timezones:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeZone'
+          maxItems: 4
+          description: If a value is passed, only Openings that either explicitly mention this timezone in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.
+        remote_country_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CountryCode'
+          maxItems: 4
+          description: If a value is passed, either Openings that either explicitly mention this country code in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.
+        pagination_key:
+          type: integer
+          format: int64
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: If nothing is passed, 40 Openings are returned
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+    ForgotPasswordResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    GetApplicationsRequest:
+      type: object
+      required:
+        - state
+        - opening_id
+        - limit
+      properties:
+        state:
+          $ref: '#/components/schemas/ApplicationState'
+        search_query:
+          type: string
+          maxLength: 25
+          description: If passed, the Applicants whose name matches this query will be returned
+        color_tag_filter:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationColorTag'
+          description: If passed, only Applications of the passed color tag will be returned
+        opening_id:
+          type: string
+          description: The Opening ID for which Applications are to be fetched
+        pagination_key:
+          type: string
+        limit:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 40
+          description: If nothing is passed a default of 40 will be returned
+    GetAssessmentRequest:
+      type: object
+      required:
+        - interview_id
+      properties:
+        interview_id:
+          type: string
+    GetCandidaciesInfoRequest:
+      type: object
+      properties:
+        recruiter_email:
+          type: string
+          description: If provided, will return only the candidacies for the given recruiter. If not provided, all Candidacies under the given employer will be returned.
+        state:
+          allOf:
+            - $ref: '#/components/schemas/CandidacyState'
+          description: If provided, will return only the Candidacies in the given state. Otherwise all Candidacies will be returned.
+        pagination_key:
+          type: string
+          description: If provided, will return only the Candidacies after the given pagination_key. Otherwise all Candidacies will be returned. The Candidacies will be returned in reverse chronological order. If two Candidacies are created at the same time, the Candidacies will be further ordered by the candidacy_id. Pass the last candidacy_id fetched to get the next set of Candidacies.
+        limit:
+          type: integer
+          maximum: 40
+          description: Number of Candidacies to return. Defaults to 40.
+    GetCandidacyCommentsRequest:
+      type: object
+      required:
+        - candidacyID
+      properties:
+        candidacyID:
+          type: string
+    GetCostCenterRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/CostCenterName'
+    GetCostCentersRequest:
+      type: object
+      properties:
+        pagination_key:
+          $ref: '#/components/schemas/CostCenterName'
+        limit:
+          type: integer
+          maximum: 100
+          description: Number of Cost Centers to return; 100 is the default if not specified
+    GetInterviewsByCandidacyRequest:
+      type: object
+      required:
+        - candidacy_id
+      properties:
+        candidacy_id:
+          type: string
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewState'
+          description: If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.
+    GetInterviewsByOpeningRequest:
+      type: object
+      required:
+        - opening_id
+      properties:
+        opening_id:
+          type: string
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/InterviewState'
+          description: If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.
+        pagination_key:
+          type: string
+          description: If provided, will return only the Interviews after the given pagination_key. Otherwise all Interviews will be returned. The interviews will be ordered by their start_time, and then the interview_id. Pass the last interview_id fetched to get the next set of Interviews.
+        limit:
+          type: integer
+          maximum: 100
+          description: Number of Interviews to return. Defaults to 40.
+    GetLocationRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+    GetLocationsRequest:
+      type: object
+      properties:
+        pagination_key:
+          type: string
+          minLength: 3
+          maxLength: 32
+        limit:
+          type: integer
+          maximum: 100
+          description: Number of Locations to return; 100 is the default if not specified
+    GetMyHandleResponse:
+      type: object
+      required:
+        - handle
+      properties:
+        handle:
+          type: string
+    GetOnboardStatusRequest:
+      type: object
+      required:
+        - client_id
+      properties:
+        client_id:
+          type: string
+    GetOnboardStatusResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/OnboardStatus'
+    GetOpeningRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/OpeningID'
+          description: ID of the Opening to fetch
+    GetOpeningWatchersRequest:
+      type: object
+      required:
+        - opening_id
+      properties:
+        opening_id:
+          $ref: '#/components/schemas/OpeningID'
+    HubApplication:
+      type: object
+      required:
+        - application_id
+        - state
+        - opening_id
+        - opening_title
+        - employer_name
+        - employer_domain
+        - created_at
+      properties:
+        application_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/ApplicationState'
+        opening_id:
+          type: string
+        opening_title:
+          type: string
+        employer_name:
+          type: string
+        employer_domain:
+          type: string
+        created_at:
+          type: string
+    HubOpening:
+      type: object
+      required:
+        - opening_id_within_company
+        - company_domain
+        - company_name
+        - job_title
+        - jd
+        - pagination_key
+      properties:
+        opening_id_within_company:
+          type: string
+        company_domain:
+          type: string
+        company_name:
+          type: string
+        job_title:
+          type: string
+        jd:
+          type: string
+        pagination_key:
+          type: integer
+          format: int64
+    HubTFARequest:
+      type: object
+      required:
+        - tfa_token
+        - tfa_code
+        - remember_me
+      properties:
+        tfa_token:
+          type: string
+        tfa_code:
+          type: string
+        remember_me:
+          type: boolean
+          description: If true, the session will be remembered for a longer duration
+    HubTFAResponse:
+      type: object
+      required:
+        - session_token
+      properties:
+        session_token:
+          type: string
+    HubUserState:
+      type: string
+      enum:
+        - ACTIVE_HUB_USER
+    Interview:
+      type: object
+      required:
+        - interview_id
+        - interview_state
+        - start_time
+        - end_time
+        - interview_type
+        - created_at
+      properties:
+        interview_id:
+          type: string
+        interview_state:
+          $ref: '#/components/schemas/InterviewState'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        interview_type:
+          $ref: '#/components/schemas/InterviewType'
+        description:
+          type: string
+        interviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserShort'
+        interviewers_decision:
+          $ref: '#/components/schemas/InterviewersDecision'
+        positives:
+          type: string
+          maxLength: 4096
+        negatives:
+          type: string
+          maxLength: 4096
+        overall_assessment:
+          type: string
+          maxLength: 4096
+        feedback_to_candidate:
+          type: string
+          maxLength: 4096
+        feedback_submitted_by:
+          $ref: '#/components/schemas/OrgUserShort'
+        feedback_submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    InterviewState:
+      type: string
+      enum:
+        - SCHEDULED
+        - COMPLETED
+        - CANDIDATE_WITHDREW
+        - EMPLOYER_WITHDREW
+    InterviewType:
+      type: string
+      enum:
+        - IN_PERSON
+        - VIDEO_CALL
+        - TAKE_HOME
+        - UNSPECIFIED
+    InterviewersDecision:
+      type: string
+      enum:
+        - STRONG_YES
+        - YES
+        - NEUTRAL
+        - NO
+        - STRONG_NO
+    Location:
+      type: object
+      required:
+        - title
+        - country_code
+        - postal_address
+        - postal_code
+        - state
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        country_code:
+          $ref: '#/components/schemas/CountryCode'
+        postal_address:
+          type: string
+          maxLength: 1024
+        postal_code:
+          type: string
+        openstreetmap_url:
+          type: string
+          format: uri
+          maxLength: 255
+        city_aka:
+          type: array
+          items:
+            $ref: '#/components/schemas/City'
+          maxItems: 3
+        state:
+          $ref: '#/components/schemas/LocationState'
+      description: Office Location of an Employer
+    LocationFilter:
+      type: object
+      required:
+        - country_code
+        - city
+      properties:
+        country_code:
+          $ref: '#/components/schemas/CountryCode'
+        city:
+          type: string
+    LocationState:
+      type: string
+      enum:
+        - ACTIVE_LOCATION
+        - DEFUNCT_LOCATION
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        password:
+          $ref: '#/components/schemas/Password'
+    LoginResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    MyApplicationsRequest:
+      type: object
+      required:
+        - limit
+      properties:
+        state:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationState'
+          description: Filter by Application state. If nothing is provided all Applications in the Hub are fetched
+        pagination_key:
+          type: string
+          description: Pagination key to fetch the next page of Applications. The Applications are sorted by the created_at timestamp in descending order with newest Applications first and if there are multiple Applications with the same created_at timestamp, they are sorted by the ApplicationID in ascending order. Use the ApplicationID as the pagination_key
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 40
+          description: Number of Applications to fetch per page
+    MyCandidaciesRequest:
+      type: object
+      properties:
+        pagination_key:
+          type: string
+          description: The candidacy_id of the last candidacy. Candidacies are returned in reverse chronological order and if two candidacies have the same timestamp, they are further ordered by id.
+        limit:
+          type: integer
+          maximum: 40
+          description: The maximum number of candidacies to return. Defaults to 40.
+    MyCandidacy:
+      type: object
+      required:
+        - candidacy_id
+        - company_name
+        - company_domain
+        - opening_id
+        - opening_title
+        - opening_description
+        - candidacy_state
+      properties:
+        candidacy_id:
+          type: string
+        company_name:
+          type: string
+        company_domain:
+          type: string
+        opening_id:
+          type: string
+        opening_title:
+          type: string
+        opening_description:
+          type: string
+        candidacy_state:
+          $ref: '#/components/schemas/CandidacyState'
+    OnboardStatus:
+      type: string
+      enum:
+        - DOMAIN_NOT_VERIFIED
+        - DOMAIN_VERIFIED_ONBOARD_PENDING
+        - DOMAIN_ONBOARDED
+    Opening:
+      type: object
+      required:
+        - id
+        - title
+        - positions
+        - filled_positions
+        - jd
+        - recruiter
+        - hiring_manager
+        - cost_center_name
+        - opening_type
+        - yoe_min
+        - yoe_max
+        - state
+        - created_at
+        - last_updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/OpeningID'
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        positions:
+          type: integer
+          minimum: 1
+          maximum: 20
+        filled_positions:
+          type: integer
+          minimum: 0
+          maximum: 20
+        jd:
+          type: string
+          minLength: 10
+          maxLength: 1024
+        recruiter:
+          $ref: '#/components/schemas/OrgUserShort'
+        hiring_manager:
+          $ref: '#/components/schemas/OrgUserShort'
+        hiring_team_members:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserShort'
+          maxItems: 10
+          description: OrgUser emails of the members of the team for which the opening is created
+        cost_center_name:
+          allOf:
+            - $ref: '#/components/schemas/CostCenterName'
+          description: Cost Center name under which the opening is created
+        employer_notes:
+          type: string
+          maxLength: 1024
+          description: Privates notes about the opening visible only to the employer
+        location_titles:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: List of pre-configured Location titles where the opening is available
+        remote_country_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CountryCode'
+          maxItems: 100
+          description: List of ISO 3166-1 alpha-3 country codes where the opening is available for remote work. Special value ZZG to indicate Global
+        remote_timezones:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeZone'
+          maxItems: 200
+          description: List of timezones where the opening is available for remote work
+        opening_type:
+          $ref: '#/components/schemas/OpeningType'
+        yoe_min:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Minimum years of experience required for the opening
+        yoe_max:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum years of experience allowed for the opening
+        min_education_level:
+          $ref: '#/components/schemas/EducationLevel'
+        salary:
+          $ref: '#/components/schemas/Salary'
+        state:
+          allOf:
+            - $ref: '#/components/schemas/OpeningState'
+          description: Current state of the opening
+        created_at:
+          type: string
+          format: date-time
+        last_updated_at:
+          type: string
+          format: date-time
+      description: The Opening object that should be used within the Employer API. Should not be exposed to the Hub APIs or the Hub UI.
+    OpeningID:
+      type: string
+      maxLength: 64
+    OpeningInfo:
+      type: object
+      required:
+        - id
+        - title
+        - positions
+        - filled_positions
+        - recruiter
+        - hiring_manager
+        - cost_center_name
+        - opening_type
+        - state
+        - created_at
+        - last_updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/OpeningID'
+        title:
+          type: string
+        positions:
+          type: integer
+        filled_positions:
+          type: integer
+        recruiter:
+          $ref: '#/components/schemas/OrgUserShort'
+        hiring_manager:
+          $ref: '#/components/schemas/OrgUserShort'
+        cost_center_name:
+          $ref: '#/components/schemas/CostCenterName'
+        opening_type:
+          $ref: '#/components/schemas/OpeningType'
+        state:
+          $ref: '#/components/schemas/OpeningState'
+        created_at:
+          type: string
+          format: date-time
+        last_updated_at:
+          type: string
+          format: date-time
+    OpeningState:
+      type: string
+      enum:
+        - DRAFT_OPENING
+        - ACTIVE_OPENING
+        - SUSPENDED_OPENING
+        - CLOSED_OPENING
+    OpeningType:
+      type: string
+      enum:
+        - FULL_TIME_OPENING
+        - PART_TIME_OPENING
+        - CONTRACT_OPENING
+        - INTERNSHIP_OPENING
+        - UNSPECIFIED_OPENING
+    OrgUser:
+      type: object
+      required:
+        - email
+        - name
+        - state
+        - roles
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        name:
+          type: string
+        state:
+          $ref: '#/components/schemas/OrgUserState'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserRole'
+    OrgUserRole:
+      type: string
+    OrgUserShort:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        vetchi_handle:
+          type: string
+          description: In case the same email address of the org_user is added by a hub profile, its Vetchi handle is populated here
+    OrgUserState:
+      type: string
+    OrgUserTiny:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          allOf:
+            - $ref: '#/components/schemas/EmailAddress'
+          description: The email address of the org user. Not to be confused with the email address of the HubUser.
+    Password:
+      type: string
+      minLength: 12
+      maxLength: 64
+    RSVPInterviewRequest:
+      type: object
+      required:
+        - interview_id
+        - rsvp_status
+      properties:
+        interview_id:
+          type: string
+        rsvp_status:
+          $ref: '#/components/schemas/RSVPStatus'
+    RSVPStatus:
+      type: string
+      enum:
+        - YES
+        - NO
+        - NOT_SET
+    RejectApplicationRequest:
+      type: object
+      required:
+        - application_id
+      properties:
+        application_id:
+          type: string
+    RemoveApplicationColorTagRequest:
+      type: object
+      required:
+        - application_id
+      properties:
+        application_id:
+          type: string
+    RemoveInterviewerRequest:
+      type: object
+      required:
+        - interview_id
+        - org_user_email
+      properties:
+        interview_id:
+          type: string
+        org_user_email:
+          type: string
+    RemoveOpeningWatcherRequest:
+      type: object
+      required:
+        - opening_id
+        - email
+      properties:
+        opening_id:
+          $ref: '#/components/schemas/OpeningID'
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+    RenameCostCenterRequest:
+      type: object
+      required:
+        - old_name
+        - new_name
+      properties:
+        old_name:
+          $ref: '#/components/schemas/CostCenterName'
+        new_name:
+          $ref: '#/components/schemas/CostCenterName'
+    RenameLocationRequest:
+      type: object
+      required:
+        - old_title
+        - new_title
+      properties:
+        old_title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        new_title:
+          type: string
+          minLength: 3
+          maxLength: 32
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+        password:
+          $ref: '#/components/schemas/Password'
+    Salary:
+      type: object
+      required:
+        - min_amount
+        - max_amount
+        - currency
+      properties:
+        min_amount:
+          type: number
+          format: decimal
+          minimum: 0
+        max_amount:
+          type: number
+          format: decimal
+          minimum: 1
+        currency:
+          $ref: '#/components/schemas/Currency'
+    SalaryRange:
+      type: object
+      required:
+        - currency
+        - min
+        - max
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+    SetApplicationColorTagRequest:
+      type: object
+      required:
+        - application_id
+        - color_tag
+      properties:
+        application_id:
+          type: string
+        color_tag:
+          $ref: '#/components/schemas/ApplicationColorTag'
+    SetOnboardPasswordRequest:
+      type: object
+      required:
+        - client_id
+        - password
+        - token
+      properties:
+        client_id:
+          type: string
+        password:
+          $ref: '#/components/schemas/Password'
+        token:
+          type: string
+    ShortlistApplicationRequest:
+      type: object
+      required:
+        - application_id
+      properties:
+        application_id:
+          type: string
+    SignupOrgUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          $ref: '#/components/schemas/EmailAddress'
+        name:
+          type: string
+        password:
+          $ref: '#/components/schemas/Password'
+    TimeZone:
+      type: string
+      enum:
+        - ACDT Australian Central Daylight Time GMT+1030
+        - ACST Australian Central Standard Time GMT+0930
+        - AEDT Australian Eastern Daylight Time GMT+1100
+        - AEST Australian Eastern Standard Time GMT+1000
+        - AFT Afghanistan Time GMT+0430
+        - AKDT Alaska Daylight Time GMT-0800
+        - AKST Alaska Standard Time GMT-0900
+        - ALMT Alma-Ata Time GMT+0600
+        - AMST Amazon Summer Time (Brazil) GMT-0300
+        - AMT Amazon Time (Brazil) GMT-0400
+        - ANAST Anadyr Summer Time GMT+1200
+        - ANAT Anadyr Time GMT+1200
+        - AQTT Aqtobe Time GMT+0500
+        - ART Argentina Time GMT-0300
+        - AST Arabia Standard Time GMT+0300
+        - AST Atlantic Standard Time GMT-0400
+        - AWST Australian Western Standard Time GMT+0800
+        - AZOST Azores Summer Time GMT+0000
+        - AZOT Azores Standard Time GMT-0100
+        - AZT Azerbaijan Time GMT+0400
+        - BNT Brunei Darussalam Time GMT+0800
+        - BOT Bolivia Time GMT-0400
+        - BRST Brasilia Summer Time GMT-0200
+        - BRT Brasilia Time GMT-0300
+        - BST Bangladesh Standard Time GMT+0600
+        - BST Bougainville Standard Time GMT+1100
+        - BST British Summer Time GMT+0100
+        - BTT Bhutan Time GMT+0600
+        - CAT Central Africa Time GMT+0200
+        - CCT Cocos Islands Time GMT+0630
+        - CDT Central Daylight Time (North America) GMT-0500
+        - CEST Central European Summer Time GMT+0200
+        - CET Central European Time GMT+0100
+        - CHADT Chatham Island Daylight Time GMT+1345
+        - CHAST Chatham Island Standard Time GMT+1245
+        - CKT Cook Island Time GMT-1000
+        - CLST Chile Summer Time GMT-0300
+        - CLT Chile Standard Time GMT-0400
+        - COT Colombia Time GMT-0500
+        - CST Central Standard Time (North America) GMT-0600
+        - CST China Standard Time GMT+0800
+        - CST Cuba Standard Time GMT-0500
+        - CVT Cape Verde Time GMT-0100
+        - CXT Christmas Island Time GMT+0700
+        - DAVT Davis Time GMT+0700
+        - EASST Easter Island Summer Time GMT-0500
+        - EAST Easter Island Standard Time GMT-0600
+        - EAT East Africa Time GMT+0300
+        - ECT Ecuador Time GMT-0500
+        - EDT Eastern Daylight Time (North America) GMT-0400
+        - EEST Eastern European Summer Time GMT+0300
+        - EET Eastern European Time GMT+0200
+        - EGST Eastern Greenland Summer Time GMT+0000
+        - EGT Eastern Greenland Time GMT-0100
+        - FET Further-eastern European Time GMT+0300
+        - FJT Fiji Time GMT+1200
+        - FKST Falkland Islands Summer Time GMT-0300
+        - FKT Falkland Islands Time GMT-0400
+        - FNT Fernando de Noronha Time GMT-0200
+        - GALT Galapagos Time GMT-0600
+        - GAMT Gambier Time GMT-0900
+        - GET Georgia Standard Time GMT+0400
+        - GFT French Guiana Time GMT-0300
+        - GILT Gilbert Island Time GMT+1200
+        - GMT Greenwich Mean Time GMT+0000
+        - GST South Georgia Time GMT-0200
+        - GST Gulf Standard Time GMT+0400
+        - GYT Guyana Time GMT-0400
+        - HKT Hong Kong Time GMT+0800
+        - HOVT Hovd Time GMT+0700
+        - HST Hawaii-Aleutian Standard Time GMT-1000
+        - ICT Indochina Time GMT+0700
+        - IDT Israel Daylight Time GMT+0300
+        - IOT Indian Chagos Time GMT+0600
+        - IRDT Iran Daylight Time GMT+0430
+        - IRKT Irkutsk Time GMT+0800
+        - IRST Iran Standard Time GMT+0330
+        - IST Indian Standard Time GMT+0530
+        - IST Irish Standard Time GMT+0100
+        - JST Japan Standard Time GMT+0900
+        - KGT Kyrgyzstan Time GMT+0600
+        - KOST Kosrae Time GMT+1100
+        - KRAT Krasnoyarsk Time GMT+0700
+        - KST Korea Standard Time GMT+0900
+        - LHDT Lord Howe Daylight Time GMT+1100
+        - LHST Lord Howe Standard Time GMT+1030
+        - LINT Line Islands Time GMT+1400
+        - MAGT Magadan Time GMT+1100
+        - MART Marquesas Time GMT-0930
+        - MAWT Mawson Time GMT+0500
+        - MDT Mountain Daylight Time (North America) GMT-0600
+        - MET Middle European Time GMT+0100
+        - MEST Middle European Summer Time GMT+0200
+        - MHT Marshall Islands Time GMT+1200
+        - MIST Macquarie Island Station Time GMT+1100
+        - MIT Marquesas Islands Time GMT-0930
+        - MMT Myanmar Time GMT+0630
+        - MSK Moscow Time GMT+0300
+        - MST Malaysia Standard Time GMT+0800
+        - MST Mountain Standard Time (North America) GMT-0700
+        - MUT Mauritius Time GMT+0400
+        - MVT Maldives Time GMT+0500
+        - MYT Malaysia Time GMT+0800
+        - NCT New Caledonia Time GMT+1100
+        - NDT Newfoundland Daylight Time GMT-0230
+        - NFT Norfolk Island Time GMT+1130
+        - NOVT Novosibirsk Time GMT+0700
+        - NPT Nepal Time GMT+0545
+        - NST Newfoundland Standard Time GMT-0330
+        - NT Newfoundland Time GMT-0330
+        - NUT Niue Time GMT-1100
+        - NZDT New Zealand Daylight Time GMT+1300
+        - NZST New Zealand Standard Time GMT+1200
+        - OMST Omsk Time GMT+0600
+        - ORAT Oral Time GMT+0500
+        - PDT Pacific Daylight Time (North America) GMT-0700
+        - PET Peru Time GMT-0500
+        - PETT Kamchatka Time GMT+1200
+        - PGT Papua New Guinea Time GMT+1000
+        - PHOT Phoenix Island Time GMT+1300
+        - PKT Pakistan Standard Time GMT+0500
+        - PMDT Saint Pierre and Miquelon Daylight Time GMT-0200
+        - PMST Saint Pierre and Miquelon Standard Time GMT-0300
+        - PONT Pohnpei Standard Time GMT+1100
+        - PST Pacific Standard Time (North America) GMT-0800
+        - PYST Paraguay Summer Time GMT-0300
+        - PYT Paraguay Time GMT-0400
+        - RET Réunion Time GMT+0400
+        - ROTT Rothera Research Station Time GMT-0300
+        - SAKT Sakhalin Island Time GMT+1100
+        - SAMT Samara Time GMT+0400
+        - SAST South Africa Standard Time GMT+0200
+        - SBT Solomon Islands Time GMT+1100
+        - SCT Seychelles Time GMT+0400
+        - SGT Singapore Time GMT+0800
+        - SLST Sri Lanka Standard Time GMT+0530
+        - SRET Srednekolymsk Time GMT+1100
+        - SRT Suriname Time GMT-0300
+        - SST Samoa Standard Time GMT-1100
+        - SYOT Syowa Time GMT+0300
+        - TAHT Tahiti Time GMT-1000
+        - THA Thailand Standard Time GMT+0700
+        - TFT French Southern and Antarctic Time GMT+0500
+        - TJT Tajikistan Time GMT+0500
+        - TKT Tokelau Time GMT+1300
+        - TLT Timor Leste Time GMT+0900
+        - TMT Turkmenistan Time GMT+0500
+        - TRT Turkey Time GMT+0300
+        - TOT Tonga Time GMT+1300
+        - TVT Tuvalu Time GMT+1200
+        - ULAST Ulaanbaatar Summer Time GMT+0900
+        - ULAT Ulaanbaatar Time GMT+0800
+        - UTC Coordinated Universal Time GMT+0000
+        - UYST Uruguay Summer Time GMT-0200
+        - UYT Uruguay Time GMT-0300
+        - VET Venezuelan Standard Time GMT-0400
+        - VLAST Vladivostok Summer Time GMT+1100
+        - VLAT Vladivostok Time GMT+1000
+        - VOST Vostok Station Time GMT+0600
+        - VUT Vanuatu Time GMT+1100
+        - WAKT Wake Island Time GMT+1200
+        - WAT West Africa Time GMT+0100
+        - WEDT Western European Daylight Time GMT+0100
+        - WEST Western European Summer Time GMT+0100
+        - WET Western European Time GMT+0000
+        - WGST Western Greenland Summer Time GMT-0200
+        - WGT Western Greenland Time GMT-0300
+        - WIB Western Indonesia Time GMT+0700
+        - WIT Eastern Indonesia Time GMT+0900
+        - WITA Central Indonesia Time GMT+0800
+        - WST Western Standard Time (Australia) GMT+0800
+        - WT Western Sahara Standard Time GMT+0000
+        - YAKT Yakutsk Time GMT+0900
+        - YEKT Yekaterinburg Time GMT+0500
+      description: Supported timezone values with their GMT offsets
+    UpdateCostCenterRequest:
+      type: object
+      required:
+        - name
+        - notes
+      properties:
+        name:
+          $ref: '#/components/schemas/CostCenterName'
+        notes:
+          type: string
+          maxLength: 1024
+    UpdateLocationRequest:
+      type: object
+      required:
+        - title
+        - country_code
+        - postal_address
+        - postal_code
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 32
+        country_code:
+          $ref: '#/components/schemas/CountryCode'
+        postal_address:
+          type: string
+          maxLength: 1024
+        postal_code:
+          type: string
+        openstreetmap_url:
+          type: string
+          format: uri
+        city_aka:
+          type: array
+          items:
+            $ref: '#/components/schemas/City'
+          maxItems: 3
+    UpdateOpeningRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: '#/components/schemas/OpeningID'
+    UpdateOrgUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - roles
+      properties:
+        email:
+          allOf:
+            - $ref: '#/components/schemas/EmailAddress'
+          description: The email address of the org user to update
+        name:
+          type: string
+          description: The new name of the org user
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUserRole'
+          description: The new roles of the org user
+    ValidationErrors:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+          description: List of fields that failed validation
+    WithdrawApplicationRequest:
+      type: object
+      required:
+        - application_id
+      properties:
+        application_id:
+          type: string
+  securitySchemes:
+    EmployerAuth:
+      type: http
+      scheme: bearer
+    HubAuth:
+      type: http
+      scheme: bearer
+servers:
+  - url: http://example.com
+    description: blah
+    variables: {}
