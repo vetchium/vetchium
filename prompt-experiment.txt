@@ -21,3 +21,6 @@ The Employer Site and the Hub site should have a header, footer and a sidebar to
 The Employer site and the Hub site should have two different package.json files, node_modules etc. The two sites will be deployed on different servers and potentially on different domains and they should not share any cookies or auth tokens or such. The only API server that it needs to talk to is the example.com api server that is documented in the yaml. It should not talk to any other API server (such as supabase or anything else).
 
 The Employer site and the Hub site should have an option to toggle between light and dark themes; change the language of the site; and other settings.
+
+All user visible strings should have support for i18n.
+
