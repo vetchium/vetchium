@@ -1,26 +1,64 @@
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 
-export default function Home() {
+export default function DashboardPage() {
   return (
-    <html>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        />
-      </head>
-      <body>
-        <h1>Hello World</h1>
-      </body>
-    </html>
+    <AuthenticatedLayout>
+      <Box sx={{ flexGrow: 1 }}>
+        <Typography variant="h4" gutterBottom>
+          Dashboard
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6} lg={4}>
+            <Paper
+              sx={{
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                height: 240,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Recent Applications
+              </Typography>
+              {/* Add content here */}
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6} lg={4}>
+            <Paper
+              sx={{
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                height: 240,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Active Openings
+              </Typography>
+              {/* Add content here */}
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6} lg={4}>
+            <Paper
+              sx={{
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                height: 240,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Upcoming Interviews
+              </Typography>
+              {/* Add content here */}
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    </AuthenticatedLayout>
   );
 }
