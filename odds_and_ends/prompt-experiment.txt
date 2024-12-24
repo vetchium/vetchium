@@ -14,7 +14,7 @@ Once all the Interviews are completed, the Hiring Manager will be able to make a
 
 A Hub user should be able to see the list of all the Openings, Applications, Candidacies, Interviews, etc. that they have applied to.
 
-The Employer site and the Hub should have a common landing page but different colorschemes. The UI should be rich, responsive and beautiful. Use ant.design component library for the whole project. The UI should be fluid to use on both desktop and mobile devices. There should be a settings page, change password, and other usual pages needed for the sites.
+The Employer site and the Hub should have a common landing page but different colorschemes. The UI should be rich, responsive and beautiful. Use mui component library (material ui) for the whole project. The UI should be fluid to use on both desktop and mobile devices. There should be a settings page, change password, and other usual pages needed for the sites.
 
 The Employer Site and the Hub site should have a header, footer and a sidebar to navigate between various pages. The sign in page should be shown if the user is not logged in. The user should be able to logout from the sites.
 
