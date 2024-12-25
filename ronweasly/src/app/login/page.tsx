@@ -31,8 +31,17 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      console.log("Response from the server is:", response);
+
+      if (response.status === 401) {
+        console.log("Invalid credentials");
+        throw new Error("Invalid credentials");
+      }
+
       if (!response.ok) {
         const data = await response.json();
+        console.log(data);
+        console.log(response.status);
         throw new Error(data.message || "Login failed");
       }
 
