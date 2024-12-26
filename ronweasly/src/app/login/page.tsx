@@ -11,9 +11,11 @@ import Alert from "@mui/material/Alert";
 import Paper from "@mui/material/Paper";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,18 +33,21 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      console.log("Response from the server is:", response);
-
-      if (response.status === 401) {
-        console.log("Invalid credentials");
-        throw new Error("Invalid credentials");
-      }
-
       if (!response.ok) {
-        const data = await response.json();
-        console.log(data);
-        console.log(response.status);
-        throw new Error(data.message || "Login failed");
+        switch (response.status) {
+          case 401:
+            throw new Error(t("auth.errors.invalidCredentials"));
+          case 422:
+            throw new Error(t("auth.errors.accountDisabled"));
+          case 500:
+          case 501:
+          case 502:
+          case 503:
+          case 504:
+            throw new Error(t("auth.errors.serverError"));
+          default:
+            throw new Error(t("auth.loginFailed"));
+        }
       }
 
       const data = await response.json();
@@ -50,7 +55,7 @@ export default function LoginPage() {
       Cookies.set("tfa_token", data.token, { path: "/" });
       router.push("/tfa");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("auth.loginFailed"));
     }
   };
 
@@ -85,7 +90,7 @@ export default function LoginPage() {
             }}
           />
           <Typography component="h1" variant="h5">
-            Sign in
+            {t("common.login")}
           </Typography>
           <Box
             component="form"
@@ -103,7 +108,7 @@ export default function LoginPage() {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t("common.email")}
               name="email"
               autoComplete="email"
               autoFocus
@@ -115,7 +120,7 @@ export default function LoginPage() {
               required
               fullWidth
               name="password"
-              label="Password"
+              label={t("common.password")}
               type="password"
               id="password"
               autoComplete="current-password"
@@ -128,7 +133,7 @@ export default function LoginPage() {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
             >
-              Sign In
+              {t("common.login")}
             </Button>
           </Box>
         </Paper>
