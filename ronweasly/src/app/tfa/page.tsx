@@ -11,9 +11,12 @@ import Alert from "@mui/material/Alert";
 import Paper from "@mui/material/Paper";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { useTranslation } from "@/hooks/useTranslation";
+import Link from "next/link";
 
 export default function TFAPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [tfaCode, setTfaCode] = useState("");
   const [error, setError] = useState("");
 
@@ -40,18 +43,19 @@ export default function TFAPage() {
         }),
       });
 
-      if (!response.ok) {
+      if (response.status === 200) {
         const data = await response.json();
-        throw new Error(data.message || "TFA verification failed");
+        // Store the session token in a cookie and remove TFA token
+        Cookies.set("session_token", data.session_token, { path: "/" });
+        Cookies.remove("tfa_token", { path: "/" });
+        router.push("/");
+      } else if (response.status === 500) {
+        throw new Error(t("auth.errors.serverError"));
+      } else {
+        throw new Error(t("auth.errors.invalidTfaCode"));
       }
-
-      const data = await response.json();
-      // Store the session token in a cookie and remove TFA token
-      Cookies.set("session_token", data.session_token, { path: "/" });
-      Cookies.remove("tfa_token", { path: "/" });
-      router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "TFA verification failed");
+      setError(err instanceof Error ? err.message : t("auth.tfaFailed"));
     }
   };
 
@@ -76,7 +80,7 @@ export default function TFAPage() {
           }}
         >
           <Typography component="h1" variant="h5" gutterBottom>
-            Two-Factor Authentication
+            {t("auth.tfa.title")}
           </Typography>
           <Typography
             variant="body2"
@@ -84,7 +88,7 @@ export default function TFAPage() {
             align="center"
             sx={{ mb: 3 }}
           >
-            Please enter the verification code sent to your email
+            {t("auth.tfa.description")}
           </Typography>
           <Box
             component="form"
@@ -102,7 +106,7 @@ export default function TFAPage() {
               required
               fullWidth
               id="tfa-code"
-              label="Verification Code"
+              label={t("auth.tfa.codeLabel")}
               name="tfa-code"
               autoComplete="one-time-code"
               autoFocus
@@ -115,8 +119,13 @@ export default function TFAPage() {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
             >
-              Verify
+              {t("common.verify")}
             </Button>
+            <Box sx={{ textAlign: "center" }}>
+              <Link href="/login" style={{ textDecoration: "none" }}>
+                <Button color="primary">{t("auth.backToLogin")}</Button>
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Box>
