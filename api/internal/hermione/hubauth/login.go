@@ -39,12 +39,13 @@ func Login(h wand.Wand) http.HandlerFunc {
 			h.Dbg("failed to validate request", "error", err)
 			return
 		}
-		h.Dbg("validated request", "loginRequest", loginRequest)
+		h.Dbg("validated request")
 
 		hubUser, err := h.DB().
 			GetHubUserByEmail(r.Context(), string(loginRequest.Email))
 		if err != nil {
 			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("no hub user found", "email", loginRequest.Email)
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
@@ -55,6 +56,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 		}
 
 		if hubUser.State != hub.ActiveHubUserState {
+			h.Dbg("hub user is not active", "email", loginRequest.Email)
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return
 		}
@@ -64,6 +66,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 			[]byte(loginRequest.Password),
 		)
 		if err != nil {
+			h.Dbg("invalid password", "email", loginRequest.Email)
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
@@ -108,6 +111,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 			},
 		)
 		if err != nil {
+			h.Dbg("failed to init hub user tfa", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
