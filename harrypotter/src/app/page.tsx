@@ -1,13 +1,19 @@
-import Image from "next/image";
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
+"use client";
 
-export default function Home() {
+import { Box, Typography } from "@mui/material";
+import { useTranslation } from "@/hooks/useTranslation";
+import DashboardLayout from "@/components/DashboardLayout";
+
+export default function Dashboard() {
+  const { t } = useTranslation();
+
   return (
-    <div>
-      <h1>Harry Potter</h1>
-    </div>
+    <DashboardLayout>
+      <Box sx={{ width: "100%" }}>
+        <Typography variant="h4" gutterBottom>
+          {t("dashboard.welcome")}
+        </Typography>
+      </Box>
+    </DashboardLayout>
   );
 }

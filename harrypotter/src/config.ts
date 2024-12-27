@@ -1,0 +1,2 @@
+export const API_SERVER_PREFIX =
+  process.env.NEXT_PUBLIC_API_SERVER_PREFIX || "/api";
