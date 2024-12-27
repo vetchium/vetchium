@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
-import { API_SERVER_PREFIX } from "@/config";
+import { config } from "@/config";
 import DashboardLayout from "@/components/DashboardLayout";
 
 interface Opening {
@@ -46,7 +46,7 @@ export default function Openings() {
     const fetchOpenings = async () => {
       try {
         const response = await fetch(
-          `${API_SERVER_PREFIX}/employer/filter-openings`,
+          `${config.API_SERVER_PREFIX}/employer/filter-openings`,
           {
             method: "POST",
             headers: {

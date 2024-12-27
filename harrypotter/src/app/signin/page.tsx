@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
-import { API_SERVER_PREFIX } from "@/config";
+import { config } from "@/config";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");
@@ -25,7 +25,7 @@ export default function SignIn() {
   const handleDomainVerification = async () => {
     try {
       const response = await fetch(
-        `${API_SERVER_PREFIX}/employer/get-onboard-status`,
+        `${config.API_SERVER_PREFIX}/employer/get-onboard-status`,
         {
           method: "POST",
           headers: {
@@ -52,17 +52,20 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     try {
-      const response = await fetch(`${API_SERVER_PREFIX}/employer/signin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          client_id: domain,
-          email,
-          password,
-        }),
-      });
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/signin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            client_id: domain,
+            email,
+            password,
+          }),
+        }
+      );
 
       if (response.status === 200) {
         const data = await response.json();

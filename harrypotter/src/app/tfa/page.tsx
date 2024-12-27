@@ -11,7 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
-import { API_SERVER_PREFIX } from "@/config";
+import { config } from "@/config";
 
 export default function TFA() {
   const [tfaCode, setTfaCode] = useState("");
@@ -29,7 +29,7 @@ export default function TFA() {
   const handleVerify = async () => {
     try {
       const token = localStorage.getItem("tfaToken");
-      const response = await fetch(`${API_SERVER_PREFIX}/hub/tfa`, {
+      const response = await fetch(`${config.API_SERVER_PREFIX}/employer/tfa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
