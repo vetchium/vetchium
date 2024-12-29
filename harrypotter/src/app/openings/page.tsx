@@ -16,6 +16,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import DashboardLayout from "@/components/DashboardLayout";
+import Cookies from "js-cookie";
 
 interface Opening {
   id: string;
@@ -45,13 +46,19 @@ export default function Openings() {
   useEffect(() => {
     const fetchOpenings = async () => {
       try {
+        const sessionToken = Cookies.get("session_token");
+        if (!sessionToken) {
+          setError(t("auth.unauthorized"));
+          return;
+        }
+
         const response = await fetch(
           `${config.API_SERVER_PREFIX}/employer/filter-openings`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
+              Authorization: `Bearer ${sessionToken}`,
             },
             body: JSON.stringify({}),
           }
@@ -60,6 +67,8 @@ export default function Openings() {
         if (response.status === 200) {
           const data = await response.json();
           setOpenings(data);
+        } else if (response.status === 401) {
+          setError(t("auth.unauthorized"));
         } else {
           setError(t("common.error"));
         }
@@ -69,7 +78,9 @@ export default function Openings() {
     };
 
     fetchOpenings();
-  }, [t]);
+    // We're intentionally not including t in the dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <DashboardLayout>

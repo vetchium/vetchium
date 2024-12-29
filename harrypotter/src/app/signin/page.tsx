@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
+import Cookies from "js-cookie";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");
@@ -69,7 +70,7 @@ export default function SignIn() {
 
       if (response.status === 200) {
         const data = await response.json();
-        localStorage.setItem("tfaToken", data.token);
+        Cookies.set("tfa_token", data.token, { path: "/" });
         router.push("/tfa");
       } else if (response.status === 422) {
         setError(t("auth.accountDisabled"));

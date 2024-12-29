@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
+import Cookies from "js-cookie";
 
 export default function TFA() {
   const [tfaCode, setTfaCode] = useState("");
@@ -20,15 +21,15 @@ export default function TFA() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const token = localStorage.getItem("tfaToken");
+    const token = Cookies.get("tfa_token");
     if (!token) {
-      router.push("/signin");
+      router.replace("/signin");
     }
   }, [router]);
 
   const handleVerify = async () => {
     try {
-      const token = localStorage.getItem("tfaToken");
+      const token = Cookies.get("tfa_token");
       const response = await fetch(`${config.API_SERVER_PREFIX}/employer/tfa`, {
         method: "POST",
         headers: {
@@ -43,8 +44,8 @@ export default function TFA() {
 
       if (response.status === 200) {
         const data = await response.json();
-        localStorage.setItem("sessionToken", data.session_token);
-        localStorage.removeItem("tfaToken");
+        Cookies.set("session_token", data.session_token, { path: "/" });
+        Cookies.remove("tfa_token", { path: "/" });
         router.push("/");
       } else {
         setError(t("auth.invalidCredentials"));

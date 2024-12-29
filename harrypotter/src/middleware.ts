@@ -3,20 +3,30 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/signin", "/tfa"];
 
-export default async function middleware(request: NextRequest) {
-  const publicPath = PUBLIC_PATHS.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+export function middleware(request: NextRequest) {
+  const sessionToken = request.cookies.get("session_token")?.value;
+  const tfaToken = request.cookies.get("tfa_token")?.value;
+  const pathname = request.nextUrl.pathname;
 
-  if (publicPath) {
+  // Allow public paths
+  if (PUBLIC_PATHS.includes(pathname)) {
+    // If user is already authenticated, redirect to home
+    if (sessionToken) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
     return NextResponse.next();
   }
 
-  const token =
-    request.cookies.get("sessionToken") ||
-    request.headers.get("Authorization")?.split(" ")[1];
+  // Check for TFA page
+  if (pathname === "/tfa") {
+    if (!tfaToken) {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+    return NextResponse.next();
+  }
 
-  if (!token) {
+  // Protected routes
+  if (!sessionToken) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
@@ -24,5 +34,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
