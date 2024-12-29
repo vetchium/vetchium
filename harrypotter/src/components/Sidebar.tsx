@@ -3,27 +3,34 @@
 import {
   Box,
   Drawer,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   useTheme,
+  styled,
 } from "@mui/material";
-import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import HomeIcon from "@mui/icons-material/Home";
 import WorkIcon from "@mui/icons-material/Work";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import MenuIcon from "@mui/icons-material/Menu";
 
 const drawerWidth = 240;
 
-export default function Sidebar() {
-  const [open, setOpen] = useState(true);
+const DrawerHeader = styled("div")(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  padding: theme.spacing(0, 1),
+  ...theme.mixins.toolbar,
+  justifyContent: "center",
+}));
+
+interface SidebarProps {
+  open: boolean;
+}
+
+export default function Sidebar({ open }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
@@ -34,18 +41,14 @@ export default function Sidebar() {
     { text: t("common.openings"), icon: <WorkIcon />, path: "/openings" },
   ];
 
-  const handleDrawerToggle = () => {
-    setOpen(!open);
-  };
-
   return (
     <Drawer
       variant="permanent"
       sx={{
-        width: open ? drawerWidth : theme.spacing(7),
+        width: open ? drawerWidth : theme.spacing(9),
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: open ? drawerWidth : theme.spacing(7),
+          width: open ? drawerWidth : theme.spacing(9),
           transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -56,18 +59,22 @@ export default function Sidebar() {
         },
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          p: 1,
-        }}
-      >
-        <IconButton onClick={handleDrawerToggle}>
-          {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-        </IconButton>
-      </Box>
+      <DrawerHeader>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            visibility: open ? "visible" : "hidden",
+          }}
+        >
+          <Box component="span" sx={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            HP
+          </Box>
+        </Box>
+      </DrawerHeader>
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -91,7 +98,10 @@ export default function Sidebar() {
               </ListItemIcon>
               <ListItemText
                 primary={item.text}
-                sx={{ opacity: open ? 1 : 0 }}
+                sx={{
+                  opacity: open ? 1 : 0,
+                  whiteSpace: "nowrap",
+                }}
               />
             </ListItemButton>
           </ListItem>

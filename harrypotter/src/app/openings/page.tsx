@@ -12,6 +12,7 @@ import {
   TableRow,
   Typography,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -41,14 +42,20 @@ interface Opening {
 export default function Openings() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchOpenings = async () => {
       try {
         const sessionToken = Cookies.get("session_token");
         if (!sessionToken) {
-          setError(t("auth.unauthorized"));
+          if (isMounted) {
+            setError(t("auth.unauthorized"));
+            setIsLoading(false);
+          }
           return;
         }
 
@@ -64,6 +71,8 @@ export default function Openings() {
           }
         );
 
+        if (!isMounted) return;
+
         if (response.status === 200) {
           const data = await response.json();
           setOpenings(data);
@@ -73,12 +82,23 @@ export default function Openings() {
           setError(t("common.error"));
         }
       } catch (err) {
-        setError(t("common.error"));
+        if (isMounted) {
+          setError(t("common.error"));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchOpenings();
-    // We're intentionally not including t in the dependencies
+
+    return () => {
+      isMounted = false;
+    };
+    // We intentionally omit 't' from dependencies as it would cause unnecessary refetches
+    // The translations are stable enough that this is safe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,51 +113,57 @@ export default function Openings() {
             {error}
           </Alert>
         )}
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="openings table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell align="right">Positions</TableCell>
-                <TableCell align="right">Filled</TableCell>
-                <TableCell>Recruiter</TableCell>
-                <TableCell>Hiring Manager</TableCell>
-                <TableCell>Cost Center</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>State</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {openings.length > 0 ? (
-                openings.map((opening) => (
-                  <TableRow
-                    key={opening.id}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {opening.title}
-                    </TableCell>
-                    <TableCell align="right">{opening.positions}</TableCell>
-                    <TableCell align="right">
-                      {opening.filled_positions}
-                    </TableCell>
-                    <TableCell>{opening.recruiter.name}</TableCell>
-                    <TableCell>{opening.hiring_manager.name}</TableCell>
-                    <TableCell>{opening.cost_center_name}</TableCell>
-                    <TableCell>{opening.opening_type}</TableCell>
-                    <TableCell>{opening.state}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
+        {isLoading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }} aria-label="openings table">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
-                    {t("openings.noOpenings")}
-                  </TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell align="right">Positions</TableCell>
+                  <TableCell align="right">Filled</TableCell>
+                  <TableCell>Recruiter</TableCell>
+                  <TableCell>Hiring Manager</TableCell>
+                  <TableCell>Cost Center</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>State</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {openings.length > 0 ? (
+                  openings.map((opening) => (
+                    <TableRow
+                      key={opening.id}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      <TableCell component="th" scope="row">
+                        {opening.title}
+                      </TableCell>
+                      <TableCell align="right">{opening.positions}</TableCell>
+                      <TableCell align="right">
+                        {opening.filled_positions}
+                      </TableCell>
+                      <TableCell>{opening.recruiter.name}</TableCell>
+                      <TableCell>{opening.hiring_manager.name}</TableCell>
+                      <TableCell>{opening.cost_center_name}</TableCell>
+                      <TableCell>{opening.opening_type}</TableCell>
+                      <TableCell>{opening.state}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      {t("openings.noOpenings")}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     </DashboardLayout>
   );
