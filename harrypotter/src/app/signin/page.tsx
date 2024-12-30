@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { GetOnboardStatusRequest } from "@/../../typespec/employer/auth";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");
@@ -25,6 +26,10 @@ export default function SignIn() {
 
   const handleDomainVerification = async () => {
     try {
+      const requestBody: GetOnboardStatusRequest = {
+        client_id: domain,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/get-onboard-status`,
         {
@@ -32,7 +37,7 @@ export default function SignIn() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ client_id: domain }),
+          body: JSON.stringify(requestBody),
         }
       );
 
