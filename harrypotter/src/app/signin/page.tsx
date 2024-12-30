@@ -13,7 +13,11 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
-import { GetOnboardStatusRequest } from "@/../../typespec/employer/auth";
+import {
+  GetOnboardStatusRequest,
+  EmployerSignInRequest,
+  EmployerSignInResponse,
+} from "@psankar/vetchi-typespec/employer/auth";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");
@@ -58,6 +62,12 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     try {
+      const requestBody: EmployerSignInRequest = {
+        client_id: domain,
+        email,
+        password,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/signin`,
         {
@@ -65,16 +75,12 @@ export default function SignIn() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            client_id: domain,
-            email,
-            password,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
       if (response.status === 200) {
-        const data = await response.json();
+        const data: EmployerSignInResponse = await response.json();
         Cookies.set("tfa_token", data.token, { path: "/" });
         router.push("/tfa");
       } else if (response.status === 422) {
