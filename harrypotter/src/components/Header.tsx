@@ -1,13 +1,43 @@
 "use client";
 
-import { AppBar, Toolbar, IconButton, Typography, Box } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Box,
+  Avatar,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = () => {
+    Cookies.remove("session_token", { path: "/" });
+    router.push("/signin");
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -44,6 +74,35 @@ export default function Header({ onMenuClick }: HeaderProps) {
             HarryPotter
           </Typography>
         </Box>
+        <div>
+          <IconButton
+            size="large"
+            aria-label="account of current user"
+            aria-controls="menu-appbar"
+            aria-haspopup="true"
+            onClick={handleMenu}
+            color="inherit"
+          >
+            <Avatar />
+          </IconButton>
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleSignOut}>{t("common.logout")}</MenuItem>
+          </Menu>
+        </div>
       </Toolbar>
     </AppBar>
   );
