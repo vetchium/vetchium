@@ -15,6 +15,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import HomeIcon from "@mui/icons-material/Home";
 import WorkIcon from "@mui/icons-material/Work";
+import BusinessIcon from "@mui/icons-material/Business";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 const drawerWidth = 240;
 
@@ -39,6 +41,12 @@ export default function Sidebar({ open }: SidebarProps) {
   const menuItems = [
     { text: t("common.home"), icon: <HomeIcon />, path: "/" },
     { text: t("common.openings"), icon: <WorkIcon />, path: "/openings" },
+    {
+      text: t("common.costCenters"),
+      icon: <AccountBalanceIcon />,
+      path: "/cost-centers",
+    },
+    { text: t("common.locations"), icon: <BusinessIcon />, path: "/locations" },
   ];
 
   return (

@@ -18,9 +18,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 interface HeaderProps {
   onMenuClick: () => void;
+  isSidebarOpen: boolean;
 }
 
-export default function Header({ onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick, isSidebarOpen }: HeaderProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const { t } = useTranslation();
@@ -41,12 +42,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <AppBar
       position="fixed"
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        transition: (theme) =>
+          theme.transitions.create(["width", "margin"], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+        ...(isSidebarOpen && {
+          transition: (theme) =>
+            theme.transitions.create(["width", "margin"], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+        }),
+      }}
     >
       <Toolbar>
         <IconButton
           color="inherit"
-          aria-label="open drawer"
+          aria-label={isSidebarOpen ? "close drawer" : "open drawer"}
           edge="start"
           onClick={onMenuClick}
           sx={{ mr: 2 }}
