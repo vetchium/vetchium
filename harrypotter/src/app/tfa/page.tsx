@@ -13,6 +13,10 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import {
+  EmployerTFARequest,
+  EmployerTFAResponse,
+} from "@psankar/vetchi-typespec/employer/auth";
 
 export default function TFA() {
   const [tfaCode, setTfaCode] = useState("");
@@ -30,20 +34,22 @@ export default function TFA() {
   const handleVerify = async () => {
     try {
       const token = Cookies.get("tfa_token");
+      const requestBody: EmployerTFARequest = {
+        tfa_code: tfaCode,
+        tfa_token: token!,
+        remember_me: true,
+      };
+
       const response = await fetch(`${config.API_SERVER_PREFIX}/employer/tfa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          tfa_code: tfaCode,
-          tfa_token: token,
-          remember_me: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.status === 200) {
-        const data = await response.json();
+        const data: EmployerTFAResponse = await response.json();
         Cookies.set("session_token", data.session_token, { path: "/" });
         Cookies.remove("tfa_token", { path: "/" });
         router.push("/");
