@@ -38,7 +38,12 @@ export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
-  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [postalAddress, setPostalAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [openstreetmapUrl, setOpenstreetmapUrl] = useState("");
+  const [cityAka, setCityAka] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
@@ -51,6 +56,8 @@ export default function LocationsPage() {
         return;
       }
 
+      const request: GetLocationsRequest = {};
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/get-locations`,
         {
@@ -59,11 +66,12 @@ export default function LocationsPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify(request),
         }
       );
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
@@ -85,19 +93,34 @@ export default function LocationsPage() {
 
   const handleAddClick = () => {
     setEditingLocation(null);
-    setName("");
+    setTitle("");
+    setCountryCode("");
+    setPostalAddress("");
+    setPostalCode("");
+    setOpenstreetmapUrl("");
+    setCityAka([]);
     setOpenDialog(true);
   };
 
   const handleEditClick = (location: Location) => {
     setEditingLocation(location);
-    setName(location.title);
+    setTitle(location.title);
+    setCountryCode(location.country_code);
+    setPostalAddress(location.postal_address);
+    setPostalCode(location.postal_code);
+    setOpenstreetmapUrl(location.openstreetmap_url || "");
+    setCityAka(location.city_aka || []);
     setOpenDialog(true);
   };
 
   const handleClose = () => {
     setOpenDialog(false);
-    setName("");
+    setTitle("");
+    setCountryCode("");
+    setPostalAddress("");
+    setPostalCode("");
+    setOpenstreetmapUrl("");
+    setCityAka([]);
     setEditingLocation(null);
   };
 
@@ -113,27 +136,33 @@ export default function LocationsPage() {
         ? `${config.API_SERVER_PREFIX}/employer/update-location`
         : `${config.API_SERVER_PREFIX}/employer/add-location`;
 
+      const requestBody: AddLocationRequest | UpdateLocationRequest = {
+        title,
+        country_code: countryCode,
+        postal_address: postalAddress,
+        postal_code: postalCode,
+        openstreetmap_url: openstreetmapUrl || undefined,
+        city_aka: cityAka.length > 0 ? cityAka : undefined,
+      };
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          title: name,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
 
       if (!response.ok) {
         throw new Error(
-          editingLocation
-            ? "Failed to update location"
-            : "Failed to add location"
+          editingLocation ? t("locations.updateError") : t("locations.addError")
         );
       }
 
@@ -152,6 +181,10 @@ export default function LocationsPage() {
         return;
       }
 
+      const request: DefunctLocationRequest = {
+        title: location.title,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/defunct-location`,
         {
@@ -160,13 +193,12 @@ export default function LocationsPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title: location.title,
-          }),
+          body: JSON.stringify(request),
         }
       );
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
@@ -242,8 +274,42 @@ export default function LocationsPage() {
             label={t("locations.locationTitle")}
             type="text"
             fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label={t("locations.countryCode")}
+            type="text"
+            fullWidth
+            value={countryCode}
+            onChange={(e) => setCountryCode(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label={t("locations.postalAddress")}
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            value={postalAddress}
+            onChange={(e) => setPostalAddress(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label={t("locations.postalCode")}
+            type="text"
+            fullWidth
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label={t("locations.mapUrl")}
+            type="url"
+            fullWidth
+            value={openstreetmapUrl}
+            onChange={(e) => setOpenstreetmapUrl(e.target.value)}
           />
         </DialogContent>
         <DialogActions>

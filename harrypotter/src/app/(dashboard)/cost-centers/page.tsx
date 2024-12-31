@@ -41,6 +41,7 @@ export default function CostCentersPage() {
     null
   );
   const [name, setName] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
@@ -53,6 +54,8 @@ export default function CostCentersPage() {
         return;
       }
 
+      const request: GetCostCentersRequest = {};
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/get-cost-centers`,
         {
@@ -61,11 +64,12 @@ export default function CostCentersPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify(request),
         }
       );
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
@@ -90,18 +94,21 @@ export default function CostCentersPage() {
   const handleAddClick = () => {
     setEditingCostCenter(null);
     setName("");
+    setNotes("");
     setOpenDialog(true);
   };
 
   const handleEditClick = (costCenter: CostCenter) => {
     setEditingCostCenter(costCenter);
     setName(costCenter.name);
+    setNotes(costCenter.notes || "");
     setOpenDialog(true);
   };
 
   const handleClose = () => {
     setOpenDialog(false);
     setName("");
+    setNotes("");
     setEditingCostCenter(null);
   };
 
@@ -117,18 +124,22 @@ export default function CostCentersPage() {
         ? `${config.API_SERVER_PREFIX}/employer/update-cost-center`
         : `${config.API_SERVER_PREFIX}/employer/add-cost-center`;
 
+      const requestBody: AddCostCenterRequest | UpdateCostCenterRequest = {
+        name,
+        notes: notes || undefined,
+      };
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
@@ -136,8 +147,8 @@ export default function CostCentersPage() {
       if (!response.ok) {
         throw new Error(
           editingCostCenter
-            ? "Failed to update cost center"
-            : "Failed to add cost center"
+            ? t("costCenters.updateError")
+            : t("costCenters.addError")
         );
       }
 
@@ -156,6 +167,10 @@ export default function CostCentersPage() {
         return;
       }
 
+      const request: DefunctCostCenterRequest = {
+        name: costCenter.name,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/defunct-cost-center`,
         {
@@ -164,13 +179,12 @@ export default function CostCentersPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            name: costCenter.name,
-          }),
+          body: JSON.stringify(request),
         }
       );
 
       if (response.status === 401) {
+        Cookies.remove("session_token");
         router.push("/signin");
         return;
       }
@@ -250,6 +264,16 @@ export default function CostCentersPage() {
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label={t("costCenters.notes")}
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
