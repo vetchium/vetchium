@@ -45,6 +45,7 @@ export default function LocationsPage() {
   const [openstreetmapUrl, setOpenstreetmapUrl] = useState("");
   const [cityAka, setCityAka] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [cityAkaInput, setCityAkaInput] = useState("");
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -213,6 +214,17 @@ export default function LocationsPage() {
     }
   };
 
+  const handleAddCityAka = () => {
+    if (cityAkaInput.trim() && cityAka.length < 3) {
+      setCityAka([...cityAka, cityAkaInput.trim()]);
+      setCityAkaInput("");
+    }
+  };
+
+  const handleRemoveCityAka = (index: number) => {
+    setCityAka(cityAka.filter((_, i) => i !== index));
+  };
+
   return (
     <Container maxWidth="lg">
       <Box
@@ -242,6 +254,8 @@ export default function LocationsPage() {
           <TableHead>
             <TableRow>
               <TableCell>{t("locations.locationTitle")}</TableCell>
+              <TableCell>{t("locations.countryCode")}</TableCell>
+              <TableCell>{t("locations.postalCode")}</TableCell>
               <TableCell align="right">{t("common.actions")}</TableCell>
             </TableRow>
           </TableHead>
@@ -249,6 +263,8 @@ export default function LocationsPage() {
             {locations.map((location) => (
               <TableRow key={location.title}>
                 <TableCell>{location.title}</TableCell>
+                <TableCell>{location.country_code}</TableCell>
+                <TableCell>{location.postal_code}</TableCell>
                 <TableCell align="right">
                   <IconButton onClick={() => handleEditClick(location)}>
                     <EditIcon />
@@ -274,6 +290,7 @@ export default function LocationsPage() {
             label={t("locations.locationTitle")}
             type="text"
             fullWidth
+            required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -282,14 +299,18 @@ export default function LocationsPage() {
             label={t("locations.countryCode")}
             type="text"
             fullWidth
+            required
             value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value)}
+            onChange={(e) => setCountryCode(e.target.value.toUpperCase())}
+            inputProps={{ maxLength: 3 }}
+            helperText={t("locations.countryCodeHelp")}
           />
           <TextField
             margin="dense"
             label={t("locations.postalAddress")}
             type="text"
             fullWidth
+            required
             multiline
             rows={3}
             value={postalAddress}
@@ -300,6 +321,7 @@ export default function LocationsPage() {
             label={t("locations.postalCode")}
             type="text"
             fullWidth
+            required
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
           />
@@ -311,10 +333,55 @@ export default function LocationsPage() {
             value={openstreetmapUrl}
             onChange={(e) => setOpenstreetmapUrl(e.target.value)}
           />
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {t("locations.cityAka")} ({cityAka.length}/3)
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+              <TextField
+                size="small"
+                value={cityAkaInput}
+                onChange={(e) => setCityAkaInput(e.target.value)}
+                disabled={cityAka.length >= 3}
+                placeholder={t("locations.cityAkaPlaceholder")}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleAddCityAka}
+                disabled={!cityAkaInput.trim() || cityAka.length >= 3}
+              >
+                {t("common.add")}
+              </Button>
+            </Box>
+            {cityAka.map((city, index) => (
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 0.5,
+                }}
+              >
+                <Typography>{city}</Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveCityAka(index)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>{t("common.cancel")}</Button>
-          <Button onClick={handleSave}>{t("common.save")}</Button>
+          <Button
+            onClick={handleSave}
+            disabled={!title || !countryCode || !postalAddress || !postalCode}
+          >
+            {t("common.save")}
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
