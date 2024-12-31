@@ -23,8 +23,8 @@ const theme = createTheme({
       paper: "#ffffff",
     },
     text: {
-      primary: "#1B5E20",
-      secondary: "#2E7D32",
+      primary: "rgba(0, 0, 0, 0.87)", // Standard dark text
+      secondary: "rgba(0, 0, 0, 0.6)", // Standard secondary text
     },
     error: {
       main: "#d32f2f",
@@ -42,22 +42,22 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
     h2: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
     h3: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
     h4: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
     h5: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
     h6: {
-      color: "#1B5E20",
+      fontWeight: 500,
     },
   },
   components: {

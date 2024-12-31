@@ -4,24 +4,13 @@ import {
   Box,
   Button,
   Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
   Alert,
   Typography,
   FormControlLabel,
   Switch,
   Grid,
+  Paper,
+  IconButton,
   Chip,
   Link,
 } from "@mui/material";
@@ -38,23 +27,12 @@ import Cookies from "js-cookie";
 import {
   Location,
   GetLocationsRequest,
-  AddLocationRequest,
-  UpdateLocationRequest,
   DefunctLocationRequest,
 } from "@psankar/vetchi-typespec";
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
-  const [title, setTitle] = useState("");
-  const [countryCode, setCountryCode] = useState("");
-  const [postalAddress, setPostalAddress] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [openstreetmapUrl, setOpenstreetmapUrl] = useState("");
-  const [cityAka, setCityAka] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [cityAkaInput, setCityAkaInput] = useState("");
   const [includeDefunct, setIncludeDefunct] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
@@ -106,88 +84,6 @@ export default function LocationsPage() {
     fetchLocations();
   }, [includeDefunct]);
 
-  const handleAddClick = () => {
-    setEditingLocation(null);
-    setTitle("");
-    setCountryCode("");
-    setPostalAddress("");
-    setPostalCode("");
-    setOpenstreetmapUrl("");
-    setCityAka([]);
-    setOpenDialog(true);
-  };
-
-  const handleEditClick = (location: Location) => {
-    setEditingLocation(location);
-    setTitle(location.title);
-    setCountryCode(location.country_code);
-    setPostalAddress(location.postal_address);
-    setPostalCode(location.postal_code);
-    setOpenstreetmapUrl(location.openstreetmap_url || "");
-    setCityAka(location.city_aka || []);
-    setOpenDialog(true);
-  };
-
-  const handleClose = () => {
-    setOpenDialog(false);
-    setTitle("");
-    setCountryCode("");
-    setPostalAddress("");
-    setPostalCode("");
-    setOpenstreetmapUrl("");
-    setCityAka([]);
-    setEditingLocation(null);
-  };
-
-  const handleSave = async () => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const url = editingLocation
-        ? `${config.API_SERVER_PREFIX}/employer/update-location`
-        : `${config.API_SERVER_PREFIX}/employer/add-location`;
-
-      const requestBody: AddLocationRequest | UpdateLocationRequest = {
-        title,
-        country_code: countryCode,
-        postal_address: postalAddress,
-        postal_code: postalCode,
-        openstreetmap_url: openstreetmapUrl || undefined,
-        city_aka: cityAka.length > 0 ? cityAka : undefined,
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          editingLocation ? t("locations.updateError") : t("locations.addError")
-        );
-      }
-
-      handleClose();
-      fetchLocations();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    }
-  };
-
   const handleDelete = async (location: Location) => {
     try {
       const token = Cookies.get("session_token");
@@ -219,24 +115,15 @@ export default function LocationsPage() {
       }
 
       if (!response.ok) {
-        throw new Error("Failed to delete location");
+        throw new Error(t("locations.defunctError"));
       }
 
       fetchLocations();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error ? err.message : t("locations.defunctError")
+      );
     }
-  };
-
-  const handleAddCityAka = () => {
-    if (cityAkaInput.trim() && cityAka.length < 3) {
-      setCityAka([...cityAka, cityAkaInput.trim()]);
-      setCityAkaInput("");
-    }
-  };
-
-  const handleRemoveCityAka = (index: number) => {
-    setCityAka(cityAka.filter((_, i) => i !== index));
   };
 
   return (
@@ -249,7 +136,7 @@ export default function LocationsPage() {
           alignItems: "center",
         }}
       >
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component="h1" sx={{ color: "text.primary" }}>
           {t("locations.title")}
         </Typography>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -261,8 +148,12 @@ export default function LocationsPage() {
               />
             }
             label={t("locations.includeDefunct")}
+            sx={{ color: "text.primary" }}
           />
-          <Button variant="contained" onClick={handleAddClick}>
+          <Button
+            variant="contained"
+            onClick={() => router.push("/locations/add")}
+          >
             {t("locations.add")}
           </Button>
         </Box>
@@ -283,6 +174,7 @@ export default function LocationsPage() {
                   p: 2,
                   height: "100%",
                   opacity: location.state === "DEFUNCT_LOCATION" ? 0.7 : 1,
+                  color: "text.primary",
                 }}
               >
                 <Box
@@ -294,7 +186,11 @@ export default function LocationsPage() {
                   }}
                 >
                   <Box>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ color: "text.primary" }}
+                    >
                       {location.title}
                     </Typography>
                     <Typography
@@ -317,14 +213,23 @@ export default function LocationsPage() {
                   </Box>
                   <Box>
                     <IconButton
-                      onClick={() => handleEditClick(location)}
+                      onClick={() =>
+                        router.push(
+                          `/locations/edit?title=${encodeURIComponent(
+                            location.title
+                          )}`
+                        )
+                      }
                       size="small"
+                      sx={{ color: "text.primary" }}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       onClick={() => handleDelete(location)}
                       size="small"
+                      disabled={location.state === "DEFUNCT_LOCATION"}
+                      sx={{ color: "text.primary" }}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -332,31 +237,49 @@ export default function LocationsPage() {
                 </Box>
 
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "text.secondary", mb: 0.5 }}
+                  >
                     {t("locations.countryCode")}
                   </Typography>
-                  <Typography>{location.country_code}</Typography>
+                  <Typography sx={{ color: "text.primary" }}>
+                    {location.country_code}
+                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "text.secondary", mb: 0.5 }}
+                  >
                     {t("locations.postalAddress")}
                   </Typography>
-                  <Typography style={{ whiteSpace: "pre-line" }}>
+                  <Typography
+                    sx={{ color: "text.primary", whiteSpace: "pre-line" }}
+                  >
                     {location.postal_address}
                   </Typography>
                 </Box>
 
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "text.secondary", mb: 0.5 }}
+                  >
                     {t("locations.postalCode")}
                   </Typography>
-                  <Typography>{location.postal_code}</Typography>
+                  <Typography sx={{ color: "text.primary" }}>
+                    {location.postal_code}
+                  </Typography>
                 </Box>
 
                 {location.city_aka && location.city_aka.length > 0 && (
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary", mb: 0.5 }}
+                    >
                       {t("locations.cityAka")}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -366,6 +289,7 @@ export default function LocationsPage() {
                           label={city}
                           size="small"
                           variant="outlined"
+                          sx={{ color: "text.primary", borderColor: "divider" }}
                         />
                       ))}
                     </Box>
@@ -384,6 +308,7 @@ export default function LocationsPage() {
                         variant="outlined"
                         size="small"
                         startIcon={<MapIcon />}
+                        sx={{ color: "text.primary", borderColor: "divider" }}
                       >
                         {t("locations.viewMap")}
                       </Button>
@@ -396,117 +321,11 @@ export default function LocationsPage() {
         </Grid>
       ) : (
         <Paper sx={{ p: 4, textAlign: "center" }}>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
             {t("locations.noLocations")}
           </Typography>
         </Paper>
       )}
-
-      <Dialog open={openDialog} onClose={handleClose}>
-        <DialogTitle>
-          {editingLocation ? t("locations.editTitle") : t("locations.addTitle")}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t("locations.locationTitle")}
-            type="text"
-            fullWidth
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label={t("locations.countryCode")}
-            type="text"
-            fullWidth
-            required
-            value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value.toUpperCase())}
-            inputProps={{ maxLength: 3 }}
-            helperText={t("locations.countryCodeHelp")}
-          />
-          <TextField
-            margin="dense"
-            label={t("locations.postalAddress")}
-            type="text"
-            fullWidth
-            required
-            multiline
-            rows={3}
-            value={postalAddress}
-            onChange={(e) => setPostalAddress(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label={t("locations.postalCode")}
-            type="text"
-            fullWidth
-            required
-            value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label={t("locations.mapUrl")}
-            type="url"
-            fullWidth
-            value={openstreetmapUrl}
-            onChange={(e) => setOpenstreetmapUrl(e.target.value)}
-          />
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              {t("locations.cityAka")} ({cityAka.length}/3)
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-              <TextField
-                size="small"
-                value={cityAkaInput}
-                onChange={(e) => setCityAkaInput(e.target.value)}
-                disabled={cityAka.length >= 3}
-                placeholder={t("locations.cityAkaPlaceholder")}
-              />
-              <Button
-                variant="outlined"
-                onClick={handleAddCityAka}
-                disabled={!cityAkaInput.trim() || cityAka.length >= 3}
-              >
-                {t("common.add")}
-              </Button>
-            </Box>
-            {cityAka.map((city, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  mb: 0.5,
-                }}
-              >
-                <Typography>{city}</Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => handleRemoveCityAka(index)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            ))}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>{t("common.cancel")}</Button>
-          <Button
-            onClick={handleSave}
-            disabled={!title || !countryCode || !postalAddress || !postalCode}
-          >
-            {t("common.save")}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 }
