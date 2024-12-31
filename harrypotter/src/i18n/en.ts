@@ -47,6 +47,11 @@ export const en = {
     notes: "Notes",
     state: "State",
     add: "Add Cost Center",
+    active: "Active",
+    defunct: "Defunct",
+    includeDefunct: "Show Defunct Cost Centers",
+    noCostCenters:
+      "No cost centers found. Click 'Add Cost Center' to create one.",
     fetchError: "Failed to fetch cost centers",
     addError: "Failed to add cost center",
     updateError: "Failed to update cost center",

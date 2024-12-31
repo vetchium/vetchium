@@ -4,21 +4,13 @@ import {
   Box,
   Button,
   Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
   Alert,
   Typography,
+  FormControlLabel,
+  Switch,
+  Grid,
+  Paper,
+  IconButton,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -29,20 +21,13 @@ import Cookies from "js-cookie";
 import {
   CostCenter,
   GetCostCentersRequest,
-  AddCostCenterRequest,
-  UpdateCostCenterRequest,
   DefunctCostCenterRequest,
 } from "@psankar/vetchi-typespec";
 
 export default function CostCentersPage() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingCostCenter, setEditingCostCenter] = useState<CostCenter | null>(
-    null
-  );
-  const [name, setName] = useState("");
-  const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [includeDefunct, setIncludeDefunct] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -54,7 +39,9 @@ export default function CostCentersPage() {
         return;
       }
 
-      const request: GetCostCentersRequest = {};
+      const request: GetCostCentersRequest = {
+        states: includeDefunct ? ["ACTIVE_CC", "DEFUNCT_CC"] : ["ACTIVE_CC"],
+      };
 
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/get-cost-centers`,
@@ -89,75 +76,7 @@ export default function CostCentersPage() {
 
   useEffect(() => {
     fetchCostCenters();
-  }, []);
-
-  const handleAddClick = () => {
-    setEditingCostCenter(null);
-    setName("");
-    setNotes("");
-    setOpenDialog(true);
-  };
-
-  const handleEditClick = (costCenter: CostCenter) => {
-    setEditingCostCenter(costCenter);
-    setName(costCenter.name);
-    setNotes(costCenter.notes || "");
-    setOpenDialog(true);
-  };
-
-  const handleClose = () => {
-    setOpenDialog(false);
-    setName("");
-    setNotes("");
-    setEditingCostCenter(null);
-  };
-
-  const handleSave = async () => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const url = editingCostCenter
-        ? `${config.API_SERVER_PREFIX}/employer/update-cost-center`
-        : `${config.API_SERVER_PREFIX}/employer/add-cost-center`;
-
-      const requestBody: AddCostCenterRequest | UpdateCostCenterRequest = {
-        name,
-        notes: notes || undefined,
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          editingCostCenter
-            ? t("costCenters.updateError")
-            : t("costCenters.addError")
-        );
-      }
-
-      handleClose();
-      fetchCostCenters();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    }
-  };
+  }, [includeDefunct]);
 
   const handleDelete = async (costCenter: CostCenter) => {
     try {
@@ -190,12 +109,14 @@ export default function CostCentersPage() {
       }
 
       if (!response.ok) {
-        throw new Error("Failed to delete cost center");
+        throw new Error(t("costCenters.defunctError"));
       }
 
       fetchCostCenters();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error ? err.message : t("costCenters.defunctError")
+      );
     }
   };
 
@@ -209,12 +130,27 @@ export default function CostCentersPage() {
           alignItems: "center",
         }}
       >
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component="h1" sx={{ color: "text.primary" }}>
           {t("costCenters.title")}
         </Typography>
-        <Button variant="contained" onClick={handleAddClick}>
-          {t("costCenters.add")}
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={includeDefunct}
+                onChange={(e) => setIncludeDefunct(e.target.checked)}
+              />
+            }
+            label={t("costCenters.includeDefunct")}
+            sx={{ color: "text.primary" }}
+          />
+          <Button
+            variant="contained"
+            onClick={() => router.push("/cost-centers/add")}
+          >
+            {t("costCenters.add")}
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -223,64 +159,103 @@ export default function CostCentersPage() {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("costCenters.name")}</TableCell>
-              <TableCell align="right">{t("common.actions")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {costCenters.map((costCenter) => (
-              <TableRow key={costCenter.name}>
-                <TableCell>{costCenter.name}</TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleEditClick(costCenter)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(costCenter)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {costCenters.length > 0 ? (
+        <Grid container spacing={2}>
+          {costCenters.map((costCenter) => (
+            <Grid item xs={12} md={6} lg={4} key={costCenter.name}>
+              <Paper
+                sx={{
+                  p: 2,
+                  height: "100%",
+                  opacity: costCenter.state === "DEFUNCT_CC" ? 0.7 : 1,
+                  color: "text.primary",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ color: "text.primary" }}
+                    >
+                      {costCenter.name}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        backgroundColor:
+                          costCenter.state === "DEFUNCT_CC"
+                            ? "error.main"
+                            : "success.main",
+                        color: "white",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {costCenter.state === "DEFUNCT_CC"
+                        ? t("costCenters.defunct")
+                        : t("costCenters.active")}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <IconButton
+                      onClick={() =>
+                        router.push(
+                          `/cost-centers/edit?name=${encodeURIComponent(
+                            costCenter.name
+                          )}`
+                        )
+                      }
+                      size="small"
+                      sx={{ color: "text.primary" }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(costCenter)}
+                      size="small"
+                      disabled={costCenter.state === "DEFUNCT_CC"}
+                      sx={{ color: "text.primary" }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
 
-      <Dialog open={openDialog} onClose={handleClose}>
-        <DialogTitle>
-          {editingCostCenter
-            ? t("costCenters.editTitle")
-            : t("costCenters.addTitle")}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t("costCenters.name")}
-            type="text"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label={t("costCenters.notes")}
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>{t("common.cancel")}</Button>
-          <Button onClick={handleSave}>{t("common.save")}</Button>
-        </DialogActions>
-      </Dialog>
+                {costCenter.notes && (
+                  <Box sx={{ mb: 1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary", mb: 0.5 }}
+                    >
+                      {t("costCenters.notes")}
+                    </Typography>
+                    <Typography
+                      sx={{ color: "text.primary", whiteSpace: "pre-line" }}
+                    >
+                      {costCenter.notes}
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
+            {t("costCenters.noCostCenters")}
+          </Typography>
+        </Paper>
+      )}
     </Container>
   );
 }
