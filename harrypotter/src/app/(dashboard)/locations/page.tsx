@@ -21,8 +21,15 @@ import {
   Typography,
   FormControlLabel,
   Switch,
+  Grid,
+  Chip,
+  Link,
 } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Map as MapIcon,
+} from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -267,60 +274,133 @@ export default function LocationsPage() {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("locations.locationTitle")}</TableCell>
-              <TableCell>{t("locations.countryCode")}</TableCell>
-              <TableCell>{t("locations.postalAddress")}</TableCell>
-              <TableCell>{t("locations.postalCode")}</TableCell>
-              <TableCell>{t("locations.state")}</TableCell>
-              <TableCell align="right">{t("common.actions")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {locations.length > 0 ? (
-              locations.map((location) => (
-                <TableRow
-                  key={location.title}
-                  sx={
-                    location.state === "DEFUNCT_LOCATION"
-                      ? { opacity: 0.7 }
-                      : undefined
-                  }
+      {locations.length > 0 ? (
+        <Grid container spacing={2}>
+          {locations.map((location) => (
+            <Grid item xs={12} md={6} lg={4} key={location.title}>
+              <Paper
+                sx={{
+                  p: 2,
+                  height: "100%",
+                  opacity: location.state === "DEFUNCT_LOCATION" ? 0.7 : 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 2,
+                  }}
                 >
-                  <TableCell>{location.title}</TableCell>
-                  <TableCell>{location.country_code}</TableCell>
-                  <TableCell>{location.postal_address}</TableCell>
-                  <TableCell>{location.postal_code}</TableCell>
-                  <TableCell>
-                    {location.state === "DEFUNCT_LOCATION"
-                      ? t("locations.defunct")
-                      : t("locations.active")}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleEditClick(location)}>
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      {location.title}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        backgroundColor:
+                          location.state === "DEFUNCT_LOCATION"
+                            ? "error.main"
+                            : "success.main",
+                        color: "white",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {location.state === "DEFUNCT_LOCATION"
+                        ? t("locations.defunct")
+                        : t("locations.active")}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <IconButton
+                      onClick={() => handleEditClick(location)}
+                      size="small"
+                    >
                       <EditIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleDelete(location)}>
+                    <IconButton
+                      onClick={() => handleDelete(location)}
+                      size="small"
+                    >
                       <DeleteIcon />
                     </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    {t("locations.noLocations")}
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t("locations.countryCode")}
                   </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                  <Typography>{location.country_code}</Typography>
+                </Box>
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t("locations.postalAddress")}
+                  </Typography>
+                  <Typography style={{ whiteSpace: "pre-line" }}>
+                    {location.postal_address}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {t("locations.postalCode")}
+                  </Typography>
+                  <Typography>{location.postal_code}</Typography>
+                </Box>
+
+                {location.city_aka && location.city_aka.length > 0 && (
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {t("locations.cityAka")}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                      {location.city_aka.map((city, index) => (
+                        <Chip
+                          key={index}
+                          label={city}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {location.openstreetmap_url && (
+                  <Box sx={{ mt: 2 }}>
+                    <Link
+                      href={location.openstreetmap_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none" }}
+                    >
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<MapIcon />}
+                      >
+                        {t("locations.viewMap")}
+                      </Button>
+                    </Link>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Typography variant="body1" color="text.secondary">
+            {t("locations.noLocations")}
+          </Typography>
+        </Paper>
+      )}
 
       <Dialog open={openDialog} onClose={handleClose}>
         <DialogTitle>

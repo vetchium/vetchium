@@ -74,5 +74,6 @@ export const en = {
     defunctError: "Failed to defunct location",
     noLocations: "No locations found. Click 'Add Location' to create one.",
     includeDefunct: "Include Defunct Locations",
+    viewMap: "View on Map",
   },
 };
