@@ -19,6 +19,8 @@ import {
   IconButton,
   Alert,
   Typography,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -46,6 +48,7 @@ export default function LocationsPage() {
   const [cityAka, setCityAka] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cityAkaInput, setCityAkaInput] = useState("");
+  const [includeDefunct, setIncludeDefunct] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -57,7 +60,11 @@ export default function LocationsPage() {
         return;
       }
 
-      const request: GetLocationsRequest = {};
+      const request: GetLocationsRequest = {
+        states: includeDefunct
+          ? ["ACTIVE_LOCATION", "DEFUNCT_LOCATION"]
+          : ["ACTIVE_LOCATION"],
+      };
 
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/get-locations`,
@@ -90,7 +97,7 @@ export default function LocationsPage() {
 
   useEffect(() => {
     fetchLocations();
-  }, []);
+  }, [includeDefunct]);
 
   const handleAddClick = () => {
     setEditingLocation(null);
@@ -238,9 +245,20 @@ export default function LocationsPage() {
         <Typography variant="h4" component="h1">
           {t("locations.title")}
         </Typography>
-        <Button variant="contained" onClick={handleAddClick}>
-          {t("locations.add")}
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={includeDefunct}
+                onChange={(e) => setIncludeDefunct(e.target.checked)}
+              />
+            }
+            label={t("locations.includeDefunct")}
+          />
+          <Button variant="contained" onClick={handleAddClick}>
+            {t("locations.add")}
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -255,26 +273,51 @@ export default function LocationsPage() {
             <TableRow>
               <TableCell>{t("locations.locationTitle")}</TableCell>
               <TableCell>{t("locations.countryCode")}</TableCell>
+              <TableCell>{t("locations.postalAddress")}</TableCell>
               <TableCell>{t("locations.postalCode")}</TableCell>
+              <TableCell>{t("locations.state")}</TableCell>
               <TableCell align="right">{t("common.actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {locations.map((location) => (
-              <TableRow key={location.title}>
-                <TableCell>{location.title}</TableCell>
-                <TableCell>{location.country_code}</TableCell>
-                <TableCell>{location.postal_code}</TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleEditClick(location)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(location)}>
-                    <DeleteIcon />
-                  </IconButton>
+            {locations.length > 0 ? (
+              locations.map((location) => (
+                <TableRow
+                  key={location.title}
+                  sx={
+                    location.state === "DEFUNCT_LOCATION"
+                      ? { opacity: 0.7 }
+                      : undefined
+                  }
+                >
+                  <TableCell>{location.title}</TableCell>
+                  <TableCell>{location.country_code}</TableCell>
+                  <TableCell>{location.postal_address}</TableCell>
+                  <TableCell>{location.postal_code}</TableCell>
+                  <TableCell>
+                    {location.state === "DEFUNCT_LOCATION"
+                      ? t("locations.defunct")
+                      : t("locations.active")}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={() => handleEditClick(location)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete(location)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    {t("locations.noLocations")}
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
