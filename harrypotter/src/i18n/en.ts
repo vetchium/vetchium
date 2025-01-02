@@ -25,6 +25,7 @@ export const en = {
     tfaCode: "Enter TFA Code",
     verify: "Verify",
     submit: "Submit",
+    rememberMe: "Remember me",
     domainNotVerified:
       "Please add CNAME records to verify your domain with Vetchi.",
     domainVerifyPending:

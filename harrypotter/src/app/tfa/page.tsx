@@ -7,6 +7,8 @@ import {
   TextField,
   Typography,
   Alert,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +23,7 @@ import {
 export default function TFA() {
   const [tfaCode, setTfaCode] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -37,7 +40,7 @@ export default function TFA() {
       const requestBody: EmployerTFARequest = {
         tfa_code: tfaCode,
         tfa_token: token!,
-        remember_me: true,
+        remember_me: rememberMe,
       };
 
       const response = await fetch(`${config.API_SERVER_PREFIX}/employer/tfa`, {
@@ -90,6 +93,16 @@ export default function TFA() {
             autoFocus
             value={tfaCode}
             onChange={(e) => setTfaCode(e.target.value)}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                name="rememberMe"
+              />
+            }
+            label={t("auth.rememberMe")}
           />
           <Button
             fullWidth
