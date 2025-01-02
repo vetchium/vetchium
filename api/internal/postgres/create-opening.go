@@ -73,6 +73,15 @@ SELECT id FROM org_cost_centers WHERE cost_center_name = $1 AND employer_id = $2
 	)
 	p.log.Dbg("generated opening ID", "id", openingID)
 
+	var salaryMin, salaryMax *float64
+	var currency *string
+	if createOpeningReq.Salary != nil {
+		salaryMin = &createOpeningReq.Salary.MinAmount
+		salaryMax = &createOpeningReq.Salary.MaxAmount
+		salaryCurrency := string(createOpeningReq.Salary.Currency)
+		currency = &salaryCurrency
+	}
+
 	query := `
 INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_center_id, employer_notes, remote_country_codes, remote_timezones, opening_type, yoe_min, yoe_max, min_education_level, salary_min, salary_max, salary_currency, state, employer_id)
     VALUES ($1, $2, $3, $4, (
@@ -124,9 +133,9 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
 		createOpeningReq.YoeMin,
 		createOpeningReq.YoeMax,
 		createOpeningReq.MinEducationLevel,
-		createOpeningReq.Salary.MinAmount,
-		createOpeningReq.Salary.MaxAmount,
-		createOpeningReq.Salary.Currency,
+		salaryMin,
+		salaryMax,
+		currency,
 		common.DraftOpening,
 		orgUser.EmployerID,
 	).Scan(&openingID)
