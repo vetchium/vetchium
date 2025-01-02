@@ -40,17 +40,30 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if createOpeningReq.Salary != nil &&
-			(createOpeningReq.Salary.MinAmount > createOpeningReq.Salary.MaxAmount) {
-			h.Dbg("salary min > max", "createOpeningReq", createOpeningReq)
-			w.WriteHeader(http.StatusBadRequest)
-			err = json.NewEncoder(w).Encode(common.ValidationErrors{
-				Errors: []string{"salary"},
-			})
-			if err != nil {
-				h.Err("failed to encode validation errors", "error", err)
+		if createOpeningReq.Salary != nil {
+			if createOpeningReq.Salary.MinAmount > createOpeningReq.Salary.MaxAmount {
+				h.Dbg("salary min > max", "createOpeningReq", createOpeningReq)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"salary"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
+				return
 			}
-			return
+
+			if createOpeningReq.Salary.Currency == "" {
+				h.Dbg("currency is empty", "createOpeningReq", createOpeningReq)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"currency"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
+				return
+			}
 		}
 
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
