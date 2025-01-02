@@ -28,6 +28,7 @@ import {
   Location,
   GetLocationsRequest,
   DefunctLocationRequest,
+  LocationStates,
 } from "@psankar/vetchi-typespec";
 
 export default function LocationsPage() {
@@ -47,8 +48,8 @@ export default function LocationsPage() {
 
       const request: GetLocationsRequest = {
         states: includeDefunct
-          ? ["ACTIVE_LOCATION", "DEFUNCT_LOCATION"]
-          : ["ACTIVE_LOCATION"],
+          ? [LocationStates.ACTIVE, LocationStates.DEFUNCT]
+          : [LocationStates.ACTIVE],
       };
 
       const response = await fetch(
