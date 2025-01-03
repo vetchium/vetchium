@@ -10,7 +10,7 @@ data:
         "tfa_tok_life": "5m",
 
         "session_tok_life": "15m",
-        "lts_tok_life": "20m",
+        "lts_tok_life": "730h",
 
         "employee_invite_tok_life": "5m"
       },
@@ -19,7 +19,7 @@ data:
         "tfa_tok_life": "5m",
 
         "session_tok_life": "15m",
-        "lts_tok_life": "365d",
+        "lts_tok_life": "730h",
 
         "hub_user_invite_tok_life": "5m",
         "password_reset_tok_life": "5m"
