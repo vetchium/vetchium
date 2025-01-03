@@ -54,6 +54,12 @@ export const en = {
     maxYoe: "Maximum Years of Experience",
     minEducation: "Minimum Education Level",
     employerNotes: "Employer Notes",
+    remoteTimezones: "Remote Timezones",
+    remoteTimezonesHelp:
+      "Select the timezones where remote work is allowed. Leave empty if remote work is not allowed.",
+    officeLocations: "Office Locations",
+    officeLocationsHelp:
+      "Select the office locations where this position is available. Leave empty if the position is fully remote.",
     types: {
       FULL_TIME_OPENING: "Full Time",
       PART_TIME_OPENING: "Part Time",
@@ -71,6 +77,7 @@ export const en = {
     fetchError: "Failed to fetch openings",
     createError: "Failed to create opening",
     fetchCostCentersError: "Failed to fetch cost centers",
+    fetchLocationsError: "Failed to fetch locations",
     missingUserError: "Please select both recruiter and hiring manager",
   },
   costCenters: {

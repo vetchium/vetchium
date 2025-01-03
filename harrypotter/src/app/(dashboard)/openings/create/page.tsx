@@ -13,6 +13,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Chip,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -24,9 +25,12 @@ import {
   OrgUserShort,
   OpeningType,
   EducationLevel,
+  validTimezones,
+  TimeZone,
   OpeningTypes,
   EducationLevels,
 } from "@psankar/vetchi-typespec";
+import { Location, LocationStates } from "@psankar/vetchi-typespec";
 
 export default function CreateOpeningPage() {
   const [title, setTitle] = useState("");
@@ -44,11 +48,14 @@ export default function CreateOpeningPage() {
     EducationLevels.UNSPECIFIED
   );
   const [employerNotes, setEmployerNotes] = useState("");
+  const [remoteTimezones, setRemoteTimezones] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [orgUsers, setOrgUsers] = useState<OrgUserShort[]>([]);
   const [costCenters, setCostCenters] = useState<string[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   const router = useRouter();
   const { t } = useTranslation();
@@ -56,6 +63,7 @@ export default function CreateOpeningPage() {
   useEffect(() => {
     fetchOrgUsers();
     fetchCostCenters();
+    fetchLocations();
   }, []);
 
   const fetchOrgUsers = async (searchPrefix?: string) => {
@@ -131,6 +139,39 @@ export default function CreateOpeningPage() {
     }
   };
 
+  const fetchLocations = async () => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/get-locations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(t("openings.fetchLocationsError"));
+      }
+
+      const data = await response.json();
+      setLocations(data || []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("openings.fetchLocationsError")
+      );
+    }
+  };
+
   const handleSave = async () => {
     try {
       setIsLoading(true);
@@ -157,6 +198,10 @@ export default function CreateOpeningPage() {
         yoe_max: yoeMax,
         min_education_level: minEducationLevel,
         employer_notes: employerNotes || undefined,
+        remote_timezones:
+          remoteTimezones.length > 0 ? remoteTimezones : undefined,
+        location_titles:
+          selectedLocations.length > 0 ? selectedLocations : undefined,
       };
 
       const response = await fetch(
@@ -344,15 +389,12 @@ export default function CreateOpeningPage() {
           <FormControl fullWidth margin="normal">
             <InputLabel>{t("openings.minEducation")}</InputLabel>
             <Select
-              value={minEducationLevel || ""}
+              value={minEducationLevel}
               onChange={(e) =>
                 setMinEducationLevel(e.target.value as EducationLevel)
               }
               label={t("openings.minEducation")}
             >
-              <MenuItem value="">
-                <em>{t("common.none")}</em>
-              </MenuItem>
               {Object.values(EducationLevels).map((level) => (
                 <MenuItem key={level} value={level}>
                   {t(`openings.education.${level}`)}
@@ -360,6 +402,48 @@ export default function CreateOpeningPage() {
               ))}
             </Select>
           </FormControl>
+
+          <Autocomplete
+            multiple
+            options={Array.from(validTimezones)}
+            value={remoteTimezones}
+            onChange={(_, newValue) => setRemoteTimezones(newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="normal"
+                label={t("openings.remoteTimezones")}
+                helperText={t("openings.remoteTimezonesHelp")}
+              />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip label={option} {...getTagProps({ index })} key={option} />
+              ))
+            }
+          />
+
+          <Autocomplete
+            multiple
+            options={locations
+              .filter((loc) => loc.state === LocationStates.ACTIVE)
+              .map((loc) => loc.title)}
+            value={selectedLocations}
+            onChange={(_, newValue) => setSelectedLocations(newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="normal"
+                label={t("openings.officeLocations")}
+                helperText={t("openings.officeLocationsHelp")}
+              />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip label={option} {...getTagProps({ index })} key={option} />
+              ))
+            }
+          />
 
           <TextField
             margin="normal"
