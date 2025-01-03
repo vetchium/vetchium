@@ -194,7 +194,7 @@ export default function OpeningDetail({ params }: PageProps) {
         <Box>
           <Typography variant="h4">{opening.title}</Typography>
           <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 1 }}>
-            {t(`openings.state.${opening.state.toLowerCase()}`)}
+            {t(`openings.state.${opening.state}`)}
           </Typography>
         </Box>
         <Button variant="outlined" onClick={() => router.back()}>
@@ -255,6 +255,14 @@ export default function OpeningDetail({ params }: PageProps) {
                     {t("openings.type")}
                   </Typography>
                   <Typography>{opening.opening_type}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">
+                    {t("openings.stateLabel")}
+                  </Typography>
+                  <Typography>
+                    {t(`openings.state.${opening.state}`)}
+                  </Typography>
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" sx={{ mt: 2 }}>

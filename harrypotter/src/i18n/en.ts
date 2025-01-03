@@ -51,6 +51,7 @@ export const en = {
     hiringManager: "Hiring Manager",
     costCenter: "Cost Center",
     type: "Opening Type",
+    stateLabel: "State",
     minYoe: "Minimum Years of Experience",
     maxYoe: "Maximum Years of Experience",
     minEducation: "Minimum Education Level",
@@ -61,6 +62,7 @@ export const en = {
     officeLocations: "Office Locations",
     officeLocationsHelp:
       "Select the office locations where this position is available. Leave empty if the position is fully remote.",
+    showClosed: "Show Closed Openings",
     types: {
       FULL_TIME_OPENING: "Full Time",
       PART_TIME_OPENING: "Part Time",
@@ -76,10 +78,10 @@ export const en = {
       UNSPECIFIED_EDUCATION: "Unspecified",
     },
     state: {
-      draft_opening_state: "Draft",
-      active_opening_state: "Active",
-      suspended_opening_state: "Suspended",
-      closed_opening_state: "Closed",
+      DRAFT_OPENING_STATE: "Draft",
+      ACTIVE_OPENING_STATE: "Active",
+      SUSPENDED_OPENING_STATE: "Suspended",
+      CLOSED_OPENING_STATE: "Closed",
     },
     details: "Opening Details",
     id: "Opening ID",

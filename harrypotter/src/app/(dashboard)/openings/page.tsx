@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -14,12 +14,18 @@ import {
   Alert,
   CircularProgress,
   Button,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  OpeningState,
+  OpeningStates,
+} from "@psankar/vetchi-typespec/common/openings";
 
 interface Opening {
   id: string;
@@ -36,7 +42,7 @@ interface Opening {
   };
   cost_center_name: string;
   opening_type: string;
-  state: string;
+  state: OpeningState;
   created_at: string;
   last_updated_at: string;
 }
@@ -45,18 +51,46 @@ export default function Openings() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showClosed, setShowClosed] = useState(false);
+
   const { t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {
-    let isMounted = true;
+    const saved = localStorage.getItem("showClosedOpenings");
+    if (saved) {
+      setShowClosed(JSON.parse(saved));
+    }
+  }, []);
 
-    const fetchOpenings = async () => {
+  // Memoize the states array
+  const states = useMemo(() => {
+    const baseStates = [
+      OpeningStates.DRAFT,
+      OpeningStates.ACTIVE,
+      OpeningStates.SUSPENDED,
+    ];
+    return showClosed ? [...baseStates, OpeningStates.CLOSED] : baseStates;
+  }, [showClosed]);
+
+  // Handle switch change
+  const handleShowClosedChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.checked;
+      setShowClosed(newValue);
+      localStorage.setItem("showClosedOpenings", JSON.stringify(newValue));
+    },
+    []
+  );
+
+  // Fetch openings function
+  const fetchOpenings = useCallback(
+    async (isMounted: boolean) => {
       try {
         const sessionToken = Cookies.get("session_token");
         if (!sessionToken) {
           if (isMounted) {
-            setError(t("auth.unauthorized"));
+            setError("auth.unauthorized");
             setIsLoading(false);
           }
           return;
@@ -70,7 +104,7 @@ export default function Openings() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${sessionToken}`,
             },
-            body: JSON.stringify({}),
+            body: JSON.stringify({ state: states }),
           }
         );
 
@@ -80,30 +114,30 @@ export default function Openings() {
           const data = await response.json();
           setOpenings(data);
         } else if (response.status === 401) {
-          setError(t("auth.unauthorized"));
+          setError("auth.unauthorized");
         } else {
-          setError(t("common.error"));
+          setError("common.error");
         }
       } catch (err) {
         if (isMounted) {
-          setError(t("common.error"));
+          setError("common.error");
         }
       } finally {
         if (isMounted) {
           setIsLoading(false);
         }
       }
-    };
+    },
+    [states]
+  );
 
-    fetchOpenings();
-
+  useEffect(() => {
+    let isMounted = true;
+    fetchOpenings(isMounted);
     return () => {
       isMounted = false;
     };
-    // We intentionally omit 't' from dependencies as it would cause unnecessary refetches
-    // The translations are stable enough that this is safe
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchOpenings]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -118,17 +152,25 @@ export default function Openings() {
         <Typography variant="h4" gutterBottom>
           {t("openings.title")}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => router.push("/openings/create")}
-        >
-          {t("openings.create")}
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch checked={showClosed} onChange={handleShowClosedChange} />
+            }
+            label={t("openings.showClosed")}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => router.push("/openings/create")}
+          >
+            {t("openings.create")}
+          </Button>
+        </Box>
       </Box>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {t(error)}
         </Alert>
       )}
       {isLoading ? (
@@ -176,8 +218,12 @@ export default function Openings() {
                     <TableCell>{opening.recruiter.name}</TableCell>
                     <TableCell>{opening.hiring_manager.name}</TableCell>
                     <TableCell>{opening.cost_center_name}</TableCell>
-                    <TableCell>{opening.opening_type}</TableCell>
-                    <TableCell>{opening.state}</TableCell>
+                    <TableCell>
+                      {t(`openings.types.${opening.opening_type}`)}
+                    </TableCell>
+                    <TableCell>
+                      {t(`openings.state.${opening.state}`)}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
