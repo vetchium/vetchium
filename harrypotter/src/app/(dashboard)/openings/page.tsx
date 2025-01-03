@@ -19,6 +19,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Opening {
   id: string;
@@ -139,6 +140,7 @@ export default function Openings() {
           <Table sx={{ minWidth: 650 }} aria-label="openings table">
             <TableHead>
               <TableRow>
+                <TableCell>ID</TableCell>
                 <TableCell>Title</TableCell>
                 <TableCell align="right">Positions</TableCell>
                 <TableCell align="right">Filled</TableCell>
@@ -156,6 +158,14 @@ export default function Openings() {
                     key={opening.id}
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
+                    <TableCell>
+                      <Link
+                        href={`/openings/${opening.id}`}
+                        style={{ color: "blue", textDecoration: "underline" }}
+                      >
+                        {opening.id}
+                      </Link>
+                    </TableCell>
                     <TableCell component="th" scope="row">
                       {opening.title}
                     </TableCell>
