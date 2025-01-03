@@ -34,7 +34,10 @@ import {
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [includeDefunct, setIncludeDefunct] = useState(false);
+  const [includeDefunct, setIncludeDefunct] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("includeDefunctLocations") === "true";
+  });
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -145,7 +148,13 @@ export default function LocationsPage() {
             control={
               <Switch
                 checked={includeDefunct}
-                onChange={(e) => setIncludeDefunct(e.target.checked)}
+                onChange={(e) => {
+                  setIncludeDefunct(e.target.checked);
+                  localStorage.setItem(
+                    "includeDefunctLocations",
+                    e.target.checked.toString()
+                  );
+                }}
               />
             }
             label={t("locations.includeDefunct")}

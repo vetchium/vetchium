@@ -27,7 +27,10 @@ import {
 export default function CostCentersPage() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [includeDefunct, setIncludeDefunct] = useState(false);
+  const [includeDefunct, setIncludeDefunct] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("includeDefunctCostCenters") === "true";
+  });
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -138,7 +141,13 @@ export default function CostCentersPage() {
             control={
               <Switch
                 checked={includeDefunct}
-                onChange={(e) => setIncludeDefunct(e.target.checked)}
+                onChange={(e) => {
+                  setIncludeDefunct(e.target.checked);
+                  localStorage.setItem(
+                    "includeDefunctCostCenters",
+                    e.target.checked.toString()
+                  );
+                }}
               />
             }
             label={t("costCenters.includeDefunct")}
