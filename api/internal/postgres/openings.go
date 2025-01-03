@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
@@ -94,6 +95,8 @@ GROUP BY
 	var hiringTeam []employer.OrgUserShort
 	var recruiter, hiringManager employer.OrgUserShort
 	var salary employer.Salary
+	var minAmount, maxAmount *float64
+	var currencyStr *string
 
 	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(
@@ -110,9 +113,9 @@ GROUP BY
 			&opening.YoeMin,
 			&opening.YoeMax,
 			&opening.MinEducationLevel,
-			&salary.MinAmount,
-			&salary.MaxAmount,
-			&salary.Currency,
+			&minAmount,
+			&maxAmount,
+			&currencyStr,
 			&opening.State,
 			&opening.CreatedAt,
 			&opening.LastUpdatedAt,
@@ -126,6 +129,16 @@ GROUP BY
 		}
 		p.log.Err("failed to scan opening", "error", err)
 		return employer.Opening{}, err
+	}
+
+	if minAmount != nil {
+		salary.MinAmount = *minAmount
+	}
+	if maxAmount != nil {
+		salary.MaxAmount = *maxAmount
+	}
+	if currencyStr != nil {
+		salary.Currency = common.Currency(*currencyStr)
 	}
 
 	opening.Salary = &salary
