@@ -15,6 +15,7 @@ export const en = {
     loadMore: "Load More",
     serverError: "Please try again after some time.",
     none: "None",
+    back: "Back",
   },
   auth: {
     signin: "Sign In",
@@ -74,11 +75,35 @@ export const en = {
       NOT_MATTERS_EDUCATION: "Not Required",
       UNSPECIFIED_EDUCATION: "Unspecified",
     },
+    state: {
+      draft_opening_state: "Draft",
+      active_opening_state: "Active",
+      suspended_opening_state: "Suspended",
+      closed_opening_state: "Closed",
+    },
+    details: "Opening Details",
+    id: "Opening ID",
+    filledPositions: "Filled Positions",
+    description: "Description",
+    contacts: "Contact Information",
+    actions: "Actions",
+    publish: "Publish Opening",
+    suspend: "Suspend Opening",
+    reactivate: "Reactivate Opening",
+    viewCandidacies: "View Candidacies",
+    viewInterviews: "View Interviews",
+    invalidStateTransition: "Invalid state transition",
+    notFound: "Opening not found",
     fetchError: "Failed to fetch openings",
     createError: "Failed to create opening",
     fetchCostCentersError: "Failed to fetch cost centers",
     fetchLocationsError: "Failed to fetch locations",
     missingUserError: "Please select both recruiter and hiring manager",
+    close: "Close Opening",
+    closeConfirmTitle: "Close Opening",
+    closeConfirmMessage:
+      "Are you sure you want to close this opening? This action cannot be undone.",
+    confirmClose: "Yes, Close Opening",
   },
   costCenters: {
     title: "Cost Centers",
@@ -127,4 +152,6 @@ export const en = {
     "Number of positions must be between 1 and 20",
   "validation.jobDescription.length.10.1024":
     "Job description must be between 10 and 1024 characters",
+  "validation.employerNotes.maxLength.1024":
+    "Employer notes must not exceed 1024 characters",
 };
