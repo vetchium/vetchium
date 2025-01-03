@@ -53,11 +53,13 @@ export const en = {
     minYoe: "Minimum Years of Experience",
     maxYoe: "Maximum Years of Experience",
     minEducation: "Minimum Education Level",
+    employerNotes: "Employer Notes",
     types: {
       FULL_TIME_OPENING: "Full Time",
       PART_TIME_OPENING: "Part Time",
       CONTRACT_OPENING: "Contract",
       INTERNSHIP_OPENING: "Internship",
+      UNSPECIFIED_OPENING: "Unspecified",
     },
     education: {
       BACHELOR_EDUCATION: "Bachelor's Degree",
