@@ -115,4 +115,9 @@ export const en = {
     includeDefunct: "Include Defunct Locations",
     viewMap: "View on Map",
   },
+  "validation.title.length.3.32": "Title must be between 3 and 32 characters",
+  "validation.positions.range.1.20":
+    "Number of positions must be between 1 and 20",
+  "validation.jobDescription.length.10.1024":
+    "Job description must be between 10 and 1024 characters",
 };
