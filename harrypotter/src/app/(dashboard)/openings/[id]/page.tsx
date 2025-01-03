@@ -18,6 +18,7 @@ import {
   DialogActions,
   DialogContentText,
 } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
@@ -60,6 +61,8 @@ export default function OpeningDetail({ params }: PageProps) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [isStateChanging, setIsStateChanging] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -120,6 +123,10 @@ export default function OpeningDetail({ params }: PageProps) {
   const handleStateChange = async (toState: OpeningState) => {
     if (!opening) return;
 
+    setIsStateChanging(true);
+    setError("");
+    setSuccessMessage("");
+
     try {
       const sessionToken = Cookies.get("session_token");
       if (!sessionToken) {
@@ -144,8 +151,9 @@ export default function OpeningDetail({ params }: PageProps) {
       );
 
       if (response.status === 200) {
-        // Refresh the opening data
         setOpening((prev) => (prev ? { ...prev, state: toState } : null));
+        setSuccessMessage(t("openings.stateChangeSuccess"));
+        setShowCloseConfirm(false);
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else if (response.status === 409) {
@@ -155,6 +163,8 @@ export default function OpeningDetail({ params }: PageProps) {
       }
     } catch (err) {
       setError(t("common.error"));
+    } finally {
+      setIsStateChanging(false);
     }
   };
 
@@ -191,6 +201,22 @@ export default function OpeningDetail({ params }: PageProps) {
           {t("common.back")}
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert
+          severity="success"
+          sx={{ mb: 2 }}
+          onClose={() => setSuccessMessage("")}
+        >
+          {successMessage}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
@@ -278,40 +304,44 @@ export default function OpeningDetail({ params }: PageProps) {
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 {opening.state === OpeningStates.DRAFT && (
-                  <Button
+                  <LoadingButton
                     variant="contained"
                     color="primary"
                     onClick={() => handleStateChange(OpeningStates.ACTIVE)}
+                    loading={isStateChanging}
                   >
                     {t("openings.publish")}
-                  </Button>
+                  </LoadingButton>
                 )}
                 {opening.state === OpeningStates.ACTIVE && (
-                  <Button
+                  <LoadingButton
                     variant="contained"
                     color="warning"
                     onClick={() => handleStateChange(OpeningStates.SUSPENDED)}
+                    loading={isStateChanging}
                   >
                     {t("openings.suspend")}
-                  </Button>
+                  </LoadingButton>
                 )}
                 {opening.state === OpeningStates.SUSPENDED && (
-                  <Button
+                  <LoadingButton
                     variant="contained"
                     color="primary"
                     onClick={() => handleStateChange(OpeningStates.ACTIVE)}
+                    loading={isStateChanging}
                   >
                     {t("openings.reactivate")}
-                  </Button>
+                  </LoadingButton>
                 )}
                 {opening.state !== OpeningStates.CLOSED && (
-                  <Button
+                  <LoadingButton
                     variant="contained"
                     color="error"
                     onClick={() => setShowCloseConfirm(true)}
+                    loading={isStateChanging}
                   >
                     {t("openings.close")}
-                  </Button>
+                  </LoadingButton>
                 )}
                 <Button
                   variant="outlined"
@@ -337,7 +367,7 @@ export default function OpeningDetail({ params }: PageProps) {
 
       <Dialog
         open={showCloseConfirm}
-        onClose={() => setShowCloseConfirm(false)}
+        onClose={() => !isStateChanging && setShowCloseConfirm(false)}
       >
         <DialogTitle>{t("openings.closeConfirmTitle")}</DialogTitle>
         <DialogContent>
@@ -346,19 +376,22 @@ export default function OpeningDetail({ params }: PageProps) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowCloseConfirm(false)}>
+          <Button
+            onClick={() => setShowCloseConfirm(false)}
+            disabled={isStateChanging}
+          >
             {t("common.cancel")}
           </Button>
-          <Button
+          <LoadingButton
             onClick={() => {
               handleStateChange(OpeningStates.CLOSED);
-              setShowCloseConfirm(false);
             }}
             color="error"
             variant="contained"
+            loading={isStateChanging}
           >
             {t("openings.confirmClose")}
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </Box>

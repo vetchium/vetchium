@@ -104,6 +104,7 @@ export const en = {
     closeConfirmMessage:
       "Are you sure you want to close this opening? This action cannot be undone.",
     confirmClose: "Yes, Close Opening",
+    stateChangeSuccess: "Opening state updated successfully",
   },
   costCenters: {
     title: "Cost Centers",
