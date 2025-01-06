@@ -15,6 +15,7 @@
     "@mui/icons-material": "^5.15.3",
     "@mui/material": "^5.15.3",
     "@mui/material-nextjs": "^5.15.3",
+    "@psankar/vetchi-typespec": "file:../typespec",
     "js-cookie": "^3.0.5",
     "next": "14.0.4",
     "react": "^18",
