@@ -1,4 +1,8 @@
 [
+  {
+    "country_code": "ZZG",
+    "en": "Global Universal (Not restricted to any country)"
+  },
   { "country_code": "AFG", "en": "Afghanistan" },
   { "country_code": "ALB", "en": "Albania" },
   { "country_code": "DZA", "en": "Algeria" },
