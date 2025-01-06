@@ -71,6 +71,22 @@ export default function CreateOpeningPage() {
   const router = useRouter();
   const { t } = useTranslation();
 
+  // Initialize from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem("isGloballyRemote");
+    if (saved !== null) {
+      setIsGloballyRemote(JSON.parse(saved));
+    }
+  }, []);
+
+  // Persist isGloballyRemote state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(
+      "isGloballyRemote",
+      JSON.stringify(isGloballyRemote)
+    );
+  }, [isGloballyRemote]);
+
   useEffect(() => {
     fetchOrgUsers();
     fetchCostCenters();
@@ -440,6 +456,7 @@ export default function CreateOpeningPage() {
                     setRemoteTimezones([]);
                   }
                 }}
+                color="primary"
               />
             }
             label={t("openings.globallyRemote")}

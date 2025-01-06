@@ -1,3 +1,4 @@
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import ThemeRegistry from "@/components/ThemeRegistry";
 
 export const metadata = {
@@ -13,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <AppRouterCacheProvider>
+          <ThemeRegistry>{children}</ThemeRegistry>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

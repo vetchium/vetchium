@@ -21,11 +21,24 @@ import {
 } from "@psankar/vetchi-typespec/employer/auth";
 
 export default function TFA() {
+  const router = useRouter();
+  const { t } = useTranslation();
   const [tfaCode, setTfaCode] = useState("");
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const router = useRouter();
-  const { t } = useTranslation();
+
+  // Initialize from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberMe");
+    if (saved !== null) {
+      setRememberMe(JSON.parse(saved));
+    }
+  }, []);
+
+  // Persist rememberMe state to localStorage
+  useEffect(() => {
+    localStorage.setItem("rememberMe", JSON.stringify(rememberMe));
+  }, [rememberMe]);
 
   useEffect(() => {
     const token = Cookies.get("tfa_token");
@@ -100,6 +113,7 @@ export default function TFA() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 name="rememberMe"
+                color="primary"
               />
             }
             label={t("auth.rememberMe")}
