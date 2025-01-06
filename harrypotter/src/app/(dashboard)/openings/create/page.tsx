@@ -31,6 +31,7 @@ import {
   TimeZone,
   OpeningTypes,
   EducationLevels,
+  GlobalCountryCode,
 } from "@psankar/vetchi-typespec";
 import { Location, LocationStates } from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
@@ -223,7 +224,7 @@ export default function CreateOpeningPage() {
         location_titles:
           selectedLocations.length > 0 ? selectedLocations : undefined,
         remote_country_codes: isGloballyRemote
-          ? ["ZZG"]
+          ? [GlobalCountryCode]
           : remoteCountries.length > 0
           ? remoteCountries
           : undefined,
@@ -445,88 +446,79 @@ export default function CreateOpeningPage() {
             sx={{ mt: 2, mb: 1, display: "block" }}
           />
 
-          {!isGloballyRemote && (
-            <>
-              <Autocomplete
-                multiple
-                options={countries}
-                getOptionLabel={(option) => option.en}
-                value={countries.filter((c) =>
-                  remoteCountries.includes(c.country_code)
-                )}
-                onChange={(_, newValue) =>
-                  setRemoteCountries(newValue.map((c) => c.country_code))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    margin="normal"
-                    label={t("openings.remoteCountries")}
-                    helperText={t("openings.remoteCountriesHelp")}
-                  />
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option.en}
-                      {...getTagProps({ index })}
-                      key={option.country_code}
-                    />
-                  ))
-                }
+          <Autocomplete
+            multiple
+            options={countries}
+            getOptionLabel={(option) => option.en}
+            value={countries.filter((c) =>
+              remoteCountries.includes(c.country_code)
+            )}
+            onChange={(_, newValue) =>
+              setRemoteCountries(newValue.map((c) => c.country_code))
+            }
+            disabled={isGloballyRemote}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="normal"
+                label={t("openings.remoteCountries")}
+                helperText={t("openings.remoteCountriesHelp")}
               />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  label={option.en}
+                  {...getTagProps({ index })}
+                  key={option.country_code}
+                />
+              ))
+            }
+          />
 
-              <Autocomplete
-                multiple
-                options={Array.from(validTimezones)}
-                value={remoteTimezones}
-                onChange={(_, newValue) => setRemoteTimezones(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    margin="normal"
-                    label={t("openings.remoteTimezones")}
-                    helperText={t("openings.remoteTimezonesHelp")}
-                  />
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option}
-                      {...getTagProps({ index })}
-                      key={option}
-                    />
-                  ))
-                }
+          <Autocomplete
+            multiple
+            options={Array.from(validTimezones)}
+            value={remoteTimezones}
+            onChange={(_, newValue) => setRemoteTimezones(newValue)}
+            disabled={isGloballyRemote}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="normal"
+                label={t("openings.remoteTimezones")}
+                helperText={t("openings.remoteTimezonesHelp")}
               />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip label={option} {...getTagProps({ index })} key={option} />
+              ))
+            }
+          />
 
-              <Autocomplete
-                multiple
-                options={locations
-                  .filter((loc) => loc.state === LocationStates.ACTIVE)
-                  .map((loc) => loc.title)}
-                value={selectedLocations}
-                onChange={(_, newValue) => setSelectedLocations(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    margin="normal"
-                    label={t("openings.officeLocations")}
-                    helperText={t("openings.officeLocationsHelp")}
-                  />
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option}
-                      {...getTagProps({ index })}
-                      key={option}
-                    />
-                  ))
-                }
+          <Autocomplete
+            multiple
+            options={locations
+              .filter((loc) => loc.state === LocationStates.ACTIVE)
+              .map((loc) => loc.title)}
+            value={selectedLocations}
+            onChange={(_, newValue) => setSelectedLocations(newValue)}
+            disabled={isGloballyRemote}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="normal"
+                label={t("openings.officeLocations")}
+                helperText={t("openings.officeLocationsHelp")}
               />
-            </>
-          )}
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip label={option} {...getTagProps({ index })} key={option} />
+              ))
+            }
+          />
 
           <TextField
             margin="normal"

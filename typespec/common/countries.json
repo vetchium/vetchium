@@ -1,8 +1,4 @@
 [
-  {
-    "country_code": "ZZG",
-    "en": "Global Universal (Not restricted to any country)"
-  },
   { "country_code": "AFG", "en": "Afghanistan" },
   { "country_code": "ALB", "en": "Albania" },
   { "country_code": "DZA", "en": "Algeria" },
@@ -101,8 +97,8 @@
   { "country_code": "KAZ", "en": "Kazakhstan" },
   { "country_code": "KEN", "en": "Kenya" },
   { "country_code": "KIR", "en": "Kiribati" },
-  { "country_code": "PRK", "en": "Korea" },
-  { "country_code": "KOR", "en": "Korea" },
+  { "country_code": "PRK", "en": "People's Republic of Korea (North Korea)" },
+  { "country_code": "KOR", "en": "Republic of Korea (South Korea)" },
   { "country_code": "KWT", "en": "Kuwait" },
   { "country_code": "KGZ", "en": "Kyrgyzstan" },
   { "country_code": "LAO", "en": "Lao PDR" },

@@ -10,13 +10,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./common/countries.json": "./dist/common/countries.json"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc && cp common/countries.json dist/common/",
     "prepare": "npm run build"
   },
   "devDependencies": {

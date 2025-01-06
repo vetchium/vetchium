@@ -5,7 +5,11 @@ export interface ValidationErrors {
 export type EmailAddress = string;
 export type Password = string;
 export type City = string;
+
 export type CountryCode = string;
+
+export const GlobalCountryCode = "ZZG";
+
 export type Currency = string;
 
 export type TimeZone = string;

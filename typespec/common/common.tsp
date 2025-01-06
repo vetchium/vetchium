@@ -25,6 +25,8 @@ scalar City extends string;
 @doc("ISO 3166-1 alpha-3 code for the Country; Special value ZZG to indicate Global")
 scalar CountryCode extends string;
 
+alias GlobalCountryCode = "ZZG";
+
 @minLength(3)
 @maxLength(3)
 @doc("One of the active ISO 4217 currency codes")

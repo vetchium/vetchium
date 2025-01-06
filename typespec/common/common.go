@@ -7,7 +7,11 @@ type ValidationErrors struct {
 type EmailAddress string
 type Password string
 type City string
+
 type CountryCode string
+
+const GlobalCountryCode CountryCode = "ZZG"
+
 type Currency string
 
 type TimeZone string
