@@ -222,7 +222,7 @@ FROM openings o
 	}
 	defer rows.Close()
 
-	var openings []hub.HubOpening
+	openings := []hub.HubOpening{}
 	for rows.Next() {
 		var opening hub.HubOpening
 		err := rows.Scan(
