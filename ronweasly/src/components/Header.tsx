@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -10,12 +11,14 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MenuIcon from "@mui/icons-material/Menu";
 import Box from "@mui/material/Box";
+import Cookies from "js-cookie";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -27,8 +30,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
+    // Clear all authentication tokens
+    Cookies.remove("session_token", { path: "/" });
+    Cookies.remove("tfa_token", { path: "/" });
+
+    // Close the menu
     handleClose();
+
+    // Redirect to login page
+    router.push("/login");
   };
 
   return (

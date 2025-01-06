@@ -14,6 +14,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import { FindHubOpeningsRequest, HubOpening } from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
+import Cookies from "js-cookie";
 
 interface Country {
   country_code: string;
@@ -29,13 +30,9 @@ export default function FindOpeningsPage() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSearchResults([]); // Clear results before new search
 
-    // Ensure we're in the browser
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const token = localStorage.getItem("token");
+    const token = Cookies.get("session_token");
     if (!token) {
       setError("Not authenticated. Please log in again.");
       return;
@@ -59,15 +56,23 @@ export default function FindOpeningsPage() {
       if (!response.ok) {
         if (response.status === 401) {
           setError("Session expired. Please log in again.");
-          // Optionally redirect to login page or clear invalid token
-          localStorage.removeItem("token");
+          // Clear the invalid session token
+          Cookies.remove("session_token", { path: "/" });
           return;
         }
         throw new Error(`Failed to fetch openings: ${response.statusText}`);
       }
 
       const data = await response.json();
-      setSearchResults(data);
+
+      // Safely check if data exists and has openings property
+      if (data && typeof data === "object") {
+        const openings = data.openings || [];
+        setSearchResults(Array.isArray(openings) ? openings : []);
+      } else {
+        console.error("Invalid response format:", data);
+        setError("Received invalid data format from server");
+      }
     } catch (error) {
       console.error("Error searching openings:", error);
       setError("Failed to fetch openings. Please try again.");
@@ -160,15 +165,24 @@ export default function FindOpeningsPage() {
         </Paper>
         {/* Search results will be displayed here */}
         <Box sx={{ mt: 4 }}>
-          {searchResults.map((opening) => (
-            <Paper key={opening.opening_id_within_company} sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h6">{opening.job_title}</Typography>
-              <Typography variant="subtitle1">
-                {opening.company_name}
-              </Typography>
-              <Typography variant="body1">{opening.jd}</Typography>
-            </Paper>
-          ))}
+          {searchResults.length > 0 ? (
+            searchResults.map((opening) => (
+              <Paper
+                key={opening.opening_id_within_company}
+                sx={{ p: 2, mb: 2 }}
+              >
+                <Typography variant="h6">{opening.job_title}</Typography>
+                <Typography variant="subtitle1">
+                  {opening.company_name}
+                </Typography>
+                <Typography variant="body1">{opening.jd}</Typography>
+              </Paper>
+            ))
+          ) : (
+            <Typography variant="body1" color="text.secondary" align="center">
+              No openings found
+            </Typography>
+          )}
         </Box>
       </Box>
     </AuthenticatedLayout>
