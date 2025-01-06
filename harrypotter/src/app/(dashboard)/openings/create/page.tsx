@@ -14,6 +14,8 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +33,12 @@ import {
   EducationLevels,
 } from "@psankar/vetchi-typespec";
 import { Location, LocationStates } from "@psankar/vetchi-typespec";
+import countries from "@psankar/vetchi-typespec/common/countries.json";
+
+interface Country {
+  country_code: string;
+  en: string;
+}
 
 export default function CreateOpeningPage() {
   const [title, setTitle] = useState("");
@@ -50,6 +58,8 @@ export default function CreateOpeningPage() {
   const [employerNotes, setEmployerNotes] = useState("");
   const [remoteTimezones, setRemoteTimezones] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [remoteCountries, setRemoteCountries] = useState<string[]>([]);
+  const [isGloballyRemote, setIsGloballyRemote] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -186,6 +196,16 @@ export default function CreateOpeningPage() {
         return;
       }
 
+      if (
+        !isGloballyRemote &&
+        selectedLocations.length === 0 &&
+        remoteTimezones.length === 0 &&
+        remoteCountries.length === 0
+      ) {
+        setError(t("openings.locationRequiredError"));
+        return;
+      }
+
       const request: CreateOpeningRequest = {
         title,
         positions,
@@ -202,6 +222,11 @@ export default function CreateOpeningPage() {
           remoteTimezones.length > 0 ? remoteTimezones : undefined,
         location_titles:
           selectedLocations.length > 0 ? selectedLocations : undefined,
+        remote_country_codes: isGloballyRemote
+          ? ["ZZG"]
+          : remoteCountries.length > 0
+          ? remoteCountries
+          : undefined,
       };
 
       const response = await fetch(
@@ -403,47 +428,105 @@ export default function CreateOpeningPage() {
             </Select>
           </FormControl>
 
-          <Autocomplete
-            multiple
-            options={Array.from(validTimezones)}
-            value={remoteTimezones}
-            onChange={(_, newValue) => setRemoteTimezones(newValue)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                margin="normal"
-                label={t("openings.remoteTimezones")}
-                helperText={t("openings.remoteTimezonesHelp")}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isGloballyRemote}
+                onChange={(e) => {
+                  setIsGloballyRemote(e.target.checked);
+                  if (e.target.checked) {
+                    setRemoteCountries([]);
+                    setRemoteTimezones([]);
+                  }
+                }}
               />
-            )}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip label={option} {...getTagProps({ index })} key={option} />
-              ))
             }
+            label={t("openings.globallyRemote")}
+            sx={{ mt: 2, mb: 1, display: "block" }}
           />
 
-          <Autocomplete
-            multiple
-            options={locations
-              .filter((loc) => loc.state === LocationStates.ACTIVE)
-              .map((loc) => loc.title)}
-            value={selectedLocations}
-            onChange={(_, newValue) => setSelectedLocations(newValue)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                margin="normal"
-                label={t("openings.officeLocations")}
-                helperText={t("openings.officeLocationsHelp")}
+          {!isGloballyRemote && (
+            <>
+              <Autocomplete
+                multiple
+                options={countries}
+                getOptionLabel={(option) => option.en}
+                value={countries.filter((c) =>
+                  remoteCountries.includes(c.country_code)
+                )}
+                onChange={(_, newValue) =>
+                  setRemoteCountries(newValue.map((c) => c.country_code))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    margin="normal"
+                    label={t("openings.remoteCountries")}
+                    helperText={t("openings.remoteCountriesHelp")}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option.en}
+                      {...getTagProps({ index })}
+                      key={option.country_code}
+                    />
+                  ))
+                }
               />
-            )}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip label={option} {...getTagProps({ index })} key={option} />
-              ))
-            }
-          />
+
+              <Autocomplete
+                multiple
+                options={Array.from(validTimezones)}
+                value={remoteTimezones}
+                onChange={(_, newValue) => setRemoteTimezones(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    margin="normal"
+                    label={t("openings.remoteTimezones")}
+                    helperText={t("openings.remoteTimezonesHelp")}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option}
+                      {...getTagProps({ index })}
+                      key={option}
+                    />
+                  ))
+                }
+              />
+
+              <Autocomplete
+                multiple
+                options={locations
+                  .filter((loc) => loc.state === LocationStates.ACTIVE)
+                  .map((loc) => loc.title)}
+                value={selectedLocations}
+                onChange={(_, newValue) => setSelectedLocations(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    margin="normal"
+                    label={t("openings.officeLocations")}
+                    helperText={t("openings.officeLocationsHelp")}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option}
+                      {...getTagProps({ index })}
+                      key={option}
+                    />
+                  ))
+                }
+              />
+            </>
+          )}
 
           <TextField
             margin="normal"
@@ -487,7 +570,11 @@ export default function CreateOpeningPage() {
                 yoeMin < 0 ||
                 yoeMax <= yoeMin ||
                 yoeMin > 100 ||
-                yoeMax > 100
+                yoeMax > 100 ||
+                (!isGloballyRemote &&
+                  selectedLocations.length === 0 &&
+                  remoteTimezones.length === 0 &&
+                  remoteCountries.length === 0)
               }
             >
               {isLoading ? t("common.loading") : t("common.save")}

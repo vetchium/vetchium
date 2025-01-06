@@ -62,6 +62,12 @@ export const en = {
     officeLocations: "Office Locations",
     officeLocationsHelp:
       "Select the office locations where this position is available. Leave empty if the position is fully remote.",
+    globallyRemote: "Globally Remote (Available worldwide)",
+    remoteCountries: "Remote Countries",
+    remoteCountriesHelp:
+      "Select the countries where remote work is allowed. Leave empty if remote work is not allowed.",
+    locationRequiredError:
+      "Please select at least one location option (office locations, remote timezones, remote countries) or mark the position as globally remote.",
     showClosed: "Show Closed Openings",
     types: {
       FULL_TIME_OPENING: "Full Time",
