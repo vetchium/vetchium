@@ -101,6 +101,38 @@ CREATE TABLE employers (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+-- Create a function to check if employer has required records
+CREATE OR REPLACE FUNCTION check_employer_required_records()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only check for ONBOARDED employers
+    IF NEW.employer_state = 'ONBOARDED' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM domains
+            WHERE employer_id = NEW.id
+        ) THEN
+            RAISE EXCEPTION 'Onboarded employer must have at least one domain record';
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM employer_primary_domains
+            WHERE employer_id = NEW.id
+        ) THEN
+            RAISE EXCEPTION 'Onboarded employer must have a primary domain record';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to enforce the constraint
+CREATE CONSTRAINT TRIGGER enforce_employer_required_records
+    AFTER INSERT OR UPDATE ON employers
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW
+    EXECUTE FUNCTION check_employer_required_records();
+
 ---
 
 CREATE TYPE domain_states AS ENUM (
@@ -109,7 +141,7 @@ CREATE TYPE domain_states AS ENUM (
 );
 CREATE TABLE domains (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
+
     domain_name TEXT NOT NULL,
     CONSTRAINT uniq_domain_name UNIQUE (domain_name),
 
@@ -126,7 +158,7 @@ CREATE TABLE employer_primary_domains(
     domain_id UUID NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
 
     PRIMARY KEY (employer_id),
-    CONSTRAINT fk_employer_domain_match FOREIGN KEY (employer_id, domain_id) 
+    CONSTRAINT fk_employer_domain_match FOREIGN KEY (employer_id, domain_id)
         REFERENCES domains(employer_id, id)
 );
 ---
@@ -318,8 +350,8 @@ CREATE TYPE candidacy_states AS ENUM (
     -- What should be the state when a position is filled but a different
     -- candidate is in pipeline ? Or if the opening is no longer available for
     -- budget reasons ? Should we have a new state for it ?
-    'INTERVIEWING', 
-    'OFFERED', 'OFFER_DECLINED', 'OFFER_ACCEPTED', 
+    'INTERVIEWING',
+    'OFFERED', 'OFFER_DECLINED', 'OFFER_ACCEPTED',
     'CANDIDATE_UNSUITABLE',
     'CANDIDATE_NOT_RESPONDING',
     'EMPLOYER_DEFUNCT'
@@ -346,17 +378,17 @@ CREATE TABLE candidacies(
 CREATE TYPE comment_author_types AS ENUM ('ORG_USER', 'HUB_USER');
 CREATE TABLE candidacy_comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
+
     -- Discriminator field to identify the type of user
     author_type comment_author_types NOT NULL,
-    
+
     -- Only one of these will be populated based on author_type
     org_user_id UUID REFERENCES org_users(id),
     hub_user_id UUID REFERENCES hub_users(id),
-    
+
     comment_text TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    
+
     -- Ensure exactly one user type is specified
     CONSTRAINT check_single_author CHECK (
         (author_type = 'ORG_USER' AND org_user_id IS NOT NULL AND hub_user_id IS NULL) OR
@@ -403,18 +435,18 @@ CREATE TABLE interviews(
     interview_type interview_types NOT NULL,
     interview_state interview_states NOT NULL,
     candidate_rsvp rsvp_status NOT NULL DEFAULT 'NOT_SET',
-    
+
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT valid_interview_duration CHECK (end_time > start_time),
 
     description TEXT,
-    
+
     created_by UUID REFERENCES org_users(id) NOT NULL,
 
     candidacy_id TEXT REFERENCES candidacies(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
-    
+
     CONSTRAINT fk_candidacy FOREIGN KEY (candidacy_id) REFERENCES candidacies(id),
 
     interviewers_decision interviewers_decisions,
@@ -429,13 +461,13 @@ CREATE TABLE interviews(
         (feedback_submitted_by IS NULL AND feedback_submitted_at IS NULL AND interviewers_decision IS NULL) OR
         (feedback_submitted_by IS NOT NULL AND feedback_submitted_at IS NOT NULL AND interviewers_decision IS NOT NULL)
     ),
-    
+
     completed_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT valid_completion CHECK (
         (interview_state = 'COMPLETED' AND completed_at IS NOT NULL) OR
         (interview_state != 'COMPLETED' AND completed_at IS NULL)
     ),
-    
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -445,9 +477,9 @@ CREATE TABLE interview_interviewers (
     interviewer_id UUID REFERENCES org_users(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
     rsvp_status rsvp_status NOT NULL DEFAULT 'NOT_SET',
-    
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    
+
     PRIMARY KEY (interview_id, interviewer_id)
 );
 
