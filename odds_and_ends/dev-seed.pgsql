@@ -12,6 +12,8 @@ INSERT INTO public.employers (id, client_id_type, employer_state, company_name, 
 INSERT INTO public.domains (id, domain_name, domain_state, employer_id, created_at)
     VALUES ('87654321-8336-8336-8336-000000003001'::uuid, 'vetchidev.example', 'VERIFIED', '87654321-8336-8336-8336-000000000201'::uuid, timezone('UTC'::text, now()));
 
+INSERT INTO public.employer_primary_domains (employer_id, domain_id)
+    VALUES ('87654321-8336-8336-8336-000000000201'::uuid, '87654321-8336-8336-8336-000000003001'::uuid);
 
 INSERT INTO public.org_users (id, name, email, password_hash, org_user_roles, org_user_state, employer_id, created_at)
     VALUES ('87654321-8336-8336-8336-000000040001'::uuid, 'admin', 'admin@vetchidev.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '87654321-8336-8336-8336-000000000201'::uuid, timezone('UTC'::text, now()));
