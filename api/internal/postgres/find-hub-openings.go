@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -14,12 +13,6 @@ func (p *PG) FindHubOpenings(
 	ctx context.Context,
 	req *hub.FindHubOpeningsRequest,
 ) ([]hub.HubOpening, error) {
-	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
-	if !ok {
-		p.log.Err("hub user not found in context")
-		return nil, db.ErrInternal
-	}
-
 	query := `
 SELECT
 	o.id as opening_id_within_company,
@@ -29,30 +22,22 @@ SELECT
 	o.jd as jd,
 	o.pagination_key
 FROM openings o
-	JOIN hub_users hu ON hu.id = $1
 	JOIN employers e ON o.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id
 	JOIN domains d ON epd.domain_id = d.id
 	JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	JOIN locations l ON ol.location_id = l.id
 	WHERE o.state = 'ACTIVE_OPENING_STATE'
-		AND l.country_code = COALESCE($2, hu.resident_country_code)
-	`
+		AND l.country_code = $1
+`
 
-	// $1 is hub_users.id (needed for getting the resident_country_code and
-	// the resident_city of the logged in Hub User)
-	args := []interface{}{hubUser.ID}
+	args := []interface{}{}
 
-	// $2 is for country_code
-	if req.CountryCode != nil {
-		args = append(args, string(*req.CountryCode))
-	} else {
-		// If no country code is passed, we will fallback to the Hub User's resident country
-		args = append(args, nil)
-	}
+	// $1 is for country_code
+	args = append(args, string(req.CountryCode))
 
-	// $1 and $2 already filled, so we start from $3
-	argPos := 3
+	// $1 already filled, so we start from $2
+	argPos := 2
 
 	// Add city filter if specified
 	if len(req.Cities) > 0 {
@@ -142,40 +127,6 @@ FROM openings o
 	}
 	p.log.Dbg("salary", "query", query, "args", args, "argPos", argPos)
 
-	if len(req.RemoteCountryCodes) > 0 {
-		// TODO: Accomodate Globally Remote Openings
-		placeholders := make([]string, len(req.RemoteCountryCodes))
-		for i := range req.RemoteCountryCodes {
-			placeholders[i] = fmt.Sprintf("$%d", argPos)
-			args = append(args, req.RemoteCountryCodes[i])
-			argPos++
-		}
-		remoteCountryConds := fmt.Sprintf(
-			"o.remote_country_codes && ARRAY[%s]::text[]",
-			strings.Join(placeholders, ","),
-		)
-		whereConditions = append(whereConditions, remoteCountryConds)
-		p.log.Dbg("remote_country_codes", "Conds", remoteCountryConds)
-	}
-	p.log.Dbg("remote_country", "query", query, "args", args, "argPos", argPos)
-
-	if len(req.RemoteTimezones) > 0 {
-		// TODO: Accomodate Globally Remote Openings
-		placeholders := make([]string, len(req.RemoteTimezones))
-		for i := range req.RemoteTimezones {
-			placeholders[i] = fmt.Sprintf("$%d", argPos)
-			args = append(args, req.RemoteTimezones[i])
-			argPos++
-		}
-		remoteTimezoneConds := fmt.Sprintf(
-			"o.remote_timezones && ARRAY[%s]::text[]",
-			strings.Join(placeholders, ","),
-		)
-		whereConditions = append(whereConditions, remoteTimezoneConds)
-		p.log.Dbg("remote_timezone", "remoteTimezoneConds", remoteTimezoneConds)
-	}
-	p.log.Dbg("remote_timezone", "query", query, "args", args, "argPos", argPos)
-
 	if req.MinEducationLevel != nil {
 		minEduConds := fmt.Sprintf("o.min_education_level = $%d", argPos)
 		whereConditions = append(whereConditions, minEduConds)
@@ -207,7 +158,7 @@ FROM openings o
 			e.company_name,
 			o.pagination_key
 		ORDER BY o.pagination_key
-	`
+`
 
 	// Add LIMIT
 	query += fmt.Sprintf(" LIMIT $%d", argPos)

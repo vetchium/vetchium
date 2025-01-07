@@ -25,8 +25,6 @@ export interface FindHubOpeningsRequest {
   experience_range?: ExperienceRange;
   salary_range?: SalaryRange;
   min_education_level?: EducationLevel;
-  remote_timezones?: TimeZone[];
-  remote_country_codes?: CountryCode[];
   pagination_key?: number;
   limit?: number;
 }

@@ -19,15 +19,15 @@ func FindHubOpenings(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if findHubOpeningsReq.Limit == 0 {
-			findHubOpeningsReq.Limit = 40
-		}
-
 		if !h.Vator().Struct(w, &findHubOpeningsReq) {
 			h.Dbg("validation failed", "findHubOpeningsReq", findHubOpeningsReq)
 			return
 		}
 		h.Dbg("validated", "findHubOpeningsReq", findHubOpeningsReq)
+
+		if findHubOpeningsReq.Limit == 0 {
+			findHubOpeningsReq.Limit = 40
+		}
 
 		openings, err := h.DB().
 			FindHubOpenings(r.Context(), &findHubOpeningsReq)

@@ -39,7 +39,7 @@ export default function FindOpeningsPage() {
     }
 
     const request: FindHubOpeningsRequest = {
-      country_code: countryCode || undefined,
+      country_code: countryCode,
       limit: 40,
     };
 
@@ -50,7 +50,7 @@ export default function FindOpeningsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ request }),
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -65,10 +65,9 @@ export default function FindOpeningsPage() {
 
       const data = await response.json();
 
-      // Safely check if data exists and has openings property
-      if (data && typeof data === "object") {
-        const openings = data.openings || [];
-        setSearchResults(Array.isArray(openings) ? openings : []);
+      // Update to handle array response directly
+      if (Array.isArray(data)) {
+        setSearchResults(data);
       } else {
         console.error("Invalid response format:", data);
         setError("Received invalid data format from server");

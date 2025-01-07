@@ -25,7 +25,7 @@ func CountryCodePtr(c string) *common.CountryCode {
 }
 
 type FindHubOpeningsRequest struct {
-	CountryCode common.CountryCode `json:"country_code" validate:"required,validate_country_code"`
+	CountryCode common.CountryCode `json:"country_code"`
 	Cities      []string           `json:"cities"       validate:"dive,omitempty"`
 
 	OpeningTypes    []common.OpeningType `json:"opening_types"    validate:"dive,omitempty,validate_opening_type"`
@@ -33,11 +33,9 @@ type FindHubOpeningsRequest struct {
 	ExperienceRange *ExperienceRange     `json:"experience_range" validate:"omitempty"`
 	SalaryRange     *SalaryRange         `json:"salary_range"     validate:"omitempty"`
 
-	MinEducationLevel  *common.EducationLevel `json:"min_education_level"  validate:"omitempty,validate_education_level"`
-	RemoteTimezones    []common.TimeZone      `json:"remote_timezones"     validate:"dive,omitempty,validate_timezone"`
-	RemoteCountryCodes []common.CountryCode   `json:"remote_country_codes" validate:"dive,omitempty,validate_country_code"`
-	PaginationKey      int64                  `json:"pagination_key"`
-	Limit              int64                  `json:"limit"                validate:"min=1,max=100"`
+	MinEducationLevel *common.EducationLevel `json:"min_education_level" validate:"omitempty,validate_education_level"`
+	PaginationKey     int64                  `json:"pagination_key"`
+	Limit             int64                  `json:"limit"               validate:"min=0,max=100"`
 }
 
 type HubOpening struct {

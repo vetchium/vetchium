@@ -95,10 +95,9 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		"validate_country_code",
 		func(fl validator.FieldLevel) bool {
 			// TODO: Validate country code is one of the ISO 3166-1 alpha-3 codes
-			result := len(fl.Field().String()) == 3
-			if !result {
-				log.Dbg("invalid country code", "code", fl.Field().String())
-			}
+			countryCode := fl.Field().String()
+			result := len(countryCode) == 3
+			log.Dbg("country code", "code", countryCode, "result", result)
 			return result
 		},
 	)
@@ -496,6 +495,8 @@ func (v *Vator) Struct(w http.ResponseWriter, i interface{}) bool {
 				failedFields = append(failedFields, validationErr.Field())
 			}
 		}
+
+		v.log.Dbg("validation failed", "failedFields", failedFields)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)

@@ -54,14 +54,6 @@ model FindHubOpeningsRequest {
     @doc("If nothing is passed, all education levels are considered")
     min_education_level?: EducationLevel;
 
-    @doc("If a value is passed, only Openings that either explicitly mention this timezone in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
-    @maxItems(4)
-    remote_timezones?: TimeZone[];
-
-    @doc("If a value is passed, either Openings that either explicitly mention this country code in the Opening (or) globally remote, are considered. If nothing is passed, all Openings under the country_code irrespective of their remote status are considered.")
-    @maxItems(4)
-    remote_country_codes?: CountryCode[];
-
     pagination_key?: int64;
 
     @doc("If nothing is passed, 40 Openings are returned")
