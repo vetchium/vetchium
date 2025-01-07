@@ -25,8 +25,8 @@ func CountryCodePtr(c string) *common.CountryCode {
 }
 
 type FindHubOpeningsRequest struct {
-	CountryCode *common.CountryCode `json:"country_code" validate:"omitempty,validate_country_code"`
-	Cities      []string            `json:"cities"       validate:"dive,omitempty"`
+	CountryCode common.CountryCode `json:"country_code" validate:"required,validate_country_code"`
+	Cities      []string           `json:"cities"       validate:"dive,omitempty"`
 
 	OpeningTypes    []common.OpeningType `json:"opening_types"    validate:"dive,omitempty,validate_opening_type"`
 	CompanyDomains  []string             `json:"company_domains"  validate:"dive,omitempty,validate_domain"`

@@ -32,8 +32,7 @@ model LocationFilter {
 }
 
 model FindHubOpeningsRequest {
-    @doc("If nothing is passed, the HubUser's resident country will be considered.")
-    country_code?: CountryCode;
+    country_code: CountryCode;
 
     @doc("If nothing is passed, all cities under the country_code are considered. No error will be reported if a passed city does not belong to the country_code.")
     @maxItems(4)
