@@ -17,9 +17,11 @@ export const en = {
       invalidCredentials: "Invalid credentials",
       accountDisabled: "Your account has been disabled",
       serverError: "The server is experiencing issues. Please try again later",
+      invalidTfaCode: "Invalid verification code",
     },
     loginFailed: "Login failed",
     tfaFailed: "TFA verification failed",
+    backToLogin: "Back to Login",
   },
   dashboard: {
     title: "Dashboard",
