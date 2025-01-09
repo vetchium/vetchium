@@ -35,6 +35,7 @@ import {
 } from "@psankar/vetchi-typespec";
 import { Location, LocationStates } from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
+import { FeatureFlags } from "@/config/features";
 
 interface Country {
   country_code: string;
@@ -492,28 +493,32 @@ export default function CreateOpeningPage() {
               ))
             }
           />
-
-          <Autocomplete
-            multiple
-            options={Array.from(validTimezones)}
-            value={remoteTimezones}
-            onChange={(_, newValue) => setRemoteTimezones(newValue)}
-            disabled={isGloballyRemote}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                margin="normal"
-                label={t("openings.remoteTimezones")}
-                helperText={t("openings.remoteTimezonesHelp")}
-              />
-            )}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip label={option} {...getTagProps({ index })} key={option} />
-              ))
-            }
-          />
-
+          {FeatureFlags.TimezonesForCreateOpening && (
+            <Autocomplete
+              multiple
+              options={Array.from(validTimezones)}
+              value={remoteTimezones}
+              onChange={(_, newValue) => setRemoteTimezones(newValue)}
+              disabled={isGloballyRemote}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  margin="normal"
+                  label={t("openings.remoteTimezones")}
+                  helperText={t("openings.remoteTimezonesHelp")}
+                />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    label={option}
+                    {...getTagProps({ index })}
+                    key={option}
+                  />
+                ))
+              }
+            />
+          )}
           <Autocomplete
             multiple
             options={locations
