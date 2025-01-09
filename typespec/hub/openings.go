@@ -50,7 +50,7 @@ type GetHubOpeningDetailsRequest struct {
 	CompanyDomain          string `json:"company_domain"            validate:"required"`
 }
 
-type GetHubOpeningDetailsResponse struct {
+type HubOpeningDetails struct {
 	CompanyDomain             string                 `json:"company_domain"`
 	CompanyName               string                 `json:"company_name"`
 	CreatedAt                 time.Time              `json:"created_at"`

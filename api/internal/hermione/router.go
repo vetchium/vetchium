@@ -314,6 +314,7 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
+	http.Handle("/hub/get-opening-details", wrap(ho.GetOpeningDetails(h)))
 	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpening(h)))
 	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
 	http.Handle("/hub/withdraw-application", wrap(app.WithdrawApplication(h)))

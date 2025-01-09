@@ -197,6 +197,10 @@ type DB interface {
 		context.Context,
 		*hub.FindHubOpeningsRequest,
 	) ([]hub.HubOpening, error)
+	GetHubOpeningDetails(
+		context.Context,
+		hub.GetHubOpeningDetailsRequest,
+	) (hub.HubOpeningDetails, error)
 	GetMyHandle(context.Context) (string, error)
 	GetMyCandidacies(
 		context.Context,
