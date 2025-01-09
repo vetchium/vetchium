@@ -65,7 +65,7 @@ type CreateOpeningRequest struct {
 	LocationTitles []string              `json:"location_titles,omitempty" validate:"omitempty,max=10"`
 
 	// TODO: Add validation for remote_country_codes and remote_timezones
-	RemoteCountryCodes []common.CountryCode `json:"remote_country_codes,omitempty" validate:"omitempty,max=100"`
+	RemoteCountryCodes []common.CountryCode `json:"remote_country_codes,omitempty" validate:"omitempty,dive,validate_country_code,max=100"`
 	RemoteTimezones    []common.TimeZone    `json:"remote_timezones,omitempty"     validate:"omitempty,max=200"`
 
 	OpeningType common.OpeningType `json:"opening_type" validate:"required,validate_opening_type"`
