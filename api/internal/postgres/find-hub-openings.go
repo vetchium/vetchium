@@ -25,15 +25,14 @@ FROM openings o
 	JOIN employers e ON o.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id
 	JOIN domains d ON epd.domain_id = d.id
-	JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
-	JOIN locations l ON ol.location_id = l.id
+	LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
+	LEFT JOIN locations l ON ol.location_id = l.id
 	WHERE o.state = 'ACTIVE_OPENING_STATE'
-			AND (
-				l.country_code = $1
-				OR l.country_code = 'ZZX'
-				OR $1 = ANY(o.remote_country_codes)
-			)
-`
+		AND (
+			COALESCE(l.country_code, '') = $1 
+			OR 'ZZG' = ANY(o.remote_country_codes)
+			OR $1 = ANY(o.remote_country_codes)
+		)`
 
 	args := []interface{}{}
 
