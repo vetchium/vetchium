@@ -10,18 +10,6 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-model Salary {
-    // salary values are in decimal and not integer because of crypto currencies
-
-    @minValue(0)
-    min_amount: decimal;
-
-    @minValue(1)
-    max_amount: decimal;
-
-    currency: Currency;
-}
-
 @maxLength(64)
 scalar OpeningID extends string;
 

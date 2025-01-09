@@ -1,3 +1,5 @@
+import { Currency } from "../common/common";
+
 export type OpeningState =
   | "DRAFT_OPENING_STATE"
   | "ACTIVE_OPENING_STATE"
@@ -51,4 +53,10 @@ export function isValidOpeningType(type: string): type is OpeningType {
 
 export function isValidEducationLevel(level: string): level is EducationLevel {
   return Object.values(EducationLevels).includes(level as EducationLevel);
+}
+
+export interface Salary {
+  currency: Currency;
+  min_amount: number;
+  max_amount: number;
 }

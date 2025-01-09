@@ -38,3 +38,15 @@ union EducationLevel {
     NotMattersEducation: "NOT_MATTERS_EDUCATION",
     UnspecifiedEducation: "UNSPECIFIED_EDUCATION",
 }
+
+model Salary {
+    // salary values are in decimal and not integer because of crypto currencies
+
+    @minValue(0)
+    min_amount: decimal;
+
+    @minValue(1)
+    max_amount: decimal;
+
+    currency: Currency;
+}

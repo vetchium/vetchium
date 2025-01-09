@@ -20,12 +20,6 @@ model ExperienceRange {
     yoe_max: integer;
 }
 
-model SalaryRange {
-    currency: Currency;
-    min: float64;
-    max: float64;
-}
-
 model LocationFilter {
     country_code: CountryCode;
     city: string;
@@ -49,7 +43,7 @@ model FindHubOpeningsRequest {
     experience?: ExperienceRange;
 
     @doc("If nothing is passed, all salary ranges are considered")
-    salary_range?: SalaryRange;
+    salary_range?: Salary;
 
     @doc("If nothing is passed, all education levels are considered")
     min_education_level?: EducationLevel;
@@ -77,6 +71,29 @@ model HubOpening {
         some kind of score for how the company treats the applicants, etc. */
 }
 
+model GetHubOpeningDetailsRequest {
+    opening_id_within_company: string;
+    company_domain: string;
+}
+
+model HubOpeningDetails {
+    company_domain: string;
+    company_name: string;
+    created_at: utcDateTime;
+    education_level?: EducationLevel;
+    experience_range?: ExperienceRange;
+    hiring_manager_name: string;
+    hiring_manager_vetchi_handle?: string; // TODO: Not done yet
+    jd: string;
+    job_title: string;
+    opening_id_within_company: string;
+    opening_type: OpeningType;
+    pagination_key: int64;
+    recruiter_name: string;
+    salary?: Salary;
+    state: OpeningState;
+}
+
 model ApplyForOpeningRequest {
     opening_id_within_company: string;
     company_domain: string;
@@ -97,6 +114,17 @@ interface FindHubOpenings {
     findOpenings(request: FindHubOpeningsRequest): {
         @statusCode statusCode: 200;
         @body HubOpening: [];
+    };
+}
+
+@route("/hub/get-opening-details")
+interface GetOpeningDetails {
+    @tag("Openings")
+    @post
+    @useAuth(HubAuth)
+    getOpeningDetails(@body request: GetHubOpeningDetailsRequest): {
+        @statusCode statusCode: 200;
+        @body HubOpeningDetails: HubOpeningDetails;
     };
 }
 

@@ -48,3 +48,9 @@ func (e EducationLevel) IsValid() bool {
 		e == NotMattersEducation ||
 		e == UnspecifiedEducation
 }
+
+type Salary struct {
+	MinAmount float64  `json:"min_amount" validate:"required,min=0"`
+	MaxAmount float64  `json:"max_amount" validate:"required,min=1"`
+	Currency  Currency `json:"currency"   validate:"required"`
+}

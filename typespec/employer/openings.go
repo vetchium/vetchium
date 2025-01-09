@@ -6,12 +6,6 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-type Salary struct {
-	MinAmount float64         `json:"min_amount" validate:"required,min=0"`
-	MaxAmount float64         `json:"max_amount" validate:"required,min=1"`
-	Currency  common.Currency `json:"currency"   validate:"required"`
-}
-
 type OpeningID string
 
 type OpeningInfo struct {
@@ -51,7 +45,7 @@ type Opening struct {
 	// Optional fields
 	EmployerNotes     *string                `json:"employer_notes,omitempty"`
 	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty"`
-	Salary            *Salary                `json:"salary,omitempty"`
+	Salary            *common.Salary         `json:"salary,omitempty"`
 }
 
 type CreateOpeningRequest struct {
@@ -75,7 +69,7 @@ type CreateOpeningRequest struct {
 	// Optional fields
 	EmployerNotes     *string                `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
 	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty" validate:"omitempty"`
-	Salary            *Salary                `json:"salary,omitempty"              validate:"omitempty"`
+	Salary            *common.Salary         `json:"salary,omitempty"              validate:"omitempty"`
 }
 
 type CreateOpeningResponse struct {
