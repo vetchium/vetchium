@@ -122,8 +122,8 @@ FROM openings o
 		args = append(
 			args,
 			req.SalaryRange.Currency,
-			req.SalaryRange.Min,
-			req.SalaryRange.Max,
+			req.SalaryRange.MinAmount,
+			req.SalaryRange.MaxAmount,
 		)
 		argPos += 3
 		p.log.Dbg("salary", "salaryConds", salaryConds)

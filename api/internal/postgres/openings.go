@@ -94,7 +94,7 @@ GROUP BY
 	var locations []string
 	var hiringTeam []employer.OrgUserShort
 	var recruiter, hiringManager employer.OrgUserShort
-	var salary employer.Salary
+	var salary common.Salary
 	var minAmount, maxAmount *float64
 	var currencyStr *string
 
