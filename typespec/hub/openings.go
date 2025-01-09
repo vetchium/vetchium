@@ -51,21 +51,22 @@ type GetHubOpeningDetailsRequest struct {
 }
 
 type HubOpeningDetails struct {
-	CompanyDomain             string                 `json:"company_domain"`
-	CompanyName               string                 `json:"company_name"`
-	CreatedAt                 time.Time              `json:"created_at"`
-	EducationLevel            *common.EducationLevel `json:"education_level"`
-	ExperienceRange           *ExperienceRange       `json:"experience_range"`
-	HiringManagerName         string                 `json:"hiring_manager_name"`
-	HiringManagerVetchiHandle *string                `json:"hiring_manager_vetchi_handle"`
-	JD                        string                 `json:"jd"`
-	JobTitle                  string                 `json:"job_title"`
-	OpeningIDWithinCompany    string                 `json:"opening_id_within_company"`
-	OpeningType               common.OpeningType     `json:"opening_type"`
-	PaginationKey             int64                  `json:"pagination_key"`
-	RecruiterName             string                 `json:"recruiter_name"`
-	Salary                    *common.Salary         `json:"salary"`
-	State                     common.OpeningState    `json:"state"`
+	CompanyDomain             string                `json:"company_domain"`
+	CompanyName               string                `json:"company_name"`
+	CreatedAt                 time.Time             `json:"created_at"`
+	EducationLevel            common.EducationLevel `json:"education_level"`
+	YoeMin                    int                   `json:"yoe_min"`
+	YoeMax                    int                   `json:"yoe_max"`
+	HiringManagerName         string                `json:"hiring_manager_name"`
+	HiringManagerVetchiHandle *string               `json:"hiring_manager_vetchi_handle"`
+	JD                        string                `json:"jd"`
+	JobTitle                  string                `json:"job_title"`
+	OpeningIDWithinCompany    string                `json:"opening_id_within_company"`
+	OpeningType               common.OpeningType    `json:"opening_type"`
+	PaginationKey             int64                 `json:"pagination_key"`
+	RecruiterName             string                `json:"recruiter_name"`
+	Salary                    *common.Salary        `json:"salary"`
+	State                     common.OpeningState   `json:"state"`
 }
 
 type ApplyForOpeningRequest struct {

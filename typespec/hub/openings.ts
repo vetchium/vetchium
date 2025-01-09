@@ -46,8 +46,9 @@ export interface HubOpeningDetails {
   company_domain: string;
   company_name: string;
   created_at: EpochTimeStamp;
-  education_level?: EducationLevel;
-  experience_range?: ExperienceRange;
+  education_level: EducationLevel;
+  yoe_min: number;
+  yoe_max: number;
   hiring_manager_name: string;
   hiring_manager_vetchi_handle?: string;
   jd: string;
