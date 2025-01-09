@@ -28,7 +28,11 @@ FROM openings o
 	JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	JOIN locations l ON ol.location_id = l.id
 	WHERE o.state = 'ACTIVE_OPENING_STATE'
-		AND l.country_code = $1
+			AND (
+				l.country_code = $1
+				OR l.country_code = 'ZZX'
+				OR $1 = ANY(o.remote_country_codes)
+			)
 `
 
 	args := []interface{}{}
@@ -149,9 +153,9 @@ FROM openings o
 
 	// Add GROUP BY
 	query += `
-		GROUP BY 
+		GROUP BY
 			o.employer_id,
-			o.id, 
+			o.id,
 			o.title,
 			o.jd,
 			d.domain_name,
