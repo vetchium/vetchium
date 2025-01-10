@@ -27,10 +27,12 @@ export default function AuthenticatedLayout({
         sx={{
           flexGrow: 1,
           p: 3,
-          width: "100%",
+          width: {
+            xs: `calc(100% - ${sidebarOpen ? "240px" : theme.spacing(9)})`,
+          },
           ml: sidebarOpen ? "240px" : theme.spacing(9),
           mt: "64px", // Height of the header
-          transition: theme.transitions.create(["margin"], {
+          transition: theme.transitions.create(["margin", "width"], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),

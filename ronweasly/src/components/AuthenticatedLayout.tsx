@@ -26,11 +26,11 @@ export default function AuthenticatedLayout({
         sx={{
           flexGrow: 1,
           p: 3,
-          width: "100%",
+          width: { xs: `calc(100% - ${sidebarOpen ? "240px" : "72px"})` },
           ml: sidebarOpen ? "240px" : "72px",
           mt: "64px", // Height of the header
           transition: (theme) =>
-            theme.transitions.create(["margin"], {
+            theme.transitions.create(["margin", "width"], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
