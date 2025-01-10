@@ -1,10 +1,11 @@
 import { en } from "@/i18n/en";
+import { useCallback } from "react";
 
 type TranslationParams = Record<string, string | number>;
 
 // For now, we'll just use English. In the future, this can be expanded to support multiple languages
 export function useTranslation() {
-  const t = (key: string, params?: TranslationParams) => {
+  const t = useCallback((key: string, params?: TranslationParams) => {
     const keys = key.split(".");
     let value: any = en;
 
@@ -24,7 +25,7 @@ export function useTranslation() {
     }
 
     return value;
-  };
+  }, []); // Empty dependencies since en is static
 
   return { t };
 }

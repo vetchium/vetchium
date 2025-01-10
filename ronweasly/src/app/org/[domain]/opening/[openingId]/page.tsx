@@ -117,7 +117,7 @@ export default function OpeningDetailsPage() {
     };
 
     fetchOpeningDetails();
-  }, [params.domain, params.openingId, t]);
+  }, [params.domain, params.openingId]);
 
   const handleApply = async () => {
     // TODO: Implement apply functionality
