@@ -107,7 +107,7 @@ export default function MyApplicationsPage() {
         }
 
         const data = await response.json();
-        setApplications(data);
+        setApplications(data ?? []);
       } catch (error) {
         console.error("Error fetching applications:", error);
         setError(t("myApplications.error.loadFailed"));
@@ -195,7 +195,7 @@ export default function MyApplicationsPage() {
           </Alert>
         )}
 
-        {applications.length === 0 ? (
+        {(applications ?? []).length === 0 ? (
           <Paper sx={{ p: 4, textAlign: "center" }}>
             <Typography color="text.secondary">
               {t("myApplications.noApplications")}

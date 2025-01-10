@@ -20,7 +20,7 @@ export default function AuthenticatedLayout({
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "column" }}>
-      <Header onMenuClick={toggleSidebar} />
+      <Header onMenuClick={toggleSidebar} isSidebarOpen={sidebarOpen} />
       <Sidebar open={sidebarOpen} />
       <Box
         component="main"
