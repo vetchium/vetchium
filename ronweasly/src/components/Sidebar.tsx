@@ -10,6 +10,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import { styled } from "@mui/material/styles";
 
 const drawerWidth = 240;
@@ -29,6 +30,11 @@ interface SidebarProps {
 const menuItems = [
   { text: "Home", icon: <HomeIcon />, path: "/" },
   { text: "Find Openings", icon: <SearchIcon />, path: "/find-openings" },
+  {
+    text: "My Applications",
+    icon: <AssignmentIcon />,
+    path: "/my-applications",
+  },
 ];
 
 export default function Sidebar({ open }: SidebarProps) {
