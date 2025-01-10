@@ -1,11 +1,13 @@
-import { en } from '@/i18n/en';
+import { en } from "@/i18n/en";
+
+type TranslationParams = Record<string, string | number>;
 
 // For now, we'll just use English. In the future, this can be expanded to support multiple languages
 export function useTranslation() {
-  const t = (key: string) => {
-    const keys = key.split('.');
+  const t = (key: string, params?: TranslationParams) => {
+    const keys = key.split(".");
     let value: any = en;
-    
+
     for (const k of keys) {
       if (value[k] === undefined) {
         console.warn(`Translation key not found: ${key}`);
@@ -13,9 +15,16 @@ export function useTranslation() {
       }
       value = value[k];
     }
-    
+
+    if (params) {
+      return Object.entries(params).reduce(
+        (str, [key, value]) => str.replace(`{${key}}`, String(value)),
+        value
+      );
+    }
+
     return value;
   };
 
   return { t };
-} 
+}

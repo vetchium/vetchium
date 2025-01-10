@@ -17,45 +17,52 @@ import {
   OpeningTypes,
   EducationLevels,
   GetHubOpeningDetailsRequest,
+  OpeningState,
+  OpeningStates,
 } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { useTranslation } from "@/hooks/useTranslation";
 
-const formatEducationLevel = (level: EducationLevel) => {
+const formatEducationLevel = (
+  level: EducationLevel,
+  t: (key: string) => string
+) => {
   switch (level) {
     case EducationLevels.BACHELOR:
-      return "Bachelor's Degree";
+      return t("openingDetails.educationLevel.bachelor");
     case EducationLevels.MASTER:
-      return "Master's Degree";
+      return t("openingDetails.educationLevel.master");
     case EducationLevels.DOCTORATE:
-      return "Doctorate";
+      return t("openingDetails.educationLevel.doctorate");
     case EducationLevels.NOT_MATTERS:
-      return "Any Education Level";
+      return t("openingDetails.educationLevel.notMatters");
     case EducationLevels.UNSPECIFIED:
-      return "Not Specified";
+      return t("openingDetails.educationLevel.unspecified");
     default:
       return level;
   }
 };
 
-const formatOpeningType = (type: OpeningType) => {
+const formatOpeningType = (type: OpeningType, t: (key: string) => string) => {
   switch (type) {
     case OpeningTypes.FULL_TIME:
-      return "Full Time";
+      return t("openingDetails.openingType.fullTime");
     case OpeningTypes.PART_TIME:
-      return "Part Time";
+      return t("openingDetails.openingType.partTime");
     case OpeningTypes.CONTRACT:
-      return "Contract";
+      return t("openingDetails.openingType.contract");
     case OpeningTypes.INTERNSHIP:
-      return "Internship";
+      return t("openingDetails.openingType.internship");
     case OpeningTypes.UNSPECIFIED:
-      return "Not Specified";
+      return t("openingDetails.openingType.unspecified");
     default:
       return type;
   }
 };
 
 export default function OpeningDetailsPage() {
+  const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -66,7 +73,7 @@ export default function OpeningDetailsPage() {
     const fetchOpeningDetails = async () => {
       const token = Cookies.get("session_token");
       if (!token) {
-        setError("Not authenticated. Please log in again.");
+        setError(t("common.error.notAuthenticated"));
         return;
       }
 
@@ -90,7 +97,7 @@ export default function OpeningDetailsPage() {
 
         if (!response.ok) {
           if (response.status === 401) {
-            setError("Session expired. Please log in again.");
+            setError(t("common.error.sessionExpired"));
             Cookies.remove("session_token", { path: "/" });
             return;
           }
@@ -103,18 +110,33 @@ export default function OpeningDetailsPage() {
         setOpening(data);
       } catch (error) {
         console.error("Error fetching opening details:", error);
-        setError("Failed to load opening details. Please try again later.");
+        setError(t("openingDetails.error.loadFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchOpeningDetails();
-  }, [params.domain, params.openingId]);
+  }, [params.domain, params.openingId, t]);
 
   const handleApply = async () => {
     // TODO: Implement apply functionality
     alert("Apply functionality will be implemented soon!");
+  };
+
+  const canApply = opening?.state === OpeningStates.ACTIVE;
+
+  const getOpeningStateMessage = (state: OpeningState) => {
+    switch (state) {
+      case OpeningStates.DRAFT:
+        return t("openingDetails.state.draft");
+      case OpeningStates.SUSPENDED:
+        return t("openingDetails.state.suspended");
+      case OpeningStates.CLOSED:
+        return t("openingDetails.state.closed");
+      default:
+        return null;
+    }
   };
 
   if (loading) {
@@ -143,7 +165,7 @@ export default function OpeningDetailsPage() {
     return (
       <AuthenticatedLayout>
         <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography align="center">Opening not found</Typography>
+          <Typography align="center">{t("openingDetails.notFound")}</Typography>
         </Paper>
       </AuthenticatedLayout>
     );
@@ -162,14 +184,17 @@ export default function OpeningDetailsPage() {
 
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             {opening.opening_type && (
-              <Chip label={formatOpeningType(opening.opening_type)} />
+              <Chip label={formatOpeningType(opening.opening_type, t)} />
             )}
             {opening.education_level && (
-              <Chip label={formatEducationLevel(opening.education_level)} />
+              <Chip label={formatEducationLevel(opening.education_level, t)} />
             )}
             {opening.yoe_min !== undefined && opening.yoe_max !== undefined && (
               <Chip
-                label={`${opening.yoe_min}-${opening.yoe_max} years experience`}
+                label={t("openingDetails.yearsExperience", {
+                  min: opening.yoe_min,
+                  max: opening.yoe_max,
+                })}
               />
             )}
           </Stack>
@@ -180,20 +205,31 @@ export default function OpeningDetailsPage() {
 
           {opening.hiring_manager_name && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Hiring Manager: {opening.hiring_manager_name}
+              {t("openingDetails.hiringManager")}: {opening.hiring_manager_name}
             </Typography>
           )}
 
           <Box sx={{ mt: 4 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handleApply}
-              fullWidth
-            >
-              Apply for this Opening
-            </Button>
+            {canApply ? (
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={handleApply}
+                fullWidth
+              >
+                {t("openingDetails.apply")}
+              </Button>
+            ) : (
+              <Typography
+                variant="body1"
+                color="error"
+                align="center"
+                sx={{ mb: 2 }}
+              >
+                {getOpeningStateMessage(opening.state)}
+              </Typography>
+            )}
           </Box>
         </Paper>
       </Box>
