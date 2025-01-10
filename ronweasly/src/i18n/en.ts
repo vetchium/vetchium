@@ -67,7 +67,13 @@ export const en = {
     },
     error: {
       loadFailed: "Failed to load opening details. Please try again later.",
+      pdfOnly: "Please upload a PDF file only",
+      fileTooLarge: "File size should be less than 5MB",
+      noResume: "Please select a resume to upload",
+      applyFailed: "Failed to apply for the opening. Please try again later.",
     },
+    selectResume: "Select Resume (PDF)",
+    resumeSelected: "Selected: {name}",
   },
   navigation: {
     home: "Home",
