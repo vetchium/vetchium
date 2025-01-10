@@ -41,6 +41,26 @@ export const en = {
     searchPlaceholder: "Search for job titles, skills, or keywords",
     noOpeningsFound: "No openings found",
   },
+  myApplications: {
+    title: "My Applications",
+    noApplications: "You haven't applied to any openings yet",
+    error: {
+      loadFailed: "Failed to load your applications. Please try again later.",
+    },
+    applicationState: {
+      applied: "Applied",
+      rejected: "Rejected",
+      shortlisted: "Shortlisted",
+      withdrawn: "Withdrawn",
+      expired: "Expired",
+    },
+    appliedOn: "Applied on {date}",
+    viewOpening: "View Opening",
+    withdrawApplication: "Withdraw Application",
+    withdrawConfirmation: "Are you sure you want to withdraw this application?",
+    withdrawSuccess: "Application withdrawn successfully",
+    withdrawError: "Failed to withdraw application. Please try again later.",
+  },
   openingDetails: {
     notFound: "Opening not found",
     hiringManager: "Hiring Manager",
@@ -78,5 +98,6 @@ export const en = {
   navigation: {
     home: "Home",
     findOpenings: "Find Openings",
+    myApplications: "My Applications",
   },
 };
