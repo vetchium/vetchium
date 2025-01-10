@@ -104,7 +104,7 @@ export default function FindOpeningsPage() {
   };
 
   const handleOpeningClick = (opening: HubOpening, newTab?: boolean) => {
-    const url = `/org/${opening.company_domain}/${opening.opening_id_within_company}`;
+    const url = `/org/${opening.company_domain}/opening/${opening.opening_id_within_company}`;
     if (newTab) {
       window.open(url, "_blank");
     } else {
