@@ -129,14 +129,16 @@ VALUES
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
 SELECT
     gen_random_uuid(),
-    'admin@' || domain_name,
+    'admin@' || d.domain_name,
     'Admin User',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     ARRAY['ADMIN']::org_user_roles[],
     'ACTIVE_ORG_USER',
-    employer_id,
+    e.id,
     timezone('UTC'::text, now())
-FROM domains;
+FROM employers e
+JOIN employer_primary_domains epd ON e.id = epd.employer_id
+JOIN domains d ON epd.domain_id = d.id;
 
 -- Create locations for each employer
 INSERT INTO locations (id, title, country_code, postal_address, postal_code, city_aka, location_state, employer_id, created_at)

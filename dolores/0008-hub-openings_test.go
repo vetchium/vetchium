@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Hub Openings", Ordered, func() {
+var _ = FDescribe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
@@ -157,14 +157,17 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				// Basic pagination and limit tests
 				{
 					description: "find all openings with default limit",
-					request:     hub.FindHubOpeningsRequest{},
-					wantStatus:  http.StatusOK,
-					wantCount:   10,
+					request: hub.FindHubOpeningsRequest{
+						CountryCode: usaCountryCode,
+					},
+					wantStatus: http.StatusOK,
+					wantCount:  30,
 				},
 				{
 					description: "find openings with custom limit",
 					request: hub.FindHubOpeningsRequest{
-						Limit: 10,
+						CountryCode: usaCountryCode,
+						Limit:       10,
 					},
 					wantStatus: http.StatusOK,
 					wantCount:  10,
@@ -172,14 +175,16 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				{
 					description: "find openings with invalid limit (too high)",
 					request: hub.FindHubOpeningsRequest{
-						Limit: 101,
+						CountryCode: usaCountryCode,
+						Limit:       101,
 					},
 					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "find openings with invalid limit (too low)",
 					request: hub.FindHubOpeningsRequest{
-						Limit: -1,
+						CountryCode: usaCountryCode,
+						Limit:       -1,
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -189,6 +194,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 					description: "find openings by single company domain",
 					request: hub.FindHubOpeningsRequest{
 						CompanyDomains: []string{"hubopening1.example"},
+						CountryCode:    usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -206,6 +212,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							"hubopening1.example",
 							"hubopening2.example",
 						},
+						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -226,6 +233,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							YoeMin: 0,
 							YoeMax: 3,
 						},
+						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -239,6 +247,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							YoeMin: 3,
 							YoeMax: 6,
 						},
+						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -252,6 +261,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							YoeMin: 6,
 							YoeMax: 10,
 						},
+						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -268,6 +278,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							MinAmount: 50000,
 							MaxAmount: 100000,
 						},
+						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -280,6 +291,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 					description: "find openings by minimum education level (Bachelor's)",
 					request: hub.FindHubOpeningsRequest{
 						MinEducationLevel: &bachelorEducation,
+						CountryCode:       usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
