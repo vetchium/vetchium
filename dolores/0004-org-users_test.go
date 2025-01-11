@@ -825,6 +825,9 @@ var _ = Describe("Org Users", Ordered, func() {
 
 			// After running test cases, verify that invite emails were sent to enabled users
 
+			// Wait for 10 seconds to ensure mailpit has processed the emails
+			<-time.After(10 * time.Second)
+
 			enabledUsers := []string{
 				"to-enable1@orgusers.example",
 				"to-enable2@orgusers.example",
