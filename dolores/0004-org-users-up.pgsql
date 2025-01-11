@@ -12,6 +12,10 @@ INSERT INTO public.employers (id, client_id_type, employer_state, company_name, 
 INSERT INTO public.domains (id, domain_name, domain_state, employer_id, created_at)
     VALUES ('12345678-0004-0004-0004-000000003001'::uuid, 'orgusers.example', 'VERIFIED', '12345678-0004-0004-0004-000000000201'::uuid, timezone('UTC'::text, now()));
 
+-- Set primary domain
+INSERT INTO public.employer_primary_domains (employer_id, domain_id)
+    VALUES ('12345678-0004-0004-0004-000000000201'::uuid, '12345678-0004-0004-0004-000000003001'::uuid);
+
 INSERT INTO public.org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
     VALUES 
     ('12345678-0004-0004-0004-000000040001'::uuid, 'admin@orgusers.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0004-0004-0004-000000000201'::uuid, timezone('UTC'::text, now())),

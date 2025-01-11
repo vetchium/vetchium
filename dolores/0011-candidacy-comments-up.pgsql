@@ -10,6 +10,10 @@ VALUES ('12345678-0011-0011-0011-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'ca
 INSERT INTO domains (id, domain_name, domain_state, employer_id, created_at)
 VALUES ('12345678-0011-0011-0011-000000003001'::uuid, 'candidacy-comments.example', 'VERIFIED', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
 
+-- Set primary domain
+INSERT INTO employer_primary_domains (employer_id, domain_id)
+VALUES ('12345678-0011-0011-0011-000000000201'::uuid, '12345678-0011-0011-0011-000000003001'::uuid);
+
 -- Create org users with different roles
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
 VALUES
