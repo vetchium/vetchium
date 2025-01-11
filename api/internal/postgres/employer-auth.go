@@ -307,6 +307,21 @@ VALUES ($1, $2, $3, $4::org_user_roles[], $5, $6)
 		return err
 	}
 
+	primaryDomainInsertQuery := `
+INSERT INTO employer_primary_domains (employer_id, domain_id)
+VALUES ($1, (SELECT id FROM domains WHERE domain_name = $2))
+`
+	_, err = tx.Exec(
+		ctx,
+		primaryDomainInsertQuery,
+		employerID,
+		onboardReq.DomainName,
+	)
+	if err != nil {
+		p.log.Err("failed to insert primary domain", "error", err)
+		return err
+	}
+
 	employerUpdateQuery := `
 UPDATE employers SET employer_state = $1 WHERE id = $2
 `

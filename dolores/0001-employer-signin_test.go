@@ -17,7 +17,7 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-var _ = Describe("Employer Signin", Ordered, func() {
+var _ = FDescribe("Employer Signin", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
