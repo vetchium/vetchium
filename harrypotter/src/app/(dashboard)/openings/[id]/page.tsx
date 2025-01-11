@@ -362,6 +362,14 @@ export default function OpeningDetail({ params }: PageProps) {
                 <Button
                   variant="outlined"
                   onClick={() =>
+                    router.push(`/openings/${opening.id}/applications`)
+                  }
+                >
+                  {t("openings.viewApplications")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
                     router.push(`/openings/${opening.id}/interviews`)
                   }
                 >

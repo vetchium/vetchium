@@ -113,6 +113,7 @@ export const en = {
       "Are you sure you want to close this opening? This action cannot be undone.",
     confirmClose: "Yes, Close Opening",
     stateChangeSuccess: "Opening state updated successfully",
+    viewApplications: "View Applications",
   },
   costCenters: {
     title: "Cost Centers",
@@ -163,4 +164,19 @@ export const en = {
     "Job description must be between 10 and 1024 characters",
   "validation.employerNotes.maxLength.1024":
     "Employer notes must not exceed 1024 characters",
+  applications: {
+    title: "Applications",
+    filterByColor: "Filter by Color",
+    allColors: "All Colors",
+    colorGreen: "Green",
+    colorYellow: "Yellow",
+    colorRed: "Red",
+    removeColor: "Remove Color",
+    shortlist: "Shortlist",
+    reject: "Reject",
+    resumePreview: "Resume Preview",
+    noApplications: "No applications found",
+    setColor: "Set Color",
+    noColor: "No color tag",
+  },
 };
