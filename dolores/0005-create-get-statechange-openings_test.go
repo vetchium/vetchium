@@ -84,7 +84,7 @@ var _ = Describe("Openings", Ordered, func() {
 				YoeMin:            2,
 				YoeMax:            5,
 				MinEducationLevel: bachelorEducation_0005,
-				Salary: &employer.Salary{
+				Salary: &common.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
 					Currency:  "USD",
@@ -240,7 +240,7 @@ var _ = Describe("Openings", Ordered, func() {
 							YoeMin:            2,
 							YoeMax:            5,
 							MinEducationLevel: bachelorEducation_0005,
-							Salary: &employer.Salary{
+							Salary: &common.Salary{
 								MinAmount: 200000,
 								MaxAmount: 100000,
 								Currency:  "USD",
@@ -587,7 +587,7 @@ func createTestOpening(token string) string {
 		YoeMin:            0,
 		YoeMax:            5,
 		MinEducationLevel: bachelorEducation_0005,
-		Salary: &employer.Salary{
+		Salary: &common.Salary{
 			MinAmount: 50000,
 			MaxAmount: 100000,
 			Currency:  "USD",
@@ -621,7 +621,7 @@ func createTestOpenings(token string) {
 			YoeMin:            0,
 			YoeMax:            5,
 			MinEducationLevel: bachelorEducation_0005,
-			Salary: &employer.Salary{
+			Salary: &common.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",
@@ -656,7 +656,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			YoeMin:            0,
 			YoeMax:            5,
 			MinEducationLevel: bachelorEducation_0005,
-			Salary: &employer.Salary{
+			Salary: &common.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",

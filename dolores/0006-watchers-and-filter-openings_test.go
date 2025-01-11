@@ -515,7 +515,7 @@ var _ = Describe("Openings", Ordered, func() {
 				YoeMin:            0,
 				YoeMax:            5,
 				MinEducationLevel: bachelorEducation_0006,
-				Salary: &employer.Salary{
+				Salary: &common.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
 					Currency:  "USD",

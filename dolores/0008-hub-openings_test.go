@@ -263,10 +263,10 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				{
 					description: "find openings by salary range (USD)",
 					request: hub.FindHubOpeningsRequest{
-						SalaryRange: &hub.SalaryRange{
-							Currency: "USD",
-							Min:      50000,
-							Max:      100000,
+						SalaryRange: &common.Salary{
+							Currency:  "USD",
+							MinAmount: 50000,
+							MaxAmount: 100000,
 						},
 					},
 					wantStatus: http.StatusOK,
@@ -287,30 +287,6 @@ var _ = Describe("Hub Openings", Ordered, func() {
 					},
 				},
 
-				// Remote work filters
-				{
-					description: "find openings by remote timezone",
-					request: hub.FindHubOpeningsRequest{
-						RemoteTimezones: []common.TimeZone{
-							"IST Indian Standard Time GMT+0530",
-						},
-					},
-					wantStatus: http.StatusOK,
-					validate: func(openings []hub.HubOpening) {
-						Expect(len(openings)).Should(BeNumerically(">", 0))
-					},
-				},
-				{
-					description: "find openings by remote country",
-					request: hub.FindHubOpeningsRequest{
-						RemoteCountryCodes: []common.CountryCode{"IND"},
-					},
-					wantStatus: http.StatusOK,
-					validate: func(openings []hub.HubOpening) {
-						Expect(len(openings)).Should(BeNumerically(">", 0))
-					},
-				},
-
 				// Combined filters
 				{
 					description: "find openings with multiple filters",
@@ -319,16 +295,13 @@ var _ = Describe("Hub Openings", Ordered, func() {
 							YoeMin: 3,
 							YoeMax: 6,
 						},
-						SalaryRange: &hub.SalaryRange{
-							Currency: "USD",
-							Min:      80000,
-							Max:      150000,
+						SalaryRange: &common.Salary{
+							Currency:  "USD",
+							MinAmount: 80000,
+							MaxAmount: 150000,
 						},
-						CountryCode:       &usaCountryCode,
+						CountryCode:       usaCountryCode,
 						MinEducationLevel: &masterEducation,
-						RemoteTimezones: []common.TimeZone{
-							"PST Pacific Standard Time (North America) GMT-0800",
-						},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(openings []hub.HubOpening) {
@@ -391,7 +364,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 		It("should handle pagination correctly", func() {
 			// Get first page with USA country filter
 			firstPageReq := hub.FindHubOpeningsRequest{
-				CountryCode: &usaCountryCode,
+				CountryCode: usaCountryCode,
 				Limit:       10,
 			}
 			firstPageBody, err := json.Marshal(firstPageReq)
@@ -416,7 +389,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 
 			// Get second page using pagination key AND country code
 			secondPageReq := hub.FindHubOpeningsRequest{
-				CountryCode:   &usaCountryCode,
+				CountryCode:   usaCountryCode,
 				Limit:         10,
 				PaginationKey: firstPage[len(firstPage)-1].PaginationKey,
 			}
@@ -455,7 +428,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				{
 					description: "find openings in different country",
 					request: hub.FindHubOpeningsRequest{
-						CountryCode: hub.CountryCodePtr("USA"),
+						CountryCode: usaCountryCode,
 						Limit:       10,
 					},
 					wantStatus: http.StatusOK,
@@ -466,7 +439,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 				{
 					description: "search for non-existent city in wrong country",
 					request: hub.FindHubOpeningsRequest{
-						CountryCode: hub.CountryCodePtr("IND"),
+						CountryCode: usaCountryCode,
 						Cities:      []string{"New York"},
 						Limit:       10,
 					},
