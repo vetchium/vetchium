@@ -308,7 +308,15 @@ export default function ApplicationsPage({ params }: PageProps) {
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                   {application.color_tag && (
                     <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        padding: "2px 4px",
+                      }}
                     >
                       <FiberManualRecordIcon
                         sx={{
@@ -318,19 +326,35 @@ export default function ApplicationsPage({ params }: PageProps) {
                               : application.color_tag === "YELLOW"
                               ? "warning.main"
                               : "error.main",
-                          fontSize: "small",
+                          fontSize: {
+                            xs: "1rem",
+                            sm: "1.5rem",
+                            md: "2rem",
+                          },
                         }}
                       />
                       <IconButton
                         size="small"
                         onClick={() => handleColorTag(application.id, null)}
                         sx={{
-                          padding: 0.5,
+                          padding: {
+                            xs: 0.5,
+                            sm: 0.75,
+                            md: 1,
+                          },
                           color: "text.secondary",
                           "&:hover": { bgcolor: "action.hover" },
                         }}
                       >
-                        <CloseIcon sx={{ fontSize: "small" }} />
+                        <CloseIcon
+                          sx={{
+                            fontSize: {
+                              xs: "small",
+                              sm: "medium",
+                              md: "large",
+                            },
+                          }}
+                        />
                       </IconButton>
                     </Box>
                   )}
