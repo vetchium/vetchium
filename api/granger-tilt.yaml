@@ -65,7 +65,7 @@ spec:
             name: granger-config
         - name: resumes-volume
           hostPath:
-            path: /tmp/vetchi-resumes
+            path: /var/lib/vetchi/resumes
             type: DirectoryOrCreate
 ---
 apiVersion: v1
