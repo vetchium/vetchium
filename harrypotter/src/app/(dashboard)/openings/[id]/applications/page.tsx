@@ -305,7 +305,52 @@ export default function ApplicationsPage({ params }: PageProps) {
                 <Typography variant="h6">
                   {application.hub_user_handle}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                  {application.color_tag && (
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <FiberManualRecordIcon
+                        sx={{
+                          color:
+                            application.color_tag === "GREEN"
+                              ? "success.main"
+                              : application.color_tag === "YELLOW"
+                              ? "warning.main"
+                              : "error.main",
+                          fontSize: "small",
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleColorTag(application.id, null)}
+                        sx={{
+                          padding: 0.5,
+                          color: "text.secondary",
+                          "&:hover": { bgcolor: "action.hover" },
+                        }}
+                      >
+                        <CloseIcon sx={{ fontSize: "small" }} />
+                      </IconButton>
+                    </Box>
+                  )}
+                  {!application.color_tag && (
+                    <Tooltip title={t("applications.setColor")}>
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          setAnchorEl(event.currentTarget);
+                          setSelectedApplicationId(application.id);
+                        }}
+                        sx={{
+                          color: "text.secondary",
+                          "&:hover": { bgcolor: "action.hover" },
+                        }}
+                      >
+                        <ColorLensIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                   <IconButton
                     onClick={() => setSelectedResume(application.resume)}
                     color="primary"
@@ -313,74 +358,6 @@ export default function ApplicationsPage({ params }: PageProps) {
                     <VisibilityIcon />
                   </IconButton>
                 </Box>
-              </Box>
-
-              <Box
-                sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}
-              >
-                {application.color_tag && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      backgroundColor:
-                        application.color_tag === "GREEN"
-                          ? "success.light"
-                          : application.color_tag === "YELLOW"
-                          ? "warning.light"
-                          : "error.light",
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 1,
-                      gap: 1,
-                    }}
-                  >
-                    <FiberManualRecordIcon
-                      sx={{
-                        color:
-                          application.color_tag === "GREEN"
-                            ? "success.main"
-                            : application.color_tag === "YELLOW"
-                            ? "warning.main"
-                            : "error.main",
-                        fontSize: "small",
-                      }}
-                    />
-                    <Typography variant="body2">
-                      {t(`applications.color${application.color_tag}`)}
-                    </Typography>
-                  </Box>
-                )}
-
-                <Tooltip
-                  title={
-                    application.color_tag
-                      ? t("applications.removeColor")
-                      : t("applications.setColor")
-                  }
-                >
-                  <IconButton
-                    size="small"
-                    onClick={(event) => {
-                      if (application.color_tag) {
-                        handleColorTag(application.id, null);
-                      } else {
-                        setAnchorEl(event.currentTarget);
-                        setSelectedApplicationId(application.id);
-                      }
-                    }}
-                    sx={{
-                      color: "text.secondary",
-                      "&:hover": { bgcolor: "action.hover" },
-                    }}
-                  >
-                    {application.color_tag ? (
-                      <CloseIcon fontSize="small" />
-                    ) : (
-                      <ColorLensIcon fontSize="small" />
-                    )}
-                  </IconButton>
-                </Tooltip>
               </Box>
 
               <Box sx={{ display: "flex", gap: 2 }}>
