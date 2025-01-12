@@ -112,8 +112,8 @@ export default function ApplicationsPage({ params }: PageProps) {
 
       if (response.status === 200) {
         const data = await response.json();
-        setApplications(data);
-        if (data.length === ITEMS_PER_PAGE) {
+        setApplications(data || []);
+        if (data?.length === ITEMS_PER_PAGE) {
           setPaginationKey(data[data.length - 1].id);
         }
       } else if (response.status === 401) {
@@ -292,7 +292,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       </Box>
 
       <Stack spacing={3}>
-        {applications.map((application) => (
+        {applications?.map((application) => (
           <Card key={application.id}>
             <CardContent>
               <Box
