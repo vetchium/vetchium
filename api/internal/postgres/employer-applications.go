@@ -64,7 +64,7 @@ func (p *PG) GetApplicationsForEmployer(
 	}
 	defer rows.Close()
 
-	var applications []employer.Application
+	applications := make([]employer.Application, 0)
 	for rows.Next() {
 		var app employer.Application
 		var internalFilename string
