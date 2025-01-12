@@ -46,6 +46,7 @@ model Application {
     hub_user_last_employer_domain?: string;
     resume: string;
     state: ApplicationState;
+    color_tag?: ApplicationColorTag;
 }
 
 model SetApplicationColorTagRequest {

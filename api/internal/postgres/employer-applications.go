@@ -28,7 +28,8 @@ func (p *PG) GetApplicationsForEmployer(
 			a.original_filename,
 			a.internal_filename,
 			h.handle as hub_user_handle,
-			a.application_state
+			a.application_state,
+			a.color_tag
 		FROM applications a
 		JOIN hub_users h ON h.id = a.hub_user_id
 		WHERE a.employer_id = $1
@@ -77,6 +78,7 @@ func (p *PG) GetApplicationsForEmployer(
 			&internalFilename,
 			&app.HubUserHandle,
 			&app.State,
+			&app.ColorTag,
 		)
 		if err != nil {
 			p.log.Err("failed to scan application", "error", err)
@@ -85,7 +87,6 @@ func (p *PG) GetApplicationsForEmployer(
 
 		// Set the resume URL using the internal filename
 		app.Resume = "/resumes/" + internalFilename
-
 		applications = append(applications, app)
 	}
 

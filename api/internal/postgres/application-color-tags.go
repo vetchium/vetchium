@@ -40,15 +40,13 @@ func (p *PG) SetApplicationColorTag(
 				ELSE $7
 			END as status
 		),
-		update_result AS (
+		update_attempt AS (
 			UPDATE applications
-			SET color_tag = CASE 
-				WHEN (SELECT status FROM application_check) = $7 THEN $1 
-				ELSE color_tag 
-			END
+			SET color_tag = $1
 			WHERE id = $2 
 			AND employer_id = $3
 			AND application_state = $4
+			AND (SELECT status FROM application_check) = $7
 		)
 		SELECT status FROM application_check;
 	`
@@ -65,9 +63,8 @@ func (p *PG) SetApplicationColorTag(
 		statusWrongState,
 		statusOK,
 	).Scan(&status)
-
 	if err != nil {
-		p.log.Err("failed to add application color tag", "error", err)
+		p.log.Err("failed to execute color tag update query", "error", err)
 		return db.ErrInternal
 	}
 

@@ -39,6 +39,7 @@ type Application struct {
 	HubUserLastEmployerDomain *string                 `json:"hub_user_last_employer_domain,omitempty"`
 	Resume                    string                  `json:"resume"`
 	State                     common.ApplicationState `json:"state"`
+	ColorTag                  *ApplicationColorTag    `json:"color_tag,omitempty"`
 }
 
 type SetApplicationColorTagRequest struct {
