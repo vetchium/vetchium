@@ -32,6 +32,8 @@ const (
 	CandidacyIDLenBytes = 16
 
 	InterviewIDLenBytes = 16
+
+	ResumeIDLenBytes = 12
 )
 
 const (

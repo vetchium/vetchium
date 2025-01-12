@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/uuid"
+	"github.com/psankar/vetchi/api/internal/util"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type UploadResumeRequest struct {
@@ -32,17 +33,17 @@ func (g *Granger) uploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var file *os.File
-	var filename string
+	var filepath, filename string
 
 	// Try up to 3 times to create a file with a unique name
 	for i := 0; i < 3; i++ {
-		uniqueID := uuid.New().String()
-		filename = fmt.Sprintf("/resumes/%s", uniqueID)
+		filename = util.RandomUniqueID(vetchi.ResumeIDLenBytes)
+		filepath = fmt.Sprintf("/resumes/%s", filename)
 
 		// Atomically create and open the file
 		var err error
 		file, err = os.OpenFile(
-			filename,
+			filepath,
 			os.O_WRONLY|os.O_CREATE|os.O_EXCL,
 			0644,
 		)
@@ -68,18 +69,21 @@ func (g *Granger) uploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	closeErr := file.Close()
 	if err != nil {
 		g.log.Err("failed to write resume content", "error", err)
-		os.Remove(filename)
+		os.Remove(filepath)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	if closeErr != nil {
 		g.log.Err("failed to close resume file", "error", closeErr)
-		os.Remove(filename)
+		os.Remove(filepath)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	// File saved successfully
-	g.log.Dbg("saved resume file", "filename", filename)
+	g.log.Dbg("saved resume file", "filepath", filepath)
+
+	// filename should be returned to hermione.
+	// filepath has the volume mount as per the granger deployment spec,
+	// while hermione may mount in a different path
 	w.Write([]byte(filename))
 }
