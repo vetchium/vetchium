@@ -44,13 +44,22 @@ func (p *PG) GetApplicationsForEmployer(
 	}
 
 	if req.SearchQuery != nil {
-		query += ` AND (h.handle ILIKE $4 OR h.full_name ILIKE $4)`
+		query += fmt.Sprintf(
+			` AND (h.handle ILIKE $%d OR h.full_name ILIKE $%d)`,
+			len(args)+1,
+			len(args)+1,
+		)
 		args = append(args, "%"+*req.SearchQuery+"%")
+	}
+
+	if req.ColorTagFilter != nil {
+		query += fmt.Sprintf(` AND a.color_tag = $%d`, len(args)+1)
+		args = append(args, *req.ColorTagFilter)
 	}
 
 	// Add pagination if key is provided
 	if req.PaginationKey != nil {
-		query += ` AND a.id > $5`
+		query += fmt.Sprintf(` AND a.id > $%d`, len(args)+1)
 		args = append(args, *req.PaginationKey)
 	}
 
