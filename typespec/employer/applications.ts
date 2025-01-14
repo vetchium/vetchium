@@ -21,10 +21,8 @@ export interface Application {
   id: string;
   cover_letter?: string;
   created_at: Date;
-  filename: string;
   hub_user_handle: string;
   hub_user_last_employer_domain?: string;
-  resume: string;
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
 }

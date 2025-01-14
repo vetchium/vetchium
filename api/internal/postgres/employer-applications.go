@@ -25,8 +25,6 @@ func (p *PG) GetApplicationsForEmployer(
 			a.id,
 			a.cover_letter,
 			a.created_at,
-			a.original_filename,
-			a.internal_filename,
 			h.handle as hub_user_handle,
 			a.application_state,
 			a.color_tag
@@ -77,14 +75,11 @@ func (p *PG) GetApplicationsForEmployer(
 	applications := make([]employer.Application, 0)
 	for rows.Next() {
 		var app employer.Application
-		var internalFilename string
 
 		err := rows.Scan(
 			&app.ID,
 			&app.CoverLetter,
 			&app.CreatedAt,
-			&app.Filename,
-			&internalFilename,
 			&app.HubUserHandle,
 			&app.State,
 			&app.ColorTag,
@@ -94,8 +89,6 @@ func (p *PG) GetApplicationsForEmployer(
 			return nil, db.ErrInternal
 		}
 
-		// Set the resume URL using the internal filename
-		app.Resume = "/resumes/" + internalFilename
 		applications = append(applications, app)
 	}
 

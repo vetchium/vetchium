@@ -34,10 +34,8 @@ type Application struct {
 	ID                        string                  `json:"id"`
 	CoverLetter               *string                 `json:"cover_letter,omitempty"`
 	CreatedAt                 time.Time               `json:"created_at"`
-	Filename                  string                  `json:"filename"`
 	HubUserHandle             string                  `json:"hub_user_handle"`
 	HubUserLastEmployerDomain *string                 `json:"hub_user_last_employer_domain,omitempty"`
-	Resume                    string                  `json:"resume"`
 	State                     common.ApplicationState `json:"state"`
 	ColorTag                  *ApplicationColorTag    `json:"color_tag,omitempty"`
 }
