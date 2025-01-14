@@ -74,8 +74,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 			OpeningIDWithinCompany: applyForOpeningReq.OpeningIDWithinCompany,
 			CompanyDomain:          applyForOpeningReq.CompanyDomain,
 			CoverLetter:            applyForOpeningReq.CoverLetter,
-			OriginalFilename:       applyForOpeningReq.Filename,
-			InternalFilename:       filename,
+			ResumeSHA:              filename,
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {

@@ -33,10 +33,10 @@ valid_opening AS (
 )
 INSERT INTO applications (
     id, employer_id, opening_id, cover_letter,
-    original_filename, internal_filename, hub_user_id, application_state
+    resume_sha, hub_user_id, application_state
 )
 SELECT
-    $1, (SELECT employer_id FROM employer), $3, $4, $5, $6, $7, $8
+    $1, (SELECT employer_id FROM employer), $3, $4, $5, $6, $7
 WHERE EXISTS (SELECT 1 FROM valid_opening)
 RETURNING id
 `
@@ -49,8 +49,7 @@ RETURNING id
 		req.CompanyDomain,
 		req.OpeningIDWithinCompany,
 		req.CoverLetter,
-		req.OriginalFilename,
-		req.InternalFilename,
+		req.ResumeSHA,
 		hubUser.ID,
 		common.AppliedAppState,
 	).Scan(&applicationID)

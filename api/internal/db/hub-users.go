@@ -40,6 +40,5 @@ type ApplyOpeningReq struct {
 	OpeningIDWithinCompany string
 	CompanyDomain          string
 	CoverLetter            string
-	OriginalFilename       string
-	InternalFilename       string
+	ResumeSHA              string
 }
