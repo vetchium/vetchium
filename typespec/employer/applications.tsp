@@ -42,6 +42,7 @@ model Application {
     cover_letter?: string;
     created_at: utcDateTime;
     hub_user_handle: string;
+    hub_user_name: string;
     hub_user_last_employer_domain?: string;
     state: ApplicationState;
     color_tag?: ApplicationColorTag;

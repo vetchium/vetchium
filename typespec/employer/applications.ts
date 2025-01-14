@@ -22,6 +22,7 @@ export interface Application {
   cover_letter?: string;
   created_at: Date;
   hub_user_handle: string;
+  hub_user_name: string;
   hub_user_last_employer_domain?: string;
   state: ApplicationState;
   color_tag?: ApplicationColorTag;

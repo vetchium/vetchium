@@ -35,6 +35,7 @@ type Application struct {
 	CoverLetter               *string                 `json:"cover_letter,omitempty"`
 	CreatedAt                 time.Time               `json:"created_at"`
 	HubUserHandle             string                  `json:"hub_user_handle"`
+	HubUserName               string                  `json:"hub_user_name"`
 	HubUserLastEmployerDomain *string                 `json:"hub_user_last_employer_domain,omitempty"`
 	State                     common.ApplicationState `json:"state"`
 	ColorTag                  *ApplicationColorTag    `json:"color_tag,omitempty"`

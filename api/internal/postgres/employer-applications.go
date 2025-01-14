@@ -26,6 +26,7 @@ func (p *PG) GetApplicationsForEmployer(
 			a.cover_letter,
 			a.created_at,
 			h.handle as hub_user_handle,
+			h.full_name as hub_user_name,
 			a.application_state,
 			a.color_tag
 		FROM applications a
@@ -81,6 +82,7 @@ func (p *PG) GetApplicationsForEmployer(
 			&app.CoverLetter,
 			&app.CreatedAt,
 			&app.HubUserHandle,
+			&app.HubUserName,
 			&app.State,
 			&app.ColorTag,
 		)

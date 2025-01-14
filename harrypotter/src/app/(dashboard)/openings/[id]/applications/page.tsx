@@ -45,6 +45,7 @@ interface Application {
   created_at: string;
   filename: string;
   hub_user_handle: string;
+  hub_user_name: string;
   hub_user_last_employer_domain?: string;
   resume: string;
   state: ApplicationState;
@@ -373,170 +374,179 @@ export default function ApplicationsPage({ params }: PageProps) {
                   mb: 2,
                 }}
               >
-                <Typography variant="h6">
-                  {application.hub_user_handle}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                  {application.color_tag && (
+                <Box>
+                  <Typography variant="h6">
+                    {application.hub_user_name} ({application.hub_user_handle})
+                  </Typography>
+                  {application.hub_user_last_employer_domain && (
+                    <Typography variant="body2" color="text.secondary">
+                      {t("applications.lastEmployer")}:{" "}
+                      {application.hub_user_last_employer_domain}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 3,
+                  mb: 3,
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: 100,
+                    height: 140,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    "&:hover": {
+                      boxShadow: 1,
+                    },
+                  }}
+                  onClick={() =>
+                    setSelectedResume(application.resumeUrl || null)
+                  }
+                >
+                  {loadingResumes[application.id] ? (
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 0.5,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        padding: "2px 4px",
+                        justifyContent: "center",
+                        height: "100%",
                       }}
                     >
-                      <FiberManualRecordIcon
-                        sx={{
-                          color:
-                            application.color_tag === "GREEN"
-                              ? "success.main"
-                              : application.color_tag === "YELLOW"
-                              ? "warning.main"
-                              : "error.main",
-                          fontSize: {
-                            xs: "1rem",
-                            sm: "1.5rem",
-                            md: "2rem",
-                          },
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => handleColorTag(application.id, null)}
-                        sx={{
-                          padding: {
-                            xs: 0.5,
-                            sm: 0.75,
-                            md: 1,
-                          },
-                          color: "text.secondary",
-                          "&:hover": { bgcolor: "action.hover" },
-                        }}
-                      >
-                        <CloseIcon
-                          sx={{
-                            fontSize: {
-                              xs: "small",
-                              sm: "medium",
-                              md: "large",
-                            },
-                          }}
-                        />
-                      </IconButton>
+                      <CircularProgress size={24} />
                     </Box>
-                  )}
-                  {!application.color_tag && (
-                    <Tooltip title={t("applications.setColor")}>
-                      <IconButton
-                        size="small"
-                        onClick={(event) => {
-                          setAnchorEl(event.currentTarget);
-                          setSelectedApplicationId(application.id);
-                        }}
-                        sx={{
-                          color: "text.secondary",
-                          "&:hover": { bgcolor: "action.hover" },
-                        }}
-                      >
-                        <ColorLensIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: 100,
-                      height: 140,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1,
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      "&:hover": {
-                        boxShadow: 1,
-                      },
-                    }}
-                    onClick={() =>
-                      setSelectedResume(application.resumeUrl || null)
-                    }
-                  >
-                    {loadingResumes[application.id] ? (
+                  ) : application.resumeUrl ? (
+                    <object
+                      data={application.resumeUrl}
+                      type="application/pdf"
+                      width="100%"
+                      height="100%"
+                      style={{ pointerEvents: "none" }}
+                    >
                       <Box
                         sx={{
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: "100%",
-                        }}
-                      >
-                        <CircularProgress size={24} />
-                      </Box>
-                    ) : application.resumeUrl ? (
-                      <object
-                        data={application.resumeUrl}
-                        type="application/pdf"
-                        width="100%"
-                        height="100%"
-                        style={{ pointerEvents: "none" }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: "100%",
-                            bgcolor: "action.hover",
-                            color: "text.secondary",
-                            p: 1,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography variant="caption">
-                            {t("applications.pdfPreviewNotAvailable")}
-                          </Typography>
-                        </Box>
-                      </object>
-                    ) : (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
                           height: "100%",
                           bgcolor: "action.hover",
                           color: "text.secondary",
                           p: 1,
+                          textAlign: "center",
                         }}
                       >
-                        <CircularProgress size={24} />
+                        <Typography variant="caption">
+                          {t("applications.pdfPreviewNotAvailable")}
+                        </Typography>
                       </Box>
+                    </object>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        bgcolor: "action.hover",
+                        color: "text.secondary",
+                        p: 1,
+                      }}
+                    >
+                      <CircularProgress size={24} />
+                    </Box>
+                  )}
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    px: 4, // Add horizontal padding for better spacing from edges
+                  }}
+                >
+                  <LoadingButton
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleAction(application.id, "shortlist")}
+                    loading={isActionLoading}
+                    sx={{ minWidth: 120 }} // Ensure consistent button width
+                  >
+                    {t("applications.shortlist")}
+                  </LoadingButton>
+
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {application.color_tag ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 1,
+                          padding: "2px 8px", // Increased horizontal padding
+                        }}
+                      >
+                        <FiberManualRecordIcon
+                          sx={{
+                            color:
+                              application.color_tag === "GREEN"
+                                ? "success.main"
+                                : application.color_tag === "YELLOW"
+                                ? "warning.main"
+                                : "error.main",
+                          }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => handleColorTag(application.id, null)}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      <Tooltip title={t("applications.setColor")}>
+                        <IconButton
+                          size="medium" // Increased button size
+                          onClick={(event) => {
+                            setAnchorEl(event.currentTarget);
+                            setSelectedApplicationId(application.id);
+                          }}
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            p: 1,
+                          }}
+                        >
+                          <ColorLensIcon />
+                        </IconButton>
+                      </Tooltip>
                     )}
                   </Box>
-                </Box>
-              </Box>
 
-              <Box sx={{ display: "flex", gap: 2 }}>
-                <LoadingButton
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleAction(application.id, "shortlist")}
-                  loading={isActionLoading}
-                >
-                  {t("applications.shortlist")}
-                </LoadingButton>
-                <LoadingButton
-                  variant="contained"
-                  color="error"
-                  onClick={() => handleAction(application.id, "reject")}
-                  loading={isActionLoading}
-                >
-                  {t("applications.reject")}
-                </LoadingButton>
+                  <LoadingButton
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleAction(application.id, "reject")}
+                    loading={isActionLoading}
+                    sx={{ minWidth: 120 }} // Ensure consistent button width
+                  >
+                    {t("applications.reject")}
+                  </LoadingButton>
+                </Box>
               </Box>
 
               {application.cover_letter && (
