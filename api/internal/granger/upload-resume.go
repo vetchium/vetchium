@@ -1,14 +1,11 @@
 package granger
 
 import (
-	"encoding/base64"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 
 	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 type UploadResumeRequest struct {
@@ -25,47 +22,40 @@ func (g *Granger) uploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decodedResume, err := base64.StdEncoding.DecodeString(string(body))
+	// Generate a unique ID based on content hash
+	resumeSHA := util.GenerateResumeID(body)
+	storageDir := util.GetResumeStorageDir("/resumes", resumeSHA)
+	filepath := util.GetResumeStoragePath("/resumes", resumeSHA)
+
+	// Create the directory structure if it doesn't exist
+	err = os.MkdirAll(storageDir, 0755)
 	if err != nil {
-		g.log.Err("failed to decode base64 resume", "error", err)
-		http.Error(w, "", http.StatusBadRequest)
+		g.log.Err("failed to create directory structure", "error", err)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
-	var file *os.File
-	var filepath, filename string
-
-	// Try up to 3 times to create a file with a unique name
-	for i := 0; i < 3; i++ {
-		filename = util.RandomUniqueID(vetchi.ResumeIDLenBytes)
-		filepath = fmt.Sprintf("/resumes/%s", filename)
-
-		// Atomically create and open the file
-		var err error
-		file, err = os.OpenFile(
-			filepath,
-			os.O_WRONLY|os.O_CREATE|os.O_EXCL,
-			0644,
-		)
-		if err != nil {
-			if os.IsExist(err) {
-				continue // File exists, try again with a new UUID
-			}
-			g.log.Err("failed to create resume file", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
+	// Try to create the file - if it already exists, it's likely the same content
+	file, err := os.OpenFile(
+		filepath,
+		os.O_WRONLY|os.O_CREATE|os.O_EXCL,
+		0644,
+	)
+	if err != nil {
+		if os.IsExist(err) {
+			// File already exists - since we use content hash, this means
+			// the same resume was uploaded before
+			g.log.Dbg("resume already exists, reusing", "filepath", filepath)
+			w.Write([]byte(resumeSHA))
 			return
 		}
-		break // Successfully created the file
-	}
-
-	if file == nil {
-		g.log.Err("failed to create resume file after 3 attempts")
+		g.log.Err("failed to create resume file", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
 	// Write the content and close the file
-	_, err = file.Write(decodedResume)
+	_, err = file.Write(body)
 	closeErr := file.Close()
 	if err != nil {
 		g.log.Err("failed to write resume content", "error", err)
@@ -81,9 +71,5 @@ func (g *Granger) uploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	g.log.Dbg("saved resume file", "filepath", filepath)
-
-	// filename should be returned to hermione.
-	// filepath has the volume mount as per the granger deployment spec,
-	// while hermione may mount in a different path
-	w.Write([]byte(filename))
+	w.Write([]byte(resumeSHA))
 }

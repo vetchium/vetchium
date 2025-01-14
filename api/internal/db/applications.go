@@ -1,5 +1,12 @@
 package db
 
+// ResumeDetails contains the information needed to retrieve a resume file
+type ResumeDetails struct {
+	SHA           string
+	HubUserHandle string
+	ApplicationID string
+}
+
 type ShortlistRequest struct {
 	ApplicationID string
 	OpeningID     string

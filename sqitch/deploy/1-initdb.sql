@@ -334,8 +334,7 @@ CREATE TABLE applications (
     opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
     cover_letter TEXT NOT NULL,
-    original_filename TEXT NOT NULL,
-    internal_filename TEXT NOT NULL,
+    resume_sha TEXT NOT NULL,
     application_state application_states NOT NULL,
 
     color_tag application_color_tags,

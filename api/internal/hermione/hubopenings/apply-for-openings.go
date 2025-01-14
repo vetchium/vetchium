@@ -99,11 +99,18 @@ func uploadResume(
 	h wand.Wand,
 	resume string,
 ) (string, error) {
+	// Validate and sanitize the PDF
+	pdfBytes, err := util.ValidateAndSanitizePDF(resume)
+	if err != nil {
+		h.Dbg("invalid PDF file", "error", err)
+		return "", db.ErrBadResume
+	}
+
 	resumeFileReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"http://granger:8080/internal/upload-resume", // Take this from config ?
-		bytes.NewBuffer([]byte(resume)),
+		bytes.NewBuffer(pdfBytes),
 	)
 	if err != nil {
 		h.Err("failed to create resume file request", "error", err)

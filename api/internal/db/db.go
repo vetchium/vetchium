@@ -122,6 +122,10 @@ type DB interface {
 		context.Context,
 		employer.GetApplicationsRequest,
 	) ([]employer.Application, error)
+	GetResumeDetails(
+		context.Context,
+		employer.GetResumeRequest,
+	) (ResumeDetails, error)
 	SetApplicationColorTag(
 		context.Context,
 		employer.SetApplicationColorTagRequest,
