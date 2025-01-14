@@ -24,6 +24,11 @@ To connect to the port-forwarded Postgres using the psql command line, use the f
 $ psql -h localhost -p 5432 -U user vdb
 ```
 
+To seed with some test data, run the following command:
+```
+$ psql -h localhost -p 5432 -U user vdb -f odds_and_ends/dev-seed.pgsql
+```
+
 To run tests, use the following command:
 ```
 $ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
