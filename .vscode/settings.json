@@ -1,0 +1,3 @@
+{
+  "typespec.tsp-server.path": "${workspaceFolder}/typespec/node_modules/@typespec/compiler"
+}
