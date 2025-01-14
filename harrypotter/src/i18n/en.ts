@@ -178,5 +178,7 @@ export const en = {
     noApplications: "No applications found",
     setColor: "Set Color",
     noColor: "No color tag",
+    clickToPreview: "Click to preview resume",
+    pdfPreviewNotAvailable: "PDF preview not available",
   },
 };

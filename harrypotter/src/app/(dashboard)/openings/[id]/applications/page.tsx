@@ -49,6 +49,7 @@ interface Application {
   resume: string;
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
+  resumeUrl?: string;
 }
 
 interface PageProps {
@@ -76,8 +77,9 @@ export default function ApplicationsPage({ params }: PageProps) {
   const [selectedApplicationId, setSelectedApplicationId] = useState<
     string | null
   >(null);
-  const [isResumeLoading, setIsResumeLoading] = useState(false);
-  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [loadingResumes, setLoadingResumes] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const { t } = useTranslation();
   const router = useRouter();
@@ -233,8 +235,10 @@ export default function ApplicationsPage({ params }: PageProps) {
     fetchApplications(value);
   };
 
-  const fetchResume = async (applicationId: string) => {
-    setIsResumeLoading(true);
+  const fetchResume = async (application: Application) => {
+    if (application.resumeUrl) return; // Already fetched
+
+    setLoadingResumes((prev) => ({ ...prev, [application.id]: true }));
     setError("");
 
     try {
@@ -253,7 +257,7 @@ export default function ApplicationsPage({ params }: PageProps) {
             Authorization: `Bearer ${sessionToken}`,
           },
           body: JSON.stringify({
-            application_id: applicationId,
+            application_id: application.id,
           }),
         }
       );
@@ -261,8 +265,11 @@ export default function ApplicationsPage({ params }: PageProps) {
       if (response.status === 200) {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
-        setResumeUrl(url);
-        setSelectedResume(url);
+        setApplications((prevApps) =>
+          prevApps.map((app) =>
+            app.id === application.id ? { ...app, resumeUrl: url } : app
+          )
+        );
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else {
@@ -271,18 +278,29 @@ export default function ApplicationsPage({ params }: PageProps) {
     } catch (err) {
       setError(t("common.error"));
     } finally {
-      setIsResumeLoading(false);
+      setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));
     }
   };
 
+  // Fetch resumes for visible applications
   useEffect(() => {
-    // Cleanup object URLs when component unmounts
-    return () => {
-      if (resumeUrl) {
-        URL.revokeObjectURL(resumeUrl);
+    applications.forEach((application) => {
+      if (!application.resumeUrl && !loadingResumes[application.id]) {
+        fetchResume(application);
       }
+    });
+  }, [applications]);
+
+  // Cleanup object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      applications.forEach((app) => {
+        if (app.resumeUrl) {
+          URL.revokeObjectURL(app.resumeUrl);
+        }
+      });
     };
-  }, [resumeUrl]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -428,17 +446,77 @@ export default function ApplicationsPage({ params }: PageProps) {
                       </IconButton>
                     </Tooltip>
                   )}
-                  <IconButton
-                    onClick={() => fetchResume(application.id)}
-                    color="primary"
-                    disabled={isResumeLoading}
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: 100,
+                      height: 140,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      "&:hover": {
+                        boxShadow: 1,
+                      },
+                    }}
+                    onClick={() =>
+                      setSelectedResume(application.resumeUrl || null)
+                    }
                   >
-                    {isResumeLoading ? (
-                      <CircularProgress size={24} />
+                    {loadingResumes[application.id] ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "100%",
+                        }}
+                      >
+                        <CircularProgress size={24} />
+                      </Box>
+                    ) : application.resumeUrl ? (
+                      <object
+                        data={application.resumeUrl}
+                        type="application/pdf"
+                        width="100%"
+                        height="100%"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "100%",
+                            bgcolor: "action.hover",
+                            color: "text.secondary",
+                            p: 1,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography variant="caption">
+                            {t("applications.pdfPreviewNotAvailable")}
+                          </Typography>
+                        </Box>
+                      </object>
                     ) : (
-                      <VisibilityIcon />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "100%",
+                          bgcolor: "action.hover",
+                          color: "text.secondary",
+                          p: 1,
+                        }}
+                      >
+                        <CircularProgress size={24} />
+                      </Box>
                     )}
-                  </IconButton>
+                  </Box>
                 </Box>
               </Box>
 
@@ -486,7 +564,6 @@ export default function ApplicationsPage({ params }: PageProps) {
         open={!!selectedResume}
         onClose={() => {
           setSelectedResume(null);
-          setResumeUrl(null);
         }}
         maxWidth="lg"
         fullWidth
@@ -503,7 +580,6 @@ export default function ApplicationsPage({ params }: PageProps) {
             <IconButton
               onClick={() => {
                 setSelectedResume(null);
-                setResumeUrl(null);
               }}
             >
               <CloseIcon />
