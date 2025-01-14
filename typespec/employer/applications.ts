@@ -44,6 +44,10 @@ export interface RejectApplicationRequest {
   application_id: string;
 }
 
+export interface GetResumeRequest {
+  application_id: string;
+}
+
 export function isValidApplicationColorTag(
   tag: string
 ): tag is ApplicationColorTag {

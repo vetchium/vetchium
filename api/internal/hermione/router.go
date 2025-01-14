@@ -198,6 +198,16 @@ func (h *Hermione) Run() error {
 	)
 
 	h.mw.Protect(
+		"/employer/get-resume",
+		app.GetResume(h),
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
+			common.ApplicationsViewer,
+		},
+	)
+
+	h.mw.Protect(
 		"/employer/set-application-color-tag",
 		app.SetApplicationColorTag(h),
 		[]common.OrgUserRole{

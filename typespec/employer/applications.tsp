@@ -64,6 +64,11 @@ model RejectApplicationRequest {
     application_id: string;
 }
 
+model GetResumeRequest {
+    application_id: string;
+    // TODO: In future, add some kind of versioning here
+}
+
 @route("/employer/get-applications")
 interface GetApplications {
     @tag("Applications")
@@ -72,6 +77,16 @@ interface GetApplications {
     getApplications(@body request: GetApplicationsRequest): {
         @statusCode statusCode: 200;
         @body applications: Application[];
+    };
+}
+
+@route("/employer/get-resume")
+interface GetResume {
+    @tag("Applications")
+    @doc("Requires any of ${Admin}, ${ApplicationsCRUD} or ${ApplicationsViewer} roles")
+    @post
+    getResume(@body request: GetResumeRequest): {
+        @statusCode statusCode: 200;
     };
 }
 

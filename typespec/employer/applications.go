@@ -56,3 +56,7 @@ type ShortlistApplicationRequest struct {
 type RejectApplicationRequest struct {
 	ApplicationID string `json:"application_id" validate:"required"`
 }
+
+type GetResumeRequest struct {
+	ApplicationID string `json:"application_id" validate:"required"`
+}
