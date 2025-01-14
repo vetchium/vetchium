@@ -76,6 +76,8 @@ export default function ApplicationsPage({ params }: PageProps) {
   const [selectedApplicationId, setSelectedApplicationId] = useState<
     string | null
   >(null);
+  const [isResumeLoading, setIsResumeLoading] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
 
   const { t } = useTranslation();
   const router = useRouter();
@@ -231,6 +233,57 @@ export default function ApplicationsPage({ params }: PageProps) {
     fetchApplications(value);
   };
 
+  const fetchResume = async (applicationId: string) => {
+    setIsResumeLoading(true);
+    setError("");
+
+    try {
+      const sessionToken = Cookies.get("session_token");
+      if (!sessionToken) {
+        setError(t("auth.unauthorized"));
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/get-resume`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+          },
+          body: JSON.stringify({
+            application_id: applicationId,
+          }),
+        }
+      );
+
+      if (response.status === 200) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setResumeUrl(url);
+        setSelectedResume(url);
+      } else if (response.status === 401) {
+        setError(t("auth.unauthorized"));
+      } else {
+        setError(t("common.error"));
+      }
+    } catch (err) {
+      setError(t("common.error"));
+    } finally {
+      setIsResumeLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup object URLs when component unmounts
+    return () => {
+      if (resumeUrl) {
+        URL.revokeObjectURL(resumeUrl);
+      }
+    };
+  }, [resumeUrl]);
+
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
@@ -376,10 +429,15 @@ export default function ApplicationsPage({ params }: PageProps) {
                     </Tooltip>
                   )}
                   <IconButton
-                    onClick={() => setSelectedResume(application.resume)}
+                    onClick={() => fetchResume(application.id)}
                     color="primary"
+                    disabled={isResumeLoading}
                   >
-                    <VisibilityIcon />
+                    {isResumeLoading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
                   </IconButton>
                 </Box>
               </Box>
@@ -426,7 +484,10 @@ export default function ApplicationsPage({ params }: PageProps) {
 
       <Dialog
         open={!!selectedResume}
-        onClose={() => setSelectedResume(null)}
+        onClose={() => {
+          setSelectedResume(null);
+          setResumeUrl(null);
+        }}
         maxWidth="lg"
         fullWidth
       >
@@ -439,7 +500,12 @@ export default function ApplicationsPage({ params }: PageProps) {
             }}
           >
             {t("applications.resumePreview")}
-            <IconButton onClick={() => setSelectedResume(null)}>
+            <IconButton
+              onClick={() => {
+                setSelectedResume(null);
+                setResumeUrl(null);
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </Box>
@@ -450,7 +516,7 @@ export default function ApplicationsPage({ params }: PageProps) {
               <iframe
                 src={selectedResume}
                 style={{ width: "100%", height: "100%", border: "none" }}
-                title="Resume Preview"
+                title={t("applications.resumePreview")}
               />
             </Box>
           )}
