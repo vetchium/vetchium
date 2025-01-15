@@ -82,11 +82,11 @@ export default function Header({ onMenuClick, isSidebarOpen }: HeaderProps) {
             }}
           >
             <Typography sx={{ color: "primary.main", fontWeight: "bold" }}>
-              HP
+              V
             </Typography>
           </Box>
           <Typography variant="h6" noWrap component="div">
-            HarryPotter
+            {t("common.headerTitle")}
           </Typography>
         </Box>
         <div>

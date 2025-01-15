@@ -79,7 +79,7 @@ export default function Sidebar({ open }: SidebarProps) {
           }}
         >
           <Box component="span" sx={{ fontSize: "1.5rem", fontWeight: "bold" }}>
-            HP
+            V
           </Box>
         </Box>
       </DrawerHeader>

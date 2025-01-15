@@ -16,6 +16,7 @@ export const en = {
     serverError: "Please try again after some time.",
     none: "None",
     back: "Back",
+    headerTitle: "Vetchi for Employers",
   },
   auth: {
     signin: "Sign In",
