@@ -7,30 +7,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var db *pgxpool.Pool
-
 func main() {
-	initDB()
-	initEmployersAndDomains()
-	initOrgUsers()
-	initLocations()
-	initCostCenters()
-	initHubUsers()
-}
-
-func initDB() {
 	connStr := "host=localhost port=5432 user=user dbname=vdb password=pass sslmode=disable"
-	pool, err := pgxpool.New(context.Background(), connStr)
+	db, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	db = pool
-}
 
-func initLocations() {
+	// Directly write to the database
+	initEmployersAndDomains(db)
+	initOrgUsers(db)
+	initHubUsers(db)
 
-}
-
-func initCostCenters() {
-
+	// Use APIs to write to the database
+	initLocations()
+	initCostCenters()
 }

@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func initOrgUsers() {
+func initOrgUsers(db *pgxpool.Pool) {
 	users := []struct {
 		employerID   string
 		employerName string

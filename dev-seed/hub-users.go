@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func initHubUsers() {
+func initHubUsers(db *pgxpool.Pool) {
 	hubUsers := []struct {
 		name              string
 		handle            string

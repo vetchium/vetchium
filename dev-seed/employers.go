@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func initEmployersAndDomains() {
+func initEmployersAndDomains(db *pgxpool.Pool) {
 	employers := []struct {
 		displayName string
 		email       string
