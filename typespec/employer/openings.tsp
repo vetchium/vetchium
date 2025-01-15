@@ -85,7 +85,7 @@ model Opening {
     @doc("Maximum years of experience allowed for the opening")
     yoe_max: integer;
 
-    min_education_level?: EducationLevel;
+    min_education_level: EducationLevel;
     salary?: Salary;
 
     @doc("Current state of the opening")
@@ -146,7 +146,7 @@ model CreateOpeningRequest {
     @doc("Maximum years of experience allowed for the opening")
     yoe_max: integer;
 
-    min_education_level?: EducationLevel;
+    min_education_level: EducationLevel;
     salary?: Salary;
 }
 

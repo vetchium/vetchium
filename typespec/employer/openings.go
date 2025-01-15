@@ -43,9 +43,9 @@ type Opening struct {
 	LastUpdatedAt      time.Time            `json:"last_updated_at"`
 
 	// Optional fields
-	EmployerNotes     *string                `json:"employer_notes,omitempty"`
-	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty"`
-	Salary            *common.Salary         `json:"salary,omitempty"`
+	EmployerNotes     *string               `json:"employer_notes,omitempty"`
+	MinEducationLevel common.EducationLevel `json:"min_education_level"`
+	Salary            *common.Salary        `json:"salary,omitempty"`
 }
 
 type CreateOpeningRequest struct {
@@ -67,9 +67,9 @@ type CreateOpeningRequest struct {
 	YoeMax      int                `json:"yoe_max"      validate:"min=1,max=100"`
 
 	// Optional fields
-	EmployerNotes     *string                `json:"employer_notes,omitempty"      validate:"omitempty,max=1024"`
-	MinEducationLevel *common.EducationLevel `json:"min_education_level,omitempty" validate:"omitempty"`
-	Salary            *common.Salary         `json:"salary,omitempty"              validate:"omitempty"`
+	EmployerNotes     *string               `json:"employer_notes,omitempty" validate:"omitempty,max=1024"`
+	MinEducationLevel common.EducationLevel `json:"min_education_level"      validate:"required,validate_education_level"`
+	Salary            *common.Salary        `json:"salary,omitempty"         validate:"omitempty"`
 }
 
 type CreateOpeningResponse struct {

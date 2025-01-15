@@ -44,7 +44,7 @@ export interface Opening {
   created_at: Date;
   last_updated_at: Date;
   employer_notes?: string;
-  min_education_level?: EducationLevel;
+  min_education_level: EducationLevel;
   salary?: Salary;
 }
 
@@ -63,7 +63,7 @@ export interface CreateOpeningRequest {
   yoe_min: number;
   yoe_max: number;
   employer_notes?: string;
-  min_education_level?: EducationLevel;
+  min_education_level: EducationLevel;
   salary?: Salary;
 }
 
