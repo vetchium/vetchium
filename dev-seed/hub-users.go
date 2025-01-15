@@ -76,6 +76,12 @@ func initHubUsers(db *pgxpool.Pool) {
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.name, err)
 		}
+		log.Printf(
+			"created hub user %s <%s> @%s",
+			user.name,
+			user.email,
+			user.handle,
+		)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

@@ -21,12 +21,18 @@ func main() {
 	}
 
 	// Directly write to the database
+	log.Println("Initializing employers and domains")
 	initEmployersAndDomains(db)
+	log.Println("Initializing org users")
 	initOrgUsers(db)
+	log.Println("Initializing hub users")
 	initHubUsers(db)
 
 	// Use APIs to write to the database
+	log.Println("Signing in admins")
 	signinAdmins()
+	log.Println("Initializing locations")
 	initLocations()
+	log.Println("Initializing cost centers")
 	initCostCenters()
 }

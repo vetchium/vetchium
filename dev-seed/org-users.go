@@ -139,6 +139,12 @@ func initOrgUsers(db *pgxpool.Pool) {
 				err,
 			)
 		}
+		log.Printf(
+			"created admin user %s <%s> for %s",
+			emp.adminEmail,
+			emp.adminEmail,
+			emp.employerName,
+		)
 
 		// Create other org users
 		for j, user := range emp.orgUsers {
@@ -163,6 +169,12 @@ func initOrgUsers(db *pgxpool.Pool) {
 					err,
 				)
 			}
+			log.Printf(
+				"created user %s <%s> for %s",
+				user.name,
+				user.email,
+				emp.employerName,
+			)
 		}
 	}
 
