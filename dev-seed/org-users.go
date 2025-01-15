@@ -8,6 +8,38 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// signinAdmins logs in all admin users and stores their tokens
+func signinAdmins() {
+	admins := []struct {
+		email    string
+		clientID string
+	}{
+		{
+			email:    "admin@gryffindor.example",
+			clientID: "gryffindor.example",
+		},
+		{
+			email:    "admin@hufflepuff.example",
+			clientID: "hufflepuff.example",
+		},
+		{
+			email:    "admin@ravenclaw.example",
+			clientID: "ravenclaw.example",
+		},
+		{
+			email:    "admin@slytherin.example",
+			clientID: "slytherin.example",
+		},
+	}
+
+	for _, admin := range admins {
+		sessionTokens.Store(
+			admin.email,
+			employerSignin(admin.email, "NewPassword123$", admin.clientID),
+		)
+	}
+}
+
 func initOrgUsers(db *pgxpool.Pool) {
 	users := []struct {
 		employerID   string
