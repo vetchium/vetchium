@@ -10,7 +10,7 @@ func addLocation(token string, req employer.AddLocationRequest) {
 	makeRequest("POST", "/employer/add-location", token, req, nil)
 }
 
-func initLocations() {
+func createLocations() {
 	// Get tokens from the global map
 	gryffindorVal, ok := sessionTokens.Load("admin@gryffindor.example")
 	if !ok {

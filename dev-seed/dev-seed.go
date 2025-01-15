@@ -32,7 +32,9 @@ func main() {
 	log.Println("Signing in admins")
 	signinAdmins()
 	log.Println("Initializing locations")
-	initLocations()
+	createLocations()
 	log.Println("Initializing cost centers")
-	initCostCenters()
+	createCostCenters()
+	log.Println("Create Openings")
+	createOpenings()
 }

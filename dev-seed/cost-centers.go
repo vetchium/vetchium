@@ -16,7 +16,7 @@ func addCostCenter(token, name, notes string) {
 	makeRequest("POST", "/employer/add-cost-center", token, req, nil)
 }
 
-func initCostCenters() {
+func createCostCenters() {
 	// Get tokens from the global map
 	gryffindorVal, ok := sessionTokens.Load("admin@gryffindor.example")
 	if !ok {
