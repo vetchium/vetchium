@@ -66,6 +66,23 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			}
 		}
 
+		if len(createOpeningReq.RemoteCountryCodes) == 0 &&
+			len(createOpeningReq.LocationTitles) == 0 {
+			h.Dbg(
+				"neither remote countries nor locations specified",
+				"createOpeningReq",
+				createOpeningReq,
+			)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).Encode(common.ValidationErrors{
+				Errors: []string{"remote_country_codes", "location_titles"},
+			})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
 			if errors.Is(err, db.ErrNoRecruiter) ||

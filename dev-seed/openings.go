@@ -7,8 +7,23 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-func createOpening(token string, req employer.CreateOpeningRequest) {
-	makeRequest("POST", "/employer/create-opening", token, req, nil)
+func createOpening(token string, req employer.CreateOpeningRequest) string {
+	var resp employer.CreateOpeningResponse
+	makeRequest("POST", "/employer/create-opening", token, req, &resp)
+	return resp.OpeningID
+}
+
+func changeOpeningState(
+	token string,
+	openingID string,
+	fromState, toState common.OpeningState,
+) {
+	req := employer.ChangeOpeningStateRequest{
+		OpeningID: openingID,
+		FromState: fromState,
+		ToState:   toState,
+	}
+	makeRequest("POST", "/employer/change-opening-state", token, req, nil)
 }
 
 func createOpenings() {
@@ -36,6 +51,9 @@ func createOpenings() {
 		log.Fatal("failed to get slytherin token")
 	}
 	slytherinToken := slytherinVal.(string)
+
+	// Track openings per company to publish first two
+	companyOpenings := make(map[string][]string)
 
 	openings := []struct {
 		token string
@@ -351,6 +369,24 @@ func createOpenings() {
 	}
 
 	for _, opening := range openings {
-		createOpening(opening.token, opening.req)
+		openingID := createOpening(opening.token, opening.req)
+
+		// Track openings by token
+		companyOpenings[opening.token] = append(
+			companyOpenings[opening.token],
+			openingID,
+		)
+	}
+
+	// Publish first two openings for each company
+	for token, openings := range companyOpenings {
+		for i := 0; i < 2 && i < len(openings); i++ {
+			changeOpeningState(
+				token,
+				openings[i],
+				common.DraftOpening,
+				common.ActiveOpening,
+			)
+		}
 	}
 }
