@@ -40,6 +40,51 @@ func createLocations() {
 		token string
 		req   employer.AddLocationRequest
 	}{
+		// Chennai locations for all employers
+		{
+			gryffindorToken,
+			employer.AddLocationRequest{
+				Title:            "Chennai Diagon",
+				CountryCode:      "IND",
+				PostalAddress:    "93 Diagon Alley, Chennai",
+				PostalCode:       "600001",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/1111111",
+				CityAka:          []string{"Madras"},
+			},
+		},
+		{
+			hufflepuffToken,
+			employer.AddLocationRequest{
+				Title:            "Chennai Cauldron",
+				CountryCode:      "IND",
+				PostalAddress:    "42 Leaky Cauldron Street, Chennai",
+				PostalCode:       "600002",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/2222222",
+				CityAka:          []string{"Madras"},
+			},
+		},
+		{
+			ravenclawToken,
+			employer.AddLocationRequest{
+				Title:            "Chennai Flourish",
+				CountryCode:      "IND",
+				PostalAddress:    "17 Flourish and Blotts Avenue, Chennai",
+				PostalCode:       "600003",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/3333333",
+				CityAka:          []string{"Madras"},
+			},
+		},
+		{
+			slytherinToken,
+			employer.AddLocationRequest{
+				Title:            "Chennai Ollivanders",
+				CountryCode:      "IND",
+				PostalAddress:    "7 Ollivanders Road, Chennai",
+				PostalCode:       "600004",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/4444444",
+				CityAka:          []string{"Madras"},
+			},
+		},
 		// Gryffindor locations
 		{
 			gryffindorToken,

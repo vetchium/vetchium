@@ -73,6 +73,7 @@ func createOpenings() {
 				YoeMin:            5,
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Diagon"},
 			},
 		},
 		{
@@ -88,6 +89,7 @@ func createOpenings() {
 				YoeMin:            8,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Diagon"},
 			},
 		},
 		{
@@ -103,6 +105,7 @@ func createOpenings() {
 				YoeMin:            3,
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Diagon"},
 			},
 		},
 		{
@@ -118,6 +121,7 @@ func createOpenings() {
 				YoeMin:            2,
 				YoeMax:            6,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Diagon"},
 			},
 		},
 		{
@@ -133,6 +137,7 @@ func createOpenings() {
 				YoeMin:            10,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Diagon"},
 			},
 		},
 
@@ -150,6 +155,7 @@ func createOpenings() {
 				YoeMin:            8,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Cauldron"},
 			},
 		},
 		{
@@ -165,6 +171,7 @@ func createOpenings() {
 				YoeMin:            3,
 				YoeMax:            8,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Cauldron"},
 			},
 		},
 		{
@@ -180,6 +187,7 @@ func createOpenings() {
 				YoeMin:            5,
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Cauldron"},
 			},
 		},
 		{
@@ -195,6 +203,7 @@ func createOpenings() {
 				YoeMin:            4,
 				YoeMax:            12,
 				MinEducationLevel: common.DoctorateEducation,
+				LocationTitles:    []string{"Chennai Cauldron"},
 			},
 		},
 		{
@@ -210,6 +219,7 @@ func createOpenings() {
 				YoeMin:            6,
 				YoeMax:            12,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Cauldron"},
 			},
 		},
 
@@ -227,6 +237,7 @@ func createOpenings() {
 				YoeMin:            8,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Flourish"},
 			},
 		},
 		{
@@ -242,6 +253,7 @@ func createOpenings() {
 				YoeMin:            3,
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Flourish"},
 			},
 		},
 		{
@@ -257,6 +269,7 @@ func createOpenings() {
 				YoeMin:            2,
 				YoeMax:            6,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Flourish"},
 			},
 		},
 		{
@@ -272,6 +285,7 @@ func createOpenings() {
 				YoeMin:            4,
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Flourish"},
 			},
 		},
 		{
@@ -287,6 +301,7 @@ func createOpenings() {
 				YoeMin:            10,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Flourish"},
 			},
 		},
 
@@ -304,6 +319,7 @@ func createOpenings() {
 				YoeMin:            8,
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
+				LocationTitles:    []string{"Chennai Ollivanders"},
 			},
 		},
 		{
@@ -319,6 +335,7 @@ func createOpenings() {
 				YoeMin:            5,
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Ollivanders"},
 			},
 		},
 		{
@@ -334,6 +351,7 @@ func createOpenings() {
 				YoeMin:            3,
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Ollivanders"},
 			},
 		},
 		{
@@ -349,6 +367,7 @@ func createOpenings() {
 				YoeMin:            6,
 				YoeMax:            12,
 				MinEducationLevel: common.BachelorEducation,
+				LocationTitles:    []string{"Chennai Ollivanders"},
 			},
 		},
 		{
@@ -364,6 +383,7 @@ func createOpenings() {
 				YoeMin:            5,
 				YoeMax:            12,
 				MinEducationLevel: common.DoctorateEducation,
+				LocationTitles:    []string{"Chennai Ollivanders"},
 			},
 		},
 	}
