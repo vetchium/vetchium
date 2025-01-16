@@ -47,6 +47,9 @@ interface Opening {
   state: OpeningState;
   created_at: string;
   last_updated_at: string;
+  location_titles: string[] | undefined;
+  remote_country_codes: string[] | undefined;
+  remote_timezones: string[] | undefined;
 }
 
 interface PageProps {
@@ -263,6 +266,63 @@ export default function OpeningDetail({ params }: PageProps) {
                   <Typography>
                     {t(`openings.state.${opening.state}`)}
                   </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                    {t("openings.locations")}
+                  </Typography>
+                  {(opening.location_titles?.length ?? 0) > 0 && (
+                    <Box
+                      sx={{
+                        mb:
+                          (opening.remote_country_codes?.length ?? 0) > 0
+                            ? 2
+                            : 0,
+                      }}
+                    >
+                      <Typography variant="body2" color="textSecondary">
+                        {t("openings.physicalLocations")}
+                      </Typography>
+                      <Typography>
+                        {opening.location_titles?.join(", ") ?? ""}
+                      </Typography>
+                    </Box>
+                  )}
+                  {(opening.remote_country_codes?.length ?? 0) > 0 && (
+                    <Box>
+                      <Typography variant="body2" color="textSecondary">
+                        {t("openings.remoteWork")}
+                      </Typography>
+                      <Box sx={{ ml: 2 }}>
+                        <Typography variant="body2" color="textSecondary">
+                          {t("openings.remoteCountries")}
+                        </Typography>
+                        <Typography>
+                          {opening.remote_country_codes?.join(", ") ?? ""}
+                        </Typography>
+                        {(opening.remote_timezones?.length ?? 0) > 0 && (
+                          <>
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              sx={{ mt: 1 }}
+                            >
+                              {t("openings.remoteTimezones")}
+                            </Typography>
+                            <Typography>
+                              {opening.remote_timezones?.join(", ") ?? ""}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    </Box>
+                  )}
+                  {(opening.location_titles?.length ?? 0) === 0 &&
+                    (opening.remote_country_codes?.length ?? 0) === 0 && (
+                      <Typography color="error">
+                        {t("openings.noLocationsError")}
+                      </Typography>
+                    )}
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" sx={{ mt: 2 }}>
