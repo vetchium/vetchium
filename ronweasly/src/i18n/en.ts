@@ -28,6 +28,7 @@ export const en = {
     loginFailed: "Login failed",
     tfaFailed: "TFA verification failed",
     backToLogin: "Back to Login",
+    rememberMe: "Remember me",
   },
   dashboard: {
     title: "Dashboard",

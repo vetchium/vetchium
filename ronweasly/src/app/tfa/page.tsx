@@ -9,6 +9,8 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Paper from "@mui/material/Paper";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -19,6 +21,7 @@ export default function TFAPage() {
   const { t } = useTranslation();
   const [tfaCode, setTfaCode] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +42,7 @@ export default function TFAPage() {
         body: JSON.stringify({
           tfa_token: tfaToken,
           tfa_code: tfaCode,
-          remember_me: true,
+          remember_me: rememberMe,
         }),
       });
 
@@ -112,6 +115,17 @@ export default function TFAPage() {
               autoFocus
               value={tfaCode}
               onChange={(e) => setTfaCode(e.target.value)}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  name="remember-me"
+                />
+              }
+              label={t("auth.rememberMe")}
+              sx={{ mt: 1 }}
             />
             <Button
               type="submit"
