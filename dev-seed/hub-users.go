@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -76,12 +77,9 @@ func initHubUsers(db *pgxpool.Pool) {
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.name, err)
 		}
-		log.Printf(
-			"created hub user %s <%s> @%s",
-			user.name,
-			user.email,
-			user.handle,
-		)
+		color.New(color.FgGreen).Printf("created hub user %s ", user.name)
+		color.New(color.FgCyan).Printf("<%s> ", user.email)
+		color.New(color.FgYellow).Printf("@%s\n", user.handle)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

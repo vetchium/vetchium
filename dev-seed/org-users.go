@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -139,12 +140,10 @@ func initOrgUsers(db *pgxpool.Pool) {
 				err,
 			)
 		}
-		log.Printf(
-			"created admin user %s <%s> for %s",
-			emp.adminEmail,
-			emp.adminEmail,
-			emp.employerName,
-		)
+		color.New(color.FgGreen).
+			Printf("created admin user %s ", emp.adminEmail)
+		color.New(color.FgCyan).Printf("<%s> ", emp.adminEmail)
+		color.New(color.FgYellow).Printf("for %s\n", emp.employerName)
 
 		// Create other org users
 		for j, user := range emp.orgUsers {
@@ -169,12 +168,9 @@ func initOrgUsers(db *pgxpool.Pool) {
 					err,
 				)
 			}
-			log.Printf(
-				"created user %s <%s> for %s",
-				user.name,
-				user.email,
-				emp.employerName,
-			)
+			color.New(color.FgGreen).Printf("created user %s ", user.name)
+			color.New(color.FgCyan).Printf("<%s> ", user.email)
+			color.New(color.FgYellow).Printf("for %s\n", emp.employerName)
 		}
 	}
 

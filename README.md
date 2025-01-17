@@ -26,7 +26,7 @@ $ psql -h localhost -p 5432 -U user vdb
 
 To seed with some test data, run the following command:
 ```
-$ go run dev-seed/dev-seed.go
+$ cd dev-seed && go run .
 ```
 
 To run tests, use the following command:
