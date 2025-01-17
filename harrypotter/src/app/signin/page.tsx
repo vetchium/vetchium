@@ -7,7 +7,9 @@ import {
   TextField,
   Typography,
   Alert,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -25,8 +27,11 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showCredentials, setShowCredentials] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   const handleDomainVerification = async () => {
     try {
@@ -153,11 +158,22 @@ export default function SignIn() {
                 fullWidth
                 name="password"
                 label={t("auth.password")}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  ),
+                }}
               />
               <Button
                 fullWidth
