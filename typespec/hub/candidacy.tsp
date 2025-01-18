@@ -55,6 +55,16 @@ interface GetMyCandidacies {
     };
 }
 
+@route("/hub/get-candidacy-info")
+interface GetHubCandidacyInfo {
+    @tag("Candidacies")
+    @post
+    getHubCandidacyInfo(@body request: GetCandidacyInfoRequest): {
+        @statusCode statusCode: 200;
+        @body response: Candidacy;
+    };
+}
+
 @route("/hub/get-candidacy-comments")
 interface GetHubCandidacyComments {
     @tag("Candidacies")

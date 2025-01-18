@@ -7,6 +7,7 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -14,11 +15,11 @@ import (
 func (p *PG) GetCandidaciesInfo(
 	ctx context.Context,
 	getCandidaciesInfoReq employer.GetCandidaciesInfoRequest,
-) ([]employer.Candidacy, error) {
+) ([]common.Candidacy, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return []employer.Candidacy{}, db.ErrInternal
+		return []common.Candidacy{}, db.ErrInternal
 	}
 
 	var args []interface{}
@@ -62,14 +63,14 @@ WHERE c.employer_id = $1
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
 		p.log.Err("failed to query candidacies", "error", err)
-		return []employer.Candidacy{}, db.ErrInternal
+		return []common.Candidacy{}, db.ErrInternal
 	}
 
 	defer rows.Close()
 
-	candidacies := []employer.Candidacy{}
+	candidacies := []common.Candidacy{}
 	for rows.Next() {
-		var candidacy employer.Candidacy
+		var candidacy common.Candidacy
 		err := rows.Scan(
 			&candidacy.CandidacyID,
 			&candidacy.OpeningID,
@@ -81,7 +82,7 @@ WHERE c.employer_id = $1
 		)
 		if err != nil {
 			p.log.Err("failed to scan candidacy", "error", err)
-			return []employer.Candidacy{}, db.ErrInternal
+			return []common.Candidacy{}, db.ErrInternal
 		}
 
 		candidacies = append(candidacies, candidacy)
@@ -89,7 +90,7 @@ WHERE c.employer_id = $1
 
 	if err := rows.Err(); err != nil {
 		p.log.Err("failed to iterate over candidacies", "error", err)
-		return []employer.Candidacy{}, db.ErrInternal
+		return []common.Candidacy{}, db.ErrInternal
 	}
 
 	p.log.Dbg("candidacies", "candidacies", candidacies)

@@ -1,6 +1,22 @@
 package common
 
-import "time"
+import (
+	"time"
+)
+
+type GetCandidacyInfoRequest struct {
+	CandidacyID string `json:"candidacy_id"`
+}
+
+type Candidacy struct {
+	CandidacyID        string         `json:"candidacy_id"`
+	OpeningID          string         `json:"opening_id"`
+	OpeningTitle       string         `json:"opening_title"`
+	OpeningDescription string         `json:"opening_description"`
+	CandidacyState     CandidacyState `json:"candidacy_state"`
+	ApplicantName      string         `json:"applicant_name"`
+	ApplicantHandle    string         `json:"applicant_handle"`
+}
 
 type GetCandidacyCommentsRequest struct {
 	CandidacyID string `json:"candidacy_id"`

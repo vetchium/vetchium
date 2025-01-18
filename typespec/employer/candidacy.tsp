@@ -27,16 +27,6 @@ model GetCandidaciesInfoRequest {
     limit?: integer;
 }
 
-model Candidacy {
-    candidacy_id: string;
-    opening_id: string;
-    opening_title: string;
-    opening_description: string;
-    candidacy_state: CandidacyState;
-    applicant_name: string;
-    applicant_handle: string;
-}
-
 model AddEmployerCandidacyCommentRequest {
     candidacy_id: string;
 
@@ -102,6 +92,16 @@ interface GetCandidaciesInfo {
     getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
         @statusCode statusCode: 200;
         @body response: Candidacy[];
+    };
+}
+
+@route("/employer/get-candidacy-info")
+interface GetEmployerCandidacyInfo {
+    @tag("Candidacies")
+    @post
+    getEmployerCandidacyInfo(@body request: GetCandidacyInfoRequest): {
+        @statusCode statusCode: 200;
+        @body response: Candidacy;
     };
 }
 

@@ -263,6 +263,13 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Any},
 	)
 
+	h.mw.Protect(
+		"/employer/get-candidacy-info",
+		candidacy.GetEmployerCandidacyInfo(h),
+		// TODO: It is unclear what roles should be required here
+		[]common.OrgUserRole{common.Any},
+	)
+
 	// Used by employer - Interviews
 	h.mw.Protect(
 		"/employer/add-interview",
@@ -334,6 +341,10 @@ func (h *Hermione) Run() error {
 		wrap(candidacy.HubGetComments(h)),
 	)
 	http.Handle("/hub/get-my-candidacies", wrap(candidacy.MyCandidacies(h)))
+	http.Handle(
+		"/hub/get-candidacy-info",
+		wrap(candidacy.GetHubCandidacyInfo(h)),
+	)
 	http.Handle("/hub/rsvp-interview", wrap(interview.HubRSVPInterview(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)

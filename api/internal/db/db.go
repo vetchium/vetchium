@@ -161,7 +161,15 @@ type DB interface {
 	GetCandidaciesInfo(
 		context.Context,
 		employer.GetCandidaciesInfoRequest,
-	) ([]employer.Candidacy, error)
+	) ([]common.Candidacy, error)
+	GetEmployerCandidacyInfo(
+		context.Context,
+		common.GetCandidacyInfoRequest,
+	) (common.Candidacy, error)
+	GetHubCandidacyInfo(
+		context.Context,
+		common.GetCandidacyInfoRequest,
+	) (common.Candidacy, error)
 	AddInterview(context.Context, AddInterviewRequest) error
 	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
