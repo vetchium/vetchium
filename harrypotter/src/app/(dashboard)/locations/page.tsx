@@ -34,10 +34,7 @@ import {
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [includeDefunct, setIncludeDefunct] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("includeDefunctLocations") === "true";
-  });
+  const [includeDefunct, setIncludeDefunct] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -83,6 +80,13 @@ export default function LocationsPage() {
       setError(err instanceof Error ? err.message : t("locations.fetchError"));
     }
   };
+
+  useEffect(() => {
+    const savedValue = localStorage.getItem("includeDefunctLocations");
+    if (savedValue) {
+      setIncludeDefunct(savedValue === "true");
+    }
+  }, []);
 
   useEffect(() => {
     fetchLocations();
