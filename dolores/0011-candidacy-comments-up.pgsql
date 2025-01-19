@@ -79,9 +79,9 @@ VALUES (
 );
 
 -- Create test applications
-INSERT INTO applications (id, employer_id, opening_id, cover_letter, original_filename, internal_filename, application_state, hub_user_id, created_at)
+INSERT INTO applications (id, employer_id, opening_id, cover_letter, resume_sha, application_state, hub_user_id, created_at)
 VALUES
-    ('2024-Dec-01-1', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-11-001', 'Test Cover Letter', 'resume.pdf', 'internal-resume.pdf', 'APPLIED', '12345678-0011-0011-0011-000000050001'::uuid, timezone('UTC'::text, now()));
+    ('2024-Dec-01-1', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-11-001', 'Test Cover Letter', 'sha-sha-sha', 'APPLIED', '12345678-0011-0011-0011-000000050001'::uuid, timezone('UTC'::text, now()));
 
 -- Create test candidacies
 INSERT INTO candidacies (id, application_id, employer_id, opening_id, candidacy_state, created_by, created_at)
