@@ -60,7 +60,7 @@ var _ = Describe("Openings", Ordered, func() {
 		db.Close()
 	})
 
-	Describe("Filter Openings", func() {
+	Describe("Filter Openings on watchers and filter openings", func() {
 		type filterOpeningsTestCase struct {
 			description string
 			token       string
@@ -519,6 +519,10 @@ var _ = Describe("Openings", Ordered, func() {
 					MinAmount: 50000,
 					MaxAmount: 100000,
 					Currency:  "USD",
+				},
+				RemoteCountryCodes: []common.CountryCode{
+					"IND",
+					"USA",
 				},
 			}
 

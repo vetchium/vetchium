@@ -269,7 +269,7 @@ var _ = Describe("Openings", Ordered, func() {
 			}
 		})
 
-		It("Filter Openings", func() {
+		It("Filter Openings on openings state", func() {
 			fmt.Fprintf(GinkgoWriter, "#### Creating test openings\n")
 			createTestOpenings(adminToken)
 			fmt.Fprintf(GinkgoWriter, "#### Test openings created\n")
@@ -587,6 +587,10 @@ func createTestOpening(token string) string {
 			MaxAmount: 100000,
 			Currency:  "USD",
 		},
+		RemoteCountryCodes: []common.CountryCode{
+			"IND",
+			"USA",
+		},
 	}
 
 	resp := testPOSTGetResp(
@@ -620,6 +624,10 @@ func createTestOpenings(token string) {
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",
+			},
+			RemoteCountryCodes: []common.CountryCode{
+				"IND",
+				"USA",
 			},
 		}
 
@@ -655,6 +663,10 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 				MinAmount: 50000,
 				MaxAmount: 100000,
 				Currency:  "USD",
+			},
+			RemoteCountryCodes: []common.CountryCode{
+				"IND",
+				"USA",
 			},
 		}
 
