@@ -514,7 +514,7 @@ var _ = Describe("Openings", Ordered, func() {
 				OpeningType:       common.FullTimeOpening,
 				YoeMin:            0,
 				YoeMax:            5,
-				MinEducationLevel: bachelorEducation_0006,
+				MinEducationLevel: common.BachelorEducation,
 				Salary: &common.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
