@@ -14,15 +14,10 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-var bachelorEducation_0005 *common.EducationLevel
-
 var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
-
-	bachelor := common.BachelorEducation
-	bachelorEducation_0005 = &bachelor
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -83,7 +78,7 @@ var _ = Describe("Openings", Ordered, func() {
 				OpeningType:       common.FullTimeOpening,
 				YoeMin:            2,
 				YoeMax:            5,
-				MinEducationLevel: bachelorEducation_0005,
+				MinEducationLevel: common.BachelorEducation,
 				Salary: &common.Salary{
 					MinAmount: 50000,
 					MaxAmount: 100000,
@@ -239,7 +234,7 @@ var _ = Describe("Openings", Ordered, func() {
 							OpeningType:       common.FullTimeOpening,
 							YoeMin:            2,
 							YoeMax:            5,
-							MinEducationLevel: bachelorEducation_0005,
+							MinEducationLevel: common.BachelorEducation,
 							Salary: &common.Salary{
 								MinAmount: 200000,
 								MaxAmount: 100000,
@@ -586,7 +581,7 @@ func createTestOpening(token string) string {
 		OpeningType:       common.FullTimeOpening,
 		YoeMin:            0,
 		YoeMax:            5,
-		MinEducationLevel: bachelorEducation_0005,
+		MinEducationLevel: common.BachelorEducation,
 		Salary: &common.Salary{
 			MinAmount: 50000,
 			MaxAmount: 100000,
@@ -620,7 +615,7 @@ func createTestOpenings(token string) {
 			OpeningType:       common.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
-			MinEducationLevel: bachelorEducation_0005,
+			MinEducationLevel: common.BachelorEducation,
 			Salary: &common.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
@@ -655,7 +650,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 			OpeningType:       common.FullTimeOpening,
 			YoeMin:            0,
 			YoeMax:            5,
-			MinEducationLevel: bachelorEducation_0005,
+			MinEducationLevel: common.BachelorEducation,
 			Salary: &common.Salary{
 				MinAmount: 50000,
 				MaxAmount: 100000,
