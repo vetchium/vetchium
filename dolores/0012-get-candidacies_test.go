@@ -51,9 +51,9 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 		type getCandidaciesTestCase struct {
 			description string
 			token       string
-			request     employer.GetCandidaciesInfoRequest
+			request     employer.FilterCandidacyInfosRequest
 			wantStatus  int
-			validate    func([]employer.Candidacy)
+			validate    func([]common.Candidacy)
 		}
 
 		It("should handle various get candidacies requests correctly", func() {
@@ -61,7 +61,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "without a session token",
 					token:       "",
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: 10,
 					},
 					wantStatus: http.StatusUnauthorized,
@@ -69,7 +69,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "with invalid session token",
 					token:       "invalid-token",
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: 10,
 					},
 					wantStatus: http.StatusUnauthorized,
@@ -77,25 +77,25 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "with viewer role (should be allowed)",
 					token:       viewerToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						Expect(candidacies).Should(HaveLen(3))
 					},
 				},
 				{
 					description: "filter by recruiter1",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						RecruiterEmail: strptr(
 							"recruiter1@get-candidates.example",
 						),
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						Expect(candidacies).Should(HaveLen(2))
 						for _, c := range candidacies {
 							Expect(c.OpeningID).Should(Or(
@@ -107,14 +107,14 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "filter by recruiter2",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						RecruiterEmail: strptr(
 							"recruiter2@get-candidates.example",
 						),
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						Expect(candidacies).Should(HaveLen(1))
 						Expect(
 							candidacies[0].OpeningID,
@@ -124,14 +124,14 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "filter by state INTERVIEWING",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						State: strptr(
 							string(common.InterviewingCandidacyState),
 						),
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						Expect(candidacies).Should(HaveLen(2))
 						for _, c := range candidacies {
 							Expect(
@@ -143,12 +143,12 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "filter by state OFFERED",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						State: strptr(string(common.OfferedCandidacyState)),
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						Expect(candidacies).Should(HaveLen(1))
 						Expect(
 							candidacies[0].CandidacyState,
@@ -158,7 +158,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "with invalid limit (negative)",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: -1,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -166,7 +166,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "with invalid limit (too large)",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: 100,
 					},
 					wantStatus: http.StatusBadRequest,
@@ -174,11 +174,11 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				{
 					description: "with pagination",
 					token:       adminToken,
-					request: employer.GetCandidaciesInfoRequest{
+					request: employer.FilterCandidacyInfosRequest{
 						Limit: 2,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []employer.Candidacy) {
+					validate: func(candidacies []common.Candidacy) {
 						fmt.Fprintf(GinkgoWriter, "page1: %+v\n", candidacies)
 						Expect(candidacies).Should(HaveLen(2))
 
@@ -186,7 +186,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						fmt.Fprintf(GinkgoWriter, "pkey: %s\n", *paginationKey)
 
 						// Get next page
-						nextPageReq := employer.GetCandidaciesInfoRequest{
+						nextPageReq := employer.FilterCandidacyInfosRequest{
 							PaginationKey: paginationKey,
 							Limit:         2,
 						}
@@ -197,7 +197,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 							http.StatusOK,
 						).([]byte)
 
-						var nextPage []employer.Candidacy
+						var nextPage []common.Candidacy
 						err := json.Unmarshal(resp, &nextPage)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(nextPage).Should(HaveLen(1))
@@ -229,7 +229,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				)
 
 				if tc.wantStatus == http.StatusOK {
-					var candidacies []employer.Candidacy
+					var candidacies []common.Candidacy
 					err := json.Unmarshal(resp.([]byte), &candidacies)
 					Expect(err).ShouldNot(HaveOccurred())
 
