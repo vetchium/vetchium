@@ -47,11 +47,11 @@ VALUES
     ('12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-002', 'Senior Engineer', 1, 'Looking for senior engineers', '12345678-0011-0011-0011-000000040003'::uuid, '12345678-0011-0011-0011-000000040001'::uuid, '12345678-0011-0011-0011-000000050001'::uuid, 'FULL_TIME_OPENING', 5, 8, 'BACHELOR_EDUCATION', 'ACTIVE_OPENING_STATE', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 -- Create applications
-INSERT INTO applications (id, employer_id, opening_id, cover_letter, original_filename, internal_filename, application_state, color_tag, hub_user_id, created_at)
+INSERT INTO applications (id, employer_id, opening_id, cover_letter, resume_sha, application_state, color_tag, hub_user_id, created_at)
 VALUES
-    ('APP-001', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-001', 'Cover letter 1', 'resume1.pdf', 'internal1.pdf', 'SHORTLISTED', 'GREEN', '12345678-0011-0011-0011-000000060001'::uuid, timezone('UTC'::text, now())),
-    ('APP-002', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-001', 'Cover letter 2', 'resume2.pdf', 'internal2.pdf', 'SHORTLISTED', 'YELLOW', '12345678-0011-0011-0011-000000060002'::uuid, timezone('UTC'::text, now())),
-    ('APP-003', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-002', 'Cover letter 3', 'resume3.pdf', 'internal3.pdf', 'SHORTLISTED', 'GREEN', '12345678-0011-0011-0011-000000060003'::uuid, timezone('UTC'::text, now()));
+    ('APP-001', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-001', 'Cover letter 1', 'sha-sha-sha', 'SHORTLISTED', 'GREEN', '12345678-0011-0011-0011-000000060001'::uuid, timezone('UTC'::text, now())),
+    ('APP-002', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-001', 'Cover letter 2', 'sha-sha-sha', 'SHORTLISTED', 'YELLOW', '12345678-0011-0011-0011-000000060002'::uuid, timezone('UTC'::text, now())),
+    ('APP-003', '12345678-0011-0011-0011-000000000201'::uuid, '2024-Mar-01-002', 'Cover letter 3', 'sha-sha-sha', 'SHORTLISTED', 'GREEN', '12345678-0011-0011-0011-000000060003'::uuid, timezone('UTC'::text, now()));
 
 -- Create candidacies with different states
 INSERT INTO candidacies (id, application_id, employer_id, opening_id, candidacy_state, created_by, created_at)

@@ -170,8 +170,7 @@ WITH inserted_applications AS (
         hub_user_id,
         application_state,
         cover_letter,
-        original_filename,
-        internal_filename,
+        resume_sha,
         created_at
     )
     SELECT
@@ -181,8 +180,7 @@ WITH inserted_applications AS (
         '12345678-0013-0013-0013-000000050001'::uuid,
         'APPLIED'::application_states,
         'Cover Letter for ' || o.id,
-        'resume.pdf',
-        'internal-' || o.id || '.pdf',
+        'sha-sha-sha',
         timezone('UTC'::text, now())
     FROM openings o
     RETURNING id, employer_id, opening_id
@@ -219,8 +217,7 @@ WITH inserted_applications AS (
         hub_user_id,
         application_state,
         cover_letter,
-        original_filename,
-        internal_filename,
+        resume_sha,
         created_at
     )
     SELECT
@@ -230,8 +227,7 @@ WITH inserted_applications AS (
         '12345678-0013-0013-0013-000000050002'::uuid,
         'APPLIED'::application_states,
         'Cover Letter for ' || o.id,
-        'resume.pdf',
-        'internal-' || o.id || '.pdf',
+        'sha-sha-sha',
         timezone('UTC'::text, now())
     FROM openings o
     WHERE o.employer_id = '12345678-0013-0013-0013-000000000201'::uuid

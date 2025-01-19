@@ -113,8 +113,7 @@ INSERT INTO applications (
     employer_id,
     opening_id,
     cover_letter,
-    original_filename,
-    internal_filename,
+    resume_sha,
     application_state,
     hub_user_id,
     created_at
@@ -123,8 +122,7 @@ INSERT INTO applications (
     '12345678-0014-0014-0014-000000000201'::uuid,
     '2024-Mar-15-001', -- opening ID
     'Cover letter',
-    'cover-letter.pdf',
-    'cover-letter.pdf',
+    'sha-sha-sha',
     'APPLIED',
     '12345678-0014-0014-0014-000000050001'::uuid,
     timezone('UTC'::text, now())
