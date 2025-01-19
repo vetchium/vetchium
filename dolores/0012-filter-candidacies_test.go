@@ -19,20 +19,20 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 
 	BeforeAll(func() {
 		db = setupTestDB()
-		seedDatabase(db, "0012-get-candidacies-up.pgsql")
+		seedDatabase(db, "0012-filter-candidacies-up.pgsql")
 
 		var wg sync.WaitGroup
 		tokens := map[string]*string{
-			"admin@get-candidates.example":      &adminToken,
-			"recruiter1@get-candidates.example": &recruiter1Token,
-			"recruiter2@get-candidates.example": &recruiter2Token,
-			"viewer@get-candidates.example":     &viewerToken,
+			"admin@filter-candidacy-infos.example":      &adminToken,
+			"recruiter1@filter-candidacy-infos.example": &recruiter1Token,
+			"recruiter2@filter-candidacy-infos.example": &recruiter2Token,
+			"viewer@filter-candidacy-infos.example":     &viewerToken,
 		}
 
 		for email, token := range tokens {
 			wg.Add(1)
 			employerSigninAsync(
-				"get-candidates.example",
+				"filter-candidacy-infos.example",
 				email,
 				"NewPassword123$",
 				token,
@@ -43,11 +43,11 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		seedDatabase(db, "0012-get-candidacies-down.pgsql")
+		seedDatabase(db, "0012-filter-candidacies-down.pgsql")
 		db.Close()
 	})
 
-	Describe("Get Candidacies Info", func() {
+	Describe("Get Candidacy Infos", func() {
 		type getCandidaciesTestCase struct {
 			description string
 			token       string
@@ -90,7 +90,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					token:       adminToken,
 					request: employer.FilterCandidacyInfosRequest{
 						RecruiterEmail: strptr(
-							"recruiter1@get-candidates.example",
+							"recruiter1@filter-candidacy-infos.example",
 						),
 						Limit: 10,
 					},
@@ -109,7 +109,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 					token:       adminToken,
 					request: employer.FilterCandidacyInfosRequest{
 						RecruiterEmail: strptr(
-							"recruiter2@get-candidates.example",
+							"recruiter2@filter-candidacy-infos.example",
 						),
 						Limit: 10,
 					},
@@ -193,7 +193,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						resp := testPOSTGetResp(
 							adminToken,
 							nextPageReq,
-							"/employer/get-candidacies-info",
+							"/employer/filter-candidacy-infos",
 							http.StatusOK,
 						).([]byte)
 
@@ -224,7 +224,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				resp := testPOSTGetResp(
 					tc.token,
 					tc.request,
-					"/employer/get-candidacies-info",
+					"/employer/filter-candidacy-infos",
 					tc.wantStatus,
 				)
 
