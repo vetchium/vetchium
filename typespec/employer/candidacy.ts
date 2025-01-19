@@ -15,9 +15,11 @@ export const InterviewTypes = {
   UNSPECIFIED: "UNSPECIFIED" as InterviewType,
 } as const;
 
-export interface GetCandidaciesInfoRequest {
+export interface FilterCandidacyInfosRequest {
+  opening_id?: string;
   recruiter_email?: string;
   state?: CandidacyState;
+
   pagination_key?: string;
   limit?: number;
 }

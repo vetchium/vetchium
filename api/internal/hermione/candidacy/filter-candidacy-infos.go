@@ -8,31 +8,31 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-func GetCandidaciesInfo(h wand.Wand) http.HandlerFunc {
+func FilterCandidacyInfos(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered GetCandidaciesInfo")
+		h.Dbg("Entered FilterCandidacyInfos")
 
-		var getCandidaciesInfoReq employer.GetCandidaciesInfoRequest
-		err := json.NewDecoder(r.Body).Decode(&getCandidaciesInfoReq)
+		var filterCandidacyInfosReq employer.FilterCandidacyInfosRequest
+		err := json.NewDecoder(r.Body).Decode(&filterCandidacyInfosReq)
 		if err != nil {
 			h.Dbg("Error decoding request body", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !h.Vator().Struct(w, &getCandidaciesInfoReq) {
+		if !h.Vator().Struct(w, &filterCandidacyInfosReq) {
 			h.Dbg("Error validating request body")
 			return
 		}
 
-		h.Dbg("validated", "getCandidaciesInfoReq", getCandidaciesInfoReq)
+		h.Dbg("validated", "filterCandidacyInfosReq", filterCandidacyInfosReq)
 
-		if getCandidaciesInfoReq.Limit == 0 {
-			getCandidaciesInfoReq.Limit = 40
+		if filterCandidacyInfosReq.Limit == 0 {
+			filterCandidacyInfosReq.Limit = 40
 		}
 
 		candidaciesInfo, err := h.DB().
-			GetCandidaciesInfo(r.Context(), getCandidaciesInfoReq)
+			FilterCandidacyInfos(r.Context(), filterCandidacyInfosReq)
 		if err != nil {
 			h.Dbg("Error getting candidacies info", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

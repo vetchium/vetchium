@@ -12,7 +12,10 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-model GetCandidaciesInfoRequest {
+model FilterCandidacyInfosRequest {
+    @doc("If provided, will return only the Candidacies for the given opening. If not provided, all Candidacies of the Employer across all the Openings will be returned.")
+    opening_id?: string;
+
     @doc("If provided, will return only the candidacies for the given recruiter. If not provided, all Candidacies under the given employer will be returned.")
     recruiter_email?: string;
 
@@ -85,11 +88,11 @@ model Interview {
     created_at: utcDateTime;
 }
 
-@route("/employer/get-candidacies-info")
-interface GetCandidaciesInfo {
+@route("/employer/filter-candidacy-infos")
+interface FilterCandidacyInfos {
     @tag("Candidacies")
     @post
-    getCandidaciesInfo(@body request: GetCandidaciesInfoRequest): {
+    filterCandidacyInfos(@body request: FilterCandidacyInfosRequest): {
         @statusCode statusCode: 200;
         @body response: Candidacy[];
     };

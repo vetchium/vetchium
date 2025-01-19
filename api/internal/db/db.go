@@ -158,9 +158,9 @@ type DB interface {
 		context.Context,
 		common.GetCandidacyCommentsRequest,
 	) ([]common.CandidacyComment, error)
-	GetCandidaciesInfo(
+	FilterCandidacyInfos(
 		context.Context,
-		employer.GetCandidaciesInfoRequest,
+		employer.FilterCandidacyInfosRequest,
 	) ([]common.Candidacy, error)
 	GetEmployerCandidacyInfo(
 		context.Context,

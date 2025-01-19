@@ -257,8 +257,8 @@ func (h *Hermione) Run() error {
 	)
 
 	h.mw.Protect(
-		"/employer/get-candidacies-info",
-		candidacy.GetCandidaciesInfo(h),
+		"/employer/filter-candidacy-infos",
+		candidacy.FilterCandidacyInfos(h),
 		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)

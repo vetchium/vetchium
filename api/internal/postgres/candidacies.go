@@ -12,9 +12,9 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-func (p *PG) GetCandidaciesInfo(
+func (p *PG) FilterCandidacyInfos(
 	ctx context.Context,
-	getCandidaciesInfoReq employer.GetCandidaciesInfoRequest,
+	filterCandidacyInfosReq employer.FilterCandidacyInfosRequest,
 ) ([]common.Candidacy, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -34,29 +34,31 @@ JOIN org_users ou ON o.recruiter = ou.id
 WHERE c.employer_id = $1
 	`
 	args = append(args, orgUser.EmployerID)
-	i := 2
 
-	if getCandidaciesInfoReq.RecruiterEmail != nil {
-		query += fmt.Sprintf(` AND ou.email = $%d`, i)
-		args = append(args, *getCandidaciesInfoReq.RecruiterEmail)
-		i++
+	if filterCandidacyInfosReq.OpeningID != nil {
+		query += fmt.Sprintf(` AND c.opening_id = $%d`, len(args)+1)
+		args = append(args, *filterCandidacyInfosReq.OpeningID)
 	}
 
-	if getCandidaciesInfoReq.State != nil {
-		query += fmt.Sprintf(` AND c.candidacy_state = $%d`, i)
-		args = append(args, *getCandidaciesInfoReq.State)
-		i++
+	if filterCandidacyInfosReq.RecruiterEmail != nil {
+		query += fmt.Sprintf(` AND ou.email = $%d`, len(args)+1)
+		args = append(args, *filterCandidacyInfosReq.RecruiterEmail)
 	}
 
-	if getCandidaciesInfoReq.PaginationKey != nil {
-		query += fmt.Sprintf(` AND c.id > $%d`, i)
-		args = append(args, *getCandidaciesInfoReq.PaginationKey)
-		i++
+	if filterCandidacyInfosReq.State != nil {
+		query += fmt.Sprintf(` AND c.candidacy_state = $%d`, len(args)+1)
+		args = append(args, *filterCandidacyInfosReq.State)
+	}
+
+	if filterCandidacyInfosReq.PaginationKey != nil {
+		query += fmt.Sprintf(` AND c.id > $%d`, len(args)+1)
+		args = append(args, *filterCandidacyInfosReq.PaginationKey)
 	}
 
 	query += " ORDER BY c.created_at DESC, c.id ASC "
 
-	query += fmt.Sprintf(" LIMIT %d", getCandidaciesInfoReq.Limit)
+	query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
+	args = append(args, filterCandidacyInfosReq.Limit)
 
 	p.log.Dbg("query", "query", query)
 
@@ -121,7 +123,6 @@ WHERE a.hub_user_id = $1
 
 	var args []interface{}
 	args = append(args, hubUser.ID)
-	i := 2
 
 	if getMyCandidaciesReq.CandidacyStates != nil {
 		stateParams := make(
@@ -130,7 +131,7 @@ WHERE a.hub_user_id = $1
 			len(getMyCandidaciesReq.CandidacyStates),
 		)
 		for j, state := range getMyCandidaciesReq.CandidacyStates {
-			paramNum := i + j
+			paramNum := len(args) + 1 + j
 			stateParams = append(
 				stateParams,
 				fmt.Sprintf("$%d::candidacy_states", paramNum),
@@ -141,20 +142,17 @@ WHERE a.hub_user_id = $1
 			" AND c.candidacy_state = ANY(ARRAY[%s])",
 			strings.Join(stateParams, ","),
 		)
-		i += len(getMyCandidaciesReq.CandidacyStates)
 	}
 
 	if getMyCandidaciesReq.PaginationKey != nil {
-		query += fmt.Sprintf(` AND c.id > $%d`, i)
+		query += fmt.Sprintf(` AND c.id > $%d`, len(args)+1)
 		args = append(args, *getMyCandidaciesReq.PaginationKey)
-		i++
 	}
 
 	query += " ORDER BY c.created_at DESC, c.id ASC "
 
-	query += fmt.Sprintf(" LIMIT $%d", i)
+	query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
 	args = append(args, getMyCandidaciesReq.Limit)
-	i++
 
 	p.log.Dbg("query", "query", query, "args", args)
 

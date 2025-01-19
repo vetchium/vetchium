@@ -6,11 +6,13 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-type GetCandidaciesInfoRequest struct {
+type FilterCandidacyInfosRequest struct {
+	OpeningID      *string `json:"opening_id"      validate:"omitempty"`
 	RecruiterEmail *string `json:"recruiter_email" validate:"omitempty"`
 	State          *string `json:"state"           validate:"omitempty"`
-	PaginationKey  *string `json:"pagination_key"  validate:"omitempty"`
-	Limit          int64   `json:"limit"           validate:"required,min=0,max=40"`
+
+	PaginationKey *string `json:"pagination_key" validate:"omitempty"`
+	Limit         int64   `json:"limit"          validate:"required,min=0,max=40"`
 }
 
 type AddEmployerCandidacyCommentRequest struct {
