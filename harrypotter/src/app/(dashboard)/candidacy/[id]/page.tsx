@@ -12,6 +12,8 @@ import {
   Link,
   CircularProgress,
   IconButton,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -20,10 +22,48 @@ import {
   GetCandidacyCommentsRequest,
   Candidacy,
   CandidacyComment,
-} from "@psankar/vetchi-typespec/common/candidacies";
+  CandidacyState,
+} from "@psankar/vetchi-typespec";
 import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+
+function CandidacyStateLabel({
+  state,
+  t,
+}: {
+  state: CandidacyState;
+  t: (key: string) => string;
+}) {
+  let color:
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning" = "info";
+  switch (state) {
+    case "INTERVIEWING":
+      color = "info";
+      break;
+    case "OFFERED":
+      color = "warning";
+      break;
+    case "OFFER_ACCEPTED":
+      color = "success";
+      break;
+    case "OFFER_DECLINED":
+    case "CANDIDATE_UNSUITABLE":
+    case "CANDIDATE_NOT_RESPONDING":
+    case "CANDIDATE_WITHDREW":
+    case "EMPLOYER_DEFUNCT":
+      color = "error";
+      break;
+  }
+  return (
+    <Chip label={t(`candidacies.states.${state}`)} color={color} size="small" />
+  );
+}
 
 export default function CandidacyDetailPage() {
   const params = useParams();
@@ -179,15 +219,23 @@ export default function CandidacyDetailPage() {
 
       {candidacy && (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {t("candidacies.applicantName")}: {candidacy.applicant_name}
-          </Typography>
-          <Typography gutterBottom>
-            {t("candidacies.handle")}: {candidacy.applicant_handle}
-          </Typography>
-          <Typography gutterBottom>
-            {t("candidacies.state")}:{" "}
-            {t(`candidacies.states.${candidacy.candidacy_state}`)}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6">{candidacy.applicant_name}</Typography>
+            <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
+          </Box>
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            sx={{ color: "text.secondary" }}
+          >
+            @{candidacy.applicant_handle}
           </Typography>
           <Divider sx={{ my: 2 }} />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -221,43 +269,106 @@ export default function CandidacyDetailPage() {
         </Typography>
 
         {comments.length > 0 ? (
-          // Sort comments by created_at in ascending order (oldest first)
-          [...comments]
-            .sort(
-              (a, b) =>
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()
-            )
-            .map((comment) => (
-              <Paper
-                key={comment.comment_id}
-                variant="outlined"
-                sx={{ p: 2, mb: 2 }}
-              >
+          <Box sx={{ mt: 3 }}>
+            {[...comments]
+              .sort(
+                (a, b) =>
+                  new Date(a.created_at).getTime() -
+                  new Date(b.created_at).getTime()
+              )
+              .map((comment) => (
                 <Box
+                  key={comment.comment_id}
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    mb: 1,
+                    gap: 2,
+                    mb: 3,
                   }}
                 >
-                  <Typography variant="subtitle2">
-                    {comment.commenter_name} ({comment.commenter_type})
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(comment.created_at).toLocaleString()}
-                  </Typography>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: (theme) => theme.palette.primary.main,
+                    }}
+                  >
+                    {comment.commenter_name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Paper
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        position: "relative",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: -8,
+                          top: 16,
+                          width: 0,
+                          height: 0,
+                          borderTop: "8px solid transparent",
+                          borderBottom: "8px solid transparent",
+                          borderRight: (theme) =>
+                            `8px solid ${theme.palette.divider}`,
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: "bold" }}
+                          >
+                            {comment.commenter_name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              bgcolor: "action.hover",
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: 1,
+                            }}
+                          >
+                            {comment.commenter_type}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(comment.created_at).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        sx={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {comment.content}
+                      </Typography>
+                    </Paper>
+                  </Box>
                 </Box>
-                <Typography>{comment.content}</Typography>
-              </Paper>
-            ))
+              ))}
+          </Box>
         ) : (
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" sx={{ my: 2 }}>
             {t("comments.noComments")}
           </Typography>
         )}
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 3 }} />
 
         <Box>
           <TextField
@@ -269,14 +380,15 @@ export default function CandidacyDetailPage() {
             placeholder={t("comments.addPlaceholder")}
             disabled={submitting}
           />
-          <Button
-            variant="contained"
-            onClick={handleAddComment}
-            disabled={!newComment.trim() || submitting}
-            sx={{ mt: 1 }}
-          >
-            {submitting ? t("common.loading") : t("comments.add")}
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleAddComment}
+              disabled={!newComment.trim() || submitting}
+            >
+              {submitting ? t("common.loading") : t("comments.add")}
+            </Button>
+          </Box>
         </Box>
       </Paper>
     </Box>
