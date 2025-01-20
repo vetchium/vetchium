@@ -186,4 +186,23 @@ export const en = {
     clickToPreview: "Click to preview resume",
     pdfPreviewNotAvailable: "PDF preview not available",
   },
+  candidacies: {
+    title: "Candidacies",
+    view: "View Candidacies",
+    noCandidacies: "No candidacies found for this opening.",
+    fetchError: "Failed to fetch candidacies",
+    applicantName: "Applicant Name",
+    handle: "Handle",
+    state: "State",
+    states: {
+      INTERVIEWING: "Interviewing",
+      OFFERED: "Offered",
+      OFFER_ACCEPTED: "Offer Accepted",
+      OFFER_DECLINED: "Offer Declined",
+      CANDIDATE_UNSUITABLE: "Candidate Unsuitable",
+      CANDIDATE_NOT_RESPONDING: "Not Responding",
+      CANDIDATE_WITHDREW: "Candidate Withdrew",
+      EMPLOYER_DEFUNCT: "Employer Defunct",
+    },
+  },
 };

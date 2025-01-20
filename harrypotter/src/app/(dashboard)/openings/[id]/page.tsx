@@ -200,9 +200,11 @@ export default function OpeningDetail({ params }: PageProps) {
             {t(`openings.state.${opening.state}`)}
           </Typography>
         </Box>
-        <Button variant="outlined" onClick={() => router.back()}>
-          {t("common.back")}
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button variant="outlined" onClick={() => router.back()}>
+            {t("common.back")}
+          </Button>
+        </Box>
       </Box>
 
       {error && (
