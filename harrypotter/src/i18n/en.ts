@@ -207,4 +207,10 @@ export const en = {
       EMPLOYER_DEFUNCT: "Employer Defunct",
     },
   },
+  comments: {
+    title: "Comments",
+    add: "Add Comment",
+    addPlaceholder: "Write your comment here...",
+    noComments: "No comments yet",
+  },
 };
