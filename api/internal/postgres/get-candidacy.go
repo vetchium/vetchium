@@ -41,16 +41,25 @@ AND o.employer_id = $2
 		&candidacy.OpeningTitle,
 		&candidacy.OpeningDescription,
 		&candidacy.CandidacyState,
+		&candidacy.ApplicantName,
+		&candidacy.ApplicantHandle,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
+			p.log.Dbg(
+				"no candidacy found",
+				"candidacy_id",
+				getCandidacyInfoReq.CandidacyID,
+				"employer_id",
+				orgUser.EmployerID,
+			)
 			return common.Candidacy{}, db.ErrNoCandidacy
 		}
 		p.log.Err("failed to scan candidacy", "error", err)
 		return common.Candidacy{}, db.ErrInternal
 	}
 
-	return common.Candidacy{}, nil
+	return candidacy, nil
 }
 
 func (p *PG) GetHubCandidacyInfo(

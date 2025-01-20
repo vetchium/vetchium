@@ -12,7 +12,7 @@ func (p *PG) GetEmployerCandidacyComments(
 	ctx context.Context,
 	empGetCommentsReq common.GetCandidacyCommentsRequest,
 ) ([]common.CandidacyComment, error) {
-	var candidacyComments []common.CandidacyComment
+	candidacyComments := make([]common.CandidacyComment, 0)
 
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
