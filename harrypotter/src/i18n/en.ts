@@ -189,11 +189,13 @@ export const en = {
   candidacies: {
     title: "Candidacies",
     view: "View Candidacies",
+    viewCandidacy: "View Candidacy",
     noCandidacies: "No candidacies found for this opening.",
     fetchError: "Failed to fetch candidacies",
     applicantName: "Applicant Name",
     handle: "Handle",
     state: "State",
+    filterPlaceholder: "Filter by",
     states: {
       INTERVIEWING: "Interviewing",
       OFFERED: "Offered",
