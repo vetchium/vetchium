@@ -283,13 +283,20 @@ export default function CandidacyDetailPage() {
                     display: "flex",
                     gap: 2,
                     mb: 3,
+                    flexDirection:
+                      comment.commenter_type === "ORG_USER"
+                        ? "row"
+                        : "row-reverse",
                   }}
                 >
                   <Avatar
                     sx={{
                       width: 40,
                       height: 40,
-                      bgcolor: (theme) => theme.palette.primary.main,
+                      bgcolor: (theme) =>
+                        comment.commenter_type === "ORG_USER"
+                          ? theme.palette.primary.main
+                          : theme.palette.grey[400],
                     }}
                   >
                     {comment.commenter_name.charAt(0).toUpperCase()}
@@ -305,14 +312,22 @@ export default function CandidacyDetailPage() {
                         "&::before": {
                           content: '""',
                           position: "absolute",
-                          left: -8,
+                          ...(comment.commenter_type === "ORG_USER"
+                            ? {
+                                left: -8,
+                                borderRight: (theme) =>
+                                  `8px solid ${theme.palette.divider}`,
+                              }
+                            : {
+                                right: -8,
+                                borderLeft: (theme) =>
+                                  `8px solid ${theme.palette.divider}`,
+                              }),
                           top: 16,
                           width: 0,
                           height: 0,
                           borderTop: "8px solid transparent",
                           borderBottom: "8px solid transparent",
-                          borderRight: (theme) =>
-                            `8px solid ${theme.palette.divider}`,
                         },
                       }}
                     >
@@ -324,29 +339,34 @@ export default function CandidacyDetailPage() {
                           mb: 1,
                         }}
                       >
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: "bold",
+                            color: (theme) =>
+                              comment.commenter_type === "ORG_USER"
+                                ? theme.palette.primary.main
+                                : theme.palette.text.primary,
+                          }}
                         >
-                          <Typography
-                            variant="subtitle2"
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            {comment.commenter_name}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              bgcolor: "action.hover",
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1,
-                            }}
-                          >
-                            {comment.commenter_type}
-                          </Typography>
-                        </Box>
+                          {comment.commenter_name}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {new Date(comment.created_at).toLocaleString()}
+                          {new Date(comment.created_at).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "2-digit",
+                            }
+                          )}{" "}
+                          {new Date(comment.created_at).toLocaleTimeString(
+                            undefined,
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
                         </Typography>
                       </Box>
                       <Typography
