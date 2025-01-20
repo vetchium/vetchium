@@ -29,6 +29,7 @@ import {
   IconButton,
   Link,
   Popover,
+  Autocomplete,
 } from "@mui/material";
 import {
   Visibility as VisibilityIcon,
@@ -118,12 +119,14 @@ function ColumnFilter({
   value,
   onChange,
   placeholder,
+  options,
 }: {
   anchorEl: HTMLElement | null;
   onClose: () => void;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  options?: { value: string; label: string }[];
 }) {
   return (
     <Popover
@@ -139,14 +142,30 @@ function ColumnFilter({
         horizontal: "left",
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <TextField
-          size="small"
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          autoFocus
-        />
+      <Box sx={{ p: 2, minWidth: 220 }}>
+        {options ? (
+          <Autocomplete
+            size="small"
+            options={options}
+            getOptionLabel={(option) => option.label}
+            renderInput={(params) => (
+              <TextField {...params} placeholder={placeholder} />
+            )}
+            value={options.find((opt) => opt.value === value) || null}
+            onChange={(_, newValue) => onChange(newValue?.value || "")}
+            autoComplete
+            autoHighlight
+            autoFocus
+          />
+        ) : (
+          <TextField
+            size="small"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            autoFocus
+          />
+        )}
       </Box>
     </Popover>
   );
@@ -173,6 +192,14 @@ function CandidaciesTable({
     state: null,
   });
 
+  // Get unique states from candidacies and create options
+  const stateOptions = Array.from(
+    new Set(candidacies.map((c) => c.candidacy_state))
+  ).map((state) => ({
+    value: state,
+    label: t(`candidacies.states.${state}`),
+  }));
+
   const handleFilterClick = (
     event: React.MouseEvent<HTMLElement>,
     field: string
@@ -197,9 +224,9 @@ function CandidaciesTable({
     const handleMatch = candidacy.applicant_handle
       .toLowerCase()
       .includes(filters.handle.toLowerCase());
-    const stateMatch = t(`candidacies.states.${candidacy.candidacy_state}`)
-      .toLowerCase()
-      .includes(filters.state.toLowerCase());
+    const stateMatch = filters.state
+      ? candidacy.candidacy_state === filters.state
+      : true;
 
     return nameMatch && handleMatch && stateMatch;
   });
@@ -276,6 +303,7 @@ function CandidaciesTable({
                 placeholder={`${t("candidacies.filterPlaceholder")} ${t(
                   "candidacies.state"
                 ).toLowerCase()}`}
+                options={stateOptions}
               />
             </TableCell>
             <TableCell>
