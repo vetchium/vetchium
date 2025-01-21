@@ -109,6 +109,22 @@ export default function CandidacyDetailPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [openAddInterview, setOpenAddInterview] = useState(false);
   const [showInterviews, setShowInterviews] = useState(true);
+  const [expandedInterviews, setExpandedInterviews] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Initialize expanded state for new interviews
+  useEffect(() => {
+    const newExpandedState: Record<string, boolean> = {};
+    interviews.forEach((interview) => {
+      if (!(interview.interview_id in expandedInterviews)) {
+        newExpandedState[interview.interview_id] = false;
+      }
+    });
+    if (Object.keys(newExpandedState).length > 0) {
+      setExpandedInterviews((prev) => ({ ...prev, ...newExpandedState }));
+    }
+  }, [interviews]);
 
   // Get user's timezone and find closest matching TimeZone enum value
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -139,11 +155,23 @@ export default function CandidacyDetailPage() {
   });
 
   const [allowPastDates, setAllowPastDates] = useState(false);
-  const [use24HourFormat, setUse24HourFormat] = useState(() => {
-    // Try to get the saved preference from localStorage, default to true if not found
+  const [use24HourFormat, setUse24HourFormat] = useState(true);
+
+  // Handle localStorage in useEffect to avoid SSR issues
+  useEffect(() => {
     const saved = localStorage.getItem("create_interview_24hour_format");
-    return saved === null ? true : saved === "true";
-  });
+    if (saved !== null) {
+      setUse24HourFormat(saved === "true");
+    }
+  }, []);
+
+  // Update localStorage when time format preference changes
+  useEffect(() => {
+    localStorage.setItem(
+      "create_interview_24hour_format",
+      use24HourFormat.toString()
+    );
+  }, [use24HourFormat]);
 
   // Reset interview form with default timezone
   const resetInterviewForm = () => {
@@ -157,14 +185,6 @@ export default function CandidacyDetailPage() {
     setAllowPastDates(false);
     // Don't reset the time format preference
   };
-
-  // Update localStorage when time format preference changes
-  useEffect(() => {
-    localStorage.setItem(
-      "create_interview_24hour_format",
-      use24HourFormat.toString()
-    );
-  }, [use24HourFormat]);
 
   // Fetch candidacy info, comments, and interviews
   const fetchData = async () => {
@@ -446,110 +466,55 @@ export default function CandidacyDetailPage() {
         </Box>
 
         <Collapse in={showInterviews}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t("interviews.type")}</TableCell>
-                  <TableCell>{t("interviews.startTime")}</TableCell>
-                  <TableCell>{t("interviews.endTime")}</TableCell>
-                  <TableCell>{t("interviews.state")}</TableCell>
-                  <TableCell>{t("interviews.interviewers")}</TableCell>
-                  <TableCell>{t("interviews.description")}</TableCell>
-                  <TableCell>{t("common.actions")}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {interviews.map((interview) => (
-                  <TableRow key={interview.interview_id}>
-                    <TableCell>
-                      {t(`interviews.types.${interview.interview_type}`)}
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Box
-                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                        >
-                          <Typography>
-                            {new Date(interview.start_time).getFullYear()}-
-                            {new Date(interview.start_time).toLocaleString(
-                              "default",
-                              { month: "short" }
-                            )}
-                            -
-                            {String(
-                              new Date(interview.start_time).getDate()
-                            ).padStart(2, "0")}
-                          </Typography>
-                          <Typography color="text.secondary">
-                            {new Date(interview.start_time).toLocaleString(
-                              "default",
-                              { weekday: "long" }
-                            )}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                        >
-                          <Typography>
-                            {new Date(interview.start_time).toLocaleTimeString(
-                              "default",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: undefined,
-                              }
-                            )}
-                          </Typography>
-                          <Typography color="text.secondary" variant="body2">
-                            {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Box
-                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                        >
-                          <Typography>
-                            {new Date(interview.end_time).getFullYear()}-
-                            {new Date(interview.end_time).toLocaleString(
-                              "default",
-                              { month: "short" }
-                            )}
-                            -
-                            {String(
-                              new Date(interview.end_time).getDate()
-                            ).padStart(2, "0")}
-                          </Typography>
-                          <Typography color="text.secondary">
-                            {new Date(interview.end_time).toLocaleString(
-                              "default",
-                              { weekday: "long" }
-                            )}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                        >
-                          <Typography>
-                            {new Date(interview.end_time).toLocaleTimeString(
-                              "default",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: undefined,
-                              }
-                            )}
-                          </Typography>
-                          <Typography color="text.secondary" variant="body2">
-                            {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {interviews.length > 0 ? (
+              interviews.map((interview) => (
+                <Paper
+                  key={interview.interview_id}
+                  elevation={1}
+                  sx={{
+                    p: expandedInterviews[interview.interview_id] ? 3 : 2,
+                    transition: "padding 0.2s",
+                  }}
+                >
+                  {/* Header with start time and collapse control */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: expandedInterviews[interview.interview_id] ? 2 : 0,
+                    }}
+                  >
+                    <Box
+                      sx={{ display: "flex", alignItems: "baseline", gap: 1 }}
+                    >
+                      <Typography variant="body1" color="text.secondary">
+                        {new Date(interview.start_time).toLocaleString(
+                          "default",
+                          {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </Typography>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 500, color: "primary.main" }}
+                      >
+                        {new Date(interview.start_time).toLocaleTimeString(
+                          "default",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: undefined,
+                          }
+                        )}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Chip
                         label={t(
                           `interviews.states.${interview.interview_state}`
@@ -563,19 +528,105 @@ export default function CandidacyDetailPage() {
                         }
                         size="small"
                       />
-                    </TableCell>
-                    <TableCell>
-                      {interview.interviewers?.map((interviewer) => (
-                        <Chip
-                          key={interviewer.email}
-                          label={interviewer.name}
-                          size="small"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      ))}
-                    </TableCell>
-                    <TableCell>{interview.description}</TableCell>
-                    <TableCell>
+                      <IconButton
+                        onClick={() =>
+                          setExpandedInterviews((prev) => ({
+                            ...prev,
+                            [interview.interview_id]:
+                              !prev[interview.interview_id],
+                          }))
+                        }
+                        sx={{
+                          transform: expandedInterviews[interview.interview_id]
+                            ? "rotate(180deg)"
+                            : "rotate(0deg)",
+                          transition: "transform 0.2s",
+                        }}
+                        size="small"
+                      >
+                        <ExpandMoreIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Collapse in={expandedInterviews[interview.interview_id]}>
+                    {/* Interview Type */}
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: 500 }}
+                    >
+                      {t(`interviews.types.${interview.interview_type}`)}
+                    </Typography>
+
+                    {/* Time section */}
+                    <Box sx={{ mb: 3 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          {t("interviews.endTime")}
+                        </Typography>
+                        <Typography>
+                          {new Date(interview.end_time).toLocaleString(
+                            "default",
+                            {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: undefined,
+                            }
+                          )}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, display: "block" }}
+                      >
+                        {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                      </Typography>
+                    </Box>
+
+                    {/* Interviewers section */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mb: 1, display: "block" }}
+                      >
+                        {t("interviews.interviewers")}
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {interview.interviewers?.map((interviewer) => (
+                          <Chip
+                            key={interviewer.email}
+                            label={interviewer.name}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+
+                    {/* Description section */}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mb: 1, display: "block" }}
+                      >
+                        {t("interviews.description")}
+                      </Typography>
+                      <Typography sx={{ whiteSpace: "pre-wrap" }}>
+                        {interview.description}
+                      </Typography>
+                    </Box>
+
+                    {/* Actions */}
+                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                       <Button
                         size="small"
                         variant="outlined"
@@ -585,27 +636,17 @@ export default function CandidacyDetailPage() {
                       >
                         {t("interviews.manage")}
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {interviews.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      {t("interviews.noInterviews")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={() => setOpenAddInterview(true)}
-              size="small"
-            >
-              {t("interviews.addNew")}
-            </Button>
+                    </Box>
+                  </Collapse>
+                </Paper>
+              ))
+            ) : (
+              <Paper sx={{ p: 3, textAlign: "center" }}>
+                <Typography color="text.secondary">
+                  {t("interviews.noInterviews")}
+                </Typography>
+              </Paper>
+            )}
           </Box>
         </Collapse>
       </Paper>
