@@ -223,6 +223,7 @@ export const en = {
     noInterviews: "No interviews scheduled",
     allowPastDates: "Allow setting dates in the past",
     endTimeBeforeStart: "End time cannot be before or equal to start time",
+    use24HourFormat: "Use 24-hour time format",
     types: {
       VIDEO_CALL: "Video Call",
       IN_PERSON: "In Person",

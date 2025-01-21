@@ -134,6 +134,11 @@ export default function CandidacyDetailPage() {
   });
 
   const [allowPastDates, setAllowPastDates] = useState(false);
+  const [use24HourFormat, setUse24HourFormat] = useState(() => {
+    // Try to get the saved preference from localStorage, default to true if not found
+    const saved = localStorage.getItem("create_interview_24hour_format");
+    return saved === null ? true : saved === "true";
+  });
 
   // Reset interview form with default timezone
   const resetInterviewForm = () => {
@@ -145,7 +150,16 @@ export default function CandidacyDetailPage() {
       timezone: defaultTimezone,
     });
     setAllowPastDates(false);
+    // Don't reset the time format preference
   };
+
+  // Update localStorage when time format preference changes
+  useEffect(() => {
+    localStorage.setItem(
+      "create_interview_24hour_format",
+      use24HourFormat.toString()
+    );
+  }, [use24HourFormat]);
 
   // Fetch candidacy info, comments, and interviews
   const fetchData = async () => {
@@ -641,6 +655,16 @@ export default function CandidacyDetailPage() {
               label={t("interviews.allowPastDates")}
             />
 
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={use24HourFormat}
+                  onChange={(e) => setUse24HourFormat(e.target.checked)}
+                />
+              }
+              label={t("interviews.use24HourFormat")}
+            />
+
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DateTimePicker
                 label={t("interviews.startTime")}
@@ -664,8 +688,12 @@ export default function CandidacyDetailPage() {
                   }
                 }}
                 views={["year", "month", "day", "hours", "minutes"]}
-                ampm={false}
-                format="MMMM dd, yyyy HH:mm"
+                ampm={!use24HourFormat}
+                format={
+                  use24HourFormat
+                    ? "MMMM dd, yyyy HH:mm"
+                    : "MMMM dd, yyyy hh:mm a"
+                }
                 minDateTime={allowPastDates ? undefined : new Date()}
                 slotProps={{
                   textField: {
@@ -696,8 +724,12 @@ export default function CandidacyDetailPage() {
                   }
                 }}
                 views={["year", "month", "day", "hours", "minutes"]}
-                ampm={false}
-                format="MMMM dd, yyyy HH:mm"
+                ampm={!use24HourFormat}
+                format={
+                  use24HourFormat
+                    ? "MMMM dd, yyyy HH:mm"
+                    : "MMMM dd, yyyy hh:mm a"
+                }
                 minDateTime={
                   newInterview.startTime
                     ? new Date(newInterview.startTime)
