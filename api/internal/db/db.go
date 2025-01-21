@@ -158,18 +158,18 @@ type DB interface {
 		context.Context,
 		common.GetCandidacyCommentsRequest,
 	) ([]common.CandidacyComment, error)
-	FilterCandidacyInfos(
+	FilterEmployerCandidacyInfos(
 		context.Context,
 		employer.FilterCandidacyInfosRequest,
-	) ([]common.Candidacy, error)
+	) ([]employer.Candidacy, error)
 	GetEmployerCandidacyInfo(
 		context.Context,
 		common.GetCandidacyInfoRequest,
-	) (common.Candidacy, error)
+	) (employer.Candidacy, error)
 	GetHubCandidacyInfo(
 		context.Context,
 		common.GetCandidacyInfoRequest,
-	) (common.Candidacy, error)
+	) (hub.MyCandidacy, error)
 	AddInterview(context.Context, AddInterviewRequest) error
 	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error

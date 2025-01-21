@@ -24,6 +24,16 @@ export interface FilterCandidacyInfosRequest {
   limit?: number;
 }
 
+export interface Candidacy {
+  candidacy_id: string;
+  opening_id: string;
+  opening_title: string;
+  opening_description: string;
+  candidacy_state: CandidacyState;
+  applicant_name: string;
+  applicant_handle: string;
+}
+
 export interface AddEmployerCandidacyCommentRequest {
   candidacy_id: string;
   comment: string;

@@ -32,7 +32,7 @@ func FilterCandidacyInfos(h wand.Wand) http.HandlerFunc {
 		}
 
 		candidaciesInfo, err := h.DB().
-			FilterCandidacyInfos(r.Context(), filterCandidacyInfosReq)
+			FilterEmployerCandidacyInfos(r.Context(), filterCandidacyInfosReq)
 		if err != nil {
 			h.Dbg("Error getting candidacies info", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

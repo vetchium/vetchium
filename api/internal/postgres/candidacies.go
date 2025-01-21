@@ -7,19 +7,18 @@ import (
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-func (p *PG) FilterCandidacyInfos(
+func (p *PG) FilterEmployerCandidacyInfos(
 	ctx context.Context,
-	filterCandidacyInfosReq employer.FilterCandidacyInfosRequest,
-) ([]common.Candidacy, error) {
+	request employer.FilterCandidacyInfosRequest,
+) ([]employer.Candidacy, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
-		return []common.Candidacy{}, db.ErrInternal
+		return []employer.Candidacy{}, db.ErrInternal
 	}
 
 	var args []interface{}
@@ -35,44 +34,44 @@ WHERE c.employer_id = $1
 	`
 	args = append(args, orgUser.EmployerID)
 
-	if filterCandidacyInfosReq.OpeningID != nil {
+	if request.OpeningID != nil {
 		query += fmt.Sprintf(` AND c.opening_id = $%d`, len(args)+1)
-		args = append(args, *filterCandidacyInfosReq.OpeningID)
+		args = append(args, *request.OpeningID)
 	}
 
-	if filterCandidacyInfosReq.RecruiterEmail != nil {
+	if request.RecruiterEmail != nil {
 		query += fmt.Sprintf(` AND ou.email = $%d`, len(args)+1)
-		args = append(args, *filterCandidacyInfosReq.RecruiterEmail)
+		args = append(args, *request.RecruiterEmail)
 	}
 
-	if filterCandidacyInfosReq.State != nil {
+	if request.State != nil {
 		query += fmt.Sprintf(` AND c.candidacy_state = $%d`, len(args)+1)
-		args = append(args, *filterCandidacyInfosReq.State)
+		args = append(args, *request.State)
 	}
 
-	if filterCandidacyInfosReq.PaginationKey != nil {
+	if request.PaginationKey != nil {
 		query += fmt.Sprintf(` AND c.id > $%d`, len(args)+1)
-		args = append(args, *filterCandidacyInfosReq.PaginationKey)
+		args = append(args, *request.PaginationKey)
 	}
 
 	query += " ORDER BY c.created_at DESC, c.id ASC "
 
 	query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
-	args = append(args, filterCandidacyInfosReq.Limit)
+	args = append(args, request.Limit)
 
 	p.log.Dbg("query", "query", query)
 
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
 		p.log.Err("failed to query candidacies", "error", err)
-		return []common.Candidacy{}, db.ErrInternal
+		return []employer.Candidacy{}, db.ErrInternal
 	}
 
 	defer rows.Close()
 
-	candidacies := []common.Candidacy{}
+	candidacies := []employer.Candidacy{}
 	for rows.Next() {
-		var candidacy common.Candidacy
+		var candidacy employer.Candidacy
 		err := rows.Scan(
 			&candidacy.CandidacyID,
 			&candidacy.OpeningID,
@@ -84,7 +83,7 @@ WHERE c.employer_id = $1
 		)
 		if err != nil {
 			p.log.Err("failed to scan candidacy", "error", err)
-			return []common.Candidacy{}, db.ErrInternal
+			return []employer.Candidacy{}, db.ErrInternal
 		}
 
 		candidacies = append(candidacies, candidacy)
@@ -92,7 +91,7 @@ WHERE c.employer_id = $1
 
 	if err := rows.Err(); err != nil {
 		p.log.Err("failed to iterate over candidacies", "error", err)
-		return []common.Candidacy{}, db.ErrInternal
+		return []employer.Candidacy{}, db.ErrInternal
 	}
 
 	p.log.Dbg("candidacies", "candidacies", candidacies)

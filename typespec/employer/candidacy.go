@@ -15,6 +15,16 @@ type FilterCandidacyInfosRequest struct {
 	Limit         int64   `json:"limit"          validate:"required,min=0,max=40"`
 }
 
+type Candidacy struct {
+	CandidacyID        string                `json:"candidacy_id"`
+	OpeningID          string                `json:"opening_id"`
+	OpeningTitle       string                `json:"opening_title"`
+	OpeningDescription string                `json:"opening_description"`
+	CandidacyState     common.CandidacyState `json:"candidacy_state"`
+	ApplicantName      string                `json:"applicant_name"`
+	ApplicantHandle    string                `json:"applicant_handle"`
+}
+
 type AddEmployerCandidacyCommentRequest struct {
 	CandidacyID string `json:"candidacy_id" validate:"required"`
 	Comment     string `json:"comment"      validate:"required,max=2048"`
