@@ -81,7 +81,7 @@ func (p *PG) GetHubCandidacyComments(
 	ctx context.Context,
 	hubGetCommentsReq common.GetCandidacyCommentsRequest,
 ) ([]common.CandidacyComment, error) {
-	var candidacyComments []common.CandidacyComment
+	candidacyComments := make([]common.CandidacyComment, 0)
 
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
@@ -90,6 +90,13 @@ func (p *PG) GetHubCandidacyComments(
 	}
 
 	query := `
+WITH access_check AS (
+	SELECT EXISTS (
+		SELECT 1 FROM candidacies c
+		JOIN applications a ON c.application_id = a.id
+		WHERE c.id = $1 AND a.hub_user_id = $2
+	) as has_access
+)
 SELECT 
 	cc.id,
 	COALESCE(ou.name, hu.full_name) as commenter_name,
@@ -98,9 +105,10 @@ SELECT
 	cc.created_at
 FROM candidacy_comments cc
 LEFT JOIN org_users ou ON cc.org_user_id = ou.id
-LEFT JOIN hub_users hu ON cc.hub_user_id = hu.id
+LEFT JOIN hub_users hu ON cc.hub_user_id = hu.id,
+access_check
 WHERE cc.candidacy_id = $1
-AND cc.hub_user_id = $2
+AND access_check.has_access
 ORDER BY cc.created_at DESC
 `
 
