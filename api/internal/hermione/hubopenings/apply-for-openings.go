@@ -30,7 +30,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		if !h.Vator().Struct(w, &applyForOpeningReq) {
-			h.Dbg("validation failed", "applyForOpeningReq", applyForOpeningReq)
+			h.Dbg("validation failed")
 			return
 		}
 		h.Dbg("validated", "applyForOpeningReq", applyForOpeningReq)

@@ -55,7 +55,7 @@ RETURNING id
 	).Scan(&applicationID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			p.log.Err("either domain or opening does not exist", "error", err)
+			p.log.Dbg("either domain or opening does not exist", "error", err)
 			return db.ErrNoOpening
 		}
 		p.log.Err("failed to create application", "error", err)
