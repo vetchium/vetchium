@@ -12,6 +12,9 @@ export const en = {
       sessionExpired: "Session expired. Please log in again.",
       serverError: "The server is experiencing issues. Please try again later",
     },
+    retry: "Retry",
+    back: "Back",
+    actions: "Actions",
   },
   auth: {
     tfa: {
@@ -100,5 +103,25 @@ export const en = {
     home: "Home",
     findOpenings: "Find Openings",
     myApplications: "My Applications",
+  },
+  candidacies: {
+    viewCandidacy: "View Candidacy",
+    fetchError: "Failed to load candidacy details",
+    states: {
+      INTERVIEWING: "Interviewing",
+      OFFERED: "Offered",
+      OFFER_ACCEPTED: "Offer Accepted",
+      OFFER_DECLINED: "Offer Declined",
+      CANDIDATE_UNSUITABLE: "Not Selected",
+      CANDIDATE_NOT_RESPONDING: "Not Responding",
+      CANDIDATE_WITHDREW: "Withdrawn",
+      EMPLOYER_DEFUNCT: "Position Closed",
+    },
+  },
+  comments: {
+    title: "Comments",
+    noComments: "No comments yet",
+    addPlaceholder: "Add a comment...",
+    add: "Add Comment",
   },
 };
