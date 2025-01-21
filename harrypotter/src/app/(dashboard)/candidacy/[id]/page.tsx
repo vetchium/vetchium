@@ -29,6 +29,8 @@ import {
   Select,
   MenuItem,
   Stack,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -131,6 +133,8 @@ export default function CandidacyDetailPage() {
     timezone: defaultTimezone,
   });
 
+  const [allowPastDates, setAllowPastDates] = useState(false);
+
   // Reset interview form with default timezone
   const resetInterviewForm = () => {
     setNewInterview({
@@ -140,6 +144,7 @@ export default function CandidacyDetailPage() {
       description: "",
       timezone: defaultTimezone,
     });
+    setAllowPastDates(false);
   };
 
   // Fetch candidacy info, comments, and interviews
@@ -426,7 +431,9 @@ export default function CandidacyDetailPage() {
                 <TableCell>{t("interviews.startTime")}</TableCell>
                 <TableCell>{t("interviews.endTime")}</TableCell>
                 <TableCell>{t("interviews.state")}</TableCell>
+                <TableCell>{t("interviews.interviewers")}</TableCell>
                 <TableCell>{t("interviews.description")}</TableCell>
+                <TableCell>{t("common.actions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -467,7 +474,7 @@ export default function CandidacyDetailPage() {
                             {
                               hour: "2-digit",
                               minute: "2-digit",
-                              hour12: undefined, // This will use browser's preference
+                              hour12: undefined,
                             }
                           )}
                         </Typography>
@@ -509,7 +516,7 @@ export default function CandidacyDetailPage() {
                             {
                               hour: "2-digit",
                               minute: "2-digit",
-                              hour12: undefined, // This will use browser's preference
+                              hour12: undefined,
                             }
                           )}
                         </Typography>
@@ -534,7 +541,28 @@ export default function CandidacyDetailPage() {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell>
+                    {interview.interviewers?.map((interviewer) => (
+                      <Chip
+                        key={interviewer.email}
+                        label={interviewer.name}
+                        size="small"
+                        sx={{ mr: 0.5, mb: 0.5 }}
+                      />
+                    ))}
+                  </TableCell>
                   <TableCell>{interview.description}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() =>
+                        router.push(`/interviews/${interview.interview_id}`)
+                      }
+                    >
+                      {t("interviews.manage")}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {interviews.length === 0 && (
@@ -603,6 +631,16 @@ export default function CandidacyDetailPage() {
               </Select>
             </FormControl>
 
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={allowPastDates}
+                  onChange={(e) => setAllowPastDates(e.target.checked)}
+                />
+              }
+              label={t("interviews.allowPastDates")}
+            />
+
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DateTimePicker
                 label={t("interviews.startTime")}
@@ -627,7 +665,8 @@ export default function CandidacyDetailPage() {
                 }}
                 views={["year", "month", "day", "hours", "minutes"]}
                 ampm={false}
-                format="MM/dd/yyyy HH:mm"
+                format="MMMM dd, yyyy HH:mm"
+                minDateTime={allowPastDates ? undefined : new Date()}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -642,6 +681,14 @@ export default function CandidacyDetailPage() {
                 }
                 onChange={(newValue: Date | null) => {
                   if (newValue) {
+                    // Only update if end time is after start time
+                    if (
+                      newInterview.startTime &&
+                      new Date(newValue) <= new Date(newInterview.startTime)
+                    ) {
+                      setError(t("interviews.endTimeBeforeStart"));
+                      return;
+                    }
                     setNewInterview({
                       ...newInterview,
                       endTime: newValue.toISOString(),
@@ -650,7 +697,7 @@ export default function CandidacyDetailPage() {
                 }}
                 views={["year", "month", "day", "hours", "minutes"]}
                 ampm={false}
-                format="MM/dd/yyyy HH:mm"
+                format="MMMM dd, yyyy HH:mm"
                 minDateTime={
                   newInterview.startTime
                     ? new Date(newInterview.startTime)
