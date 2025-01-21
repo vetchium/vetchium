@@ -14,6 +14,21 @@ import {
   IconButton,
   Avatar,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
 } from "@mui/material";
 import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,10 +38,19 @@ import {
   Candidacy,
   CandidacyComment,
   CandidacyState,
+  Interview,
+  InterviewType,
+  GetInterviewsByCandidacyRequest,
+  AddInterviewRequest,
+  TimeZone,
+  validTimezones,
 } from "@psankar/vetchi-typespec";
 import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 function CandidacyStateLabel({
   state,
@@ -76,8 +100,49 @@ export default function CandidacyDetailPage() {
   const [comments, setComments] = useState<CandidacyComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [openAddInterview, setOpenAddInterview] = useState(false);
 
-  // Fetch candidacy info and comments
+  // Get user's timezone and find closest matching TimeZone enum value
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const userOffset = new Date().getTimezoneOffset();
+  const offsetHours = Math.floor(Math.abs(userOffset) / 60);
+  const offsetMinutes = Math.abs(userOffset) % 60;
+  const offsetStr = `${userOffset <= 0 ? "+" : "-"}${offsetHours
+    .toString()
+    .padStart(2, "0")}${offsetMinutes.toString().padStart(2, "0")}`;
+
+  // Find the closest matching timezone from validTimezones
+  const defaultTimezone =
+    Array.from(validTimezones).find((tz) => tz.includes(`GMT${offsetStr}`)) ||
+    "UTC Coordinated Universal Time GMT+0000";
+
+  const [newInterview, setNewInterview] = useState<{
+    startTime: string;
+    endTime: string;
+    type: InterviewType;
+    description: string;
+    timezone: TimeZone;
+  }>({
+    startTime: "",
+    endTime: "",
+    type: "VIDEO_CALL",
+    description: "",
+    timezone: defaultTimezone,
+  });
+
+  // Reset interview form with default timezone
+  const resetInterviewForm = () => {
+    setNewInterview({
+      startTime: "",
+      endTime: "",
+      type: "VIDEO_CALL",
+      description: "",
+      timezone: defaultTimezone,
+    });
+  };
+
+  // Fetch candidacy info, comments, and interviews
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -115,6 +180,25 @@ export default function CandidacyDetailPage() {
         throw new Error(t("candidacies.fetchError"));
       }
       setCandidacy(candidacyData);
+
+      // Fetch interviews
+      const interviewsResponse = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/get-interviews-by-candidacy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            candidacy_id: candidacyId,
+          } as GetInterviewsByCandidacyRequest),
+        }
+      );
+
+      if (!interviewsResponse.ok) throw new Error(t("interviews.fetchError"));
+      const interviewsData = await interviewsResponse.json();
+      setInterviews(interviewsData || []);
 
       // Fetch comments
       const commentsResponse = await fetch(
@@ -181,6 +265,64 @@ export default function CandidacyDetailPage() {
       setError(err instanceof Error ? err.message : t("common.serverError"));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddInterview = async () => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      // Convert local times to UTC for API
+      const startDate = new Date(newInterview.startTime);
+      const endDate = new Date(newInterview.endTime);
+
+      // Get timezone offset from selected timezone
+      const tzMatch = newInterview.timezone.match(/GMT([+-]\d{4})/);
+      const tzOffset = tzMatch ? tzMatch[1] : "+0000";
+      const tzHours = parseInt(tzOffset.slice(1, 3));
+      const tzMinutes = parseInt(tzOffset.slice(3));
+      const offsetMillis =
+        (tzHours * 60 + tzMinutes) * 60 * 1000 * (tzOffset[0] === "+" ? -1 : 1);
+
+      // Adjust dates to UTC
+      const utcStartDate = new Date(startDate.getTime() + offsetMillis);
+      const utcEndDate = new Date(endDate.getTime() + offsetMillis);
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/add-interview`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            candidacy_id: candidacyId,
+            start_time: utcStartDate,
+            end_time: utcEndDate,
+            interview_type: newInterview.type,
+            description: newInterview.description,
+          } satisfies AddInterviewRequest),
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/signin");
+        return;
+      }
+
+      if (!response.ok) throw new Error(t("interviews.addError"));
+
+      setOpenAddInterview(false);
+      resetInterviewForm();
+      await fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.serverError"));
     }
   };
 
@@ -262,6 +404,298 @@ export default function CandidacyDetailPage() {
           </Typography>
         </Paper>
       )}
+
+      {/* Interviews Section */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+          <Typography variant="h6">{t("interviews.title")}</Typography>
+          <Button
+            variant="contained"
+            onClick={() => setOpenAddInterview(true)}
+            size="small"
+          >
+            {t("interviews.addNew")}
+          </Button>
+        </Box>
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>{t("interviews.type")}</TableCell>
+                <TableCell>{t("interviews.startTime")}</TableCell>
+                <TableCell>{t("interviews.endTime")}</TableCell>
+                <TableCell>{t("interviews.state")}</TableCell>
+                <TableCell>{t("interviews.description")}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {interviews.map((interview) => (
+                <TableRow key={interview.interview_id}>
+                  <TableCell>
+                    {t(`interviews.types.${interview.interview_type}`)}
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Box
+                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                      >
+                        <Typography>
+                          {new Date(interview.start_time).getFullYear()}-
+                          {new Date(interview.start_time).toLocaleString(
+                            "default",
+                            { month: "short" }
+                          )}
+                          -
+                          {String(
+                            new Date(interview.start_time).getDate()
+                          ).padStart(2, "0")}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {new Date(interview.start_time).toLocaleString(
+                            "default",
+                            { weekday: "long" }
+                          )}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                      >
+                        <Typography>
+                          {new Date(interview.start_time).toLocaleTimeString(
+                            "default",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: undefined, // This will use browser's preference
+                            }
+                          )}
+                        </Typography>
+                        <Typography color="text.secondary" variant="body2">
+                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Box
+                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                      >
+                        <Typography>
+                          {new Date(interview.end_time).getFullYear()}-
+                          {new Date(interview.end_time).toLocaleString(
+                            "default",
+                            { month: "short" }
+                          )}
+                          -
+                          {String(
+                            new Date(interview.end_time).getDate()
+                          ).padStart(2, "0")}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          {new Date(interview.end_time).toLocaleString(
+                            "default",
+                            { weekday: "long" }
+                          )}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                      >
+                        <Typography>
+                          {new Date(interview.end_time).toLocaleTimeString(
+                            "default",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: undefined, // This will use browser's preference
+                            }
+                          )}
+                        </Typography>
+                        <Typography color="text.secondary" variant="body2">
+                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={t(
+                        `interviews.states.${interview.interview_state}`
+                      )}
+                      color={
+                        interview.interview_state === "COMPLETED"
+                          ? "success"
+                          : interview.interview_state === "SCHEDULED"
+                          ? "primary"
+                          : "error"
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{interview.description}</TableCell>
+                </TableRow>
+              ))}
+              {interviews.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    {t("interviews.noInterviews")}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Add Interview Dialog */}
+      <Dialog
+        open={openAddInterview}
+        onClose={() => setOpenAddInterview(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t("interviews.addNew")}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>{t("interviews.type")}</InputLabel>
+              <Select
+                value={newInterview.type}
+                label={t("interviews.type")}
+                onChange={(e) =>
+                  setNewInterview({
+                    ...newInterview,
+                    type: e.target.value as InterviewType,
+                  })
+                }
+              >
+                <MenuItem value="VIDEO_CALL">
+                  {t("interviews.types.VIDEO_CALL")}
+                </MenuItem>
+                <MenuItem value="IN_PERSON">
+                  {t("interviews.types.IN_PERSON")}
+                </MenuItem>
+                <MenuItem value="TAKE_HOME">
+                  {t("interviews.types.TAKE_HOME")}
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>{t("interviews.timezone")}</InputLabel>
+              <Select
+                value={newInterview.timezone}
+                label={t("interviews.timezone")}
+                onChange={(e) =>
+                  setNewInterview({
+                    ...newInterview,
+                    timezone: e.target.value as TimeZone,
+                  })
+                }
+              >
+                {Array.from(validTimezones).map((tz) => (
+                  <MenuItem key={tz} value={tz}>
+                    {tz}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateTimePicker
+                label={t("interviews.startTime")}
+                value={
+                  newInterview.startTime
+                    ? new Date(newInterview.startTime)
+                    : null
+                }
+                onChange={(newValue: Date | null) => {
+                  if (newValue) {
+                    const startDate = newValue;
+                    // Set end time to 1 hour after start time
+                    const endDate = new Date(startDate);
+                    endDate.setHours(startDate.getHours() + 1);
+
+                    setNewInterview({
+                      ...newInterview,
+                      startTime: startDate.toISOString(),
+                      endTime: endDate.toISOString(),
+                    });
+                  }
+                }}
+                views={["year", "month", "day", "hours", "minutes"]}
+                ampm={false}
+                format="MM/dd/yyyy HH:mm"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+
+              <DateTimePicker
+                label={t("interviews.endTime")}
+                value={
+                  newInterview.endTime ? new Date(newInterview.endTime) : null
+                }
+                onChange={(newValue: Date | null) => {
+                  if (newValue) {
+                    setNewInterview({
+                      ...newInterview,
+                      endTime: newValue.toISOString(),
+                    });
+                  }
+                }}
+                views={["year", "month", "day", "hours", "minutes"]}
+                ampm={false}
+                format="MM/dd/yyyy HH:mm"
+                minDateTime={
+                  newInterview.startTime
+                    ? new Date(newInterview.startTime)
+                    : undefined
+                }
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+
+            <TextField
+              label={t("interviews.description")}
+              multiline
+              rows={4}
+              value={newInterview.description}
+              onChange={(e) =>
+                setNewInterview({
+                  ...newInterview,
+                  description: e.target.value,
+                })
+              }
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAddInterview(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleAddInterview}
+            variant="contained"
+            disabled={
+              !newInterview.startTime ||
+              !newInterview.endTime ||
+              !newInterview.description
+            }
+          >
+            {t("common.add")}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
