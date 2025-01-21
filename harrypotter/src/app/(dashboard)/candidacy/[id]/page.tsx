@@ -31,8 +31,12 @@ import {
   Stack,
   FormControlLabel,
   Switch,
+  Collapse,
 } from "@mui/material";
-import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
+import {
+  OpenInNew as OpenInNewIcon,
+  ExpandMore as ExpandMoreIcon,
+} from "@mui/icons-material";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   GetCandidacyInfoRequest,
@@ -104,6 +108,7 @@ export default function CandidacyDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [openAddInterview, setOpenAddInterview] = useState(false);
+  const [showInterviews, setShowInterviews] = useState(true);
 
   // Get user's timezone and find closest matching TimeZone enum value
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -426,169 +431,183 @@ export default function CandidacyDetailPage() {
 
       {/* Interviews Section */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
           <Typography variant="h6">{t("interviews.title")}</Typography>
-          <Button
-            variant="contained"
-            onClick={() => setOpenAddInterview(true)}
+          <IconButton
+            onClick={() => setShowInterviews(!showInterviews)}
+            sx={{
+              transform: showInterviews ? "rotate(0deg)" : "rotate(180deg)",
+              transition: "transform 0.2s",
+            }}
             size="small"
           >
-            {t("interviews.addNew")}
-          </Button>
+            <ExpandMoreIcon />
+          </IconButton>
         </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>{t("interviews.type")}</TableCell>
-                <TableCell>{t("interviews.startTime")}</TableCell>
-                <TableCell>{t("interviews.endTime")}</TableCell>
-                <TableCell>{t("interviews.state")}</TableCell>
-                <TableCell>{t("interviews.interviewers")}</TableCell>
-                <TableCell>{t("interviews.description")}</TableCell>
-                <TableCell>{t("common.actions")}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {interviews.map((interview) => (
-                <TableRow key={interview.interview_id}>
-                  <TableCell>
-                    {t(`interviews.types.${interview.interview_type}`)}
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Box
-                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                      >
-                        <Typography>
-                          {new Date(interview.start_time).getFullYear()}-
-                          {new Date(interview.start_time).toLocaleString(
-                            "default",
-                            { month: "short" }
-                          )}
-                          -
-                          {String(
-                            new Date(interview.start_time).getDate()
-                          ).padStart(2, "0")}
-                        </Typography>
-                        <Typography color="text.secondary">
-                          {new Date(interview.start_time).toLocaleString(
-                            "default",
-                            { weekday: "long" }
-                          )}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                      >
-                        <Typography>
-                          {new Date(interview.start_time).toLocaleTimeString(
-                            "default",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: undefined,
-                            }
-                          )}
-                        </Typography>
-                        <Typography color="text.secondary" variant="body2">
-                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Box
-                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                      >
-                        <Typography>
-                          {new Date(interview.end_time).getFullYear()}-
-                          {new Date(interview.end_time).toLocaleString(
-                            "default",
-                            { month: "short" }
-                          )}
-                          -
-                          {String(
-                            new Date(interview.end_time).getDate()
-                          ).padStart(2, "0")}
-                        </Typography>
-                        <Typography color="text.secondary">
-                          {new Date(interview.end_time).toLocaleString(
-                            "default",
-                            { weekday: "long" }
-                          )}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{ display: "flex", gap: 1, alignItems: "center" }}
-                      >
-                        <Typography>
-                          {new Date(interview.end_time).toLocaleTimeString(
-                            "default",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: undefined,
-                            }
-                          )}
-                        </Typography>
-                        <Typography color="text.secondary" variant="body2">
-                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={t(
-                        `interviews.states.${interview.interview_state}`
-                      )}
-                      color={
-                        interview.interview_state === "COMPLETED"
-                          ? "success"
-                          : interview.interview_state === "SCHEDULED"
-                          ? "primary"
-                          : "error"
-                      }
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {interview.interviewers?.map((interviewer) => (
-                      <Chip
-                        key={interviewer.email}
-                        label={interviewer.name}
-                        size="small"
-                        sx={{ mr: 0.5, mb: 0.5 }}
-                      />
-                    ))}
-                  </TableCell>
-                  <TableCell>{interview.description}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() =>
-                        router.push(`/interviews/${interview.interview_id}`)
-                      }
-                    >
-                      {t("interviews.manage")}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {interviews.length === 0 && (
+        <Collapse in={showInterviews}>
+          <TableContainer>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    {t("interviews.noInterviews")}
-                  </TableCell>
+                  <TableCell>{t("interviews.type")}</TableCell>
+                  <TableCell>{t("interviews.startTime")}</TableCell>
+                  <TableCell>{t("interviews.endTime")}</TableCell>
+                  <TableCell>{t("interviews.state")}</TableCell>
+                  <TableCell>{t("interviews.interviewers")}</TableCell>
+                  <TableCell>{t("interviews.description")}</TableCell>
+                  <TableCell>{t("common.actions")}</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {interviews.map((interview) => (
+                  <TableRow key={interview.interview_id}>
+                    <TableCell>
+                      {t(`interviews.types.${interview.interview_type}`)}
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <Box
+                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                        >
+                          <Typography>
+                            {new Date(interview.start_time).getFullYear()}-
+                            {new Date(interview.start_time).toLocaleString(
+                              "default",
+                              { month: "short" }
+                            )}
+                            -
+                            {String(
+                              new Date(interview.start_time).getDate()
+                            ).padStart(2, "0")}
+                          </Typography>
+                          <Typography color="text.secondary">
+                            {new Date(interview.start_time).toLocaleString(
+                              "default",
+                              { weekday: "long" }
+                            )}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                        >
+                          <Typography>
+                            {new Date(interview.start_time).toLocaleTimeString(
+                              "default",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: undefined,
+                              }
+                            )}
+                          </Typography>
+                          <Typography color="text.secondary" variant="body2">
+                            {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <Box
+                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                        >
+                          <Typography>
+                            {new Date(interview.end_time).getFullYear()}-
+                            {new Date(interview.end_time).toLocaleString(
+                              "default",
+                              { month: "short" }
+                            )}
+                            -
+                            {String(
+                              new Date(interview.end_time).getDate()
+                            ).padStart(2, "0")}
+                          </Typography>
+                          <Typography color="text.secondary">
+                            {new Date(interview.end_time).toLocaleString(
+                              "default",
+                              { weekday: "long" }
+                            )}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                        >
+                          <Typography>
+                            {new Date(interview.end_time).toLocaleTimeString(
+                              "default",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: undefined,
+                              }
+                            )}
+                          </Typography>
+                          <Typography color="text.secondary" variant="body2">
+                            {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t(
+                          `interviews.states.${interview.interview_state}`
+                        )}
+                        color={
+                          interview.interview_state === "COMPLETED"
+                            ? "success"
+                            : interview.interview_state === "SCHEDULED"
+                            ? "primary"
+                            : "error"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {interview.interviewers?.map((interviewer) => (
+                        <Chip
+                          key={interviewer.email}
+                          label={interviewer.name}
+                          size="small"
+                          sx={{ mr: 0.5, mb: 0.5 }}
+                        />
+                      ))}
+                    </TableCell>
+                    <TableCell>{interview.description}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() =>
+                          router.push(`/interviews/${interview.interview_id}`)
+                        }
+                      >
+                        {t("interviews.manage")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {interviews.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      {t("interviews.noInterviews")}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button
+              variant="contained"
+              onClick={() => setOpenAddInterview(true)}
+              size="small"
+            >
+              {t("interviews.addNew")}
+            </Button>
+          </Box>
+        </Collapse>
       </Paper>
 
       {/* Add Interview Dialog */}
