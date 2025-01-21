@@ -53,7 +53,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 			token       string
 			request     employer.FilterCandidacyInfosRequest
 			wantStatus  int
-			validate    func([]common.Candidacy)
+			validate    func([]employer.Candidacy)
 		}
 
 		It("should handle various get candidacies requests correctly", func() {
@@ -81,7 +81,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						Expect(candidacies).Should(HaveLen(3))
 					},
 				},
@@ -95,7 +95,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						Expect(candidacies).Should(HaveLen(2))
 						for _, c := range candidacies {
 							Expect(c.OpeningID).Should(Or(
@@ -114,7 +114,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						Expect(candidacies).Should(HaveLen(1))
 						Expect(
 							candidacies[0].OpeningID,
@@ -131,7 +131,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						Expect(candidacies).Should(HaveLen(2))
 						for _, c := range candidacies {
 							Expect(
@@ -148,7 +148,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 10,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						Expect(candidacies).Should(HaveLen(1))
 						Expect(
 							candidacies[0].CandidacyState,
@@ -178,7 +178,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 						Limit: 2,
 					},
 					wantStatus: http.StatusOK,
-					validate: func(candidacies []common.Candidacy) {
+					validate: func(candidacies []employer.Candidacy) {
 						fmt.Fprintf(GinkgoWriter, "page1: %+v\n", candidacies)
 						Expect(candidacies).Should(HaveLen(2))
 
@@ -197,7 +197,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 							http.StatusOK,
 						).([]byte)
 
-						var nextPage []common.Candidacy
+						var nextPage []employer.Candidacy
 						err := json.Unmarshal(resp, &nextPage)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(nextPage).Should(HaveLen(1))
@@ -229,7 +229,7 @@ var _ = Describe("Get Candidacies", Ordered, func() {
 				)
 
 				if tc.wantStatus == http.StatusOK {
-					var candidacies []common.Candidacy
+					var candidacies []employer.Candidacy
 					err := json.Unmarshal(resp.([]byte), &candidacies)
 					Expect(err).ShouldNot(HaveOccurred())
 
