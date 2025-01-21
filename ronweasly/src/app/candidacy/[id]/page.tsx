@@ -20,7 +20,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   GetCandidacyInfoRequest,
   GetCandidacyCommentsRequest,
-  Candidacy,
+  MyCandidacy,
   CandidacyComment,
   CandidacyState,
   AddHubCandidacyCommentRequest,
@@ -73,7 +73,7 @@ export default function CandidacyDetailPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [candidacy, setCandidacy] = useState<Candidacy | null>(null);
+  const [candidacy, setCandidacy] = useState<MyCandidacy | null>(null);
   const [comments, setComments] = useState<CandidacyComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -229,6 +229,34 @@ export default function CandidacyDetailPage() {
                 <Typography variant="h6">{candidacy.opening_title}</Typography>
                 <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
               </Box>
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ color: "text.secondary" }}
+              >
+                {candidacy.company_name}
+              </Typography>
+              {candidacy.company_domain && (
+                <Link
+                  href={`https://${candidacy.company_domain}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: "primary.main",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="body2">
+                    {candidacy.company_domain}
+                  </Typography>
+                  <OpenInNewIcon fontSize="small" />
+                </Link>
+              )}
+              <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary">
                 {candidacy.opening_description}
               </Typography>
