@@ -350,7 +350,7 @@ var _ = Describe("Interviews", Ordered, func() {
 				CandidacyID:   "candidacy-001",
 				StartTime:     time.Now().Add(24 * time.Hour),
 				EndTime:       time.Now().Add(25 * time.Hour),
-				InterviewType: common.OtherInterviewType,
+				InterviewType: "invalid-type",
 				Description:   "Invalid Interview Type",
 			}
 
