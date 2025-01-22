@@ -23,8 +23,9 @@ func (p *PG) GetHubInterviewsByCandidacy(
 	// First check if the candidacy exists and belongs to the user
 	checkQuery := `
 		SELECT EXISTS (
-			SELECT 1 FROM candidacies 
-			WHERE candidacy_id = $1 AND hub_user_id = $2
+			SELECT 1 FROM candidacies c
+			JOIN applications a ON c.application_id = a.id
+			WHERE c.id = $1 AND a.hub_user_id = $2
 		)`
 
 	var exists bool
@@ -42,7 +43,7 @@ func (p *PG) GetHubInterviewsByCandidacy(
 	// Now get interviews if any exist
 	query := `
 		SELECT 
-			i.interview_id,
+			i.id,
 			i.interview_state,
 			i.start_time,
 			i.end_time,
@@ -53,11 +54,11 @@ func (p *PG) GetHubInterviewsByCandidacy(
 				ARRAY[]::TEXT[]
 			) as interviewer_names
 		FROM interviews i
-		LEFT JOIN interview_interviewers ii ON i.interview_id = ii.interview_id
+		LEFT JOIN interview_interviewers ii ON i.id = ii.interview_id
 		LEFT JOIN org_users ou ON ii.interviewer_id = ou.id
 		WHERE i.candidacy_id = $1
 		GROUP BY 
-			i.interview_id,
+			i.id,
 			i.interview_state,
 			i.start_time,
 			i.end_time,
