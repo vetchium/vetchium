@@ -1,4 +1,7 @@
-export type InterviewState = "SCHEDULED" | "COMPLETED" | "CANCELLED";
+export type InterviewState =
+  | "SCHEDULED_INTERVIEW"
+  | "COMPLETED_INTERVIEW"
+  | "CANCELLED_INTERVIEW";
 
 export const InterviewStates = {
   SCHEDULED_INTERVIEW: "SCHEDULED_INTERVIEW" as InterviewState,

@@ -24,6 +24,12 @@ import {
   CandidacyComment,
   CandidacyState,
   AddHubCandidacyCommentRequest,
+  GetHubInterviewsByCandidacyRequest,
+  HubInterview,
+  InterviewState,
+  InterviewType,
+  InterviewStates,
+  InterviewTypes,
 } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import Cookies from "js-cookie";
@@ -75,6 +81,7 @@ export default function CandidacyDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [candidacy, setCandidacy] = useState<MyCandidacy | null>(null);
   const [comments, setComments] = useState<CandidacyComment[]>([]);
+  const [interviews, setInterviews] = useState<HubInterview[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -144,6 +151,45 @@ export default function CandidacyDetailPage() {
     }
   };
 
+  // Fetch interviews
+  const fetchInterviews = async () => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/get-interviews-by-candidacy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            candidacy_id: candidacyId,
+          } as GetHubInterviewsByCandidacyRequest),
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) throw new Error(t("interviews.fetchError"));
+      const interviewsData = await response.json();
+      setInterviews(interviewsData || []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
+    }
+  };
+
   // Add new comment
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -192,7 +238,42 @@ export default function CandidacyDetailPage() {
   // Fetch data on mount
   useEffect(() => {
     fetchData();
+    fetchInterviews();
   }, []); // Empty dependency array means this runs once on mount
+
+  const formatDateTime = (dateTime: string): string => {
+    return new Date(dateTime).toLocaleString();
+  };
+
+  const getInterviewStateColor = (
+    state: InterviewState
+  ): "warning" | "success" | "error" | "default" => {
+    switch (state) {
+      case InterviewStates.SCHEDULED_INTERVIEW:
+        return "warning";
+      case InterviewStates.COMPLETED_INTERVIEW:
+        return "success";
+      case InterviewStates.CANCELLED_INTERVIEW:
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const getInterviewTypeLabel = (type: InterviewType) => {
+    switch (type) {
+      case InterviewTypes.IN_PERSON:
+        return t("interviews.types.IN_PERSON");
+      case InterviewTypes.VIDEO_CALL:
+        return t("interviews.types.VIDEO_CALL");
+      case InterviewTypes.TAKE_HOME:
+        return t("interviews.types.TAKE_HOME");
+      case InterviewTypes.OTHER_INTERVIEW:
+        return t("interviews.types.OTHER_INTERVIEW");
+      default:
+        return type; // fallback
+    }
+  };
 
   const content = (
     <Box sx={{ p: 3 }}>
@@ -260,6 +341,73 @@ export default function CandidacyDetailPage() {
               <Typography variant="body2" color="text.secondary">
                 {candidacy.opening_description}
               </Typography>
+            </Paper>
+
+            {/* Interviews Section */}
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                {t("interviews.title")}
+              </Typography>
+              {interviews.length > 0 ? (
+                interviews.map((interview) => (
+                  <Box
+                    key={interview.interview_id}
+                    sx={{
+                      py: 2,
+                      "&:not(:last-child)": {
+                        borderBottom: 1,
+                        borderColor: "divider",
+                      },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography variant="subtitle1">
+                        {getInterviewTypeLabel(interview.interview_type)}
+                      </Typography>
+                      <Chip
+                        label={t(
+                          `interviews.states.${interview.interview_state}`
+                        )}
+                        color={getInterviewStateColor(
+                          interview.interview_state
+                        )}
+                        size="small"
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("interviews.timeRange", {
+                        start: new Date(interview.start_time).toLocaleString(),
+                        end: new Date(interview.end_time).toLocaleString(),
+                      })}
+                    </Typography>
+                    {interview.description && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {interview.description}
+                      </Typography>
+                    )}
+                    {interview.interviewers &&
+                      interview.interviewers.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("interviews.interviewers")}:{" "}
+                            {interview.interviewers.join(", ")}
+                          </Typography>
+                        </Box>
+                      )}
+                  </Box>
+                ))
+              ) : (
+                <Typography color="text.secondary">
+                  {t("interviews.noInterviews")}
+                </Typography>
+              )}
             </Paper>
 
             <Paper sx={{ p: 3 }}>

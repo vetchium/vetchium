@@ -124,4 +124,22 @@ export const en = {
     addPlaceholder: "Add a comment...",
     add: "Add Comment",
   },
+  interviews: {
+    title: "Interviews",
+    noInterviews: "No interviews scheduled",
+    fetchError: "Failed to load interviews",
+    timeRange: "{start} - {end}",
+    interviewers: "Interviewers",
+    states: {
+      SCHEDULED_INTERVIEW: "Scheduled",
+      COMPLETED_INTERVIEW: "Completed",
+      CANCELLED_INTERVIEW: "Cancelled",
+    },
+    types: {
+      IN_PERSON: "In Person",
+      VIDEO_CALL: "Video Call",
+      TAKE_HOME: "Take Home Assignment",
+      OTHER_INTERVIEW: "Other",
+    },
+  },
 };
