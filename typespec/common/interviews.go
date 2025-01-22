@@ -87,3 +87,23 @@ func (r RSVPInterviewRequest) IsValid() bool {
 	}
 	return false
 }
+
+type InterviewType string
+
+const (
+	InPersonInterviewType  InterviewType = "IN_PERSON"
+	VideoCallInterviewType InterviewType = "VIDEO_CALL"
+	TakeHomeInterviewType  InterviewType = "TAKE_HOME"
+	OtherInterviewType     InterviewType = "OTHER_INTERVIEW"
+)
+
+func (i InterviewType) IsValid() bool {
+	switch i {
+	case InPersonInterviewType,
+		VideoCallInterviewType,
+		TakeHomeInterviewType,
+		OtherInterviewType:
+		return true
+	}
+	return false
+}

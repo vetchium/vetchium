@@ -1,9 +1,9 @@
 export type InterviewState = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 
 export const InterviewStates = {
-  SCHEDULED: "SCHEDULED" as InterviewState,
-  COMPLETED: "COMPLETED" as InterviewState,
-  CANCELLED: "CANCELLED" as InterviewState,
+  SCHEDULED_INTERVIEW: "SCHEDULED_INTERVIEW" as InterviewState,
+  COMPLETED_INTERVIEW: "COMPLETED_INTERVIEW" as InterviewState,
+  CANCELLED_INTERVIEW: "CANCELLED_INTERVIEW" as InterviewState,
 } as const;
 
 export type CandidacyState =
@@ -73,4 +73,21 @@ export function isValidInterviewersDecision(
 
 export function isValidRSVPStatus(status: string): status is RSVPStatus {
   return Object.values(RSVPStatuses).includes(status as RSVPStatus);
+}
+
+export type InterviewType =
+  | "IN_PERSON"
+  | "VIDEO_CALL"
+  | "TAKE_HOME"
+  | "OTHER_INTERVIEW";
+
+export const InterviewTypes = {
+  IN_PERSON: "IN_PERSON" as InterviewType,
+  VIDEO_CALL: "VIDEO_CALL" as InterviewType,
+  TAKE_HOME: "TAKE_HOME" as InterviewType,
+  OTHER_INTERVIEW: "OTHER_INTERVIEW" as InterviewType,
+} as const;
+
+export function isValidInterviewType(type: string): type is InterviewType {
+  return Object.values(InterviewTypes).includes(type as InterviewType);
 }

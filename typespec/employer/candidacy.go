@@ -30,32 +30,12 @@ type AddEmployerCandidacyCommentRequest struct {
 	Comment     string `json:"comment"      validate:"required,max=2048"`
 }
 
-type InterviewType string
-
-const (
-	InPersonInterviewType    InterviewType = "IN_PERSON"
-	VideoCallInterviewType   InterviewType = "VIDEO_CALL"
-	TakeHomeInterviewType    InterviewType = "TAKE_HOME"
-	UnspecifiedInterviewType InterviewType = "UNSPECIFIED"
-)
-
-func (i InterviewType) IsValid() bool {
-	switch i {
-	case InPersonInterviewType,
-		VideoCallInterviewType,
-		TakeHomeInterviewType,
-		UnspecifiedInterviewType:
-		return true
-	}
-	return false
-}
-
 type AddInterviewRequest struct {
-	CandidacyID   string        `json:"candidacy_id"   validate:"required"`
-	StartTime     time.Time     `json:"start_time"     validate:"required"`
-	EndTime       time.Time     `json:"end_time"       validate:"required"`
-	InterviewType InterviewType `json:"interview_type" validate:"required,validate_interview_type"`
-	Description   string        `json:"description"    validate:"omitempty,max=2048"`
+	CandidacyID   string               `json:"candidacy_id"   validate:"required"`
+	StartTime     time.Time            `json:"start_time"     validate:"required"`
+	EndTime       time.Time            `json:"end_time"       validate:"required"`
+	InterviewType common.InterviewType `json:"interview_type" validate:"required,validate_interview_type"`
+	Description   string               `json:"description"    validate:"omitempty,max=2048"`
 }
 
 type AddInterviewResponse struct {
@@ -67,7 +47,7 @@ type EmployerInterview struct {
 	InterviewState       common.InterviewState        `json:"interview_state"`
 	StartTime            time.Time                    `json:"start_time"`
 	EndTime              time.Time                    `json:"end_time"`
-	InterviewType        InterviewType                `json:"interview_type"`
+	InterviewType        common.InterviewType         `json:"interview_type"`
 	Description          *string                      `json:"description"`
 	Interviewers         []OrgUserTiny                `json:"interviewers"`
 	InterviewersDecision *common.InterviewersDecision `json:"interviewers_decision"`

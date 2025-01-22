@@ -48,3 +48,10 @@ model RSVPInterviewRequest {
     interview_id: string;
     rsvp_status: RSVPStatus;
 }
+
+union InterviewType {
+    InPerson: "IN_PERSON",
+    VideoCall: "VIDEO_CALL",
+    TakeHome: "TAKE_HOME",
+    OtherInterview: "OTHER_INTERVIEW",
+}

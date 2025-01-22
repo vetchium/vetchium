@@ -47,13 +47,6 @@ model AddEmployerCandidacyCommentRequest {
     comment: string;
 }
 
-union InterviewType {
-    InPerson: "IN_PERSON",
-    VideoCall: "VIDEO_CALL",
-    TakeHome: "TAKE_HOME",
-    Unspecified: "UNSPECIFIED",
-}
-
 model AddInterviewRequest {
     candidacy_id: string;
     start_time: utcDateTime;
