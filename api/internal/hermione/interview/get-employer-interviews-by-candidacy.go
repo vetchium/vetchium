@@ -11,7 +11,7 @@ import (
 func GetEmployerInterviewsByCandidacy(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetEmployerInterviewsByCandidacy")
-		var getInterviewsReq employer.GetInterviewsByCandidacyRequest
+		var getInterviewsReq employer.GetEmployerInterviewsByCandidacyRequest
 		err := json.NewDecoder(r.Body).Decode(&getInterviewsReq)
 		if err != nil {
 			h.Dbg("decoding failed", "error", err)

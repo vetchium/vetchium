@@ -19,7 +19,7 @@ model RemoveInterviewerRequest {
     org_user_email: string;
 }
 
-model GetInterviewsByOpeningRequest {
+model GetEmployerInterviewsByOpeningRequest {
     opening_id: string;
 
     @doc("If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.")
@@ -33,7 +33,7 @@ model GetInterviewsByOpeningRequest {
     limit?: integer;
 }
 
-model GetInterviewsByCandidacyRequest {
+model GetEmployerInterviewsByCandidacyRequest {
     candidacy_id: string;
 
     @doc("If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.")
@@ -131,12 +131,14 @@ interface EmployerRemoveInterviewer {
 interface GetInterviewsByOpening {
     @tag("Interviews")
     @post
-    getInterviewsByOpening(@body request: GetInterviewsByOpeningRequest): {
+    getInterviewsByOpening(
+        @body request: GetEmployerInterviewsByOpeningRequest,
+    ): {
         @doc("All Interviews of an Opening are returned, ordered by their start_time")
         @statusCode
         statusCode: 200;
 
-        @body response: Interview[];
+        @body response: EmployerInterview[];
     };
 }
 
@@ -144,12 +146,14 @@ interface GetInterviewsByOpening {
 interface GetInterviewsByCandidacy {
     @tag("Interviews")
     @post
-    getInterviewsByCandidacy(@body request: GetInterviewsByCandidacyRequest): {
+    getInterviewsByCandidacy(
+        @body request: GetEmployerInterviewsByCandidacyRequest,
+    ): {
         @doc("All Interviews of a Candidacy are returned, ordered by their start_time")
         @statusCode
         statusCode: 200;
 
-        @body response: Interview[];
+        @body response: EmployerInterview[];
     };
 }
 

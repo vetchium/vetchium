@@ -51,7 +51,7 @@ export interface AddInterviewResponse {
   interview_id: string;
 }
 
-export interface Interview {
+export interface EmployerInterview {
   interview_id: string;
   interview_state: InterviewState;
   start_time: Date;

@@ -1,8 +1,7 @@
 union InterviewState {
-    Scheduled: "SCHEDULED",
-    Completed: "COMPLETED",
-    CandidateWithdrew: "CANDIDATE_WITHDREW",
-    EmployerWithdrew: "EMPLOYER_WITHDREW",
+    ScheduledInterview: "SCHEDULED_INTERVIEW",
+    CompletedInterview: "COMPLETED_INTERVIEW",
+    CancelledInterview: "CANCELLED_INTERVIEW",
 }
 
 union CandidacyState {

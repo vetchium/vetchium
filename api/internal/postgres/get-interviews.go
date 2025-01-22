@@ -10,10 +10,10 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-func (p *PG) GetInterviewsByOpening(
+func (p *PG) GetEmployerInterviewsByOpening(
 	ctx context.Context,
-	req employer.GetInterviewsByOpeningRequest,
-) ([]employer.Interview, error) {
+	req employer.GetEmployerInterviewsByOpeningRequest,
+) ([]employer.EmployerInterview, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -129,7 +129,7 @@ func (p *PG) GetInterviewsByOpening(
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("no interviews found", "opening_id", req.OpeningID)
-			return []employer.Interview{}, nil
+			return []employer.EmployerInterview{}, nil
 		}
 
 		p.log.Err("failed to get interviews by opening", "error", err)
@@ -137,9 +137,9 @@ func (p *PG) GetInterviewsByOpening(
 	}
 	defer rows.Close()
 
-	interviews := []employer.Interview{}
+	interviews := []employer.EmployerInterview{}
 	for rows.Next() {
-		var interview employer.Interview
+		var interview employer.EmployerInterview
 		var feedbackSubmittedBy *struct {
 			Name  string `json:"name"`
 			Email string `json:"email"`
@@ -187,8 +187,8 @@ func (p *PG) GetInterviewsByOpening(
 
 func (p *PG) GetEmployerInterviewsByCandidacy(
 	ctx context.Context,
-	req employer.GetInterviewsByCandidacyRequest,
-) ([]employer.Interview, error) {
+	req employer.GetEmployerInterviewsByCandidacyRequest,
+) ([]employer.EmployerInterview, error) {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
 		p.log.Err("failed to get orgUser from context")
@@ -280,7 +280,7 @@ func (p *PG) GetEmployerInterviewsByCandidacy(
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("no interviews found", "candidacy_id", req.CandidacyID)
-			return []employer.Interview{}, nil
+			return []employer.EmployerInterview{}, nil
 		}
 
 		p.log.Err("failed to get interviews by candidacy", "error", err)
@@ -288,9 +288,9 @@ func (p *PG) GetEmployerInterviewsByCandidacy(
 	}
 	defer rows.Close()
 
-	interviews := []employer.Interview{}
+	interviews := []employer.EmployerInterview{}
 	for rows.Next() {
-		var interview employer.Interview
+		var interview employer.EmployerInterview
 		var feedbackSubmittedBy *struct {
 			Name  string `json:"name"`
 			Email string `json:"email"`

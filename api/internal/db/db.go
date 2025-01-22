@@ -178,14 +178,14 @@ type DB interface {
 		interviewID string,
 	) (WatchersInfo, error)
 	EmployerRSVPInterview(context.Context, common.RSVPInterviewRequest) error
-	GetInterviewsByOpening(
+	GetEmployerInterviewsByOpening(
 		context.Context,
-		employer.GetInterviewsByOpeningRequest,
-	) ([]employer.Interview, error)
+		employer.GetEmployerInterviewsByOpeningRequest,
+	) ([]employer.EmployerInterview, error)
 	GetEmployerInterviewsByCandidacy(
 		context.Context,
-		employer.GetInterviewsByCandidacyRequest,
-	) ([]employer.Interview, error)
+		employer.GetEmployerInterviewsByCandidacyRequest,
+	) ([]employer.EmployerInterview, error)
 	GetAssessment(
 		context.Context,
 		employer.GetAssessmentRequest,

@@ -16,14 +16,14 @@ type RemoveInterviewerRequest struct {
 	OrgUserEmail string `json:"org_user_email" validate:"required,email"`
 }
 
-type GetInterviewsByOpeningRequest struct {
+type GetEmployerInterviewsByOpeningRequest struct {
 	OpeningID     string                  `json:"opening_id"     validate:"required"`
 	States        []common.InterviewState `json:"states"         validate:"omitempty"`
 	PaginationKey string                  `json:"pagination_key" validate:"omitempty"`
 	Limit         int64                   `json:"limit"          validate:"required,min=0,max=100"`
 }
 
-type GetInterviewsByCandidacyRequest struct {
+type GetEmployerInterviewsByCandidacyRequest struct {
 	CandidacyID string                  `json:"candidacy_id" validate:"required"`
 	States      []common.InterviewState `json:"states"       validate:"omitempty"`
 }

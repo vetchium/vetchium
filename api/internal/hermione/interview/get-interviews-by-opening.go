@@ -13,8 +13,8 @@ import (
 
 func GetInterviewsByOpening(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered GetInterviewsByOpening")
-		var getInterviewsReq employer.GetInterviewsByOpeningRequest
+		h.Dbg("Entered GetHubInterviewsByOpening")
+		var getInterviewsReq employer.GetEmployerInterviewsByOpeningRequest
 		err := json.NewDecoder(r.Body).Decode(&getInterviewsReq)
 		if err != nil {
 			h.Dbg("decoding failed", "error", err)
@@ -33,7 +33,7 @@ func GetInterviewsByOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		interviews, err := h.DB().
-			GetInterviewsByOpening(r.Context(), getInterviewsReq)
+			GetEmployerInterviewsByOpening(r.Context(), getInterviewsReq)
 		if err != nil {
 			if errors.Is(err, db.ErrInvalidPaginationKey) {
 				w.WriteHeader(http.StatusBadRequest)

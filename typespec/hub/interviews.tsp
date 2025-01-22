@@ -9,6 +9,30 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+model GetHubInterviewsByCandidacyRequest {
+  @doc("The Candidacy ID to get Interviews for")
+  candidacy_id: string;
+
+  @doc("If provided, will return only the Interviews in the given states. Otherwise all Interviews will be returned.")
+  states?: InterviewState[];
+}
+
+@route("/hub/get-interviews-by-candidacy")
+interface GetHubInterviewsByCandidacy {
+  @tag("Interviews")
+  @doc("Get Interviews by Candidacy")
+  @post
+  @useAuth(HubAuth)
+  getHubInterviewsByCandidacy(
+    @body request: GetHubInterviewsByCandidacyRequest,
+  ): {
+    @statusCode statusCode: 200;
+  } | {
+    @statusCode statusCode: 400;
+    @body error: ValidationErrors;
+  };
+}
+
 @route("/hub/rsvp-interview")
 interface HubRSVPInterview {
   @tag("Interviews")

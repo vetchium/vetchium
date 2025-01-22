@@ -71,7 +71,7 @@ model AddInterviewResponse {
     interview_id: string;
 }
 
-model Interview {
+model EmployerInterview {
     interview_id: string;
     interview_state: InterviewState;
     start_time: utcDateTime;

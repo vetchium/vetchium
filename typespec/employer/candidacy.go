@@ -62,7 +62,7 @@ type AddInterviewResponse struct {
 	InterviewID string `json:"interview_id"`
 }
 
-type Interview struct {
+type EmployerInterview struct {
 	InterviewID          string                       `json:"interview_id"`
 	InterviewState       common.InterviewState        `json:"interview_state"`
 	StartTime            time.Time                    `json:"start_time"`
