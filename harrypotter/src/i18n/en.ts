@@ -230,9 +230,9 @@ export const en = {
       TAKE_HOME: "Take Home",
     },
     states: {
-      SCHEDULED: "Scheduled",
-      COMPLETED: "Completed",
-      CANCELLED: "Cancelled",
+      SCHEDULED_INTERVIEW: "Scheduled",
+      COMPLETED_INTERVIEW: "Completed",
+      CANCELLED_INTERVIEW: "Cancelled",
     },
     addError: "Failed to add interview",
     fetchError: "Failed to fetch interviews",

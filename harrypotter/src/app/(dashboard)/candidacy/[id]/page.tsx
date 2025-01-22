@@ -44,9 +44,10 @@ import {
   Candidacy,
   CandidacyComment,
   CandidacyState,
-  Interview,
+  HubInterview as Interview,
   InterviewType,
-  GetInterviewsByCandidacyRequest,
+  InterviewState,
+  GetHubInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
   AddInterviewRequest,
   TimeZone,
   validTimezones,
@@ -92,6 +93,37 @@ function CandidacyStateLabel({
   }
   return (
     <Chip label={t(`candidacies.states.${state}`)} color={color} size="small" />
+  );
+}
+
+function InterviewStateLabel({
+  state,
+  t,
+}: {
+  state: InterviewState;
+  t: (key: string) => string;
+}) {
+  let color:
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning" = "info";
+
+  switch (state) {
+    case "SCHEDULED_INTERVIEW":
+      color = "info";
+      break;
+    case "COMPLETED_INTERVIEW":
+      color = "success";
+      break;
+    case "CANCELLED_INTERVIEW":
+      color = "error";
+      break;
+  }
+  return (
+    <Chip label={t(`interviews.states.${state}`)} color={color} size="small" />
   );
 }
 
@@ -523,18 +555,9 @@ export default function CandidacyDetailPage() {
                       </Typography>
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Chip
-                        label={t(
-                          `interviews.states.${interview.interview_state}`
-                        )}
-                        color={
-                          interview.interview_state === "COMPLETED"
-                            ? "success"
-                            : interview.interview_state === "SCHEDULED"
-                            ? "primary"
-                            : "error"
-                        }
-                        size="small"
+                      <InterviewStateLabel
+                        state={interview.interview_state}
+                        t={t}
                       />
                       <IconButton
                         onClick={() =>
@@ -607,16 +630,44 @@ export default function CandidacyDetailPage() {
                       >
                         {t("interviews.interviewers")}
                       </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {interview.interviewers?.map((interviewer) => (
-                          <Chip
-                            key={interviewer.email}
-                            label={interviewer.name}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                }}
+                              >
+                                {interview.interviewers?.map(
+                                  (interviewer, idx) => (
+                                    <Box
+                                      key={idx}
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        mb: 0.5,
+                                      }}
+                                    >
+                                      <Avatar
+                                        sx={{ width: 24, height: 24 }}
+                                        alt={interviewer}
+                                      >
+                                        {interviewer.charAt(0).toUpperCase()}
+                                      </Avatar>
+                                      <Typography variant="body2">
+                                        {interviewer}
+                                      </Typography>
+                                    </Box>
+                                  )
+                                )}
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
                     </Box>
 
                     {/* Description section */}
