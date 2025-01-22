@@ -44,9 +44,12 @@ import {
   Candidacy,
   CandidacyComment,
   CandidacyState,
+  CandidacyStates,
   HubInterview as Interview,
   InterviewType,
+  InterviewTypes,
   InterviewState,
+  InterviewStates,
   GetHubInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
   AddInterviewRequest,
   TimeZone,
@@ -74,20 +77,20 @@ function CandidacyStateLabel({
     | "success"
     | "warning" = "info";
   switch (state) {
-    case "INTERVIEWING":
+    case CandidacyStates.INTERVIEWING:
       color = "info";
       break;
-    case "OFFERED":
+    case CandidacyStates.OFFERED:
       color = "warning";
       break;
-    case "OFFER_ACCEPTED":
+    case CandidacyStates.OFFER_ACCEPTED:
       color = "success";
       break;
-    case "OFFER_DECLINED":
-    case "CANDIDATE_UNSUITABLE":
-    case "CANDIDATE_NOT_RESPONDING":
-    case "CANDIDATE_WITHDREW":
-    case "EMPLOYER_DEFUNCT":
+    case CandidacyStates.OFFER_DECLINED:
+    case CandidacyStates.CANDIDATE_UNSUITABLE:
+    case CandidacyStates.CANDIDATE_NOT_RESPONDING:
+    case CandidacyStates.CANDIDATE_WITHDREW:
+    case CandidacyStates.EMPLOYER_DEFUNCT:
       color = "error";
       break;
   }
@@ -112,13 +115,13 @@ function InterviewStateLabel({
     | "warning" = "info";
 
   switch (state) {
-    case "SCHEDULED_INTERVIEW":
+    case InterviewStates.SCHEDULED_INTERVIEW:
       color = "info";
       break;
-    case "COMPLETED_INTERVIEW":
+    case InterviewStates.COMPLETED_INTERVIEW:
       color = "success";
       break;
-    case "CANCELLED_INTERVIEW":
+    case InterviewStates.CANCELLED_INTERVIEW:
       color = "error";
       break;
   }
@@ -181,7 +184,7 @@ export default function CandidacyDetailPage() {
   }>({
     startTime: "",
     endTime: "",
-    type: "VIDEO_CALL",
+    type: InterviewTypes.VIDEO_CALL,
     description: "",
     timezone: defaultTimezone,
   });
@@ -210,7 +213,7 @@ export default function CandidacyDetailPage() {
     setNewInterview({
       startTime: "",
       endTime: "",
-      type: "VIDEO_CALL",
+      type: InterviewTypes.VIDEO_CALL,
       description: "",
       timezone: defaultTimezone,
     });
@@ -732,13 +735,13 @@ export default function CandidacyDetailPage() {
                   })
                 }
               >
-                <MenuItem value="VIDEO_CALL">
+                <MenuItem value={InterviewTypes.VIDEO_CALL}>
                   {t("interviews.types.VIDEO_CALL")}
                 </MenuItem>
-                <MenuItem value="IN_PERSON">
+                <MenuItem value={InterviewTypes.IN_PERSON}>
                   {t("interviews.types.IN_PERSON")}
                 </MenuItem>
-                <MenuItem value="TAKE_HOME">
+                <MenuItem value={InterviewTypes.TAKE_HOME}>
                   {t("interviews.types.TAKE_HOME")}
                 </MenuItem>
               </Select>
