@@ -413,9 +413,9 @@ CREATE TYPE interview_types AS ENUM (
     'OTHER_INTERVIEW'
 );
 CREATE TYPE interview_states AS ENUM (
-    'SCHEDULED',
-    'COMPLETED',
-    'CANCELLED'
+    'SCHEDULED_INTERVIEW',
+    'COMPLETED_INTERVIEW',
+    'CANCELLED_INTERVIEW'
 );
 CREATE TYPE interviewers_decisions AS ENUM (
     'STRONG_YES',
@@ -463,8 +463,8 @@ CREATE TABLE interviews(
 
     completed_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT valid_completion CHECK (
-        (interview_state = 'COMPLETED' AND completed_at IS NOT NULL) OR
-        (interview_state != 'COMPLETED' AND completed_at IS NULL)
+        (interview_state = 'COMPLETED_INTERVIEW' AND completed_at IS NOT NULL) OR
+        (interview_state != 'COMPLETED_INTERVIEW' AND completed_at IS NULL)
     ),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),

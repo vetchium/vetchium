@@ -3,9 +3,9 @@ package common
 type InterviewState string
 
 const (
-	ScheduledInterviewState InterviewState = "SCHEDULED"
-	CompletedInterviewState InterviewState = "COMPLETED"
-	CancelledInterviewState InterviewState = "CANCELLED"
+	ScheduledInterviewState InterviewState = "SCHEDULED_INTERVIEW"
+	CompletedInterviewState InterviewState = "COMPLETED_INTERVIEW"
+	CancelledInterviewState InterviewState = "CANCELLED_INTERVIEW"
 )
 
 func (s InterviewState) IsValid() bool {
