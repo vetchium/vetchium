@@ -130,6 +130,7 @@ export const en = {
     fetchError: "Failed to load interviews",
     timeRange: "{start} - {end}",
     interviewers: "Interviewers",
+    endTime: "End Time",
     states: {
       SCHEDULED_INTERVIEW: "Scheduled",
       COMPLETED_INTERVIEW: "Completed",
