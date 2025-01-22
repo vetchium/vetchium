@@ -64,7 +64,7 @@ var _ = Describe("Interviews", Ordered, func() {
 				CandidacyID:   "candidacy-001",
 				StartTime:     time.Now().Add(24 * time.Hour),
 				EndTime:       time.Now().Add(25 * time.Hour),
-				InterviewType: employer.InPersonInterviewType,
+				InterviewType: common.InPersonInterviewType,
 				Description:   "Technical Interview Round",
 			}
 
@@ -158,7 +158,7 @@ var _ = Describe("Interviews", Ordered, func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			// 4. Get interviews by opening
-			getInterviewsByOpeningReq := employer.GetInterviewsByOpeningRequest{
+			getInterviewsByOpeningReq := employer.GetEmployerInterviewsByOpeningRequest{
 				OpeningID: "2024-Mar-15-001",
 				States: []common.InterviewState{
 					common.ScheduledInterviewState,
@@ -182,7 +182,7 @@ var _ = Describe("Interviews", Ordered, func() {
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
 			// 5. Get interviews by candidacy
-			getInterviewsByCandidacyReq := employer.GetInterviewsByCandidacyRequest{
+			getInterviewsByCandidacyReq := employer.GetEmployerInterviewsByCandidacyRequest{
 				CandidacyID: "candidacy-001",
 				States: []common.InterviewState{
 					common.ScheduledInterviewState,
@@ -285,7 +285,7 @@ var _ = Describe("Interviews", Ordered, func() {
 						Add(time.Duration(24+i) * time.Hour),
 					EndTime: time.Now().
 						Add(time.Duration(25+i) * time.Hour),
-					InterviewType: employer.InPersonInterviewType,
+					InterviewType: common.InPersonInterviewType,
 					Description: fmt.Sprintf(
 						"Technical Interview Round %d",
 						i+1,
@@ -314,7 +314,7 @@ var _ = Describe("Interviews", Ordered, func() {
 			}
 
 			// Test pagination with limit
-			getInterviewsReq := employer.GetInterviewsByOpeningRequest{
+			getInterviewsReq := employer.GetEmployerInterviewsByOpeningRequest{
 				OpeningID: "2024-Mar-15-001",
 				States: []common.InterviewState{
 					common.ScheduledInterviewState,
@@ -337,7 +337,7 @@ var _ = Describe("Interviews", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 
-			var interviews []employer.Interview
+			var interviews []employer.EmployerInterview
 			err = json.NewDecoder(resp.Body).Decode(&interviews)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(len(interviews)).Should(Equal(2))
@@ -350,7 +350,7 @@ var _ = Describe("Interviews", Ordered, func() {
 				CandidacyID:   "candidacy-001",
 				StartTime:     time.Now().Add(24 * time.Hour),
 				EndTime:       time.Now().Add(25 * time.Hour),
-				InterviewType: "INVALID_TYPE",
+				InterviewType: common.OtherInterviewType,
 				Description:   "Invalid Interview Type",
 			}
 
