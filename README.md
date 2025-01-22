@@ -15,18 +15,24 @@ To bring the services up, run the following commands:
 ```
 vetchi $ # Setup any Kubernetes cluster (docker desktop, kind, etc.) and make kubectl point to it
 vetchi $ kubectl create namespace vetchidev
+
+vetchi $ # Bring up the backend services 
 vetchi $ tilt up
 vetchi $ # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
+
+vetchi $ # Bring up the frontend services
+vetchi $ cd harrypotter && npm install && npm run dev
+vetchi $ cd ronweasly && npm install && npm run dev
+vetchi $ # Visit http://localhost:3000 and http://localhost:3001
+
+vetchi $ # Seed some test data
+vetchi $ cd dev-seed
+vetchi $ go run .
 ```
 
 To connect to the port-forwarded Postgres using the psql command line, use the following command:
 ```
 $ psql -h localhost -p 5432 -U user vdb
-```
-
-To seed with some test data, run the following command:
-```
-$ cd dev-seed && go run .
 ```
 
 To run tests, use the following command:
@@ -57,6 +63,7 @@ vetchi $ kubectl delete namespace vetchidev
 - Use [Gomega](https://onsi.github.io/gomega/) for assertions
 - Use [golines](https://github.com/segmentio/golines) to format the Go code. Do NOT manually format the code or split the parameters to multiple lines. Write a really long line with all parameters and then summon golines to format it.
 - Use [prettier](https://prettier.io/) to format the typescript code. Do not manually format the code or split the parameters to multiple lines.
+- [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt up` to be running before this. This will also serve as some basic sanity testing.
 
 ## Engineering Notes
 Following are some rules that you should follow while working on the code. It is okay to break these rules, if that would make the code more readable. But your interest to break rules should not spawn from your inability to follow rules.
@@ -87,3 +94,13 @@ Following are some rules that you should follow while working on the code. It is
 - Try to have a maximum of about 200 lines per file. Be miserly in creating new packages and be generous in creating new files under existing packages.
 - Use https://sqlformat.darold.net/ to format SQL within the postgres.go file and dolores/*.pgsql files. This does not do a good job at breaking long line or aligning complex queries, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.
 - In the backend, log errors with the `Err` method. Log as Error only on the place where the error actually happens. This will help us get maximum debug information. In all the above layers of the call stack, if you want to log, use the `Dbg` method. The only exceptions to this are when the services are coming up. In that case, the errors are logged in the main function. Always, strive to log an error as Err only once. This will help us avoid generating too many tickets in SIEM/EventMgmt systems (such as Sentry).
+
+#### Frontend
+- Format all code with prettier
+- Do not duplicate any structs to send requests to the backend or parse the responses from the server. Use the library imported from typespec.
+- Material UI is used for the frontend styling. Stick to the same styling guidelines to keep the UI consistent. Do not import any new icon families or components from other libraries.
+- Some of the libraries may be using deprecated versions. Always try to upgrade to the latest stable releases.
+
+
+#### Others
+Sometimes we are forced to use longer names in the libraries. For example, we use  employer.EmployerInterview instead of just employer.Interview as any Go programmer would do. The reason for this is, typespec does not allow creating duplicate structures as we compile into one large openapi.yaml in the end. So we have to live with the longer names. But try to minimize the length of variables as much as you can.
