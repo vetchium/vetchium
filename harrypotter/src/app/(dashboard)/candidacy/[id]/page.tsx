@@ -463,6 +463,14 @@ export default function CandidacyDetailPage() {
           >
             <ExpandMoreIcon />
           </IconButton>
+          <Box sx={{ flex: 1 }} />
+          <Button
+            variant="contained"
+            onClick={() => setOpenAddInterview(true)}
+            size="small"
+          >
+            {t("interviews.addNew")}
+          </Button>
         </Box>
 
         <Collapse in={showInterviews}>
