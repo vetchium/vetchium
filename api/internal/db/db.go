@@ -218,6 +218,10 @@ type DB interface {
 		context.Context,
 		hub.MyCandidaciesRequest,
 	) ([]hub.MyCandidacy, error)
+	GetHubInterviewsByCandidacy(
+		context.Context,
+		hub.GetHubInterviewsByCandidacyRequest,
+	) ([]hub.HubInterview, error)
 	InitHubUserPasswordReset(context.Context, HubUserInitPasswordReset) error
 	Logout(c context.Context, token string) error
 	ResetHubUserPassword(context.Context, HubUserPasswordReset) error
