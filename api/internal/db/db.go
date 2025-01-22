@@ -182,7 +182,7 @@ type DB interface {
 		context.Context,
 		employer.GetInterviewsByOpeningRequest,
 	) ([]employer.Interview, error)
-	GetInterviewsByCandidacy(
+	GetEmployerInterviewsByCandidacy(
 		context.Context,
 		employer.GetInterviewsByCandidacyRequest,
 	) ([]employer.Interview, error)

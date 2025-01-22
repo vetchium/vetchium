@@ -8,9 +8,9 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-func GetInterviewsByCandidacy(h wand.Wand) http.HandlerFunc {
+func GetEmployerInterviewsByCandidacy(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered GetInterviewsByCandidacy")
+		h.Dbg("Entered GetEmployerInterviewsByCandidacy")
 		var getInterviewsReq employer.GetInterviewsByCandidacyRequest
 		err := json.NewDecoder(r.Body).Decode(&getInterviewsReq)
 		if err != nil {
@@ -26,7 +26,7 @@ func GetInterviewsByCandidacy(h wand.Wand) http.HandlerFunc {
 		h.Dbg("validated", "getInterviewsByCandidacyReq", getInterviewsReq)
 
 		interviews, err := h.DB().
-			GetInterviewsByCandidacy(r.Context(), getInterviewsReq)
+			GetEmployerInterviewsByCandidacy(r.Context(), getInterviewsReq)
 		if err != nil {
 			h.Dbg("error getting interviews", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

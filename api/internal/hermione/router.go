@@ -301,7 +301,7 @@ func (h *Hermione) Run() error {
 	)
 	h.mw.Protect(
 		"/employer/get-interviews-by-candidacy",
-		interview.GetInterviewsByCandidacy(h),
+		interview.GetEmployerInterviewsByCandidacy(h),
 		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
@@ -344,6 +344,10 @@ func (h *Hermione) Run() error {
 	http.Handle(
 		"/hub/get-candidacy-info",
 		wrap(candidacy.GetHubCandidacyInfo(h)),
+	)
+	http.Handle(
+		"/hub/get-interviews-by-candidacy",
+		wrap(interview.GetHubInterviewsByCandidacy(h)),
 	)
 	http.Handle("/hub/rsvp-interview", wrap(interview.HubRSVPInterview(h)))
 

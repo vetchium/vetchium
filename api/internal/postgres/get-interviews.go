@@ -185,7 +185,7 @@ func (p *PG) GetInterviewsByOpening(
 	return interviews, nil
 }
 
-func (p *PG) GetInterviewsByCandidacy(
+func (p *PG) GetEmployerInterviewsByCandidacy(
 	ctx context.Context,
 	req employer.GetInterviewsByCandidacyRequest,
 ) ([]employer.Interview, error) {
