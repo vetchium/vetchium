@@ -410,7 +410,7 @@ CREATE TYPE interview_types AS ENUM (
     'IN_PERSON',
     'VIDEO_CALL',
     'TAKE_HOME',
-    'UNSPECIFIED'
+    'OTHER_INTERVIEW'
 );
 CREATE TYPE interview_states AS ENUM (
     'SCHEDULED',
