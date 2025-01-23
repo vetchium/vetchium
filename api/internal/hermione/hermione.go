@@ -31,11 +31,6 @@ func NewHermione() (*Hermione, error) {
 		return nil, err
 	}
 
-	pgPassword := os.Getenv("POSTGRES_PASSWORD")
-	if pgPassword == "" {
-		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
-	}
-
 	logger := util.Logger{
 		Log: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level:     slog.LevelDebug,
@@ -43,14 +38,11 @@ func NewHermione() (*Hermione, error) {
 		})),
 	}
 
-	pgConnStr := fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		config.Postgres.Host,
-		config.Postgres.Port,
-		config.Postgres.User,
-		config.Postgres.DB,
-		pgPassword,
-	)
+	pgConnStr := os.Getenv("POSTGRES_URI")
+	if pgConnStr == "" {
+		return nil, fmt.Errorf("POSTGRES_URI not set")
+	}
+
 	pg, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err

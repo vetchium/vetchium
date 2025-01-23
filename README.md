@@ -26,20 +26,19 @@ vetchi $ cd ronweasly && npm install && npm run dev
 vetchi $ # Visit http://localhost:3000 and http://localhost:3001
 
 vetchi $ # Seed some test data
-vetchi $ cd dev-seed
-vetchi $ go run .
+vetchi $ make dev-seed  # tilt up should be running
 ```
 
-To connect to the port-forwarded Postgres using the psql command line, use the following command:
+To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 ```
-$ psql -h localhost -p 5432 -U user vdb
+$ POSTGRES_URI=$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchidev/localhost/g')
+$ psql "$POSTGRES_URI"
 ```
 
 To run tests, use the following command:
 ```
 $ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
-vetchi $ cd dolores
-dolores $ ginkgo -vv ; # tilt up should be running
+vetchi $ make test ; # tilt up should be running
 ```
 
 ### Tear down

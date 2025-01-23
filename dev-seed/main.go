@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/fatih/color"
@@ -15,7 +16,10 @@ var sessionTokens sync.Map
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	connStr := "host=localhost port=5432 user=user dbname=vdb password=pass sslmode=disable"
+	connStr := os.Getenv("POSTGRES_URI")
+	if connStr == "" {
+		log.Fatal("POSTGRES_URI environment variable is required")
+	}
 	db, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)

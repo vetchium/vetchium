@@ -1,10 +1,5 @@
 -- Deploy vetchi:1-initdb to pg
 
-ALTER SYSTEM SET log_statement = 'all';
-ALTER SYSTEM SET log_min_duration_statement = 0;
-ALTER SYSTEM SET log_duration = 'on';
-SELECT pg_reload_conf();
-
 BEGIN;
 
 CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER', 'DELETED_HUB_USER');

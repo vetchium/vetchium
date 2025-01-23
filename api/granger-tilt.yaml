@@ -9,12 +9,6 @@ data:
       "env": "dev",
       "onboard_token_life": "3m",
       "port": "8080",
-      "postgres": {
-        "db": "vdb",
-        "host": "postgres",
-        "port": "5432",
-        "user": "user"
-      },
       "smtp": {
         "host": "mailpit",
         "port": "1025",
@@ -44,11 +38,11 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_URI
               valueFrom:
                 secretKeyRef:
-                  name: vetchi-secrets
-                  key: POSTGRES_PASSWORD
+                  name: postgres-app
+                  key: uri
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:

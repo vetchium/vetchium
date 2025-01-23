@@ -15,5 +15,4 @@ metadata:
   namespace: vetchidev
 type: Opaque
 stringData:
-  POSTGRES_PASSWORD: "pass"
   SMTP_PASSWORD: "password"

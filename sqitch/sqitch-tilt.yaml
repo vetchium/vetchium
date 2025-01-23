@@ -25,8 +25,17 @@ spec:
           args:
             - |
               set -e
-              sqitch deploy --verbose db:pg://user:pass@postgres:5432/vdb
-              sqitch verify --verbose db:pg://user:pass@postgres:5432/vdb
+              URI=$(cat /mnt/secrets/uri | sed 's|postgresql://|db:pg://|')
+              sqitch deploy --verbose "${URI}"
+              sqitch verify --verbose "${URI}"
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: postgres-app
       restartPolicy: Never
 
 ---

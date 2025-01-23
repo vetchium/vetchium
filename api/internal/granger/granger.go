@@ -26,13 +26,6 @@ type Config struct {
 
 	Port string `json:"port" validate:"required,min=1,number"`
 
-	Postgres struct {
-		Host string `json:"host" validate:"required,min=1"`
-		Port string `json:"port" validate:"required,min=1,number"`
-		User string `json:"user" validate:"required,min=1"`
-		DB   string `json:"db" validate:"required,min=1"`
-	} `json:"postgres" validate:"required"`
-
 	SMTP struct {
 		Host string `json:"host" validate:"required,min=1"`
 		Port string `json:"port" validate:"required,min=1,number"`
@@ -96,9 +89,9 @@ func NewGranger() (*Granger, error) {
 		return nil, err
 	}
 
-	pgPassword := os.Getenv("POSTGRES_PASSWORD")
-	if pgPassword == "" {
-		return nil, fmt.Errorf("POSTGRES_PASSWORD not set")
+	pgConnStr := os.Getenv("POSTGRES_URI")
+	if pgConnStr == "" {
+		return nil, fmt.Errorf("POSTGRES_URI not set")
 	}
 
 	logger := util.Logger{
@@ -113,14 +106,6 @@ func NewGranger() (*Granger, error) {
 		return nil, fmt.Errorf("SMTP_PASSWORD not set")
 	}
 
-	pgConnStr := fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-		config.Postgres.Host,
-		config.Postgres.Port,
-		config.Postgres.User,
-		config.Postgres.DB,
-		pgPassword,
-	)
 	db, err := postgres.New(pgConnStr, logger)
 	if err != nil {
 		return nil, err

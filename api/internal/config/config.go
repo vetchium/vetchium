@@ -27,13 +27,6 @@ type HermioneConfigOnDisk struct {
 		PasswordResetTokLife string `json:"password_reset_tok_life" validate:"required"`
 	} `json:"hub" validate:"required"`
 
-	Postgres struct {
-		Host string `json:"host" validate:"required,min=1"`
-		Port string `json:"port" validate:"required,min=1"`
-		User string `json:"user" validate:"required,min=1"`
-		DB   string `json:"db" validate:"required,min=1"`
-	} `json:"postgres" validate:"required"`
-
 	Port string `json:"port" validate:"required,min=1,number"`
 
 	TimingAttackDelay string `json:"timing_attack_delay" validate:"required"`
@@ -54,13 +47,6 @@ type Hermione struct {
 		LTSTokLife           time.Duration
 		InviteTokLife        time.Duration
 		PasswordResetTokLife time.Duration
-	}
-
-	Postgres struct {
-		Host string
-		Port string
-		User string
-		DB   string
 	}
 
 	Port              int
@@ -86,11 +72,6 @@ func LoadHermioneConfig() (*Hermione, error) {
 	}
 
 	hc := &Hermione{}
-
-	hc.Postgres.Host = cmap.Postgres.Host
-	hc.Postgres.Port = cmap.Postgres.Port
-	hc.Postgres.User = cmap.Postgres.User
-	hc.Postgres.DB = cmap.Postgres.DB
 
 	hc.Port, err = strconv.Atoi(cmap.Port)
 	if err != nil {
