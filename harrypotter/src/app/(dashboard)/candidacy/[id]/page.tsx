@@ -518,6 +518,8 @@ export default function CandidacyDetailPage() {
                   sx={{
                     p: expandedInterviews[interview.interview_id] ? 3 : 2,
                     transition: "padding 0.2s",
+                    borderTop: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
                   {/* Header with start time and collapse control */}

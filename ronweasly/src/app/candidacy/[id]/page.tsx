@@ -369,7 +369,8 @@ export default function CandidacyDetailPage() {
                       key={interview.interview_id}
                       sx={{
                         "&:not(:last-child)": { mb: 1 },
-                        "&::before": { display: "none" },
+                        borderTop: "1px solid",
+                        borderColor: "divider",
                       }}
                     >
                       <AccordionSummary
