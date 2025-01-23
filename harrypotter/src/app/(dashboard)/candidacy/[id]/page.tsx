@@ -31,14 +31,15 @@ import {
   CandidacyStates,
   GetCandidacyCommentsRequest,
   GetCandidacyInfoRequest,
-  GetHubInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
-  HubInterview as Interview,
+  GetEmployerInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
+  EmployerInterview as Interview,
   InterviewState,
   InterviewStates,
   InterviewType,
   InterviewTypes,
   TimeZone,
   validTimezones,
+  OrgUserShort,
 } from "@psankar/vetchi-typespec";
 import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
 import Cookies from "js-cookie";
@@ -572,7 +573,7 @@ export default function CandidacyDetailPage() {
                                 }}
                               >
                                 {interview.interviewers?.map(
-                                  (interviewer, idx) => (
+                                  (interviewer: OrgUserShort, idx) => (
                                     <Box
                                       key={idx}
                                       sx={{
@@ -584,12 +585,14 @@ export default function CandidacyDetailPage() {
                                     >
                                       <Avatar
                                         sx={{ width: 24, height: 24 }}
-                                        alt={interviewer}
+                                        alt={interviewer.name}
                                       >
-                                        {interviewer.charAt(0).toUpperCase()}
+                                        {interviewer.name
+                                          .charAt(0)
+                                          .toUpperCase()}
                                       </Avatar>
                                       <Typography variant="body2">
-                                        {interviewer}
+                                        {`${interviewer.name} (${interviewer.email})`}
                                       </Typography>
                                     </Box>
                                   )

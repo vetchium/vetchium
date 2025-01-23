@@ -17,6 +17,7 @@ import {
   Stack,
   FormControlLabel,
   Switch,
+  Autocomplete,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -25,6 +26,7 @@ import {
   TimeZone,
   validTimezones,
   AddInterviewRequest,
+  OrgUserShort,
 } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import Cookies from "js-cookie";
@@ -39,6 +41,10 @@ export default function AddInterviewPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [interviewerOptions, setInterviewerOptions] = useState<OrgUserShort[]>(
+    []
+  );
+  const [isLoadingInterviewers, setIsLoadingInterviewers] = useState(false);
 
   // Get user's timezone and find closest matching TimeZone enum value
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -60,12 +66,14 @@ export default function AddInterviewPage() {
     type: InterviewType;
     description: string;
     timezone: TimeZone;
+    interviewers: OrgUserShort[];
   }>({
     startTime: "",
     endTime: "",
     type: InterviewTypes.VIDEO_CALL,
     description: "",
     timezone: defaultTimezone,
+    interviewers: [],
   });
 
   const [allowPastDates, setAllowPastDates] = useState(false);
@@ -86,6 +94,47 @@ export default function AddInterviewPage() {
       use24HourFormat.toString()
     );
   }, [use24HourFormat]);
+
+  const fetchInterviewers = async (searchQuery: string) => {
+    try {
+      setIsLoadingInterviewers(true);
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/filter-org-users`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            prefix: searchQuery,
+            limit: 10,
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/signin");
+        return;
+      }
+
+      if (!response.ok) throw new Error(t("common.serverError"));
+
+      const data = await response.json();
+      setInterviewerOptions(data);
+    } catch (err) {
+      console.error("Error fetching interviewers:", err);
+    } finally {
+      setIsLoadingInterviewers(false);
+    }
+  };
 
   const handleAddInterview = async () => {
     try {
@@ -128,6 +177,7 @@ export default function AddInterviewPage() {
             end_time: utcEndDate,
             interview_type: interview.type,
             description: interview.description,
+            interviewer_emails: interview.interviewers.map((i) => i.email),
           } satisfies AddInterviewRequest),
         }
       );
@@ -187,6 +237,31 @@ export default function AddInterviewPage() {
                 </MenuItem>
               </Select>
             </FormControl>
+
+            <Autocomplete
+              multiple
+              options={interviewerOptions}
+              getOptionLabel={(option) => `${option.name} (${option.email})`}
+              value={interview.interviewers}
+              onChange={(_, newValue) => {
+                if (newValue.length <= 5) {
+                  setInterview({
+                    ...interview,
+                    interviewers: newValue,
+                  });
+                }
+              }}
+              onInputChange={(_, value) => fetchInterviewers(value)}
+              loading={isLoadingInterviewers}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={t("interviews.interviewers")}
+                  helperText={t("interviews.maxInterviewers")}
+                  error={interview.interviewers.length > 5}
+                />
+              )}
+            />
 
             <FormControl fullWidth>
               <InputLabel>{t("interviews.timezone")}</InputLabel>
