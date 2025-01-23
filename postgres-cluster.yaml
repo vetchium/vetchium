@@ -3,12 +3,12 @@ kind: Cluster
 metadata:
   name: postgres
   namespace: vetchidev
-  labels:
-    app: postgres
 spec:
   instances: 3
   storage:
     size: 1Gi
+  monitoring:
+    enablePodMonitor: true
   inheritedMetadata:
     labels:
       app: postgres
