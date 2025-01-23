@@ -208,7 +208,7 @@ export default function FindOpeningsPage() {
           {searchResults.length > 0 ? (
             searchResults.map((opening) => (
               <Paper
-                key={opening.opening_id_within_company}
+                key={`${opening.company_domain}-${opening.opening_id_within_company}`}
                 sx={{
                   p: 2,
                   mb: 2,
