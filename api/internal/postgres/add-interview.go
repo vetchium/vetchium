@@ -6,6 +6,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) AddInterview(
@@ -18,12 +19,63 @@ func (p *PG) AddInterview(
 		return db.ErrInternal
 	}
 
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		p.log.Err("failed to begin transaction", "error", err)
+		return db.ErrInternal
+	}
+	defer tx.Rollback(ctx)
+
 	const (
 		statusNoCandidacy  = "no_candidacy"
 		statusInvalidState = "invalid_state"
 		statusOK           = "ok"
 	)
 
+	// First validate all interviewers exist and are in valid state
+	interviewerValidationQuery := `
+WITH valid_states AS (
+	SELECT ARRAY[
+		$1::org_user_states,
+		$2::org_user_states,
+		$3::org_user_states
+	] as states
+)
+SELECT COUNT(*) = $4::int
+FROM (
+	SELECT DISTINCT email 
+	FROM unnest($5::text[]) as emails(email)
+) as unique_emails
+WHERE EXISTS (
+	SELECT 1 
+	FROM org_users ou, valid_states vs
+	WHERE ou.email = unique_emails.email 
+	AND ou.employer_id = $6
+	AND ou.org_user_state = ANY(vs.states)
+)`
+
+	var allInterviewersValid bool
+	err = tx.QueryRow(
+		ctx,
+		interviewerValidationQuery,
+		string(employer.ActiveOrgUserState),
+		string(employer.AddedOrgUserState),
+		string(employer.ReplicatedOrgUserState),
+		len(req.InterviewerEmails),
+		req.InterviewerEmails,
+		orgUser.EmployerID,
+	).Scan(&allInterviewersValid)
+
+	if err != nil {
+		p.log.Err("failed to validate interviewers", "error", err)
+		return db.ErrInternal
+	}
+
+	if !allInterviewersValid {
+		return db.ErrNoOrgUser
+	}
+
+	// Now add the interview
 	query := `
 WITH candidacy_check AS (
 	SELECT
@@ -75,7 +127,7 @@ SELECT
 	)
 `
 	var result string
-	err := p.pool.QueryRow(
+	err = tx.QueryRow(
 		ctx,
 		query,
 		req.CandidacyID,                   // $1
@@ -103,7 +155,38 @@ SELECT
 		return db.ErrNoCandidacy
 	case statusInvalidState:
 		return db.ErrInvalidCandidacyState
-	default:
-		return nil
 	}
+
+	// Now add the interviewers
+	interviewerInsertQuery := `
+INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
+SELECT 
+	$1,
+	ou.id,
+	ou.employer_id,
+	$3::rsvp_status
+FROM org_users ou
+WHERE ou.email = ANY($2::text[])
+AND ou.employer_id = $4`
+
+	_, err = tx.Exec(
+		ctx,
+		interviewerInsertQuery,
+		req.InterviewID,
+		req.InterviewerEmails,
+		common.NotSetRSVP,
+		orgUser.EmployerID,
+	)
+	if err != nil {
+		p.log.Err("failed to add interviewers", "error", err)
+		return db.ErrInternal
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
+		return db.ErrInternal
+	}
+
+	return nil
 }

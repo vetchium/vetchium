@@ -9,6 +9,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
@@ -27,6 +28,14 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 			return
 		}
 		h.Dbg("validated", "addInterviewReq", addInterviewReq)
+
+		if len(addInterviewReq.InterviewerEmails) > 5 {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(common.ValidationErrors{
+				Errors: []string{"interviewer_emails"},
+			})
+			return
+		}
 
 		interviewID := util.RandomUniqueID(vetchi.InterviewIDLenBytes)
 

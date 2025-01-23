@@ -32,6 +32,7 @@ export interface AddInterviewRequest {
   end_time: Date;
   interview_type: InterviewType;
   description?: string;
+  interviewer_emails?: string[];
 }
 
 export interface AddInterviewResponse {

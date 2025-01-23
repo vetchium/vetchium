@@ -57,6 +57,11 @@ model AddInterviewRequest {
     @maxLength(2048)
     description: string;
 
+    @doc("Emails of the interviewers. These users should be orgusers of the employer.")
+    @minItems(0)
+    @maxItems(5)
+    interviewer_emails?: string[];
+
     // TODO: Perhaps should not allow more than 25 interviews per Candidacy
 }
 
