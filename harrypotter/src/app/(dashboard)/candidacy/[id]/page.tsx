@@ -1,66 +1,49 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-  Divider,
-  Link,
-  CircularProgress,
-  IconButton,
+  ExpandMore as ExpandMoreIcon,
+  OpenInNew as OpenInNewIcon,
+} from "@mui/icons-material";
+import {
   Avatar,
+  Box,
+  Button,
   Chip,
+  CircularProgress,
+  Collapse,
+  Divider,
+  IconButton,
+  Link,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  FormControlLabel,
-  Switch,
-  Collapse,
+  TextField,
+  Typography,
 } from "@mui/material";
 import {
-  OpenInNew as OpenInNewIcon,
-  ExpandMore as ExpandMoreIcon,
-} from "@mui/icons-material";
-import { useTranslation } from "@/hooks/useTranslation";
-import {
-  GetCandidacyInfoRequest,
-  GetCandidacyCommentsRequest,
   Candidacy,
   CandidacyComment,
   CandidacyState,
   CandidacyStates,
+  GetCandidacyCommentsRequest,
+  GetCandidacyInfoRequest,
+  GetHubInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
   HubInterview as Interview,
-  InterviewType,
-  InterviewTypes,
   InterviewState,
   InterviewStates,
-  GetHubInterviewsByCandidacyRequest as GetInterviewsByCandidacyRequest,
-  AddInterviewRequest,
+  InterviewType,
+  InterviewTypes,
   TimeZone,
   validTimezones,
 } from "@psankar/vetchi-typespec";
 import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
-import { config } from "@/config";
 import Cookies from "js-cookie";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function CandidacyStateLabel({
   state,
@@ -142,7 +125,6 @@ export default function CandidacyDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
-  const [openAddInterview, setOpenAddInterview] = useState(false);
   const [showInterviews, setShowInterviews] = useState(true);
   const [expandedInterviews, setExpandedInterviews] = useState<
     Record<string, boolean>
@@ -347,64 +329,6 @@ export default function CandidacyDetailPage() {
     }
   };
 
-  const handleAddInterview = async () => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      // Convert local times to UTC for API
-      const startDate = new Date(newInterview.startTime);
-      const endDate = new Date(newInterview.endTime);
-
-      // Get timezone offset from selected timezone
-      const tzMatch = newInterview.timezone.match(/GMT([+-]\d{4})/);
-      const tzOffset = tzMatch ? tzMatch[1] : "+0000";
-      const tzHours = parseInt(tzOffset.slice(1, 3));
-      const tzMinutes = parseInt(tzOffset.slice(3));
-      const offsetMillis =
-        (tzHours * 60 + tzMinutes) * 60 * 1000 * (tzOffset[0] === "+" ? -1 : 1);
-
-      // Adjust dates to UTC
-      const utcStartDate = new Date(startDate.getTime() + offsetMillis);
-      const utcEndDate = new Date(endDate.getTime() + offsetMillis);
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/add-interview`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            candidacy_id: candidacyId,
-            start_time: utcStartDate,
-            end_time: utcEndDate,
-            interview_type: newInterview.type,
-            description: newInterview.description,
-          } satisfies AddInterviewRequest),
-        }
-      );
-
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
-      }
-
-      if (!response.ok) throw new Error(t("interviews.addError"));
-
-      setOpenAddInterview(false);
-      resetInterviewForm();
-      await fetchData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.serverError"));
-    }
-  };
-
   // Fetch data on mount
   useEffect(() => {
     fetchData();
@@ -501,7 +425,9 @@ export default function CandidacyDetailPage() {
           <Box sx={{ flex: 1 }} />
           <Button
             variant="contained"
-            onClick={() => setOpenAddInterview(true)}
+            onClick={() =>
+              router.push(`/candidacy/${candidacyId}/add-interview`)
+            }
             size="small"
           >
             {t("interviews.addNew")}
@@ -714,191 +640,6 @@ export default function CandidacyDetailPage() {
           </Box>
         </Collapse>
       </Paper>
-
-      {/* Add Interview Dialog */}
-      <Dialog
-        open={openAddInterview}
-        onClose={() => setOpenAddInterview(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("interviews.addNew")}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <FormControl fullWidth>
-              <InputLabel>{t("interviews.type")}</InputLabel>
-              <Select
-                value={newInterview.type}
-                label={t("interviews.type")}
-                onChange={(e) =>
-                  setNewInterview({
-                    ...newInterview,
-                    type: e.target.value as InterviewType,
-                  })
-                }
-              >
-                <MenuItem value={InterviewTypes.VIDEO_CALL}>
-                  {t("interviews.types.VIDEO_CALL")}
-                </MenuItem>
-                <MenuItem value={InterviewTypes.IN_PERSON}>
-                  {t("interviews.types.IN_PERSON")}
-                </MenuItem>
-                <MenuItem value={InterviewTypes.TAKE_HOME}>
-                  {t("interviews.types.TAKE_HOME")}
-                </MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>{t("interviews.timezone")}</InputLabel>
-              <Select
-                value={newInterview.timezone}
-                label={t("interviews.timezone")}
-                onChange={(e) =>
-                  setNewInterview({
-                    ...newInterview,
-                    timezone: e.target.value as TimeZone,
-                  })
-                }
-              >
-                {Array.from(validTimezones).map((tz) => (
-                  <MenuItem key={tz} value={tz}>
-                    {tz}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={allowPastDates}
-                  onChange={(e) => setAllowPastDates(e.target.checked)}
-                />
-              }
-              label={t("interviews.allowPastDates")}
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={use24HourFormat}
-                  onChange={(e) => setUse24HourFormat(e.target.checked)}
-                />
-              }
-              label={t("interviews.use24HourFormat")}
-            />
-
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DateTimePicker
-                label={t("interviews.startTime")}
-                value={
-                  newInterview.startTime
-                    ? new Date(newInterview.startTime)
-                    : null
-                }
-                onChange={(newValue: Date | null) => {
-                  if (newValue) {
-                    const startDate = newValue;
-                    // Set end time to 1 hour after start time
-                    const endDate = new Date(startDate);
-                    endDate.setHours(startDate.getHours() + 1);
-
-                    setNewInterview({
-                      ...newInterview,
-                      startTime: startDate.toISOString(),
-                      endTime: endDate.toISOString(),
-                    });
-                  }
-                }}
-                views={["year", "month", "day", "hours", "minutes"]}
-                ampm={!use24HourFormat}
-                format={
-                  use24HourFormat
-                    ? "MMMM dd, yyyy HH:mm"
-                    : "MMMM dd, yyyy hh:mm a"
-                }
-                minDateTime={allowPastDates ? undefined : new Date()}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                  },
-                }}
-              />
-
-              <DateTimePicker
-                label={t("interviews.endTime")}
-                value={
-                  newInterview.endTime ? new Date(newInterview.endTime) : null
-                }
-                onChange={(newValue: Date | null) => {
-                  if (newValue) {
-                    // Only update if end time is after start time
-                    if (
-                      newInterview.startTime &&
-                      new Date(newValue) <= new Date(newInterview.startTime)
-                    ) {
-                      setError(t("interviews.endTimeBeforeStart"));
-                      return;
-                    }
-                    setNewInterview({
-                      ...newInterview,
-                      endTime: newValue.toISOString(),
-                    });
-                  }
-                }}
-                views={["year", "month", "day", "hours", "minutes"]}
-                ampm={!use24HourFormat}
-                format={
-                  use24HourFormat
-                    ? "MMMM dd, yyyy HH:mm"
-                    : "MMMM dd, yyyy hh:mm a"
-                }
-                minDateTime={
-                  newInterview.startTime
-                    ? new Date(newInterview.startTime)
-                    : undefined
-                }
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                  },
-                }}
-              />
-            </LocalizationProvider>
-
-            <TextField
-              label={t("interviews.description")}
-              multiline
-              rows={4}
-              value={newInterview.description}
-              onChange={(e) =>
-                setNewInterview({
-                  ...newInterview,
-                  description: e.target.value,
-                })
-              }
-              fullWidth
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAddInterview(false)}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            onClick={handleAddInterview}
-            variant="contained"
-            disabled={
-              !newInterview.startTime ||
-              !newInterview.endTime ||
-              !newInterview.description
-            }
-          >
-            {t("common.add")}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
