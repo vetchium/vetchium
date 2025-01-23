@@ -103,10 +103,13 @@ export const en = {
     home: "Home",
     findOpenings: "Find Openings",
     myApplications: "My Applications",
+    myCandidacies: "My Candidacies",
   },
   candidacies: {
     viewCandidacy: "View Candidacy",
+    viewDetails: "View candidacy details",
     fetchError: "Failed to load candidacy details",
+    noCandidacies: "You don't have any candidacies yet",
     states: {
       INTERVIEWING: "Interviewing",
       OFFERED: "Offered",

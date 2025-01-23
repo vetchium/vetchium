@@ -11,7 +11,9 @@ import ListItemText from "@mui/material/ListItemText";
 import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const drawerWidth = 240;
 
@@ -28,17 +30,23 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { text: "Home", icon: <HomeIcon />, path: "/" },
-  { text: "Find Openings", icon: <SearchIcon />, path: "/find-openings" },
+  { text: "home", icon: <HomeIcon />, path: "/" },
+  { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
   {
-    text: "My Applications",
+    text: "myApplications",
     icon: <AssignmentIcon />,
     path: "/my-applications",
+  },
+  {
+    text: "myCandidacies",
+    icon: <FolderSpecialIcon />,
+    path: "/my-candidacies",
   },
 ];
 
 export default function Sidebar({ open }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <Drawer
@@ -88,7 +96,7 @@ export default function Sidebar({ open }: SidebarProps) {
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.text}
+                  primary={t(`navigation.${item.text}`)}
                   sx={{
                     opacity: open ? 1 : 0,
                     whiteSpace: "nowrap",
