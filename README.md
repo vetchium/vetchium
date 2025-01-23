@@ -26,7 +26,7 @@ vetchi $ cd ronweasly && npm install && npm run dev
 vetchi $ # Visit http://localhost:3000 and http://localhost:3001
 
 vetchi $ # Seed some test data
-vetchi $ make dev-seed  # tilt up should be running
+vetchi $ make seed  # tilt up should be running
 ```
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
