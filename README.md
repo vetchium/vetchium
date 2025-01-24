@@ -26,14 +26,18 @@ vetchi $ # Seed some test data
 vetchi $ make seed  # tilt up should be running
 ```
 
+```
 http://localhost:3000 contains the Employer site. Login with:
 domain: gryffindor.example
 username: hermione@gryffindor.example (or) admin@gryffindor.example
 password: NewPassword123$
+```
 
+```
 http://localhost:3001 contains the Hub site. Login with:
 user: hagrid@hub.example (or) minerva@hub.example
 password: NewPassword123$
+```
 
 * Any Openings created on the Employer site should be available on the Hub site for Users to Find Opening and Apply
 * Any Applications made on Hub site should be available for the Employer to either Shortlist or Reject
