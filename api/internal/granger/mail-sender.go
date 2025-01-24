@@ -64,7 +64,7 @@ func (g *Granger) sendEmail(email db.Email) error {
 	}
 
 	if err = m.To(email.EmailTo...); err != nil {
-		g.log.Err("failed to set To address", "error", err)
+		g.log.Err("failed to set To address", "error", err, "mail", email)
 		return err
 	}
 
