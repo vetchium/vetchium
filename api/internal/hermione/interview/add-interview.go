@@ -3,9 +3,12 @@ package interview
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -39,9 +42,95 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 
 		interviewID := util.RandomUniqueID(vetchi.InterviewIDLenBytes)
 
-		err := h.DB().AddInterview(r.Context(), db.AddInterviewRequest{
-			AddInterviewRequest: addInterviewReq,
-			InterviewID:         interviewID,
+		orgUser, ok := r.Context().Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+		if !ok {
+			h.Err("failed to get orgUser from context")
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		// Prepare email notifications
+		var interviewerNotification, watcherNotification, applicantNotification db.Email
+		var err error
+
+		// Prepare applicant notification
+		emailArgs := map[string]string{
+			"InterviewURL":    "TODO",
+			"InterviewType":   string(addInterviewReq.InterviewType),
+			"StartTime":       addInterviewReq.StartTime.String(),
+			"EndTime":         addInterviewReq.EndTime.String(),
+			"Description":     addInterviewReq.Description,
+			"InterviewerName": orgUser.Name,
+		}
+
+		if len(addInterviewReq.InterviewerEmails) > 0 {
+			// We'll get the actual names from the database during the transaction
+			emailArgs["Interviewers"] = "Your interviewers will be: " +
+				"[Interviewer names will be added during the transaction]"
+		}
+
+		applicantNotification, err = h.Hedwig().
+			GenerateEmail(hedwig.GenerateEmailReq{
+				TemplateName: hedwig.NotifyApplicantInterview,
+				Args:         emailArgs,
+				EmailFrom:    vetchi.EmailFrom,
+				Subject:      "Interview Scheduled",
+			})
+		if err != nil {
+			h.Dbg("generating applicant email failed", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		if len(addInterviewReq.InterviewerEmails) > 0 {
+			interviewerNotification, err = h.Hedwig().
+				GenerateEmail(hedwig.GenerateEmailReq{
+					TemplateName: hedwig.NotifyNewInterviewer,
+					Args: map[string]string{
+						"InterviewURL": "TODO",
+					},
+					EmailFrom: vetchi.EmailFrom,
+					EmailTo:   addInterviewReq.InterviewerEmails,
+					Subject:   "Added as an Interviewer",
+				})
+			if err != nil {
+				h.Dbg("generating interviewer email failed", "error", err)
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
+
+			watcherNotification, err = h.Hedwig().
+				GenerateEmail(hedwig.GenerateEmailReq{
+					TemplateName: hedwig.NotifyWatchersNewInterviewer,
+					Args: map[string]string{
+						"InterviewURL": "TODO",
+					},
+					EmailFrom: vetchi.EmailFrom,
+					EmailTo: []string{
+						orgUser.Email,
+					}, // TODO: Add other watchers
+					Subject: "New Interviewer Added",
+				})
+			if err != nil {
+				h.Dbg("generating watcher email failed", "error", err)
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		candidacyComment := fmt.Sprintf(
+			"%s scheduled a new interview of type %s TODO: i18n",
+			orgUser.Name,
+			addInterviewReq.InterviewType,
+		)
+
+		err = h.DB().AddInterview(r.Context(), db.AddInterviewRequest{
+			AddInterviewRequest:          addInterviewReq,
+			InterviewID:                  interviewID,
+			InterviewerNotificationEmail: interviewerNotification,
+			WatcherNotificationEmail:     watcherNotification,
+			ApplicantNotificationEmail:   applicantNotification,
+			CandidacyComment:             candidacyComment,
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoCandidacy) {

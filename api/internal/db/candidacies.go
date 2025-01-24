@@ -26,4 +26,12 @@ type WatchersInfo struct {
 type AddInterviewRequest struct {
 	employer.AddInterviewRequest
 	InterviewID string
+
+	InterviewerNotificationEmail Email
+	WatcherNotificationEmail     Email
+	ApplicantNotificationEmail   Email
+	CandidacyComment             string
+
+	// Names of interviewers, used for applicant notification
+	InterviewerNames []string
 }

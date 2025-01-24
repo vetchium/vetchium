@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
@@ -74,6 +75,63 @@ WHERE EXISTS (
 	if !allInterviewersValid {
 		return db.ErrNoOrgUser
 	}
+
+	// Get applicant's email
+	var applicantEmail string
+	err = tx.QueryRow(
+		ctx,
+		`
+		SELECT hu.email
+		FROM candidacies c
+		JOIN applications a ON c.application_id = a.id
+		JOIN hub_users hu ON a.hub_user_id = hu.id
+		WHERE c.id = $1 AND c.employer_id = $2
+		`,
+		req.CandidacyID,
+		orgUser.EmployerID,
+	).Scan(&applicantEmail)
+	if err != nil {
+		p.log.Err("failed to get applicant email", "error", err)
+		return db.ErrInternal
+	}
+
+	// Get interviewer names if any
+	var interviewerNames []string
+	if len(req.InterviewerEmails) > 0 {
+		rows, err := tx.Query(
+			ctx,
+			`
+			SELECT name
+			FROM org_users
+			WHERE email = ANY($1::text[])
+			AND employer_id = $2
+			ORDER BY name
+			`,
+			req.InterviewerEmails,
+			orgUser.EmployerID,
+		)
+		if err != nil {
+			p.log.Err("failed to get interviewer names", "error", err)
+			return db.ErrInternal
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err != nil {
+				p.log.Err("failed to scan interviewer name", "error", err)
+				return db.ErrInternal
+			}
+			interviewerNames = append(interviewerNames, name)
+		}
+		if err := rows.Err(); err != nil {
+			p.log.Err("failed to iterate over interviewer names", "error", err)
+			return db.ErrInternal
+		}
+	}
+
+	// Update the request with interviewer names
+	req.InterviewerNames = interviewerNames
 
 	// Now add the interview
 	query := `
@@ -180,6 +238,100 @@ AND ou.employer_id = $4`
 	if err != nil {
 		p.log.Err("failed to add interviewers", "error", err)
 		return db.ErrInternal
+	}
+
+	// Insert candidacy comment
+	if req.CandidacyComment != "" {
+		_, err = tx.Exec(
+			ctx,
+			`
+			INSERT INTO candidacy_comments (
+				author_type,
+				org_user_id,
+				comment_text,
+				created_at,
+				candidacy_id,
+				employer_id
+			) SELECT 
+				$1,
+				$2,
+				$3,
+				timezone('UTC', now()),
+				$4,
+				$5
+			`,
+			string(db.OrgUserAuthorType),
+			orgUser.ID,
+			req.CandidacyComment,
+			req.CandidacyID,
+			orgUser.EmployerID,
+		)
+		if err != nil {
+			p.log.Err("failed to insert comment", "error", err)
+			return db.ErrInternal
+		}
+	}
+
+	// Insert email notifications
+	emailQuery := `
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state)
+    VALUES ($1, $2, $3, $4, $5, $6)`
+
+	// Update applicant notification with actual interviewer names
+	if len(interviewerNames) > 0 {
+		req.ApplicantNotificationEmail.EmailHTMLBody = strings.Replace(
+			req.ApplicantNotificationEmail.EmailHTMLBody,
+			"[Interviewer names will be added during the transaction]",
+			strings.Join(interviewerNames, ", "),
+			1,
+		)
+		req.ApplicantNotificationEmail.EmailTextBody = strings.Replace(
+			req.ApplicantNotificationEmail.EmailTextBody,
+			"[Interviewer names will be added during the transaction]",
+			strings.Join(interviewerNames, ", "),
+			1,
+		)
+	}
+
+	// Insert applicant notification
+	_, err = tx.Exec(
+		ctx,
+		emailQuery,
+		req.ApplicantNotificationEmail.EmailFrom,
+		[]string{applicantEmail},
+		req.ApplicantNotificationEmail.EmailSubject,
+		req.ApplicantNotificationEmail.EmailHTMLBody,
+		req.ApplicantNotificationEmail.EmailTextBody,
+		req.ApplicantNotificationEmail.EmailState,
+	)
+	if err != nil {
+		p.log.Err("failed to insert applicant email", "error", err)
+		return db.ErrInternal
+	}
+
+	// Insert interviewer and watcher notifications if there are interviewers
+	if len(req.InterviewerEmails) > 0 {
+		_, err = tx.Exec(
+			ctx,
+			emailQuery+", ($7, $8, $9, $10, $11, $12)",
+			req.InterviewerNotificationEmail.EmailFrom,
+			req.InterviewerNotificationEmail.EmailTo,
+			req.InterviewerNotificationEmail.EmailSubject,
+			req.InterviewerNotificationEmail.EmailHTMLBody,
+			req.InterviewerNotificationEmail.EmailTextBody,
+			req.InterviewerNotificationEmail.EmailState,
+			// -- End of interviewer notification email
+			req.WatcherNotificationEmail.EmailFrom,
+			req.WatcherNotificationEmail.EmailTo,
+			req.WatcherNotificationEmail.EmailSubject,
+			req.WatcherNotificationEmail.EmailHTMLBody,
+			req.WatcherNotificationEmail.EmailTextBody,
+			req.WatcherNotificationEmail.EmailState,
+		)
+		if err != nil {
+			p.log.Err("failed to insert email", "error", err)
+			return db.ErrInternal
+		}
 	}
 
 	err = tx.Commit(ctx)

@@ -1,0 +1,18 @@
+Hello,
+
+An interview has been scheduled for you.
+
+Interview Details:
+- Type: {{.InterviewType}}
+- Start Time: {{.StartTime}}
+- End Time: {{.EndTime}}
+- Description: {{.Description}}
+- Scheduled by: {{.InterviewerName}}
+{{if .Interviewers}}
+- {{.Interviewers}}
+{{end}}
+
+You can view more details and manage your interview at: {{.InterviewURL}}
+
+Best regards,
+Vetchi Team 
