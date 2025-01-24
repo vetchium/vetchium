@@ -13,11 +13,8 @@
 
 To bring the services up, run the following commands:
 ```
-vetchi $ # Setup any Kubernetes cluster (docker desktop, kind, etc.) and make kubectl point to it
-vetchi $ kubectl create namespace vetchidev
-
 vetchi $ # Bring up the backend services 
-vetchi $ tilt up
+vetchi $ make
 vetchi $ # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 
 vetchi $ # Bring up the frontend services
@@ -28,6 +25,19 @@ vetchi $ # Visit http://localhost:3000 and http://localhost:3001
 vetchi $ # Seed some test data
 vetchi $ make seed  # tilt up should be running
 ```
+
+http://localhost:3000 contains the Employer site. Login with:
+domain: gryffindor.example
+username: hermione@gryffindor.example (or) admin@gryffindor.example
+password: NewPassword123$
+
+http://localhost:3001 contains the Hub site. Login with:
+user: hagrid@hub.example (or) minerva@hub.example
+password: NewPassword123$
+
+* Any Openings created on the Employer site should be available on the Hub site for Users to Find Opening and Apply
+* Any Applications made on Hub site should be available for the Employer to either Shortlist or Reject
+* Any shortlisted application will become a Candidacy which both the Employer and Hub User can use for further communication. The url for the candidacy will be in the mail at http://localhost:8025 
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 ```
@@ -69,6 +79,7 @@ Following are some rules that you should follow while working on the code. It is
 
 #### Backend
 - Readability > Scalability > Performance. Optimise in this order.
+- We are a simple CRUD application that just needs to scale well. No need for anything fancy. Use boring, stable, battle-tested technologies. Try to keep things simple but do not make anything that would be impossible to scale later without a lot of rework. An example of this is: We chose postgres and neither sqlite (difficult to scale later for multiple machines) nor spanner (huh !?)
 - Do not use fancy algorithms. Use simple and scalable solutions.
 - Do not use ORMs. Do not fear SQL.
 - Do not introduce a caching layer (like Redis or within the Golang handlers) for any data that has a strong consistency requirement. Rely on database indexes and query tuning for performance. It is okay to put a lot of load on the database. It is easier to scale a single ACID compliant database layer (either vertically or horizontally) than debug a problem across multiple caching layers.
