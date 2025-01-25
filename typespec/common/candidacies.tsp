@@ -18,10 +18,15 @@ model GetCandidacyCommentsRequest {
     // TODO: Should we paginate ?
 }
 
+union CommenterType {
+    ORG_USER: "ORG_USER",
+    HUB_USER: "HUB_USER",
+}
+
 model CandidacyComment {
     commentID: string;
     commenterName: string;
-    commenterType: string;
+    commenterType: CommenterType;
     content: string;
     createdAt: utcDateTime;
 }

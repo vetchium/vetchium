@@ -132,8 +132,17 @@ export const en = {
     noInterviews: "No interviews scheduled",
     fetchError: "Failed to load interviews",
     timeRange: "{start} - {end}",
+    timezone: "Timezone: {zone}",
     interviewers: "Interviewers",
+    noInterviewers: "No interviewers assigned",
     endTime: "End Time",
+    details: "Interview Details",
+    yourRSVP: "Your RSVP Status",
+    rsvp: {
+      yes: "Accept",
+      no: "Decline",
+    },
+    rsvpError: "Failed to update RSVP status",
     states: {
       SCHEDULED_INTERVIEW: "Scheduled",
       COMPLETED_INTERVIEW: "Completed",

@@ -17,9 +17,16 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  ButtonGroup,
 } from "@mui/material";
-import { OpenInNew as OpenInNewIcon } from "@mui/icons-material";
-import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import {
+  OpenInNew as OpenInNewIcon,
+  ExpandMore as ExpandMoreIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  HelpOutline as HelpOutlineIcon,
+  Person as PersonIcon,
+} from "@mui/icons-material";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   GetCandidacyInfoRequest,
@@ -34,10 +41,26 @@ import {
   InterviewType,
   InterviewStates,
   InterviewTypes,
+  CommenterTypes,
+  RSVPStatus,
+  RSVPInterviewRequest,
+  RSVPStatuses,
 } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+
+// Helper function for consistent date formatting
+const formatDateTime = (
+  date: string | Date,
+  options?: Intl.DateTimeFormatOptions
+) => {
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: "full",
+    timeStyle: "short",
+  };
+  return new Date(date).toLocaleString(undefined, options || defaultOptions);
+};
 
 function CandidacyStateLabel({
   state,
@@ -75,6 +98,18 @@ function CandidacyStateLabel({
     <Chip label={t(`candidacies.states.${state}`)} color={color} size="small" />
   );
 }
+
+const RSVPStatusIcon = ({ status }: { status: RSVPStatus }) => {
+  switch (status) {
+    case RSVPStatuses.YES:
+      return <CheckCircleIcon color="success" />;
+    case RSVPStatuses.NO:
+      return <CancelIcon color="error" />;
+    case RSVPStatuses.NOT_SET:
+    default:
+      return null;
+  }
+};
 
 export default function CandidacyDetailPage() {
   const params = useParams();
@@ -239,6 +274,47 @@ export default function CandidacyDetailPage() {
     }
   };
 
+  // Add RSVP mutation function
+  const handleRSVP = async (interviewId: string, status: RSVPStatus) => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/rsvp-interview`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            interview_id: interviewId,
+            rsvp_status: status,
+          } as RSVPInterviewRequest),
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) throw new Error(t("interviews.rsvpError"));
+
+      // Refresh interviews after successful RSVP
+      await fetchInterviews();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
+    }
+  };
+
   // Fetch data on mount
   useEffect(() => {
     fetchData();
@@ -399,127 +475,185 @@ export default function CandidacyDetailPage() {
                             }}
                           >
                             <Typography variant="body1" color="text.secondary">
-                              {new Date(interview.start_time).toLocaleString(
-                                "default",
-                                {
-                                  weekday: "short",
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
+                              {formatDateTime(interview.start_time, {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </Typography>
                             <Typography
                               variant="subtitle1"
                               sx={{ fontWeight: 500, color: "primary.main" }}
                             >
-                              {new Date(
-                                interview.start_time
-                              ).toLocaleTimeString("default", {
+                              {formatDateTime(interview.start_time, {
                                 hour: "2-digit",
                                 minute: "2-digit",
-                                hour12: undefined,
                               })}
                             </Typography>
                           </Box>
-                          <Chip
-                            label={getInterviewStateLabel(
-                              interview.interview_state
-                            )}
-                            color={getInterviewStateColor(
-                              interview.interview_state
-                            )}
-                            size="small"
-                            sx={{ ml: 2 }}
-                          />
-                        </Box>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Box>
-                          <Typography variant="subtitle1" gutterBottom>
-                            {getInterviewTypeLabel(interview.interview_type)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {t("interviews.timeRange", {
-                              start: new Date(
-                                interview.start_time
-                              ).toLocaleString("default", {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: undefined,
-                              }),
-                              end: new Date(interview.end_time).toLocaleString(
-                                "default",
-                                {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: undefined,
-                                }
-                              ),
-                            })}
-                          </Typography>
-                          {interview.description && (
-                            <Typography variant="body2" sx={{ mt: 2 }}>
-                              {interview.description}
-                            </Typography>
-                          )}
-                          {interview.interviewers &&
-                            interview.interviewers.length > 0 && (
-                              <Box sx={{ mt: 2 }}>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {t("interviews.interviewers")}:{" "}
-                                  {interview.interviewers.join(", ")}
-                                </Typography>
-                              </Box>
-                            )}
-                        </Box>
-                        <Box sx={{ mb: 3 }}>
                           <Box
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
+                              gap: 2,
                             }}
                           >
+                            <Chip
+                              label={getInterviewTypeLabel(
+                                interview.interview_type
+                              )}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                            <Chip
+                              label={getInterviewStateLabel(
+                                interview.interview_state
+                              )}
+                              color={getInterviewStateColor(
+                                interview.interview_state
+                              )}
+                              size="small"
+                            />
+                          </Box>
+                        </Box>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                          }}
+                        >
+                          {/* Interview Details */}
+                          <Box>
+                            <Typography variant="subtitle1" gutterBottom>
+                              {t("interviews.details")}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              paragraph
+                            >
+                              {interview.description}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {t("interviews.timeRange", {
+                                start: formatDateTime(interview.start_time),
+                                end: formatDateTime(interview.end_time),
+                              })}
+                            </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
+                              sx={{ mt: 1, display: "block" }}
                             >
-                              {t("interviews.endTime")}
-                            </Typography>
-                            <Typography>
-                              {new Date(interview.end_time).toLocaleString(
-                                "default",
-                                {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: undefined,
-                                }
-                              )}
+                              {t("interviews.timezone", {
+                                zone: Intl.DateTimeFormat().resolvedOptions()
+                                  .timeZone,
+                              })}
                             </Typography>
                           </Box>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ mt: 0.5, display: "block" }}
-                          >
-                            {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                          </Typography>
+
+                          {/* RSVP Section */}
+                          <Box>
+                            <Typography variant="subtitle1" gutterBottom>
+                              {t("interviews.yourRSVP")}
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
+                            >
+                              <RSVPStatusIcon
+                                status={interview.candidate_rsvp_status}
+                              />
+                              {interview.interview_state ===
+                                InterviewStates.SCHEDULED_INTERVIEW && (
+                                <ButtonGroup size="small">
+                                  <Button
+                                    variant={
+                                      interview.candidate_rsvp_status ===
+                                      RSVPStatuses.YES
+                                        ? "contained"
+                                        : "outlined"
+                                    }
+                                    onClick={() =>
+                                      handleRSVP(
+                                        interview.interview_id,
+                                        RSVPStatuses.YES
+                                      )
+                                    }
+                                    color="success"
+                                  >
+                                    {t("interviews.rsvp.yes")}
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      interview.candidate_rsvp_status ===
+                                      RSVPStatuses.NO
+                                        ? "contained"
+                                        : "outlined"
+                                    }
+                                    onClick={() =>
+                                      handleRSVP(
+                                        interview.interview_id,
+                                        RSVPStatuses.NO
+                                      )
+                                    }
+                                    color="error"
+                                  >
+                                    {t("interviews.rsvp.no")}
+                                  </Button>
+                                </ButtonGroup>
+                              )}
+                            </Box>
+                          </Box>
+
+                          {/* Interviewers Section */}
+                          <Box>
+                            <Typography variant="subtitle1" gutterBottom>
+                              {t("interviews.interviewers")}
+                            </Typography>
+                            <Box
+                              sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                            >
+                              {interview.interviewers &&
+                              interview.interviewers.length > 0 ? (
+                                interview.interviewers.map(
+                                  (interviewer, index) => (
+                                    <Chip
+                                      key={index}
+                                      icon={<PersonIcon />}
+                                      label={
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                          }}
+                                        >
+                                          <span>{interviewer.name}</span>
+                                          <RSVPStatusIcon
+                                            status={interviewer.rsvp_status}
+                                          />
+                                        </Box>
+                                      }
+                                      variant="outlined"
+                                    />
+                                  )
+                                )
+                              ) : (
+                                <Typography color="text.secondary">
+                                  {t("interviews.noInterviewers")}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
                         </Box>
                       </AccordionDetails>
                     </Accordion>
@@ -553,7 +687,7 @@ export default function CandidacyDetailPage() {
                           gap: 2,
                           mb: 3,
                           flexDirection:
-                            comment.commenter_type === "ORG_USER"
+                            comment.commenter_type === CommenterTypes.ORG_USER
                               ? "row"
                               : "row-reverse",
                         }}
@@ -563,7 +697,7 @@ export default function CandidacyDetailPage() {
                             width: 40,
                             height: 40,
                             bgcolor: (theme) =>
-                              comment.commenter_type === "ORG_USER"
+                              comment.commenter_type === CommenterTypes.ORG_USER
                                 ? theme.palette.primary.main
                                 : theme.palette.grey[400],
                           }}
@@ -581,7 +715,8 @@ export default function CandidacyDetailPage() {
                               "&::before": {
                                 content: '""',
                                 position: "absolute",
-                                ...(comment.commenter_type === "ORG_USER"
+                                ...(comment.commenter_type ===
+                                CommenterTypes.ORG_USER
                                   ? {
                                       left: -8,
                                       borderRight: (theme) =>
@@ -613,7 +748,8 @@ export default function CandidacyDetailPage() {
                                 sx={{
                                   fontWeight: "bold",
                                   color: (theme) =>
-                                    comment.commenter_type === "ORG_USER"
+                                    comment.commenter_type ===
+                                    CommenterTypes.ORG_USER
                                       ? theme.palette.primary.main
                                       : theme.palette.text.primary,
                                 }}
