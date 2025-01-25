@@ -257,7 +257,7 @@ var _ = Describe("Interviews", Ordered, func() {
 			// 8. Hub user RSVP
 			rsvpReq := hub.HubRSVPInterviewRequest{
 				InterviewID: addInterviewResp.InterviewID,
-				RSVP:        common.YesRSVP,
+				RSVPStatus:  common.YesRSVP,
 			}
 
 			reqBody, err = json.Marshal(rsvpReq)
