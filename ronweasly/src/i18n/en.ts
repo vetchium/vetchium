@@ -7,6 +7,7 @@ export const en = {
     verify: "Verify",
     search: "Search",
     loading: "Loading...",
+    cancel: "Cancel",
     error: {
       notAuthenticated: "Not authenticated. Please log in again.",
       sessionExpired: "Session expired. Please log in again.",
@@ -141,6 +142,16 @@ export const en = {
     rsvp: {
       yes: "Accept",
       no: "Decline",
+      confirmYes: "Accept Interview",
+      confirmNo: "Decline Interview",
+      confirmYesMessage:
+        "Are you sure you want to accept this interview? The employer will be notified of your response.",
+      confirmNoMessage:
+        "Are you sure you want to decline this interview? The employer will be notified of your response.",
+      confirmChangeYesMessage:
+        "Are you sure you want to change your response to accept? The employer will be notified of this change.",
+      confirmChangeNoMessage:
+        "Are you sure you want to change your response to decline? The employer will be notified of this change.",
     },
     rsvpError: "Failed to update RSVP status",
     states: {

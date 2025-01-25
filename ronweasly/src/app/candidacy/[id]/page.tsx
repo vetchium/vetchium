@@ -18,6 +18,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   OpenInNew as OpenInNewIcon,
@@ -123,6 +127,16 @@ export default function CandidacyDetailPage() {
   const [interviews, setInterviews] = useState<HubInterview[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    interviewId: string;
+    status: RSVPStatus;
+  }>({
+    open: false,
+    interviewId: "",
+    status: RSVPStatuses.NOT_SET,
+  });
 
   // Fetch candidacy info and comments
   const fetchData = async () => {
@@ -274,9 +288,28 @@ export default function CandidacyDetailPage() {
     }
   };
 
+  const handleRSVPClick = (
+    interviewId: string,
+    status: RSVPStatus,
+    currentStatus: RSVPStatus
+  ) => {
+    // Always show confirmation dialog when changing status
+    setConfirmDialog({
+      open: true,
+      interviewId,
+      status,
+    });
+  };
+
+  const handleConfirmRSVP = () => {
+    handleRSVP(confirmDialog.interviewId, confirmDialog.status);
+    setConfirmDialog((prev) => ({ ...prev, open: false }));
+  };
+
   // Add RSVP mutation function
   const handleRSVP = async (interviewId: string, status: RSVPStatus) => {
     try {
+      setRsvpLoading(interviewId);
       const token = Cookies.get("session_token");
       if (!token) {
         router.push("/login");
@@ -314,6 +347,8 @@ export default function CandidacyDetailPage() {
       setError(
         err instanceof Error ? err.message : t("common.error.serverError")
       );
+    } finally {
+      setRsvpLoading(null);
     }
   };
 
@@ -585,12 +620,39 @@ export default function CandidacyDetailPage() {
                                         : "outlined"
                                     }
                                     onClick={() =>
-                                      handleRSVP(
+                                      handleRSVPClick(
                                         interview.interview_id,
-                                        RSVPStatuses.YES
+                                        RSVPStatuses.YES,
+                                        interview.candidate_rsvp_status
                                       )
                                     }
                                     color="success"
+                                    disabled={
+                                      rsvpLoading === interview.interview_id ||
+                                      interview.candidate_rsvp_status ===
+                                        RSVPStatuses.YES
+                                    }
+                                    startIcon={
+                                      rsvpLoading ===
+                                        interview.interview_id && (
+                                        <CircularProgress size={16} />
+                                      )
+                                    }
+                                    sx={{
+                                      "&.Mui-disabled": {
+                                        backgroundColor:
+                                          interview.candidate_rsvp_status ===
+                                          RSVPStatuses.YES
+                                            ? "success.main"
+                                            : "transparent",
+                                        color:
+                                          interview.candidate_rsvp_status ===
+                                          RSVPStatuses.YES
+                                            ? "white"
+                                            : undefined,
+                                        opacity: 0.7,
+                                      },
+                                    }}
                                   >
                                     {t("interviews.rsvp.yes")}
                                   </Button>
@@ -602,12 +664,39 @@ export default function CandidacyDetailPage() {
                                         : "outlined"
                                     }
                                     onClick={() =>
-                                      handleRSVP(
+                                      handleRSVPClick(
                                         interview.interview_id,
-                                        RSVPStatuses.NO
+                                        RSVPStatuses.NO,
+                                        interview.candidate_rsvp_status
                                       )
                                     }
                                     color="error"
+                                    disabled={
+                                      rsvpLoading === interview.interview_id ||
+                                      interview.candidate_rsvp_status ===
+                                        RSVPStatuses.NO
+                                    }
+                                    startIcon={
+                                      rsvpLoading ===
+                                        interview.interview_id && (
+                                        <CircularProgress size={16} />
+                                      )
+                                    }
+                                    sx={{
+                                      "&.Mui-disabled": {
+                                        backgroundColor:
+                                          interview.candidate_rsvp_status ===
+                                          RSVPStatuses.NO
+                                            ? "error.main"
+                                            : "transparent",
+                                        color:
+                                          interview.candidate_rsvp_status ===
+                                          RSVPStatuses.NO
+                                            ? "white"
+                                            : undefined,
+                                        opacity: 0.7,
+                                      },
+                                    }}
                                   >
                                     {t("interviews.rsvp.no")}
                                   </Button>
@@ -827,5 +916,58 @@ export default function CandidacyDetailPage() {
     </Box>
   );
 
-  return <AuthenticatedLayout>{content}</AuthenticatedLayout>;
+  return (
+    <AuthenticatedLayout>
+      {content}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {confirmDialog.status === RSVPStatuses.YES
+            ? t("interviews.rsvp.confirmYes")
+            : t("interviews.rsvp.confirmNo")}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {confirmDialog.status === RSVPStatuses.YES
+              ? interviews.find(
+                  (i) => i.interview_id === confirmDialog.interviewId
+                )?.candidate_rsvp_status === RSVPStatuses.NOT_SET
+                ? t("interviews.rsvp.confirmYesMessage")
+                : t("interviews.rsvp.confirmChangeYesMessage")
+              : interviews.find(
+                  (i) => i.interview_id === confirmDialog.interviewId
+                )?.candidate_rsvp_status === RSVPStatuses.NOT_SET
+              ? t("interviews.rsvp.confirmNoMessage")
+              : t("interviews.rsvp.confirmChangeNoMessage")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setConfirmDialog((prev) => ({ ...prev, open: false }))
+            }
+            color="inherit"
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleConfirmRSVP}
+            color={
+              confirmDialog.status === RSVPStatuses.YES ? "success" : "error"
+            }
+            variant="contained"
+            autoFocus
+          >
+            {confirmDialog.status === RSVPStatuses.YES
+              ? t("interviews.rsvp.yes")
+              : t("interviews.rsvp.no")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </AuthenticatedLayout>
+  );
 }
