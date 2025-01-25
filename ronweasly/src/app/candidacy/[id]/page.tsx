@@ -283,6 +283,11 @@ export default function CandidacyDetailPage() {
         return;
       }
 
+      const request: RSVPInterviewRequest = {
+        interview_id: interviewId,
+        rsvp_status: status,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/hub/rsvp-interview`,
         {
@@ -291,10 +296,7 @@ export default function CandidacyDetailPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            interview_id: interviewId,
-            rsvp_status: status,
-          } as RSVPInterviewRequest),
+          body: JSON.stringify(request),
         }
       );
 

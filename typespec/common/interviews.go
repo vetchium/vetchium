@@ -67,17 +67,20 @@ const (
 	NotSetRSVP RSVPStatus = "NOT_SET"
 )
 
-func (s RSVPStatus) IsValid() bool {
+func (s RSVPStatus) IsValidRequest() bool {
 	switch s {
-	case YesRSVP, NoRSVP, NotSetRSVP:
+	case YesRSVP, NoRSVP:
 		return true
+	case NotSetRSVP:
+		// NOT_SET is the initial value; users should not be allowed to set it
+		return false
 	}
 	return false
 }
 
 type RSVPInterviewRequest struct {
 	InterviewID string     `json:"interview_id" validate:"required"`
-	RSVPStatus  RSVPStatus `json:"rsvp_status"  validate:"required,validate_rsvp_status"`
+	RSVPStatus  RSVPStatus `json:"rsvp_status"  validate:"required,validate_rsvp_request"`
 }
 
 func (r RSVPInterviewRequest) IsValid() bool {

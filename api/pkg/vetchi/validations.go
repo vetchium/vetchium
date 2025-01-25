@@ -452,6 +452,21 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_rsvp_request",
+		func(fl validator.FieldLevel) bool {
+			rsvp, ok := fl.Field().Interface().(common.RSVPStatus)
+			if !ok {
+				return false
+			}
+			return rsvp.IsValidRequest()
+		},
+	)
+	if err != nil {
+		log.Err("failed to register rsvp request validation", "error", err)
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

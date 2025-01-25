@@ -27,5 +27,5 @@ export interface HubInterview {
 
 export interface HubRSVPInterviewRequest {
   interview_id: string;
-  rsvp: RSVPStatus;
+  rsvp_status: RSVPStatus;
 }

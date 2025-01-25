@@ -28,6 +28,6 @@ type HubInterview struct {
 }
 
 type HubRSVPInterviewRequest struct {
-	InterviewID string            `json:"interview_id"`
-	RSVP        common.RSVPStatus `json:"rsvp"`
+	InterviewID string            `json:"interview_id" validate:"required"`
+	RSVPStatus  common.RSVPStatus `json:"rsvp_status"  validate:"required,validate_rsvp_request"`
 }

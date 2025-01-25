@@ -35,6 +35,11 @@ model HubInterview {
   interviewers?: HubInterviewer[];
 }
 
+model HubRSVPInterviewRequest {
+  interview_id: string;
+  rsvp_status: RSVPStatus;
+}
+
 @route("/hub/get-interviews-by-candidacy")
 interface GetHubInterviewsByCandidacy {
   @tag("Interviews")

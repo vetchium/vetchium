@@ -63,7 +63,7 @@ SELECT
 	err := p.pool.QueryRow(
 		ctx,
 		query,
-		req.RSVP,
+		req.RSVPStatus,
 		req.InterviewID,
 		hubUser.ID,
 		common.ScheduledInterviewState,
@@ -91,7 +91,7 @@ SELECT
 			"hub_user_id",
 			hubUser.ID,
 			"rsvp",
-			req.RSVP,
+			req.RSVPStatus,
 		)
 		return nil
 	}
