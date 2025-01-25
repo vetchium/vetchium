@@ -2,9 +2,11 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -49,10 +51,17 @@ func (p *PG) GetHubInterviewsByCandidacy(
 			i.end_time,
 			i.interview_type,
 			i.description,
+			i.candidate_rsvp,
 			COALESCE(
-				array_agg(ou.name) FILTER (WHERE ou.name IS NOT NULL),
-				ARRAY[]::TEXT[]
-			) as interviewer_names
+				jsonb_agg(
+					jsonb_build_object(
+						'name', ou.name,
+						'rsvp_status', ii.rsvp_status
+					) 
+					ORDER BY ou.name
+				) FILTER (WHERE ou.name IS NOT NULL),
+				'[]'::jsonb
+			) as interviewer_data
 		FROM interviews i
 		LEFT JOIN interview_interviewers ii ON i.id = ii.interview_id
 		LEFT JOIN org_users ou ON ii.interviewer_id = ou.id
@@ -63,7 +72,8 @@ func (p *PG) GetHubInterviewsByCandidacy(
 			i.start_time,
 			i.end_time,
 			i.interview_type,
-			i.description
+			i.description,
+			i.candidate_rsvp
 		ORDER BY i.start_time ASC`
 
 	rows, err := p.pool.Query(ctx, query, req.CandidacyID)
@@ -76,7 +86,7 @@ func (p *PG) GetHubInterviewsByCandidacy(
 	interviews := []hub.HubInterview{}
 	for rows.Next() {
 		var interview hub.HubInterview
-		var interviewerNames []string
+		var interviewerData []byte
 		if err := rows.Scan(
 			&interview.InterviewID,
 			&interview.InterviewState,
@@ -84,12 +94,32 @@ func (p *PG) GetHubInterviewsByCandidacy(
 			&interview.EndTime,
 			&interview.InterviewType,
 			&interview.Description,
-			&interviewerNames,
+			&interview.CandidateRSVP,
+			&interviewerData,
 		); err != nil {
 			p.log.Err("failed to scan hub interview", "error", err)
 			return nil, db.ErrInternal
 		}
-		interview.Interviewers = interviewerNames
+
+		// Parse the interviewer data from JSON
+		var interviewers []struct {
+			Name       string            `json:"name"`
+			RSVPStatus common.RSVPStatus `json:"rsvp_status"`
+		}
+		if err := json.Unmarshal(interviewerData, &interviewers); err != nil {
+			p.log.Err("failed to unmarshal interviewer data", "error", err)
+			return nil, db.ErrInternal
+		}
+
+		// Convert to HubInterviewer slice
+		interview.Interviewers = make([]hub.HubInterviewer, len(interviewers))
+		for i, interviewer := range interviewers {
+			interview.Interviewers[i] = hub.HubInterviewer{
+				Name:       interviewer.Name,
+				RSVPStatus: interviewer.RSVPStatus,
+			}
+		}
+
 		interviews = append(interviews, interview)
 	}
 

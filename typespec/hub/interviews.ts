@@ -9,6 +9,11 @@ export interface GetHubInterviewsByCandidacyRequest {
   states?: InterviewState[];
 }
 
+export interface HubInterviewer {
+  name: string;
+  rsvp_status: RSVPStatus;
+}
+
 export interface HubInterview {
   interview_id: string;
   interview_state: InterviewState;
@@ -16,7 +21,8 @@ export interface HubInterview {
   end_time: Date;
   interview_type: InterviewType;
   description?: string;
-  interviewers?: string[];
+  candidate_rsvp_status: RSVPStatus;
+  interviewers?: HubInterviewer[];
 }
 
 export interface HubRSVPInterviewRequest {

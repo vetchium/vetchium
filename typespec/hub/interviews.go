@@ -11,6 +11,11 @@ type GetHubInterviewsByCandidacyRequest struct {
 	States      []common.InterviewState `json:"states"`
 }
 
+type HubInterviewer struct {
+	Name       string            `json:"name"`
+	RSVPStatus common.RSVPStatus `json:"rsvp_status"`
+}
+
 type HubInterview struct {
 	InterviewID    string                `json:"interview_id"`
 	InterviewState common.InterviewState `json:"interview_state"`
@@ -18,7 +23,8 @@ type HubInterview struct {
 	EndTime        time.Time             `json:"end_time"`
 	InterviewType  common.InterviewType  `json:"interview_type"`
 	Description    string                `json:"description"`
-	Interviewers   []string              `json:"interviewers"`
+	CandidateRSVP  common.RSVPStatus     `json:"candidate_rsvp_status"`
+	Interviewers   []HubInterviewer      `json:"interviewers"`
 }
 
 type HubRSVPInterviewRequest struct {

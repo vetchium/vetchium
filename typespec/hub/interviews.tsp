@@ -17,6 +17,11 @@ model GetHubInterviewsByCandidacyRequest {
   states?: InterviewState[];
 }
 
+model HubInterviewer {
+  name: string;
+  rsvp_status: RSVPStatus;
+}
+
 model HubInterview {
   @doc("The Interview ID")
   interview_id: string;
@@ -26,9 +31,8 @@ model HubInterview {
   end_time: utcDateTime;
   interview_type: InterviewType;
   description?: string;
-
-  @doc("The names of the interviewers for the Interview. Their email addresses should not be exposed.")
-  interviewers?: string[];
+  candidate_rsvp_status: RSVPStatus;
+  interviewers?: HubInterviewer[];
 }
 
 @route("/hub/get-interviews-by-candidacy")
