@@ -40,6 +40,10 @@ model GetEmployerInterviewsByCandidacyRequest {
     states?: InterviewState[];
 }
 
+model GetInterviewDetailsRequest {
+    interview_id: string;
+}
+
 model Assessment {
     interview_id: string;
     decision?: InterviewersDecision;
@@ -127,6 +131,7 @@ interface EmployerRemoveInterviewer {
     };
 }
 
+#deprecated "This endpoint is deprecated"
 @route("/employer/get-interviews-by-opening")
 interface GetInterviewsByOpening {
     @tag("Interviews")
@@ -154,6 +159,15 @@ interface GetInterviewsByCandidacy {
         statusCode: 200;
 
         @body response: EmployerInterview[];
+    };
+}
+
+@route("/employer/get-interview-details")
+interface GetInterviewDetails {
+    @post
+    getInterviewDetails(@body request: GetInterviewDetailsRequest): {
+        @statusCode statusCode: 200;
+        @body response: EmployerInterview;
     };
 }
 
@@ -185,6 +199,7 @@ interface PutAssesment {
           };
 }
 
+#deprecated "This endpoint is deprecated"
 @route("/employer/get-assessment")
 interface GetAssessment {
     @tag("Interviews")

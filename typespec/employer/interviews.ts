@@ -22,6 +22,10 @@ export interface GetEmployerInterviewsByCandidacyRequest {
   states?: InterviewState[];
 }
 
+export interface GetInterviewDetailsRequest {
+  interview_id: string;
+}
+
 export interface Assessment {
   interview_id: string;
   decision?: InterviewersDecision;

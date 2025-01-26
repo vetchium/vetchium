@@ -28,6 +28,10 @@ type GetEmployerInterviewsByCandidacyRequest struct {
 	States      []common.InterviewState `json:"states"       validate:"omitempty"`
 }
 
+type GetInterviewDetailsRequest struct {
+	InterviewID string `json:"interview_id" validate:"required"`
+}
+
 type Assessment struct {
 	InterviewID         string                      `json:"interview_id"          validate:"required"`
 	Decision            common.InterviewersDecision `json:"decision"              validate:"required"`
