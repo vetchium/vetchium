@@ -41,14 +41,16 @@ AND employer_id = $2
 	p.log.Dbg("query", "query", query)
 
 	var assessment employer.Assessment
+	var decision *common.InterviewersDecision
+	var positives, negatives, overallAssessment, feedbackToCandidate *string
 	err := p.pool.QueryRow(ctx, query, req.InterviewID, orgUser.EmployerID).
 		Scan(
 			&assessment.InterviewID,
-			&assessment.Decision,
-			&assessment.Positives,
-			&assessment.Negatives,
-			&assessment.OverallAssessment,
-			&assessment.FeedbackToCandidate,
+			&decision,
+			&positives,
+			&negatives,
+			&overallAssessment,
+			&feedbackToCandidate,
 			&assessment.FeedbackSubmittedBy,
 			&assessment.FeedbackSubmittedAt,
 		)
@@ -60,6 +62,23 @@ AND employer_id = $2
 
 		p.log.Err("error getting assessment", "error", err)
 		return employer.Assessment{}, db.ErrInternal
+	}
+
+	// Convert nullable fields to empty values if NULL
+	if decision != nil {
+		assessment.Decision = *decision
+	}
+	if positives != nil {
+		assessment.Positives = *positives
+	}
+	if negatives != nil {
+		assessment.Negatives = *negatives
+	}
+	if overallAssessment != nil {
+		assessment.OverallAssessment = *overallAssessment
+	}
+	if feedbackToCandidate != nil {
+		assessment.FeedbackToCandidate = *feedbackToCandidate
 	}
 
 	return assessment, nil
