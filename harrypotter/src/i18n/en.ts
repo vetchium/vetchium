@@ -236,6 +236,24 @@ export const en = {
     },
     addError: "Failed to add interview",
     fetchError: "Failed to fetch interviews",
+    assessment: {
+      title: "Interview Assessment",
+      rating: "Rating",
+      feedback: "Feedback",
+      feedbackPlaceholder:
+        "Enter detailed feedback about the candidate's performance",
+      save: "Save Assessment",
+      saveSuccess: "Assessment saved successfully",
+      saveError: "Failed to save assessment",
+      fetchError: "Failed to fetch assessment",
+      ratings: {
+        EXCELLENT: "Excellent",
+        GOOD: "Good",
+        AVERAGE: "Average",
+        BELOW_AVERAGE: "Below Average",
+        POOR: "Poor",
+      },
+    },
   },
   comments: {
     title: "Comments",
