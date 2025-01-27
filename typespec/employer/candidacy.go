@@ -43,6 +43,12 @@ type AddInterviewResponse struct {
 	InterviewID string `json:"interview_id"`
 }
 
+type Interviewer struct {
+	Name       string            `json:"name"`
+	Email      string            `json:"email"`
+	RSVPStatus common.RSVPStatus `json:"rsvp_status"`
+}
+
 type EmployerInterview struct {
 	InterviewID          string                       `json:"interview_id"`
 	InterviewState       common.InterviewState        `json:"interview_state"`
@@ -50,7 +56,7 @@ type EmployerInterview struct {
 	EndTime              time.Time                    `json:"end_time"`
 	InterviewType        common.InterviewType         `json:"interview_type"`
 	Description          *string                      `json:"description"`
-	Interviewers         []OrgUserTiny                `json:"interviewers"`
+	Interviewers         []Interviewer                `json:"interviewers"`
 	InterviewersDecision *common.InterviewersDecision `json:"interviewers_decision"`
 	Positives            *string                      `json:"positives"             validate:"omitempty,max=4096"`
 	Negatives            *string                      `json:"negatives"             validate:"omitempty,max=4096"`

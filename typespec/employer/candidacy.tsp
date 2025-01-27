@@ -69,6 +69,12 @@ model AddInterviewResponse {
     interview_id: string;
 }
 
+model Interviewer {
+    name: string;
+    email: string;
+    rsvp_status: RSVPStatus;
+}
+
 model EmployerInterview {
     interview_id: string;
     interview_state: InterviewState;
@@ -76,7 +82,7 @@ model EmployerInterview {
     end_time: utcDateTime;
     interview_type: InterviewType;
     description?: string;
-    interviewers?: OrgUserShort[];
+    interviewers?: Interviewer[];
     interviewers_decision?: InterviewersDecision;
 
     @maxLength(4096)

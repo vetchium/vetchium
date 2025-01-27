@@ -102,7 +102,8 @@ func (p *PG) GetInterview(
 	interviewersQuery := `
 		SELECT 
 			ou.name,
-			ou.email
+			ou.email,
+			COALESCE(ii.rsvp_status, 'NOT_SET') as rsvp_status
 		FROM interview_interviewers ii
 		JOIN org_users ou ON ii.interviewer_id = ou.id
 		WHERE ii.interview_id = $1
@@ -121,12 +122,13 @@ func (p *PG) GetInterview(
 	}
 	defer rows.Close()
 
-	var interviewers []employer.OrgUserTiny
+	var interviewers []employer.Interviewer
 	for rows.Next() {
-		var interviewer employer.OrgUserTiny
+		var interviewer employer.Interviewer
 		err := rows.Scan(
 			&interviewer.Name,
 			&interviewer.Email,
+			&interviewer.RSVPStatus,
 		)
 		if err != nil {
 			p.log.Err("failed to scan interviewer", "error", err)
