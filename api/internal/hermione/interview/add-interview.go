@@ -31,6 +31,12 @@ func AddInterview(h wand.Wand) http.HandlerFunc {
 			return
 		}
 		h.Dbg("validated", "addInterviewReq", addInterviewReq)
+		h.Dbg("timestamp debug",
+			"start_time_utc", addInterviewReq.StartTime.UTC(),
+			"end_time_utc", addInterviewReq.EndTime.UTC(),
+			"start_time_local", addInterviewReq.StartTime.Local(),
+			"end_time_local", addInterviewReq.EndTime.Local(),
+		)
 
 		if len(addInterviewReq.InterviewerEmails) > 5 {
 			w.WriteHeader(http.StatusBadRequest)

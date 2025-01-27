@@ -20,14 +20,23 @@ func (p *PG) GetInterview(
 		return employer.EmployerInterview{}, db.ErrInternal
 	}
 
+	// First get the database timezone
+	var dbTimezone string
+	err := p.pool.QueryRow(ctx, "SHOW timezone").Scan(&dbTimezone)
+	if err != nil {
+		p.log.Err("failed to get database timezone", "error", err)
+		return employer.EmployerInterview{}, db.ErrInternal
+	}
+	p.log.Dbg("database timezone", "timezone", dbTimezone)
+
 	// TODO: Right now we are making the getInterview and getInterviews
 	// calls for all the orgUsers. We should do some RBAC on this.
 	query := `
 		SELECT 
 			i.id as interview_id,
 			i.interview_state as interview_state,
-			i.start_time,
-			i.end_time,
+			i.start_time at time zone 'UTC' as start_time,
+			i.end_time at time zone 'UTC' as end_time,
 			i.interview_type,
 			i.description,
 			i.interviewers_decision,
@@ -37,8 +46,8 @@ func (p *PG) GetInterview(
 			i.feedback_to_candidate,
 			ou.name as feedback_submitted_by_name,
 			ou.email as feedback_submitted_by_email,
-			i.feedback_submitted_at,
-			i.created_at
+			i.feedback_submitted_at at time zone 'UTC' as feedback_submitted_at,
+			i.created_at at time zone 'UTC' as created_at
 		FROM interviews i
 		LEFT JOIN org_users ou ON i.feedback_submitted_by = ou.id
 		WHERE i.id = $1
@@ -49,7 +58,7 @@ func (p *PG) GetInterview(
 	var feedbackSubmittedByName sql.NullString
 	var feedbackSubmittedByEmail sql.NullString
 
-	err := p.pool.QueryRow(ctx, query, interviewID, orgUser.EmployerID).Scan(
+	err = p.pool.QueryRow(ctx, query, interviewID, orgUser.EmployerID).Scan(
 		&interview.InterviewID,
 		&interview.InterviewState,
 		&interview.StartTime,
@@ -74,6 +83,13 @@ func (p *PG) GetInterview(
 		p.log.Err("failed to get interview", "error", err)
 		return employer.EmployerInterview{}, db.ErrInternal
 	}
+
+	p.log.Dbg("retrieved interview timestamps",
+		"start_time", interview.StartTime,
+		"end_time", interview.EndTime,
+		"feedback_submitted_at", interview.FeedbackSubmittedAt,
+		"created_at", interview.CreatedAt,
+	)
 
 	if feedbackSubmittedByName.Valid && feedbackSubmittedByEmail.Valid {
 		interview.FeedbackSubmittedBy = &employer.OrgUserTiny{
