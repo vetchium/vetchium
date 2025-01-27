@@ -472,11 +472,19 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		func(fl validator.FieldLevel) bool {
 			decision, ok := fl.Field().Interface().(common.InterviewersDecision)
 			if !ok {
+				log.Dbg("invalid interviewers decision", "decision", decision)
 				return false
 			}
 
 			if decision != "" {
+				log.Dbg(
+					"validating interviewers decision",
+					"decision",
+					decision,
+				)
 				return decision.IsValid()
+			} else {
+				log.Dbg("interviewers decision is empty", "decision", decision)
 			}
 			return true
 		},

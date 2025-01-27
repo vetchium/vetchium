@@ -32,6 +32,7 @@ import {
   GetInterviewDetailsRequest,
   InterviewersDecision,
   InterviewersDecisions,
+  PutAssessmentRequest,
 } from "@psankar/vetchi-typespec";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import {
@@ -123,6 +124,15 @@ export default function InterviewDetailPage() {
         return;
       }
 
+      const request: PutAssessmentRequest = {
+        interview_id: interviewId,
+        decision: interview.interviewers_decision,
+        positives: interview.positives,
+        negatives: interview.negatives,
+        overall_assessment: interview.overall_assessment,
+        feedback_to_candidate: interview.feedback_to_candidate,
+      };
+
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/put-assessment`,
         {
@@ -131,14 +141,7 @@ export default function InterviewDetailPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            interview_id: interviewId,
-            decision: interview.interviewers_decision,
-            feedback_to_candidate: interview.feedback_to_candidate,
-            positives: interview.positives,
-            negatives: interview.negatives,
-            overall_assessment: interview.overall_assessment,
-          }),
+          body: JSON.stringify(request),
         }
       );
 
@@ -148,11 +151,24 @@ export default function InterviewDetailPage() {
         return;
       }
 
+      if (response.status === 403) {
+        throw new Error(t("interviews.assessment.forbiddenError"));
+      }
+
+      if (response.status === 404) {
+        throw new Error(t("interviews.assessment.notFoundError"));
+      }
+
+      if (response.status === 422) {
+        throw new Error(t("interviews.assessment.validationError"));
+      }
+
       if (!response.ok) {
         throw new Error(t("interviews.assessment.saveError"));
       }
 
       setSuccessMessage(t("interviews.assessment.saveSuccess"));
+      await fetchInterview();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {

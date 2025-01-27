@@ -255,6 +255,9 @@ export const en = {
       save: "Save Assessment",
       saveSuccess: "Assessment saved successfully",
       saveError: "Failed to save assessment",
+      notFoundError: "Interview not found",
+      validationError: "Please check your input and try again",
+      forbiddenError: "You do not have permission to update this assessment",
       fetchError: "Failed to fetch assessment",
       lastUpdated: "Last updated by {{name}} on {{date}}",
       ratings: {

@@ -1,10 +1,12 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
 	"runtime"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -46,7 +48,16 @@ func (l *Logger) Err(msg string, args ...any) {
 }
 
 func (l *Logger) Dbg(msg string, args ...any) {
-	l.Log.Debug(msg, args...)
+	// l.Log.Debug(msg, args...)
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:])
+	r := slog.NewRecord(
+		time.Now(),
+		slog.LevelDebug,
+		fmt.Sprintf(msg, args...),
+		pcs[0],
+	)
+	_ = l.Log.Handler().Handle(context.Background(), r)
 }
 
 func (l *Logger) Inf(msg string, args ...any) {

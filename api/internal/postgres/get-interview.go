@@ -35,15 +35,20 @@ func (p *PG) GetInterview(
 			i.negatives,
 			i.overall_assessment,
 			i.feedback_to_candidate,
-			i.feedback_submitted_by,
+			ou.name as feedback_submitted_by_name,
+			ou.email as feedback_submitted_by_email,
 			i.feedback_submitted_at,
 			i.created_at
 		FROM interviews i
+		LEFT JOIN org_users ou ON i.feedback_submitted_by = ou.id
 		WHERE i.id = $1
 		AND i.employer_id = $2
 	`
 
 	var interview employer.EmployerInterview
+	var feedbackSubmittedByName sql.NullString
+	var feedbackSubmittedByEmail sql.NullString
+
 	err := p.pool.QueryRow(ctx, query, interviewID, orgUser.EmployerID).Scan(
 		&interview.InterviewID,
 		&interview.InterviewState,
@@ -56,7 +61,8 @@ func (p *PG) GetInterview(
 		&interview.Negatives,
 		&interview.OverallAssessment,
 		&interview.FeedbackToCandidate,
-		&interview.FeedbackSubmittedBy,
+		&feedbackSubmittedByName,
+		&feedbackSubmittedByEmail,
 		&interview.FeedbackSubmittedAt,
 		&interview.CreatedAt,
 	)
@@ -67,6 +73,13 @@ func (p *PG) GetInterview(
 		}
 		p.log.Err("failed to get interview", "error", err)
 		return employer.EmployerInterview{}, db.ErrInternal
+	}
+
+	if feedbackSubmittedByName.Valid && feedbackSubmittedByEmail.Valid {
+		interview.FeedbackSubmittedBy = &employer.OrgUserTiny{
+			Name:  feedbackSubmittedByName.String,
+			Email: feedbackSubmittedByEmail.String,
+		}
 	}
 
 	// Get interviewers
