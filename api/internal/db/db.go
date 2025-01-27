@@ -186,6 +186,7 @@ type DB interface {
 		context.Context,
 		employer.GetEmployerInterviewsByCandidacyRequest,
 	) ([]employer.EmployerInterview, error)
+	GetInterview(context.Context, string) (employer.EmployerInterview, error)
 	GetAssessment(
 		context.Context,
 		employer.GetAssessmentRequest,

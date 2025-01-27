@@ -312,6 +312,11 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Any},
 	)
 	h.mw.Protect(
+		"/employer/get-interview-details",
+		interview.GetInterviewDetails(h),
+		[]common.OrgUserRole{common.Any},
+	)
+	h.mw.Protect(
 		"/employer/put-assessment",
 		interview.EmployerPutAssessment(h),
 		[]common.OrgUserRole{common.Any},
