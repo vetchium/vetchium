@@ -13,33 +13,62 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  Container,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  Avatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import {
-  Assessment,
-  GetAssessmentRequest,
+  EmployerInterview,
+  GetInterviewDetailsRequest,
   InterviewersDecision,
+  InterviewersDecisions,
 } from "@psankar/vetchi-typespec";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import {
+  Person as PersonIcon,
+  ExpandMore as ExpandMoreIcon,
+  Public as PublicIcon,
+} from "@mui/icons-material";
+
+// Helper function for consistent date formatting
+const formatDateTime = (
+  date: string | Date,
+  options?: Intl.DateTimeFormatOptions
+) => {
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: "full",
+    timeStyle: "short",
+  };
+  return new Date(date).toLocaleString(undefined, options || defaultOptions);
+};
 
 export default function InterviewDetailPage() {
   const params = useParams();
   const interviewId = params.id as string;
-  const { t, tObject } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
 
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [interview, setInterview] = useState<EmployerInterview | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAssessment();
+    fetchInterview();
   }, [interviewId]);
 
-  const fetchAssessment = async () => {
+  const fetchInterview = async () => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -48,7 +77,7 @@ export default function InterviewDetailPage() {
       }
 
       const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-assessment`,
+        `${config.API_SERVER_PREFIX}/employer/get-interview-details`,
         {
           method: "POST",
           headers: {
@@ -57,7 +86,7 @@ export default function InterviewDetailPage() {
           },
           body: JSON.stringify({
             interview_id: interviewId,
-          } satisfies GetAssessmentRequest),
+          } satisfies GetInterviewDetailsRequest),
         }
       );
 
@@ -72,7 +101,7 @@ export default function InterviewDetailPage() {
       }
 
       const data = await response.json();
-      setAssessment(data || { interview_id: interviewId });
+      setInterview(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
@@ -81,7 +110,7 @@ export default function InterviewDetailPage() {
   };
 
   const handleSave = async () => {
-    if (!assessment) return;
+    if (!interview) return;
 
     try {
       setSaving(true);
@@ -102,7 +131,14 @@ export default function InterviewDetailPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(assessment),
+          body: JSON.stringify({
+            interview_id: interviewId,
+            decision: interview.interviewers_decision,
+            feedback_to_candidate: interview.feedback_to_candidate,
+            positives: interview.positives,
+            negatives: interview.negatives,
+            overall_assessment: interview.overall_assessment,
+          }),
         }
       );
 
@@ -126,96 +162,394 @@ export default function InterviewDetailPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <CircularProgress />
-      </Box>
+      <AuthenticatedLayout>
+        <Container maxWidth="lg">
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </AuthenticatedLayout>
     );
   }
 
-  const ratings = tObject("interviews.assessment.ratings");
-
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">{t("interviews.manageInterview")}</Typography>
-        <Button variant="outlined" onClick={() => router.back()}>
-          {t("common.back")}
-        </Button>
-      </Box>
+    <AuthenticatedLayout>
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+            <Typography variant="h4">
+              {t("interviews.manageInterview")}
+            </Typography>
+            <Button variant="outlined" onClick={() => router.back()}>
+              {t("common.back")}
+            </Button>
+          </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert
-          severity="success"
-          sx={{ mb: 2 }}
-          onClose={() => setSuccessMessage(null)}
-        >
-          {successMessage}
-        </Alert>
-      )}
-
-      <Box sx={{ maxWidth: 600 }}>
-        <Typography variant="h5" sx={{ mb: 3 }}>
-          {t("interviews.assessment.title")}
-        </Typography>
-
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="rating-label">
-            {t("interviews.assessment.rating")}
-          </InputLabel>
-          <Select
-            labelId="rating-label"
-            value={assessment?.decision || "NEUTRAL"}
-            label={t("interviews.assessment.rating")}
-            onChange={(e) =>
-              setAssessment((prev) => ({
-                ...prev!,
-                decision: e.target.value as InterviewersDecision,
-              }))
-            }
-          >
-            {Object.entries(ratings).map(([key, label]) => (
-              <MenuItem key={key} value={key}>
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label={t("interviews.assessment.feedback")}
-          placeholder={t("interviews.assessment.feedbackPlaceholder")}
-          value={assessment?.feedback_to_candidate || ""}
-          onChange={(e) =>
-            setAssessment((prev) => ({
-              ...prev!,
-              feedback_to_candidate: e.target.value,
-            }))
-          }
-          sx={{ mb: 3 }}
-        />
-
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={saving}
-          sx={{ minWidth: 120 }}
-        >
-          {saving ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            t("interviews.assessment.save")
+          {error && (
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
           )}
-        </Button>
-      </Box>
-    </Box>
+
+          {successMessage && (
+            <Alert
+              severity="success"
+              sx={{ mb: 2 }}
+              onClose={() => setSuccessMessage(null)}
+            >
+              {successMessage}
+            </Alert>
+          )}
+
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Accordion defaultExpanded>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    "& .MuiAccordionSummary-content": {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    },
+                  }}
+                >
+                  <Typography variant="h6">
+                    {t("interviews.details")}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Chip
+                      label={t(`interviews.types.${interview?.interview_type}`)}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={t(
+                        `interviews.states.${interview?.interview_state}`
+                      )}
+                      size="small"
+                      color={
+                        interview?.interview_state === "SCHEDULED_INTERVIEW"
+                          ? "primary"
+                          : interview?.interview_state === "COMPLETED_INTERVIEW"
+                          ? "success"
+                          : "error"
+                      }
+                    />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2">
+                        {t("interviews.type")}
+                      </Typography>
+                      <Chip
+                        label={t(
+                          `interviews.types.${interview?.interview_type}`
+                        )}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2">
+                        {t("interviews.startTime")}
+                      </Typography>
+                      <Typography>
+                        {formatDateTime(interview?.start_time || "", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 1 }}
+                        >
+                          ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                        </Typography>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2">
+                        {t("interviews.endTime")}
+                      </Typography>
+                      <Typography>
+                        {formatDateTime(interview?.end_time || "", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 1 }}
+                        >
+                          ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                        </Typography>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2">
+                        {t("interviews.state")}
+                      </Typography>
+                      <Chip
+                        label={t(
+                          `interviews.states.${interview?.interview_state}`
+                        )}
+                        size="small"
+                        color={
+                          interview?.interview_state === "SCHEDULED_INTERVIEW"
+                            ? "primary"
+                            : interview?.interview_state ===
+                              "COMPLETED_INTERVIEW"
+                            ? "success"
+                            : "error"
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        {t("interviews.interviewers")}
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                        {interview?.interviewers &&
+                        interview.interviewers.length > 0 ? (
+                          interview.interviewers.map((interviewer, index) => (
+                            <Chip
+                              key={index}
+                              avatar={
+                                <Avatar>
+                                  {interviewer.name.charAt(0).toUpperCase()}
+                                </Avatar>
+                              }
+                              label={interviewer.name}
+                              variant="outlined"
+                            />
+                          ))
+                        ) : (
+                          <Typography color="text.secondary">
+                            {t("interviews.noInterviewers")}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Accordion defaultExpanded>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    "& .MuiAccordionSummary-content": {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    },
+                  }}
+                >
+                  <Typography variant="h6">
+                    {t("interviews.assessment.title")}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    {interview?.interviewers_decision && (
+                      <Chip
+                        label={t(
+                          `interviews.assessment.ratings.${
+                            Object.entries(InterviewersDecisions).find(
+                              ([_, value]) =>
+                                value === interview.interviewers_decision
+                            )?.[0]
+                          }`
+                        )}
+                        size="small"
+                        color={
+                          interview.interviewers_decision ===
+                            InterviewersDecisions.STRONG_YES ||
+                          interview.interviewers_decision ===
+                            InterviewersDecisions.YES
+                            ? "success"
+                            : interview.interviewers_decision ===
+                              InterviewersDecisions.NEUTRAL
+                            ? "primary"
+                            : "error"
+                        }
+                      />
+                    )}
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel id="rating-label">
+                      {t("interviews.assessment.rating")}
+                    </InputLabel>
+                    <Select
+                      labelId="rating-label"
+                      value={interview?.interviewers_decision || ""}
+                      label={t("interviews.assessment.rating")}
+                      onChange={(e) =>
+                        setInterview((prev) => ({
+                          ...prev!,
+                          interviewers_decision: e.target
+                            .value as InterviewersDecision,
+                        }))
+                      }
+                    >
+                      {Object.entries(InterviewersDecisions).map(([key]) => (
+                        <MenuItem
+                          key={key}
+                          value={
+                            InterviewersDecisions[
+                              key as keyof typeof InterviewersDecisions
+                            ]
+                          }
+                        >
+                          {t(`interviews.assessment.ratings.${key}`)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label={t("interviews.assessment.positives")}
+                    placeholder={t(
+                      "interviews.assessment.positivesPlaceholder"
+                    )}
+                    value={interview?.positives || ""}
+                    onChange={(e) =>
+                      setInterview((prev) => ({
+                        ...prev!,
+                        positives: e.target.value,
+                      }))
+                    }
+                    sx={{ mb: 3 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label={t("interviews.assessment.negatives")}
+                    placeholder={t(
+                      "interviews.assessment.negativesPlaceholder"
+                    )}
+                    value={interview?.negatives || ""}
+                    onChange={(e) =>
+                      setInterview((prev) => ({
+                        ...prev!,
+                        negatives: e.target.value,
+                      }))
+                    }
+                    sx={{ mb: 3 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label={t("interviews.assessment.overallAssessment")}
+                    placeholder={t(
+                      "interviews.assessment.overallAssessmentPlaceholder"
+                    )}
+                    value={interview?.overall_assessment || ""}
+                    onChange={(e) =>
+                      setInterview((prev) => ({
+                        ...prev!,
+                        overall_assessment: e.target.value,
+                      }))
+                    }
+                    sx={{ mb: 3 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label={
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <PublicIcon color="action" fontSize="small" />
+                        {t("interviews.assessment.feedback")}
+                      </Box>
+                    }
+                    placeholder={t("interviews.assessment.feedbackPlaceholder")}
+                    value={interview?.feedback_to_candidate || ""}
+                    onChange={(e) =>
+                      setInterview((prev) => ({
+                        ...prev!,
+                        feedback_to_candidate: e.target.value,
+                      }))
+                    }
+                    sx={{
+                      mb: 3,
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: (theme) => theme.palette.warning.light + "10",
+                      },
+                    }}
+                  />
+
+                  {interview?.feedback_submitted_by && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {`${t("interviews.assessment.lastUpdated")
+                          .replace(
+                            "{{name}}",
+                            interview.feedback_submitted_by.name
+                          )
+                          .replace(
+                            "{{date}}",
+                            formatDateTime(
+                              interview.feedback_submitted_at || "",
+                              {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              }
+                            )
+                          )}`}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Button
+                    variant="contained"
+                    onClick={handleSave}
+                    disabled={saving}
+                    sx={{ minWidth: 120 }}
+                  >
+                    {saving ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      t("interviews.assessment.save")
+                    )}
+                  </Button>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+          </Grid>
+        </Box>
+      </Container>
+    </AuthenticatedLayout>
   );
 }

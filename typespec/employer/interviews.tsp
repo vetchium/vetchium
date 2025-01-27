@@ -164,6 +164,7 @@ interface GetInterviewsByCandidacy {
 
 @route("/employer/get-interview-details")
 interface GetInterviewDetails {
+    @tag("Interviews")
     @post
     getInterviewDetails(@body request: GetInterviewDetailsRequest): {
         @statusCode statusCode: 200;

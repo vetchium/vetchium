@@ -25,7 +25,7 @@ func (p *PG) GetInterview(
 	query := `
 		SELECT 
 			i.id as interview_id,
-			i.state as interview_state,
+			i.interview_state as interview_state,
 			i.start_time,
 			i.end_time,
 			i.interview_type,
@@ -38,7 +38,7 @@ func (p *PG) GetInterview(
 			i.feedback_submitted_by,
 			i.feedback_submitted_at,
 			i.created_at
-		FROM employer_interviews i
+		FROM interviews i
 		WHERE i.id = $1
 		AND i.employer_id = $2
 	`
@@ -75,11 +75,17 @@ func (p *PG) GetInterview(
 			ou.name,
 			ou.email
 		FROM interview_interviewers ii
-		JOIN org_users ou ON ii.org_user_id = ou.id
+		JOIN org_users ou ON ii.interviewer_id = ou.id
 		WHERE ii.interview_id = $1
+		AND ii.employer_id = $2
 	`
 
-	rows, err := p.pool.Query(ctx, interviewersQuery, interviewID)
+	rows, err := p.pool.Query(
+		ctx,
+		interviewersQuery,
+		interviewID,
+		orgUser.EmployerID,
+	)
 	if err != nil {
 		p.log.Err("failed to get interviewers", "error", err)
 		return employer.EmployerInterview{}, db.ErrInternal
