@@ -147,21 +147,19 @@ export default function AddInterviewPage() {
         return;
       }
 
-      // Convert local times to UTC for API
+      // The startTime and endTime are already in local timezone
+      // We need to convert them to UTC without double-applying the offset
       const startDate = new Date(interview.startTime);
       const endDate = new Date(interview.endTime);
 
-      // Get timezone offset from selected timezone
-      const tzMatch = interview.timezone.match(/GMT([+-]\d{4})/);
-      const tzOffset = tzMatch ? tzMatch[1] : "+0000";
-      const tzHours = parseInt(tzOffset.slice(1, 3));
-      const tzMinutes = parseInt(tzOffset.slice(3));
-      const offsetMillis =
-        (tzHours * 60 + tzMinutes) * 60 * 1000 * (tzOffset[0] === "+" ? -1 : 1);
-
-      // Adjust dates to UTC
-      const utcStartDate = new Date(startDate.getTime() + offsetMillis);
-      const utcEndDate = new Date(endDate.getTime() + offsetMillis);
+      const request: AddInterviewRequest = {
+        candidacy_id: candidacyId,
+        start_time: startDate,
+        end_time: endDate,
+        interview_type: interview.type,
+        description: interview.description,
+        interviewer_emails: interview.interviewers.map((i) => i.email),
+      };
 
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/add-interview`,
@@ -171,14 +169,7 @@ export default function AddInterviewPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            candidacy_id: candidacyId,
-            start_time: utcStartDate,
-            end_time: utcEndDate,
-            interview_type: interview.type,
-            description: interview.description,
-            interviewer_emails: interview.interviewers.map((i) => i.email),
-          } satisfies AddInterviewRequest),
+          body: JSON.stringify(request),
         }
       );
 

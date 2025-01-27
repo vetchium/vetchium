@@ -43,14 +43,40 @@ import {
 
 // Helper function for consistent date formatting
 const formatDateTime = (
-  date: string | Date,
-  options?: Intl.DateTimeFormatOptions
+  isoString: string | Date,
+  options?: Intl.DateTimeFormatOptions,
+  timeZone?: string
 ) => {
   const defaultOptions: Intl.DateTimeFormatOptions = {
     dateStyle: "full",
     timeStyle: "short",
+    timeZone: timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
-  return new Date(date).toLocaleString(undefined, options || defaultOptions);
+
+  // If it's already a Date object, convert it to ISO string
+  const dateStr =
+    isoString instanceof Date ? isoString.toISOString() : isoString;
+
+  return new Intl.DateTimeFormat(undefined, options || defaultOptions).format(
+    new Date(dateStr)
+  );
+};
+
+// Helper to format UTC time
+const formatUTCDateTime = (isoString: string | Date) => {
+  // If it's already a Date object, convert it to ISO string
+  const dateStr =
+    isoString instanceof Date ? isoString.toISOString() : isoString;
+
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(dateStr));
 };
 
 export default function InterviewDetailPage() {
@@ -295,6 +321,15 @@ export default function InterviewDetailPage() {
                         >
                           ({Intl.DateTimeFormat().resolvedOptions().timeZone})
                         </Typography>
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 1 }}
+                        >
+                          (UTC: {formatUTCDateTime(interview?.start_time || "")}
+                          )
+                        </Typography>
                       </Typography>
                     </Grid>
                     <Grid item xs={12}>
@@ -317,6 +352,14 @@ export default function InterviewDetailPage() {
                           sx={{ ml: 1 }}
                         >
                           ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                        </Typography>
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 1 }}
+                        >
+                          (UTC: {formatUTCDateTime(interview?.end_time || "")})
                         </Typography>
                       </Typography>
                     </Grid>
