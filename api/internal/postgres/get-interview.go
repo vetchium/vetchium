@@ -47,9 +47,15 @@ func (p *PG) GetInterview(
 			ou.name as feedback_submitted_by_name,
 			ou.email as feedback_submitted_by_email,
 			i.feedback_submitted_at at time zone 'UTC' as feedback_submitted_at,
-			i.created_at at time zone 'UTC' as created_at
+			i.created_at at time zone 'UTC' as created_at,
+			hu.full_name as candidate_name,
+			hu.handle as candidate_handle,
+			i.candidate_rsvp as candidate_rsvp_status
 		FROM interviews i
 		LEFT JOIN org_users ou ON i.feedback_submitted_by = ou.id
+		LEFT JOIN candidacies c ON i.candidacy_id = c.id
+		LEFT JOIN applications a ON c.application_id = a.id
+		LEFT JOIN hub_users hu ON a.hub_user_id = hu.id
 		WHERE i.id = $1
 		AND i.employer_id = $2
 	`
@@ -74,6 +80,9 @@ func (p *PG) GetInterview(
 		&feedbackSubmittedByEmail,
 		&interview.FeedbackSubmittedAt,
 		&interview.CreatedAt,
+		&interview.CandidateName,
+		&interview.CandidateHandle,
+		&interview.CandidateRSVPStatus,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

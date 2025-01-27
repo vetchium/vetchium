@@ -56,6 +56,9 @@ export interface EmployerInterview {
   end_time: Date;
   interview_type: InterviewType;
   description?: string;
+  candidate_name: string;
+  candidate_handle: string;
+  candidate_rsvp_status: RSVPStatus;
   interviewers?: Interviewer[];
   interviewers_decision?: InterviewersDecision;
   positives?: string;

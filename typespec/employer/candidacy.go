@@ -56,6 +56,9 @@ type EmployerInterview struct {
 	EndTime              time.Time                    `json:"end_time"`
 	InterviewType        common.InterviewType         `json:"interview_type"`
 	Description          *string                      `json:"description"`
+	CandidateName        string                       `json:"candidate_name"`
+	CandidateHandle      string                       `json:"candidate_handle"`
+	CandidateRSVPStatus  common.RSVPStatus            `json:"candidate_rsvp_status"`
 	Interviewers         []Interviewer                `json:"interviewers"`
 	InterviewersDecision *common.InterviewersDecision `json:"interviewers_decision"`
 	Positives            *string                      `json:"positives"             validate:"omitempty,max=4096"`

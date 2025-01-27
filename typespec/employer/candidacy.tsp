@@ -82,6 +82,9 @@ model EmployerInterview {
     end_time: utcDateTime;
     interview_type: InterviewType;
     description?: string;
+    candidate_name: string;
+    candidate_handle: string;
+    candidate_rsvp_status: RSVPStatus;
     interviewers?: Interviewer[];
     interviewers_decision?: InterviewersDecision;
 
