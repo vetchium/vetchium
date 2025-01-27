@@ -1,5 +1,8 @@
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import ThemeRegistry from "@/components/ThemeRegistry";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import ClientLayout from "./ClientLayout";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Vetchi",
@@ -13,10 +16,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <AppRouterCacheProvider>
-          <ThemeRegistry>{children}</ThemeRegistry>
-        </AppRouterCacheProvider>
+      <body className={inter.className}>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

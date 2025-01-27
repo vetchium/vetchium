@@ -23,6 +23,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  ButtonGroup,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -33,6 +34,9 @@ import {
   InterviewersDecision,
   InterviewersDecisions,
   PutAssessmentRequest,
+  RSVPInterviewRequest,
+  RSVPStatus,
+  RSVPStatuses,
 } from "@psankar/vetchi-typespec";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import {
@@ -40,6 +44,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Public as PublicIcon,
 } from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Helper function for consistent date formatting
 const formatDateTime = (
@@ -84,12 +89,14 @@ export default function InterviewDetailPage() {
   const interviewId = params.id as string;
   const { t } = useTranslation();
   const router = useRouter();
+  const { userEmail } = useAuth();
 
   const [interview, setInterview] = useState<EmployerInterview | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
 
   useEffect(() => {
     fetchInterview();
@@ -199,6 +206,62 @@ export default function InterviewDetailPage() {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRSVP = async (status: RSVPStatus) => {
+    try {
+      setRsvpLoading(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      const request: RSVPInterviewRequest = {
+        interview_id: interviewId,
+        rsvp_status: status,
+      };
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/rsvp-interview`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(request),
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/signin");
+        return;
+      }
+
+      if (response.status === 404) {
+        throw new Error(t("interviews.assessment.notFoundError"));
+      }
+
+      if (response.status === 422) {
+        throw new Error(t("interviews.assessment.invalidStateError"));
+      }
+
+      if (!response.ok) {
+        throw new Error(t("interviews.assessment.rsvpError"));
+      }
+
+      setSuccessMessage(t("interviews.assessment.rsvpSuccess"));
+      await fetchInterview();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.error"));
+    } finally {
+      setRsvpLoading(false);
     }
   };
 
@@ -389,18 +452,79 @@ export default function InterviewDetailPage() {
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                         {interview?.interviewers &&
                         interview.interviewers.length > 0 ? (
-                          interview.interviewers.map((interviewer, index) => (
-                            <Chip
-                              key={index}
-                              avatar={
-                                <Avatar>
-                                  {interviewer.name.charAt(0).toUpperCase()}
-                                </Avatar>
-                              }
-                              label={interviewer.name}
-                              variant="outlined"
-                            />
-                          ))
+                          interview.interviewers.map((interviewer, index) => {
+                            const isCurrentUser =
+                              interviewer.email === userEmail;
+                            return (
+                              <Box
+                                key={index}
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <Chip
+                                  icon={<PersonIcon />}
+                                  label={
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                      }}
+                                    >
+                                      <span>{interviewer.name}</span>
+                                      {isCurrentUser && (
+                                        <Typography
+                                          variant="caption"
+                                          sx={{
+                                            color: "primary.main",
+                                            fontWeight: "bold",
+                                          }}
+                                        >
+                                          ({t("interviews.you")})
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  }
+                                  variant="outlined"
+                                  sx={{
+                                    bgcolor: isCurrentUser
+                                      ? "primary.light"
+                                      : undefined,
+                                  }}
+                                />
+                                {isCurrentUser &&
+                                  interview.interview_state ===
+                                    "SCHEDULED_INTERVIEW" && (
+                                    <ButtonGroup size="small">
+                                      <Button
+                                        variant="contained"
+                                        color="success"
+                                        onClick={() =>
+                                          handleRSVP(RSVPStatuses.YES)
+                                        }
+                                        disabled={rsvpLoading}
+                                      >
+                                        {t("interviews.rsvp.yes")}
+                                      </Button>
+                                      <Button
+                                        variant="contained"
+                                        color="error"
+                                        onClick={() =>
+                                          handleRSVP(RSVPStatuses.NO)
+                                        }
+                                        disabled={rsvpLoading}
+                                      >
+                                        {t("interviews.rsvp.no")}
+                                      </Button>
+                                    </ButtonGroup>
+                                  )}
+                              </Box>
+                            );
+                          })
                         ) : (
                           <Typography color="text.secondary">
                             {t("interviews.noInterviewers")}

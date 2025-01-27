@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   GetOnboardStatusRequest,
   EmployerSignInRequest,
@@ -30,6 +31,7 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
+  const { setUserEmail } = useAuth();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -87,6 +89,7 @@ export default function SignIn() {
       if (response.status === 200) {
         const data: EmployerSignInResponse = await response.json();
         Cookies.set("tfa_token", data.token, { path: "/" });
+        setUserEmail(email);
         router.push("/tfa");
       } else if (response.status === 422) {
         setError(t("auth.accountDisabled"));

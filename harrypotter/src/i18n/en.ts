@@ -225,10 +225,12 @@ export const en = {
     allowPastDates: "Allow setting dates in the past",
     endTimeBeforeStart: "End time cannot be before or equal to start time",
     use24HourFormat: "Use 24-hour time format",
+    you: "You",
     types: {
       VIDEO_CALL: "Video Call",
       IN_PERSON: "In Person",
       TAKE_HOME: "Take Home",
+      OTHER_INTERVIEW: "Other",
     },
     states: {
       SCHEDULED_INTERVIEW: "Scheduled",
@@ -237,6 +239,20 @@ export const en = {
     },
     addError: "Failed to add interview",
     fetchError: "Failed to fetch interviews",
+    rsvp: {
+      yes: "Accept",
+      no: "Decline",
+      confirmYes: "Accept Interview",
+      confirmNo: "Decline Interview",
+      confirmYesMessage:
+        "Are you sure you want to accept this interview? The employer will be notified of your response.",
+      confirmNoMessage:
+        "Are you sure you want to decline this interview? The employer will be notified of your response.",
+      confirmChangeYesMessage:
+        "Are you sure you want to change your response to accept? The employer will be notified of this change.",
+      confirmChangeNoMessage:
+        "Are you sure you want to change your response to decline? The employer will be notified of this change.",
+    },
     assessment: {
       title: "Interview Assessment",
       rating: "Rating",
@@ -260,6 +276,9 @@ export const en = {
       forbiddenError: "You do not have permission to update this assessment",
       fetchError: "Failed to fetch assessment",
       lastUpdated: "Last updated by {{name}} on {{date}}",
+      rsvpError: "Failed to update RSVP status",
+      rsvpSuccess: "RSVP status updated successfully",
+      invalidStateError: "Interview is not in a valid state for RSVP",
       ratings: {
         STRONG_YES: "Strong Yes",
         YES: "Yes",
