@@ -24,6 +24,11 @@ import {
   AccordionSummary,
   AccordionDetails,
   ButtonGroup,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -43,6 +48,8 @@ import {
   Person as PersonIcon,
   ExpandMore as ExpandMoreIcon,
   Public as PublicIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -97,6 +104,13 @@ export default function InterviewDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    status: RSVPStatus;
+  }>({
+    open: false,
+    status: RSVPStatuses.NOT_SET,
+  });
 
   useEffect(() => {
     fetchInterview();
@@ -209,6 +223,18 @@ export default function InterviewDetailPage() {
     }
   };
 
+  const handleRSVPClick = (status: RSVPStatus, currentStatus: RSVPStatus) => {
+    setConfirmDialog({
+      open: true,
+      status,
+    });
+  };
+
+  const handleConfirmRSVP = () => {
+    handleRSVP(confirmDialog.status);
+    setConfirmDialog((prev) => ({ ...prev, open: false }));
+  };
+
   const handleRSVP = async (status: RSVPStatus) => {
     try {
       setRsvpLoading(true);
@@ -242,6 +268,10 @@ export default function InterviewDetailPage() {
         Cookies.remove("session_token");
         router.push("/signin");
         return;
+      }
+
+      if (response.status === 403) {
+        throw new Error(t("interviews.assessment.forbiddenError"));
       }
 
       if (response.status === 404) {
@@ -351,118 +381,112 @@ export default function InterviewDetailPage() {
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
-                      <Typography variant="subtitle2">
-                        {t("interviews.type")}
-                      </Typography>
-                      <Chip
-                        label={t(
-                          `interviews.types.${interview?.interview_type}`
-                        )}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Box>
+                          <Typography>
+                            {formatDateTime(interview?.start_time || "", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ ml: 1 }}
+                            >
+                              (
+                              {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                              )
+                            </Typography>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            UTC:{" "}
+                            {formatUTCDateTime(interview?.start_time || "")}
+                          </Typography>
+                        </Box>
+
+                        <Typography color="text.secondary" sx={{ my: 1 }}>
+                          -
+                        </Typography>
+
+                        <Box>
+                          <Typography>
+                            {formatDateTime(interview?.end_time || "", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ ml: 1 }}
+                            >
+                              (
+                              {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                              )
+                            </Typography>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            UTC: {formatUTCDateTime(interview?.end_time || "")}
+                          </Typography>
+                        </Box>
+                      </Box>
                     </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2">
-                        {t("interviews.startTime")}
-                      </Typography>
-                      <Typography>
-                        {formatDateTime(interview?.start_time || "", {
-                          weekday: "short",
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 1 }}
-                        >
-                          ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                    {interview?.description && (
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2">
+                          {t("interviews.description")}
                         </Typography>
                         <Typography
-                          component="span"
-                          variant="caption"
+                          variant="body2"
                           color="text.secondary"
-                          sx={{ ml: 1 }}
+                          sx={{ whiteSpace: "pre-wrap" }}
                         >
-                          (UTC: {formatUTCDateTime(interview?.start_time || "")}
-                          )
+                          {interview.description}
                         </Typography>
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2">
-                        {t("interviews.endTime")}
-                      </Typography>
-                      <Typography>
-                        {formatDateTime(interview?.end_time || "", {
-                          weekday: "short",
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 1 }}
-                        >
-                          ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-                        </Typography>
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 1 }}
-                        >
-                          (UTC: {formatUTCDateTime(interview?.end_time || "")})
-                        </Typography>
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2">
-                        {t("interviews.state")}
-                      </Typography>
-                      <Chip
-                        label={t(
-                          `interviews.states.${interview?.interview_state}`
-                        )}
-                        size="small"
-                        color={
-                          interview?.interview_state === "SCHEDULED_INTERVIEW"
-                            ? "primary"
-                            : interview?.interview_state ===
-                              "COMPLETED_INTERVIEW"
-                            ? "success"
-                            : "error"
-                        }
-                      />
-                    </Grid>
+                      </Grid>
+                    )}
                     <Grid item xs={12}>
                       <Typography variant="subtitle2" gutterBottom>
                         {t("interviews.interviewers")}
                       </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                        {interview?.interviewers &&
-                        interview.interviewers.length > 0 ? (
-                          interview.interviewers.map((interviewer, index) => {
-                            const isCurrentUser =
-                              interviewer.email === userEmail;
-                            return (
+                      {interview?.interviewers &&
+                      interview.interviewers.length > 0 ? (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                          }}
+                        >
+                          {/* Current user's interviewer card if they are an interviewer */}
+                          {interview.interviewers
+                            .filter(
+                              (interviewer) => interviewer.email === userEmail
+                            )
+                            .map((interviewer, index) => (
                               <Box
                                 key={index}
                                 sx={{
                                   display: "flex",
                                   flexDirection: "column",
-                                  alignItems: "center",
+                                  alignItems: "flex-start",
                                   gap: 1,
+                                  width: "100%",
                                 }}
                               >
                                 <Chip
@@ -476,61 +500,226 @@ export default function InterviewDetailPage() {
                                       }}
                                     >
                                       <span>{interviewer.name}</span>
-                                      {isCurrentUser && (
-                                        <Typography
-                                          variant="caption"
-                                          sx={{
-                                            color: "primary.main",
-                                            fontWeight: "bold",
-                                          }}
-                                        >
-                                          ({t("interviews.you")})
-                                        </Typography>
-                                      )}
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: "primary.main",
+                                          fontWeight: "bold",
+                                        }}
+                                      >
+                                        ({t("interviews.you")})
+                                      </Typography>
                                     </Box>
                                   }
                                   variant="outlined"
                                   sx={{
-                                    bgcolor: isCurrentUser
-                                      ? "primary.light"
-                                      : undefined,
+                                    bgcolor: "primary.light",
+                                    mb: 1,
                                   }}
                                 />
-                                {isCurrentUser &&
-                                  interview.interview_state ===
-                                    "SCHEDULED_INTERVIEW" && (
+                                {interview.interview_state ===
+                                  "SCHEDULED_INTERVIEW" && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 1,
+                                      width: "100%",
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                      }}
+                                    >
+                                      <Typography variant="subtitle2">
+                                        {t("interviews.yourRSVP")}:
+                                      </Typography>
+                                      {interviewer.rsvp_status !==
+                                        RSVPStatuses.NOT_SET && (
+                                        <Box
+                                          component="span"
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          {interviewer.rsvp_status ===
+                                          RSVPStatuses.YES ? (
+                                            <CheckCircleIcon
+                                              color="success"
+                                              fontSize="small"
+                                            />
+                                          ) : (
+                                            <CancelIcon
+                                              color="error"
+                                              fontSize="small"
+                                            />
+                                          )}
+                                        </Box>
+                                      )}
+                                    </Box>
                                     <ButtonGroup size="small">
                                       <Button
-                                        variant="contained"
-                                        color="success"
-                                        onClick={() =>
-                                          handleRSVP(RSVPStatuses.YES)
+                                        variant={
+                                          interviewer.rsvp_status ===
+                                          RSVPStatuses.YES
+                                            ? "contained"
+                                            : "outlined"
                                         }
-                                        disabled={rsvpLoading}
+                                        onClick={() =>
+                                          handleRSVPClick(
+                                            RSVPStatuses.YES,
+                                            interviewer.rsvp_status
+                                          )
+                                        }
+                                        color="success"
+                                        disabled={
+                                          rsvpLoading ||
+                                          interviewer.rsvp_status ===
+                                            RSVPStatuses.YES
+                                        }
+                                        sx={{
+                                          "&.Mui-disabled": {
+                                            backgroundColor:
+                                              interviewer.rsvp_status ===
+                                              RSVPStatuses.YES
+                                                ? "success.main"
+                                                : "transparent",
+                                            color:
+                                              interviewer.rsvp_status ===
+                                              RSVPStatuses.YES
+                                                ? "white"
+                                                : undefined,
+                                            opacity: 0.7,
+                                          },
+                                        }}
                                       >
                                         {t("interviews.rsvp.yes")}
                                       </Button>
                                       <Button
-                                        variant="contained"
-                                        color="error"
-                                        onClick={() =>
-                                          handleRSVP(RSVPStatuses.NO)
+                                        variant={
+                                          interviewer.rsvp_status ===
+                                          RSVPStatuses.NO
+                                            ? "contained"
+                                            : "outlined"
                                         }
-                                        disabled={rsvpLoading}
+                                        onClick={() =>
+                                          handleRSVPClick(
+                                            RSVPStatuses.NO,
+                                            interviewer.rsvp_status
+                                          )
+                                        }
+                                        color="error"
+                                        disabled={
+                                          rsvpLoading ||
+                                          interviewer.rsvp_status ===
+                                            RSVPStatuses.NO
+                                        }
+                                        sx={{
+                                          "&.Mui-disabled": {
+                                            backgroundColor:
+                                              interviewer.rsvp_status ===
+                                              RSVPStatuses.NO
+                                                ? "error.main"
+                                                : "transparent",
+                                            color:
+                                              interviewer.rsvp_status ===
+                                              RSVPStatuses.NO
+                                                ? "white"
+                                                : undefined,
+                                            opacity: 0.7,
+                                          },
+                                        }}
                                       >
                                         {t("interviews.rsvp.no")}
                                       </Button>
                                     </ButtonGroup>
-                                  )}
+                                  </Box>
+                                )}
                               </Box>
-                            );
-                          })
-                        ) : (
-                          <Typography color="text.secondary">
-                            {t("interviews.noInterviewers")}
-                          </Typography>
-                        )}
-                      </Box>
+                            ))}
+
+                          {/* Divider and "Other Interviewers" title only if user is an interviewer */}
+                          {interview.interviewers.some(
+                            (interviewer) => interviewer.email === userEmail
+                          ) &&
+                            interview.interviewers.some(
+                              (interviewer) => interviewer.email !== userEmail
+                            ) && (
+                              <>
+                                <Divider sx={{ width: "100%" }} />
+                                <Typography
+                                  variant="subtitle2"
+                                  color="text.secondary"
+                                >
+                                  {t("interviews.otherInterviewers")}
+                                </Typography>
+                              </>
+                            )}
+
+                          {/* Other interviewers */}
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                          >
+                            {(interview?.interviewers || [])
+                              .filter(
+                                (interviewer) =>
+                                  interviewer.email !== userEmail ||
+                                  !interview?.interviewers?.some(
+                                    (i) => i.email === userEmail
+                                  )
+                              )
+                              .map((interviewer, index) => (
+                                <Chip
+                                  key={index}
+                                  icon={<PersonIcon />}
+                                  label={
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                      }}
+                                    >
+                                      <span>{interviewer.name}</span>
+                                      {interviewer.rsvp_status !==
+                                        RSVPStatuses.NOT_SET && (
+                                        <Box
+                                          component="span"
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          {interviewer.rsvp_status ===
+                                          RSVPStatuses.YES ? (
+                                            <CheckCircleIcon
+                                              color="success"
+                                              fontSize="small"
+                                            />
+                                          ) : (
+                                            <CancelIcon
+                                              color="error"
+                                              fontSize="small"
+                                            />
+                                          )}
+                                        </Box>
+                                      )}
+                                    </Box>
+                                  }
+                                  variant="outlined"
+                                />
+                              ))}
+                          </Box>
+                        </Box>
+                      ) : (
+                        <Typography color="text.secondary">
+                          {t("interviews.noInterviewers")}
+                        </Typography>
+                      )}
                     </Grid>
                   </Grid>
                 </AccordionDetails>
@@ -733,6 +922,52 @@ export default function InterviewDetailPage() {
           </Grid>
         </Box>
       </Container>
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {confirmDialog.status === RSVPStatuses.YES
+            ? t("interviews.rsvp.confirmYes")
+            : t("interviews.rsvp.confirmNo")}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {interview?.interviewers?.find((i) => i.email === userEmail)
+              ?.rsvp_status === RSVPStatuses.NOT_SET
+              ? confirmDialog.status === RSVPStatuses.YES
+                ? t("interviews.rsvp.confirmYesMessage")
+                : t("interviews.rsvp.confirmNoMessage")
+              : confirmDialog.status === RSVPStatuses.YES
+              ? t("interviews.rsvp.confirmChangeYesMessage")
+              : t("interviews.rsvp.confirmChangeNoMessage")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setConfirmDialog((prev) => ({ ...prev, open: false }))
+            }
+            color="inherit"
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleConfirmRSVP}
+            color={
+              confirmDialog.status === RSVPStatuses.YES ? "success" : "error"
+            }
+            variant="contained"
+            autoFocus
+          >
+            {confirmDialog.status === RSVPStatuses.YES
+              ? t("interviews.rsvp.yes")
+              : t("interviews.rsvp.no")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </AuthenticatedLayout>
   );
 }
