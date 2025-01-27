@@ -446,22 +446,72 @@ export default function InterviewDetailPage() {
                         </Box>
                       </Box>
                     </Grid>
+
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        {t("interviews.candidate")}
+                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Chip
+                          icon={<PersonIcon />}
+                          variant="outlined"
+                          label={
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Typography>
+                                {interview?.candidate_name} (
+                                {interview?.candidate_handle})
+                              </Typography>
+                              {interview?.candidate_rsvp_status !==
+                                RSVPStatuses.NOT_SET && (
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    display: "inline-flex",
+                                    verticalAlign: "middle",
+                                  }}
+                                >
+                                  {interview?.candidate_rsvp_status ===
+                                  RSVPStatuses.YES ? (
+                                    <CheckCircleIcon
+                                      color="success"
+                                      fontSize="small"
+                                    />
+                                  ) : (
+                                    <CancelIcon
+                                      color="error"
+                                      fontSize="small"
+                                    />
+                                  )}
+                                </Box>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </Box>
+                    </Grid>
+
                     {interview?.description && (
                       <Grid item xs={12}>
-                        <Typography variant="subtitle2">
-                          {t("interviews.description")}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ whiteSpace: "pre-wrap" }}
-                        >
+                        <Typography variant="body1">
                           {interview.description}
                         </Typography>
                       </Grid>
                     )}
+
                     <Grid item xs={12}>
-                      <Typography variant="subtitle2" gutterBottom>
+                      <Typography variant="caption" color="text.secondary">
                         {t("interviews.interviewers")}
                       </Typography>
                       {interview?.interviewers &&

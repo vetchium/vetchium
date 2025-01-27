@@ -223,6 +223,7 @@ export const en = {
     manage: "Manage Interview",
     manageInterview: "Manage Interview",
     details: "Interview Details",
+    candidate: "Candidate",
     placeholder: "Interview management page is under construction",
     noInterviews: "No interviews scheduled",
     allowPastDates: "Allow setting dates in the past",
