@@ -59,6 +59,18 @@ const (
 	StrongNoInterviewersDecision  InterviewersDecision = "STRONG_NO"
 )
 
+func (d InterviewersDecision) IsValid() bool {
+	switch d {
+	case StrongYesInterviewersDecision,
+		YesInterviewersDecision,
+		NeutralInterviewersDecision,
+		NoInterviewersDecision,
+		StrongNoInterviewersDecision:
+		return true
+	}
+	return false
+}
+
 type RSVPStatus string
 
 const (

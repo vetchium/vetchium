@@ -86,7 +86,7 @@ AND employer_id = $2
 
 func (p *PG) PutAssessment(
 	ctx context.Context,
-	req employer.Assessment,
+	req employer.PutAssessmentRequest,
 ) error {
 	p.log.Dbg("PutAssessment", "req", req)
 

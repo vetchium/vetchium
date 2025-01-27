@@ -14,7 +14,7 @@ func EmployerPutAssessment(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered EmployerPutAssessment")
 
-		var assessment employer.Assessment
+		var assessment employer.PutAssessmentRequest
 		if err := json.NewDecoder(r.Body).Decode(&assessment); err != nil {
 			h.Dbg("decoding failed", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)

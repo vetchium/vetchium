@@ -26,6 +26,15 @@ export interface GetInterviewDetailsRequest {
   interview_id: string;
 }
 
+export interface PutAssessmentRequest {
+  interview_id: string;
+  decision?: InterviewersDecision;
+  positives?: string;
+  negatives?: string;
+  overall_assessment?: string;
+  feedback_to_candidate?: string;
+}
+
 export interface Assessment {
   interview_id: string;
   decision?: InterviewersDecision;

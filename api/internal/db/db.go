@@ -193,7 +193,7 @@ type DB interface {
 	) (employer.Assessment, error)
 	PutAssessment(
 		context.Context,
-		employer.Assessment,
+		employer.PutAssessmentRequest,
 	) error
 
 	// Used by hermione - for Hub users

@@ -44,6 +44,15 @@ model GetInterviewDetailsRequest {
     interview_id: string;
 }
 
+model PutAssessmentRequest {
+    interview_id: string;
+    decision?: InterviewersDecision;
+    positives?: string;
+    negatives?: string;
+    overall_assessment?: string;
+    feedback_to_candidate?: string;
+}
+
 model Assessment {
     interview_id: string;
     decision?: InterviewersDecision;
@@ -177,7 +186,7 @@ interface PutAssesment {
     @doc("Any old feedback will be overwritten")
     @tag("Interviews")
     @post
-    putAssesment(@body request: Assessment):
+    putAssesment(@body request: PutAssessmentRequest):
         | {
               @doc("Assessment updated successfully")
               @statusCode

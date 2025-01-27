@@ -467,6 +467,29 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_interviewers_decision",
+		func(fl validator.FieldLevel) bool {
+			decision, ok := fl.Field().Interface().(common.InterviewersDecision)
+			if !ok {
+				return false
+			}
+
+			if decision != "" {
+				return decision.IsValid()
+			}
+			return true
+		},
+	)
+	if err != nil {
+		log.Err(
+			"failed to register interviewers decision validation",
+			"error",
+			err,
+		)
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 
