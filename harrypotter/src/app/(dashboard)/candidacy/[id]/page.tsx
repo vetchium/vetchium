@@ -1,11 +1,7 @@
 "use client";
 
-import { config } from "@/config";
-import { useTranslation } from "@/hooks/useTranslation";
-import {
-  ExpandMore as ExpandMoreIcon,
-  OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Avatar,
   Box,
@@ -22,6 +18,8 @@ import {
   IconButton,
   Link,
   Paper,
+  Snackbar,
+  Alert,
   Table,
   TableBody,
   TableCell,
@@ -29,6 +27,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import {
+  ExpandMore as ExpandMoreIcon,
+  OpenInNew as OpenInNewIcon,
+} from "@mui/icons-material";
 import {
   Candidacy,
   CandidacyComment,
@@ -45,11 +47,12 @@ import {
   TimeZone,
   validTimezones,
   OrgUserShort,
+  OfferToCandidateRequest,
 } from "@psankar/vetchi-typespec";
 import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
 import Cookies from "js-cookie";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function CandidacyStateLabel({
   state,
@@ -142,6 +145,15 @@ export default function CandidacyDetailPage() {
   const [openRejectDialog, setOpenRejectDialog] = useState(false);
   const [openUnresponsiveDialog, setOpenUnresponsiveDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error" | "info" | "warning";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // Initialize expanded state for new interviews
   useEffect(() => {
@@ -355,10 +367,78 @@ export default function CandidacyDetailPage() {
   };
 
   // Handlers for dialog actions
-  const handleMakeOffer = () => {
-    // TODO: Implement network call
-    setOpenOfferDialog(false);
-    setSelectedFile(null);
+  const handleMakeOffer = async () => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      // Convert file to base64 if it exists
+      let offerDocument;
+      if (selectedFile) {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const base64String = (reader.result as string).split(",")[1];
+            resolve(base64String);
+          };
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(selectedFile);
+        offerDocument = await base64Promise;
+      }
+
+      const request: OfferToCandidateRequest = {
+        candidacy_id: params.id as string,
+        offer_document: offerDocument,
+      };
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/offer-to-candidate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(request),
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError(t("common.error.sessionExpired"));
+          Cookies.remove("session_token");
+          router.push("/signin");
+          return;
+        }
+        throw new Error(t("candidacies.makeOffer.error"));
+      }
+
+      // Refresh the candidacy data after successful offer
+      await fetchData();
+      setOpenOfferDialog(false);
+      setSelectedFile(null);
+
+      // Show success message using Material UI Snackbar
+      setSnackbar({
+        open: true,
+        message: t("candidacies.makeOffer.success"),
+        severity: "success",
+      });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
+      setSnackbar({
+        open: true,
+        message:
+          err instanceof Error ? err.message : t("common.error.serverError"),
+        severity: "error",
+      });
+    }
   };
 
   const handleReject = () => {
@@ -861,201 +941,221 @@ export default function CandidacyDetailPage() {
       </Paper>
 
       {/* Candidacy State Changes Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-          <Typography variant="h6">{t("candidacies.stateChanges")}</Typography>
-          <IconButton
-            onClick={() => setShowStateChanges(!showStateChanges)}
-            sx={{
-              transform: showStateChanges ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s",
-            }}
-            size="small"
-          >
-            <ExpandMoreIcon />
-          </IconButton>
-        </Box>
-
-        <Collapse in={showStateChanges}>
-          {/* Make Offer Subsection */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-              {t("candidacies.makeOffer.title")}
+      {candidacy && candidacy.candidacy_state !== CandidacyStates.OFFERED && (
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <Typography variant="h6">
+              {t("candidacies.stateChanges")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("candidacies.makeOffer.description")}
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setOpenOfferDialog(true)}
+            <IconButton
+              onClick={() => setShowStateChanges(!showStateChanges)}
+              sx={{
+                transform: showStateChanges ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+              size="small"
             >
-              {t("candidacies.makeOffer.button")}
-            </Button>
+              <ExpandMoreIcon />
+            </IconButton>
           </Box>
 
-          <Divider sx={{ my: 3 }} />
-
-          {/* Reject Candidacy Subsection */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-              {t("candidacies.reject.title")}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("candidacies.reject.description")}
-            </Typography>
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Collapse in={showStateChanges}>
+            {/* Make Offer Subsection */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+                {t("candidacies.makeOffer.title")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("candidacies.makeOffer.description")}
+              </Typography>
               <Button
                 variant="contained"
-                color="error"
-                onClick={() => setOpenRejectDialog(true)}
+                color="primary"
+                onClick={() => setOpenOfferDialog(true)}
               >
-                {t("candidacies.reject.button")}
+                {t("candidacies.makeOffer.button")}
               </Button>
             </Box>
-          </Box>
 
-          <Divider sx={{ my: 3 }} />
+            <Divider sx={{ my: 3 }} />
 
-          {/* Mark Unresponsive Subsection */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-              {t("candidacies.markUnresponsive.title")}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("candidacies.markUnresponsive.description")}
-            </Typography>
-            <Button
-              variant="contained"
-              color="warning"
-              onClick={() => setOpenUnresponsiveDialog(true)}
-            >
-              {t("candidacies.markUnresponsive.button")}
-            </Button>
-          </Box>
-        </Collapse>
-
-        {/* Make Offer Dialog */}
-        <Dialog
-          open={openOfferDialog}
-          onClose={() => setOpenOfferDialog(false)}
-        >
-          <DialogTitle>{t("candidacies.makeOffer.confirmTitle")}</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {t("candidacies.makeOffer.confirmDescription")}
-            </DialogContentText>
-            <Typography sx={{ mt: 2 }}>
-              {t("candidacies.dialogEffects.title")}
-            </Typography>
-            <ul>
-              <li>{t("candidacies.dialogEffects.stateChange")} OFFERED</li>
-              <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
-              <li>{t("candidacies.dialogEffects.uploadOffer")}</li>
-            </ul>
-            <Button variant="outlined" component="label" sx={{ mt: 2 }}>
-              {t("candidacies.makeOffer.uploadButton")}
-              <input
-                type="file"
-                hidden
-                accept="application/pdf"
-                onChange={handleFileSelect}
-              />
-            </Button>
-            {selectedFile && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {t("candidacies.makeOffer.selectedFile")} {selectedFile.name}
+            {/* Reject Candidacy Subsection */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+                {t("candidacies.reject.title")}
               </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenOfferDialog(false)}>
-              {t("candidacies.dialogActions.cancel")}
-            </Button>
-            <Button
-              onClick={handleMakeOffer}
-              variant="contained"
-              disabled={!selectedFile}
-            >
-              {t("candidacies.dialogActions.confirm")}
-            </Button>
-          </DialogActions>
-        </Dialog>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("candidacies.reject.description")}
+              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => setOpenRejectDialog(true)}
+                >
+                  {t("candidacies.reject.button")}
+                </Button>
+              </Box>
+            </Box>
 
-        {/* Reject Dialog */}
-        <Dialog
-          open={openRejectDialog}
-          onClose={() => setOpenRejectDialog(false)}
-        >
-          <DialogTitle>{t("candidacies.reject.confirmTitle")}</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {t("candidacies.reject.confirmDescription")}
-            </DialogContentText>
-            <Typography sx={{ mt: 2 }}>
-              {t("candidacies.dialogEffects.title")}
-            </Typography>
-            <ul>
-              <li>
-                {t("candidacies.dialogEffects.stateChange")}{" "}
-                CANDIDATE_UNSUITABLE
-              </li>
-              <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
-            </ul>
-            <Typography sx={{ mt: 2 }} color="error">
-              {t("candidacies.dialogWarning")}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenRejectDialog(false)}>
-              {t("candidacies.dialogActions.cancel")}
-            </Button>
-            <Button onClick={handleReject} variant="contained" color="error">
-              {t("candidacies.dialogActions.confirm")}
-            </Button>
-          </DialogActions>
-        </Dialog>
+            <Divider sx={{ my: 3 }} />
 
-        {/* Unresponsive Dialog */}
-        <Dialog
-          open={openUnresponsiveDialog}
-          onClose={() => setOpenUnresponsiveDialog(false)}
+            {/* Mark Unresponsive Subsection */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+                {t("candidacies.markUnresponsive.title")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("candidacies.markUnresponsive.description")}
+              </Typography>
+              <Button
+                variant="contained"
+                color="warning"
+                onClick={() => setOpenUnresponsiveDialog(true)}
+              >
+                {t("candidacies.markUnresponsive.button")}
+              </Button>
+            </Box>
+          </Collapse>
+
+          {/* Make Offer Dialog */}
+          <Dialog
+            open={openOfferDialog}
+            onClose={() => setOpenOfferDialog(false)}
+          >
+            <DialogTitle>{t("candidacies.makeOffer.confirmTitle")}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {t("candidacies.makeOffer.confirmDescription")}
+              </DialogContentText>
+              <Typography sx={{ mt: 2 }}>
+                {t("candidacies.dialogEffects.title")}
+              </Typography>
+              <ul>
+                <li>{t("candidacies.dialogEffects.stateChange")} OFFERED</li>
+                <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
+                <li>{t("candidacies.dialogEffects.uploadOffer")}</li>
+              </ul>
+              <Button variant="outlined" component="label" sx={{ mt: 2 }}>
+                {t("candidacies.makeOffer.uploadButton")}
+                <input
+                  type="file"
+                  hidden
+                  accept="application/pdf"
+                  onChange={handleFileSelect}
+                />
+              </Button>
+              {selectedFile && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {t("candidacies.makeOffer.selectedFile")} {selectedFile.name}
+                </Typography>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenOfferDialog(false)}>
+                {t("candidacies.dialogActions.cancel")}
+              </Button>
+              <Button
+                onClick={handleMakeOffer}
+                variant="contained"
+                disabled={!selectedFile}
+              >
+                {t("candidacies.dialogActions.confirm")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Reject Dialog */}
+          <Dialog
+            open={openRejectDialog}
+            onClose={() => setOpenRejectDialog(false)}
+          >
+            <DialogTitle>{t("candidacies.reject.confirmTitle")}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {t("candidacies.reject.confirmDescription")}
+              </DialogContentText>
+              <Typography sx={{ mt: 2 }}>
+                {t("candidacies.dialogEffects.title")}
+              </Typography>
+              <ul>
+                <li>
+                  {t("candidacies.dialogEffects.stateChange")}{" "}
+                  CANDIDATE_UNSUITABLE
+                </li>
+                <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
+              </ul>
+              <Typography sx={{ mt: 2 }} color="error">
+                {t("candidacies.dialogWarning")}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenRejectDialog(false)}>
+                {t("candidacies.dialogActions.cancel")}
+              </Button>
+              <Button onClick={handleReject} variant="contained" color="error">
+                {t("candidacies.dialogActions.confirm")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Unresponsive Dialog */}
+          <Dialog
+            open={openUnresponsiveDialog}
+            onClose={() => setOpenUnresponsiveDialog(false)}
+          >
+            <DialogTitle>
+              {t("candidacies.markUnresponsive.confirmTitle")}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {t("candidacies.markUnresponsive.confirmDescription")}
+              </DialogContentText>
+              <Typography sx={{ mt: 2 }}>
+                {t("candidacies.dialogEffects.title")}
+              </Typography>
+              <ul>
+                <li>
+                  {t("candidacies.dialogEffects.stateChange")}{" "}
+                  CANDIDATE_NOT_RESPONDING
+                </li>
+                <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
+              </ul>
+              <Typography sx={{ mt: 2 }} color="error">
+                {t("candidacies.dialogWarning")}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenUnresponsiveDialog(false)}>
+                {t("candidacies.dialogActions.cancel")}
+              </Button>
+              <Button
+                onClick={handleMarkUnresponsive}
+                variant="contained"
+                color="warning"
+              >
+                {t("candidacies.dialogActions.confirm")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Paper>
+      )}
+
+      {/* Add Snackbar component at the end */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
         >
-          <DialogTitle>
-            {t("candidacies.markUnresponsive.confirmTitle")}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {t("candidacies.markUnresponsive.confirmDescription")}
-            </DialogContentText>
-            <Typography sx={{ mt: 2 }}>
-              {t("candidacies.dialogEffects.title")}
-            </Typography>
-            <ul>
-              <li>
-                {t("candidacies.dialogEffects.stateChange")}{" "}
-                CANDIDATE_NOT_RESPONDING
-              </li>
-              <li>{t("candidacies.dialogEffects.cancelInterviews")}</li>
-            </ul>
-            <Typography sx={{ mt: 2 }} color="error">
-              {t("candidacies.dialogWarning")}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenUnresponsiveDialog(false)}>
-              {t("candidacies.dialogActions.cancel")}
-            </Button>
-            <Button
-              onClick={handleMarkUnresponsive}
-              variant="contained"
-              color="warning"
-            >
-              {t("candidacies.dialogActions.confirm")}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Paper>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

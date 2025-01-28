@@ -207,6 +207,8 @@ export const en = {
         "Are you sure you want to make an offer to this candidate?",
       uploadButton: "Upload Offer Letter (PDF)",
       selectedFile: "Selected file:",
+      error: "Failed to make offer to candidate",
+      success: "Offer has been successfully made to the candidate",
     },
     reject: {
       title: "Reject Candidacy",
