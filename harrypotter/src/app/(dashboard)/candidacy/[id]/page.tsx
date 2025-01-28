@@ -127,6 +127,8 @@ export default function CandidacyDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [showInterviews, setShowInterviews] = useState(true);
+  const [showDetails, setShowDetails] = useState(true);
+  const [showComments, setShowComments] = useState(true);
   const [expandedInterviews, setExpandedInterviews] = useState<
     Record<string, boolean>
   >({});
@@ -365,47 +367,65 @@ export default function CandidacyDetailPage() {
 
       {candidacy && (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 1,
-            }}
-          >
-            <Typography variant="h6">{candidacy.applicant_name}</Typography>
-            <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
-          </Box>
-          <Typography
-            variant="subtitle1"
-            gutterBottom
-            sx={{ color: "text.secondary" }}
-          >
-            @{candidacy.applicant_handle}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Link
-              href={`/openings/${candidacy.opening_id}`}
-              target="_blank"
-              rel="noopener noreferrer"
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <Typography variant="h6">
+              {t("candidacies.viewCandidacy")}
+            </Typography>
+            <IconButton
+              onClick={() => setShowDetails(!showDetails)}
               sx={{
-                color: "primary.main",
-                textDecoration: "none",
+                transform: showDetails ? "rotate(0deg)" : "rotate(180deg)",
+                transition: "transform 0.2s",
+              }}
+              size="small"
+            >
+              <ExpandMoreIcon />
+            </IconButton>
+          </Box>
+
+          <Collapse in={showDetails}>
+            <Box
+              sx={{
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: 0.5,
+                mb: 1,
               }}
             >
-              <Typography variant="subtitle1">
-                {candidacy.opening_title}
-              </Typography>
-              <OpenInNewIcon fontSize="small" />
-            </Link>
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {candidacy.opening_description}
-          </Typography>
+              <Typography variant="h6">{candidacy.applicant_name}</Typography>
+              <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
+            </Box>
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ color: "text.secondary" }}
+            >
+              @{candidacy.applicant_handle}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Link
+                href={`/openings/${candidacy.opening_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  color: "primary.main",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <Typography variant="subtitle1">
+                  {candidacy.opening_title}
+                </Typography>
+                <OpenInNewIcon fontSize="small" />
+              </Link>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {candidacy.opening_description}
+            </Typography>
+          </Collapse>
         </Paper>
       )}
 
@@ -645,152 +665,164 @@ export default function CandidacyDetailPage() {
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          {t("comments.title")}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Typography variant="h6">{t("comments.title")}</Typography>
+          <IconButton
+            onClick={() => setShowComments(!showComments)}
+            sx={{
+              transform: showComments ? "rotate(0deg)" : "rotate(180deg)",
+              transition: "transform 0.2s",
+            }}
+            size="small"
+          >
+            <ExpandMoreIcon />
+          </IconButton>
+        </Box>
 
-        {comments.length > 0 ? (
-          <Box sx={{ mt: 3 }}>
-            {[...comments]
-              .sort(
-                (a, b) =>
-                  new Date(a.created_at).getTime() -
-                  new Date(b.created_at).getTime()
-              )
-              .map((comment) => (
-                <Box
-                  key={comment.comment_id}
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    mb: 3,
-                    flexDirection:
-                      comment.commenter_type === "ORG_USER"
-                        ? "row"
-                        : "row-reverse",
-                  }}
-                >
-                  <Avatar
+        <Collapse in={showComments}>
+          {comments.length > 0 ? (
+            <Box sx={{ mt: 3 }}>
+              {[...comments]
+                .sort(
+                  (a, b) =>
+                    new Date(a.created_at).getTime() -
+                    new Date(b.created_at).getTime()
+                )
+                .map((comment) => (
+                  <Box
+                    key={comment.comment_id}
                     sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: (theme) =>
+                      display: "flex",
+                      gap: 2,
+                      mb: 3,
+                      flexDirection:
                         comment.commenter_type === "ORG_USER"
-                          ? theme.palette.primary.main
-                          : theme.palette.grey[400],
+                          ? "row"
+                          : "row-reverse",
                     }}
                   >
-                    {comment.commenter_name.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Paper
+                    <Avatar
                       sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        position: "relative",
-                        "&::before": {
-                          content: '""',
-                          position: "absolute",
-                          ...(comment.commenter_type === "ORG_USER"
-                            ? {
-                                left: -8,
-                                borderRight: (theme) =>
-                                  `8px solid ${theme.palette.divider}`,
-                              }
-                            : {
-                                right: -8,
-                                borderLeft: (theme) =>
-                                  `8px solid ${theme.palette.divider}`,
-                              }),
-                          top: 16,
-                          width: 0,
-                          height: 0,
-                          borderTop: "8px solid transparent",
-                          borderBottom: "8px solid transparent",
-                        },
+                        width: 40,
+                        height: 40,
+                        bgcolor: (theme) =>
+                          comment.commenter_type === "ORG_USER"
+                            ? theme.palette.primary.main
+                            : theme.palette.grey[400],
                       }}
                     >
-                      <Box
+                      {comment.commenter_name.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Paper
                         sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          mb: 1,
+                          p: 2,
+                          borderRadius: 2,
+                          border: "1px solid",
+                          borderColor: "divider",
+                          position: "relative",
+                          "&::before": {
+                            content: '""',
+                            position: "absolute",
+                            ...(comment.commenter_type === "ORG_USER"
+                              ? {
+                                  left: -8,
+                                  borderRight: (theme) =>
+                                    `8px solid ${theme.palette.divider}`,
+                                }
+                              : {
+                                  right: -8,
+                                  borderLeft: (theme) =>
+                                    `8px solid ${theme.palette.divider}`,
+                                }),
+                            top: 16,
+                            width: 0,
+                            height: 0,
+                            borderTop: "8px solid transparent",
+                            borderBottom: "8px solid transparent",
+                          },
                         }}
                       >
-                        <Typography
-                          variant="subtitle2"
+                        <Box
                           sx={{
-                            fontWeight: "bold",
-                            color: (theme) =>
-                              comment.commenter_type === "ORG_USER"
-                                ? theme.palette.primary.main
-                                : theme.palette.text.primary,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 1,
                           }}
                         >
-                          {comment.commenter_name}
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              fontWeight: "bold",
+                              color: (theme) =>
+                                comment.commenter_type === "ORG_USER"
+                                  ? theme.palette.primary.main
+                                  : theme.palette.text.primary,
+                            }}
+                          >
+                            {comment.commenter_name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(comment.created_at).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit",
+                              }
+                            )}{" "}
+                            {new Date(comment.created_at).toLocaleTimeString(
+                              undefined,
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </Typography>
+                        </Box>
+                        <Typography
+                          sx={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {comment.content}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(comment.created_at).toLocaleDateString(
-                            undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "2-digit",
-                            }
-                          )}{" "}
-                          {new Date(comment.created_at).toLocaleTimeString(
-                            undefined,
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </Typography>
-                      </Box>
-                      <Typography
-                        sx={{
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {comment.content}
-                      </Typography>
-                    </Paper>
+                      </Paper>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-          </Box>
-        ) : (
-          <Typography color="text.secondary" sx={{ my: 2 }}>
-            {t("comments.noComments")}
-          </Typography>
-        )}
+                ))}
+            </Box>
+          ) : (
+            <Typography color="text.secondary" sx={{ my: 2 }}>
+              {t("comments.noComments")}
+            </Typography>
+          )}
 
-        <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3 }} />
 
-        <Box>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t("comments.addPlaceholder")}
-            disabled={submitting}
-          />
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleAddComment}
-              disabled={!newComment.trim() || submitting}
-            >
-              {submitting ? t("common.loading") : t("comments.add")}
-            </Button>
+          <Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={t("comments.addPlaceholder")}
+              disabled={submitting}
+            />
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+              <Button
+                variant="contained"
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || submitting}
+              >
+                {submitting ? t("common.loading") : t("comments.add")}
+              </Button>
+            </Box>
           </Box>
-        </Box>
+        </Collapse>
       </Paper>
     </Box>
   );
