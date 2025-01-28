@@ -196,6 +196,46 @@ export const en = {
     handle: "Handle",
     state: "State",
     filterPlaceholder: "Filter by",
+    stateChanges: "Change State",
+    makeOffer: {
+      title: "Make Offer",
+      description:
+        "Upload an offer letter (PDF) and change the candidacy state to OFFERED. All pending interviews will be marked as cancelled.",
+      button: "Make Offer",
+      confirmTitle: "Confirm Make Offer",
+      confirmDescription:
+        "Are you sure you want to make an offer to this candidate?",
+      uploadButton: "Upload Offer Letter (PDF)",
+      selectedFile: "Selected file:",
+    },
+    reject: {
+      title: "Reject Candidacy",
+      description:
+        "Mark the candidate as unsuitable for this position. All pending interviews will be marked as cancelled.",
+      button: "Reject Candidate",
+      confirmTitle: "Confirm Reject Candidacy",
+      confirmDescription: "Are you sure you want to reject this candidate?",
+    },
+    markUnresponsive: {
+      title: "Mark as Unresponsive",
+      description:
+        "Mark the candidate as unresponsive if they have not been responding to communications. All pending interviews will be marked as cancelled.",
+      button: "Mark Unresponsive",
+      confirmTitle: "Confirm Mark as Unresponsive",
+      confirmDescription:
+        "Are you sure you want to mark this candidate as unresponsive?",
+    },
+    dialogActions: {
+      confirm: "Confirm",
+      cancel: "Cancel",
+    },
+    dialogWarning: "This action cannot be undone.",
+    dialogEffects: {
+      title: "This action will:",
+      cancelInterviews: "Mark all pending interviews as cancelled",
+      stateChange: "Change the candidacy state to",
+      uploadOffer: "Upload the offer letter",
+    },
     states: {
       INTERVIEWING: "Interviewing",
       OFFERED: "Offered",
