@@ -28,11 +28,11 @@ func (p *PG) OfferToCandidate(
 	defer tx.Rollback(ctx)
 
 	query := `
-UPDATE candidacy
-SET status = $1
+UPDATE candidacies
+SET candidacy_state = $1
 WHERE id = $2
 AND employer_id = $3
-AND status = $4
+AND candidacy_state = $4
 RETURNING id
 `
 
