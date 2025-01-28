@@ -69,3 +69,8 @@ type EmployerInterview struct {
 	FeedbackSubmittedAt  *time.Time                   `json:"feedback_submitted_at"`
 	CreatedAt            time.Time                    `json:"created_at"`
 }
+
+type OfferToCandidateRequest struct {
+	CandidacyID   string `json:"candidacy_id"   validate:"required"`
+	OfferDocument string `json:"offer_document" validate:"omitempty"`
+}

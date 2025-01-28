@@ -105,6 +105,11 @@ model EmployerInterview {
     created_at: utcDateTime;
 }
 
+model OfferToCandidateRequest {
+    candidacy_id: string;
+    offer_document?: string;
+}
+
 @route("/employer/filter-candidacy-infos")
 interface FilterCandidacyInfos {
     @tag("Candidacies")
@@ -163,5 +168,14 @@ interface GetCandidacyComments {
         statusCode: 200;
 
         @body response: CandidacyComment[];
+    };
+}
+
+@route("/employer/offer-to-candidate")
+interface OfferToCandidate {
+    @tag("Candidacies")
+    @post
+    offerToCandidate(@body request: OfferToCandidateRequest): {
+        @statusCode statusCode: 200;
     };
 }

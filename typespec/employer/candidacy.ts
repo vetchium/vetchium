@@ -69,3 +69,8 @@ export interface EmployerInterview {
   feedback_submitted_at?: Date;
   created_at: Date;
 }
+
+export interface OfferToCandidateRequest {
+  candidacy_id: string;
+  offer_document?: string;
+}

@@ -195,6 +195,7 @@ type DB interface {
 		context.Context,
 		employer.PutAssessmentRequest,
 	) error
+	OfferToCandidate(context.Context, employer.OfferToCandidateRequest) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)

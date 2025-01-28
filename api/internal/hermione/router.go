@@ -269,6 +269,11 @@ func (h *Hermione) Run() error {
 		// TODO: It is unclear what roles should be required here
 		[]common.OrgUserRole{common.Any},
 	)
+	h.mw.Protect(
+		"/employer/offer-to-candidate",
+		candidacy.OfferToCandidate(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	)
 
 	// Used by employer - Interviews
 	h.mw.Protect(
