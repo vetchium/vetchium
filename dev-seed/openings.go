@@ -7,6 +7,9 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
+// Track openings per company
+var companyOpenings = make(map[string][]string)
+
 func createOpening(token string, req employer.CreateOpeningRequest) string {
 	var resp employer.CreateOpeningResponse
 	makeRequest("POST", "/employer/create-opening", token, req, &resp)
@@ -28,32 +31,29 @@ func changeOpeningState(
 
 func createOpenings() {
 	// Get tokens from the global map
-	gryffindorVal, ok := sessionTokens.Load("admin@gryffindor.example")
+	gryffindorVal, ok := employerSessionTokens.Load("admin@gryffindor.example")
 	if !ok {
 		log.Fatal("failed to get gryffindor token")
 	}
 	gryffindorToken := gryffindorVal.(string)
 
-	hufflepuffVal, ok := sessionTokens.Load("admin@hufflepuff.example")
+	hufflepuffVal, ok := employerSessionTokens.Load("admin@hufflepuff.example")
 	if !ok {
 		log.Fatal("failed to get hufflepuff token")
 	}
 	hufflepuffToken := hufflepuffVal.(string)
 
-	ravenclawVal, ok := sessionTokens.Load("admin@ravenclaw.example")
+	ravenclawVal, ok := employerSessionTokens.Load("admin@ravenclaw.example")
 	if !ok {
 		log.Fatal("failed to get ravenclaw token")
 	}
 	ravenclawToken := ravenclawVal.(string)
 
-	slytherinVal, ok := sessionTokens.Load("admin@slytherin.example")
+	slytherinVal, ok := employerSessionTokens.Load("admin@slytherin.example")
 	if !ok {
 		log.Fatal("failed to get slytherin token")
 	}
 	slytherinToken := slytherinVal.(string)
-
-	// Track openings per company to publish first two
-	companyOpenings := make(map[string][]string)
 
 	openings := []struct {
 		token string

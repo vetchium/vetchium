@@ -34,7 +34,7 @@ func signinAdmins() {
 	}
 
 	for _, admin := range admins {
-		sessionTokens.Store(
+		employerSessionTokens.Store(
 			admin.email,
 			employerSignin(admin.email, "NewPassword123$", admin.clientID),
 		)

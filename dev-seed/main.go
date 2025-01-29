@@ -11,7 +11,8 @@ import (
 )
 
 // Store session tokens for each user in a thread-safe map
-var sessionTokens sync.Map
+var employerSessionTokens sync.Map
+var hubSessionTokens sync.Map
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -43,4 +44,7 @@ func main() {
 	createCostCenters()
 	color.Cyan("Create Openings")
 	createOpenings()
+
+	// color.Cyan("Signing in hub users")
+	// signinHubUsers()
 }

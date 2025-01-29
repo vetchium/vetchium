@@ -9,49 +9,57 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func initHubUsers(db *pgxpool.Pool) {
-	hubUsers := []struct {
-		name              string
-		handle            string
-		email             string
-		residentCountry   string
-		residentCity      string
-		preferredLanguage string
-	}{
-		{
-			name:              "Minerva McGonagall",
-			handle:            "minerva",
-			email:             "minerva@hub.example",
-			residentCountry:   "IRL",
-			residentCity:      "Dublin",
-			preferredLanguage: "en",
-		},
-		{
-			name:              "Pomona Sprout",
-			handle:            "pomona",
-			email:             "pomona@hub.example",
-			residentCountry:   "NZL",
-			residentCity:      "Wellington",
-			preferredLanguage: "en",
-		},
-		{
-			name:              "Rubeus Hagrid",
-			handle:            "hagrid",
-			email:             "hagrid@hub.example",
-			residentCountry:   "NOR",
-			residentCity:      "Bergen",
-			preferredLanguage: "en",
-		},
-		{
-			name:              "Sybill Trelawney",
-			handle:            "sybill",
-			email:             "sybill@hub.example",
-			residentCountry:   "ISL",
-			residentCity:      "Reykjavik",
-			preferredLanguage: "en",
-		},
-	}
+var hubUsers = []struct {
+	name              string
+	handle            string
+	email             string
+	residentCountry   string
+	residentCity      string
+	preferredLanguage string
+}{
+	{
+		name:              "Luna Lovegood",
+		handle:            "luna",
+		email:             "luna@hub.example",
+		residentCountry:   "IND",
+		residentCity:      "Chennai",
+		preferredLanguage: "en",
+	},
+	{
+		name:              "Minerva McGonagall",
+		handle:            "minerva",
+		email:             "minerva@hub.example",
+		residentCountry:   "IRL",
+		residentCity:      "Dublin",
+		preferredLanguage: "en",
+	},
+	{
+		name:              "Pomona Sprout",
+		handle:            "pomona",
+		email:             "pomona@hub.example",
+		residentCountry:   "NZL",
+		residentCity:      "Wellington",
+		preferredLanguage: "en",
+	},
+	{
+		name:              "Rubeus Hagrid",
+		handle:            "hagrid",
+		email:             "hagrid@hub.example",
+		residentCountry:   "NOR",
+		residentCity:      "Bergen",
+		preferredLanguage: "en",
+	},
+	{
+		name:              "Sybill Trelawney",
+		handle:            "sybill",
+		email:             "sybill@hub.example",
+		residentCountry:   "ISL",
+		residentCity:      "Reykjavik",
+		preferredLanguage: "en",
+	},
+}
 
+func initHubUsers(db *pgxpool.Pool) {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
@@ -84,5 +92,14 @@ func initHubUsers(db *pgxpool.Pool) {
 
 	if err := tx.Commit(ctx); err != nil {
 		log.Fatalf("failed to commit transaction: %v", err)
+	}
+}
+
+func signinHubUsers() {
+	for _, user := range hubUsers {
+		hubSessionTokens.Store(
+			user.email,
+			hubSignin(user.email, "NewPassword123$"),
+		)
 	}
 }

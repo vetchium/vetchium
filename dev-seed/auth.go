@@ -10,6 +10,9 @@ import (
 	"net/url"
 	"regexp"
 	"time"
+
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 // Message corresponds to the message object in mailpit
@@ -24,7 +27,7 @@ type MailPitResponse struct {
 // employerSignin handles the employer signin process including TFA
 func employerSignin(email, password, clientID string) string {
 	// Check if we already have a token
-	if token, ok := sessionTokens.Load(email); ok {
+	if token, ok := employerSessionTokens.Load(email); ok {
 		return token.(string)
 	}
 
@@ -219,6 +222,136 @@ func employerSignin(email, password, clientID string) string {
 	}
 
 	// Store the token for future use
-	sessionTokens.Store(email, tfaResp.SessionToken)
+	employerSessionTokens.Store(email, tfaResp.SessionToken)
 	return tfaResp.SessionToken
+}
+
+func hubSignin(email, password string) string {
+	// Check if we already have a token
+	if token, ok := hubSessionTokens.Load(email); ok {
+		return token.(string)
+	}
+
+	// Step 1: Login
+	loginRequest := hub.LoginRequest{
+		Email:    common.EmailAddress(email),
+		Password: common.Password(password),
+	}
+
+	loginReqJSON, err := json.Marshal(loginRequest)
+	if err != nil {
+		log.Fatalf("failed to marshal login request: %v", err)
+	}
+
+	loginResp, err := http.Post(
+		serverURL+"/hub/login",
+		"application/json",
+		bytes.NewBuffer(loginReqJSON),
+	)
+	if err != nil {
+		log.Fatalf("failed to make login request: %v", err)
+	}
+	defer loginResp.Body.Close()
+
+	if loginResp.StatusCode != http.StatusOK {
+		log.Fatalf("login failed with status %d", loginResp.StatusCode)
+	}
+
+	var loginResponse hub.LoginResponse
+	if err := json.NewDecoder(loginResp.Body).Decode(&loginResponse); err != nil {
+		log.Fatalf("failed to decode login response: %v", err)
+	}
+
+	// Step 2: Wait for TFA email and get code from mailpit
+	time.Sleep(5 * time.Second)
+
+	// Query mailpit for the TFA email
+	baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+	if err != nil {
+		log.Fatalf("failed to parse mailpit URL: %v", err)
+	}
+	query := url.Values{}
+	query.Add(
+		"query",
+		fmt.Sprintf("to:%s subject:Vetchi Two Factor Authentication", email),
+	)
+	baseURL.RawQuery = query.Encode()
+
+	var messageID string
+	for i := 0; i < 3; i++ {
+		mailResp, err := http.Get(baseURL.String())
+		if err != nil {
+			log.Fatalf("failed to query mailpit: %v", err)
+		}
+
+		var mailPitResp MailPitResponse
+		if err := json.NewDecoder(mailResp.Body).Decode(&mailPitResp); err != nil {
+			log.Fatalf("failed to decode mailpit response: %v", err)
+		}
+		mailResp.Body.Close()
+
+		if len(mailPitResp.Messages) > 0 {
+			messageID = mailPitResp.Messages[0].ID
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	if messageID == "" {
+		log.Fatal("no TFA email found in mailpit")
+	}
+
+	// Get the email content
+	mailResp, err := http.Get(mailPitURL + "/api/v1/message/" + messageID)
+	if err != nil {
+		log.Fatalf("failed to get email content: %v", err)
+	}
+	defer mailResp.Body.Close()
+
+	mailBody, err := io.ReadAll(mailResp.Body)
+	if err != nil {
+		log.Fatalf("failed to read email body: %v", err)
+	}
+
+	// Extract TFA code from email
+	re := regexp.MustCompile(`Token:\s*([a-zA-Z0-9]+)\s*`)
+	matches := re.FindStringSubmatch(string(mailBody))
+	if len(matches) < 2 {
+		log.Fatal("could not find TFA code in email")
+	}
+	tfaCode := matches[1]
+
+	// Step 3: TFA
+	tfaRequest := hub.HubTFARequest{
+		TFAToken:   loginResponse.Token,
+		TFACode:    tfaCode,
+		RememberMe: true,
+	}
+
+	tfaReqJSON, err := json.Marshal(tfaRequest)
+	if err != nil {
+		log.Fatalf("failed to marshal TFA request: %v", err)
+	}
+
+	tfaResp, err := http.Post(
+		serverURL+"/hub/tfa",
+		"application/json",
+		bytes.NewBuffer(tfaReqJSON),
+	)
+	if err != nil {
+		log.Fatalf("failed to make TFA request: %v", err)
+	}
+	defer tfaResp.Body.Close()
+
+	if tfaResp.StatusCode != http.StatusOK {
+		log.Fatalf("TFA failed with status %d", tfaResp.StatusCode)
+	}
+
+	var tfaResponse hub.HubTFAResponse
+	if err := json.NewDecoder(tfaResp.Body).Decode(&tfaResponse); err != nil {
+		log.Fatalf("failed to decode TFA response: %v", err)
+	}
+
+	hubSessionTokens.Store(email, tfaResponse.SessionToken)
+	return tfaResponse.SessionToken
 }

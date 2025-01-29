@@ -12,25 +12,25 @@ func addLocation(token string, req employer.AddLocationRequest) {
 
 func createLocations() {
 	// Get tokens from the global map
-	gryffindorVal, ok := sessionTokens.Load("admin@gryffindor.example")
+	gryffindorVal, ok := employerSessionTokens.Load("admin@gryffindor.example")
 	if !ok {
 		log.Fatal("failed to get gryffindor token")
 	}
 	gryffindorToken := gryffindorVal.(string)
 
-	hufflepuffVal, ok := sessionTokens.Load("admin@hufflepuff.example")
+	hufflepuffVal, ok := employerSessionTokens.Load("admin@hufflepuff.example")
 	if !ok {
 		log.Fatal("failed to get hufflepuff token")
 	}
 	hufflepuffToken := hufflepuffVal.(string)
 
-	ravenclawVal, ok := sessionTokens.Load("admin@ravenclaw.example")
+	ravenclawVal, ok := employerSessionTokens.Load("admin@ravenclaw.example")
 	if !ok {
 		log.Fatal("failed to get ravenclaw token")
 	}
 	ravenclawToken := ravenclawVal.(string)
 
-	slytherinVal, ok := sessionTokens.Load("admin@slytherin.example")
+	slytherinVal, ok := employerSessionTokens.Load("admin@slytherin.example")
 	if !ok {
 		log.Fatal("failed to get slytherin token")
 	}
