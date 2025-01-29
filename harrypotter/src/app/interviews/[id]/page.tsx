@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -50,6 +51,7 @@ import {
   Public as PublicIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -90,6 +92,117 @@ const formatUTCDateTime = (isoString: string | Date) => {
     timeZone: "UTC",
   }).format(new Date(dateStr));
 };
+
+// FeedbackWidget component for displaying and editing feedback sections
+interface FeedbackWidgetProps {
+  title: string;
+  value: string;
+  placeholder: string;
+  icon?: React.ReactNode;
+  isInterviewer: boolean;
+  onSave: (value: string) => void;
+  customStyle?: any;
+}
+
+function FeedbackWidget({
+  title,
+  value,
+  placeholder,
+  icon,
+  isInterviewer,
+  onSave,
+  customStyle,
+}: FeedbackWidgetProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    onSave(editValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value);
+    setIsEditing(false);
+  };
+
+  return (
+    <Card
+      sx={{
+        mb: 2,
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        "& .MuiCardContent-root": {
+          ...customStyle?.["& .MuiCardContent-root"],
+        },
+        boxShadow: "none",
+        ...customStyle,
+      }}
+    >
+      <CardContent>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {icon}
+            <Typography variant="h6">{title}</Typography>
+          </Box>
+          {isInterviewer && (
+            <IconButton
+              onClick={() => setIsEditing(!isEditing)}
+              color="primary"
+              size="small"
+            >
+              <EditIcon />
+            </IconButton>
+          )}
+        </Box>
+
+        {isEditing ? (
+          <>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              placeholder={placeholder}
+              sx={{ mb: 2 }}
+            />
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+              <Button onClick={handleCancel} color="inherit">
+                {t("common.cancel")}
+              </Button>
+              <Button onClick={handleSave} variant="contained">
+                {t("common.save")}
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Typography
+            variant="body1"
+            sx={{
+              whiteSpace: "pre-wrap",
+              color: value ? "text.primary" : "text.secondary",
+              fontStyle: value ? "normal" : "italic",
+            }}
+          >
+            {value || placeholder}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function InterviewDetailPage() {
   const params = useParams();
@@ -292,6 +405,65 @@ export default function InterviewDetailPage() {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setRsvpLoading(false);
+    }
+  };
+
+  const isInterviewer = Boolean(
+    interview?.interviewers?.some(
+      (interviewer) => interviewer.email === userEmail
+    )
+  );
+
+  const handleFeedbackSave = async (updates: Partial<EmployerInterview>) => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      const request: PutAssessmentRequest = {
+        interview_id: interviewId,
+        decision:
+          updates.interviewers_decision ||
+          interview?.interviewers_decision ||
+          InterviewersDecisions.NEUTRAL,
+        positives: updates.positives || interview?.positives || "",
+        negatives: updates.negatives || interview?.negatives || "",
+        overall_assessment:
+          updates.overall_assessment || interview?.overall_assessment || "",
+        feedback_to_candidate:
+          updates.feedback_to_candidate ||
+          interview?.feedback_to_candidate ||
+          "",
+      };
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/put-assessment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(request),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(t("interviews.assessment.saveError"));
+      }
+
+      setSuccessMessage(t("interviews.assessment.saveSuccess"));
+      await fetchInterview();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.error"));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -819,121 +991,89 @@ export default function InterviewDetailPage() {
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel id="rating-label">
-                      {t("interviews.assessment.rating")}
-                    </InputLabel>
-                    <Select
-                      labelId="rating-label"
-                      value={interview?.interviewers_decision || ""}
-                      label={t("interviews.assessment.rating")}
-                      onChange={(e) =>
-                        setInterview((prev) => ({
-                          ...prev!,
-                          interviewers_decision: e.target
-                            .value as InterviewersDecision,
-                        }))
-                      }
-                    >
-                      {Object.entries(InterviewersDecisions).map(([key]) => (
-                        <MenuItem
-                          key={key}
-                          value={
-                            InterviewersDecisions[
-                              key as keyof typeof InterviewersDecisions
-                            ]
-                          }
-                        >
-                          {t(`interviews.assessment.ratings.${key}`)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  {isInterviewer && (
+                    <FormControl fullWidth sx={{ mb: 3 }}>
+                      <InputLabel id="rating-label">
+                        {t("interviews.assessment.rating")}
+                      </InputLabel>
+                      <Select
+                        labelId="rating-label"
+                        value={interview?.interviewers_decision || ""}
+                        label={t("interviews.assessment.rating")}
+                        onChange={(e) =>
+                          handleFeedbackSave({
+                            interviewers_decision: e.target
+                              .value as InterviewersDecision,
+                          })
+                        }
+                      >
+                        {Object.entries(InterviewersDecisions).map(([key]) => (
+                          <MenuItem
+                            key={key}
+                            value={
+                              InterviewersDecisions[
+                                key as keyof typeof InterviewersDecisions
+                              ]
+                            }
+                          >
+                            {t(`interviews.assessment.ratings.${key}`)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
 
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    label={t("interviews.assessment.positives")}
+                  <FeedbackWidget
+                    title={t("interviews.assessment.positives")}
+                    value={interview?.positives || ""}
                     placeholder={t(
                       "interviews.assessment.positivesPlaceholder"
                     )}
-                    value={interview?.positives || ""}
-                    onChange={(e) =>
-                      setInterview((prev) => ({
-                        ...prev!,
-                        positives: e.target.value,
-                      }))
-                    }
-                    sx={{ mb: 3 }}
+                    isInterviewer={isInterviewer}
+                    onSave={(value) => handleFeedbackSave({ positives: value })}
                   />
 
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    label={t("interviews.assessment.negatives")}
+                  <FeedbackWidget
+                    title={t("interviews.assessment.negatives")}
+                    value={interview?.negatives || ""}
                     placeholder={t(
                       "interviews.assessment.negativesPlaceholder"
                     )}
-                    value={interview?.negatives || ""}
-                    onChange={(e) =>
-                      setInterview((prev) => ({
-                        ...prev!,
-                        negatives: e.target.value,
-                      }))
-                    }
-                    sx={{ mb: 3 }}
+                    isInterviewer={isInterviewer}
+                    onSave={(value) => handleFeedbackSave({ negatives: value })}
                   />
 
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    label={t("interviews.assessment.overallAssessment")}
+                  <FeedbackWidget
+                    title={t("interviews.assessment.overallAssessment")}
+                    value={interview?.overall_assessment || ""}
                     placeholder={t(
                       "interviews.assessment.overallAssessmentPlaceholder"
                     )}
-                    value={interview?.overall_assessment || ""}
-                    onChange={(e) =>
-                      setInterview((prev) => ({
-                        ...prev!,
-                        overall_assessment: e.target.value,
-                      }))
+                    isInterviewer={isInterviewer}
+                    onSave={(value) =>
+                      handleFeedbackSave({ overall_assessment: value })
                     }
-                    sx={{ mb: 3 }}
                   />
 
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    label={
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <PublicIcon color="action" fontSize="small" />
-                        {t("interviews.assessment.feedback")}
-                      </Box>
-                    }
-                    placeholder={t("interviews.assessment.feedbackPlaceholder")}
+                  <FeedbackWidget
+                    title={t("interviews.assessment.feedback")}
                     value={interview?.feedback_to_candidate || ""}
-                    onChange={(e) =>
-                      setInterview((prev) => ({
-                        ...prev!,
-                        feedback_to_candidate: e.target.value,
-                      }))
+                    placeholder={t("interviews.assessment.feedbackPlaceholder")}
+                    icon={<PublicIcon color="action" fontSize="small" />}
+                    isInterviewer={isInterviewer}
+                    onSave={(value) =>
+                      handleFeedbackSave({ feedback_to_candidate: value })
                     }
-                    sx={{
-                      mb: 3,
-                      "& .MuiOutlinedInput-root": {
-                        bgcolor: (theme) => theme.palette.warning.light + "10",
+                    customStyle={{
+                      "& .MuiCardContent-root": {
+                        bgcolor: (theme: any) =>
+                          theme.palette.warning.light + "10",
                       },
                     }}
                   />
 
                   {interview?.feedback_submitted_by && (
-                    <Box sx={{ mb: 3 }}>
+                    <Box sx={{ mt: 2 }}>
                       <Typography variant="body2" color="text.secondary">
                         {`${t("interviews.assessment.lastUpdated")
                           .replace(
@@ -953,19 +1093,6 @@ export default function InterviewDetailPage() {
                       </Typography>
                     </Box>
                   )}
-
-                  <Button
-                    variant="contained"
-                    onClick={handleSave}
-                    disabled={saving}
-                    sx={{ minWidth: 120 }}
-                  >
-                    {saving ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      t("interviews.assessment.save")
-                    )}
-                  </Button>
                 </AccordionDetails>
               </Accordion>
             </Grid>
