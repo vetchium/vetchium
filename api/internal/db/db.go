@@ -13,6 +13,19 @@ import (
 // Do not name parameters when passing objects. Name parameters when passing
 // primitive data types. Try to keep within 80 characters.
 
+type OfferToCandidateReq struct {
+	CandidacyID string
+	Comment     string
+	Email       Email
+}
+
+type CandidateInfo struct {
+	CandidateName  string
+	CandidateEmail string
+	CompanyName    string
+	OpeningTitle   string
+}
+
 type DB interface {
 	// Used by hermione and granger
 
@@ -195,7 +208,7 @@ type DB interface {
 		context.Context,
 		employer.PutAssessmentRequest,
 	) error
-	OfferToCandidate(context.Context, employer.OfferToCandidateRequest) error
+	OfferToCandidate(context.Context, OfferToCandidateReq) error
 
 	// Used by hermione - for Hub users
 	AuthHubUser(c context.Context, token string) (HubUserTO, error)
@@ -228,4 +241,5 @@ type DB interface {
 	Logout(c context.Context, token string) error
 	ResetHubUserPassword(context.Context, HubUserPasswordReset) error
 	HubRSVPInterview(context.Context, hub.HubRSVPInterviewRequest) error
+	GetCandidateInfo(context.Context, string) (CandidateInfo, error)
 }

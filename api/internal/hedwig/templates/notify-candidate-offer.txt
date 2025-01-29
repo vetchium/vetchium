@@ -1,0 +1,10 @@
+Dear {{.CandidateName}},
+
+Congratulations! 🎉
+
+{{.CompanyName}} has extended you an offer for the {{.OpeningTitle}} position.
+
+Please visit your candidacy page at {{.CandidacyURL}} to view and respond to the offer.
+
+Best regards,
+The Vetchi Team 

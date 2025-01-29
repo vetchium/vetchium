@@ -22,6 +22,7 @@ const (
 	NotifyWatchersNewInterviewer = "notify-watchers-new-interviewer"
 	RemovedInterviewerNotify     = "removed-interviewer-notify"
 	NotifyApplicantInterview     = "notify-applicant-interview"
+	NotifyCandidateOffer         = "notify-candidate-offer"
 )
 
 type Hedwig interface {

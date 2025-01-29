@@ -3,16 +3,17 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
 )
 
 func (p *PG) OfferToCandidate(
 	ctx context.Context,
-	request employer.OfferToCandidateRequest,
+	request db.OfferToCandidateReq,
 ) error {
 	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
 	if !ok {
@@ -71,6 +72,74 @@ AND interview_state = $3
 		return db.ErrInternal
 	}
 
+	commentQuery := `
+INSERT INTO candidacy_comments (
+	author_type,
+	org_user_id,
+	comment_text,
+	candidacy_id,
+	employer_id,
+	created_at
+)
+VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5,
+	timezone('UTC', now())
+)
+`
+	_, err = tx.Exec(
+		ctx,
+		commentQuery,
+		db.OrgUserAuthorType,
+		orgUser.ID,
+		request.Comment,
+		request.CandidacyID,
+		orgUser.EmployerID,
+	)
+	if err != nil {
+		p.log.Err("failed to add comment", "error", err)
+		return db.ErrInternal
+	}
+
+	emailQuery := `
+INSERT INTO emails (
+	email_from,
+	email_to,
+	email_cc,
+	email_subject,
+	email_html_body,
+	email_text_body,
+	email_state
+)
+VALUES (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5,
+	$6,
+	$7
+)
+`
+	_, err = tx.Exec(
+		ctx,
+		emailQuery,
+		request.Email.EmailFrom,
+		request.Email.EmailTo,
+		request.Email.EmailCC,
+		request.Email.EmailSubject,
+		request.Email.EmailHTMLBody,
+		request.Email.EmailTextBody,
+		request.Email.EmailState,
+	)
+	if err != nil {
+		p.log.Err("failed to create email", "error", err)
+		return db.ErrInternal
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
@@ -78,4 +147,41 @@ AND interview_state = $3
 	}
 
 	return nil
+}
+
+func (p *PG) GetCandidateInfo(
+	ctx context.Context,
+	candidacyID string,
+) (db.CandidateInfo, error) {
+	query := `
+SELECT
+	h.full_name,
+	h.email,
+	e.company_name,
+	o.title
+FROM
+	candidacies c
+	JOIN applications a ON c.application_id = a.id
+	JOIN hub_users h ON a.hub_user_id = h.id
+	JOIN employers e ON c.employer_id = e.id
+	JOIN openings o ON c.employer_id = o.employer_id AND c.opening_id = o.id
+WHERE
+	c.id = $1
+`
+	var info db.CandidateInfo
+	err := p.pool.QueryRow(ctx, query, candidacyID).Scan(
+		&info.CandidateName,
+		&info.CandidateEmail,
+		&info.CompanyName,
+		&info.OpeningTitle,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.CandidateInfo{}, db.ErrNoCandidacy
+		}
+		p.log.Err("failed to get candidate info", "error", err)
+		return db.CandidateInfo{}, db.ErrInternal
+	}
+
+	return info, nil
 }
