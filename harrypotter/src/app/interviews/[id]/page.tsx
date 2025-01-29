@@ -112,7 +112,8 @@ function FeedbackWidget({
   isInterviewer,
   onSave,
   customStyle,
-}: FeedbackWidgetProps) {
+  isEditable = true,
+}: FeedbackWidgetProps & { isEditable?: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const { t } = useTranslation();
@@ -156,7 +157,7 @@ function FeedbackWidget({
             {icon}
             <Typography variant="h6">{title}</Typography>
           </Box>
-          {isInterviewer && (
+          {isInterviewer && isEditable && (
             <IconButton
               onClick={() => setIsEditing(!isEditing)}
               color="primary"
@@ -466,6 +467,9 @@ export default function InterviewDetailPage() {
       setSaving(false);
     }
   };
+
+  const isInterviewScheduled =
+    interview?.interview_state === "SCHEDULED_INTERVIEW";
 
   if (loading) {
     return (
@@ -801,7 +805,8 @@ export default function InterviewDetailPage() {
                                         disabled={
                                           rsvpLoading ||
                                           interviewer.rsvp_status ===
-                                            RSVPStatuses.YES
+                                            RSVPStatuses.YES ||
+                                          !isInterviewScheduled
                                         }
                                         sx={{
                                           "&.Mui-disabled": {
@@ -838,7 +843,8 @@ export default function InterviewDetailPage() {
                                         disabled={
                                           rsvpLoading ||
                                           interviewer.rsvp_status ===
-                                            RSVPStatuses.NO
+                                            RSVPStatuses.NO ||
+                                          !isInterviewScheduled
                                         }
                                         sx={{
                                           "&.Mui-disabled": {
@@ -1031,6 +1037,7 @@ export default function InterviewDetailPage() {
                     )}
                     isInterviewer={isInterviewer}
                     onSave={(value) => handleFeedbackSave({ positives: value })}
+                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1041,6 +1048,7 @@ export default function InterviewDetailPage() {
                     )}
                     isInterviewer={isInterviewer}
                     onSave={(value) => handleFeedbackSave({ negatives: value })}
+                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1053,6 +1061,7 @@ export default function InterviewDetailPage() {
                     onSave={(value) =>
                       handleFeedbackSave({ overall_assessment: value })
                     }
+                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1070,6 +1079,7 @@ export default function InterviewDetailPage() {
                           theme.palette.warning.light + "10",
                       },
                     }}
+                    isEditable={isInterviewScheduled}
                   />
 
                   {interview?.feedback_submitted_by && (

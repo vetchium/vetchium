@@ -564,6 +564,9 @@ export default function CandidacyDetailPage() {
               router.push(`/candidacy/${candidacyId}/add-interview`)
             }
             size="small"
+            disabled={
+              candidacy?.candidacy_state !== CandidacyStates.INTERVIEWING
+            }
           >
             {t("interviews.addNew")}
           </Button>
