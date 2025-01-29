@@ -17,10 +17,17 @@ vetchi $ # Bring up the backend services
 vetchi $ make
 vetchi $ # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 
+vetchi $ cd typespec && npm ci && npm run build
+
 vetchi $ # Bring up the frontend services
-vetchi $ cd harrypotter && npm install && npm run dev
-vetchi $ cd ronweasly && npm install && npm run dev
+vetchi $ cd harrypotter && npm ci && npm run dev
+vetchi $ cd ronweasly && npm ci && npm run dev
 vetchi $ # Visit http://localhost:3000 and http://localhost:3001
+
+vetchi $ # If changes were made in typespec/**/*.ts files, do:
+vetchi $ cd typespec && npm run build 
+vetchi $ cd harrypotter && npm install ../typespec
+vetchi $ cd ronweasly && npm install ../typespec
 
 vetchi $ # Seed some test data
 vetchi $ make seed  # tilt up should be running
