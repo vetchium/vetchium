@@ -321,7 +321,40 @@ func hubSignin(email, password string) string {
 	}
 	tfaCode := matches[1]
 
-	// Step 3: TFA
+	// Step 3: Delete the email from mailpit
+	deleteBody := struct {
+		IDs []string `json:"IDs"`
+	}{
+		IDs: []string{messageID},
+	}
+
+	deleteJSON, err := json.Marshal(deleteBody)
+	if err != nil {
+		log.Fatalf("failed to marshal delete request: %v", err)
+	}
+
+	deleteReq, err := http.NewRequest(
+		"DELETE",
+		mailPitURL+"/api/v1/messages",
+		bytes.NewBuffer(deleteJSON),
+	)
+	if err != nil {
+		log.Fatalf("failed to create delete request: %v", err)
+	}
+	deleteReq.Header.Set("Accept", "application/json")
+	deleteReq.Header.Set("Content-Type", "application/json")
+
+	deleteResp, err := http.DefaultClient.Do(deleteReq)
+	if err != nil {
+		log.Fatalf("failed to delete email: %v", err)
+	}
+	defer deleteResp.Body.Close()
+
+	if deleteResp.StatusCode != http.StatusOK {
+		log.Fatalf("failed to delete email. status: %d", deleteResp.StatusCode)
+	}
+
+	// Step 4: TFA
 	tfaRequest := hub.HubTFARequest{
 		TFAToken:   loginResponse.Token,
 		TFACode:    tfaCode,

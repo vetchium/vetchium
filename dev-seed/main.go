@@ -45,6 +45,6 @@ func main() {
 	color.Cyan("Create Openings")
 	createOpenings()
 
-	// color.Cyan("Signing in hub users")
-	// signinHubUsers()
+	color.Cyan("Signing in hub users")
+	signinHubUsers()
 }
