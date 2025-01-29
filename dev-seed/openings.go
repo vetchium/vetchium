@@ -3,12 +3,16 @@ package main
 import (
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
-// Track openings per company
+// Track openings per company using company domain as key, openingID as value
 var companyOpenings = make(map[string][]string)
+
+// Track active openings per company using company domain as key, openingID as value
+var activeOpenings = make(map[string][]string)
 
 func createOpening(token string, req employer.CreateOpeningRequest) string {
 	var resp employer.CreateOpeningResponse
@@ -56,12 +60,14 @@ func createOpenings() {
 	slytherinToken := slytherinVal.(string)
 
 	openings := []struct {
-		token string
-		req   employer.CreateOpeningRequest
+		domain string
+		token  string
+		req    employer.CreateOpeningRequest
 	}{
 		// Gryffindor openings
 		{
-			token: gryffindorToken,
+			domain: "gryffindor.example",
+			token:  gryffindorToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Senior Backend Engineer",
 				Positions:         2,
@@ -77,7 +83,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: gryffindorToken,
+			domain: "gryffindor.example",
+			token:  gryffindorToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Product Manager",
 				Positions:         1,
@@ -93,7 +100,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: gryffindorToken,
+			domain: "gryffindor.example",
+			token:  gryffindorToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "DevOps Engineer",
 				Positions:         2,
@@ -109,7 +117,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: gryffindorToken,
+			domain: "gryffindor.example",
+			token:  gryffindorToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Frontend Developer",
 				Positions:         3,
@@ -125,7 +134,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: gryffindorToken,
+			domain: "gryffindor.example",
+			token:  gryffindorToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Marketing Lead",
 				Positions:         1,
@@ -143,7 +153,8 @@ func createOpenings() {
 
 		// Hufflepuff openings
 		{
-			token: hufflepuffToken,
+			domain: "hufflepuff.example",
+			token:  hufflepuffToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Software Architect",
 				Positions:         1,
@@ -159,7 +170,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: hufflepuffToken,
+			domain: "hufflepuff.example",
+			token:  hufflepuffToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Data Scientist",
 				Positions:         2,
@@ -175,7 +187,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: hufflepuffToken,
+			domain: "hufflepuff.example",
+			token:  hufflepuffToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Marketing Manager",
 				Positions:         1,
@@ -191,7 +204,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: hufflepuffToken,
+			domain: "hufflepuff.example",
+			token:  hufflepuffToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Research Engineer",
 				Positions:         3,
@@ -207,7 +221,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: hufflepuffToken,
+			domain: "hufflepuff.example",
+			token:  hufflepuffToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Operations Manager",
 				Positions:         1,
@@ -225,7 +240,8 @@ func createOpenings() {
 
 		// Ravenclaw openings
 		{
-			token: ravenclawToken,
+			domain: "ravenclaw.example",
+			token:  ravenclawToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Technical Lead",
 				Positions:         1,
@@ -241,7 +257,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: ravenclawToken,
+			domain: "ravenclaw.example",
+			token:  ravenclawToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Mobile Developer",
 				Positions:         2,
@@ -257,7 +274,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: ravenclawToken,
+			domain: "ravenclaw.example",
+			token:  ravenclawToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "QA Engineer",
 				Positions:         2,
@@ -273,7 +291,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: ravenclawToken,
+			domain: "ravenclaw.example",
+			token:  ravenclawToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Full Stack Developer",
 				Positions:         3,
@@ -289,7 +308,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: ravenclawToken,
+			domain: "ravenclaw.example",
+			token:  ravenclawToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Solutions Architect",
 				Positions:         1,
@@ -307,7 +327,8 @@ func createOpenings() {
 
 		// Slytherin openings
 		{
-			token: slytherinToken,
+			domain: "slytherin.example",
+			token:  slytherinToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Engineering Manager",
 				Positions:         1,
@@ -323,7 +344,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: slytherinToken,
+			domain: "slytherin.example",
+			token:  slytherinToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Security Engineer",
 				Positions:         2,
@@ -339,7 +361,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: slytherinToken,
+			domain: "slytherin.example",
+			token:  slytherinToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Cloud Engineer",
 				Positions:         2,
@@ -355,7 +378,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: slytherinToken,
+			domain: "slytherin.example",
+			token:  slytherinToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Project Manager",
 				Positions:         1,
@@ -371,7 +395,8 @@ func createOpenings() {
 			},
 		},
 		{
-			token: slytherinToken,
+			domain: "slytherin.example",
+			token:  slytherinToken,
 			req: employer.CreateOpeningRequest{
 				Title:             "Research Scientist",
 				Positions:         2,
@@ -390,23 +415,35 @@ func createOpenings() {
 
 	for _, opening := range openings {
 		openingID := createOpening(opening.token, opening.req)
-
-		// Track openings by token
-		companyOpenings[opening.token] = append(
-			companyOpenings[opening.token],
+		color.Green("Created opening %s for %s", openingID, opening.domain)
+		// Track openings by domain
+		companyOpenings[opening.domain] = append(
+			companyOpenings[opening.domain],
 			openingID,
 		)
 	}
 
 	// Publish first two openings for each company
-	for token, openings := range companyOpenings {
+	for domain, openings := range companyOpenings {
+		employerTokenRaw, ok := employerSessionTokens.Load("admin@" + domain)
+		if !ok {
+			log.Fatalf("failed to get employer token for %s", domain)
+		}
+		employerToken, ok := employerTokenRaw.(string)
+		if !ok {
+			log.Fatalf("failed to cast employer token for %s", domain)
+		}
+
 		for i := 0; i < 2 && i < len(openings); i++ {
 			changeOpeningState(
-				token,
+				employerToken,
 				openings[i],
 				common.DraftOpening,
 				common.ActiveOpening,
 			)
+			color.Green("Published opening %s for %s", openings[i], domain)
+			activeOpenings[domain] = append(activeOpenings[domain], openings[i])
 		}
+
 	}
 }

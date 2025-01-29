@@ -314,7 +314,9 @@ func hubSignin(email, password string) string {
 	}
 
 	// Extract TFA code from email
-	re := regexp.MustCompile(`Token:\s*([a-zA-Z0-9]+)\s*`)
+	re := regexp.MustCompile(
+		`Your Two Factor authentication code is:\s*([0-9]+)`,
+	)
 	matches := re.FindStringSubmatch(string(mailBody))
 	if len(matches) < 2 {
 		log.Fatal("could not find TFA code in email")
