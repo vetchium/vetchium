@@ -415,6 +415,7 @@ CREATE TYPE interview_states AS ENUM (
 CREATE TYPE interviewers_decisions AS ENUM (
     'STRONG_YES',
     'YES',
+    'NEUTRAL',
     'NO',
     'STRONG_NO'
 );

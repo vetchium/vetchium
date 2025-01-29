@@ -302,6 +302,8 @@ export const en = {
     assessment: {
       title: "Interview Assessment",
       rating: "Rating",
+      ratingPlaceholder: "Select your rating for the candidate",
+      editFeedback: "Edit Feedback",
       feedback: "Feedback to Candidate (Public)",
       feedbackPlaceholder:
         "Enter feedback that will be shared with the candidate. This feedback will be visible to the candidate.",

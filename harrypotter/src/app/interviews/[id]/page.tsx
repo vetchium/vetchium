@@ -93,14 +93,12 @@ const formatUTCDateTime = (isoString: string | Date) => {
   }).format(new Date(dateStr));
 };
 
-// FeedbackWidget component for displaying and editing feedback sections
+// FeedbackWidget component for displaying feedback sections (read-only)
 interface FeedbackWidgetProps {
   title: string;
   value: string;
   placeholder: string;
   icon?: React.ReactNode;
-  isInterviewer: boolean;
-  onSave: (value: string) => void;
   customStyle?: any;
 }
 
@@ -109,29 +107,8 @@ function FeedbackWidget({
   value,
   placeholder,
   icon,
-  isInterviewer,
-  onSave,
   customStyle,
-  isEditable = true,
-}: FeedbackWidgetProps & { isEditable?: boolean }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    onSave(editValue);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value);
-    setIsEditing(false);
-  };
-
+}: FeedbackWidgetProps) {
   return (
     <Card
       sx={{
@@ -157,49 +134,17 @@ function FeedbackWidget({
             {icon}
             <Typography variant="h6">{title}</Typography>
           </Box>
-          {isInterviewer && isEditable && (
-            <IconButton
-              onClick={() => setIsEditing(!isEditing)}
-              color="primary"
-              size="small"
-            >
-              <EditIcon />
-            </IconButton>
-          )}
         </Box>
-
-        {isEditing ? (
-          <>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              placeholder={placeholder}
-              sx={{ mb: 2 }}
-            />
-            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-              <Button onClick={handleCancel} color="inherit">
-                {t("common.cancel")}
-              </Button>
-              <Button onClick={handleSave} variant="contained">
-                {t("common.save")}
-              </Button>
-            </Box>
-          </>
-        ) : (
-          <Typography
-            variant="body1"
-            sx={{
-              whiteSpace: "pre-wrap",
-              color: value ? "text.primary" : "text.secondary",
-              fontStyle: value ? "normal" : "italic",
-            }}
-          >
-            {value || placeholder}
-          </Typography>
-        )}
+        <Typography
+          variant="body1"
+          sx={{
+            whiteSpace: "pre-wrap",
+            color: value ? "text.primary" : "text.secondary",
+            fontStyle: value ? "normal" : "italic",
+          }}
+        >
+          {value || placeholder}
+        </Typography>
       </CardContent>
     </Card>
   );
@@ -224,6 +169,20 @@ export default function InterviewDetailPage() {
   }>({
     open: false,
     status: RSVPStatuses.NOT_SET,
+  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<{
+    interviewers_decision: InterviewersDecision;
+    positives: string;
+    negatives: string;
+    overall_assessment: string;
+    feedback_to_candidate: string;
+  }>({
+    interviewers_decision: InterviewersDecisions.NEUTRAL,
+    positives: "",
+    negatives: "",
+    overall_assessment: "",
+    feedback_to_candidate: "",
   });
 
   useEffect(() => {
@@ -470,6 +429,29 @@ export default function InterviewDetailPage() {
 
   const isInterviewScheduled =
     interview?.interview_state === "SCHEDULED_INTERVIEW";
+
+  // Update edit form data when interview data changes
+  useEffect(() => {
+    if (interview) {
+      setEditFormData({
+        interviewers_decision:
+          interview.interviewers_decision || InterviewersDecisions.NEUTRAL,
+        positives: interview.positives || "",
+        negatives: interview.negatives || "",
+        overall_assessment: interview.overall_assessment || "",
+        feedback_to_candidate: interview.feedback_to_candidate || "",
+      });
+    }
+  }, [interview]);
+
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+  };
+
+  const handleEditDialogSave = async () => {
+    await handleFeedbackSave(editFormData);
+    setEditDialogOpen(false);
+  };
 
   if (loading) {
     return (
@@ -997,37 +979,40 @@ export default function InterviewDetailPage() {
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {isInterviewer && (
-                    <FormControl fullWidth sx={{ mb: 3 }}>
-                      <InputLabel id="rating-label">
-                        {t("interviews.assessment.rating")}
-                      </InputLabel>
-                      <Select
-                        labelId="rating-label"
-                        value={interview?.interviewers_decision || ""}
-                        label={t("interviews.assessment.rating")}
-                        onChange={(e) =>
-                          handleFeedbackSave({
-                            interviewers_decision: e.target
-                              .value as InterviewersDecision,
-                          })
-                        }
+                  {isInterviewer && isInterviewScheduled && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        mb: 2,
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        startIcon={<EditIcon />}
+                        onClick={() => setEditDialogOpen(true)}
                       >
-                        {Object.entries(InterviewersDecisions).map(([key]) => (
-                          <MenuItem
-                            key={key}
-                            value={
-                              InterviewersDecisions[
-                                key as keyof typeof InterviewersDecisions
-                              ]
-                            }
-                          >
-                            {t(`interviews.assessment.ratings.${key}`)}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                        {t("interviews.assessment.editFeedback")}
+                      </Button>
+                    </Box>
                   )}
+
+                  <FeedbackWidget
+                    title={t("interviews.assessment.rating")}
+                    value={
+                      interview?.interviewers_decision
+                        ? t(
+                            `interviews.assessment.ratings.${
+                              Object.entries(InterviewersDecisions).find(
+                                ([_, value]) =>
+                                  value === interview.interviewers_decision
+                              )?.[0]
+                            }`
+                          )
+                        : ""
+                    }
+                    placeholder={t("interviews.assessment.ratingPlaceholder")}
+                  />
 
                   <FeedbackWidget
                     title={t("interviews.assessment.positives")}
@@ -1035,9 +1020,6 @@ export default function InterviewDetailPage() {
                     placeholder={t(
                       "interviews.assessment.positivesPlaceholder"
                     )}
-                    isInterviewer={isInterviewer}
-                    onSave={(value) => handleFeedbackSave({ positives: value })}
-                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1046,9 +1028,6 @@ export default function InterviewDetailPage() {
                     placeholder={t(
                       "interviews.assessment.negativesPlaceholder"
                     )}
-                    isInterviewer={isInterviewer}
-                    onSave={(value) => handleFeedbackSave({ negatives: value })}
-                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1057,11 +1036,6 @@ export default function InterviewDetailPage() {
                     placeholder={t(
                       "interviews.assessment.overallAssessmentPlaceholder"
                     )}
-                    isInterviewer={isInterviewer}
-                    onSave={(value) =>
-                      handleFeedbackSave({ overall_assessment: value })
-                    }
-                    isEditable={isInterviewScheduled}
                   />
 
                   <FeedbackWidget
@@ -1069,17 +1043,12 @@ export default function InterviewDetailPage() {
                     value={interview?.feedback_to_candidate || ""}
                     placeholder={t("interviews.assessment.feedbackPlaceholder")}
                     icon={<PublicIcon color="action" fontSize="small" />}
-                    isInterviewer={isInterviewer}
-                    onSave={(value) =>
-                      handleFeedbackSave({ feedback_to_candidate: value })
-                    }
                     customStyle={{
                       "& .MuiCardContent-root": {
                         bgcolor: (theme: any) =>
                           theme.palette.warning.light + "10",
                       },
                     }}
-                    isEditable={isInterviewScheduled}
                   />
 
                   {interview?.feedback_submitted_by && (
@@ -1103,6 +1072,146 @@ export default function InterviewDetailPage() {
                       </Typography>
                     </Box>
                   )}
+
+                  {/* Edit Dialog */}
+                  <Dialog
+                    open={editDialogOpen}
+                    onClose={handleEditDialogClose}
+                    maxWidth="md"
+                    fullWidth
+                  >
+                    <DialogTitle>
+                      {t("interviews.assessment.editFeedback")}
+                    </DialogTitle>
+                    <DialogContent>
+                      <FormControl fullWidth sx={{ mt: 2, mb: 3 }}>
+                        <InputLabel id="rating-label">
+                          {t("interviews.assessment.rating")}
+                        </InputLabel>
+                        <Select
+                          labelId="rating-label"
+                          value={editFormData.interviewers_decision}
+                          label={t("interviews.assessment.rating")}
+                          onChange={(e) =>
+                            setEditFormData((prev) => ({
+                              ...prev,
+                              interviewers_decision: e.target
+                                .value as InterviewersDecision,
+                            }))
+                          }
+                        >
+                          {Object.entries(InterviewersDecisions).map(
+                            ([key]) => (
+                              <MenuItem
+                                key={key}
+                                value={
+                                  InterviewersDecisions[
+                                    key as keyof typeof InterviewersDecisions
+                                  ]
+                                }
+                              >
+                                {t(`interviews.assessment.ratings.${key}`)}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </FormControl>
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label={t("interviews.assessment.positives")}
+                        placeholder={t(
+                          "interviews.assessment.positivesPlaceholder"
+                        )}
+                        value={editFormData.positives}
+                        onChange={(e) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            positives: e.target.value,
+                          }))
+                        }
+                        sx={{ mb: 3 }}
+                      />
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label={t("interviews.assessment.negatives")}
+                        placeholder={t(
+                          "interviews.assessment.negativesPlaceholder"
+                        )}
+                        value={editFormData.negatives}
+                        onChange={(e) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            negatives: e.target.value,
+                          }))
+                        }
+                        sx={{ mb: 3 }}
+                      />
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label={t("interviews.assessment.overallAssessment")}
+                        placeholder={t(
+                          "interviews.assessment.overallAssessmentPlaceholder"
+                        )}
+                        value={editFormData.overall_assessment}
+                        onChange={(e) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            overall_assessment: e.target.value,
+                          }))
+                        }
+                        sx={{ mb: 3 }}
+                      />
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label={t("interviews.assessment.feedback")}
+                        placeholder={t(
+                          "interviews.assessment.feedbackPlaceholder"
+                        )}
+                        value={editFormData.feedback_to_candidate}
+                        onChange={(e) =>
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            feedback_to_candidate: e.target.value,
+                          }))
+                        }
+                        sx={{
+                          mb: 3,
+                          "& .MuiOutlinedInput-root": {
+                            bgcolor: (theme) =>
+                              theme.palette.warning.light + "10",
+                          },
+                        }}
+                      />
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleEditDialogClose}>
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        onClick={handleEditDialogSave}
+                        variant="contained"
+                        disabled={saving}
+                      >
+                        {saving ? (
+                          <CircularProgress size={24} color="inherit" />
+                        ) : (
+                          t("common.save")
+                        )}
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                 </AccordionDetails>
               </Accordion>
             </Grid>
