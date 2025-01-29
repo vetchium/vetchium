@@ -47,4 +47,6 @@ func main() {
 
 	color.Cyan("Signing in hub users")
 	signinHubUsers()
+	color.Cyan("Creating applications")
+	createApplications()
 }

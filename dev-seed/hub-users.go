@@ -97,7 +97,7 @@ func initHubUsers(db *pgxpool.Pool) {
 
 func signinHubUsers() {
 	for _, user := range hubUsers {
-		color.New(color.FgGreen).Printf("Signing in hub user %s ", user.email)
+		color.New(color.FgGreen).Printf("Signing in hub user %s\n", user.email)
 		hubSessionTokens.Store(
 			user.email,
 			hubSignin(user.email, "NewPassword123$"),
