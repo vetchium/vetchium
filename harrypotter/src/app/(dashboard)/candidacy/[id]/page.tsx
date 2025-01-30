@@ -127,7 +127,9 @@ export default function CandidacyDetailPage() {
   const candidacyId = params.id as string;
   const { t } = useTranslation();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingInterviews, setLoadingInterviews] = useState(true);
+  const [loadingComments, setLoadingComments] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [candidacy, setCandidacy] = useState<Candidacy | null>(null);
   const [comments, setComments] = useState<CandidacyComment[]>([]);
@@ -135,7 +137,7 @@ export default function CandidacyDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [showInterviews, setShowInterviews] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [showComments, setShowComments] = useState(false);
   const [expandedInterviews, setExpandedInterviews] = useState<
     Record<string, boolean>
@@ -231,6 +233,8 @@ export default function CandidacyDetailPage() {
   // Fetch candidacy info, comments, and interviews
   const fetchData = async () => {
     setLoading(true);
+    setLoadingInterviews(true);
+    setLoadingComments(true);
     setError(null);
     try {
       const token = Cookies.get("session_token");
@@ -266,6 +270,7 @@ export default function CandidacyDetailPage() {
         throw new Error(t("candidacies.fetchError"));
       }
       setCandidacy(candidacyData);
+      setLoading(false);
 
       // Fetch interviews
       const interviewsResponse = await fetch(
@@ -285,6 +290,7 @@ export default function CandidacyDetailPage() {
       if (!interviewsResponse.ok) throw new Error(t("interviews.fetchError"));
       const interviewsData = await interviewsResponse.json();
       setInterviews(interviewsData || []);
+      setLoadingInterviews(false);
 
       // Fetch comments
       const commentsResponse = await fetch(
@@ -304,10 +310,12 @@ export default function CandidacyDetailPage() {
       if (!commentsResponse.ok) throw new Error(t("candidacies.fetchError"));
       const commentsData = await commentsResponse.json();
       setComments(commentsData || []);
+      setLoadingComments(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.serverError"));
-    } finally {
       setLoading(false);
+      setLoadingInterviews(false);
+      setLoadingComments(false);
     }
   };
 
@@ -483,7 +491,7 @@ export default function CandidacyDetailPage() {
         <Paper sx={{ p: 3, mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <Typography variant="h6">
-              {t("candidacies.viewCandidacy")}
+              {t("candidacies.candidacyDetails")}
             </Typography>
             <IconButton
               onClick={() => setShowDetails(!showDetails)}
@@ -558,122 +566,71 @@ export default function CandidacyDetailPage() {
             <ExpandMoreIcon />
           </IconButton>
           <Box sx={{ flex: 1 }} />
-          <Button
-            variant="contained"
-            onClick={() =>
-              router.push(`/candidacy/${candidacyId}/add-interview`)
-            }
-            size="small"
-            disabled={
-              candidacy?.candidacy_state !== CandidacyStates.INTERVIEWING
-            }
-          >
-            {t("interviews.addNew")}
-          </Button>
+          {!loadingInterviews && (
+            <Button
+              variant="contained"
+              onClick={() =>
+                router.push(`/candidacy/${candidacyId}/add-interview`)
+              }
+              size="small"
+              disabled={
+                candidacy?.candidacy_state !== CandidacyStates.INTERVIEWING
+              }
+            >
+              {t("interviews.addNew")}
+            </Button>
+          )}
         </Box>
 
         <Collapse in={showInterviews}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {interviews.length > 0 ? (
-              interviews.map((interview) => (
-                <Paper
-                  key={interview.interview_id}
-                  elevation={1}
-                  sx={{
-                    p: expandedInterviews[interview.interview_id] ? 3 : 2,
-                    transition: "padding 0.2s",
-                    borderTop: "1px solid",
-                    borderColor: "divider",
-                  }}
-                >
-                  {/* Header with start time and collapse control */}
-                  <Box
+          {loadingInterviews ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {interviews.length > 0 ? (
+                interviews.map((interview) => (
+                  <Paper
+                    key={interview.interview_id}
+                    elevation={1}
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: expandedInterviews[interview.interview_id] ? 2 : 0,
+                      p: expandedInterviews[interview.interview_id] ? 3 : 2,
+                      transition: "padding 0.2s",
+                      borderTop: "1px solid",
+                      borderColor: "divider",
                     }}
                   >
+                    {/* Header with start time and collapse control */}
                     <Box
-                      sx={{ display: "flex", alignItems: "baseline", gap: 1 }}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: expandedInterviews[interview.interview_id] ? 2 : 0,
+                      }}
                     >
-                      <Typography variant="body1" color="text.secondary">
-                        {new Date(interview.start_time).toLocaleString(
-                          "default",
-                          {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 500, color: "primary.main" }}
-                      >
-                        {new Date(interview.start_time).toLocaleTimeString(
-                          "default",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: undefined,
-                          }
-                        )}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <InterviewStateLabel
-                        state={interview.interview_state}
-                        t={t}
-                      />
-                      <IconButton
-                        onClick={() =>
-                          setExpandedInterviews((prev) => ({
-                            ...prev,
-                            [interview.interview_id]:
-                              !prev[interview.interview_id],
-                          }))
-                        }
-                        sx={{
-                          transform: expandedInterviews[interview.interview_id]
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
-                          transition: "transform 0.2s",
-                        }}
-                        size="small"
-                      >
-                        <ExpandMoreIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-
-                  <Collapse in={expandedInterviews[interview.interview_id]}>
-                    {/* Interview Type */}
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ mb: 2, fontWeight: 500 }}
-                    >
-                      {t(`interviews.types.${interview.interview_type}`)}
-                    </Typography>
-
-                    {/* Time section */}
-                    <Box sx={{ mb: 3 }}>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{ display: "flex", alignItems: "baseline", gap: 1 }}
                       >
-                        <Typography variant="caption" color="text.secondary">
-                          {t("interviews.endTime")}
-                        </Typography>
-                        <Typography>
-                          {new Date(interview.end_time).toLocaleString(
+                        <Typography variant="body1" color="text.secondary">
+                          {new Date(interview.start_time).toLocaleString(
                             "default",
                             {
-                              weekday: "long",
+                              weekday: "short",
                               year: "numeric",
-                              month: "long",
+                              month: "short",
                               day: "numeric",
+                            }
+                          )}
+                        </Typography>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 500, color: "primary.main" }}
+                        >
+                          {new Date(interview.start_time).toLocaleTimeString(
+                            "default",
+                            {
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: undefined,
@@ -681,103 +638,166 @@ export default function CandidacyDetailPage() {
                           )}
                         </Typography>
                       </Box>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5, display: "block" }}
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                      </Typography>
+                        <InterviewStateLabel
+                          state={interview.interview_state}
+                          t={t}
+                        />
+                        <IconButton
+                          onClick={() =>
+                            setExpandedInterviews((prev) => ({
+                              ...prev,
+                              [interview.interview_id]:
+                                !prev[interview.interview_id],
+                            }))
+                          }
+                          sx={{
+                            transform: expandedInterviews[
+                              interview.interview_id
+                            ]
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
+                            transition: "transform 0.2s",
+                          }}
+                          size="small"
+                        >
+                          <ExpandMoreIcon />
+                        </IconButton>
+                      </Box>
                     </Box>
 
-                    {/* Interviewers section */}
-                    <Box sx={{ mb: 2 }}>
+                    <Collapse in={expandedInterviews[interview.interview_id]}>
+                      {/* Interview Type */}
                       <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mb: 1, display: "block" }}
+                        variant="subtitle1"
+                        sx={{ mb: 2, fontWeight: 500 }}
                       >
-                        {t("interviews.interviewers")}
+                        {t(`interviews.types.${interview.interview_type}`)}
                       </Typography>
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                }}
-                              >
-                                {interview.interviewers?.map(
-                                  (interviewer: OrgUserShort, idx) => (
-                                    <Box
-                                      key={idx}
-                                      sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        mb: 0.5,
-                                      }}
-                                    >
-                                      <Avatar
-                                        sx={{ width: 24, height: 24 }}
-                                        alt={interviewer.name}
+
+                      {/* Time section */}
+                      <Box sx={{ mb: 3 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            {t("interviews.endTime")}
+                          </Typography>
+                          <Typography>
+                            {new Date(interview.end_time).toLocaleString(
+                              "default",
+                              {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: undefined,
+                              }
+                            )}
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mt: 0.5, display: "block" }}
+                        >
+                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                        </Typography>
+                      </Box>
+
+                      {/* Interviewers section */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mb: 1, display: "block" }}
+                        >
+                          {t("interviews.interviewers")}
+                        </Typography>
+                        <Table>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                  }}
+                                >
+                                  {interview.interviewers?.map(
+                                    (interviewer: OrgUserShort, idx) => (
+                                      <Box
+                                        key={idx}
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 1,
+                                          mb: 0.5,
+                                        }}
                                       >
-                                        {interviewer.name
-                                          .charAt(0)
-                                          .toUpperCase()}
-                                      </Avatar>
-                                      <Typography variant="body2">
-                                        {`${interviewer.name} (${interviewer.email})`}
-                                      </Typography>
-                                    </Box>
-                                  )
-                                )}
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </Box>
+                                        <Avatar
+                                          sx={{ width: 24, height: 24 }}
+                                          alt={interviewer.name}
+                                        >
+                                          {interviewer.name
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                        </Avatar>
+                                        <Typography variant="body2">
+                                          {`${interviewer.name} (${interviewer.email})`}
+                                        </Typography>
+                                      </Box>
+                                    )
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </Box>
 
-                    {/* Description section */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mb: 1, display: "block" }}
-                      >
-                        {t("interviews.description")}
-                      </Typography>
-                      <Typography sx={{ whiteSpace: "pre-wrap" }}>
-                        {interview.description}
-                      </Typography>
-                    </Box>
+                      {/* Description section */}
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mb: 1, display: "block" }}
+                        >
+                          {t("interviews.description")}
+                        </Typography>
+                        <Typography sx={{ whiteSpace: "pre-wrap" }}>
+                          {interview.description}
+                        </Typography>
+                      </Box>
 
-                    {/* Actions */}
-                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() =>
-                          router.push(`/interviews/${interview.interview_id}`)
-                        }
-                      >
-                        {t("interviews.manage")}
-                      </Button>
-                    </Box>
-                  </Collapse>
+                      {/* Actions */}
+                      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() =>
+                            router.push(`/interviews/${interview.interview_id}`)
+                          }
+                        >
+                          {t("interviews.manage")}
+                        </Button>
+                      </Box>
+                    </Collapse>
+                  </Paper>
+                ))
+              ) : (
+                <Paper sx={{ p: 3, textAlign: "center" }}>
+                  <Typography color="text.secondary">
+                    {t("interviews.noInterviews")}
+                  </Typography>
                 </Paper>
-              ))
-            ) : (
-              <Paper sx={{ p: 3, textAlign: "center" }}>
-                <Typography color="text.secondary">
-                  {t("interviews.noInterviews")}
-                </Typography>
-              </Paper>
-            )}
-          </Box>
+              )}
+            </Box>
+          )}
         </Collapse>
       </Paper>
 
@@ -798,148 +818,159 @@ export default function CandidacyDetailPage() {
         </Box>
 
         <Collapse in={showComments}>
-          {comments.length > 0 ? (
-            <Box sx={{ mt: 3 }}>
-              {[...comments]
-                .sort(
-                  (a, b) =>
-                    new Date(a.created_at).getTime() -
-                    new Date(b.created_at).getTime()
-                )
-                .map((comment) => (
-                  <Box
-                    key={comment.comment_id}
-                    sx={{
-                      display: "flex",
-                      gap: 2,
-                      mb: 3,
-                      flexDirection:
-                        comment.commenter_type === "ORG_USER"
-                          ? "row"
-                          : "row-reverse",
-                    }}
-                  >
-                    <Avatar
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: (theme) =>
-                          comment.commenter_type === "ORG_USER"
-                            ? theme.palette.primary.main
-                            : theme.palette.grey[400],
-                      }}
-                    >
-                      {comment.commenter_name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Paper
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          border: "1px solid",
-                          borderColor: "divider",
-                          position: "relative",
-                          "&::before": {
-                            content: '""',
-                            position: "absolute",
-                            ...(comment.commenter_type === "ORG_USER"
-                              ? {
-                                  left: -8,
-                                  borderRight: (theme) =>
-                                    `8px solid ${theme.palette.divider}`,
-                                }
-                              : {
-                                  right: -8,
-                                  borderLeft: (theme) =>
-                                    `8px solid ${theme.palette.divider}`,
-                                }),
-                            top: 16,
-                            width: 0,
-                            height: 0,
-                            borderTop: "8px solid transparent",
-                            borderBottom: "8px solid transparent",
-                          },
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            mb: 1,
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: "bold",
-                              color: (theme) =>
-                                comment.commenter_type === "ORG_USER"
-                                  ? theme.palette.primary.main
-                                  : theme.palette.text.primary,
-                            }}
-                          >
-                            {comment.commenter_name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(comment.created_at).toLocaleDateString(
-                              undefined,
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "2-digit",
-                              }
-                            )}{" "}
-                            {new Date(comment.created_at).toLocaleTimeString(
-                              undefined,
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </Typography>
-                        </Box>
-                        <Typography
-                          sx={{
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          {comment.content}
-                        </Typography>
-                      </Paper>
-                    </Box>
-                  </Box>
-                ))}
+          {loadingComments ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <CircularProgress size={24} />
             </Box>
           ) : (
-            <Typography color="text.secondary" sx={{ my: 2 }}>
-              {t("comments.noComments")}
-            </Typography>
+            <>
+              {comments.length > 0 ? (
+                <Box sx={{ mt: 3 }}>
+                  {[...comments]
+                    .sort(
+                      (a, b) =>
+                        new Date(a.created_at).getTime() -
+                        new Date(b.created_at).getTime()
+                    )
+                    .map((comment) => (
+                      <Box
+                        key={comment.comment_id}
+                        sx={{
+                          display: "flex",
+                          gap: 2,
+                          mb: 3,
+                          flexDirection:
+                            comment.commenter_type === "ORG_USER"
+                              ? "row"
+                              : "row-reverse",
+                        }}
+                      >
+                        <Avatar
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: (theme) =>
+                              comment.commenter_type === "ORG_USER"
+                                ? theme.palette.primary.main
+                                : theme.palette.grey[400],
+                          }}
+                        >
+                          {comment.commenter_name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              border: "1px solid",
+                              borderColor: "divider",
+                              position: "relative",
+                              "&::before": {
+                                content: '""',
+                                position: "absolute",
+                                ...(comment.commenter_type === "ORG_USER"
+                                  ? {
+                                      left: -8,
+                                      borderRight: (theme) =>
+                                        `8px solid ${theme.palette.divider}`,
+                                    }
+                                  : {
+                                      right: -8,
+                                      borderLeft: (theme) =>
+                                        `8px solid ${theme.palette.divider}`,
+                                    }),
+                                top: 16,
+                                width: 0,
+                                height: 0,
+                                borderTop: "8px solid transparent",
+                                borderBottom: "8px solid transparent",
+                              },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                mb: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  fontWeight: "bold",
+                                  color: (theme) =>
+                                    comment.commenter_type === "ORG_USER"
+                                      ? theme.palette.primary.main
+                                      : theme.palette.text.primary,
+                                }}
+                              >
+                                {comment.commenter_name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {new Date(
+                                  comment.created_at
+                                ).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "2-digit",
+                                })}{" "}
+                                {new Date(
+                                  comment.created_at
+                                ).toLocaleTimeString(undefined, {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </Typography>
+                            </Box>
+                            <Typography
+                              sx={{
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {comment.content}
+                            </Typography>
+                          </Paper>
+                        </Box>
+                      </Box>
+                    ))}
+                </Box>
+              ) : (
+                <Typography color="text.secondary" sx={{ my: 2 }}>
+                  {t("comments.noComments")}
+                </Typography>
+              )}
+
+              <Divider sx={{ my: 3 }} />
+
+              <Box>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder={t("comments.addPlaceholder")}
+                  disabled={submitting}
+                />
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
+                >
+                  <Button
+                    variant="contained"
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim() || submitting}
+                  >
+                    {submitting ? t("common.loading") : t("comments.add")}
+                  </Button>
+                </Box>
+              </Box>
+            </>
           )}
-
-          <Divider sx={{ my: 3 }} />
-
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t("comments.addPlaceholder")}
-              disabled={submitting}
-            />
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-              <Button
-                variant="contained"
-                onClick={handleAddComment}
-                disabled={!newComment.trim() || submitting}
-              >
-                {submitting ? t("common.loading") : t("comments.add")}
-              </Button>
-            </Box>
-          </Box>
         </Collapse>
       </Paper>
 
