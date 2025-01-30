@@ -30,6 +30,8 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -177,12 +179,14 @@ export default function InterviewDetailPage() {
     negatives: string;
     overall_assessment: string;
     feedback_to_candidate: string;
+    mark_interview_completed: boolean;
   }>({
     interviewers_decision: InterviewersDecisions.NEUTRAL,
     positives: "",
     negatives: "",
     overall_assessment: "",
     feedback_to_candidate: "",
+    mark_interview_completed: false,
   });
 
   useEffect(() => {
@@ -400,6 +404,7 @@ export default function InterviewDetailPage() {
           updates.feedback_to_candidate ||
           interview?.feedback_to_candidate ||
           "",
+        mark_interview_completed: editFormData.mark_interview_completed,
       };
 
       const response = await fetch(
@@ -440,6 +445,7 @@ export default function InterviewDetailPage() {
         negatives: interview.negatives || "",
         overall_assessment: interview.overall_assessment || "",
         feedback_to_candidate: interview.feedback_to_candidate || "",
+        mark_interview_completed: false,
       });
     }
   }, [interview]);
@@ -1194,6 +1200,28 @@ export default function InterviewDetailPage() {
                           },
                         }}
                       />
+
+                      <Box sx={{ mb: 3, mt: 2 }}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={editFormData.mark_interview_completed}
+                              onChange={(e) =>
+                                setEditFormData((prev) => ({
+                                  ...prev,
+                                  mark_interview_completed: e.target.checked,
+                                }))
+                              }
+                              color="primary"
+                            />
+                          }
+                          label={
+                            <Typography variant="body1" color="text.primary">
+                              {t("interviews.assessment.markAsCompleted")}
+                            </Typography>
+                          }
+                        />
+                      </Box>
                     </DialogContent>
                     <DialogActions>
                       <Button onClick={handleEditDialogClose}>

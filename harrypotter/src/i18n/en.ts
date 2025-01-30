@@ -327,6 +327,7 @@ export const en = {
       rsvpError: "Failed to update RSVP status",
       rsvpSuccess: "RSVP status updated successfully",
       invalidStateError: "Interview is not in a valid state for RSVP",
+      markAsCompleted: "Mark Interview as Completed",
       ratings: {
         STRONG_YES: "Strong Yes",
         YES: "Yes",
