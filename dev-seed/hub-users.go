@@ -9,53 +9,167 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var hubUsers = []struct {
-	name              string
-	handle            string
-	email             string
-	residentCountry   string
-	residentCity      string
-	preferredLanguage string
-}{
+type HubUser struct {
+	Name                    string
+	Handle                  string
+	Email                   string
+	ResidentCountry         string
+	ResidentCity            string
+	PreferredLanguage       string
+	PreferredCompanyDomains []string
+}
+
+var hubUsers = []HubUser{
+	// Primarily interested in Gryffindor
 	{
-		name:              "Luna Lovegood",
-		handle:            "luna",
-		email:             "luna@hub.example",
-		residentCountry:   "IND",
-		residentCity:      "Chennai",
-		preferredLanguage: "en",
+		Name:              "Minerva McGonagall",
+		Handle:            "minerva",
+		Email:             "minerva@hub.example",
+		ResidentCountry:   "IND",
+		ResidentCity:      "Chennai",
+		PreferredLanguage: "ta",
+		PreferredCompanyDomains: []string{
+			"gryffindor.example",
+			"ravenclaw.example",
+		},
 	},
 	{
-		name:              "Minerva McGonagall",
-		handle:            "minerva",
-		email:             "minerva@hub.example",
-		residentCountry:   "IRL",
-		residentCity:      "Dublin",
-		preferredLanguage: "en",
+		Name:              "Neville Longbottom",
+		Handle:            "neville",
+		Email:             "neville@hub.example",
+		ResidentCountry:   "AUS",
+		ResidentCity:      "Sydney",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"gryffindor.example",
+			"hufflepuff.example",
+		},
 	},
 	{
-		name:              "Pomona Sprout",
-		handle:            "pomona",
-		email:             "pomona@hub.example",
-		residentCountry:   "NZL",
-		residentCity:      "Wellington",
-		preferredLanguage: "en",
+		Name:              "Rubeus Hagrid",
+		Handle:            "hagrid",
+		Email:             "hagrid@hub.example",
+		ResidentCountry:   "GBR",
+		ResidentCity:      "Old Trafford",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"gryffindor.example",
+			"slytherin.example",
+		},
+	},
+
+	// Primarily interested in Hufflepuff
+	{
+		Name:              "Cedric Diggory",
+		Handle:            "cedric",
+		Email:             "cedric@hub.example",
+		ResidentCountry:   "NZL",
+		ResidentCity:      "Wellington",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"hufflepuff.example",
+			"gryffindor.example",
+		},
 	},
 	{
-		name:              "Rubeus Hagrid",
-		handle:            "hagrid",
-		email:             "hagrid@hub.example",
-		residentCountry:   "NOR",
-		residentCity:      "Bergen",
-		preferredLanguage: "en",
+		Name:              "Nymphadora Tonks",
+		Handle:            "tonks",
+		Email:             "tonks@hub.example",
+		ResidentCountry:   "USA",
+		ResidentCity:      "Provo",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"hufflepuff.example",
+			"ravenclaw.example",
+		},
 	},
 	{
-		name:              "Sybill Trelawney",
-		handle:            "sybill",
-		email:             "sybill@hub.example",
-		residentCountry:   "ISL",
-		residentCity:      "Reykjavik",
-		preferredLanguage: "en",
+		Name:              "Pomona Sprout",
+		Handle:            "pomona",
+		Email:             "pomona@hub.example",
+		ResidentCountry:   "GER",
+		ResidentCity:      "Nüremberg",
+		PreferredLanguage: "de",
+		PreferredCompanyDomains: []string{
+			"hufflepuff.example",
+			"slytherin.example",
+		},
+	},
+
+	// Primarily interested in Slytherin
+	{
+		Name:              "Severus Snape",
+		Handle:            "snape",
+		Email:             "snape@hub.example",
+		ResidentCountry:   "FRA",
+		ResidentCity:      "Paris",
+		PreferredLanguage: "fr",
+		PreferredCompanyDomains: []string{
+			"slytherin.example",
+			"gryffindor.example",
+		},
+	},
+	{
+		Name:              "Draco Malfoy",
+		Handle:            "draco",
+		Email:             "draco@hub.example",
+		ResidentCountry:   "USA",
+		ResidentCity:      "Provo",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"slytherin.example",
+			"hufflepuff.example",
+		},
+	},
+	{
+		Name:              "Tom Riddle",
+		Handle:            "tom",
+		Email:             "tom@hub.example",
+		ResidentCountry:   "USA",
+		ResidentCity:      "New York",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"slytherin.example",
+			"ravenclaw.example",
+		},
+	},
+
+	// Primarily interested in Ravenclaw
+	{
+		Name:              "Luna Lovegood",
+		Handle:            "luna",
+		Email:             "luna@hub.example",
+		ResidentCountry:   "LKA",
+		ResidentCity:      "Valvettithurai",
+		PreferredLanguage: "ta",
+		PreferredCompanyDomains: []string{
+			"ravenclaw.example",
+			"gryffindor.example",
+		},
+	},
+	{
+		Name:              "Cho Chang",
+		Handle:            "cho",
+		Email:             "cho@hub.example",
+		ResidentCountry:   "CHN",
+		ResidentCity:      "Shanghai",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"ravenclaw.example",
+			"hufflepuff.example",
+		},
+	},
+	{
+		Name:              "Xenophilius Lovegood",
+		Handle:            "xenophilius",
+		Email:             "xenophilius@hub.example",
+		ResidentCountry:   "IND",
+		ResidentCity:      "Ulsoor",
+		PreferredLanguage: "en",
+		PreferredCompanyDomains: []string{
+			"ravenclaw.example",
+			"slytherin.example",
+		},
 	},
 }
 
@@ -79,15 +193,15 @@ func initHubUsers(db *pgxpool.Pool) {
 				'$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
 				'ACTIVE_HUB_USER', $5, $6, $7
 			)
-		`, userID, user.name, user.handle, user.email,
-			user.residentCountry, user.residentCity,
-			user.preferredLanguage)
+		`, userID, user.Name, user.Handle, user.Email,
+			user.ResidentCountry, user.ResidentCity,
+			user.PreferredLanguage)
 		if err != nil {
-			log.Fatalf("failed to create hub user %s: %v", user.name, err)
+			log.Fatalf("failed to create hub user %s: %v", user.Name, err)
 		}
-		color.New(color.FgGreen).Printf("created hub user %s ", user.name)
-		color.New(color.FgCyan).Printf("<%s> ", user.email)
-		color.New(color.FgYellow).Printf("@%s\n", user.handle)
+		color.New(color.FgGreen).Printf("created hub user %s ", user.Name)
+		color.New(color.FgCyan).Printf("<%s> ", user.Email)
+		color.New(color.FgYellow).Printf("@%s\n", user.Handle)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -97,10 +211,10 @@ func initHubUsers(db *pgxpool.Pool) {
 
 func signinHubUsers() {
 	for _, user := range hubUsers {
-		color.New(color.FgGreen).Printf("Signing in hub user %s\n", user.email)
+		color.New(color.FgGreen).Printf("Signing in hub user %s\n", user.Email)
 		hubSessionTokens.Store(
-			user.email,
-			hubSignin(user.email, "NewPassword123$"),
+			user.Email,
+			hubSignin(user.Email, "NewPassword123$"),
 		)
 	}
 }
