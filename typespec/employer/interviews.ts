@@ -33,6 +33,7 @@ export interface PutAssessmentRequest {
   negatives?: string;
   overall_assessment?: string;
   feedback_to_candidate?: string;
+  mark_interview_completed?: boolean;
 }
 
 export interface Assessment {

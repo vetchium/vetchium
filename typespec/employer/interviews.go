@@ -33,12 +33,13 @@ type GetInterviewDetailsRequest struct {
 }
 
 type PutAssessmentRequest struct {
-	InterviewID         string                      `json:"interview_id"          validate:"required"`
-	Decision            common.InterviewersDecision `json:"decision"              validate:"omitempty,validate_interviewers_decision"`
-	Positives           string                      `json:"positives"             validate:"omitempty,max=4096"`
-	Negatives           string                      `json:"negatives"             validate:"omitempty,max=4096"`
-	OverallAssessment   string                      `json:"overall_assessment"    validate:"omitempty,max=4096"`
-	FeedbackToCandidate string                      `json:"feedback_to_candidate" validate:"omitempty,max=4096"`
+	InterviewID            string                      `json:"interview_id"             validate:"required"`
+	Decision               common.InterviewersDecision `json:"decision"                 validate:"omitempty,validate_interviewers_decision"`
+	Positives              string                      `json:"positives"                validate:"omitempty,max=4096"`
+	Negatives              string                      `json:"negatives"                validate:"omitempty,max=4096"`
+	OverallAssessment      string                      `json:"overall_assessment"       validate:"omitempty,max=4096"`
+	FeedbackToCandidate    string                      `json:"feedback_to_candidate"    validate:"omitempty,max=4096"`
+	MarkInterviewCompleted bool                        `json:"mark_interview_completed" validate:"omitempty"`
 }
 
 type Assessment struct {

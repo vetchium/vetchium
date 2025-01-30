@@ -51,6 +51,9 @@ model PutAssessmentRequest {
     negatives?: string;
     overall_assessment?: string;
     feedback_to_candidate?: string;
+
+    @doc("If true, will mark the interview as completed")
+    mark_interview_completed?: boolean;
 }
 
 model Assessment {
