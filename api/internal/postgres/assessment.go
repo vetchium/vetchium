@@ -156,6 +156,14 @@ update_result AS (
 		feedback_to_candidate = $5,
 		interviewers_decision = $6,
 		feedback_submitted_by = $7,
+		interview_state = CASE 
+			WHEN $11 = true THEN $10::interview_states 
+			ELSE i.interview_state 
+		END,
+		completed_at = CASE 
+			WHEN $11 = true THEN NOW() 
+			ELSE NULL 
+		END,
 		feedback_submitted_at = NOW(),
 		updated_at = NOW()
 	FROM validation_result v
@@ -170,8 +178,7 @@ SELECT
 	$8 as debug_expected_state,
 	v.debug_interviewers as debug_interviewers
 FROM validation_result v
-LIMIT 1
-`
+LIMIT 1`
 
 	p.log.Dbg("query", "query", query)
 
@@ -194,6 +201,8 @@ LIMIT 1
 		orgUser.ID,
 		string(common.ScheduledInterviewState),
 		orgUser.EmployerID,
+		string(common.CompletedInterviewState),
+		req.MarkInterviewCompleted,
 	).Scan(&result, &debugState, &debugIsInterviewer, &debugExpectedState, &debugInterviewers)
 	if err != nil {
 		p.log.Err("error putting assessment", "error", err)
