@@ -226,7 +226,7 @@ func employerSignin(email, password, clientID string) string {
 	return tfaResp.SessionToken
 }
 
-func hubSignin(email, password string) string {
+func hubLogin(email, password string) string {
 	// Check if we already have a token
 	if token, ok := hubSessionTokens.Load(email); ok {
 		return token.(string)
