@@ -68,3 +68,7 @@ export interface ApplyForOpeningRequest {
   filename: string;
   cover_letter?: string;
 }
+
+export interface ApplyForOpeningResponse {
+  application_id: string;
+}

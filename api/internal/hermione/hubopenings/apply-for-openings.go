@@ -89,7 +89,14 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		h.Dbg("created application", "application_id", applicationID)
-		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(hub.ApplyForOpeningResponse{
+			ApplicationID: applicationID,
+		})
+		if err != nil {
+			h.Err("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

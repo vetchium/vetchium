@@ -107,6 +107,10 @@ model ApplyForOpeningRequest {
     filename: string;
 }
 
+model ApplyForOpeningResponse {
+    application_id: string;
+}
+
 @route("/hub/find-openings")
 interface FindHubOpenings {
     @tag("Openings")
@@ -134,5 +138,8 @@ interface ApplyForOpening {
     @tag("Openings")
     @post
     @useAuth(HubAuth)
-    applyForOpening(@body request: ApplyForOpeningRequest): void;
+    applyForOpening(@body request: ApplyForOpeningRequest): {
+        @statusCode statusCode: 200;
+        @body ApplyForOpeningResponse: ApplyForOpeningResponse;
+    };
 }

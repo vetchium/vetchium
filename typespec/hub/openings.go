@@ -76,3 +76,7 @@ type ApplyForOpeningRequest struct {
 	Filename               string `json:"filename"                  validate:"required,max=256"`
 	CoverLetter            string `json:"cover_letter"              validate:"omitempty,max=4096"`
 }
+
+type ApplyForOpeningResponse struct {
+	ApplicationID string `json:"application_id"`
+}
