@@ -48,15 +48,17 @@ func (l *Logger) Err(msg string, args ...any) {
 }
 
 func (l *Logger) Dbg(msg string, args ...any) {
-	// l.Log.Debug(msg, args...)
 	var pcs [1]uintptr
 	runtime.Callers(2, pcs[:])
 	r := slog.NewRecord(
 		time.Now(),
 		slog.LevelDebug,
-		fmt.Sprintf(msg, args...),
+		msg,
 		pcs[0],
 	)
+	if len(args) > 0 {
+		r.Add(args...)
+	}
 	_ = l.Log.Handler().Handle(context.Background(), r)
 }
 
