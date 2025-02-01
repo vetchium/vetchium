@@ -218,6 +218,32 @@ func (roles OrgUserRoles) StringArray() []string {
 	return rolesStr
 }
 
+func (r OrgUserRole) IsValid() bool {
+	switch r {
+	case Admin, Any,
+		ApplicationsCRUD, ApplicationsViewer,
+		CostCentersCRUD, CostCentersViewer,
+		LocationsCRUD, LocationsViewer,
+		OpeningsCRUD, OpeningsViewer,
+		OrgUsersCRUD, OrgUsersViewer:
+		return true
+	default:
+		return false
+	}
+}
+
+func (roles OrgUserRoles) IsValid() bool {
+	if len(roles) == 0 {
+		return false
+	}
+	for _, role := range roles {
+		if !role.IsValid() {
+			return false
+		}
+	}
+	return true
+}
+
 const (
 	Admin OrgUserRole = "ADMIN"
 

@@ -182,36 +182,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		"validate_org_user_roles",
 		func(fl validator.FieldLevel) bool {
 			roles := fl.Field().Interface().(common.OrgUserRoles)
-			if len(roles) == 0 {
-				log.Dbg("invalid org user roles count", "count", len(roles))
-				return false
-			}
-			for _, role := range roles {
-				switch role {
-				case common.Admin:
-					continue
-				case common.CostCentersCRUD:
-					continue
-				case common.CostCentersViewer:
-					continue
-				case common.LocationsCRUD:
-					continue
-				case common.LocationsViewer:
-					continue
-				case common.OpeningsCRUD:
-					continue
-				case common.OpeningsViewer:
-					continue
-				case common.OrgUsersCRUD:
-					continue
-				case common.OrgUsersViewer:
-					continue
-				default:
-					log.Dbg("invalid org user role", "role", role)
-					return false
-				}
-			}
-			return true
+			return roles.IsValid()
 		},
 	)
 	if err != nil {
