@@ -17,6 +17,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import WorkIcon from "@mui/icons-material/Work";
 import BusinessIcon from "@mui/icons-material/Business";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PeopleIcon from "@mui/icons-material/People";
 
 const drawerWidth = 240;
 
@@ -47,6 +48,11 @@ export default function Sidebar({ open }: SidebarProps) {
       path: "/cost-centers",
     },
     { text: t("common.locations"), icon: <BusinessIcon />, path: "/locations" },
+    {
+      text: t("orgUsers.title"),
+      icon: <PeopleIcon />,
+      path: "/org-users",
+    },
   ];
 
   return (

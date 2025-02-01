@@ -4,7 +4,7 @@ export const en = {
     openings: "Openings",
     logout: "Logout",
     loading: "Loading...",
-    error: "Error",
+    generalError: "Error",
     retry: "Retry",
     costCenters: "Cost Centers",
     locations: "Locations",
@@ -17,6 +17,7 @@ export const en = {
     none: "None",
     back: "Back",
     headerTitle: "Vetchi for Employers",
+    success: "Success",
   },
   auth: {
     signin: "Sign In",
@@ -33,7 +34,6 @@ export const en = {
     domainVerifyPending:
       "Please ask your domain admin to check their email and complete the onboarding process.",
     accountDisabled: "Your account has been disabled.",
-    serverError: "Please try again after some time.",
     invalidCredentials: "Invalid credentials.",
     unauthorized: "Unauthorized access",
   },
@@ -162,13 +162,36 @@ export const en = {
     includeDefunct: "Include Defunct Locations",
     viewMap: "View on Map",
   },
-  "validation.title.length.3.32": "Title must be between 3 and 32 characters",
-  "validation.positions.range.1.20":
-    "Number of positions must be between 1 and 20",
-  "validation.jobDescription.length.10.1024":
-    "Job description must be between 10 and 1024 characters",
-  "validation.employerNotes.maxLength.1024":
-    "Employer notes must not exceed 1024 characters",
+  validation: {
+    title: {
+      length: {
+        "3.32": "Title must be between 3 and 32 characters",
+      },
+    },
+    name: {
+      length: {
+        "2.64": "Name must be between 2 and 64 characters",
+      },
+    },
+    email: {
+      invalid: "Please enter a valid email address",
+    },
+    positions: {
+      range: {
+        "1.20": "Number of positions must be between 1 and 20",
+      },
+    },
+    jobDescription: {
+      length: {
+        "10.1024": "Job description must be between 10 and 1024 characters",
+      },
+    },
+    employerNotes: {
+      maxLength: {
+        "1024": "Employer notes must not exceed 1024 characters",
+      },
+    },
+  },
   applications: {
     title: "Applications",
     filterByColor: "Filter by Color",
@@ -209,7 +232,7 @@ export const en = {
       uploadButton: "Upload Offer Letter (PDF)",
       selectedFile: "Selected file:",
       error: "Failed to make offer to candidate",
-      success: "Offer has been successfully made to the candidate",
+      offerSuccess: "Offer has been successfully made to the candidate",
     },
     reject: {
       title: "Reject Candidacy",
@@ -230,7 +253,7 @@ export const en = {
     },
     dialogActions: {
       confirm: "Confirm",
-      cancel: "Cancel",
+      dialogCancel: "Cancel",
     },
     dialogWarning: "This action cannot be undone.",
     dialogEffects: {
@@ -343,5 +366,51 @@ export const en = {
     add: "Add Comment",
     addPlaceholder: "Write your comment here...",
     noComments: "No comments yet",
+  },
+  orgUsers: {
+    title: "Organization Users",
+    addTitle: "Add Organization User",
+    email: "Email",
+    name: "Name",
+    rolesList: "Roles",
+    state: "State",
+    add: "Add User",
+    disable: "Disable User",
+    enable: "Enable User",
+    noUsers: "No users found. Click 'Add User' to create one.",
+    fetchError: "Failed to fetch organization users",
+    addError: "Failed to add user",
+    disableError: "Failed to disable user",
+    enableError: "Failed to enable user",
+    searchPlaceholder: "Search by email or name",
+    addSuccess: "User added successfully",
+    disableSuccess: "User disabled successfully",
+    enableSuccess: "User enabled successfully",
+    includeDisabled: "Show Disabled Users",
+    states: {
+      ACTIVE_ORG_USER: "Active",
+      ADDED_ORG_USER: "Added",
+      DISABLED_ORG_USER: "Disabled",
+    },
+    roles: {
+      ADMIN: "Admin",
+      ORG_USERS_CRUD: "Org Users Manager",
+      ORG_USERS_VIEWER: "Org Users Viewer",
+      COST_CENTERS_CRUD: "Cost Centers Manager",
+      COST_CENTERS_VIEWER: "Cost Centers Viewer",
+      LOCATIONS_CRUD: "Locations Manager",
+      LOCATIONS_VIEWER: "Locations Viewer",
+      OPENINGS_CRUD: "Openings Manager",
+      OPENINGS_VIEWER: "Openings Viewer",
+      APPLICATIONS_CRUD: "Applications Manager",
+      APPLICATIONS_VIEWER: "Applications Viewer",
+    },
+    confirmDisable: {
+      modalTitle: "Disable User",
+      message:
+        "Are you sure you want to disable this user? They will no longer be able to access the system.",
+      confirmButton: "Yes, Disable User",
+      cancelButton: "Cancel",
+    },
   },
 };
