@@ -172,9 +172,11 @@ export const en = {
       length: {
         "2.64": "Name must be between 2 and 64 characters",
       },
+      required: "Name is required",
     },
     email: {
       invalid: "Please enter a valid email address",
+      required: "Email is required",
     },
     positions: {
       range: {
@@ -190,6 +192,9 @@ export const en = {
       maxLength: {
         "1024": "Employer notes must not exceed 1024 characters",
       },
+    },
+    roles: {
+      required: "At least one role must be selected",
     },
   },
   applications: {
@@ -368,7 +373,7 @@ export const en = {
     noComments: "No comments yet",
   },
   orgUsers: {
-    title: "Organization Users",
+    title: "Users",
     addTitle: "Add Organization User",
     email: "Email",
     name: "Name",

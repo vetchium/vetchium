@@ -14,7 +14,6 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Snackbar,
 } from "@mui/material";
 
 interface AddOrgUserFormProps {
@@ -57,19 +56,19 @@ export function AddOrgUserForm({ onSubmit, onCancel }: AddOrgUserFormProps) {
     const newErrors: typeof errors = {};
 
     if (!email) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("validation.email.required");
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-      newErrors.email = "Invalid email address";
+      newErrors.email = t("validation.email.invalid");
     }
 
     if (!name) {
-      newErrors.name = "Name is required";
-    } else if (name.length < 2) {
-      newErrors.name = "Name must be at least 2 characters long";
+      newErrors.name = t("validation.name.required");
+    } else if (name.length < 2 || name.length > 64) {
+      newErrors.name = t("validation.name.length.2.64");
     }
 
     if (roles.length === 0) {
-      newErrors.roles = "At least one role must be selected";
+      newErrors.roles = t("validation.roles.required");
     }
 
     setErrors(newErrors);
@@ -110,6 +109,7 @@ export function AddOrgUserForm({ onSubmit, onCancel }: AddOrgUserFormProps) {
         fullWidth
         margin="normal"
         disabled={isSubmitting}
+        required
       />
 
       <TextField
@@ -121,9 +121,11 @@ export function AddOrgUserForm({ onSubmit, onCancel }: AddOrgUserFormProps) {
         fullWidth
         margin="normal"
         disabled={isSubmitting}
+        required
+        inputProps={{ minLength: 2, maxLength: 64 }}
       />
 
-      <FormControl fullWidth margin="normal" error={!!errors.roles}>
+      <FormControl fullWidth margin="normal" error={!!errors.roles} required>
         <InputLabel>{t("orgUsers.rolesList")}</InputLabel>
         <Select
           multiple
