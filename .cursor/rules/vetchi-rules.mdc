@@ -1,0 +1,9 @@
+---
+description: Adding new code
+globs: 
+---
+
+# Your rule content
+
+- When making network calls in *.tsx code, always try to use struct or const exposed from the typespec library. Do not create json.stringify with unstructured data.
+- When writing SQL queries in *.go or *.pgsql files always adhere to the database schema defined under [1-initdb.sql](mdc:sqitch/deploy/1-initdb.sql) or the *.sql files under sqitch directory
