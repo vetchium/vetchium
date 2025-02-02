@@ -26,8 +26,8 @@ vetchi $ # Visit http://localhost:3000 and http://localhost:3001
 
 vetchi $ # If changes were made in typespec/**/*.ts files, do:
 vetchi $ cd typespec && npm run build 
-vetchi $ cd harrypotter && npm install ../typespec
-vetchi $ cd ronweasly && npm install ../typespec
+vetchi $ cd harrypotter && make ;# This installs the new deps from typespec and does `npm run dev`
+vetchi $ cd ronweasly && make
 
 vetchi $ # Seed some test data
 vetchi $ make seed  # tilt up should be running
