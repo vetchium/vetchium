@@ -148,6 +148,15 @@ model CreateOpeningRequest {
 
     min_education_level: EducationLevel;
     salary?: Salary;
+
+    @doc("List of tags to be used for the Opening")
+    @minItems(1)
+    @maxItems(3)
+    tags: OpeningTagID[];
+
+    @doc("These are list of new tags that should be created and then the Opening should be associated with them")
+    @maxItems(3)
+    new_tags?: string[];
 }
 
 model CreateOpeningResponse {
@@ -331,5 +340,18 @@ interface ChangeOpeningState {
         @doc("invalid transition from from_state to to_state")
         @statusCode
         statusCode: 422;
+    };
+}
+
+@route("/employer/filter-opening-tags")
+interface FilterOpeningTags {
+    @tag("Openings")
+    @post
+    @useAuth(EmployerAuth)
+    filterOpeningTags(
+        @body filterOpeningTagsRequest: FilterOpeningTagsRequest,
+    ): {
+        @statusCode statusCode: 200;
+        @body opening_tags: OpeningTag[];
     };
 }

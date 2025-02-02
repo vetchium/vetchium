@@ -70,6 +70,10 @@ type CreateOpeningRequest struct {
 	EmployerNotes     *string               `json:"employer_notes,omitempty" validate:"omitempty,max=1024"`
 	MinEducationLevel common.EducationLevel `json:"min_education_level"      validate:"required,validate_education_level"`
 	Salary            *common.Salary        `json:"salary,omitempty"         validate:"omitempty"`
+
+	// Optional fields
+	Tags    []common.OpeningTagID `json:"tags,omitempty"     validate:"omitempty,min=1,max=3,dive,validate_opening_tag_ids"`
+	NewTags []string              `json:"new_tags,omitempty" validate:"omitempty,max=3,dive,validate_opening_tag_name"`
 }
 
 type CreateOpeningResponse struct {

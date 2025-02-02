@@ -2,6 +2,7 @@ import { CountryCode, EmailAddress, TimeZone } from "../common/common";
 import {
   EducationLevel,
   OpeningState,
+  OpeningTagID,
   OpeningType,
   Salary,
 } from "../common/openings";
@@ -65,6 +66,12 @@ export interface CreateOpeningRequest {
   employer_notes?: string;
   min_education_level: EducationLevel;
   salary?: Salary;
+
+  // Should be minimum 1 and maximum 3
+  tags: OpeningTagID[];
+
+  // Can be maximum 3
+  new_tags?: string[];
 }
 
 export interface CreateOpeningResponse {

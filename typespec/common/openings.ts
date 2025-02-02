@@ -60,3 +60,14 @@ export interface Salary {
   min_amount: number;
   max_amount: number;
 }
+
+export interface FilterOpeningTagsRequest {
+  prefix?: string;
+}
+
+export type OpeningTagID = string;
+
+export interface OpeningTag {
+  id: OpeningTagID;
+  name: string;
+}

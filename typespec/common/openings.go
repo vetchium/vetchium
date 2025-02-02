@@ -54,3 +54,18 @@ type Salary struct {
 	MaxAmount float64  `json:"max_amount" validate:"required,min=1"`
 	Currency  Currency `json:"currency"   validate:"required"`
 }
+
+type FilterOpeningTagsRequest struct {
+	Prefix *string `json:"prefix,omitempty"`
+}
+
+type OpeningTagID string
+
+type OpeningTag struct {
+	ID   OpeningTagID `json:"id"   validate:"required"`
+	Name string       `json:"name" validate:"required"`
+}
+
+type OpeningTags struct {
+	Tags []OpeningTag `json:"tags" validate:"required"`
+}

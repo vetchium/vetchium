@@ -50,3 +50,19 @@ model Salary {
 
     currency: Currency;
 }
+
+model FilterOpeningTagsRequest {
+    @doc("The prefix that should be used to filter the tags by name")
+    prefix?: string;
+}
+
+scalar OpeningTagID extends string;
+
+model OpeningTag {
+    @doc("Client should not assume anything about the format of the string. Could be UUID or XID or something random.")
+    id: OpeningTagID;
+
+    name: string;
+
+    // In future we can add more fields like Icons
+}
