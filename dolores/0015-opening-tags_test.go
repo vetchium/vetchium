@@ -14,7 +14,7 @@ import (
 
 const defaultPassword = "NewPassword123$"
 
-var _ = FDescribe("OpeningsTags", Ordered, func() {
+var _ = Describe("OpeningsTags", Ordered, func() {
 	var (
 		token string
 		db    *pgxpool.Pool
