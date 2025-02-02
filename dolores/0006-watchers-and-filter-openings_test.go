@@ -524,6 +524,7 @@ var _ = Describe("Openings", Ordered, func() {
 					"IND",
 					"USA",
 				},
+				NewTags: []string{"DevOps"},
 			}
 
 			resp := testPOSTGetResp(

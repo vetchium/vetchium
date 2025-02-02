@@ -84,6 +84,7 @@ var _ = Describe("Openings", Ordered, func() {
 					MaxAmount: 100000,
 					Currency:  "USD",
 				},
+				NewTags: []string{"DevOps"},
 			}
 
 			type createOpeningTestCase struct {
@@ -240,6 +241,7 @@ var _ = Describe("Openings", Ordered, func() {
 								MaxAmount: 100000,
 								Currency:  "USD",
 							},
+							NewTags: []string{"DevOps"},
 						}
 					}(),
 					wantStatus:    http.StatusBadRequest,
@@ -591,6 +593,7 @@ func createTestOpening(token string) string {
 			"IND",
 			"USA",
 		},
+		NewTags: []string{"DevOps"},
 	}
 
 	resp := testPOSTGetResp(
@@ -629,6 +632,7 @@ func createTestOpenings(token string) {
 				"IND",
 				"USA",
 			},
+			NewTags: []string{"DevOps"},
 		}
 
 		_ = testPOSTGetResp(
@@ -668,6 +672,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 				"IND",
 				"USA",
 			},
+			NewTags: []string{"DevOps"},
 		}
 
 		resp := testPOSTGetResp(

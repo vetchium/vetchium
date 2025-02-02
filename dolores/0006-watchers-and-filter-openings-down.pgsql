@@ -5,6 +5,9 @@ WHERE employer_id = '12345678-0006-0006-0006-000000000201'::uuid;
 DELETE FROM opening_locations
 WHERE employer_id = '12345678-0006-0006-0006-000000000201'::uuid;
 
+DELETE FROM opening_tag_mappings
+WHERE employer_id = '12345678-0006-0006-0006-000000000201'::uuid;
+
 DELETE FROM openings
 WHERE employer_id = '12345678-0006-0006-0006-000000000201'::uuid;
 
