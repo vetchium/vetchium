@@ -72,8 +72,8 @@ type CreateOpeningRequest struct {
 	Salary            *common.Salary        `json:"salary,omitempty"         validate:"omitempty"`
 
 	// Optional fields
-	Tags    []common.OpeningTagID `json:"tags,omitempty"     validate:"omitempty,min=1,max=3,dive,validate_opening_tag_ids"`
-	NewTags []string              `json:"new_tags,omitempty" validate:"omitempty,max=3,dive,validate_opening_tag_name"`
+	Tags    []common.OpeningTagID `json:"tags,omitempty"     validate:"omitempty,max=3"`
+	NewTags []string              `json:"new_tags,omitempty" validate:"omitempty,max=3"`
 }
 
 type CreateOpeningResponse struct {

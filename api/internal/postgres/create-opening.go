@@ -272,6 +272,134 @@ AND l.employer_id = $1
 		}
 	}
 
+	// Handle tags
+	if len(createOpeningReq.Tags) > 0 {
+		insertTagMappingsQuery := `
+INSERT INTO opening_tag_mappings (employer_id, opening_id, tag_id)
+SELECT $1, $2, UNNEST($3::uuid[])
+`
+		_, err = tx.Exec(
+			ctx,
+			insertTagMappingsQuery,
+			orgUser.EmployerID,
+			openingID,
+			createOpeningReq.Tags,
+		)
+		if err != nil {
+			p.log.Err("failed to insert tag mappings", "error", err)
+			return "", err
+		}
+	}
+
+	// Handle new tags
+	if len(createOpeningReq.NewTags) > 0 {
+		// First get IDs of any pre-existing tags from the names
+		getExistingTagsQuery := `
+SELECT id, name FROM opening_tags WHERE name = ANY($1)
+`
+		rows, err := tx.Query(
+			ctx,
+			getExistingTagsQuery,
+			createOpeningReq.NewTags,
+		)
+		if err != nil {
+			p.log.Err("failed to get existing tag ids", "error", err)
+			return "", err
+		}
+		defer rows.Close()
+
+		var tagIDs []uuid.UUID
+		existingTagNames := make(map[string]struct{})
+		for rows.Next() {
+			var tagID uuid.UUID
+			var tagName string
+			err = rows.Scan(&tagID, &tagName)
+			if err != nil {
+				p.log.Err("failed to scan existing tag id", "error", err)
+				return "", err
+			}
+			tagIDs = append(tagIDs, tagID)
+			existingTagNames[tagName] = struct{}{}
+		}
+
+		// Find which tags need to be created
+		var newTagNames []string
+		for _, tagName := range createOpeningReq.NewTags {
+			if _, exists := existingTagNames[tagName]; !exists {
+				newTagNames = append(newTagNames, tagName)
+			}
+		}
+
+		// Create only the tags that don't exist
+		if len(newTagNames) > 0 {
+			insertNewTagsQuery := `
+INSERT INTO opening_tags (name)
+SELECT UNNEST($1::text[])
+RETURNING id
+`
+			rows, err := tx.Query(ctx, insertNewTagsQuery, newTagNames)
+			if err != nil {
+				p.log.Err("failed to insert new tags", "error", err)
+				return "", err
+			}
+			defer rows.Close()
+
+			for rows.Next() {
+				var tagID uuid.UUID
+				err = rows.Scan(&tagID)
+				if err != nil {
+					p.log.Err("failed to scan tag id", "error", err)
+					return "", err
+				}
+				tagIDs = append(tagIDs, tagID)
+			}
+		}
+
+		// Insert mappings for all tags
+		insertTagMappingsQuery := `
+INSERT INTO opening_tag_mappings (employer_id, opening_id, tag_id)
+SELECT $1, $2, UNNEST($3::uuid[])
+`
+		_, err = tx.Exec(
+			ctx,
+			insertTagMappingsQuery,
+			orgUser.EmployerID,
+			openingID,
+			tagIDs,
+		)
+		if err != nil {
+			p.log.Err("failed to insert new tag mappings", "error", err)
+			return "", err
+		}
+	}
+
+	// Verify that at least one tag exists for the opening
+	verifyTagsQuery := `
+SELECT COUNT(*) FROM opening_tag_mappings
+WHERE employer_id = $1 AND opening_id = $2
+`
+	var tagCount int
+	err = tx.QueryRow(
+		ctx,
+		verifyTagsQuery,
+		orgUser.EmployerID,
+		openingID,
+	).Scan(&tagCount)
+	if err != nil {
+		p.log.Err("failed to verify tag count", "error", err)
+		return "", err
+	}
+
+	if tagCount == 0 {
+		p.log.Dbg("no tags specified for opening")
+		return "", errors.New("at least one tag is required for an opening")
+	}
+
+	if tagCount > 3 {
+		p.log.Dbg("too many tags specified for opening")
+		return "", errors.New("maximum of three tags allowed per opening")
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)

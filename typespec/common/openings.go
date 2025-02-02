@@ -62,8 +62,8 @@ type FilterOpeningTagsRequest struct {
 type OpeningTagID string
 
 type OpeningTag struct {
-	ID   OpeningTagID `json:"id"   validate:"required"`
-	Name string       `json:"name" validate:"required"`
+	ID   OpeningTagID `json:"id"`
+	Name string       `json:"name"`
 }
 
 type OpeningTags struct {

@@ -40,6 +40,36 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// Validate tags
+		totalTags := len(createOpeningReq.Tags) + len(createOpeningReq.NewTags)
+		if totalTags == 0 {
+			h.Dbg("no tags specified", "createOpeningReq", createOpeningReq)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).Encode(common.ValidationErrors{
+				Errors: []string{"tags", "new_tags"},
+			})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
+		if totalTags > 3 {
+			h.Dbg(
+				"too many tags specified",
+				"createOpeningReq",
+				createOpeningReq,
+			)
+			w.WriteHeader(http.StatusBadRequest)
+			err = json.NewEncoder(w).Encode(common.ValidationErrors{
+				Errors: []string{"tags", "new_tags"},
+			})
+			if err != nil {
+				h.Err("failed to encode validation errors", "error", err)
+			}
+			return
+		}
+
 		if createOpeningReq.Salary != nil {
 			if createOpeningReq.Salary.MinAmount > createOpeningReq.Salary.MaxAmount {
 				h.Dbg("salary min > max", "createOpeningReq", createOpeningReq)

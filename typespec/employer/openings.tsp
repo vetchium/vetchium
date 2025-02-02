@@ -149,12 +149,11 @@ model CreateOpeningRequest {
     min_education_level: EducationLevel;
     salary?: Salary;
 
-    @doc("List of tags to be used for the Opening")
-    @minItems(1)
+    @doc("List of tags to be used for the Opening. Atleast one tag should be specified either here or in new_tags.")
     @maxItems(3)
-    tags: OpeningTagID[];
+    tags?: OpeningTagID[];
 
-    @doc("These are list of new tags that should be created and then the Opening should be associated with them")
+    @doc("These are list of new tags that should be created and then the Opening should be associated with them. Atleast one tag should be specified either here or in tags.")
     @maxItems(3)
     new_tags?: string[];
 }

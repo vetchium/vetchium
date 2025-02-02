@@ -242,4 +242,10 @@ type DB interface {
 	ResetHubUserPassword(context.Context, HubUserPasswordReset) error
 	HubRSVPInterview(context.Context, hub.HubRSVPInterviewRequest) error
 	GetCandidateInfo(context.Context, string) (CandidateInfo, error)
+
+	// Opening tags
+	FilterOpeningTags(
+		ctx context.Context,
+		req common.FilterOpeningTagsRequest,
+	) ([]common.OpeningTag, error)
 }

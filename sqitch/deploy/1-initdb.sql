@@ -483,4 +483,41 @@ CREATE INDEX idx_interviews_candidacy ON interviews(candidacy_id);
 CREATE INDEX idx_interviews_employer ON interviews(employer_id);
 CREATE INDEX idx_interviews_state ON interviews(interview_state);
 
+CREATE TABLE opening_tags (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE opening_tag_mappings (
+    employer_id UUID NOT NULL,
+    opening_id TEXT NOT NULL,
+    CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
+    tag_id UUID REFERENCES opening_tags(id) NOT NULL,
+    PRIMARY KEY (employer_id, opening_id, tag_id)
+);
+
+-- Seed data for common opening tags
+INSERT INTO opening_tags (name) VALUES
+    ('DevOps'),
+    ('Golang'),
+    ('Database Administrator'),
+    ('Frontend Developer'),
+    ('Backend Developer'),
+    ('Full Stack Developer'),
+    ('Site Reliability Engineer'),
+    ('Cloud Engineer'),
+    ('Data Scientist'),
+    ('Machine Learning Engineer'),
+    ('Product Manager'),
+    ('UI/UX Designer'),
+    ('QA Engineer'),
+    ('Security Engineer'),
+    ('Mobile Developer'),
+    ('Technical Writer'),
+    ('Engineering Manager'),
+    ('Technical Support'),
+    ('Business Analyst'),
+    ('System Administrator');
+
 COMMIT;

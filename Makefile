@@ -18,7 +18,7 @@ dev:
 test:
 	@ORIG_URI=$$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
 	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchidev/localhost/g'); \
-	POSTGRES_URI=$$MOD_URI ginkgo -vv ./dolores/...
+	POSTGRES_URI=$$MOD_URI ginkgo -v ./dolores/...
 
 seed:
 	@ORIG_URI=$$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \

@@ -186,6 +186,17 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Admin, common.OpeningsCRUD},
 	)
 
+	// Opening tags related endpoints
+	h.mw.Protect(
+		"/employer/filter-opening-tags",
+		openings.FilterOpeningTags(h),
+		[]common.OrgUserRole{
+			common.Admin,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
+		},
+	)
+
 	// Application related endpoints
 	h.mw.Protect(
 		"/employer/get-applications",
