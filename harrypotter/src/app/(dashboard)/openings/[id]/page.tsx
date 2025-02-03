@@ -50,6 +50,7 @@ interface Opening {
   location_titles: string[] | undefined;
   remote_country_codes: string[] | undefined;
   remote_timezones: string[] | undefined;
+  tags?: { id: string; name: string }[];
 }
 
 interface PageProps {
@@ -268,6 +269,30 @@ export default function OpeningDetail({ params }: PageProps) {
                   <Typography>
                     {t(`openings.state.${opening.state}`)}
                   </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                    {t("openings.tags")}
+                  </Typography>
+                  <Box
+                    sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}
+                  >
+                    {opening.tags?.map((tag) => (
+                      <Box
+                        key={tag.id}
+                        sx={{
+                          bgcolor: "primary.main",
+                          color: "primary.contrastText",
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: 2,
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        {tag.name}
+                      </Box>
+                    ))}
+                  </Box>
                 </Grid>
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" sx={{ mt: 2 }}>
