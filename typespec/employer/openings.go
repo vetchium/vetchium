@@ -46,6 +46,7 @@ type Opening struct {
 	EmployerNotes     *string               `json:"employer_notes,omitempty"`
 	MinEducationLevel common.EducationLevel `json:"min_education_level"`
 	Salary            *common.Salary        `json:"salary,omitempty"`
+	Tags              []common.OpeningTag   `json:"tags,omitempty"`
 }
 
 type CreateOpeningRequest struct {

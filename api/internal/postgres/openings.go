@@ -44,7 +44,8 @@ SELECT
     o.last_updated_at,
     jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle) AS recruiter,
     ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) AS locations,
-    ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team
+    ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team,
+    ARRAY_AGG(DISTINCT jsonb_build_object('id', ot.id, 'name', ot.name)) FILTER (WHERE ot.id IS NOT NULL) AS tags
 FROM
     openings o
     LEFT JOIN org_cost_centers cc ON o.cost_center_id = cc.id
@@ -54,12 +55,14 @@ FROM
     LEFT JOIN org_users r ON o.recruiter = r.id
     LEFT JOIN hub_users_official_emails hue_r ON r.email = hue_r.official_email
     LEFT JOIN hub_users hu_r ON hue_r.hub_user_id = hu_r.id
-    LEFT JOIN opening_locations ol ON o.id = ol.opening_id
+    LEFT JOIN opening_locations ol ON o.id = ol.opening_id AND o.employer_id = ol.employer_id
     LEFT JOIN locations l ON ol.location_id = l.id
-    LEFT JOIN opening_hiring_team oht ON o.id = oht.opening_id
+    LEFT JOIN opening_hiring_team oht ON o.id = oht.opening_id AND o.employer_id = oht.employer_id
     LEFT JOIN org_users ht ON oht.hiring_team_mate_id = ht.id
     LEFT JOIN hub_users_official_emails hue_ht ON ht.email = hue_ht.official_email
     LEFT JOIN hub_users hu_ht ON hue_ht.hub_user_id = hu_ht.id
+    LEFT JOIN opening_tag_mappings otm ON o.id = otm.opening_id AND o.employer_id = otm.employer_id
+    LEFT JOIN opening_tags ot ON otm.tag_id = ot.id
 WHERE
     o.id = $1
     AND o.employer_id = $2
@@ -97,6 +100,7 @@ GROUP BY
 	var salary common.Salary
 	var minAmount, maxAmount *float64
 	var currencyStr *string
+	var tags []common.OpeningTag
 
 	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(
@@ -122,6 +126,7 @@ GROUP BY
 			&recruiter,
 			&locations,
 			&hiringTeam,
+			&tags,
 		)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -141,11 +146,15 @@ GROUP BY
 		salary.Currency = common.Currency(*currencyStr)
 	}
 
-	opening.Salary = &salary
+	if minAmount != nil && maxAmount != nil && currencyStr != nil {
+		opening.Salary = &salary
+	}
+
 	opening.LocationTitles = locations
+	opening.HiringTeam = hiringTeam
 	opening.HiringManager = hiringManager
 	opening.Recruiter = recruiter
-	opening.HiringTeam = hiringTeam
+	opening.Tags = tags
 
 	return opening, nil
 }

@@ -91,6 +91,10 @@ model Opening {
     @doc("Current state of the opening")
     state: OpeningState;
 
+    @doc("List of tags associated with the opening")
+    @maxItems(3)
+    tags?: OpeningTag[];
+
     created_at: utcDateTime;
     last_updated_at: utcDateTime;
 }
