@@ -32,6 +32,8 @@ import {
   OpeningTypes,
   EducationLevels,
   GlobalCountryCode,
+  OpeningTag,
+  OpeningTagID,
 } from "@psankar/vetchi-typespec";
 import { Location, LocationStates } from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
@@ -68,6 +70,10 @@ export default function CreateOpeningPage() {
   const [orgUsers, setOrgUsers] = useState<OrgUserShort[]>([]);
   const [costCenters, setCostCenters] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
+  const [newTags, setNewTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<OpeningTag[]>([]);
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
 
   const router = useRouter();
   const { t } = useTranslation();
@@ -92,6 +98,7 @@ export default function CreateOpeningPage() {
     fetchOrgUsers();
     fetchCostCenters();
     fetchLocations();
+    fetchTags();
   }, []);
 
   const fetchOrgUsers = async (searchPrefix?: string) => {
@@ -200,6 +207,74 @@ export default function CreateOpeningPage() {
     }
   };
 
+  const fetchTags = async (searchPrefix?: string) => {
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/signin");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/filter-opening-tags`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            prefix: searchPrefix,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(t("openings.fetchTagsError"));
+      }
+
+      const data = await response.json();
+      setAvailableTags(data || []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("openings.fetchTagsError")
+      );
+    }
+  };
+
+  const handleTagSearch = (query: string) => {
+    setTagSearchQuery(query);
+    fetchTags(query);
+  };
+
+  const handleAddNewTag = (newTag: string) => {
+    if (selectedTags.length + newTags.length >= 3) {
+      setError(t("openings.maxTagsError"));
+      return;
+    }
+    if (newTag.trim() && !newTags.includes(newTag.trim())) {
+      setNewTags([...newTags, newTag.trim()]);
+    }
+  };
+
+  const handleRemoveNewTag = (tagToRemove: string) => {
+    setNewTags(newTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleRemoveSelectedTag = (tagToRemove: OpeningTag) => {
+    setSelectedTags(selectedTags.filter((tag) => tag.id !== tagToRemove.id));
+  };
+
+  const handleTagSelect = (tag: OpeningTag | null) => {
+    if (tag && !selectedTags.find((t) => t.id === tag.id)) {
+      if (selectedTags.length + newTags.length >= 3) {
+        setError(t("openings.maxTagsError"));
+        return;
+      }
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setIsLoading(true);
@@ -224,6 +299,11 @@ export default function CreateOpeningPage() {
         return;
       }
 
+      if (selectedTags.length + newTags.length === 0) {
+        setError(t("openings.tagsRequiredError"));
+        return;
+      }
+
       const request: CreateOpeningRequest = {
         title,
         positions,
@@ -245,6 +325,8 @@ export default function CreateOpeningPage() {
           : remoteCountries.length > 0
           ? remoteCountries
           : undefined,
+        tags: selectedTags.map((tag) => tag.id),
+        new_tags: newTags.length > 0 ? newTags : undefined,
       };
 
       const response = await fetch(
@@ -559,6 +641,71 @@ export default function CreateOpeningPage() {
             }
           />
 
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              {t("openings.tags")}
+            </Typography>
+            <Autocomplete
+              options={availableTags}
+              getOptionLabel={(option) => option.name}
+              value={null}
+              onChange={(_, newValue) => handleTagSelect(newValue)}
+              onInputChange={(_, value) => handleTagSearch(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={t("openings.selectTags")}
+                  helperText={t("openings.tagsHelp")}
+                />
+              )}
+            />
+            <Box sx={{ mt: 1, mb: 2 }}>
+              {selectedTags.map((tag) => (
+                <Chip
+                  key={tag.id}
+                  label={tag.name}
+                  onDelete={() => handleRemoveSelectedTag(tag)}
+                  sx={{ m: 0.5 }}
+                />
+              ))}
+            </Box>
+
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                label={t("openings.addNewTag")}
+                value={tagSearchQuery}
+                onChange={(e) => setTagSearchQuery(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <Button
+                      onClick={() => handleAddNewTag(tagSearchQuery)}
+                      disabled={
+                        !tagSearchQuery.trim() ||
+                        selectedTags.length + newTags.length >= 3
+                      }
+                    >
+                      {t("common.add")}
+                    </Button>
+                  ),
+                }}
+                helperText={t("openings.newTagHelp")}
+              />
+            </Box>
+            <Box sx={{ mt: 1 }}>
+              {newTags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  onDelete={() => handleRemoveNewTag(tag)}
+                  color="primary"
+                  variant="outlined"
+                  sx={{ m: 0.5 }}
+                />
+              ))}
+            </Box>
+          </Box>
+
           <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
             <Button variant="outlined" onClick={() => router.push("/openings")}>
               {t("common.cancel")}
@@ -588,7 +735,8 @@ export default function CreateOpeningPage() {
                 (!isGloballyRemote &&
                   selectedLocations.length === 0 &&
                   remoteTimezones.length === 0 &&
-                  remoteCountries.length === 0)
+                  remoteCountries.length === 0) ||
+                selectedTags.length + newTags.length === 0
               }
             >
               {isLoading ? t("common.loading") : t("common.save")}
