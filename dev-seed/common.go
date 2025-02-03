@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 const (
@@ -24,6 +25,7 @@ func makeRequest(
 	if reqBody != nil {
 		jsonBody, err := json.Marshal(reqBody)
 		if err != nil {
+			debug.PrintStack()
 			log.Fatalf("failed to marshal request body: %v", err)
 		}
 		body = bytes.NewBuffer(jsonBody)
@@ -31,6 +33,7 @@ func makeRequest(
 
 	req, err := http.NewRequest(method, serverURL+path, body)
 	if err != nil {
+		debug.PrintStack()
 		log.Fatalf("failed to create request: %v", err)
 	}
 
@@ -41,6 +44,7 @@ func makeRequest(
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		debug.PrintStack()
 		log.Fatalf("failed to make request: %v", err)
 	}
 	defer resp.Body.Close()
@@ -48,8 +52,10 @@ func makeRequest(
 	if resp.StatusCode >= 400 {
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
+			debug.PrintStack()
 			log.Fatalf("failed to read error response body: %v", err)
 		}
+		debug.PrintStack()
 		log.Fatalf(
 			"request failed with status %d: %s",
 			resp.StatusCode,
@@ -59,6 +65,7 @@ func makeRequest(
 
 	if respBody != nil {
 		if err := json.NewDecoder(resp.Body).Decode(respBody); err != nil {
+			debug.PrintStack()
 			log.Fatalf("failed to decode response body: %v", err)
 		}
 	}
