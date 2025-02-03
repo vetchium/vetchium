@@ -130,9 +130,6 @@ WHERE EXISTS (
 		}
 	}
 
-	// Update the request with interviewer names
-	req.InterviewerNames = interviewerNames
-
 	// Now add the interview
 	query := `
 WITH candidacy_check AS (

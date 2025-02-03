@@ -31,7 +31,4 @@ type AddInterviewRequest struct {
 	WatcherNotificationEmail     Email
 	ApplicantNotificationEmail   Email
 	CandidacyComment             string
-
-	// Names of interviewers, used for applicant notification
-	InterviewerNames []string
 }
