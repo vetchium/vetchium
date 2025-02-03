@@ -121,12 +121,17 @@ export const en = {
     viewApplications: "View Applications",
     tags: "Opening Tags",
     selectTags: "Select Existing Tags",
+    selectTagsPlaceholder: "Type to search or select tags...",
     tagsHelp: "Select up to 3 tags that best describe this opening",
     addNewTag: "Add New Tag",
+    addNewTagPlaceholder: "Type a new tag and click Add",
     newTagHelp: "Can't find what you need? Add a new tag (max 3 tags total)",
     maxTagsError: "Maximum of 3 tags allowed (existing + new tags combined)",
+    maxTagsReached: "Maximum tags reached (3)",
+    noTagsFound: "No matching tags found",
     tagsRequiredError: "Please select at least one tag or add a new tag",
     fetchTagsError: "Failed to fetch opening tags",
+    tagLengthError: "Tag must not exceed 32 characters",
   },
   costCenters: {
     title: "Cost Centers",
@@ -172,9 +177,7 @@ export const en = {
   },
   validation: {
     title: {
-      length: {
-        "3.32": "Title must be between 3 and 32 characters",
-      },
+      lengthError: "Title must be between 3 and 32 characters",
     },
     name: {
       length: {
@@ -192,9 +195,7 @@ export const en = {
       },
     },
     jobDescription: {
-      length: {
-        "10.1024": "Job description must be between 10 and 1024 characters",
-      },
+      lengthError: "Job description must be between 10 and 1024 characters",
     },
     employerNotes: {
       maxLength: {

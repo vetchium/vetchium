@@ -46,7 +46,7 @@ interface Country {
 
 export default function CreateOpeningPage() {
   const [title, setTitle] = useState("");
-  const [positions, setPositions] = useState(1);
+  const [positions, setPositions] = useState<number>(1);
   const [jd, setJd] = useState("");
   const [recruiter, setRecruiter] = useState<OrgUserShort | null>(null);
   const [hiringManager, setHiringManager] = useState<OrgUserShort | null>(null);
@@ -54,8 +54,8 @@ export default function CreateOpeningPage() {
   const [openingType, setOpeningType] = useState<OpeningType>(
     OpeningTypes.FULL_TIME
   );
-  const [yoeMin, setYoeMin] = useState(1);
-  const [yoeMax, setYoeMax] = useState(80);
+  const [yoeMin, setYoeMin] = useState<number>(1);
+  const [yoeMax, setYoeMax] = useState<number>(80);
   const [minEducationLevel, setMinEducationLevel] = useState<EducationLevel>(
     EducationLevels.UNSPECIFIED
   );
@@ -360,6 +360,22 @@ export default function CreateOpeningPage() {
     }
   };
 
+  // Add handlers for numeric inputs
+  const handlePositionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setPositions(isNaN(value) ? 1 : Math.max(1, Math.min(20, value)));
+  };
+
+  const handleYoeMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setYoeMin(isNaN(value) ? 0 : Math.max(0, Math.min(100, value)));
+  };
+
+  const handleYoeMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setYoeMax(isNaN(value) ? 1 : Math.max(1, Math.min(100, value)));
+  };
+
   return (
     <Container maxWidth="md">
       <Paper sx={{ p: 4 }}>
@@ -386,7 +402,7 @@ export default function CreateOpeningPage() {
             error={title.length > 0 && (title.length < 3 || title.length > 32)}
             helperText={
               title.length > 0 && (title.length < 3 || title.length > 32)
-                ? t("validation.title.length.3.32")
+                ? t("validation.title.lengthError")
                 : ""
             }
           />
@@ -398,7 +414,7 @@ export default function CreateOpeningPage() {
             type="number"
             label={t("openings.positions")}
             value={positions}
-            onChange={(e) => setPositions(parseInt(e.target.value, 10))}
+            onChange={handlePositionsChange}
             inputProps={{ min: 1, max: 20 }}
             error={positions < 1 || positions > 20}
             helperText={
@@ -421,7 +437,7 @@ export default function CreateOpeningPage() {
             error={jd.length > 0 && (jd.length < 10 || jd.length > 1024)}
             helperText={
               jd.length > 0 && (jd.length < 10 || jd.length > 1024)
-                ? t("validation.jobDescription.length.10.1024")
+                ? t("validation.jobDescription.lengthError")
                 : ""
             }
           />
@@ -495,7 +511,7 @@ export default function CreateOpeningPage() {
               type="number"
               label={t("openings.minYoe")}
               value={yoeMin}
-              onChange={(e) => setYoeMin(parseInt(e.target.value, 10))}
+              onChange={handleYoeMinChange}
               inputProps={{ min: 0, max: 100 }}
             />
 
@@ -506,7 +522,7 @@ export default function CreateOpeningPage() {
               type="number"
               label={t("openings.maxYoe")}
               value={yoeMax}
-              onChange={(e) => setYoeMax(parseInt(e.target.value, 10))}
+              onChange={handleYoeMaxChange}
               inputProps={{ min: 1, max: 100 }}
             />
           </Box>
@@ -646,53 +662,101 @@ export default function CreateOpeningPage() {
               {t("openings.tags")}
             </Typography>
             <Autocomplete
-              options={availableTags}
+              multiple
+              options={availableTags.filter(
+                (tag) => !selectedTags.find((t) => t.id === tag.id)
+              )}
               getOptionLabel={(option) => option.name}
-              value={null}
-              onChange={(_, newValue) => handleTagSelect(newValue)}
+              value={selectedTags}
+              onChange={(_, newValue) => {
+                if (newValue.length + newTags.length <= 3) {
+                  setSelectedTags(newValue);
+                } else {
+                  setError(t("openings.maxTagsError"));
+                }
+              }}
               onInputChange={(_, value) => handleTagSearch(value)}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              filterSelectedOptions
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label={t("openings.selectTags")}
+                  placeholder={
+                    selectedTags.length + newTags.length < 3
+                      ? t("openings.selectTagsPlaceholder")
+                      : t("openings.maxTagsReached")
+                  }
                   helperText={t("openings.tagsHelp")}
                 />
               )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    label={option.name}
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    sx={{ m: 0.5 }}
+                  />
+                ))
+              }
+              noOptionsText={
+                selectedTags.length + newTags.length >= 3
+                  ? t("openings.maxTagsReached")
+                  : t("openings.noTagsFound")
+              }
+              limitTags={3}
             />
-            <Box sx={{ mt: 1, mb: 2 }}>
-              {selectedTags.map((tag) => (
-                <Chip
-                  key={tag.id}
-                  label={tag.name}
-                  onDelete={() => handleRemoveSelectedTag(tag)}
-                  sx={{ m: 0.5 }}
-                />
-              ))}
-            </Box>
 
             <Box sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 label={t("openings.addNewTag")}
                 value={tagSearchQuery}
-                onChange={(e) => setTagSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length <= 32) {
+                    // Add character limit for new tags
+                    setTagSearchQuery(e.target.value);
+                  }
+                }}
+                placeholder={
+                  selectedTags.length + newTags.length < 3
+                    ? t("openings.addNewTagPlaceholder")
+                    : t("openings.maxTagsReached")
+                }
                 InputProps={{
                   endAdornment: (
                     <Button
-                      onClick={() => handleAddNewTag(tagSearchQuery)}
+                      onClick={() => {
+                        if (selectedTags.length + newTags.length < 3) {
+                          handleAddNewTag(tagSearchQuery);
+                          setTagSearchQuery(""); // Clear input after adding
+                        } else {
+                          setError(t("openings.maxTagsError"));
+                        }
+                      }}
                       disabled={
                         !tagSearchQuery.trim() ||
-                        selectedTags.length + newTags.length >= 3
+                        selectedTags.length + newTags.length >= 3 ||
+                        newTags.includes(tagSearchQuery.trim()) ||
+                        tagSearchQuery.length > 32
                       }
                     >
                       {t("common.add")}
                     </Button>
                   ),
                 }}
-                helperText={t("openings.newTagHelp")}
+                helperText={
+                  tagSearchQuery.length > 32
+                    ? t("openings.tagLengthError")
+                    : t("openings.newTagHelp")
+                }
+                error={tagSearchQuery.length > 32}
+                disabled={selectedTags.length + newTags.length >= 3}
+                inputProps={{ maxLength: 32 }} // Hard limit on input length
               />
             </Box>
-            <Box sx={{ mt: 1 }}>
+            <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
               {newTags.map((tag) => (
                 <Chip
                   key={tag}
@@ -700,7 +764,6 @@ export default function CreateOpeningPage() {
                   onDelete={() => handleRemoveNewTag(tag)}
                   color="primary"
                   variant="outlined"
-                  sx={{ m: 0.5 }}
                 />
               ))}
             </Box>
