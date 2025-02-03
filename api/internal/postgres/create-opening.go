@@ -15,6 +15,10 @@ import (
 	"github.com/psankar/vetchi/typespec/employer"
 )
 
+// TODO: I (PSankar) am not quite satisfied with the code in this file
+// and this needs some cleanup with proper small functions, proper transactions,
+// better error handling, proper retries, etc.
+
 func (p *PG) CreateOpening(
 	ctx context.Context,
 	createOpeningReq employer.CreateOpeningRequest,
@@ -151,6 +155,16 @@ INSERT INTO openings (id, title, positions, jd, recruiter, hiring_manager, cost_
 				} else {
 					p.log.Err("create opening", "error", pgErr.Message)
 					return "", err
+				}
+			}
+
+			// Check for duplicate opening-id due to
+			// race condition on parallel requests
+			if pgErr.Code == "23505" {
+				if pgErr.ConstraintName == "openings_pkey" {
+					// TODO: Handle this more gracefully
+					p.log.Err("duplicate opening ID", "id", openingID)
+					return "", db.ErrInternal
 				}
 			}
 
