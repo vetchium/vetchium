@@ -40,13 +40,16 @@ model FindHubOpeningsRequest {
     company_domains?: string[];
 
     @doc("If nothing is passed, all experience ranges are considered")
-    experience?: ExperienceRange;
+    experience_range?: ExperienceRange;
 
     @doc("If nothing is passed, all salary ranges are considered")
     salary_range?: Salary;
 
     @doc("If nothing is passed, all education levels are considered")
     min_education_level?: EducationLevel;
+
+    @doc("If nothing is passed, all tags are considered")
+    tags?: OpeningTagID[];
 
     pagination_key?: int64;
 

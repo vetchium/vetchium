@@ -32,8 +32,10 @@ type FindHubOpeningsRequest struct {
 	SalaryRange     *common.Salary       `json:"salary_range"     validate:"omitempty"`
 
 	MinEducationLevel *common.EducationLevel `json:"min_education_level" validate:"omitempty,validate_education_level"`
-	PaginationKey     int64                  `json:"pagination_key"`
-	Limit             int64                  `json:"limit"               validate:"min=0,max=100"`
+	Tags              []common.OpeningTagID  `json:"tags"                validate:"omitempty"`
+
+	PaginationKey int64 `json:"pagination_key"`
+	Limit         int64 `json:"limit"          validate:"min=0,max=100"`
 }
 
 type HubOpening struct {
