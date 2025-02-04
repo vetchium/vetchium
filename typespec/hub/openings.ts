@@ -26,6 +26,7 @@ export interface FindHubOpeningsRequest {
   salary_range?: Salary;
   min_education_level?: EducationLevel;
   tags?: OpeningTagID[];
+  terms?: string[];
   pagination_key?: number;
   limit?: number;
 }

@@ -51,6 +51,9 @@ model FindHubOpeningsRequest {
     @doc("If nothing is passed, all tags are considered")
     tags?: OpeningTagID[];
 
+    @doc("The strings passed here will be used to filter on the Opening Titles")
+    terms?: string[];
+
     pagination_key?: int64;
 
     @doc("If nothing is passed, 40 Openings are returned")
