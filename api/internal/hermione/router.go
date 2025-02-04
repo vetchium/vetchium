@@ -9,6 +9,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
+	he "github.com/psankar/vetchi/api/internal/hermione/hubemp"
 	ho "github.com/psankar/vetchi/api/internal/hermione/hubopenings"
 	"github.com/psankar/vetchi/api/internal/hermione/interview"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
@@ -189,7 +190,7 @@ func (h *Hermione) Run() error {
 	// Opening tags related endpoints
 	h.mw.Protect(
 		"/employer/filter-opening-tags",
-		openings.FilterOpeningTags(h),
+		he.FilterOpeningTags(h),
 		[]common.OrgUserRole{
 			common.Admin,
 			common.OpeningsCRUD,
@@ -352,6 +353,7 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
+	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))
 	http.Handle("/hub/get-opening-details", wrap(ho.GetOpeningDetails(h)))
 	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpening(h)))
 	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
