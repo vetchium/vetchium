@@ -137,7 +137,7 @@ export default function FindOpeningsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ request }), // Note: API expects request object to be wrapped
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {

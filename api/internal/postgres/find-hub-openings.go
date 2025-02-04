@@ -27,6 +27,8 @@ FROM openings o
 	JOIN domains d ON epd.domain_id = d.id
 	LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	LEFT JOIN locations l ON ol.location_id = l.id
+	LEFT JOIN opening_tag_mappings otm ON o.employer_id = otm.employer_id AND o.id = otm.opening_id
+	LEFT JOIN opening_tags ot ON otm.tag_id = ot.id
 	WHERE o.state = 'ACTIVE_OPENING_STATE'
 		AND (
 			COALESCE(l.country_code, '') = $1 
@@ -61,6 +63,38 @@ FROM openings o
 
 	// Add other filters
 	whereConditions := []string{}
+
+	// Add tag filter if specified
+	if len(req.Tags) > 0 {
+		placeholders := make([]string, len(req.Tags))
+		for i := range req.Tags {
+			placeholders[i] = fmt.Sprintf("$%d", argPos)
+			args = append(args, req.Tags[i])
+			argPos++
+		}
+		tagConds := fmt.Sprintf(
+			"ot.name = ANY(ARRAY[%s])",
+			strings.Join(placeholders, ","),
+		)
+		whereConditions = append(whereConditions, tagConds)
+		p.log.Dbg("tag conditions", "tagConds", tagConds)
+	}
+
+	// Add term filter if specified
+	if len(req.Terms) > 0 {
+		termConditions := make([]string, len(req.Terms))
+		for i, term := range req.Terms {
+			termConditions[i] = fmt.Sprintf(
+				"o.title ILIKE $%d",
+				argPos,
+			)
+			args = append(args, "%"+term+"%")
+			argPos++
+		}
+		termConds := "(" + strings.Join(termConditions, " OR ") + ")"
+		whereConditions = append(whereConditions, termConds)
+		p.log.Dbg("term conditions", "termConds", termConds)
+	}
 
 	if len(req.OpeningTypes) > 0 {
 		placeholders := make([]string, len(req.OpeningTypes))
