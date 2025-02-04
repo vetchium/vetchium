@@ -146,3 +146,14 @@ interface ApplyForOpening {
         @body ApplyForOpeningResponse: ApplyForOpeningResponse;
     };
 }
+
+@route("/hub/filter-opening-tags")
+interface FilterHubOpeningTags {
+    @tag("Openings")
+    @post
+    @useAuth(HubAuth)
+    filterHubOpeningTags(@body request: FilterOpeningTagsRequest): {
+        @statusCode statusCode: 200;
+        @body OpeningTag: [];
+    };
+}
