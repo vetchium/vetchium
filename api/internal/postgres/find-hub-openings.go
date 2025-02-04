@@ -72,8 +72,9 @@ FROM openings o
 			args = append(args, req.Tags[i])
 			argPos++
 		}
+		// Use EXISTS to properly handle the LEFT JOIN case and match against tag IDs
 		tagConds := fmt.Sprintf(
-			"ot.name = ANY(ARRAY[%s])",
+			"EXISTS (SELECT 1 FROM opening_tag_mappings otm2 WHERE otm2.employer_id = o.employer_id AND otm2.opening_id = o.id AND otm2.tag_id = ANY(ARRAY[%s]::uuid[]))",
 			strings.Join(placeholders, ","),
 		)
 		whereConditions = append(whereConditions, tagConds)
@@ -94,6 +95,19 @@ FROM openings o
 		termConds := "(" + strings.Join(termConditions, " OR ") + ")"
 		whereConditions = append(whereConditions, termConds)
 		p.log.Dbg("term conditions", "termConds", termConds)
+	}
+
+	// If we have both tags and terms, we want to match either of them
+	if len(req.Tags) > 0 && len(req.Terms) > 0 {
+		// Take the last two conditions (tags and terms) and combine them with OR
+		lastIdx := len(whereConditions) - 1
+		tagCond := whereConditions[lastIdx-1]
+		termCond := whereConditions[lastIdx]
+		whereConditions = whereConditions[:lastIdx-1]
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("(%s OR %s)", tagCond, termCond),
+		)
 	}
 
 	if len(req.OpeningTypes) > 0 {
