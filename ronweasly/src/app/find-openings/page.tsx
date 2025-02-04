@@ -126,6 +126,8 @@ export default function FindOpeningsPage() {
       tags: selectedTags
         .filter((tag): tag is OpeningTag => Boolean(tag.id))
         .map((tag) => tag.id),
+      // Include free-text tags as search terms
+      terms: selectedTags.filter((tag) => !tag.id).map((tag) => tag.name),
     };
 
     try {
