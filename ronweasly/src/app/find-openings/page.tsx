@@ -14,15 +14,30 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import IconButton from "@mui/material/IconButton";
-import { FindHubOpeningsRequest, HubOpening } from "@psankar/vetchi-typespec";
+import {
+  FindHubOpeningsRequest,
+  HubOpening,
+  OpeningTag,
+} from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
+import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import AddIcon from "@mui/icons-material/Add";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 interface Country {
   country_code: string;
   en: string;
 }
+
+// Interface for tags including free input
+interface TagOption extends OpeningTag {
+  inputValue?: string;
+}
+
+// Filter configuration for Autocomplete
+const filter = createFilterOptions<TagOption>();
 
 // Cache for search results
 let searchCache: {
@@ -38,6 +53,51 @@ export default function FindOpeningsPage() {
   const [countryCode, setCountryCode] = useState("");
   const [searchResults, setSearchResults] = useState<HubOpening[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [tagSuggestions, setTagSuggestions] = useState<OpeningTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
+
+  // Fetch tag suggestions when user types
+  useEffect(() => {
+    const fetchTags = async () => {
+      if (searchQuery.length >= 2) {
+        const token = Cookies.get("session_token");
+        if (!token) return;
+
+        try {
+          const response = await fetch("/api/hub/filter-opening-tags", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              prefix: searchQuery,
+            }),
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              setError("Session expired. Please log in again.");
+              Cookies.remove("session_token", { path: "/" });
+              return;
+            }
+            throw new Error(`Failed to fetch tags: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          setTagSuggestions(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error("Error fetching tags:", error);
+          setTagSuggestions([]);
+        }
+      } else {
+        setTagSuggestions([]);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchTags, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   // Restore state from cache on mount
   useEffect(() => {
@@ -62,6 +122,10 @@ export default function FindOpeningsPage() {
     const request: FindHubOpeningsRequest = {
       country_code: countryCode,
       limit: 40,
+      // Only include tags that have an ID (existing tags)
+      tags: selectedTags
+        .filter((tag): tag is OpeningTag => Boolean(tag.id))
+        .map((tag) => tag.id),
     };
 
     try {
@@ -71,7 +135,7 @@ export default function FindOpeningsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({ request }), // Note: API expects request object to be wrapped
       });
 
       if (!response.ok) {
@@ -183,24 +247,99 @@ export default function FindOpeningsPage() {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search for job titles, skills, or keywords"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <Button
-                    variant="contained"
-                    sx={{ ml: 1 }}
-                    type="submit"
-                    startIcon={<SearchIcon />}
-                  >
-                    Search
-                  </Button>
-                ),
+            <Autocomplete
+              multiple
+              freeSolo
+              id="tags-search"
+              options={tagSuggestions}
+              value={selectedTags}
+              onChange={(_, newValue) => {
+                const processedValues = newValue.map((option) => {
+                  if (typeof option === "string") {
+                    // For free solo values, create a new tag option
+                    return {
+                      name: option,
+                      id: "", // Empty ID indicates it's a new tag
+                    };
+                  }
+                  return option;
+                });
+                setSelectedTags(processedValues);
               }}
+              getOptionLabel={(option) => {
+                if (typeof option === "string") {
+                  return option;
+                }
+                return option.name;
+              }}
+              filterOptions={(options, params) => {
+                const filtered = filter(options, params);
+                const { inputValue } = params;
+
+                // Only suggest creating a new tag if it's not already in suggestions
+                // and not already selected
+                const isExisting = options.some(
+                  (option) => option.name === inputValue
+                );
+                const isSelected = selectedTags.some(
+                  (tag) => tag.name === inputValue
+                );
+
+                if (inputValue !== "" && !isExisting && !isSelected) {
+                  filtered.push({
+                    name: inputValue,
+                    id: "", // Empty ID indicates it's a new tag
+                  });
+                }
+
+                return filtered;
+              }}
+              renderOption={(props, option) => {
+                const { key, ...otherProps } = props;
+                return (
+                  <li key={key} {...otherProps}>
+                    {!option.id ? (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <AddIcon fontSize="small" />
+                        <span>{option.name}</span>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <LocalOfferIcon fontSize="small" />
+                        <span>{option.name}</span>
+                      </Box>
+                    )}
+                  </li>
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  placeholder="Search for job titles, skills, or keywords"
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {params.InputProps.endAdornment}
+                        <Button
+                          variant="contained"
+                          sx={{ ml: 1 }}
+                          type="submit"
+                          startIcon={<SearchIcon />}
+                        >
+                          Search
+                        </Button>
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
           </Box>
         </Paper>
