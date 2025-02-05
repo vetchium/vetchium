@@ -246,7 +246,7 @@ export const en = {
       uploadButton: "Upload Offer Letter (PDF)",
       selectedFile: "Selected file:",
       error: "Failed to make offer to candidate",
-      offerSuccess: "Offer has been successfully made to the candidate",
+      success: "Offer has been successfully made to the candidate",
     },
     reject: {
       title: "Reject Candidacy",
@@ -267,6 +267,7 @@ export const en = {
     },
     dialogActions: {
       confirm: "Confirm",
+      cancel: "Cancel",
       dialogCancel: "Cancel",
     },
     dialogWarning: "This action cannot be undone.",

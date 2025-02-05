@@ -1087,7 +1087,7 @@ export default function CandidacyDetailPage() {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenOfferDialog(false)}>
-                {t("candidacies.dialogActions.cancel")}
+                {t("candidacies.dialogActions.dialogCancel")}
               </Button>
               <Button
                 onClick={handleMakeOffer}
@@ -1125,7 +1125,7 @@ export default function CandidacyDetailPage() {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenRejectDialog(false)}>
-                {t("candidacies.dialogActions.cancel")}
+                {t("candidacies.dialogActions.dialogCancel")}
               </Button>
               <Button onClick={handleReject} variant="contained" color="error">
                 {t("candidacies.dialogActions.confirm")}
@@ -1161,7 +1161,7 @@ export default function CandidacyDetailPage() {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenUnresponsiveDialog(false)}>
-                {t("candidacies.dialogActions.cancel")}
+                {t("candidacies.dialogActions.dialogCancel")}
               </Button>
               <Button
                 onClick={handleMarkUnresponsive}
