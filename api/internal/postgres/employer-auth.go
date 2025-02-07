@@ -95,19 +95,28 @@ RETURNING id
 		return err
 	}
 
-	domainInsertQuery := `
+	// Single query to either update an existing unverified domain or insert a new one
+	domainUpsertQuery := `
 INSERT INTO domains (domain_name, domain_state, employer_id, created_at)
 VALUES ($1, $2, $3, NOW())
-`
-	_, err = tx.Exec(
+ON CONFLICT (domain_name) DO UPDATE
+SET domain_state = EXCLUDED.domain_state,
+    employer_id = EXCLUDED.employer_id
+WHERE domains.domain_state = $4
+AND domains.employer_id IS NULL
+RETURNING id`
+
+	var domainID uuid.UUID
+	err = tx.QueryRow(
 		ctx,
-		domainInsertQuery,
+		domainUpsertQuery,
 		domain.DomainName,
-		domain.DomainState,
+		db.VerifiedDomainState,
 		employerID,
-	)
+		db.UnverifiedDomainState,
+	).Scan(&domainID)
 	if err != nil {
-		p.log.Err("failed to insert domain", "error", err)
+		p.log.Err("failed to upsert domain", "error", err)
 		return err
 	}
 

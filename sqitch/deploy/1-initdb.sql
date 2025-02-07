@@ -131,8 +131,8 @@ CREATE CONSTRAINT TRIGGER enforce_employer_required_records
 ---
 
 CREATE TYPE domain_states AS ENUM (
-    'VERIFIED',
-    'DEBOARDED'
+    'UNVERIFIED',
+    'VERIFIED'
 );
 CREATE TABLE domains (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -142,7 +142,7 @@ CREATE TABLE domains (
 
     domain_state domain_states NOT NULL,
 
-    employer_id UUID REFERENCES employers(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     CONSTRAINT uniq_employer_domain_id UNIQUE (employer_id, id)

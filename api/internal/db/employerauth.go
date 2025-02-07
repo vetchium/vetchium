@@ -27,8 +27,8 @@ const (
 type DomainState string
 
 const (
-	VerifiedDomainState  DomainState = "VERIFIED"
-	DeboardedDomainState DomainState = "DEBOARDED"
+	UnverifiedDomainState DomainState = "UNVERIFIED"
+	VerifiedDomainState   DomainState = "VERIFIED"
 )
 
 type Employer struct {

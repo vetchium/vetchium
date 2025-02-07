@@ -52,8 +52,6 @@ func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 			status = employer.DomainVerifiedOnboardPending
 		case db.OnboardedEmployerState:
 			status = employer.DomainOnboarded
-		case db.DeboardedEmployerState:
-			status = employer.DomainNotVerified
 		default:
 			h.Err(
 				"unknown employer state",
