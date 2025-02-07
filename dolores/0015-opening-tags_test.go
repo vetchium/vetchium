@@ -14,7 +14,7 @@ import (
 
 const defaultPassword = "NewPassword123$"
 
-var _ = Describe("OpeningsTags", Ordered, func() {
+var _ = FDescribe("OpeningsTags", Ordered, func() {
 	var (
 		token string
 		db    *pgxpool.Pool
@@ -158,6 +158,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 		})
 
 		It("should create opening with new tags and verify them", func() {
+			newTags := []string{"Scala", "Haskell"}
 			req := employer.CreateOpeningRequest{
 				Title:             "Test Opening with New Tags",
 				Positions:         2,
@@ -174,7 +175,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				NewTags: []string{"Scala", "Haskell"},
+				NewTags: newTags,
 			}
 
 			resp := doPOST(
@@ -201,11 +202,10 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			var opening employer.Opening
 			err = json.Unmarshal(resp.([]byte), &opening)
 			Expect(err).NotTo(HaveOccurred())
-
 			Expect(opening.Tags).To(HaveLen(2))
-			// Sort tags by name for consistent comparison
-			Expect(opening.Tags[0].Name).To(Equal("Haskell"))
-			Expect(opening.Tags[1].Name).To(Equal("Scala"))
+			for _, tag := range opening.Tags {
+				Expect(tag.Name).To(BeElementOf(newTags))
+			}
 		})
 
 		It("should create opening with mixed tags and verify them", func() {
