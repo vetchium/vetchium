@@ -12,6 +12,6 @@ globs:
 - The @api directory in top-level contains the golang code for implementing the backend. api/cmd/hermione is a golang http server that contains the stateless services with the individual endpoints routed on [router.go](mdc:api/internal/hermione/router.go) api/cmd/granger contains stateful services
 - The sqitch directory contains the database migrations under *.sql files. postgresql is used to save the data.
 - The @harrypotter directory in the top-level contains an employer site, where employers can login and create openings, shortlist or reject applicants, evaluate candidacies, schedule interviews, manage interview feedbacks, roll out offers, etc.
-- The @ronweasly directory in the top-level contains the hub site, where users can login, find openings, apply, connect with others, read or write social media posts, etc.
+- The @ronweasly directory in the top-level contains the hub site, where users can login, find openings, apply, connect with others, read or write social media posts, etc. The users of this are referred to as HubUsers or hubusers etc.
 - The [hedwig.go](mdc:api/internal/hedwig/hedwig.go) contains a templating library for sending emails from the backend
 - The typespec directory contains the employer and hub specific .tsp files, which document the API schema. From these files, [openapi.yaml](mdc:typespec/tsp-output/openapi.yaml) file is generated that contains the entire API spec compiled into a single file
