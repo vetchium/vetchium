@@ -56,6 +56,11 @@ $ POSTGRES_URI=$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.dat
 $ psql "$POSTGRES_URI"
 ```
 
+To connect to the port-forwarded Postgres using DBeaver or some such JDBC client, use:
+```
+$ kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
+```
+
 To run tests, use the following command:
 ```
 $ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
