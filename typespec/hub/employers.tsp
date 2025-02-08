@@ -42,5 +42,6 @@ interface GetEmployerLogo {
     getEmployerLogo(@path domain: string, @path size: string): {
         @statusCode statusCode: 200;
         @header contentType: "image/*";
+        @body body: bytes;
     };
 }
