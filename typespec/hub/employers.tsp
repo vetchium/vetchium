@@ -29,6 +29,7 @@ model FilterEmployersResponse {
 interface FilterEmployers {
     @get
     @useAuth(HubAuth)
+    @tag("HubEmployer")
     filterEmployers(@query request: FilterEmployersRequest): {
         @statusCode statusCode: 200;
         @body FilterEmployersResponse: FilterEmployersResponse;
@@ -39,9 +40,10 @@ interface FilterEmployers {
 interface GetEmployerLogo {
     @get
     @useAuth(HubAuth)
+    @tag("HubEmployer")
     getEmployerLogo(@path domain: string, @path size: string): {
         @statusCode statusCode: 200;
-        @header contentType: "image/*";
-        @body body: bytes;
+        @header contentType: "image/png" | "image/jpeg" | "image/gif";
+        @body content: bytes;
     };
 }

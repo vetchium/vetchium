@@ -61,10 +61,15 @@ model ListWorkHistoryRequest {
     user_handle?: string;
 }
 
+model DeleteWorkHistoryRequest {
+    id: string;
+}
+
 @route("/hub/add-work-history")
 interface AddWorkHistory {
     @post
     @useAuth(HubAuth)
+    @tag("WorkHistory")
     addWorkHistory(@body request: AddWorkHistoryRequest): {
         @statusCode statusCode: 200;
         @body AddWorkHistoryResponse: AddWorkHistoryResponse;
@@ -75,42 +80,32 @@ interface AddWorkHistory {
     };
 }
 
-@route("/hub/get-work-history")
-interface GetWorkHistory {
-    @get
-    @useAuth(HubAuth)
-    getWorkHistory(@path id: string): {
-        @statusCode statusCode: 200;
-        @body WorkHistory: WorkHistory;
-    };
-}
-
 @route("/hub/update-work-history")
 interface UpdateWorkHistory {
     @put
     @useAuth(HubAuth)
-    updateWorkHistory(
-        @path id: string,
-        @body request: UpdateWorkHistoryRequest,
-    ): {
+    @tag("WorkHistory")
+    updateWorkHistory(@body request: UpdateWorkHistoryRequest): {
         @statusCode statusCode: 200;
     };
 }
 
 @route("/hub/delete-work-history")
 interface DeleteWorkHistory {
-    @delete
+    @post
     @useAuth(HubAuth)
-    deleteWorkHistory(@path id: string): {
+    @tag("WorkHistory")
+    deleteWorkHistory(@body request: DeleteWorkHistoryRequest): {
         @statusCode statusCode: 200;
     };
 }
 
 @route("/hub/list-work-history")
 interface ListWorkHistory {
-    @get
+    @post
     @useAuth(HubAuth)
-    listWorkHistory(request: ListWorkHistoryRequest): {
+    @tag("WorkHistory")
+    listWorkHistory(@body request: ListWorkHistoryRequest): {
         @statusCode statusCode: 200;
         @body WorkHistory: WorkHistory[];
     };

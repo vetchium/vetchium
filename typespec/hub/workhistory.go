@@ -36,3 +36,7 @@ type UpdateWorkHistoryRequest struct {
 type ListWorkHistoryRequest struct {
 	UserHandle *string `json:"user_handle"`
 }
+
+type DeleteWorkHistoryRequest struct {
+	ID string `json:"id"`
+}

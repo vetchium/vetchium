@@ -33,6 +33,10 @@ export interface ListWorkHistoryRequest {
   user_handle?: string;
 }
 
+export interface DeleteWorkHistoryRequest {
+  id: string;
+}
+
 function isValidDate(dateStr: string): boolean {
   const date = new Date(dateStr);
   return date instanceof Date && !isNaN(date.getTime());
