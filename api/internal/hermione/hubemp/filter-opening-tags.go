@@ -1,4 +1,4 @@
-package hubopenings
+package hubemp
 
 import (
 	"encoding/json"

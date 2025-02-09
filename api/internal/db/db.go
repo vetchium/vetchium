@@ -245,7 +245,13 @@ type DB interface {
 
 	// Opening tags
 	FilterOpeningTags(
-		ctx context.Context,
-		req common.FilterOpeningTagsRequest,
+		context.Context,
+		common.FilterOpeningTagsRequest,
 	) ([]common.OpeningTag, error)
+
+	// Employers
+	FilterEmployers(
+		context.Context,
+		hub.FilterEmployersRequest,
+	) ([]hub.HubEmployer, error)
 }

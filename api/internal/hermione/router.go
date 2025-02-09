@@ -373,6 +373,7 @@ func (h *Hermione) Run() error {
 		wrap(interview.GetHubInterviewsByCandidacy(h)),
 	)
 	http.Handle("/hub/rsvp-interview", wrap(interview.HubRSVPInterview(h)))
+	http.Handle("/hub/filter-employers", wrap(he.FilterEmployers(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
