@@ -254,4 +254,16 @@ type DB interface {
 		context.Context,
 		hub.FilterEmployersRequest,
 	) ([]hub.HubEmployer, error)
+
+	// WorkHistory
+	AddWorkHistory(
+		context.Context,
+		hub.AddWorkHistoryRequest,
+	) (string, error)
+	DeleteWorkHistory(context.Context, hub.DeleteWorkHistoryRequest) error
+	ListWorkHistory(
+		context.Context,
+		hub.ListWorkHistoryRequest,
+	) ([]hub.WorkHistory, error)
+	UpdateWorkHistory(context.Context, hub.UpdateWorkHistoryRequest) error
 }

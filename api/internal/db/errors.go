@@ -65,4 +65,6 @@ var (
 	)
 
 	ErrInvalidPaginationKey = errors.New("invalid pagination key")
+
+	ErrNoWorkHistory = errors.New("work history not found")
 )

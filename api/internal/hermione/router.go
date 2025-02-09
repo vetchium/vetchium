@@ -15,6 +15,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
+	wh "github.com/psankar/vetchi/api/internal/hermione/workhistory"
 	"github.com/psankar/vetchi/typespec/common"
 )
 
@@ -374,6 +375,12 @@ func (h *Hermione) Run() error {
 	)
 	http.Handle("/hub/rsvp-interview", wrap(interview.HubRSVPInterview(h)))
 	http.Handle("/hub/filter-employers", wrap(he.FilterEmployers(h)))
+
+	// WorkHistory related endpoints
+	http.Handle("/hub/add-work-history", wrap(wh.AddWorkHistory(h)))
+	http.Handle("/hub/delete-work-history", wrap(wh.DeleteWorkHistory(h)))
+	http.Handle("/hub/list-work-history", wrap(wh.ListWorkHistory(h)))
+	http.Handle("/hub/update-work-history", wrap(wh.UpdateWorkHistory(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
