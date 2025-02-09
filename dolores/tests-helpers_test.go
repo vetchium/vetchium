@@ -474,3 +474,55 @@ func hubSigninAsync(
 func strptr(s string) *string {
 	return &s
 }
+
+func testGETWithQueryGetResp(
+	token string,
+	endpoint string,
+	queryParams map[string]string,
+	wantStatus int,
+) interface{} {
+	baseURL, err := url.Parse(serverURL + endpoint)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	query := url.Values{}
+	for key, value := range queryParams {
+		query.Add(key, value)
+	}
+	baseURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest(
+		http.MethodGet,
+		baseURL.String(),
+		nil,
+	)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	if resp.StatusCode != wantStatus {
+		debug.PrintStack()
+
+		respBody, err := io.ReadAll(resp.Body)
+		if err == nil {
+			fmt.Fprintf(GinkgoWriter, "Response Body: %s\n", string(respBody))
+		}
+
+		Fail(
+			fmt.Sprintf(
+				"Expected status %d, got %d",
+				wantStatus,
+				resp.StatusCode,
+			),
+		)
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return respBody
+}
