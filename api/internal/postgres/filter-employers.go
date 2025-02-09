@@ -11,6 +11,8 @@ func (p *PG) FilterEmployers(
 	ctx context.Context,
 	req hub.FilterEmployersRequest,
 ) ([]hub.HubEmployer, error) {
+
+	// TODO: This query will not work for non-ASCII domains
 	query := `
 WITH filtered_employers AS (
     SELECT DISTINCT ON (COALESCE(e.company_name, d.domain_name))
@@ -20,8 +22,8 @@ WITH filtered_employers AS (
     FULL OUTER JOIN domains d ON e.id = d.employer_id
     WHERE (e.employer_state = $1 OR e.employer_state IS NULL)
     AND (
-        unaccent(lower(COALESCE(e.company_name, d.domain_name))) LIKE unaccent(lower($2)) OR
-        unaccent(lower(d.domain_name)) LIKE unaccent(lower($2))
+        lower(COALESCE(e.company_name, d.domain_name)) LIKE lower($2) OR
+        lower(d.domain_name) LIKE lower($2)
     )
     ORDER BY COALESCE(e.company_name, d.domain_name)
 )

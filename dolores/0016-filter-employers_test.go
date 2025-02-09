@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 var _ = Describe("Filter Employers", Ordered, func() {
@@ -40,7 +41,7 @@ var _ = Describe("Filter Employers", Ordered, func() {
 		type filterEmployersTestCase struct {
 			description string
 			token       string
-			searchTerm  string
+			prefix      string
 			wantStatus  int
 			validate    func([]byte)
 		}
@@ -50,67 +51,60 @@ var _ = Describe("Filter Employers", Ordered, func() {
 				{
 					description: "without authentication",
 					token:       "",
-					searchTerm:  "acme",
+					prefix:      "acme",
 					wantStatus:  http.StatusUnauthorized,
 				},
 				{
 					description: "with invalid token",
 					token:       "invalid-token",
-					searchTerm:  "acme",
+					prefix:      "acme",
 					wantStatus:  http.StatusUnauthorized,
 				},
 				{
 					description: "search for existing employer",
 					token:       hubToken,
-					searchTerm:  "acme",
+					prefix:      "acme",
 					wantStatus:  http.StatusOK,
 					validate: func(resp []byte) {
-						var employers []struct {
-							Name   string `json:"name"`
-							Domain string `json:"domain"`
-						}
-						err := json.Unmarshal(resp, &employers)
+						var response hub.FilterEmployersResponse
+						err := json.Unmarshal(resp, &response)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(len(employers)).Should(Equal(1))
-						Expect(employers[0].Name).Should(Equal("Acme Corp"))
+						Expect(len(response.Employers)).Should(Equal(1))
 						Expect(
-							employers[0].Domain,
+							response.Employers[0].Name,
+						).Should(Equal("Acme Corp"))
+						Expect(
+							response.Employers[0].Domain,
 						).Should(Equal("acme.example"))
 					},
 				},
 				{
 					description: "search for non-existent employer",
 					token:       hubToken,
-					searchTerm:  "nonexistent",
+					prefix:      "nonexistent",
 					wantStatus:  http.StatusOK,
 					validate: func(resp []byte) {
-						var employers []struct {
-							Name   string `json:"name"`
-							Domain string `json:"domain"`
-						}
-						err := json.Unmarshal(resp, &employers)
+						var response hub.FilterEmployersResponse
+						err := json.Unmarshal(resp, &response)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(len(employers)).Should(BeZero())
+						Expect(len(response.Employers)).Should(BeZero())
 					},
 				},
 				{
 					description: "search for domain without employer",
 					token:       hubToken,
-					searchTerm:  "domain-without-employer",
+					prefix:      "domain-without-employer",
 					wantStatus:  http.StatusOK,
 					validate: func(resp []byte) {
-						var employers []struct {
-							Name   string `json:"name"`
-							Domain string `json:"domain"`
-						}
-						err := json.Unmarshal(resp, &employers)
+						var response hub.FilterEmployersResponse
+						err := json.Unmarshal(resp, &response)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(len(employers)).Should(Equal(1))
+						Expect(len(response.Employers)).Should(Equal(1))
 						Expect(
-							employers[0].Name,
+							response.Employers[0].Name,
 						).Should(Equal("domain-without-employer.example"))
 						Expect(
-							employers[0].Domain,
+							response.Employers[0].Domain,
 						).Should(Equal("domain-without-employer.example"))
 					},
 				},
@@ -118,10 +112,16 @@ var _ = Describe("Filter Employers", Ordered, func() {
 
 			for _, tc := range testCases {
 				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
-				resp := testGETWithQueryGetResp(
+
+				// Create request with proper struct
+				req := hub.FilterEmployersRequest{
+					Prefix: tc.prefix,
+				}
+
+				resp := testPOSTGetResp(
 					tc.token,
+					req,
 					"/hub/filter-employers",
-					map[string]string{"search_term": tc.searchTerm},
 					tc.wantStatus,
 				)
 				if tc.validate != nil && tc.wantStatus == http.StatusOK {

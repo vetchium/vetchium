@@ -32,7 +32,9 @@ func FilterEmployers(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("Filtered Employers", "employers", employers)
 
-		err = json.NewEncoder(w).Encode(employers)
+		err = json.NewEncoder(w).Encode(hub.FilterEmployersResponse{
+			Employers: employers,
+		})
 		if err != nil {
 			h.Dbg("failed to encode employers", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)

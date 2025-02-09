@@ -27,10 +27,10 @@ model FilterEmployersResponse {
 
 @route("/hub/filter-employers")
 interface FilterEmployers {
-    @get
+    @post
     @useAuth(HubAuth)
     @tag("HubEmployer")
-    filterEmployers(@query request: FilterEmployersRequest): {
+    filterEmployers(@body request: FilterEmployersRequest): {
         @statusCode statusCode: 200;
         @body FilterEmployersResponse: FilterEmployersResponse;
     };

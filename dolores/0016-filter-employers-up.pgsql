@@ -9,7 +9,7 @@ INSERT INTO hub_users (
     'Filter Employers Test User',
     'filter-employers',
     'user1@filter-employers.example',
-    crypt('NewPassword123$', gen_salt('bf')),
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'IND',
     'en'
@@ -56,6 +56,19 @@ INSERT INTO domains (
     'domain-without-employer.example',
     'UNVERIFIED',
     NULL
+);
+
+-- Set primary domains for onboarded employers
+INSERT INTO employer_primary_domains (
+    employer_id, domain_id
+) VALUES
+(
+    '12345678-0016-0016-0016-000000000002',
+    '12345678-0016-0016-0016-000000000004'
+),
+(
+    '12345678-0016-0016-0016-000000000003',
+    '12345678-0016-0016-0016-000000000005'
 );
 
 COMMIT;
