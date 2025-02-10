@@ -523,7 +523,7 @@ INSERT INTO opening_tags (name) VALUES
 CREATE TABLE work_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
-    employer_domain TEXT NOT NULL,
+    domain_id UUID REFERENCES domains(id) NOT NULL,
     title TEXT NOT NULL,
     start_date TEXT NOT NULL,
     end_date TEXT,

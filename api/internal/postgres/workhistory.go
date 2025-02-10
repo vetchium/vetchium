@@ -19,11 +19,37 @@ func (p *PG) AddWorkHistory(
 		return "", err
 	}
 
+	// Start a transaction since we might need to create a domain
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return "", db.ErrInternal
+	}
+	defer tx.Rollback(ctx)
+
+	// Get or create domain
+	var domainID string
+	err = tx.QueryRow(ctx, `
+		WITH domain_insert AS (
+			INSERT INTO domains (domain_name, domain_state)
+			VALUES ($1, $2)
+			ON CONFLICT (domain_name) DO NOTHING
+			RETURNING id
+		)
+		SELECT id FROM domain_insert
+		UNION ALL
+		SELECT id FROM domains WHERE domain_name = $1
+		LIMIT 1
+	`, req.EmployerDomain, db.UnverifiedDomainState).Scan(&domainID)
+	if err != nil {
+		return "", db.ErrInternal
+	}
+
+	// Insert work history
 	var id string
-	err = p.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		INSERT INTO work_history (
 			hub_user_id,
-			employer_domain,
+			domain_id,
 			title,
 			start_date,
 			end_date,
@@ -31,8 +57,13 @@ func (p *PG) AddWorkHistory(
 		) VALUES (
 			$1, $2, $3, $4, $5, $6
 		) RETURNING id
-	`, hubUserID, req.EmployerDomain, req.Title, req.StartDate, req.EndDate, req.Description).Scan(&id)
+	`, hubUserID, domainID, req.Title, req.StartDate, req.EndDate, req.Description).Scan(&id)
 
+	if err != nil {
+		return "", db.ErrInternal
+	}
+
+	err = tx.Commit(ctx)
 	if err != nil {
 		return "", db.ErrInternal
 	}
@@ -91,18 +122,18 @@ func (p *PG) ListWorkHistory(
 	rows, err := p.pool.Query(ctx, `
 		SELECT 
 			w.id,
-			w.employer_domain,
+			d.domain_name,
 			e.company_name,
 			w.title,
 			w.start_date,
 			w.end_date,
 			w.description
 		FROM work_history w
-		LEFT JOIN employers e ON e.client_id_type = 'DOMAIN' AND e.employer_state = 'ONBOARDED'
-		LEFT JOIN domains d ON d.employer_id = e.id AND d.domain_name = w.employer_domain
+		JOIN domains d ON d.id = w.domain_id
+		LEFT JOIN employers e ON e.id = d.employer_id AND e.employer_state = $2
 		WHERE w.hub_user_id = $1
 		ORDER BY w.start_date DESC
-	`, userID)
+	`, userID, db.OnboardedEmployerState)
 
 	if err != nil {
 		return nil, db.ErrInternal
