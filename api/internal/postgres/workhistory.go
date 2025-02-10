@@ -16,31 +16,31 @@ func (p *PG) AddWorkHistory(
 ) (string, error) {
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		p.log.Err("failed to get hub user ID", "error", err)
 		return "", err
 	}
 
 	// Start a transaction since we might need to create a domain
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
+		p.log.Err("failed to begin transaction", "error", err)
 		return "", db.ErrInternal
 	}
 	defer tx.Rollback(ctx)
 
-	// Get or create domain
-	var domainID string
+	// Get or create employer for the domain
+	var employerID string
 	err = tx.QueryRow(ctx, `
-		WITH domain_insert AS (
-			INSERT INTO domains (domain_name, domain_state)
-			VALUES ($1, $2)
-			ON CONFLICT (domain_name) DO NOTHING
-			RETURNING id
-		)
-		SELECT id FROM domain_insert
-		UNION ALL
-		SELECT id FROM domains WHERE domain_name = $1
-		LIMIT 1
-	`, req.EmployerDomain, db.UnverifiedDomainState).Scan(&domainID)
+		SELECT get_or_create_dummy_employer($1)
+	`, req.EmployerDomain).Scan(&employerID)
 	if err != nil {
+		p.log.Err(
+			"failed to get or create dummy employer",
+			"error",
+			err,
+			"domain",
+			req.EmployerDomain,
+		)
 		return "", db.ErrInternal
 	}
 
@@ -49,7 +49,7 @@ func (p *PG) AddWorkHistory(
 	err = tx.QueryRow(ctx, `
 		INSERT INTO work_history (
 			hub_user_id,
-			domain_id,
+			employer_id,
 			title,
 			start_date,
 			end_date,
@@ -57,14 +57,16 @@ func (p *PG) AddWorkHistory(
 		) VALUES (
 			$1, $2, $3, $4, $5, $6
 		) RETURNING id
-	`, hubUserID, domainID, req.Title, req.StartDate, req.EndDate, req.Description).Scan(&id)
+	`, hubUserID, employerID, req.Title, req.StartDate, req.EndDate, req.Description).Scan(&id)
 
 	if err != nil {
+		p.log.Err("failed to insert work history", "error", err)
 		return "", db.ErrInternal
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
 		return "", db.ErrInternal
 	}
 
@@ -77,6 +79,7 @@ func (p *PG) DeleteWorkHistory(
 ) error {
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		p.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
@@ -86,10 +89,24 @@ func (p *PG) DeleteWorkHistory(
 	`, req.ID, hubUserID)
 
 	if err != nil {
+		p.log.Err(
+			"failed to delete work history",
+			"error",
+			err,
+			"work_history_id",
+			req.ID,
+		)
 		return db.ErrInternal
 	}
 
 	if tag.RowsAffected() == 0 {
+		p.log.Dbg(
+			"work history not found or not owned by user",
+			"work_history_id",
+			req.ID,
+			"hub_user_id",
+			hubUserID,
+		)
 		return db.ErrNoWorkHistory
 	}
 
@@ -106,15 +123,24 @@ func (p *PG) ListWorkHistory(
 			SELECT id FROM hub_users WHERE handle = $1
 		`, *req.UserHandle).Scan(&userID)
 		if err == pgx.ErrNoRows {
+			p.log.Dbg("hub user not found", "handle", *req.UserHandle)
 			return nil, db.ErrNoHubUser
 		}
 		if err != nil {
+			p.log.Err(
+				"failed to get hub user by handle",
+				"error",
+				err,
+				"handle",
+				*req.UserHandle,
+			)
 			return nil, db.ErrInternal
 		}
 	} else {
 		var err error
 		userID, err = getHubUserID(ctx)
 		if err != nil {
+			p.log.Err("failed to get hub user ID", "error", err)
 			return nil, err
 		}
 	}
@@ -129,13 +155,21 @@ func (p *PG) ListWorkHistory(
 			w.end_date,
 			w.description
 		FROM work_history w
-		JOIN domains d ON d.id = w.domain_id
-		LEFT JOIN employers e ON e.id = d.employer_id AND e.employer_state = $2
+		JOIN employers e ON e.id = w.employer_id
+		JOIN employer_primary_domains epd ON epd.employer_id = e.id
+		JOIN domains d ON d.id = epd.domain_id
 		WHERE w.hub_user_id = $1
 		ORDER BY w.start_date DESC
-	`, userID, db.OnboardedEmployerState)
+	`, userID)
 
 	if err != nil {
+		p.log.Err(
+			"failed to query work history",
+			"error",
+			err,
+			"hub_user_id",
+			userID,
+		)
 		return nil, db.ErrInternal
 	}
 	defer rows.Close()
@@ -155,6 +189,7 @@ func (p *PG) ListWorkHistory(
 			&description,
 		)
 		if err != nil {
+			p.log.Err("failed to scan work history row", "error", err)
 			return nil, db.ErrInternal
 		}
 
@@ -171,6 +206,11 @@ func (p *PG) ListWorkHistory(
 		workHistories = append(workHistories, wh)
 	}
 
+	if err = rows.Err(); err != nil {
+		p.log.Err("error iterating over work history rows", "error", err)
+		return nil, db.ErrInternal
+	}
+
 	return workHistories, nil
 }
 
@@ -180,6 +220,7 @@ func (p *PG) UpdateWorkHistory(
 ) error {
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		p.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
@@ -195,10 +236,24 @@ func (p *PG) UpdateWorkHistory(
 	`, req.Title, req.StartDate, req.EndDate, req.Description, time.Now().UTC(), req.ID, hubUserID)
 
 	if err != nil {
+		p.log.Err(
+			"failed to update work history",
+			"error",
+			err,
+			"work_history_id",
+			req.ID,
+		)
 		return db.ErrInternal
 	}
 
 	if tag.RowsAffected() == 0 {
+		p.log.Dbg(
+			"work history not found or not owned by user",
+			"work_history_id",
+			req.ID,
+			"hub_user_id",
+			hubUserID,
+		)
 		return db.ErrNoWorkHistory
 	}
 

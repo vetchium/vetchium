@@ -75,7 +75,8 @@ CREATE TYPE client_id_types AS ENUM ('DOMAIN');
 CREATE TYPE employer_states AS ENUM (
     'ONBOARD_PENDING',
     'ONBOARDED',
-    'DEBOARDED'
+    'DEBOARDED',
+    'HUB_ADDED_EMPLOYER'
 );
 CREATE TABLE employers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -520,10 +521,61 @@ INSERT INTO opening_tags (name) VALUES
     ('Business Analyst'),
     ('System Administrator');
 
+CREATE OR REPLACE FUNCTION get_or_create_dummy_employer(domain_name text)
+RETURNS UUID AS $$
+DECLARE
+    employer_id UUID;
+    domain_id UUID;
+BEGIN
+    -- First check if domain already exists and has an employer
+    SELECT d.employer_id INTO employer_id
+    FROM domains d
+    WHERE d.domain_name = domain_name AND d.employer_id IS NOT NULL;
+
+    IF FOUND THEN
+        RETURN employer_id;
+    END IF;
+
+    -- Create dummy employer if not exists
+    INSERT INTO employers (
+        client_id_type,
+        employer_state,
+        company_name,
+        onboard_admin_email
+    ) VALUES (
+        'DOMAIN',
+        'HUB_ADDED_EMPLOYER',
+        domain_name,  -- Use domain name as company name for dummy record
+        'dummy@' || domain_name
+    )
+    RETURNING id INTO employer_id;
+
+    -- Create or update domain
+    INSERT INTO domains (
+        domain_name,
+        domain_state,
+        employer_id
+    ) VALUES (
+        domain_name,
+        'UNVERIFIED',
+        employer_id
+    )
+    ON CONFLICT (domain_name) DO UPDATE
+    SET employer_id = EXCLUDED.employer_id
+    RETURNING id INTO domain_id;
+
+    -- Set as primary domain
+    INSERT INTO employer_primary_domains (employer_id, domain_id)
+    VALUES (employer_id, domain_id);
+
+    RETURN employer_id;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE work_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
-    domain_id UUID REFERENCES domains(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
     title TEXT NOT NULL,
     start_date TEXT NOT NULL,
     end_date TEXT,

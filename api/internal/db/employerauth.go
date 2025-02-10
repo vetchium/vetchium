@@ -22,6 +22,7 @@ const (
 	OnboardPendingEmployerState EmployerState = "ONBOARD_PENDING"
 	OnboardedEmployerState      EmployerState = "ONBOARDED"
 	DeboardedEmployerState      EmployerState = "DEBOARDED"
+	HubAddedEmployerState       EmployerState = "HUB_ADDED_EMPLOYER"
 )
 
 type DomainState string
