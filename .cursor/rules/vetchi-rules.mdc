@@ -13,3 +13,5 @@ globs:
 - The @ronweasly directory in the top-level contains the hub site, where users can login, find openings, apply, connect with others, read or write social media posts, etc. The users of this are referred to as HubUsers or hubusers etc.
 - The [hedwig.go](mdc:api/internal/hedwig/hedwig.go) contains a templating library for sending emails from the backend
 - The typespec directory contains the employer and hub specific .tsp files, which document the API schema. From these files, [openapi.yaml](mdc:typespec/tsp-output/openapi.yaml) file is generated that contains the entire API spec compiled into a single file
+- When generating test code, try to create table driven tests. Try to use functions in [tests-helpers_test.go](mdc:dolores/tests-helpers_test.go) when creating tests under dolores directory
+- When generating test code, generate positive cases, negative cases, border conditions, invalid conditions, etc. Do not ignore any obvious failures.
