@@ -37,6 +37,12 @@ function formatDate(dateString: string): string {
   }).format(new Date(dateString));
 }
 
+function formatDateForInput(dateString: string): string {
+  const date = new Date(dateString);
+  // HTML date inputs require YYYY-MM-DD format as per spec
+  return date.toISOString().split("T")[0];
+}
+
 export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -258,7 +264,11 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
               <TextField
                 label={t("workHistory.startDate")}
                 type="date"
-                value={formData.start_date}
+                value={
+                  formData.start_date
+                    ? formatDateForInput(formData.start_date)
+                    : ""
+                }
                 onChange={(e) =>
                   setFormData({ ...formData, start_date: e.target.value })
                 }
@@ -269,7 +279,9 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
               <TextField
                 label={t("workHistory.endDate")}
                 type="date"
-                value={formData.end_date || ""}
+                value={
+                  formData.end_date ? formatDateForInput(formData.end_date) : ""
+                }
                 onChange={(e) =>
                   setFormData({ ...formData, end_date: e.target.value })
                 }
