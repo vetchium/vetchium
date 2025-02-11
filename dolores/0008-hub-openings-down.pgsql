@@ -38,8 +38,25 @@ WHERE org_user_id IN (
     )
 );
 
--- Delete org_users
+-- Delete org_users more precisely
 DELETE FROM org_users
+WHERE email IN (
+    SELECT 'admin@' || d.domain_name
+    FROM employers e
+    JOIN employer_primary_domains epd ON e.id = epd.employer_id
+    JOIN domains d ON epd.domain_id = d.id
+    WHERE e.onboard_admin_email LIKE '%@hubopening%.example'
+);
+
+-- Delete org_users by employer_id as a fallback
+DELETE FROM org_users
+WHERE employer_id IN (
+    SELECT id FROM employers
+    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+);
+
+-- Delete employer_primary_domains
+DELETE FROM employer_primary_domains
 WHERE employer_id IN (
     SELECT id FROM employers
     WHERE onboard_admin_email LIKE '%@hubopening%.example'
