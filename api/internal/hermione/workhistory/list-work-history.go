@@ -2,8 +2,10 @@ package workhistory
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -27,7 +29,13 @@ func ListWorkHistory(h wand.Wand) http.HandlerFunc {
 		workHistory, err := h.DB().
 			ListWorkHistory(r.Context(), listWorkHistoryReq)
 		if err != nil {
-			h.Dbg("failed to list work history", "error", err)
+			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("failed to list work history", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			h.Err("failed to list work history", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

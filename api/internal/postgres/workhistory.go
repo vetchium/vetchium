@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -122,7 +123,7 @@ func (p *PG) ListWorkHistory(
 		err := p.pool.QueryRow(ctx, `
 			SELECT id FROM hub_users WHERE handle = $1
 		`, *req.UserHandle).Scan(&userID)
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("hub user not found", "handle", *req.UserHandle)
 			return nil, db.ErrNoHubUser
 		}

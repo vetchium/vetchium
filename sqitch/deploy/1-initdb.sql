@@ -521,7 +521,7 @@ INSERT INTO opening_tags (name) VALUES
     ('Business Analyst'),
     ('System Administrator');
 
-CREATE OR REPLACE FUNCTION get_or_create_dummy_employer(domain_name text)
+CREATE OR REPLACE FUNCTION get_or_create_dummy_employer(p_domain_name text)
 RETURNS UUID AS $$
 DECLARE
     employer_id UUID;
@@ -530,7 +530,7 @@ BEGIN
     -- First check if domain already exists and has an employer
     SELECT d.employer_id INTO employer_id
     FROM domains d
-    WHERE d.domain_name = domain_name AND d.employer_id IS NOT NULL;
+    WHERE d.domain_name = p_domain_name AND d.employer_id IS NOT NULL;
 
     IF FOUND THEN
         RETURN employer_id;
@@ -545,8 +545,8 @@ BEGIN
     ) VALUES (
         'DOMAIN',
         'HUB_ADDED_EMPLOYER',
-        domain_name,  -- Use domain name as company name for dummy record
-        'dummy@' || domain_name
+        p_domain_name,  -- Use domain name as company name for dummy record
+        'admin@' || p_domain_name -- TODO: Perhaps this could just be NULL ?
     )
     RETURNING id INTO employer_id;
 
@@ -556,7 +556,7 @@ BEGIN
         domain_state,
         employer_id
     ) VALUES (
-        domain_name,
+        p_domain_name,
         'UNVERIFIED',
         employer_id
     )

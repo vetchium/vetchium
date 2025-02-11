@@ -270,6 +270,18 @@ func InitValidator(log util.Logger) (*Vator, error) {
 				return false
 			}
 
+			// Domain should be at least 4 characters (a.bc)
+			if len(domain) < 4 {
+				log.Dbg("domain too short", "domain", domain)
+				return false
+			}
+
+			// Domain should be at most 255 characters
+			if len(domain) > 255 {
+				log.Dbg("domain too long", "domain", domain)
+				return false
+			}
+
 			result := domainReg.MatchString(domain)
 
 			log.Dbg(
@@ -284,6 +296,37 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	)
 	if err != nil {
 		log.Err("failed to register domain validation", "error", err)
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"date_after",
+		func(fl validator.FieldLevel) bool {
+			endDateStr := fl.Field().String()
+			startDateField := fl.Parent().FieldByName(fl.Param())
+			if !startDateField.IsValid() {
+				log.Dbg("start date field not found", "field", fl.Param())
+				return false
+			}
+			startDateStr := startDateField.String()
+
+			endDate, err := time.Parse("2006-01-02", endDateStr)
+			if err != nil {
+				log.Dbg("failed to parse end date", "error", err)
+				return false
+			}
+
+			startDate, err := time.Parse("2006-01-02", startDateStr)
+			if err != nil {
+				log.Dbg("failed to parse start date", "error", err)
+				return false
+			}
+
+			return endDate.After(startDate) || endDate.Equal(startDate)
+		},
+	)
+	if err != nil {
+		log.Err("failed to register date_after validation", "error", err)
 		return nil, err
 	}
 

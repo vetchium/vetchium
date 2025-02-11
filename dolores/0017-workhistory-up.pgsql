@@ -61,6 +61,12 @@ INSERT INTO domains (
     'workhistory-employer2.example',
     'VERIFIED',
     '12345678-0017-0017-0017-000000000004'
+),
+(
+    '12345678-0017-0017-0017-000000000009',
+    'non-onboarded-employer.example',
+    'UNVERIFIED',
+    NULL
 );
 
 -- Set primary domains for employers
@@ -78,12 +84,12 @@ INSERT INTO employer_primary_domains (
 
 -- Create some initial work history entries
 INSERT INTO work_history (
-    id, hub_user_id, employer_domain, title, start_date, end_date, description
+    id, hub_user_id, employer_id, title, start_date, end_date, description
 ) VALUES
 (
     '12345678-0017-0017-0017-000000000007',
     '12345678-0017-0017-0017-000000000001',
-    'workhistory-employer1.example',
+    '12345678-0017-0017-0017-000000000003',
     'Software Engineer',
     '2020-01-01',
     '2021-12-31',
@@ -92,7 +98,7 @@ INSERT INTO work_history (
 (
     '12345678-0017-0017-0017-000000000008',
     '12345678-0017-0017-0017-000000000001',
-    'workhistory-employer2.example',
+    '12345678-0017-0017-0017-000000000004',
     'Senior Engineer',
     '2022-01-01',
     NULL,
