@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
@@ -12,8 +12,13 @@ import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import PersonIcon from "@mui/icons-material/Person";
+import CircularProgress from "@mui/material/CircularProgress";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { config } from "@/config";
+import Cookies from "js-cookie";
+import { useState } from "react";
 
 const drawerWidth = 240;
 
@@ -29,24 +34,75 @@ interface SidebarProps {
   open: boolean;
 }
 
-const menuItems = [
-  { text: "home", icon: <HomeIcon />, path: "/" },
-  { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
-  {
-    text: "myApplications",
-    icon: <AssignmentIcon />,
-    path: "/my-applications",
-  },
-  {
-    text: "myCandidacies",
-    icon: <FolderSpecialIcon />,
-    path: "/my-candidacies",
-  },
-];
-
 export default function Sidebar({ open }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useTranslation();
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  const handleProfileClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isLoadingProfile) return;
+
+    try {
+      setIsLoadingProfile(true);
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/get-my-handle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch handle");
+      }
+
+      const data = await response.json();
+      router.push(`/u/${data.handle}`);
+    } catch (error) {
+      console.error("Failed to fetch handle:", error);
+      // You might want to show a toast/snackbar here for error feedback
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  const menuItems = [
+    { text: "home", icon: <HomeIcon />, path: "/" },
+    { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
+    {
+      text: "myApplications",
+      icon: <AssignmentIcon />,
+      path: "/my-applications",
+    },
+    {
+      text: "myCandidacies",
+      icon: <FolderSpecialIcon />,
+      path: "/my-candidacies",
+    },
+    {
+      text: "myProfile",
+      icon: isLoadingProfile ? <CircularProgress size={24} /> : <PersonIcon />,
+      path: "#",
+      onClick: handleProfileClick,
+    },
+  ];
 
   return (
     <Drawer
@@ -70,20 +126,18 @@ export default function Sidebar({ open }: SidebarProps) {
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <Link
-              href={item.path}
-              style={{
-                textDecoration: "none",
-                width: "100%",
-                color: "inherit",
-              }}
-            >
+            {item.onClick ? (
               <ListItemButton
-                selected={pathname === item.path}
+                onClick={item.onClick}
+                disabled={isLoadingProfile && item.text === "myProfile"}
+                selected={pathname.startsWith("/u/")}
                 sx={{
                   minHeight: 48,
                   justifyContent: open ? "initial" : "center",
                   px: 2.5,
+                  textDecoration: "none",
+                  width: "100%",
+                  color: "inherit",
                 }}
               >
                 <ListItemIcon
@@ -103,7 +157,42 @@ export default function Sidebar({ open }: SidebarProps) {
                   }}
                 />
               </ListItemButton>
-            </Link>
+            ) : (
+              <Link
+                href={item.path}
+                style={{
+                  textDecoration: "none",
+                  width: "100%",
+                  color: "inherit",
+                }}
+              >
+                <ListItemButton
+                  selected={pathname === item.path}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={t(`navigation.${item.text}`)}
+                    sx={{
+                      opacity: open ? 1 : 0,
+                      whiteSpace: "nowrap",
+                    }}
+                  />
+                </ListItemButton>
+              </Link>
+            )}
           </ListItem>
         ))}
       </List>

@@ -105,6 +105,7 @@ export const en = {
     findOpenings: "Find Openings",
     myApplications: "My Applications",
     myCandidacies: "My Candidacies",
+    myProfile: "My Profile",
   },
   candidacies: {
     viewCandidacy: "View Candidacy",
