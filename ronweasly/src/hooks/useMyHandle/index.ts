@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { config } from "@/config";
 
 interface UseMyHandleResult {
   myHandle: string | null;
@@ -7,6 +10,7 @@ interface UseMyHandleResult {
 }
 
 export function useMyHandle(): UseMyHandleResult {
+  const router = useRouter();
   const [myHandle, setMyHandle] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -14,7 +18,28 @@ export function useMyHandle(): UseMyHandleResult {
   useEffect(() => {
     async function fetchMyHandle() {
       try {
-        const response = await fetch("/api/hub/get-my-handle");
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/get-my-handle`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/login");
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch user handle");
@@ -30,7 +55,7 @@ export function useMyHandle(): UseMyHandleResult {
     }
 
     fetchMyHandle();
-  }, []);
+  }, [router]);
 
   return { myHandle, isLoading, error };
 }

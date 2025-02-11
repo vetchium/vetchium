@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   WorkHistory as WorkHistoryType,
   AddWorkHistoryRequest,
@@ -9,6 +10,17 @@ import {
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useTranslation } from "@/hooks/useTranslation";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Stack from "@mui/material/Stack";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface WorkHistoryProps {
   userHandle: string;
@@ -18,9 +30,11 @@ interface WorkHistoryProps {
 type WorkHistoryFormData = Omit<AddWorkHistoryRequest, "id">;
 
 export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
+  const router = useRouter();
   const { t } = useTranslation();
   const [workHistory, setWorkHistory] = useState<WorkHistoryType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [formData, setFormData] = useState<WorkHistoryFormData>({
@@ -37,7 +51,7 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
-        // Handle unauthenticated state
+        router.push("/login");
         return;
       }
 
@@ -54,12 +68,24 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
         }
       );
 
-      if (!response.ok) throw new Error(t("workHistory.error.fetchFailed"));
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(t("workHistory.error.fetchFailed"));
+      }
 
       const data = await response.json();
-      setWorkHistory(data);
-    } catch (error) {
-      console.error("Error fetching work history:", error);
+      setWorkHistory(data || []);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
+      setWorkHistory([]);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +97,7 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
-        // Handle unauthenticated state
+        router.push("/login");
         return;
       }
 
@@ -93,10 +119,17 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
         body: JSON.stringify(body),
       });
 
-      if (!response.ok) throw new Error(t("workHistory.error.saveFailed"));
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(t("workHistory.error.saveFailed"));
+      }
 
       await fetchWorkHistory();
-
       setFormData({
         employer_domain: "",
         title: "",
@@ -104,8 +137,11 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
       });
       setIsEditing(null);
       setIsAddingNew(false);
-    } catch (error) {
-      console.error("Error saving work history:", error);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
     }
   }
 
@@ -117,7 +153,7 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
-        // Handle unauthenticated state
+        router.push("/login");
         return;
       }
 
@@ -134,178 +170,207 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
         }
       );
 
-      if (!response.ok) throw new Error(t("workHistory.error.deleteFailed"));
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(t("workHistory.error.deleteFailed"));
+      }
 
       await fetchWorkHistory();
-    } catch (error) {
-      console.error("Error deleting work history:", error);
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("common.error.serverError")
+      );
     }
   }
 
   if (isLoading) {
-    return <div>{t("workHistory.loading")}</div>;
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">{t("workHistory.title")}</h2>
-        {canEdit && !isAddingNew && !isEditing && (
-          <button
-            onClick={() => setIsAddingNew(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            {t("workHistory.addExperience")}
-          </button>
-        )}
-      </div>
-
-      {(isAddingNew || isEditing) && canEdit && (
-        <form onSubmit={handleSubmit} className="mb-8 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t("workHistory.companyDomain")}
-            </label>
-            <input
-              type="text"
-              value={formData.employer_domain}
-              onChange={(e) =>
-                setFormData({ ...formData, employer_domain: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t("workHistory.jobTitle")}
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t("workHistory.startDate")}
-            </label>
-            <input
-              type="date"
-              value={formData.start_date}
-              onChange={(e) =>
-                setFormData({ ...formData, start_date: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t("workHistory.endDate")}
-            </label>
-            <input
-              type="date"
-              value={formData.end_date || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, end_date: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t("workHistory.description")}
-            </label>
-            <textarea
-              value={formData.description || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              rows={4}
-            />
-          </div>
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              {isEditing
-                ? t("workHistory.actions.save")
-                : t("workHistory.addExperience")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(null);
-                setIsAddingNew(false);
-                setFormData({
-                  employer_domain: "",
-                  title: "",
-                  start_date: "",
-                });
-              }}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            >
-              {t("workHistory.actions.cancel")}
-            </button>
-          </div>
-        </form>
+    <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
       )}
 
-      <div className="space-y-6">
-        {workHistory.map((entry) => (
-          <div key={entry.id} className="border rounded p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold">{entry.title}</h3>
-                <p className="text-gray-600">
-                  {entry.employer_name || entry.employer_domain}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {new Date(entry.start_date).toLocaleDateString()} -{" "}
-                  {entry.end_date
-                    ? new Date(entry.end_date).toLocaleDateString()
-                    : t("workHistory.present")}
-                </p>
-                {entry.description && (
-                  <p className="mt-2 text-gray-700">{entry.description}</p>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h5">{t("workHistory.title")}</Typography>
+        {canEdit && !isAddingNew && !isEditing && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setIsAddingNew(true)}
+          >
+            {t("workHistory.addExperience")}
+          </Button>
+        )}
+      </Box>
+
+      {(isAddingNew || isEditing) && canEdit && (
+        <Paper sx={{ p: 3, mb: 4 }}>
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={3}>
+              <TextField
+                label={t("workHistory.companyDomain")}
+                value={formData.employer_domain}
+                onChange={(e) =>
+                  setFormData({ ...formData, employer_domain: e.target.value })
+                }
+                required
+                fullWidth
+              />
+              <TextField
+                label={t("workHistory.jobTitle")}
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                required
+                fullWidth
+              />
+              <TextField
+                label={t("workHistory.startDate")}
+                type="date"
+                value={formData.start_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, start_date: e.target.value })
+                }
+                required
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label={t("workHistory.endDate")}
+                type="date"
+                value={formData.end_date || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, end_date: e.target.value })
+                }
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label={t("workHistory.description")}
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                multiline
+                rows={4}
+                fullWidth
+              />
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button type="submit" variant="contained" color="primary">
+                  {isEditing
+                    ? t("workHistory.actions.save")
+                    : t("workHistory.addExperience")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  onClick={() => {
+                    setIsEditing(null);
+                    setIsAddingNew(false);
+                    setFormData({
+                      employer_domain: "",
+                      title: "",
+                      start_date: "",
+                    });
+                  }}
+                >
+                  {t("workHistory.actions.cancel")}
+                </Button>
+              </Box>
+            </Stack>
+          </form>
+        </Paper>
+      )}
+
+      {!workHistory || workHistory.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Typography color="text.secondary">
+            {t("workHistory.noEntries")}
+          </Typography>
+        </Paper>
+      ) : (
+        <Stack spacing={2}>
+          {workHistory.map((entry) => (
+            <Paper key={entry.id} sx={{ p: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    {entry.title}
+                  </Typography>
+                  <Typography
+                    variant="subtitle1"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    {entry.employer_name || entry.employer_domain}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {new Date(entry.start_date).toLocaleDateString()} -{" "}
+                    {entry.end_date
+                      ? new Date(entry.end_date).toLocaleDateString()
+                      : t("workHistory.present")}
+                  </Typography>
+                  {entry.description && (
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                      {entry.description}
+                    </Typography>
+                  )}
+                </Box>
+                {canEdit && !isEditing && !isAddingNew && (
+                  <Box>
+                    <IconButton
+                      onClick={() => {
+                        setIsEditing(entry.id);
+                        setFormData({
+                          employer_domain: entry.employer_domain,
+                          title: entry.title,
+                          start_date: entry.start_date,
+                          end_date: entry.end_date,
+                          description: entry.description,
+                        });
+                      }}
+                      color="primary"
+                      size="small"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(entry.id)}
+                      color="error"
+                      size="small"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 )}
-              </div>
-              {canEdit && !isEditing && !isAddingNew && (
-                <div className="space-x-2">
-                  <button
-                    onClick={() => {
-                      setIsEditing(entry.id);
-                      setFormData({
-                        employer_domain: entry.employer_domain,
-                        title: entry.title,
-                        start_date: entry.start_date,
-                        end_date: entry.end_date,
-                        description: entry.description,
-                      });
-                    }}
-                    className="text-blue-500 hover:text-blue-600"
-                  >
-                    {t("workHistory.actions.edit")}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    {t("workHistory.actions.delete")}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+              </Box>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Box>
   );
 }

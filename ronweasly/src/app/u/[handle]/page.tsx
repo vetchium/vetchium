@@ -6,6 +6,8 @@ import { WorkHistory } from "./WorkHistory";
 import { useTranslation } from "@/hooks/useTranslation";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -16,21 +18,25 @@ export default function ProfilePage() {
 
   if (isLoadingHandle) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress />
-      </Box>
+      <AuthenticatedLayout>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      </AuthenticatedLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">
-        {isOwnProfile ? "My Profile" : `${userHandle}'s Profile`}
-      </h1>
+    <AuthenticatedLayout>
+      <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, px: 2 }}>
+        <Typography variant="h4" gutterBottom>
+          {isOwnProfile ? t("profile.myProfile") : `${userHandle}'s Profile`}
+        </Typography>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <WorkHistory userHandle={userHandle} canEdit={isOwnProfile} />
-      </div>
-    </div>
+        <Box sx={{ mt: 4 }}>
+          <WorkHistory userHandle={userHandle} canEdit={isOwnProfile} />
+        </Box>
+      </Box>
+    </AuthenticatedLayout>
   );
 }

@@ -171,6 +171,7 @@ export const en = {
     addExperience: "Add Experience",
     updateExperience: "Update Experience",
     loading: "Loading work history...",
+    noEntries: "No work experience entries yet",
     companyDomain: "Company Domain",
     jobTitle: "Title",
     startDate: "Start Date",
@@ -189,5 +190,8 @@ export const en = {
       save: "Save",
       cancel: "Cancel",
     },
+  },
+  profile: {
+    myProfile: "My Profile",
   },
 };
