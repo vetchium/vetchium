@@ -166,4 +166,28 @@ export const en = {
       OTHER_INTERVIEW: "Other",
     },
   },
+  workHistory: {
+    title: "Work Experience",
+    addExperience: "Add Experience",
+    updateExperience: "Update Experience",
+    loading: "Loading work history...",
+    companyDomain: "Company Domain",
+    jobTitle: "Title",
+    startDate: "Start Date",
+    endDate: "End Date",
+    description: "Description",
+    present: "Present",
+    deleteConfirm: "Are you sure you want to delete this work history entry?",
+    error: {
+      fetchFailed: "Failed to fetch work history",
+      saveFailed: "Failed to save work history",
+      deleteFailed: "Failed to delete work history",
+    },
+    actions: {
+      edit: "Edit",
+      delete: "Delete",
+      save: "Save",
+      cancel: "Cancel",
+    },
+  },
 };
