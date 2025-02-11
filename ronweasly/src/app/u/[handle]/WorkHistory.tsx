@@ -29,6 +29,14 @@ interface WorkHistoryProps {
 
 type WorkHistoryFormData = Omit<AddWorkHistoryRequest, "id">;
 
+function formatDate(dateString: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(dateString));
+}
+
 export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -328,9 +336,9 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
                     {entry.employer_name || entry.employer_domain}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {new Date(entry.start_date).toLocaleDateString()} -{" "}
+                    {formatDate(entry.start_date)} -{" "}
                     {entry.end_date
-                      ? new Date(entry.end_date).toLocaleDateString()
+                      ? formatDate(entry.end_date)
                       : t("workHistory.present")}
                   </Typography>
                   {entry.description && (
