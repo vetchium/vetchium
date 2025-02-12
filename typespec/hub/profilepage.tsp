@@ -33,7 +33,10 @@ model ProfessionalEmail {
     email: EmailAddress;
 
     @doc("The date and time when the email address was last verified. If null, the email address was never verified.")
-    lastVerifiedAt?: utcDateTime;
+    last_verified_at?: utcDateTime;
+
+    @doc("Whether a verification is in progress for the email address.")
+    verify_in_progress: boolean;
 }
 
 @route("/hub/add-professional-email")

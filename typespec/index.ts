@@ -13,6 +13,7 @@ export * from "./hub/applications";
 export * from "./hub/hubusers";
 export * from "./hub/employers";
 export * from "./hub/workhistory";
+export * from "./hub/profilepage";
 
 // Export employer types
 export * from "./employer/openings";
