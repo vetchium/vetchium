@@ -43,23 +43,6 @@ CREATE TABLE hub_user_tfa_codes (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TABLE hub_users_official_emails (
-    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
-    -- TODO: When Domain Ownership changes, this may break
-    domain_id UUID REFERENCES domains(id) NOT NULL,
-
-    official_email TEXT NOT NULL PRIMARY KEY,
-
-    last_verified_at TIMESTAMP WITH TIME ZONE,
-    -- Remember to set verification_code to NULL when the email is verified
-    verification_code TEXT,
-    verification_code_expires_at TIMESTAMP WITH TIME ZONE,
-
-
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
-);
-
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');
 CREATE TABLE emails(
 	email_key UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -153,6 +136,22 @@ CREATE TABLE domains (
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     CONSTRAINT uniq_employer_domain_id UNIQUE (employer_id, id)
+);
+
+CREATE TABLE hub_users_official_emails (
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    -- TODO: When Domain Ownership changes, this may break
+    domain_id UUID REFERENCES domains(id) NOT NULL,
+
+    official_email TEXT NOT NULL PRIMARY KEY,
+
+    last_verified_at TIMESTAMP WITH TIME ZONE,
+    -- Remember to set verification_code to NULL when the email is verified
+    verification_code TEXT,
+    verification_code_expires_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE employer_primary_domains(
