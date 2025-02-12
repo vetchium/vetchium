@@ -15,6 +15,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
 	"github.com/psankar/vetchi/api/internal/hermione/openings"
 	"github.com/psankar/vetchi/api/internal/hermione/orgusers"
+	pp "github.com/psankar/vetchi/api/internal/hermione/profilepage"
 	wh "github.com/psankar/vetchi/api/internal/hermione/workhistory"
 	"github.com/psankar/vetchi/typespec/common"
 )
@@ -352,6 +353,19 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/hub/forgot-password", ha.ForgotPassword(h))
 	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
 	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
+
+	// Professional Email related endpoints
+	http.Handle("/hub/add-professional-email", wrap(pp.AddProfessionalEmail(h)))
+	http.Handle(
+		"/hub/verify-professional-email",
+		wrap(pp.VerifyProfessionalEmail(h)),
+	)
+	http.Handle("/hub/trigger-verification", wrap(pp.TriggerVerification(h)))
+	http.Handle(
+		"/hub/delete-professional-email",
+		wrap(pp.DeleteProfessionalEmail(h)),
+	)
+	http.Handle("/hub/my-professional-emails", wrap(pp.MyProfessionalEmails(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
 	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))
