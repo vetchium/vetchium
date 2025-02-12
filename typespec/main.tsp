@@ -18,6 +18,7 @@ import "./hub/candidacy.tsp";
 import "./hub/interviews.tsp";
 import "./hub/employers.tsp";
 import "./hub/workhistory.tsp";
+import "./hub/profilepage.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
