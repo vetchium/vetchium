@@ -10,11 +10,11 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-model AddProfessionalEmailRequest {
+model AddOfficialEmailRequest {
     email: EmailAddress;
 }
 
-model VerifyProfessionalEmailRequest {
+model VerifyOfficialEmailRequest {
     email: EmailAddress;
 
     @doc("The verification code sent to the email address")
@@ -25,11 +25,11 @@ model TriggerVerificationRequest {
     email: EmailAddress;
 }
 
-model DeleteProfessionalEmailRequest {
+model DeleteOfficialEmailRequest {
     email: EmailAddress;
 }
 
-model ProfessionalEmail {
+model OfficialEmail {
     email: EmailAddress;
 
     @doc("The date and time when the email address was last verified. If null, the email address was never verified.")
@@ -39,22 +39,22 @@ model ProfessionalEmail {
     verify_in_progress: boolean;
 }
 
-@route("/hub/add-professional-email")
-interface AddProfessionalEmail {
+@route("/hub/add-official-email")
+interface AddOfficialEmail {
     @tag("HubProfile")
     @post
     @useAuth(HubAuth)
-    addProfessionalEmail(@body request: AddProfessionalEmailRequest): {
+    addOfficialEmail(@body request: AddOfficialEmailRequest): {
         @statusCode statusCode: 200;
     };
 }
 
-@route("/hub/verify-professional-email")
-interface VerifyProfessionalEmail {
+@route("/hub/verify-official-email")
+interface VerifyOfficialEmail {
     @tag("HubProfile")
     @post
     @useAuth(HubAuth)
-    verifyProfessionalEmail(@body request: VerifyProfessionalEmailRequest): {};
+    verifyOfficialEmail(@body request: VerifyOfficialEmailRequest): {};
 }
 
 @route("/hub/trigger-verification")
@@ -71,21 +71,21 @@ interface TriggerVerification {
     };
 }
 
-@route("/hub/delete-professional-email")
-interface DeleteProfessionalEmail {
+@route("/hub/delete-official-email")
+interface DeleteOfficialEmail {
     @tag("HubProfile")
     @post
     @useAuth(HubAuth)
-    deleteProfessionalEmail(@body request: DeleteProfessionalEmailRequest): {};
+    deleteOfficialEmail(@body request: DeleteOfficialEmailRequest): {};
 }
 
-@route("/hub/my-professional-emails")
-interface MyProfessionalEmails {
+@route("/hub/my-official-emails")
+interface MyOfficialEmails {
     @tag("HubProfile")
     @get
     @useAuth(HubAuth)
-    myProfessionalEmails(): {
+    myOfficialEmails(): {
         @statusCode statusCode: 200;
-        @body emails: ProfessionalEmail[];
+        @body emails: OfficialEmail[];
     };
 }

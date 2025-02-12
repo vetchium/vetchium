@@ -43,15 +43,21 @@ CREATE TABLE hub_user_tfa_codes (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-CREATE TYPE official_email_states AS ENUM ('PENDING', 'VERIFIED');
 CREATE TABLE hub_users_official_emails (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
-    official_email TEXT NOT NULL,
-    state official_email_states NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    -- TODO: When Domain Ownership changes, this may break
+    domain_id UUID REFERENCES domains(id) NOT NULL,
 
-    PRIMARY KEY (hub_user_id, official_email)
+    official_email TEXT NOT NULL PRIMARY KEY,
+
+    last_verified_at TIMESTAMP WITH TIME ZONE,
+    -- Remember to set verification_code to NULL when the email is verified
+    verification_code TEXT,
+    verification_code_expires_at TIMESTAMP WITH TIME ZONE,
+
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TYPE email_states AS ENUM ('PENDING', 'PROCESSED');

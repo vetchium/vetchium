@@ -1,10 +1,10 @@
 import { EmailAddress } from "../common/common";
 
-export interface AddProfessionalEmailRequest {
+export interface AddOfficialEmailRequest {
   email: EmailAddress;
 }
 
-export interface VerifyProfessionalEmailRequest {
+export interface VerifyOfficialEmailRequest {
   email: EmailAddress;
 }
 
@@ -12,11 +12,11 @@ export interface TriggerVerificationRequest {
   email: EmailAddress;
 }
 
-export interface DeleteProfessionalEmailRequest {
+export interface DeleteOfficialEmailRequest {
   email: EmailAddress;
 }
 
-export interface ProfessionalEmail {
+export interface OfficialEmail {
   email: EmailAddress;
   lastVerifiedAt?: string;
   verifyInProgress: boolean;

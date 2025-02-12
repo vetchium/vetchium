@@ -354,18 +354,18 @@ func (h *Hermione) Run() error {
 	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
 	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
-	// Professional Email related endpoints
-	http.Handle("/hub/add-professional-email", wrap(pp.AddProfessionalEmail(h)))
+	// Official Email related endpoints
+	http.Handle("/hub/add-official-email", wrap(pp.AddOfficialEmail(h)))
 	http.Handle(
-		"/hub/verify-professional-email",
-		wrap(pp.VerifyProfessionalEmail(h)),
+		"/hub/verify-official-email",
+		wrap(pp.VerifyOfficialEmail(h)),
 	)
 	http.Handle("/hub/trigger-verification", wrap(pp.TriggerVerification(h)))
 	http.Handle(
-		"/hub/delete-professional-email",
-		wrap(pp.DeleteProfessionalEmail(h)),
+		"/hub/delete-official-email",
+		wrap(pp.DeleteOfficialEmail(h)),
 	)
-	http.Handle("/hub/my-professional-emails", wrap(pp.MyProfessionalEmails(h)))
+	http.Handle("/hub/my-official-emails", wrap(pp.MyOfficialEmails(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
 	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))

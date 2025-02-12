@@ -70,3 +70,6 @@ Current schema lacks employer branding features. Could add:
 - Culture page customization
 - Employee testimonials
 - Benefits showcase
+
+## 8. Domain Ownership Changes
+When a domain say x.com was owned by Paypal first and we had some employees verified their email address. Then the domain got transferred to Twitter. Now what happens to the old email addresses that were verified when it was with Paypal ? Will those employees show up as Twitter employees now ? We need a cleaner solution to deboard, re-onboard domains which are onboarded. There are a lot of corner cases involved in this kind of domain cross-ownerships.

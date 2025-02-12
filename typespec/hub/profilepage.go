@@ -6,11 +6,11 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-type AddProfessionalEmailRequest struct {
+type AddOfficialEmailRequest struct {
 	Email common.EmailAddress `json:"email"`
 }
 
-type VerifyProfessionalEmailRequest struct {
+type VerifyOfficialEmailRequest struct {
 	Email common.EmailAddress `json:"email"`
 }
 
@@ -18,11 +18,11 @@ type TriggerVerificationRequest struct {
 	Email common.EmailAddress `json:"email"`
 }
 
-type DeleteProfessionalEmailRequest struct {
+type DeleteOfficialEmailRequest struct {
 	Email common.EmailAddress `json:"email"`
 }
 
-type ProfessionalEmail struct {
+type OfficialEmail struct {
 	Email            common.EmailAddress `json:"email"`
 	LastVerifiedAt   *time.Time          `json:"last_verified_at"`
 	VerifyInProgress bool                `json:"verify_in_progress"`

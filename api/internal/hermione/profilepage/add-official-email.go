@@ -8,9 +8,9 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-func AddProfessionalEmail(h wand.Wand) http.HandlerFunc {
+func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req hub.AddProfessionalEmailRequest
+		var req hub.AddOfficialEmailRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
@@ -24,7 +24,7 @@ func AddProfessionalEmail(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for adding professional email
+		// TODO: Implement the business logic for adding official email
 		// This would typically involve:
 		// 1. Validating the email format
 		// 2. Checking if the email already exists

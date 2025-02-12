@@ -8,9 +8,9 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-func DeleteProfessionalEmail(h wand.Wand) http.HandlerFunc {
+func VerifyOfficialEmail(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req hub.DeleteProfessionalEmailRequest
+		var req hub.VerifyOfficialEmailRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			h.Dbg("failed to decode request", "error", err)
@@ -24,11 +24,11 @@ func DeleteProfessionalEmail(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for deleting professional email
+		// TODO: Implement the business logic for verifying official email
 		// This would typically involve:
-		// 1. Validating that the email exists
-		// 2. Checking if the user has permission to delete this email
-		// 3. Removing the email from the database
+		// 1. Validating the verification code
+		// 2. Updating the email verification status in the database
+		// 3. Setting the LastVerifiedAt timestamp
 
 		w.WriteHeader(http.StatusOK)
 	}

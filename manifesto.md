@@ -80,7 +80,7 @@ However, this new model of applying for jobs can turn out to be a total failure 
 In addition to the Employer and Employee, there is a third category of users that we want to have in our system. These are called *Agents*. These Agents are brokers who can connect to any Employee registered in Vetchi. They are not limited by the work email domain restrictions that we mentioned earlier as a pre-requisite for two Employees to connect. The Agent user would have other restrictions though. The Agent type of users must have a website, registered formally as a company. The Agent type of users will be able to add private notes for any of the Employees. 
 
 ### To summarise
-* Employees type of Users will be able to create a profile, verify their professional email, connect to their colleagues, apply for Openings
+* Employees type of Users will be able to create a profile, verify their official email, connect to their colleagues, apply for Openings
 * Agents type of User, who will be able to connect to Employees type of Users, take private notes. Work with Employer type of Users on a per-Opening basis, get paid from the Employer
 * Employer type of Users will be able to verify the company domain, Create Openings, Optionally connect with Agents to procure Candidates, Shortlist and track Applicants, Schedule Interviews, Co-ordinate Interview reviews, Issue offers or send rejection emails, integrate with HRMS and other IT systems for Onboarding, etc.
 
