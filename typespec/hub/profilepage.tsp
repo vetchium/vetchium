@@ -46,6 +46,14 @@ interface AddOfficialEmail {
     @useAuth(HubAuth)
     addOfficialEmail(@body request: AddOfficialEmailRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("The user has reached the maximum (50) allowed official emails per user.")
+        @statusCode
+        statusCode: 422;
+    } | {
+        @doc("The domain of the email address is not associated with an employer")
+        @statusCode
+        statusCode: 412;
     };
 }
 
