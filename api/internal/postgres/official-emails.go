@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -81,6 +82,12 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("domain not found", "domain", domain)
 			return db.ErrNoEmployer
+		}
+		// Check for unique constraint violation on official_email
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			p.log.Dbg("duplicate official email", "email", req.Email.EmailTo[0])
+			return db.ErrDuplicateOfficialEmail
 		}
 		p.log.Err("failed to add official email", "error", err)
 		return err

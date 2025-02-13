@@ -68,5 +68,6 @@ var (
 
 	ErrNoWorkHistory = errors.New("work history not found")
 
-	ErrTooManyOfficialEmails = errors.New("too many official emails")
+	ErrDuplicateOfficialEmail = errors.New("official email already exists")
+	ErrTooManyOfficialEmails  = errors.New("too many official emails")
 )

@@ -75,6 +75,10 @@ func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 				h.Dbg("failed to add official email", "error", err)
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
+			} else if errors.Is(err, db.ErrDuplicateOfficialEmail) {
+				h.Dbg("failed to add official email", "error", err)
+				http.Error(w, "", http.StatusConflict)
+				return
 			}
 
 			h.Dbg("failed to add official email", "error", err)
