@@ -266,4 +266,7 @@ type DB interface {
 		hub.ListWorkHistoryRequest,
 	) ([]hub.WorkHistory, error)
 	UpdateWorkHistory(context.Context, hub.UpdateWorkHistoryRequest) error
+
+	// Used by hermione - Profile page related methods
+	AddOfficialEmail(AddOfficialEmailReq) error
 }

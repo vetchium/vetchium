@@ -7,19 +7,19 @@ import (
 )
 
 type AddOfficialEmailRequest struct {
-	Email common.EmailAddress `json:"email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type VerifyOfficialEmailRequest struct {
-	Email common.EmailAddress `json:"email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type TriggerVerificationRequest struct {
-	Email common.EmailAddress `json:"email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type DeleteOfficialEmailRequest struct {
-	Email common.EmailAddress `json:"email"`
+	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
 
 type OfficialEmail struct {

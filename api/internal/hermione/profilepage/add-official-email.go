@@ -4,7 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
+	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -24,12 +29,47 @@ func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for adding official email
-		// This would typically involve:
-		// 1. Validating the email format
-		// 2. Checking if the email already exists
-		// 3. Adding the email to the database
-		// 4. Potentially triggering a verification email
+		hubUser, ok := r.Context().Value(middleware.HubUserCtxKey).(db.HubUserTO)
+		if !ok {
+			h.Err("failed to get hub user from context")
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		code := util.RandomString(vetchi.AddOfficialEmailCodeLenBytes)
+
+		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
+			TemplateName: hedwig.AddOfficialEmail,
+			Args: map[string]string{
+				"Name":   hubUser.FullName,
+				"Handle": hubUser.Handle,
+				"Code":   code,
+			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{string(req.Email)},
+
+			// TODO: The subject should be from Hedwig, based on the template
+			// This subject is used in dolores/ too. Any change
+			// in either place should be synced.
+			Subject: "Vetchi - Confirm Email Ownership",
+		})
+		if err != nil {
+			h.Dbg("failed to generate email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		err = h.DB().AddOfficialEmail(db.AddOfficialEmailReq{
+			Email:   email,
+			Code:    code,
+			HubUser: hubUser,
+			Context: r.Context(),
+		})
+		if err != nil {
+			h.Dbg("failed to add official email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}

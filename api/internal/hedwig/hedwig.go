@@ -23,6 +23,7 @@ const (
 	RemovedInterviewerNotify     = "removed-interviewer-notify"
 	NotifyApplicantInterview     = "notify-applicant-interview"
 	NotifyCandidateOffer         = "notify-candidate-offer"
+	AddOfficialEmail             = "add-official-email"
 )
 
 type Hedwig interface {
@@ -34,13 +35,33 @@ type hedwig struct {
 }
 
 func NewHedwig(log util.Logger) (Hedwig, error) {
-	for _, tmpl := range []string{InviteEmployee, HubUserTFA, HubPasswordReset} {
+	for _, tmpl := range []string{
+		InviteEmployee,
+		HubUserTFA,
+		HubPasswordReset,
+		ShortlistApplication,
+		RejectApplication,
+		NotifyNewInterviewer,
+		NotifyWatchersNewInterviewer,
+		RemovedInterviewerNotify,
+		NotifyApplicantInterview,
+		NotifyCandidateOffer,
+		AddOfficialEmail,
+	} {
 		fi, err := os.Stat(filepath.Join("hedwig", "templates", tmpl+".txt"))
 		if err != nil {
 			return nil, err
 		}
 		if fi.Size() == 0 {
-			return nil, fmt.Errorf("template %s is empty", tmpl)
+			return nil, fmt.Errorf("template %s.txt is empty", tmpl)
+		}
+
+		fi, err = os.Stat(filepath.Join("hedwig", "templates", tmpl+".html"))
+		if err != nil {
+			return nil, err
+		}
+		if fi.Size() == 0 {
+			return nil, fmt.Errorf("template %s.html is empty", tmpl)
 		}
 	}
 	return &hedwig{Logger: log}, nil

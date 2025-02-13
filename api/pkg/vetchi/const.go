@@ -34,6 +34,9 @@ const (
 	InterviewIDLenBytes = 16
 
 	ResumeIDLenBytes = 12
+
+	// Used for the code that is sent to the user's email for add official email
+	AddOfficialEmailCodeLenBytes = 2
 )
 
 const (
