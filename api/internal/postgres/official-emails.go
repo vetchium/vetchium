@@ -1,11 +1,14 @@
 package postgres
 
 import (
+	"context"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
@@ -101,4 +104,51 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 	}
 
 	return nil
+}
+
+func (p *PG) GetMyOfficialEmails(
+	ctx context.Context,
+) ([]hub.OfficialEmail, error) {
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get hub user ID", "error", err)
+		return nil, err
+	}
+
+	query := `
+		SELECT
+			he.official_email,
+			he.last_verified_at,
+			he.verification_code IS NOT NULL AS verify_in_progress
+		FROM hub_users_official_emails he
+		WHERE he.hub_user_id = $1
+	`
+
+	rows, err := p.pool.Query(ctx, query, hubUserID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no official emails found", "hub_user_id", hubUserID)
+			return []hub.OfficialEmail{}, nil
+		}
+		p.log.Err("failed to get my official emails", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	emails := []hub.OfficialEmail{}
+	for rows.Next() {
+		var email hub.OfficialEmail
+		if err := rows.Scan(&email.Email, &email.LastVerifiedAt, &email.VerifyInProgress); err != nil {
+			return nil, err
+		}
+		emails = append(emails, email)
+	}
+
+	if err := rows.Err(); err != nil {
+		p.log.Err("failed to iterate over my official emails", "error", err)
+		return nil, err
+	}
+
+	p.log.Dbg("my official emails", "emails", emails)
+	return emails, nil
 }

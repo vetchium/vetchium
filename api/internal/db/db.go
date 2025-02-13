@@ -269,4 +269,5 @@ type DB interface {
 
 	// Used by hermione - Profile page related methods
 	AddOfficialEmail(AddOfficialEmailReq) error
+	GetMyOfficialEmails(context.Context) ([]hub.OfficialEmail, error)
 }
