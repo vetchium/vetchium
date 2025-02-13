@@ -9,10 +9,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Official Emails", Ordered, func() {
+var _ = Describe("Official Emails", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2 string
 
@@ -93,7 +94,38 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 					},
 					wantStatus: http.StatusConflict,
 				},
+				{
+					description: "add email with unverified domain",
+					token:       hubToken2,
+					request: hub.AddOfficialEmailRequest{
+						Email: "user2@unverified.example",
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
 			}
+
+			// First add 49 more emails to test max limit
+			for i := 1; i <= 49; i++ {
+				email := fmt.Sprintf("user1.%d@officialmail.example", i)
+				testPOST(
+					hubToken1,
+					hub.AddOfficialEmailRequest{
+						Email: common.EmailAddress(email),
+					},
+					"/hub/add-official-email",
+					http.StatusOK,
+				)
+			}
+
+			// Now add test case for max emails reached
+			testCases = append(testCases, addOfficialEmailTestCase{
+				description: "exceed maximum allowed official emails",
+				token:       hubToken1,
+				request: hub.AddOfficialEmailRequest{
+					Email: "user1.max@officialmail.example",
+				},
+				wantStatus: http.StatusPreconditionFailed,
+			})
 
 			for _, tc := range testCases {
 				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
@@ -135,7 +167,10 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 						var emails []hub.OfficialEmail
 						err := json.Unmarshal(resp, &emails)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(len(emails)).Should(Equal(1))
+						Expect(
+							len(emails),
+						).Should(Equal(50))
+						// 1 initial + 49 added in test
 						Expect(
 							string(emails[0].Email),
 						).Should(Equal("user1@officialmail.example"))
