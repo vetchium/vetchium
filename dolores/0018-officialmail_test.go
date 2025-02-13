@@ -91,7 +91,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 					request: hub.AddOfficialEmailRequest{
 						Email: "user2@officialmail.example",
 					},
-					wantStatus: http.StatusPreconditionFailed,
+					wantStatus: http.StatusConflict,
 				},
 			}
 
