@@ -2,6 +2,7 @@ package profilepage
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
@@ -66,6 +67,16 @@ func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 			Context: r.Context(),
 		})
 		if err != nil {
+			if errors.Is(err, db.ErrTooManyOfficialEmails) {
+				h.Dbg("failed to add official email", "error", err)
+				http.Error(w, "", http.StatusPreconditionFailed)
+				return
+			} else if errors.Is(err, db.ErrNoEmployer) {
+				h.Dbg("failed to add official email", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to add official email", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

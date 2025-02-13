@@ -21,6 +21,28 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 	}
 	defer tx.Rollback(ctx)
 
+	// Check if user has reached the maximum allowed official emails
+	countQuery := `
+		SELECT COUNT(*) 
+		FROM hub_users_official_emails 
+		WHERE hub_user_id = $1`
+
+	var emailCount int
+	err = tx.QueryRow(ctx, countQuery, req.HubUser.ID).Scan(&emailCount)
+	if err != nil {
+		p.log.Err("failed to count official emails", "error", err)
+		return err
+	}
+
+	if emailCount >= 50 {
+		p.log.Dbg(
+			"user has reached maximum allowed official emails",
+			"count",
+			emailCount,
+		)
+		return db.ErrTooManyOfficialEmails
+	}
+
 	// Add the official email to the hub_users_official_emails table
 	officialEmailsQuery := `
 		WITH domain_lookup AS (
@@ -56,9 +78,9 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		verificationCodeExpiry.Minutes(),
 	).Scan(&verificationCode)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("domain not found", "domain", domain)
-			return db.ErrNoEmployer // Domain not found implies employer not found
+			return db.ErrNoEmployer
 		}
 		p.log.Err("failed to add official email", "error", err)
 		return err
@@ -90,7 +112,7 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		req.Email.EmailSubject,
 		req.Email.EmailHTMLBody,
 		req.Email.EmailTextBody,
-		"PENDING",
+		req.Email.EmailState,
 	).Scan(&emailKey)
 	if err != nil {
 		p.log.Err("failed to send token mail", "error", err)

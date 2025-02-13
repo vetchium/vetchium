@@ -67,4 +67,6 @@ var (
 	ErrInvalidPaginationKey = errors.New("invalid pagination key")
 
 	ErrNoWorkHistory = errors.New("work history not found")
+
+	ErrTooManyOfficialEmails = errors.New("too many official emails")
 )
