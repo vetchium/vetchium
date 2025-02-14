@@ -255,6 +255,7 @@ func (p *PG) VerifyOfficialEmail(
 	`, email, code)
 
 	if err != nil {
+		p.log.Err("failed to verify official email", "error", err)
 		return fmt.Errorf("failed to verify official email: %w", err)
 	}
 
@@ -268,12 +269,15 @@ func (p *PG) VerifyOfficialEmail(
 			)
 		`, email).Scan(&exists)
 		if err != nil {
+			p.log.Err("failed to check email existence", "error", err)
 			return fmt.Errorf("failed to check email existence: %w", err)
 		}
 
 		if !exists {
+			p.log.Dbg("email does not exist", "email", email)
 			return db.ErrOfficialEmailNotFound
 		}
+		p.log.Dbg("invalid verification code", "email", email)
 		return db.ErrInvalidVerificationCode
 	}
 

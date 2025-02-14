@@ -43,6 +43,7 @@ func VerifyOfficialEmail(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("verified official email", "email", req.Email)
 		w.WriteHeader(http.StatusOK)
 	}
 }

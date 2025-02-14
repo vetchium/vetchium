@@ -103,6 +103,7 @@ func TriggerVerification(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("triggered verification", "email", req.Email)
 		w.WriteHeader(http.StatusOK)
 	}
 }

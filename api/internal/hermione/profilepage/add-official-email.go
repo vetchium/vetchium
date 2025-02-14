@@ -86,6 +86,7 @@ func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("added official email; triggered email", "email", email)
 		w.WriteHeader(http.StatusOK)
 	}
 }
