@@ -76,10 +76,8 @@
               if ! is_running "$app_name"; then
                 echo "📦 Starting $app_name..."
                 cd "$app_name"
-                if [ ! -d "node_modules" ]; then
-                  echo "Installing dependencies for $app_name..."
-                  npm install
-                fi
+                echo "Installing dependencies for $app_name..."
+                npm install
                 npm run dev > ../.vetchi-pids/$app_name.log 2>&1 &
                 echo $! > "$pid_file"
                 cd ..
@@ -132,6 +130,8 @@
             echo "🚀 Starting Vetchi development environment..."
 
             # Generate typespec libraries
+            echo "Setting up typespec..."
+            cd typespec && npm install && cd ..
             echo "Generating typespec libraries..."
             make lib
 

@@ -35,9 +35,9 @@ nix develop
 
 # The above command will:
 # 1. Install all required tools (Go, Node.js, kubectl, tilt, etc.)
-# 2. Generate typespec libraries (make lib)
+# 2. Install dependencies and generate typespec libraries
 # 3. Start Kubernetes and database services
-# 4. Start both frontend applications (harrypotter and ronweasly)
+# 4. Install dependencies and start both frontend applications
 # 5. Show the status of all services
 
 # Available commands in the nix shell:
@@ -77,25 +77,30 @@ http://localhost:8025
 
 #### Manual Setup
 To bring the services up, run the following commands:
-```
-vetchi $ # Bring up the backend services 
-vetchi $ make
-vetchi $ # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
+```bash
+# Bring up the backend services 
+make
 
-vetchi $ cd typespec && npm ci && npm run build
+# Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 
-vetchi $ # Bring up the frontend services
-vetchi $ cd harrypotter && npm ci && npm run dev
-vetchi $ cd ronweasly && npm ci && npm run dev
-vetchi $ # Visit http://localhost:3000 and http://localhost:3001
+# Setup typespec
+cd typespec && npm install && npm run build && cd ..
 
-vetchi $ # If changes were made in typespec/**/*.ts files, do:
-vetchi $ cd typespec && npm run build 
-vetchi $ cd harrypotter && make ;# This installs the new deps from typespec and does `npm run dev`
-vetchi $ cd ronweasly && make
+# Generate libraries
+make lib
 
-vetchi $ # Seed some test data
-vetchi $ make seed  # tilt up should be running
+# Bring up the frontend services
+cd harrypotter && npm install && npm run dev
+cd ronweasly && npm install && npm run dev
+# Visit http://localhost:3000 and http://localhost:3001
+
+# If changes were made in typespec/**/*.ts files, do:
+cd typespec && npm install && npm run build 
+cd harrypotter && npm install && make  # This installs the new deps from typespec and does `npm run dev`
+cd ronweasly && npm install && make
+
+# Seed some test data (tilt up should be running)
+make seed
 ```
 
 ```
