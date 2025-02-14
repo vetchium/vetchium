@@ -70,4 +70,6 @@ var (
 
 	ErrDuplicateOfficialEmail = errors.New("official email already exists")
 	ErrTooManyOfficialEmails  = errors.New("too many official emails")
+
+	ErrOfficialEmailNotFound = errors.New("official email not found")
 )

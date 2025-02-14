@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -180,4 +182,57 @@ func (p *PG) GetMyOfficialEmails(
 
 	p.log.Dbg("my official emails", "emails", emails)
 	return emails, nil
+}
+
+func (p *PG) GetOfficialEmail(
+	ctx context.Context,
+	email string,
+) (*db.OfficialEmail, error) {
+	var result db.OfficialEmail
+	var lastVerifiedAt sql.NullTime
+
+	err := p.pool.QueryRow(ctx, `
+		SELECT 
+			official_email,
+			last_verified_at,
+			verification_code IS NOT NULL as verify_in_progress
+		FROM hub_users_official_emails
+		WHERE official_email = $1
+	`, email).Scan(&result.Email, &lastVerifiedAt, &result.VerifyInProgress)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, db.ErrOfficialEmailNotFound
+		}
+		return nil, fmt.Errorf("failed to get official email: %w", err)
+	}
+
+	if lastVerifiedAt.Valid {
+		result.LastVerifiedAt = &lastVerifiedAt.Time
+	}
+
+	return &result, nil
+}
+
+func (p *PG) UpdateOfficialEmailVerificationCode(
+	ctx context.Context,
+	req db.UpdateOfficialEmailVerificationCodeReq,
+) error {
+	commandTag, err := p.pool.Exec(ctx, `
+		UPDATE hub_users_official_emails
+		SET 
+			verification_code = $1,
+			verification_code_expires_at = timezone('UTC', now()) + interval '24 hours'
+		WHERE official_email = $2 AND hub_user_id = $3
+	`, req.Code, req.Email, req.HubUser.ID)
+
+	if err != nil {
+		return fmt.Errorf("failed to update verification code: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return db.ErrOfficialEmailNotFound
+	}
+
+	return nil
 }

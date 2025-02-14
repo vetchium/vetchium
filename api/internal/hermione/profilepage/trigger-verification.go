@@ -3,8 +3,14 @@ package profilepage
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
+	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -24,12 +30,76 @@ func TriggerVerification(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for triggering verification
-		// This would typically involve:
-		// 1. Validating that the email exists in our system
-		// 2. Generating a verification code
-		// 3. Sending the verification email
-		// 4. Updating the VerifyInProgress status
+		hubUser, ok := r.Context().Value(middleware.HubUserCtxKey).(db.HubUserTO)
+		if !ok {
+			h.Err("failed to get hub user from context")
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if the email exists and if it needs verification
+		officialEmail, err := h.DB().
+			GetOfficialEmail(r.Context(), string(req.Email))
+		if err != nil {
+			if err == db.ErrOfficialEmailNotFound {
+				h.Dbg("email not found", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+			h.Dbg("failed to get official email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if last verification was more than 90 days ago
+		if officialEmail.LastVerifiedAt != nil {
+			daysAgo := time.Now().
+				UTC().
+				Sub(*officialEmail.LastVerifiedAt).
+				Hours() /
+				24
+			if daysAgo < 90 {
+				h.Dbg("email was verified recently", "days_ago", daysAgo)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+		}
+
+		code := util.RandomString(vetchi.AddOfficialEmailCodeLenBytes)
+
+		_, err = h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
+			TemplateName: hedwig.AddOfficialEmail,
+			Args: map[string]string{
+				"Name":   hubUser.FullName,
+				"Handle": hubUser.Handle,
+				"Code":   code,
+			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{string(req.Email)},
+			Subject:   "Vetchi - Confirm Email Ownership",
+		})
+		if err != nil {
+			h.Dbg("failed to generate email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		err = h.DB().
+			UpdateOfficialEmailVerificationCode(r.Context(), db.UpdateOfficialEmailVerificationCodeReq{
+				Email:   string(req.Email),
+				Code:    code,
+				HubUser: hubUser,
+			})
+		if err != nil {
+			if err == db.ErrOfficialEmailNotFound {
+				h.Dbg("email was deleted before update", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+			h.Dbg("failed to update verification code", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}

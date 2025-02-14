@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
@@ -24,6 +25,18 @@ type CandidateInfo struct {
 	CandidateEmail string
 	CompanyName    string
 	OpeningTitle   string
+}
+
+type UpdateOfficialEmailVerificationCodeReq struct {
+	Email   string
+	Code    string
+	HubUser HubUserTO
+}
+
+type OfficialEmail struct {
+	Email            string
+	LastVerifiedAt   *time.Time
+	VerifyInProgress bool
 }
 
 type DB interface {
@@ -270,4 +283,9 @@ type DB interface {
 	// Used by hermione - Profile page related methods
 	AddOfficialEmail(AddOfficialEmailReq) error
 	GetMyOfficialEmails(context.Context) ([]hub.OfficialEmail, error)
+	GetOfficialEmail(ctx context.Context, email string) (*OfficialEmail, error)
+	UpdateOfficialEmailVerificationCode(
+		ctx context.Context,
+		req UpdateOfficialEmailVerificationCodeReq,
+	) error
 }
