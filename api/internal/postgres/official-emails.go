@@ -26,8 +26,8 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 
 	// Check if user has reached the maximum allowed official emails
 	countQuery := `
-		SELECT COUNT(*) 
-		FROM hub_users_official_emails 
+		SELECT COUNT(*)
+		FROM hub_users_official_emails
 		WHERE hub_user_id = $1`
 
 	var emailCount int
@@ -192,7 +192,7 @@ func (p *PG) GetOfficialEmail(
 	var lastVerifiedAt sql.NullTime
 
 	err := p.pool.QueryRow(ctx, `
-		SELECT 
+		SELECT
 			official_email,
 			last_verified_at,
 			verification_code IS NOT NULL as verify_in_progress
@@ -220,7 +220,7 @@ func (p *PG) UpdateOfficialEmailVerificationCode(
 ) error {
 	commandTag, err := p.pool.Exec(ctx, `
 		UPDATE hub_users_official_emails
-		SET 
+		SET
 			verification_code = $1,
 			verification_code_expires_at = timezone('UTC', now()) + interval '24 hours'
 		WHERE official_email = $2 AND hub_user_id = $3
@@ -245,11 +245,11 @@ func (p *PG) VerifyOfficialEmail(
 	// Update the verification status and clear the verification code
 	commandTag, err := p.pool.Exec(ctx, `
 		UPDATE hub_users_official_emails
-		SET 
+		SET
 			verification_code = NULL,
 			verification_code_expires_at = NULL,
 			last_verified_at = timezone('UTC', now())
-		WHERE official_email = $1 
+		WHERE official_email = $1
 		  AND verification_code = $2
 		  AND verification_code_expires_at > timezone('UTC', now())
 	`, email, code)
@@ -263,7 +263,7 @@ func (p *PG) VerifyOfficialEmail(
 		var exists bool
 		err := p.pool.QueryRow(ctx, `
 			SELECT EXISTS(
-				SELECT 1 FROM hub_users_official_emails 
+				SELECT 1 FROM hub_users_official_emails
 				WHERE official_email = $1
 			)
 		`, email).Scan(&exists)
