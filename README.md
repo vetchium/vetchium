@@ -4,13 +4,78 @@
 
 ### Prerequisites
 
+You can set up the development environment in two ways:
+
+#### Option 1: Manual Setup
 - [Tilt](https://docs.tilt.dev/install.html)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
 - [Go](https://golang.org/doc/install)
 
+#### Option 2: Nix-based Setup
+- [Nix Package Manager](https://nixos.org/download.html) with flakes enabled
+- [Docker](https://docs.docker.com/get-docker/)
+
+If using macOS, you can install Nix using:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+```
+
 ### Setup
 
+#### Using Nix
+The Nix-based setup automatically installs all required tools and starts all services:
+
+```bash
+# Enable flakes if you haven't already
+echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+
+# Start the development environment
+nix develop
+
+# The above command will:
+# 1. Install all required tools (Go, Node.js, kubectl, tilt, etc.)
+# 2. Generate typespec libraries (make lib)
+# 3. Start Kubernetes and database services
+# 4. Start both frontend applications (harrypotter and ronweasly)
+# 5. Show the status of all services
+
+# Available commands in the nix shell:
+status    # Check status of all services
+stop      # Stop all services
+
+# View logs
+tail -f .vetchi-pids/harrypotter.log  # For harrypotter frontend
+tail -f .vetchi-pids/ronweasly.log    # For ronweasly frontend
+
+# Seed test data (after services are up)
+make seed
+```
+
+Once the services are running, you can access:
+
+```
+# Employer site (harrypotter)
+http://localhost:3000
+Login with:
+domain: gryffindor.example
+username: hermione@gryffindor.example (or) admin@gryffindor.example
+password: NewPassword123$
+
+# Hub site (ronweasly)
+http://localhost:3001
+Login with:
+user: hagrid@hub.example (or) minerva@hub.example
+password: NewPassword123$
+
+# Tilt UI (service status and logs)
+http://localhost:10350
+
+# Mail server UI (for viewing sent emails)
+http://localhost:8025
+```
+
+#### Manual Setup
 To bring the services up, run the following commands:
 ```
 vetchi $ # Bring up the backend services 

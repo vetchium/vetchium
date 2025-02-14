@@ -1,1 +1,9 @@
 cnpg-1.24.2.yaml
+.direnv
+.envrc
+result
+
+# Nix development environment
+.vetchi-pids/
+.vetchi-pids/*.log
+.vetchi-pids/*.pid
