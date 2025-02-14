@@ -53,13 +53,15 @@ func TriggerVerification(h wand.Wand) http.HandlerFunc {
 
 		// Check if last verification was more than 90 days ago
 		if officialEmail.LastVerifiedAt != nil {
-			daysAgo := time.Now().
+			timeSinceLastVerification := time.Now().
 				UTC().
-				Sub(*officialEmail.LastVerifiedAt).
-				Hours() /
-				24
-			if daysAgo < 90 {
-				h.Dbg("email was verified recently", "days_ago", daysAgo)
+				Sub(*officialEmail.LastVerifiedAt)
+			if timeSinceLastVerification < vetchi.VerificationValidityDuration {
+				h.Dbg(
+					"email was verified recently",
+					"time_since_verification",
+					timeSinceLastVerification,
+				)
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}

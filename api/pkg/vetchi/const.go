@@ -1,5 +1,7 @@
 package vetchi
 
+import "time"
+
 const (
 	HubBaseURL      = "https://vetchi.org"
 	EmployerBaseURL = "https://employer.vetchi.org"
@@ -41,4 +43,9 @@ const (
 
 const (
 	EmailFrom = "no-reply@vetchi.org"
+)
+
+const (
+	// Duration for which an official email verification is considered valid
+	VerificationValidityDuration = 90 * 24 * time.Hour // 90 days
 )
