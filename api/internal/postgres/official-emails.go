@@ -287,6 +287,7 @@ func (p *PG) PruneOfficialEmailCodes(ctx context.Context) error {
 			verification_code = NULL,
 			verification_code_expires_at = NULL
 		WHERE verification_code_expires_at < timezone('UTC', now())
+		AND verification_code IS NOT NULL
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prune official email codes: %w", err)
