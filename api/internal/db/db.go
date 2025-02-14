@@ -289,4 +289,7 @@ type DB interface {
 		req UpdateOfficialEmailVerificationCodeReq,
 	) error
 	VerifyOfficialEmail(ctx context.Context, email string, code string) error
+
+	// Used by granger
+	PruneOfficialEmailCodes(ctx context.Context) error
 }

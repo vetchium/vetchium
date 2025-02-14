@@ -147,6 +147,10 @@ func (g *Granger) Run() error {
 	go g.createOnboardEmails(createOnboardEmailsQuit)
 
 	g.wg.Add(1)
+	pruneOfficialEmailCodesQuit := make(chan struct{})
+	go g.pruneOfficialEmailCodes(pruneOfficialEmailCodesQuit)
+
+	g.wg.Add(1)
 	mailSenderQuit := make(chan struct{})
 	go g.mailSender(mailSenderQuit)
 

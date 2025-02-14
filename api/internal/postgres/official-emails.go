@@ -279,3 +279,18 @@ func (p *PG) VerifyOfficialEmail(
 
 	return nil
 }
+
+func (p *PG) PruneOfficialEmailCodes(ctx context.Context) error {
+	_, err := p.pool.Exec(ctx, `
+		UPDATE hub_users_official_emails
+		SET
+			verification_code = NULL,
+			verification_code_expires_at = NULL
+		WHERE verification_code_expires_at < timezone('UTC', now())
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to prune official email codes: %w", err)
+	}
+
+	return nil
+}
