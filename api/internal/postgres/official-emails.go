@@ -295,3 +295,26 @@ func (p *PG) PruneOfficialEmailCodes(ctx context.Context) error {
 
 	return nil
 }
+
+func (p *PG) DeleteOfficialEmail(ctx context.Context, email string) error {
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get hub user ID", "error", err)
+		return db.ErrInternal
+	}
+
+	commandTag, err := p.pool.Exec(ctx, `
+		DELETE FROM hub_users_official_emails
+		WHERE official_email = $1 AND hub_user_id = $2
+	`, email, hubUserID)
+
+	if err != nil {
+		return fmt.Errorf("failed to delete official email: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return db.ErrOfficialEmailNotFound
+	}
+
+	return nil
+}

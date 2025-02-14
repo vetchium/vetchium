@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -24,11 +25,17 @@ func DeleteOfficialEmail(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for deleting official email
-		// This would typically involve:
-		// 1. Validating that the email exists
-		// 2. Checking if the user has permission to delete this email
-		// 3. Removing the email from the database
+		err = h.DB().DeleteOfficialEmail(r.Context(), string(req.Email))
+		if err != nil {
+			if err == db.ErrOfficialEmailNotFound {
+				h.Dbg("email not found", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+			h.Dbg("failed to delete official email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}
