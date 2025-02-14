@@ -236,3 +236,46 @@ func (p *PG) UpdateOfficialEmailVerificationCode(
 
 	return nil
 }
+
+func (p *PG) VerifyOfficialEmail(
+	ctx context.Context,
+	email string,
+	code string,
+) error {
+	// Update the verification status and clear the verification code
+	commandTag, err := p.pool.Exec(ctx, `
+		UPDATE hub_users_official_emails
+		SET 
+			verification_code = NULL,
+			verification_code_expires_at = NULL,
+			last_verified_at = timezone('UTC', now())
+		WHERE official_email = $1 
+		  AND verification_code = $2
+		  AND verification_code_expires_at > timezone('UTC', now())
+	`, email, code)
+
+	if err != nil {
+		return fmt.Errorf("failed to verify official email: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		// Check if the email exists
+		var exists bool
+		err := p.pool.QueryRow(ctx, `
+			SELECT EXISTS(
+				SELECT 1 FROM hub_users_official_emails 
+				WHERE official_email = $1
+			)
+		`, email).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("failed to check email existence: %w", err)
+		}
+
+		if !exists {
+			return db.ErrOfficialEmailNotFound
+		}
+		return db.ErrInvalidVerificationCode
+	}
+
+	return nil
+}

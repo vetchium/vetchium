@@ -72,4 +72,6 @@ var (
 	ErrTooManyOfficialEmails  = errors.New("too many official emails")
 
 	ErrOfficialEmailNotFound = errors.New("official email not found")
+
+	ErrInvalidVerificationCode = errors.New("invalid verification code")
 )

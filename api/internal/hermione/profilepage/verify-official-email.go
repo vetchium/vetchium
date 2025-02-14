@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -24,11 +25,23 @@ func VerifyOfficialEmail(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "req", req)
 
-		// TODO: Implement the business logic for verifying official email
-		// This would typically involve:
-		// 1. Validating the verification code
-		// 2. Updating the email verification status in the database
-		// 3. Setting the LastVerifiedAt timestamp
+		err = h.DB().
+			VerifyOfficialEmail(r.Context(), string(req.Email), req.Code)
+		if err != nil {
+			if err == db.ErrOfficialEmailNotFound {
+				h.Dbg("email not found", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+			if err == db.ErrInvalidVerificationCode {
+				h.Dbg("invalid verification code", "error", err)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+			h.Dbg("failed to verify official email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}

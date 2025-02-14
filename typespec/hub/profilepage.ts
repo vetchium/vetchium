@@ -6,6 +6,7 @@ export interface AddOfficialEmailRequest {
 
 export interface VerifyOfficialEmailRequest {
   email: EmailAddress;
+  code: string;
 }
 
 export interface TriggerVerificationRequest {

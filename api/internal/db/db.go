@@ -288,4 +288,5 @@ type DB interface {
 		ctx context.Context,
 		req UpdateOfficialEmailVerificationCodeReq,
 	) error
+	VerifyOfficialEmail(ctx context.Context, email string, code string) error
 }

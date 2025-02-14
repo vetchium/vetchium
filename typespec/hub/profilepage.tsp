@@ -70,7 +70,13 @@ interface VerifyOfficialEmail {
     @tag("HubProfile")
     @post
     @useAuth(HubAuth)
-    verifyOfficialEmail(@body request: VerifyOfficialEmailRequest): {};
+    verifyOfficialEmail(@body request: VerifyOfficialEmailRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Email address could not be verified, possibly because the verification code is invalid or expired")
+        @statusCode
+        statusCode: 422;
+    };
 }
 
 @route("/hub/trigger-verification")

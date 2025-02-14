@@ -12,6 +12,7 @@ type AddOfficialEmailRequest struct {
 
 type VerifyOfficialEmailRequest struct {
 	Email common.EmailAddress `json:"email" validate:"required,email"`
+	Code  string              `json:"code"  validate:"required"`
 }
 
 type TriggerVerificationRequest struct {
