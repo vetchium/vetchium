@@ -1,11 +1,18 @@
 package hubopenings
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha512"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
@@ -101,8 +108,41 @@ func uploadResume(
 		return "", db.ErrBadResume
 	}
 
-	_ = pdfBytes
+	// Calculate SHA-512 hash of the PDF content
+	hash := sha512.Sum512(pdfBytes)
+	filename := fmt.Sprintf("%x.pdf", hash)
+	h.Dbg("calculated file hash", "sha512", filename)
 
-	// S3TODO: Upload the resume to the object storage
-	return "", nil
+	cfg := h.Config()
+	s3Config := &aws.Config{
+		Credentials: credentials.NewStaticCredentials(
+			cfg.S3.AccessKey,
+			cfg.S3.SecretKey,
+			"",
+		),
+		Endpoint:         aws.String(cfg.S3.Endpoint),
+		Region:           aws.String(cfg.S3.Region),
+		S3ForcePathStyle: aws.Bool(true), // Required for MinIO
+	}
+
+	// Create S3 service client
+	s3Client := s3.New(session.Must(session.NewSession(s3Config)))
+
+	// Create the upload input parameters
+	uploadInput := &s3.PutObjectInput{
+		Bucket:        aws.String(cfg.S3.Bucket),
+		Key:           aws.String(filename),
+		Body:          bytes.NewReader(pdfBytes),
+		ContentType:   aws.String("application/pdf"),
+		ContentLength: aws.Int64(int64(len(pdfBytes))),
+	}
+
+	// Upload the file
+	_, err = s3Client.PutObjectWithContext(ctx, uploadInput)
+	if err != nil {
+		h.Err("failed to upload resume to S3", "error", err)
+		return "", fmt.Errorf("failed to upload resume: %w", err)
+	}
+
+	return filename, nil
 }

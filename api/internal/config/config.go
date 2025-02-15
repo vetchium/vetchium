@@ -27,6 +27,13 @@ type HermioneConfigOnDisk struct {
 		PasswordResetTokLife string `json:"password_reset_tok_life" validate:"required"`
 	} `json:"hub" validate:"required"`
 
+	S3 struct {
+		Endpoint  string `json:"endpoint" validate:"required"`
+		Region    string `json:"region" validate:"required"`
+		Bucket    string `json:"bucket" validate:"required"`
+		AccessKey string `json:"access_key" validate:"required"`
+	} `json:"s3" validate:"required"`
+
 	Port string `json:"port" validate:"required,min=1,number"`
 
 	TimingAttackDelay string `json:"timing_attack_delay" validate:"required"`
@@ -47,6 +54,14 @@ type Hermione struct {
 		LTSTokLife           time.Duration
 		InviteTokLife        time.Duration
 		PasswordResetTokLife time.Duration
+	}
+
+	S3 struct {
+		Endpoint  string
+		Region    string
+		Bucket    string
+		AccessKey string
+		SecretKey string
 	}
 
 	Port              int
@@ -72,6 +87,19 @@ func LoadHermioneConfig() (*Hermione, error) {
 	}
 
 	hc := &Hermione{}
+
+	// Load S3 secret key from environment
+	hc.S3.SecretKey = os.Getenv("S3_SECRET_KEY")
+	if hc.S3.SecretKey == "" {
+		return nil, fmt.Errorf("S3_SECRET_KEY environment variable is required")
+	}
+
+	// Copy S3 config
+	s3 := cmap.S3
+	hc.S3.Endpoint = s3.Endpoint
+	hc.S3.Region = s3.Region
+	hc.S3.Bucket = s3.Bucket
+	hc.S3.AccessKey = s3.AccessKey
 
 	hc.Port, err = strconv.Atoi(cmap.Port)
 	if err != nil {

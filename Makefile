@@ -9,7 +9,7 @@ dev:
 	kubectl create namespace vetchidev
 	kubectl wait --for=condition=established --timeout=60s crd/clusters.postgresql.cnpg.io
 	kubectl -n cnpg-system wait --for=condition=ready pod -l app.kubernetes.io/name=cloudnative-pg --timeout=60s
-	kubectl apply -f postgres-cluster.yaml
+	kubectl apply -f tiltenv/postgres-cluster.yaml -f tiltenv/minio.yaml
 	sleep 10
 	kubectl -n vetchidev wait --for=condition=ready pod -l cnpg.io/podRole=instance --timeout=240s
 	kubectl -n vetchidev port-forward service/postgres-rw 5432:5432 &
