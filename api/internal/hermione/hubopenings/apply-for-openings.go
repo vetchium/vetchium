@@ -128,7 +128,22 @@ func uploadResume(
 	// Create S3 service client
 	s3Client := s3.New(session.Must(session.NewSession(s3Config)))
 
-	// Create the upload input parameters
+	// Check if file already exists
+	_, err = s3Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(cfg.S3.Bucket),
+		Key:    aws.String(filename),
+	})
+	if err == nil {
+		// File already exists, no need to upload again
+		h.Dbg(
+			"resume already exists in storage, skipping upload",
+			"filename",
+			filename,
+		)
+		return filename, nil
+	}
+
+	// File doesn't exist, proceed with upload
 	uploadInput := &s3.PutObjectInput{
 		Bucket:        aws.String(cfg.S3.Bucket),
 		Key:           aws.String(filename),
@@ -144,5 +159,6 @@ func uploadResume(
 		return "", fmt.Errorf("failed to upload resume: %w", err)
 	}
 
+	h.Dbg("uploaded new resume", "filename", filename)
 	return filename, nil
 }
