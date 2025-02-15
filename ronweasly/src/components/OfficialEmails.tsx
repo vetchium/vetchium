@@ -34,6 +34,7 @@ export default function OfficialEmails() {
   const [newEmail, setNewEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [verifyingEmail, setVerifyingEmail] = useState<string | null>(null);
+  const [verifyError, setVerifyError] = useState("");
   const [addingEmail, setAddingEmail] = useState(false);
   const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -188,7 +189,7 @@ export default function OfficialEmails() {
     e.preventDefault();
     if (!verifyingEmail || !verificationCode) return;
 
-    setListError("");
+    setVerifyError("");
 
     try {
       const response = await fetch(
@@ -214,8 +215,24 @@ export default function OfficialEmails() {
       setVerificationCode("");
       await fetchEmails();
     } catch (err) {
-      setListError(t("officialEmails.errors.invalidCode"));
+      setVerifyError(t("officialEmails.errors.invalidCode"));
     }
+  };
+
+  const isVerificationExpired = (lastVerifiedAt: string | null) => {
+    if (!lastVerifiedAt) return true;
+    const verifiedDate = new Date(lastVerifiedAt);
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    return verifiedDate < ninetyDaysAgo;
+  };
+
+  const formatVerificationDate = (date: string) => {
+    return new Date(date).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   if (loading) {
@@ -237,7 +254,7 @@ export default function OfficialEmails() {
         }}
       >
         <Typography variant="h5">{t("officialEmails.title")}</Typography>
-        {!showAddForm && (
+        {!showAddForm && !verifyingEmail && (
           <Button
             variant="contained"
             color="primary"
@@ -316,7 +333,77 @@ export default function OfficialEmails() {
         </Paper>
       )}
 
-      {!showAddForm && (
+      {verifyingEmail && (
+        <Paper sx={{ p: 3, mb: 4 }}>
+          {verifyError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {verifyError}
+            </Alert>
+          )}
+          <Box
+            component="form"
+            onSubmit={handleVerifyEmail}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+            }}
+          >
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              {t("officialEmails.enterVerificationCode", {
+                email: verifyingEmail,
+              })}
+            </Typography>
+            <TextField
+              fullWidth
+              type="text"
+              label={t("officialEmails.verificationCode")}
+              value={verificationCode}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9a-zA-Z]/g, "");
+                if (value.length <= 4) {
+                  setVerificationCode(value);
+                }
+              }}
+              autoFocus
+              required
+              error={verificationCode !== "" && verificationCode.length !== 4}
+              helperText={
+                verificationCode !== "" && verificationCode.length !== 4
+                  ? t("officialEmails.errors.invalidCodeLength")
+                  : ""
+              }
+              inputProps={{
+                maxLength: 4,
+              }}
+            />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={!verificationCode || verificationCode.length !== 4}
+                aria-label={t("officialEmails.verifyEmailSubmit")}
+              >
+                {t("officialEmails.verifyButton")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setVerifyingEmail(null);
+                  setVerificationCode("");
+                  setVerifyError("");
+                }}
+                variant="outlined"
+                color="inherit"
+              >
+                {t("common.cancel")}
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      )}
+
+      {!showAddForm && !verifyingEmail && (
         <Paper sx={{ p: 4 }}>
           {listError && (
             <Alert severity="error" sx={{ mb: 3 }}>
@@ -351,23 +438,51 @@ export default function OfficialEmails() {
                   "&:last-child": { mb: 0 },
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography>{email.email}</Typography>
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography>{email.email}</Typography>
+                    {email.last_verified_at &&
+                      !isVerificationExpired(email.last_verified_at) && (
+                        <VerifiedIcon color="success" sx={{ fontSize: 20 }} />
+                      )}
+                  </Box>
                   {email.last_verified_at && (
-                    <VerifiedIcon color="success" sx={{ fontSize: 20 }} />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t("officialEmails.verifiedOn", {
+                          date: formatVerificationDate(email.last_verified_at),
+                        })}
+                      </Typography>
+                      {isVerificationExpired(email.last_verified_at) && (
+                        <Typography variant="caption" color="warning.main">
+                          {t("officialEmails.verificationExpired")}
+                        </Typography>
+                      )}
+                    </Box>
                   )}
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {!email.last_verified_at && (
+                  {(!email.last_verified_at ||
+                    isVerificationExpired(email.last_verified_at)) &&
+                    !email.verify_in_progress && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleTriggerVerification(email.email)}
+                        aria-label={t("officialEmails.sendCode")}
+                      >
+                        {t("officialEmails.sendCode")}
+                      </Button>
+                    )}
+                  {email.verify_in_progress && (
                     <Button
                       size="small"
-                      onClick={() => handleTriggerVerification(email.email)}
-                      disabled={email.verify_in_progress}
-                      aria-label={t("officialEmails.verifyButton")}
+                      variant="outlined"
+                      color="info"
+                      onClick={() => setVerifyingEmail(email.email)}
+                      aria-label={t("officialEmails.enterCode")}
                     >
-                      {email.verify_in_progress
-                        ? t("officialEmails.verificationPending")
-                        : t("officialEmails.verifyButton")}
+                      {t("officialEmails.enterCode")}
                     </Button>
                   )}
                   <IconButton
@@ -389,45 +504,6 @@ export default function OfficialEmails() {
           )}
         </Paper>
       )}
-
-      {/* Verification dialog */}
-      <Dialog
-        open={!!verifyingEmail}
-        onClose={() => setVerifyingEmail(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("officialEmails.verifyEmail")}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            {t("officialEmails.enterVerificationCode", {
-              email: verifyingEmail || "",
-            })}
-          </Typography>
-          <TextField
-            fullWidth
-            label={t("officialEmails.verificationCode")}
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
-            autoFocus
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setVerifyingEmail(null)}
-            aria-label={t("common.cancel")}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            onClick={handleVerifyEmail}
-            variant="contained"
-            aria-label={t("officialEmails.verifyEmailSubmit")}
-          >
-            {t("officialEmails.verifyButton")}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }

@@ -41,11 +41,15 @@ export const en = {
     verificationCode: "Verification Code",
     verificationPending: "Verification Pending",
     verifyButton: "Verify",
+    enterCode: "Enter Code",
+    sendCode: "Send Code",
     enterVerificationCode: "Please enter the verification code sent to {email}",
     noEmails: "No official emails added yet",
     deleteEmail: "Delete email",
     addEmailSubmit: "Add email",
     verifyEmailSubmit: "Verify email",
+    verificationExpired: "Verification expired",
+    verifiedOn: "Verified on {date}",
     errors: {
       loadFailed: "Failed to load official emails",
       addFailed: "Failed to add email",
@@ -53,8 +57,9 @@ export const en = {
       domainNotEmployer:
         "No employer with this domain found. Please add a work experience with this domain before adding it as an official email.",
       deleteFailed: "Failed to delete email",
-      triggerFailed: "Failed to trigger verification",
+      triggerFailed: "Failed to send verification code",
       invalidCode: "Invalid verification code",
+      invalidCodeLength: "Code must be 4 characters",
     },
   },
   dashboard: {
