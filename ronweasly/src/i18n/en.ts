@@ -194,5 +194,6 @@ export const en = {
   },
   profile: {
     myProfile: "My Profile",
+    editMyProfile: "Edit My Profile",
   },
 };
