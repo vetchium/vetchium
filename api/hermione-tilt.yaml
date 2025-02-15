@@ -69,17 +69,10 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/hermione-config
-            - name: resumes-volume
-              mountPath: /resumes
-              readOnly: true
       volumes:
         - name: config-volume
           configMap:
             name: hermione-config
-        - name: resumes-volume
-          hostPath:
-            path: /var/lib/vetchi/resumes
-            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

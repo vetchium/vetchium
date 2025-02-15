@@ -1,14 +1,10 @@
 package hubopenings
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/util"
@@ -59,14 +55,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("uploaded resume", "filename", filename)
 
-		// Ensures secrecy
-		applicationID := util.RandomString(vetchi.ApplicationIDLenBytes)
-		// Ensures uniqueness. This is not needed mostly, but good to have
-		applicationID = applicationID + strconv.FormatInt(
-			time.Now().UnixNano(),
-			36,
-		)
-
+		applicationID := util.RandomUniqueID(vetchi.ApplicationIDLenBytes)
 		h.Dbg("creating application in the db", "application_id", applicationID)
 
 		err = h.DB().CreateApplication(r.Context(), db.ApplyOpeningReq{
@@ -112,42 +101,8 @@ func uploadResume(
 		return "", db.ErrBadResume
 	}
 
-	resumeFileReq, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"http://granger:8080/internal/upload-resume", // Take this from config ?
-		bytes.NewBuffer(pdfBytes),
-	)
-	if err != nil {
-		h.Err("failed to create resume file request", "error", err)
-		return "", db.ErrInternal
-	}
+	_ = pdfBytes
 
-	resumeFileResp, err := http.DefaultClient.Do(resumeFileReq)
-	if err != nil {
-		h.Err("failed to upload resume", "error", err)
-		return "", db.ErrInternal
-	}
-
-	defer resumeFileResp.Body.Close()
-
-	switch resumeFileResp.StatusCode {
-	case http.StatusOK:
-		break
-	case http.StatusBadRequest:
-		h.Dbg("failed to upload resume", "status", resumeFileResp.Status)
-		return "", db.ErrBadResume
-	default:
-		h.Err("failed to upload resume", "status", resumeFileResp.Status)
-		return "", db.ErrInternal
-	}
-
-	resumeFileRespBody, err := io.ReadAll(resumeFileResp.Body)
-	if err != nil {
-		h.Err("failed to read resume file response", "error", err)
-		return "", db.ErrInternal
-	}
-
-	filename := string(resumeFileRespBody)
-	return filename, nil
+	// S3TODO: Upload the resume to the object storage
+	return "", nil
 }

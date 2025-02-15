@@ -51,16 +51,10 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config
-            - name: resumes-volume
-              mountPath: /resumes
       volumes:
         - name: config-volume
           configMap:
             name: granger-config
-        - name: resumes-volume
-          hostPath:
-            path: /var/lib/vetchi/resumes
-            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

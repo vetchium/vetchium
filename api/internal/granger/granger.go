@@ -154,9 +154,10 @@ func (g *Granger) Run() error {
 	mailSenderQuit := make(chan struct{})
 	go g.mailSender(mailSenderQuit)
 
-	http.HandleFunc("/internal/upload-resume", g.uploadResumeHandler)
-
 	go func() {
+		// For now, we don't have any routes to serve
+		// but we will keep this around for future use
+
 		err := http.ListenAndServe(g.port, nil)
 		if err != nil {
 			g.log.Err("Failed to start HTTP server", "error", err)
