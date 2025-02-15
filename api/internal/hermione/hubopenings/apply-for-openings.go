@@ -128,6 +128,26 @@ func uploadResume(
 	// Create S3 service client
 	s3Client := s3.New(session.Must(session.NewSession(s3Config)))
 
+	// Ensure bucket exists
+	_, err = s3Client.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
+		Bucket: aws.String(cfg.S3.Bucket),
+	})
+	if err != nil {
+		h.Dbg(
+			"bucket does not exist, attempting to create",
+			"bucket",
+			cfg.S3.Bucket,
+		)
+		_, err = s3Client.CreateBucketWithContext(ctx, &s3.CreateBucketInput{
+			Bucket: aws.String(cfg.S3.Bucket),
+		})
+		if err != nil {
+			h.Err("failed to create bucket", "error", err)
+			return "", fmt.Errorf("failed to create bucket: %w", err)
+		}
+		h.Dbg("created bucket", "bucket", cfg.S3.Bucket)
+	}
+
 	// Check if file already exists
 	_, err = s3Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(cfg.S3.Bucket),

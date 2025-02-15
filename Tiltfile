@@ -6,6 +6,7 @@ k8s_yaml('api/mailpit-tilt.yaml')
 k8s_yaml('api/granger-tilt.yaml')
 k8s_yaml('api/hermione-tilt.yaml')
 k8s_yaml('sqitch/sqitch-tilt.yaml')
+k8s_yaml('tiltenv/minio.yaml')
 
 
 # Define Docker builds with root context to include typespec
