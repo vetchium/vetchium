@@ -12,7 +12,7 @@
 To bring the services up, run the following commands:
 ```bash
 # Bring up the backend services
-# mailpit, cloudnative-pg (postgresql), prometheus, grafana will be brought up as helm charts
+# mailpit, cloudnative-pg (postgresql) will be brought up as helm charts
 # hermione, granger, sqitch will be brought up in tilt
 vetchi$ make
 

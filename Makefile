@@ -1,7 +1,6 @@
 dev:
 	tilt down
 	helm repo add cnpg https://cloudnative-pg.github.io/charts
-	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo update
 	# Install CloudNativePG operator first
 	helm upgrade --install cnpg \
@@ -18,8 +17,6 @@ dev:
 	sleep 5
 	kubectl -n vetchidev wait --for=condition=ready pod -l cnpg.io/podRole=instance --timeout=240s
 	kubectl -n vetchidev port-forward service/postgres-rw 5432:5432 &
-	kubectl -n vetchidev port-forward svc/vetchidev-grafana 9091:80 &
-	kubectl -n vetchidev port-forward svc/vetchidev-kube-prometheus-prometheus 9090:9090 &
 	kubectl -n vetchidev port-forward svc/mailpit 8025:8025 &
 	tilt up
 
