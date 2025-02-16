@@ -3,104 +3,35 @@
 ## Development
 
 ### Prerequisites
-
-You can set up the development environment in two ways:
-
-#### Option 1: Manual Setup
+- [Helm](https://helm.sh/docs/intro/install/)
 - [Tilt](https://docs.tilt.dev/install.html)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
 - [Go](https://golang.org/doc/install)
 
-#### Option 2: Nix-based Setup
-- [Nix Package Manager](https://nixos.org/download.html) with flakes enabled
-- [Docker](https://docs.docker.com/get-docker/)
-
-If using macOS, you can install Nix using:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
-
-### Setup
-
-#### Using Nix
-The Nix-based setup automatically installs all required tools and starts all services:
-
-```bash
-# Enable flakes if you haven't already
-echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
-
-# Start the development environment
-nix develop
-
-# The above command will:
-# 1. Install all required tools (Go, Node.js, kubectl, tilt, etc.)
-# 2. Install dependencies and generate typespec libraries
-# 3. Start Kubernetes and database services
-# 4. Install dependencies and start both frontend applications
-# 5. Show the status of all services
-
-# Available commands in the nix shell:
-status    # Check status of all services
-stop      # Stop all services
-
-# View logs
-tail -f .vetchi-pids/harrypotter.log  # For harrypotter frontend
-tail -f .vetchi-pids/ronweasly.log    # For ronweasly frontend
-
-# Seed test data (after services are up)
-make seed
-```
-
-Once the services are running, you can access:
-
-```
-# Employer site (harrypotter)
-http://localhost:3000
-Login with:
-domain: gryffindor.example
-username: hermione@gryffindor.example (or) admin@gryffindor.example
-password: NewPassword123$
-
-# Hub site (ronweasly)
-http://localhost:3001
-Login with:
-user: hagrid@hub.example (or) minerva@hub.example
-password: NewPassword123$
-
-# Tilt UI (service status and logs)
-http://localhost:10350
-
-# Mail server UI (for viewing sent emails)
-http://localhost:8025
-```
-
-#### Manual Setup
 To bring the services up, run the following commands:
 ```bash
-# Bring up the backend services 
-make
+# Bring up the backend services
+# mailpit, cloudnative-pg (postgresql), prometheus, grafana will be brought up as helm charts
+# hermione, granger, sqitch will be brought up in tilt
+vetchi$ make
 
 # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 
 # Setup typespec
-cd typespec && npm install && npm run build && cd ..
+vetchi$ cd typespec && npm install && npm run build && cd ..
 
-# Generate libraries
-make lib
-
-# Bring up the frontend services
-cd harrypotter && npm install && npm run dev
-cd ronweasly && npm install && npm run dev
-# Visit http://localhost:3000 and http://localhost:3001
-
-# If changes were made in typespec/**/*.ts files, do:
-cd typespec && npm install && npm run build 
-cd harrypotter && npm install && make  # This installs the new deps from typespec and does `npm run dev`
-cd ronweasly && npm install && make
+# Generate libraries for front-end
+# When any typespec/**/*.{tsp,ts} files are changed, do:
+vetchi$ make lib
 
 # Seed some test data (tilt up should be running)
-make seed
+vetchi$ make seed
+
+# Bring up the frontend services
+vetchi$ cd harrypotter && make
+vetchi$ cd ronweasly && make
+# Visit http://localhost:3000 and http://localhost:3001
 ```
 
 ```
@@ -115,10 +46,6 @@ http://localhost:3001 contains the Hub site. Login with:
 user: hagrid@hub.example (or) minerva@hub.example
 password: NewPassword123$
 ```
-
-* Any Openings created on the Employer site should be available on the Hub site for Users to Find Opening and Apply
-* Any Applications made on Hub site should be available for the Employer to either Shortlist or Reject
-* Any shortlisted application will become a Candidacy which both the Employer and Hub User can use for further communication. The url for the candidacy will be in the mail at http://localhost:8025 
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 ```

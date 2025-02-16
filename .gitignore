@@ -7,3 +7,7 @@ result
 .vetchi-pids/
 .vetchi-pids/*.log
 .vetchi-pids/*.pid
+
+# Helm dependencies
+charts/vetchidev/charts/
+charts/vetchidev/Chart.lock

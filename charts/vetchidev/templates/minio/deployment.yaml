@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-config
+  namespace: {{.Release.Namespace}}
+data:
+  MINIO_ROOT_USER: {{.Values.minio.rootUser}}
+  MINIO_ROOT_PASSWORD: {{.Values.minio.rootPassword}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: {{.Release.Namespace}}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{.Values.minio.persistence.size}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: {{.Release.Namespace}}
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":{{.Values.minio.service.ports.console}}"
+          envFrom:
+            - configMapRef:
+                name: minio-config
+          ports:
+            - containerPort: {{.Values.minio.service.ports.api}}
+              name: api
+            - containerPort: {{.Values.minio.service.ports.console}}
+              name: console
+          volumeMounts:
+            - name: storage
+              mountPath: "/data"
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: {{.Values.minio.service.ports.api}}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: {{.Values.minio.service.ports.api}}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: minio-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: {{.Release.Namespace}}
+spec:
+  ports:
+    - port: {{.Values.minio.service.ports.api}}
+      targetPort: {{.Values.minio.service.ports.api}}
+      protocol: TCP
+      name: api
+    - port: {{.Values.minio.service.ports.console}}
+      targetPort: {{.Values.minio.service.ports.console}}
+      protocol: TCP
+      name: console
+  selector:
+    app: minio

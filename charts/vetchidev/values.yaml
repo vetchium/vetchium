@@ -1,0 +1,76 @@
+# CloudNativePG cluster configuration
+postgresCluster:
+  instances: 3
+  storage:
+    size: 1Gi
+  monitoring:
+    enablePodMonitor: true
+  inheritedMetadata:
+    labels:
+      app: postgres
+
+# Minio configuration
+minio:
+  rootUser: minioadmin
+  rootPassword: minioadmin
+  persistence:
+    size: 10Gi
+  service:
+    ports:
+      api: 9000
+      console: 9001
+
+# Mailpit configuration
+mailpit:
+  replicaCount: 1
+  service:
+    smtp:
+      port: 1025
+    http:
+      port: 8025
+
+# Prometheus Stack configuration
+kube-prometheus-stack:
+  grafana:
+    enabled: true
+    adminPassword: admin
+    dashboards:
+      default:
+        cnpg-dashboard:
+          json: |
+            {
+              "annotations": {
+                "list": []
+              },
+              "editable": true,
+              "fiscalYearStartMonth": 0,
+              "graphTooltip": 0,
+              "links": [],
+              "liveNow": false,
+              "panels": [],
+              "refresh": "",
+              "schemaVersion": 38,
+              "style": "dark",
+              "tags": [],
+              "templating": {
+                "list": []
+              },
+              "time": {
+                "from": "now-6h",
+                "to": "now"
+              },
+              "timepicker": {},
+              "timezone": "",
+              "title": "CloudNativePG",
+              "version": 0,
+              "weekStart": ""
+            }
+  prometheus:
+    enabled: true
+    prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+  nodeExporter:
+    enabled: false
+  kubeStateMetrics:
+    enabled: true
