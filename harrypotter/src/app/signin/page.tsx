@@ -129,6 +129,7 @@ export default function SignIn() {
             id="domain"
             label={t("auth.domain")}
             name="domain"
+            autoComplete="off"
             autoFocus
             value={domain}
             onChange={(e) => setDomain(e.target.value)}

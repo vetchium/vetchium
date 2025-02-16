@@ -116,7 +116,7 @@ export default function LoginPage() {
               id="email"
               label={t("common.email")}
               name="email"
-              autoComplete="email"
+              autoComplete="off"
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
