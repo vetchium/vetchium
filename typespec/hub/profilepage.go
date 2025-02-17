@@ -28,3 +28,23 @@ type OfficialEmail struct {
 	LastVerifiedAt   *time.Time          `json:"last_verified_at"`
 	VerifyInProgress bool                `json:"verify_in_progress"`
 }
+
+type GetBioRequest struct {
+	Handle string `json:"handle" validate:"required"`
+}
+
+type Bio struct {
+	Handle   string `json:"handle"`
+	FullName string `json:"full_name"`
+	ShortBio string `json:"short_bio"`
+	LongBio  string `json:"long_bio"`
+}
+
+type UpdateBioRequest struct {
+	ShortBio string `json:"short_bio" validate:"required,min=1,max=64"`
+	LongBio  string `json:"long_bio"  validate:"required,min=1,max=1024"`
+}
+
+type UploadProfilePictureRequest struct {
+	Image []byte `json:"image" validate:"required"`
+}

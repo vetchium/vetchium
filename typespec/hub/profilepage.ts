@@ -22,3 +22,23 @@ export interface OfficialEmail {
   lastVerifiedAt?: string;
   verifyInProgress: boolean;
 }
+
+export interface GetBioRequest {
+  handle: string;
+}
+
+export interface Bio {
+  handle: string;
+  fullName: string;
+  shortBio: string;
+  longBio: string;
+}
+
+export interface UpdateBioRequest {
+  shortBio: string;
+  longBio: string;
+}
+
+export interface UploadProfilePictureRequest {
+  image: Uint8Array;
+}
