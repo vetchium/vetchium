@@ -2,11 +2,7 @@ package profilepage
 
 import (
 	"fmt"
-	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -16,24 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
-
-var allowedFormats = map[string]bool{
-	"image/jpeg": true,
-	"image/png":  true,
-	"image/webp": true,
-}
 
 func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered UploadProfilePicture")
 
 		// Parse multipart form with max memory of 5MB (our max file size limit)
-		err := r.ParseMultipartForm(vetchi.MaxProfilePictureSize)
+		err := r.ParseMultipartForm(util.MaxProfilePictureSize)
 		if err != nil {
 			h.Dbg("failed to parse multipart form", "error", err)
-			http.Error(w, "failed to parse form", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -47,7 +36,7 @@ func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 		defer file.Close()
 
 		// Validate image
-		_, err = ValidateImage(
+		_, err = util.ValidateProfilePicture(
 			file,
 			header.Header.Get("Content-Type"),
 			header.Size,
@@ -79,8 +68,13 @@ func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 		}
 
 		// Generate unique ID for the file
-		pictureID := util.RandomUniqueID(vetchi.ProfilePictureIDLenBytes)
-		filename := fmt.Sprintf("profile-pictures/%s%s", pictureID, ext)
+		pictureID := util.RandomUniqueID(util.ProfilePictureIDLenBytes)
+		filename := fmt.Sprintf(
+			"%s%s%s",
+			util.ProfilePicturesPath,
+			pictureID,
+			ext,
+		)
 		h.Dbg(
 			"generated filename",
 			"filename",
@@ -159,45 +153,4 @@ func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-// ValidateImage checks the file size, format, and dimensions
-func ValidateImage(
-	file multipart.File,
-	contentType string,
-	fileSize int64,
-) (image.Image, error) {
-	if fileSize > vetchi.MaxProfilePictureSize {
-		return nil, fmt.Errorf("file exceeds max size of 5MB")
-	}
-
-	if !allowedFormats[contentType] {
-		return nil, fmt.Errorf(
-			"unsupported file format: only JPEG, PNG, and WEBP are allowed",
-		)
-	}
-
-	// Read the image
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	// Get dimensions
-	width := img.Bounds().Dx()
-	height := img.Bounds().Dy()
-	if width < vetchi.MinProfilePictureDim ||
-		height < vetchi.MinProfilePictureDim ||
-		width > vetchi.MaxProfilePictureDim ||
-		height > vetchi.MaxProfilePictureDim {
-		return nil, fmt.Errorf(
-			"image dimensions must be between %dx%d and %dx%d",
-			vetchi.MinProfilePictureDim,
-			vetchi.MinProfilePictureDim,
-			vetchi.MaxProfilePictureDim,
-			vetchi.MaxProfilePictureDim,
-		)
-	}
-
-	return img, nil
 }

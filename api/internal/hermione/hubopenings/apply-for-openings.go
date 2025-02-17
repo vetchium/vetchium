@@ -110,7 +110,7 @@ func uploadResume(
 
 	// Calculate SHA-512 hash of the PDF content
 	hash := sha512.Sum512(pdfBytes)
-	filename := fmt.Sprintf("%x.pdf", hash)
+	filename := fmt.Sprintf("%s%x.pdf", util.ResumesPath, hash)
 	h.Dbg("calculated file hash", "sha512", filename)
 
 	cfg := h.Config()
