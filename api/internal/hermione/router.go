@@ -367,6 +367,11 @@ func (h *Hermione) Run() error {
 	)
 	http.Handle("/hub/my-official-emails", wrap(pp.MyOfficialEmails(h)))
 
+	// ProfilePage related endpoints
+	http.Handle("/hub/get-bio", wrap(pp.GetBio(h)))
+	http.Handle("/hub/update-bio", wrap(pp.UpdateBio(h)))
+	http.Handle("/hub/upload-profile-picture", wrap(pp.UploadProfilePicture(h)))
+
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
 	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))
 	http.Handle("/hub/get-opening-details", wrap(ho.GetOpeningDetails(h)))

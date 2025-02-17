@@ -290,7 +290,7 @@ type DB interface {
 	) error
 	VerifyOfficialEmail(ctx context.Context, email string, code string) error
 	DeleteOfficialEmail(ctx context.Context, email string) error
-
+	GetBio(ctx context.Context, handle string) (hub.Bio, error)
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
 }
