@@ -39,6 +39,38 @@ model OfficialEmail {
     verify_in_progress: boolean;
 }
 
+model GetBioRequest {
+    handle: string;
+}
+
+model Bio {
+    handle: string;
+    full_name: string;
+
+    @doc("The short bio of the user. The one that gets displayed below the user's name.")
+    short_bio: string;
+
+    @doc("The long bio of the user. Something like 'About Me' of a user")
+    long_bio: string;
+}
+
+model UpdateBioRequest {
+    @doc("The short bio for the logged inuser")
+    @minLength(1)
+    @maxLength(64)
+    short_bio: string;
+
+    @doc("The long bio for the logged in user")
+    @minLength(1)
+    @maxLength(1024)
+    long_bio: string;
+}
+
+model UploadProfilePictureRequest {
+    @doc("Profile image in JPEG, PNG, or WEBP format (Max: 5MB size, Dimensions: 200x200 to 2048x2048).")
+    image: bytes;
+}
+
 @route("/hub/add-official-email")
 interface AddOfficialEmail {
     @tag("HubProfile")
@@ -109,5 +141,36 @@ interface MyOfficialEmails {
     myOfficialEmails(): {
         @statusCode statusCode: 200;
         @body emails: OfficialEmail[];
+    };
+}
+
+@route("/hub/get-bio")
+interface GetBio {
+    @tag("HubProfile")
+    @get
+    @useAuth(HubAuth)
+    getBio(@body request: GetBioRequest): {
+        @body bio: Bio;
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/update-bio")
+interface UpdateBio {
+    @tag("HubProfile")
+    @post
+    @useAuth(HubAuth)
+    updateBio(@body request: UpdateBioRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/upload-profile-picture")
+interface UploadProfilePicture {
+    @tag("HubProfile")
+    @post
+    @useAuth(HubAuth)
+    uploadProfilePicture(@bodyRoot formData: UploadProfilePictureRequest): {
+        @statusCode statusCode: 200;
     };
 }
