@@ -1,7 +1,6 @@
 dev:
 	tilt down
 	helm repo add cnpg https://cloudnative-pg.github.io/charts
-	helm repo update
 	# Install CloudNativePG operator first
 	helm upgrade --install cnpg \
 		--namespace cnpg-system \
@@ -11,7 +10,8 @@ dev:
 	kubectl -n cnpg-system wait --for=condition=ready pod -l app.kubernetes.io/name=cloudnative-pg --timeout=60s
 	# Now install our infrastructure
 	cd charts/vetchidev && helm dependency build && cd ../..
-	kubectl delete namespace vetchidev --ignore-not-found
+	helm uninstall vetchidev -n vetchidev --ignore-not-found
+	time kubectl delete namespace vetchidev --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidev
 	helm upgrade --install vetchidev ./charts/vetchidev -n vetchidev
 	sleep 5
