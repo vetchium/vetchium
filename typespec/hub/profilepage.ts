@@ -19,8 +19,8 @@ export interface DeleteOfficialEmailRequest {
 
 export interface OfficialEmail {
   email: EmailAddress;
-  lastVerifiedAt?: string;
-  verifyInProgress: boolean;
+  last_verified_at?: string;
+  verify_in_progress: boolean;
 }
 
 export interface GetBioRequest {
@@ -29,14 +29,16 @@ export interface GetBioRequest {
 
 export interface Bio {
   handle: string;
-  fullName: string;
-  shortBio: string;
-  longBio: string;
+  full_name: string;
+  short_bio: string;
+  long_bio: string;
 }
 
 export interface UpdateBioRequest {
-  shortBio: string;
-  longBio: string;
+  handle?: string;
+  full_name?: string;
+  short_bio?: string;
+  long_bio?: string;
 }
 
 export interface UploadProfilePictureRequest {

@@ -55,15 +55,25 @@ model Bio {
 }
 
 model UpdateBioRequest {
+    @doc("The handle for the logged in user")
+    @minLength(1)
+    @maxLength(32)
+    handle?: string;
+
+    @doc("The full name for the logged in user")
+    @minLength(1)
+    @maxLength(64)
+    full_name?: string;
+
     @doc("The short bio for the logged inuser")
     @minLength(1)
     @maxLength(64)
-    short_bio: string;
+    short_bio?: string;
 
     @doc("The long bio for the logged in user")
     @minLength(1)
     @maxLength(1024)
-    long_bio: string;
+    long_bio?: string;
 }
 
 model UploadProfilePictureRequest {

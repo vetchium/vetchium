@@ -41,8 +41,10 @@ type Bio struct {
 }
 
 type UpdateBioRequest struct {
-	ShortBio string `json:"short_bio" validate:"required,min=1,max=64"`
-	LongBio  string `json:"long_bio"  validate:"required,min=1,max=1024"`
+	Handle   *string `json:"handle"    validate:"required,min=1,max=32"`
+	FullName *string `json:"full_name" validate:"required,min=1,max=64"`
+	ShortBio *string `json:"short_bio" validate:"required,min=1,max=64"`
+	LongBio  *string `json:"long_bio"  validate:"required,min=1,max=1024"`
 }
 
 type UploadProfilePictureRequest struct {
