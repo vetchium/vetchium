@@ -49,3 +49,11 @@ const (
 	// Duration for which an official email verification is considered valid
 	VerificationValidityDuration = 90 * 24 * time.Hour // 90 days
 )
+
+const (
+	// Profile picture constraints
+	MaxProfilePictureSize    = 5 * 1024 * 1024 // 5MB
+	MinProfilePictureDim     = 200
+	MaxProfilePictureDim     = 2048
+	ProfilePictureIDLenBytes = 16
+)
