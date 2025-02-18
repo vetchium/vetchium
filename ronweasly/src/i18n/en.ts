@@ -223,5 +223,23 @@ export const en = {
   profile: {
     myProfile: "My Profile",
     editMyProfile: "Edit My Profile",
+    bio: {
+      error: {
+        fetchFailed: "Failed to load profile information",
+        updateFailed: "Failed to update profile information",
+        uploadFailed: "Failed to upload profile picture",
+      },
+      title: "Edit Bio",
+      fullName: "Full Name",
+      handle: "Handle",
+      shortBio: "Short Bio",
+      longBio: "Long Bio",
+      save: "Save Changes",
+      cancel: "Cancel",
+    },
+    picture: {
+      change: "Change Profile Picture",
+      upload: "Upload Profile Picture",
+    },
   },
 };

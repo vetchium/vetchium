@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -126,4 +127,24 @@ func (p *PG) MarkFileCleaned(
 	}
 
 	return nil
+}
+
+// GetProfilePictureURL returns the S3 URL of a user's profile picture
+func (p *PG) GetProfilePictureURL(
+	ctx context.Context,
+	handle string,
+) (string, error) {
+	var pictureURL string
+	err := p.pool.QueryRow(ctx, `
+		SELECT profile_picture_url
+		FROM hub_users
+		WHERE handle = $1
+	`, handle).Scan(&pictureURL)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", db.ErrNoHubUser
+		}
+		return "", fmt.Errorf("failed to get profile picture URL: %w", err)
+	}
+	return pictureURL, nil
 }

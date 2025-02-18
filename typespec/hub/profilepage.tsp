@@ -184,3 +184,19 @@ interface UploadProfilePicture {
         @statusCode statusCode: 200;
     };
 }
+
+@route("/hub/profile-picture/{handle}")
+interface GetProfilePicture {
+    @tag("HubProfile")
+    @get
+    @useAuth(HubAuth)
+    @doc("Get a user's profile picture")
+    getProfilePicture(@path handle: string): {
+        @statusCode statusCode: 200;
+        @body image: bytes;
+    } | {
+        @doc("User not found or user has no profile picture")
+        @statusCode
+        statusCode: 404;
+    };
+}
