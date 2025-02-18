@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
     preferred_language TEXT NOT NULL,
     short_bio TEXT NOT NULL,
     long_bio TEXT NOT NULL,
+    profile_picture_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
@@ -590,5 +591,23 @@ CREATE TABLE work_history (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
+
+-- Table to track old files that need cleanup
+CREATE TABLE stale_files (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    file_path TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    cleaned_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT unique_file_path UNIQUE (file_path)
+);
+
+-- Index for finding unprocessed stale files
+CREATE INDEX idx_stale_files_unprocessed 
+    ON stale_files(cleaned_at) 
+    WHERE cleaned_at IS NULL;
+
+-- Drop old tables if they exist
+DROP TABLE IF EXISTS stale_profile_pictures;
+DROP TYPE IF EXISTS file_type;
 
 COMMIT;

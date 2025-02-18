@@ -39,6 +39,11 @@ type OfficialEmail struct {
 	VerifyInProgress bool
 }
 
+type StaleFile struct {
+	ID       uuid.UUID
+	FilePath string
+}
+
 type DB interface {
 	// Used by hermione and granger
 
@@ -292,7 +297,18 @@ type DB interface {
 	DeleteOfficialEmail(ctx context.Context, email string) error
 	GetBio(ctx context.Context, handle string) (hub.Bio, error)
 	UpdateBio(ctx context.Context, bio hub.UpdateBioRequest) error
+	UpdateProfilePictureWithCleanup(
+		ctx context.Context,
+		userID uuid.UUID,
+		newPicturePath string,
+	) error
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
+	GetStaleFiles(ctx context.Context, limit int) ([]StaleFile, error)
+	MarkFileCleaned(
+		ctx context.Context,
+		fileID uuid.UUID,
+		cleanedAt time.Time,
+	) error
 }

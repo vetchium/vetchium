@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 )
@@ -17,6 +19,14 @@ import (
 func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered UploadProfilePicture")
+
+		// Get hub user from context
+		hubUser, ok := r.Context().Value(middleware.HubUserCtxKey).(db.HubUserTO)
+		if !ok {
+			h.Dbg("no hub user found in context")
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
 
 		// Parse multipart form with max memory of 5MB (our max file size limit)
 		err := r.ParseMultipartForm(util.MaxProfilePictureSize)
@@ -141,15 +151,17 @@ func UploadProfilePicture(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement UpdateProfilePicture method in the database interface
-		// This method should update the user's profile picture filename in the database
-		// The database should store both the pictureID and the full filename
-		// err = h.DB().UpdateProfilePicture(r.Context(), pictureID, filename)
-		// if err != nil {
-		// 	h.Err("failed to update profile picture in database", "error", err)
-		// 	http.Error(w, "", http.StatusInternalServerError)
-		// 	return
-		// }
+		// Start a transaction to update profile picture URL and track old file
+		err = h.DB().UpdateProfilePictureWithCleanup(
+			r.Context(),
+			hubUser.ID,
+			filename,
+		)
+		if err != nil {
+			h.Err("failed to update profile picture in database", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}
