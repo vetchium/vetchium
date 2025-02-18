@@ -208,6 +208,10 @@ func initHubUsers(db *pgxpool.Pool) {
 	}
 	defer tx.Rollback(ctx)
 
+	green := color.New(color.FgGreen).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+
 	for i, user := range hubUsers {
 		userID := fmt.Sprintf("12345678-0000-0000-0000-000000050%03d", i+1)
 		_, err = tx.Exec(ctx, `
@@ -226,9 +230,11 @@ func initHubUsers(db *pgxpool.Pool) {
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.Name, err)
 		}
-		color.New(color.FgGreen).Printf("created hub user %s ", user.Name)
-		color.New(color.FgCyan).Printf("<%s> ", user.Email)
-		color.New(color.FgYellow).Printf("@%s\n", user.Handle)
+		fmt.Printf("%s %s %s\n",
+			green(fmt.Sprintf("created hub user %s", user.Name)),
+			cyan(fmt.Sprintf("<%s>", user.Email)),
+			yellow(fmt.Sprintf("@%s", user.Handle)),
+		)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -237,9 +243,10 @@ func initHubUsers(db *pgxpool.Pool) {
 }
 
 func loginHubUsers() {
+	green := color.New(color.FgGreen).SprintFunc()
 	for _, user := range hubUsers {
 		go func(user HubUser) {
-			color.New(color.FgGreen).Printf("Logging in %s\n", user.Email)
+			fmt.Printf("%s\n", green(fmt.Sprintf("Logging in %s", user.Email)))
 			hubLogin(user.Email, "NewPassword123$")
 		}(user)
 	}

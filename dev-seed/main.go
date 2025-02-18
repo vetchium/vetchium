@@ -27,13 +27,17 @@ func main() {
 	}
 
 	// Directly write to the database
-
 	color.Cyan("Initializing employers and domains")
 	initEmployersAndDomains(db)
 	color.Cyan("Initializing org users")
 	initOrgUsers(db)
 	color.Cyan("Initializing hub users")
 	initHubUsers(db)
+
+	color.Cyan("Signing in hub users")
+	loginHubUsers()
+	color.Cyan("Uploading profile pictures")
+	uploadHubUserProfilePictures()
 
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")
@@ -45,8 +49,6 @@ func main() {
 	color.Cyan("Create Openings")
 	createOpenings()
 
-	color.Cyan("Signing in hub users")
-	loginHubUsers()
 	color.Cyan("Creating applications")
 	createApplications()
 }
