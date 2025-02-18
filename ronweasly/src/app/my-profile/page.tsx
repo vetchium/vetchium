@@ -14,10 +14,12 @@ import Bio from "@/components/Bio";
 import ProfilePicture from "@/components/ProfilePicture";
 import Alert from "@mui/material/Alert";
 import { config } from "@/config";
+import { useState } from "react";
 
 export default function MyProfilePage() {
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
   const { t } = useTranslation();
+  const [timestamp, setTimestamp] = useState(Date.now());
   const {
     bio,
     isLoading: isLoadingBio,
@@ -53,8 +55,9 @@ export default function MyProfilePage() {
         )}
 
         <ProfilePicture
-          imageUrl={`${config.API_SERVER_PREFIX}/hub/profile-picture/${myHandle}`}
+          imageUrl={`${config.API_SERVER_PREFIX}/hub/profile-picture/${myHandle}?t=${timestamp}`}
           onImageSelect={uploadProfilePicture}
+          onRemove={() => setTimestamp(Date.now())}
           isLoading={isSaving}
         />
 

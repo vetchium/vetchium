@@ -200,3 +200,14 @@ interface GetProfilePicture {
         statusCode: 404;
     };
 }
+
+@route("/hub/remove-profile-picture")
+interface RemoveProfilePicture {
+    @tag("HubProfile")
+    @post
+    @useAuth(HubAuth)
+    @doc("Remove the profile picture of the logged in user")
+    removeProfilePicture(): {
+        @statusCode statusCode: 200;
+    };
+}

@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 )
 
 // UpdateProfilePictureWithCleanup updates a user's profile picture URL and adds the old
 // picture to stale_files if one exists. This is done in a single transaction.
+// If newPicturePath is empty, the profile_picture_url will be set to NULL.
 func (p *PG) UpdateProfilePictureWithCleanup(
 	ctx context.Context,
 	hubUserID uuid.UUID,
@@ -19,6 +21,7 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 ) error {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
+		p.log.Err("failed to begin transaction", "error", err)
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
@@ -31,26 +34,44 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 		WHERE id = $1
 	`, hubUserID).Scan(&oldPicturePath)
 	if err != nil {
+		p.log.Err("failed to get current profile picture", "error", err)
 		return fmt.Errorf("failed to get current profile picture: %w", err)
 	}
 
 	// Update profile picture URL
-	result, err := tx.Exec(ctx, `
-		UPDATE hub_users
-		SET profile_picture_url = $1,
-			updated_at = NOW()
-		WHERE id = $2
-	`, newPicturePath, hubUserID)
+	// If newPicturePath is empty, set to NULL
+	var result pgconn.CommandTag
+	if newPicturePath == "" {
+		p.log.Dbg("updating profile picture to NULL", "user_id", hubUserID)
+		result, err = tx.Exec(ctx, `
+			UPDATE hub_users
+			SET profile_picture_url = NULL,
+				updated_at = NOW()
+			WHERE id = $1
+		`, hubUserID)
+	} else {
+		p.log.Dbg("updating path", "user_id", hubUserID, "path", newPicturePath)
+		result, err = tx.Exec(ctx, `
+			UPDATE hub_users
+			SET profile_picture_url = $1,
+				updated_at = NOW()
+			WHERE id = $2
+		`, newPicturePath, hubUserID)
+	}
+
 	if err != nil {
+		p.log.Dbg("failed to update profile picture", "error", err)
 		return fmt.Errorf("failed to update profile picture: %w", err)
 	}
 
 	if result.RowsAffected() == 0 {
+		p.log.Dbg("no user found with ID", "id", hubUserID)
 		return fmt.Errorf("no user found with ID %s", hubUserID)
 	}
 
 	// If there was an old picture, add it to stale_files
 	if oldPicturePath != nil && *oldPicturePath != "" {
+		p.log.Dbg("adding old picture to stale files", "path", *oldPicturePath)
 		_, err = tx.Exec(ctx, `
 			INSERT INTO stale_files (
 				file_path
@@ -59,6 +80,7 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 			)
 		`, oldPicturePath)
 		if err != nil {
+			p.log.Err("failed to add old picture to stale files", "error", err)
 			return fmt.Errorf(
 				"failed to add old picture to stale files: %w",
 				err,
@@ -67,9 +89,11 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 	}
 
 	if err := tx.Commit(ctx); err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	p.log.Dbg("updated profile picture", "user_id", hubUserID)
 	return nil
 }
 
@@ -134,7 +158,7 @@ func (p *PG) GetProfilePictureURL(
 	ctx context.Context,
 	handle string,
 ) (string, error) {
-	var pictureURL string
+	var pictureURL *string
 	err := p.pool.QueryRow(ctx, `
 		SELECT profile_picture_url
 		FROM hub_users
@@ -146,5 +170,8 @@ func (p *PG) GetProfilePictureURL(
 		}
 		return "", fmt.Errorf("failed to get profile picture URL: %w", err)
 	}
-	return pictureURL, nil
+	if pictureURL == nil {
+		return "", nil
+	}
+	return *pictureURL, nil
 }

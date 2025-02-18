@@ -240,6 +240,12 @@ export const en = {
     picture: {
       change: "Change Profile Picture",
       upload: "Upload Profile Picture",
+      remove: "Remove Profile Picture",
+      removeFailed: "Failed to remove profile picture",
+      removeConfirmTitle: "Remove Profile Picture?",
+      removeConfirmMessage:
+        "Are you sure you want to remove your profile picture? This action cannot be undone.",
+      removeConfirm: "Yes, Remove Picture",
     },
   },
 };
