@@ -17,7 +17,7 @@ import { config } from "@/config";
 interface ProfilePictureProps {
   imageUrl?: string;
   size?: number;
-  onImageSelect: (file: File) => Promise<void>;
+  onImageSelect?: (file: File) => Promise<void>;
   onRemove?: () => void;
   isLoading?: boolean;
 }
@@ -36,6 +36,7 @@ export default function ProfilePicture({
   const token = Cookies.get("session_token");
   const [imageData, setImageData] = useState<string | undefined>(undefined);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const [timestamp, setTimestamp] = useState(Date.now());
 
   useEffect(() => {
@@ -70,7 +71,11 @@ export default function ProfilePicture({
   }, [imageUrl, token, timestamp]);
 
   const handleImageClick = () => {
-    if (!isLoading) {
+    if (isLoading) return;
+
+    if (imageData) {
+      setZoomOpen(true);
+    } else if (onImageSelect) {
       fileInputRef.current?.click();
     }
   };
@@ -79,7 +84,7 @@ export default function ProfilePicture({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && onImageSelect) {
       try {
         await onImageSelect(file);
         // Clear the input so the same file can be selected again
@@ -145,7 +150,7 @@ export default function ProfilePicture({
           }}
           onClick={handleImageClick}
         />
-        {imageData && (
+        {imageData && onImageSelect && (
           <IconButton
             ref={deleteButtonRef}
             sx={{
@@ -168,30 +173,34 @@ export default function ProfilePicture({
             <DeleteIcon fontSize="small" />
           </IconButton>
         )}
-        <IconButton
-          sx={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            backgroundColor: "background.paper",
-            "&:hover": {
-              backgroundColor: "action.hover",
-            },
-          }}
-          disabled={isLoading}
-          onClick={handleImageClick}
-          aria-label={t("profile.picture.change")}
-        >
-          <CameraAltIcon />
-        </IconButton>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          style={{ display: "none" }}
-          aria-label={t("profile.picture.upload")}
-        />
+        {onImageSelect && (
+          <IconButton
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              backgroundColor: "background.paper",
+              "&:hover": {
+                backgroundColor: "action.hover",
+              },
+            }}
+            disabled={isLoading}
+            onClick={() => fileInputRef.current?.click()}
+            aria-label={t("profile.picture.change")}
+          >
+            <CameraAltIcon />
+          </IconButton>
+        )}
+        {onImageSelect && (
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            style={{ display: "none" }}
+            aria-label={t("profile.picture.upload")}
+          />
+        )}
       </Box>
 
       <Dialog
@@ -216,6 +225,28 @@ export default function ProfilePicture({
             {t("profile.picture.removeConfirm")}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        maxWidth="lg"
+        aria-labelledby="zoom-profile-picture-dialog"
+      >
+        <DialogContent sx={{ p: 0 }}>
+          {imageData && (
+            <img
+              src={imageData}
+              alt={t("profile.picture.fullSize")}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "90vh",
+                display: "block",
+                margin: "0 auto",
+              }}
+            />
+          )}
+        </DialogContent>
       </Dialog>
     </>
   );

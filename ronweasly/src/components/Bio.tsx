@@ -18,7 +18,7 @@ interface BioData {
 
 interface BioProps {
   bio: BioData;
-  onSave: (bio: BioData) => Promise<void>;
+  onSave?: (bio: BioData) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -28,8 +28,10 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
   const [editedBio, setEditedBio] = useState<BioData>(bio);
 
   const handleSave = async () => {
-    await onSave(editedBio);
-    setIsEditing(false);
+    if (onSave) {
+      await onSave(editedBio);
+      setIsEditing(false);
+    }
   };
 
   const handleCancel = () => {
@@ -114,13 +116,15 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
 
   return (
     <Box sx={{ width: "100%", position: "relative" }}>
-      <IconButton
-        sx={{ position: "absolute", right: 0, top: 0 }}
-        onClick={() => setIsEditing(true)}
-        aria-label={t("profile.bio.title")}
-      >
-        <EditIcon />
-      </IconButton>
+      {onSave && (
+        <IconButton
+          sx={{ position: "absolute", right: 0, top: 0 }}
+          onClick={() => setIsEditing(true)}
+          aria-label={t("profile.bio.title")}
+        >
+          <EditIcon />
+        </IconButton>
+      )}
       <Typography variant="h3" component="h1" sx={{ mb: 1 }}>
         {bio.full_name}
       </Typography>

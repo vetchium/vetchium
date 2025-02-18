@@ -157,7 +157,7 @@ interface MyOfficialEmails {
 @route("/hub/get-bio")
 interface GetBio {
     @tag("HubProfile")
-    @get
+    @post
     @useAuth(HubAuth)
     getBio(@body request: GetBioRequest): {
         @body bio: Bio;
