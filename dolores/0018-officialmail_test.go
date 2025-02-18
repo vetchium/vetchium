@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Official Emails", Ordered, func() {
+var _ = Describe("Official Emails", Ordered, func() {
 	var db *pgxpool.Pool
 	var addToken, deleteToken, triggerToken, verifyToken, listToken string
 

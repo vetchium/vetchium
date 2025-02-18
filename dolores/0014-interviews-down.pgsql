@@ -47,10 +47,10 @@ WHERE email_key = '12345678-0014-0014-0014-000000000011'::uuid;
 DELETE FROM hub_user_tokens
 WHERE hub_user_id IN (
     SELECT id FROM hub_users
-    WHERE email = 'interview@hub.example'
+    WHERE email = 'interview@0014-interview-hub.example'
 );
 
 DELETE FROM hub_users
-WHERE email = 'interview@hub.example';
+WHERE email = 'interview@0014-interview-hub.example';
 
 COMMIT; 

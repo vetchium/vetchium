@@ -149,6 +149,8 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES (
@@ -161,6 +163,8 @@ INSERT INTO hub_users (
     'IND',
     'Bangalore',
     'en',
+    'Hub User 1 is diligent',
+    'Hub User 1 was born in India and finished education at VIT University and has 3 years as experience.',
     NOW(),
     NOW()
 ), (
@@ -173,6 +177,8 @@ INSERT INTO hub_users (
     'IND',
     'Bangalore',
     'en',
+    'Hub User 2 is proactive',
+    'Hub User 2 was born in India and finished education at SRM University and has 5 years as experience.',
     NOW(),
     NOW()
 );

@@ -24,9 +24,9 @@ VALUES
     ('12345678-0011-0011-0011-000000040005'::uuid, 'regular@candidacy-comments.example', 'Regular User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0011-0011-0011-000000000201'::uuid, timezone('UTC'::text, now()));
 
 -- Create hub users for testing
-INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, resident_country_code, resident_city, preferred_language, created_at, updated_at)
+INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, resident_country_code, resident_city, preferred_language, short_bio, long_bio, created_at, updated_at)
 VALUES
-    ('12345678-0011-0011-0011-000000050001'::uuid, 'Active Hub User', 'active_hub_user', '0011-active@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'USA', 'New York', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+    ('12345678-0011-0011-0011-000000050001'::uuid, 'Active Hub User', 'active_hub_user', '0011-active@hub.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'USA', 'New York', 'en', 'Active Hub User is analytical', 'Active Hub User was born in USA and finished education at Columbia University and has 4 years as experience.', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 -- Create cost center for openings
 INSERT INTO org_cost_centers (id, cost_center_name, cost_center_state, notes, employer_id, created_at)

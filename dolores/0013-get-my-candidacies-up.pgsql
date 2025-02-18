@@ -11,6 +11,8 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES
@@ -24,6 +26,8 @@ INSERT INTO hub_users (
         'IND',
         'Bangalore',
         'en',
+        'Hub User One is ambitious',
+        'Hub User One was born in India and finished education at NIT Trichy and has 3 years as experience.',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -37,6 +41,8 @@ INSERT INTO hub_users (
         'USA',
         'New York',
         'en',
+        'Hub User Two is creative',
+        'Hub User Two was born in USA and finished education at Cornell University and has 5 years as experience.',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
@@ -50,6 +56,8 @@ INSERT INTO hub_users (
         'GBR',
         'London',
         'en',
+        'Hub User Three is dedicated',
+        'Hub User Three was born in UK and finished education at Oxford University and has 7 years as experience.',
         timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     );

@@ -42,18 +42,22 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES (
     '12345678-0014-0014-0014-000000050001'::uuid,
     'Interview Test User',
     'interview',
-    'interview@hub.example',
+    'interview@0014-interview-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'IND',
     'Chennai',
     'en',
+    'Interview Test User is enthusiastic',
+    'Interview Test User was born in India and finished education at IIT Madras and has 4 years as experience.',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );

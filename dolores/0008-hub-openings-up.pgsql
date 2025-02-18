@@ -11,6 +11,8 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES (
@@ -23,6 +25,8 @@ INSERT INTO hub_users (
     'IND',
     'Bangalore',
     'en',
+    'Hub Opening Test User is innovative',
+    'Hub Opening Test User was born in India and finished education at IIT Madras and has 7 years as experience.',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
@@ -38,6 +42,8 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES
@@ -51,6 +57,8 @@ INSERT INTO hub_users (
  'IND',
  NULL,
  'en',
+ 'India Only User is resourceful',
+ 'India Only User was born in India and finished education at Delhi University and has 4 years as experience.',
  timezone('UTC'::text, now()),
  timezone('UTC'::text, now())),
 
@@ -64,6 +72,8 @@ INSERT INTO hub_users (
  'USA',
  'New York',
  'en',
+ 'US User is dynamic',
+ 'US User was born in USA and finished education at Harvard University and has 6 years as experience.',
  timezone('UTC'::text, now()),
  timezone('UTC'::text, now()));
 

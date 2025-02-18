@@ -49,7 +49,10 @@ var _ = Describe("Interviews", Ordered, func() {
 		wg.Wait()
 
 		// Sign in hub user
-		hubUserToken = hubSignin("interview@hub.example", "NewPassword123$")
+		hubUserToken = hubSignin(
+			"interview@0014-interview-hub.example",
+			"NewPassword123$",
+		)
 	})
 
 	AfterAll(func() {

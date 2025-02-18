@@ -3,7 +3,8 @@ BEGIN;
 -- Create test hub user
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
-    state, resident_country_code, preferred_language
+    state, resident_country_code, resident_city, preferred_language,
+    short_bio, long_bio, created_at, updated_at
 ) VALUES (
     '12345678-0016-0016-0016-000000000001',
     'Filter Employers Test User',
@@ -12,7 +13,12 @@ INSERT INTO hub_users (
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'IND',
-    'en'
+    'Bangalore',
+    'en',
+    'Filter Employers Test User is detail-oriented',
+    'Filter Employers Test User was born in India and finished education at IIIT Bangalore and has 3 years as experience.',
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
 );
 
 -- Create test employers

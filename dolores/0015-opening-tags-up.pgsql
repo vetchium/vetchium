@@ -39,6 +39,8 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES (
@@ -51,6 +53,8 @@ INSERT INTO hub_users (
     'IND',
     'Chennai',
     'en',
+    'Tags Test Hub User is methodical',
+    'Tags Test Hub User was born in India and finished education at PSG Tech and has 5 years as experience.',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );

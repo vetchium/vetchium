@@ -17,12 +17,14 @@ INSERT INTO hub_users (
     resident_country_code,
     resident_city,
     preferred_language,
+    short_bio,
+    long_bio,
     created_at,
     updated_at
 ) VALUES 
-    ('12345678-0009-0009-0009-000000050001'::uuid, 'Active Hub User', 'active_hub_user', 'active@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'IND', 'Bangalore', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
-    ('12345678-0009-0009-0009-000000050002'::uuid, 'Disabled Hub User', 'disabled_hub_user', 'disabled@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DISABLED_HUB_USER', 'IND', 'Chennai', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
-    ('12345678-0009-0009-0009-000000050003'::uuid, 'Deleted Hub User', 'deleted_hub_user', 'deleted@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DELETED_HUB_USER', 'IND', 'Mumbai', 'en', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+    ('12345678-0009-0009-0009-000000050001'::uuid, 'Active Hub User', 'active_hub_user', 'active@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'IND', 'Bangalore', 'en', 'Active Hub User is creative', 'Active Hub User was born in India and finished education at BITS Pilani and has 8 years as experience.', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
+    ('12345678-0009-0009-0009-000000050002'::uuid, 'Disabled Hub User', 'disabled_hub_user', 'disabled@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DISABLED_HUB_USER', 'IND', 'Chennai', 'en', 'Disabled Hub User is persistent', 'Disabled Hub User was born in India and finished education at Anna University and has 4 years as experience.', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
+    ('12345678-0009-0009-0009-000000050003'::uuid, 'Deleted Hub User', 'deleted_hub_user', 'deleted@applyopening.example', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'DELETED_HUB_USER', 'IND', 'Mumbai', 'en', 'Deleted Hub User is ambitious', 'Deleted Hub User was born in India and finished education at IIT Bombay and has 6 years as experience.', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 -- Create test employer
 INSERT INTO emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
