@@ -18,6 +18,8 @@ type HubUser struct {
 	ResidentCity            string
 	PreferredLanguage       string
 	PreferredCompanyDomains []string
+	ShortBio                string
+	LongBio                 string
 }
 
 var hubUsers = []HubUser{
@@ -33,6 +35,8 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"ravenclaw.example",
 		},
+		ShortBio: "Minerva McGonagall is wise",
+		LongBio:  "Minerva McGonagall was born in Scotland and finished education at Hogwarts and has 40 years as experience.",
 	},
 	{
 		Name:              "Neville Longbottom",
@@ -45,6 +49,8 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"hufflepuff.example",
 		},
+		ShortBio: "Neville Longbottom is brave",
+		LongBio:  "Neville Longbottom was born in England and finished education at Hogwarts and has 10 years as experience.",
 	},
 	{
 		Name:              "Rubeus Hagrid",
@@ -57,6 +63,8 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"slytherin.example",
 		},
+		ShortBio: "Rubeus Hagrid is caring",
+		LongBio:  "Rubeus Hagrid was born in England and finished education at Hogwarts and has 50 years as experience.",
 	},
 
 	// Primarily interested in Hufflepuff
@@ -71,6 +79,8 @@ var hubUsers = []HubUser{
 			"hufflepuff.example",
 			"gryffindor.example",
 		},
+		ShortBio: "Cedric Diggory is fair",
+		LongBio:  "Cedric Diggory was born in England and finished education at Hogwarts and has 7 years as experience.",
 	},
 	{
 		Name:              "Nymphadora Tonks",
@@ -83,6 +93,8 @@ var hubUsers = []HubUser{
 			"hufflepuff.example",
 			"ravenclaw.example",
 		},
+		ShortBio: "Nymphadora Tonks is adaptable",
+		LongBio:  "Nymphadora Tonks was born in England and finished education at Hogwarts and has 8 years as experience.",
 	},
 	{
 		Name:              "Pomona Sprout",
@@ -95,6 +107,8 @@ var hubUsers = []HubUser{
 			"hufflepuff.example",
 			"slytherin.example",
 		},
+		ShortBio: "Pomona Sprout is nurturing",
+		LongBio:  "Pomona Sprout was born in Wales and finished education at Hogwarts and has 35 years as experience.",
 	},
 
 	// Primarily interested in Slytherin
@@ -109,6 +123,8 @@ var hubUsers = []HubUser{
 			"slytherin.example",
 			"gryffindor.example",
 		},
+		ShortBio: "Severus Snape is precise",
+		LongBio:  "Severus Snape was born in England and finished education at Hogwarts and has 20 years as experience.",
 	},
 	{
 		Name:              "Draco Malfoy",
@@ -121,6 +137,8 @@ var hubUsers = []HubUser{
 			"slytherin.example",
 			"hufflepuff.example",
 		},
+		ShortBio: "Draco Malfoy is ambitious",
+		LongBio:  "Draco Malfoy was born in England and finished education at Hogwarts and has 5 years as experience.",
 	},
 	{
 		Name:              "Tom Riddle",
@@ -133,6 +151,8 @@ var hubUsers = []HubUser{
 			"slytherin.example",
 			"ravenclaw.example",
 		},
+		ShortBio: "Tom Riddle is determined",
+		LongBio:  "Tom Riddle was born in England and finished education at Hogwarts and has 50 years as experience.",
 	},
 
 	// Primarily interested in Ravenclaw
@@ -147,6 +167,8 @@ var hubUsers = []HubUser{
 			"ravenclaw.example",
 			"gryffindor.example",
 		},
+		ShortBio: "Luna Lovegood is creative",
+		LongBio:  "Luna Lovegood was born in England and finished education at Hogwarts and has 3 years as experience.",
 	},
 	{
 		Name:              "Cho Chang",
@@ -159,6 +181,8 @@ var hubUsers = []HubUser{
 			"ravenclaw.example",
 			"hufflepuff.example",
 		},
+		ShortBio: "Cho Chang is intelligent",
+		LongBio:  "Cho Chang was born in Scotland and finished education at Hogwarts and has 4 years as experience.",
 	},
 	{
 		Name:              "Xenophilius Lovegood",
@@ -171,6 +195,8 @@ var hubUsers = []HubUser{
 			"ravenclaw.example",
 			"slytherin.example",
 		},
+		ShortBio: "Xenophilius Lovegood is innovative",
+		LongBio:  "Xenophilius Lovegood was born in England and finished education at Hogwarts and has 25 years as experience.",
 	},
 }
 
@@ -188,15 +214,15 @@ func initHubUsers(db *pgxpool.Pool) {
 			INSERT INTO hub_users (
 				id, full_name, handle, email, password_hash,
 				state, resident_country_code, resident_city,
-				preferred_language
+				preferred_language, short_bio, long_bio
 			) VALUES (
 				$1, $2, $3, $4,
 				'$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-				'ACTIVE_HUB_USER', $5, $6, $7
+				'ACTIVE_HUB_USER', $5, $6, $7, $8, $9
 			)
 		`, userID, user.Name, user.Handle, user.Email,
 			user.ResidentCountry, user.ResidentCity,
-			user.PreferredLanguage)
+			user.PreferredLanguage, user.ShortBio, user.LongBio)
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.Name, err)
 		}
