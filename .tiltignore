@@ -1,7 +1,12 @@
 *.test
+.cursor/**
+.vscode/**
+charts/**
+dev-seed/**
 dolores/**
-ronweasly/**
 harrypotter/**
-odds_and_ends/**
+ronweasly/**
+typespec/dist
 typespec/dist/**
+typespec/tsp-output
 typespec/tsp-output/**
