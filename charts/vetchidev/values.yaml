@@ -1,6 +1,6 @@
 # CloudNativePG cluster configuration
 postgresCluster:
-  instances: 3
+  instances: 1
   storage:
     size: 1Gi
   monitoring:
