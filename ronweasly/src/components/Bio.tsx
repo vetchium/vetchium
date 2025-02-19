@@ -8,12 +8,16 @@ import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import InfoIcon from "@mui/icons-material/Info";
+import Tooltip from "@mui/material/Tooltip";
+import Chip from "@mui/material/Chip";
 
 interface BioData {
   handle: string;
   full_name: string;
   short_bio: string;
   long_bio: string;
+  verified_mail_domains?: string[];
 }
 
 interface BioProps {
@@ -134,6 +138,34 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
       <Typography variant="body1" sx={{ mt: 2, whiteSpace: "pre-wrap" }}>
         {bio.long_bio}
       </Typography>
+
+      {bio.verified_mail_domains && bio.verified_mail_domains.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              {t("profile.bio.verifiedDomains")}
+            </Typography>
+            <Tooltip
+              title={t("profile.bio.verifiedDomainsInfo")}
+              placement="right"
+              arrow
+            >
+              <InfoIcon color="action" sx={{ fontSize: 16 }} />
+            </Tooltip>
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {bio.verified_mail_domains.map((domain) => (
+              <Chip
+                key={domain}
+                label={domain}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

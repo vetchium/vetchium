@@ -229,13 +229,16 @@ export const en = {
         updateFailed: "Failed to update profile information",
         uploadFailed: "Failed to upload profile picture",
       },
-      title: "Edit Bio",
+      title: "Bio",
       fullName: "Full Name",
       handle: "Handle",
       shortBio: "Short Bio",
       longBio: "Long Bio",
-      save: "Save Changes",
+      save: "Save",
       cancel: "Cancel",
+      verifiedDomains: "Verified Domains",
+      verifiedDomainsInfo:
+        "These are domains where this user has verified their email address ownership. This verification helps establish the user's professional affiliations and work history authenticity.",
     },
     picture: {
       change: "Change Profile Picture",
