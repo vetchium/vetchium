@@ -14,6 +14,9 @@ import ProfilePicture from "@/components/ProfilePicture";
 import { useProfile } from "@/hooks/useProfile";
 import { config } from "@/config";
 import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -36,48 +39,68 @@ export default function ProfilePage() {
 
   return (
     <AuthenticatedLayout>
-      <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, px: 2 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error.message}
-          </Alert>
-        )}
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            mb: 4,
-          }}
-        >
-          <ProfilePicture
-            imageUrl={`${config.API_SERVER_PREFIX}/hub/profile-picture/${userHandle}`}
-            size={150}
-          />
-
-          {isOwnProfile && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => router.push("/my-profile")}
-              sx={{ mt: 2 }}
-            >
-              {t("profile.editMyProfile")}
-            </Button>
+      <Container maxWidth="md">
+        <Box sx={{ py: 4 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error.message}
+            </Alert>
           )}
-        </Box>
 
-        {bio && (
-          <Box sx={{ mb: 4 }}>
-            <Bio bio={bio} isLoading={false} />
-          </Box>
-        )}
+          <Paper
+            elevation={0}
+            sx={{ p: 4, borderRadius: 2, bgcolor: "background.default" }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: 4,
+                mb: 6,
+              }}
+            >
+              {/* Left column - Profile Picture */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <ProfilePicture
+                  imageUrl={`${config.API_SERVER_PREFIX}/hub/profile-picture/${userHandle}`}
+                  size={150}
+                />
 
-        <Box sx={{ mt: 4 }}>
-          <WorkHistory userHandle={userHandle} canEdit={false} />
+                {isOwnProfile && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => router.push("/my-profile")}
+                    sx={{ mt: 2 }}
+                  >
+                    {t("profile.editMyProfile")}
+                  </Button>
+                )}
+              </Box>
+
+              {/* Right column - Bio */}
+              {bio && (
+                <Box sx={{ flex: 1 }}>
+                  <Bio bio={bio} isLoading={false} />
+                </Box>
+              )}
+            </Box>
+
+            <Divider sx={{ mb: 4 }} />
+
+            {/* Work History section */}
+            <Box>
+              <WorkHistory userHandle={userHandle} canEdit={false} />
+            </Box>
+          </Paper>
         </Box>
-      </Box>
+      </Container>
     </AuthenticatedLayout>
   );
 }
