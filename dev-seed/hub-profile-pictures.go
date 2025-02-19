@@ -62,7 +62,7 @@ func uploadProfilePicture(avatarPath string, authToken string) error {
 
 	// Create the HTTP request
 	req, err := http.NewRequest(
-		"POST",
+		http.MethodPost,
 		serverURL+"/hub/upload-profile-picture",
 		&body,
 	)

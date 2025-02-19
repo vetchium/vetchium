@@ -49,5 +49,5 @@ func createApplicationForOpening(
 	// Make the API request and get the response
 	var resp hub.ApplyForOpeningResponse
 	makeRequest("POST", "/hub/apply-for-opening", token, req, &resp)
-	color.Green("Successfully created application: %s", resp.ApplicationID)
+	color.Magenta("Successfully created application: %s", resp.ApplicationID)
 }
