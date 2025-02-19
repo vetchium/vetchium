@@ -12,10 +12,21 @@ import (
 func (p *PG) GetBio(ctx context.Context, handle string) (hub.Bio, error) {
 	var bio hub.Bio
 	err := p.pool.QueryRow(ctx, `
-SELECT handle, full_name, short_bio, long_bio
-FROM hub_users
-WHERE handle = $1
-`, handle).Scan(&bio.Handle, &bio.FullName, &bio.ShortBio, &bio.LongBio)
+WITH verified_domains AS (
+	SELECT DISTINCT d.domain_name
+	FROM hub_users_official_emails hoe
+	JOIN domains d ON d.id = hoe.domain_id
+	JOIN hub_users hu ON hu.id = hoe.hub_user_id
+	WHERE hu.handle = $1
+	AND hoe.last_verified_at IS NOT NULL
+)
+SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
+	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains
+FROM hub_users hu
+LEFT JOIN verified_domains vd ON true
+WHERE hu.handle = $1
+GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
+`, handle).Scan(&bio.Handle, &bio.FullName, &bio.ShortBio, &bio.LongBio, &bio.VerifiedMailDomains)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			p.log.Dbg("no hub user found", "handle", handle)

@@ -52,6 +52,9 @@ model Bio {
 
     @doc("The long bio of the user. Something like 'About Me' of a user")
     long_bio: string;
+
+    @doc("The list of verified mail domains for the user.")
+    verified_mail_domains?: string[];
 }
 
 model UpdateBioRequest {
