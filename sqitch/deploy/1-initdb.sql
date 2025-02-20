@@ -657,8 +657,11 @@ CREATE TABLE colleague_connections (
 );
 
 -- Function to check if a user can send a colleague request to another user
-CREATE OR REPLACE FUNCTION is_colleaguable(seeking_user UUID, target_user UUID)
-RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION is_colleaguable(
+    seeking_user UUID,
+    target_user UUID,
+    verification_validity_duration INTERVAL
+) RETURNS BOOLEAN AS $$
 BEGIN
     -- Prevent self-connections
     IF seeking_user = target_user THEN
@@ -688,7 +691,7 @@ BEGIN
     -- Check if target_user has previously rejected/unlinked a connection from seeking_user
     IF EXISTS (
         SELECT 1 FROM colleague_connections
-        WHERE requester_id = seeking_user
+        WHERE requester_id = seeking_user 
         AND requested_id = target_user
         AND (
             (state = 'COLLEAGUING_REJECTED' AND rejected_by = target_user) OR
@@ -701,7 +704,7 @@ BEGIN
     -- Check if seeking_user has previously rejected/unlinked a connection from target_user
     IF EXISTS (
         SELECT 1 FROM colleague_connections
-        WHERE requester_id = target_user
+        WHERE requester_id = target_user 
         AND requested_id = seeking_user
         AND (
             (state = 'COLLEAGUING_REJECTED' AND rejected_by = seeking_user) OR
@@ -711,7 +714,18 @@ BEGIN
         RETURN FALSE;
     END IF;
 
-    RETURN TRUE;
+    -- Check if they have a common verified domain within the validity duration
+    RETURN EXISTS (
+        SELECT 1
+        FROM hub_users_official_emails hoe1
+        JOIN hub_users_official_emails hoe2 ON hoe1.domain_id = hoe2.domain_id
+        WHERE hoe1.hub_user_id = seeking_user
+        AND hoe2.hub_user_id = target_user
+        AND hoe1.last_verified_at IS NOT NULL
+        AND hoe2.last_verified_at IS NOT NULL
+        AND hoe1.last_verified_at > NOW() - verification_validity_duration
+        AND hoe2.last_verified_at > NOW() - verification_validity_duration
+    );
 END;
 $$ LANGUAGE plpgsql;
 

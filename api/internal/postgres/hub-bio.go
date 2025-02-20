@@ -31,22 +31,11 @@ WITH verified_domains AS (
 ),
 target_user_id AS (
 	SELECT id FROM hub_users WHERE handle = $1
-),
-common_verified_domains AS (
-	SELECT COUNT(*) > 0 AS has_common_domain
-	FROM hub_users_official_emails hoe1
-	JOIN hub_users_official_emails hoe2 ON hoe1.domain_id = hoe2.domain_id
-	WHERE hoe1.hub_user_id = $2  -- logged in user
-	AND hoe2.hub_user_id = (SELECT id FROM target_user_id)
-	AND hoe1.last_verified_at IS NOT NULL
-	AND hoe2.last_verified_at IS NOT NULL
-	AND hoe1.last_verified_at > NOW() - $3
-	AND hoe2.last_verified_at > NOW() - $3
-	AND $2 != (SELECT id FROM target_user_id)  -- exclude self
 )
 SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
 	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains,
-	COALESCE((SELECT has_common_domain FROM common_verified_domains), false) as colleaguable
+	is_colleaguable($2, (SELECT id FROM target_user_id), $3) as is_colleaguable,
+	are_colleagues($2, (SELECT id FROM target_user_id)) as is_colleague
 FROM hub_users hu
 LEFT JOIN verified_domains vd ON true
 WHERE hu.handle = $1
@@ -61,7 +50,8 @@ GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
 		&bio.ShortBio,
 		&bio.LongBio,
 		&bio.VerifiedMailDomains,
-		&bio.Colleaguable,
+		&bio.IsColleaguable,
+		&bio.IsColleague,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

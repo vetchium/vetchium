@@ -39,7 +39,8 @@ type Bio struct {
 	ShortBio            string   `json:"short_bio"`
 	LongBio             string   `json:"long_bio"`
 	VerifiedMailDomains []string `json:"verified_mail_domains"`
-	Colleaguable        bool     `json:"colleaguable"`
+	IsColleaguable      bool     `json:"is_colleaguable"`
+	IsColleague         bool     `json:"is_colleague"`
 }
 
 type UpdateBioRequest struct {

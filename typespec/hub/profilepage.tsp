@@ -57,7 +57,10 @@ model Bio {
     verified_mail_domains?: string[];
 
     @doc("Can this handle be marked as a colleague by the logged in user?")
-    colleaguable: boolean;
+    is_colleaguable: boolean;
+
+    @doc("Is the handle already marked as a colleague by the logged in user?")
+    is_colleague: boolean;
 }
 
 model UpdateBioRequest {
