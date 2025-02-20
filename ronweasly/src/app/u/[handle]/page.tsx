@@ -8,11 +8,13 @@ import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
@@ -102,7 +104,25 @@ export default function ProfilePage() {
                 {/* Right column - Bio */}
                 {bio && (
                   <Box sx={{ flex: 1 }}>
-                    <Bio bio={bio} isLoading={false} />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        mb: 2,
+                      }}
+                    >
+                      <Bio bio={bio} isLoading={false} />
+                      {bio.is_colleague && (
+                        <Chip
+                          icon={<VerifiedIcon />}
+                          label={t("profile.verifiedColleague")}
+                          color="primary"
+                          variant="outlined"
+                          size="small"
+                        />
+                      )}
+                    </Box>
                   </Box>
                 )}
               </Box>
@@ -116,7 +136,7 @@ export default function ProfilePage() {
             </Paper>
 
             {/* Actions sidebar */}
-            {bio?.colleaguable && (
+            {!isOwnProfile && bio?.is_colleaguable && !bio?.is_colleague && (
               <Box sx={{ width: 280, flexShrink: 0 }}>
                 <Card elevation={0}>
                   <CardContent>
