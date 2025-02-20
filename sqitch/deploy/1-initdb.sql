@@ -405,9 +405,6 @@ CREATE TABLE candidacy_comments (
     CONSTRAINT fk_employer FOREIGN KEY (employer_id) REFERENCES employers(id)
 );
 
--- Index for chronological fetching
-CREATE INDEX idx_candidacy_comments_chronological ON candidacy_comments(candidacy_id, created_at DESC);
-
 ---
 
 CREATE TYPE interview_types AS ENUM (
@@ -486,11 +483,6 @@ CREATE TABLE interview_interviewers (
 
     PRIMARY KEY (interview_id, interviewer_id)
 );
-
--- Add indices for common query patterns
-CREATE INDEX idx_interviews_candidacy ON interviews(candidacy_id);
-CREATE INDEX idx_interviews_employer ON interviews(employer_id);
-CREATE INDEX idx_interviews_state ON interviews(interview_state);
 
 CREATE TABLE opening_tags (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -626,9 +618,6 @@ CREATE TYPE colleaguing_states AS ENUM (
     'COLLEAGUING_UNLINKED'         -- The connection was unlinked after being accepted
 );
 
--- Drop the existing colleagues table
-DROP TABLE IF EXISTS colleagues;
-
 CREATE TABLE colleague_connections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     requester_id UUID REFERENCES hub_users(id) NOT NULL,
@@ -666,10 +655,6 @@ CREATE TABLE colleague_connections (
         (state IN ('COLLEAGUING_PENDING', 'COLLEAGUING_ACCEPTED') AND rejected_by IS NULL AND unlinked_by IS NULL)
     )
 );
-
--- Create indexes for common queries
-CREATE INDEX idx_colleague_connections_requester ON colleague_connections(requester_id);
-CREATE INDEX idx_colleague_connections_requested ON colleague_connections(requested_id);
 
 -- Function to check if a user can send a colleague request to another user
 CREATE OR REPLACE FUNCTION is_colleaguable(seeking_user UUID, target_user UUID)
@@ -751,14 +736,5 @@ CREATE TABLE stale_files (
     cleaned_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT unique_file_path UNIQUE (file_path)
 );
-
--- Index for finding unprocessed stale files
-CREATE INDEX idx_stale_files_unprocessed
-    ON stale_files(cleaned_at)
-    WHERE cleaned_at IS NULL;
-
--- Drop old tables if they exist
-DROP TABLE IF EXISTS stale_profile_pictures;
-DROP TYPE IF EXISTS file_type;
 
 COMMIT;
