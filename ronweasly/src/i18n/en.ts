@@ -223,6 +223,8 @@ export const en = {
   profile: {
     myProfile: "My Profile",
     editMyProfile: "Edit My Profile",
+    actions: "Actions",
+    addAsColleague: "Add as Colleague",
     bio: {
       error: {
         fetchFailed: "Failed to load profile information",

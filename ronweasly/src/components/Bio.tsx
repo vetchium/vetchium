@@ -11,25 +11,18 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Chip from "@mui/material/Chip";
-
-interface BioData {
-  handle: string;
-  full_name: string;
-  short_bio: string;
-  long_bio: string;
-  verified_mail_domains?: string[];
-}
+import type { Bio as BioType } from "@psankar/vetchi-typespec";
 
 interface BioProps {
-  bio: BioData;
-  onSave?: (bio: BioData) => Promise<void>;
+  bio: BioType;
+  onSave?: (bio: BioType) => Promise<void>;
   isLoading?: boolean;
 }
 
 export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedBio, setEditedBio] = useState<BioData>(bio);
+  const [editedBio, setEditedBio] = useState<BioType>(bio);
 
   const handleSave = async () => {
     if (onSave) {
@@ -154,7 +147,7 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
             </Tooltip>
           </Box>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {bio.verified_mail_domains.map((domain) => (
+            {bio.verified_mail_domains.map((domain: string) => (
               <Chip
                 key={domain}
                 label={domain}

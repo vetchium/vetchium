@@ -33,6 +33,7 @@ export interface Bio {
   short_bio: string;
   long_bio: string;
   verified_mail_domains?: string[];
+  colleaguable: boolean;
 }
 
 export interface UpdateBioRequest {

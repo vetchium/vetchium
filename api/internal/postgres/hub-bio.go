@@ -11,7 +11,13 @@ import (
 
 func (p *PG) GetBio(ctx context.Context, handle string) (hub.Bio, error) {
 	var bio hub.Bio
-	err := p.pool.QueryRow(ctx, `
+	loggedInUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get logged in user ID", "error", err)
+		return hub.Bio{}, err
+	}
+
+	err = p.pool.QueryRow(ctx, `
 WITH verified_domains AS (
 	SELECT DISTINCT d.domain_name
 	FROM hub_users_official_emails hoe
@@ -19,14 +25,30 @@ WITH verified_domains AS (
 	JOIN hub_users hu ON hu.id = hoe.hub_user_id
 	WHERE hu.handle = $1
 	AND hoe.last_verified_at IS NOT NULL
+),
+target_user_id AS (
+	SELECT id FROM hub_users WHERE handle = $1
+),
+common_verified_domains AS (
+	SELECT COUNT(*) > 0 AS has_common_domain
+	FROM hub_users_official_emails hoe1
+	JOIN hub_users_official_emails hoe2 ON hoe1.domain_id = hoe2.domain_id
+	WHERE hoe1.hub_user_id = $2  -- logged in user
+	AND hoe2.hub_user_id = (SELECT id FROM target_user_id)
+	AND hoe1.last_verified_at IS NOT NULL
+	AND hoe2.last_verified_at IS NOT NULL
+	AND hoe1.last_verified_at > NOW() - INTERVAL '90 days'
+	AND hoe2.last_verified_at > NOW() - INTERVAL '90 days'
+	AND $2 != (SELECT id FROM target_user_id)  -- exclude self
 )
 SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
-	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains
+	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains,
+	COALESCE((SELECT has_common_domain FROM common_verified_domains), false) as colleaguable
 FROM hub_users hu
 LEFT JOIN verified_domains vd ON true
 WHERE hu.handle = $1
 GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
-`, handle).Scan(&bio.Handle, &bio.FullName, &bio.ShortBio, &bio.LongBio, &bio.VerifiedMailDomains)
+`, handle, loggedInUserID).Scan(&bio.Handle, &bio.FullName, &bio.ShortBio, &bio.LongBio, &bio.VerifiedMailDomains, &bio.Colleaguable)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			p.log.Dbg("no hub user found", "handle", handle)

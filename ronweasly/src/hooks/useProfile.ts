@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Bio } from "@/types/bio";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { Bio } from "@psankar/vetchi-typespec";
 
 export function useProfile(handle: string) {
   const router = useRouter();
