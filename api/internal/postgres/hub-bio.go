@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -17,7 +18,9 @@ func (p *PG) GetBio(ctx context.Context, handle string) (hub.Bio, error) {
 		return hub.Bio{}, err
 	}
 
-	err = p.pool.QueryRow(ctx, `
+	err = p.pool.QueryRow(
+		ctx,
+		`
 WITH verified_domains AS (
 	SELECT DISTINCT d.domain_name
 	FROM hub_users_official_emails hoe
@@ -37,8 +40,8 @@ common_verified_domains AS (
 	AND hoe2.hub_user_id = (SELECT id FROM target_user_id)
 	AND hoe1.last_verified_at IS NOT NULL
 	AND hoe2.last_verified_at IS NOT NULL
-	AND hoe1.last_verified_at > NOW() - INTERVAL '90 days'
-	AND hoe2.last_verified_at > NOW() - INTERVAL '90 days'
+	AND hoe1.last_verified_at > NOW() - $3
+	AND hoe2.last_verified_at > NOW() - $3
 	AND $2 != (SELECT id FROM target_user_id)  -- exclude self
 )
 SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
@@ -48,7 +51,18 @@ FROM hub_users hu
 LEFT JOIN verified_domains vd ON true
 WHERE hu.handle = $1
 GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
-`, handle, loggedInUserID).Scan(&bio.Handle, &bio.FullName, &bio.ShortBio, &bio.LongBio, &bio.VerifiedMailDomains, &bio.Colleaguable)
+`,
+		handle,
+		loggedInUserID,
+		vetchi.VerificationValidityDuration,
+	).Scan(
+		&bio.Handle,
+		&bio.FullName,
+		&bio.ShortBio,
+		&bio.LongBio,
+		&bio.VerifiedMailDomains,
+		&bio.Colleaguable,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			p.log.Dbg("no hub user found", "handle", handle)
