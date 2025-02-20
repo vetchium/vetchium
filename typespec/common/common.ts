@@ -5,6 +5,7 @@ export interface ValidationErrors {
 export type EmailAddress = string;
 export type Password = string;
 export type City = string;
+export type Handle = string;
 
 export type CountryCode = string;
 

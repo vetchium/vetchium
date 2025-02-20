@@ -7,6 +7,7 @@ type ValidationErrors struct {
 type EmailAddress string
 type Password string
 type City string
+type Handle string
 
 type CountryCode string
 

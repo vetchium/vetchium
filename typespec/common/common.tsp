@@ -7,6 +7,11 @@ model ValidationErrors {
     errors: string[];
 }
 
+// TODO: This should be used everywhere where a handle:string is used now
+@minLength(3)
+@maxLength(32)
+scalar Handle extends string;
+
 @minLength(3)
 @maxLength(256)
 @doc("A valid email address")
