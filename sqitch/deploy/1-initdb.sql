@@ -592,6 +592,157 @@ CREATE TABLE work_history (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+-- Colleague Connection Scenarios:
+--
+-- 1. Initial Connection Request:
+--    - HubUser1 sends invitation to HubUser2 (COLLEAGUING_PENDING)
+--    - Only one pending invitation can exist between two users at a time
+--
+-- 2. Accepting Connection:
+--    - HubUser2 accepts HubUser1's invitation (COLLEAGUING_ACCEPTED)
+--    - Both users become colleagues
+--
+-- 3. Rejecting Connection:
+--    - HubUser2 rejects HubUser1's invitation (COLLEAGUING_REJECTED)
+--    - HubUser1 cannot send another invitation to HubUser2
+--    - HubUser2 can still send an invitation to HubUser1
+--
+-- 4. Unlinking Connection:
+--    - After COLLEAGUING_ACCEPTED, either user can unlink (COLLEAGUING_UNLINKED)
+--    - If HubUser2 unlinks, HubUser1 cannot send another invitation
+--    - If HubUser1 unlinks, HubUser2 cannot send another invitation
+--
+-- 5. Colleaguable Rules:
+--    - A user cannot connect with themselves
+--    - A user cannot send invitation if there's a pending invitation
+--    - A user cannot send invitation if they are already connected
+--    - A user cannot send invitation if the target user previously rejected/unlinked their invitation
+--    - A user CAN send invitation even if they previously rejected/unlinked the target user's invitation
+--
+CREATE TYPE colleaguing_states AS ENUM (
+    'COLLEAGUING_PENDING',           -- Initial state when invitation is sent
+    'COLLEAGUING_ACCEPTED',         -- Both users are connected
+    'COLLEAGUING_REJECTED',         -- The invitation was rejected
+    'COLLEAGUING_UNLINKED'         -- The connection was unlinked after being accepted
+);
+
+-- Drop the existing colleagues table
+DROP TABLE IF EXISTS colleagues;
+
+CREATE TABLE colleague_connections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id UUID REFERENCES hub_users(id) NOT NULL,
+    requested_id UUID REFERENCES hub_users(id) NOT NULL,
+    state colleaguing_states NOT NULL,
+
+    -- Track who performed which action and when
+    rejected_by UUID REFERENCES hub_users(id),
+    rejected_at TIMESTAMP WITH TIME ZONE,
+    unlinked_by UUID REFERENCES hub_users(id),
+    unlinked_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
+    CONSTRAINT check_self_reference CHECK (requester_id != requested_id),
+    CONSTRAINT unique_connection UNIQUE (requester_id, requested_id),
+
+    -- Ensure rejected_by and rejected_at are set together
+    CONSTRAINT reject_action_integrity CHECK (
+        (rejected_by IS NULL AND rejected_at IS NULL) OR
+        (rejected_by IS NOT NULL AND rejected_at IS NOT NULL)
+    ),
+
+    -- Ensure unlinked_by and unlinked_at are set together
+    CONSTRAINT unlink_action_integrity CHECK (
+        (unlinked_by IS NULL AND unlinked_at IS NULL) OR
+        (unlinked_by IS NOT NULL AND unlinked_at IS NOT NULL)
+    ),
+
+    -- Ensure state matches the action fields
+    CONSTRAINT state_action_integrity CHECK (
+        (state = 'COLLEAGUING_REJECTED' AND rejected_by IS NOT NULL AND unlinked_by IS NULL) OR
+        (state = 'COLLEAGUING_UNLINKED' AND unlinked_by IS NOT NULL AND rejected_by IS NULL) OR
+        (state IN ('COLLEAGUING_PENDING', 'COLLEAGUING_ACCEPTED') AND rejected_by IS NULL AND unlinked_by IS NULL)
+    )
+);
+
+-- Create indexes for common queries
+CREATE INDEX idx_colleague_connections_requester ON colleague_connections(requester_id);
+CREATE INDEX idx_colleague_connections_requested ON colleague_connections(requested_id);
+
+-- Function to check if a user can send a colleague request to another user
+CREATE OR REPLACE FUNCTION is_colleaguable(seeking_user UUID, target_user UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- Prevent self-connections
+    IF seeking_user = target_user THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if there's a pending invitation in either direction
+    IF EXISTS (
+        SELECT 1 FROM colleague_connections
+        WHERE (requester_id = seeking_user AND requested_id = target_user
+               OR requester_id = target_user AND requested_id = seeking_user)
+        AND state = 'COLLEAGUING_PENDING'
+    ) THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if there's an existing accepted connection
+    IF EXISTS (
+        SELECT 1 FROM colleague_connections
+        WHERE (requester_id = seeking_user AND requested_id = target_user
+               OR requester_id = target_user AND requested_id = seeking_user)
+        AND state = 'COLLEAGUING_ACCEPTED'
+    ) THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if target_user has previously rejected/unlinked a connection from seeking_user
+    IF EXISTS (
+        SELECT 1 FROM colleague_connections
+        WHERE requester_id = seeking_user
+        AND requested_id = target_user
+        AND (
+            (state = 'COLLEAGUING_REJECTED' AND rejected_by = target_user) OR
+            (state = 'COLLEAGUING_UNLINKED' AND unlinked_by = target_user)
+        )
+    ) THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if seeking_user has previously rejected/unlinked a connection from target_user
+    IF EXISTS (
+        SELECT 1 FROM colleague_connections
+        WHERE requester_id = target_user
+        AND requested_id = seeking_user
+        AND (
+            (state = 'COLLEAGUING_REJECTED' AND rejected_by = seeking_user) OR
+            (state = 'COLLEAGUING_UNLINKED' AND unlinked_by = seeking_user)
+        )
+    ) THEN
+        RETURN FALSE;
+    END IF;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to check if two users are connected
+CREATE OR REPLACE FUNCTION are_colleagues(user1_id UUID, user2_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM colleague_connections
+        WHERE (requester_id = user1_id AND requested_id = user2_id
+               OR requester_id = user2_id AND requested_id = user1_id)
+        AND state = 'COLLEAGUING_ACCEPTED'
+    );
+END;
+$$ LANGUAGE plpgsql;
+
 -- Table to track old files that need cleanup
 CREATE TABLE stale_files (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -602,8 +753,8 @@ CREATE TABLE stale_files (
 );
 
 -- Index for finding unprocessed stale files
-CREATE INDEX idx_stale_files_unprocessed 
-    ON stale_files(cleaned_at) 
+CREATE INDEX idx_stale_files_unprocessed
+    ON stale_files(cleaned_at)
     WHERE cleaned_at IS NULL;
 
 -- Drop old tables if they exist
