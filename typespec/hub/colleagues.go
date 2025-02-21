@@ -2,6 +2,12 @@ package hub
 
 import "github.com/psankar/vetchi/typespec/common"
 
+type HubUserShort struct {
+	Handle   common.Handle `json:"handle"`
+	Name     string        `json:"name"`
+	ShortBio string        `json:"short_bio"`
+}
+
 type ConnectColleagueRequest struct {
 	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
 }

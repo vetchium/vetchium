@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) ConnectColleague(ctx context.Context, handle string) error {
@@ -75,4 +76,52 @@ func (p *PG) ConnectColleague(ctx context.Context, handle string) error {
 		targetUserID,
 	)
 	return nil
+}
+
+func (p *PG) GetMyColleagueApprovals(
+	ctx context.Context,
+	req hub.MyColleagueApprovalsRequest,
+) ([]hub.HubUserShort, error) {
+	loggedInUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get logged in user ID", "error", err)
+		return nil, err
+	}
+
+	query := ``
+
+	if req.PaginationKey != nil {
+		query += ` AND id < $2`
+	}
+
+	query += ` ORDER BY id DESC LIMIT $3`
+
+	hubUsers := []hub.HubUserShort{}
+	rows, err := p.pool.Query(
+		ctx,
+		query,
+		loggedInUserID,
+		req.PaginationKey,
+		req.Limit,
+	)
+	if err != nil {
+		p.log.Err("failed to get my colleague approvals", "error", err)
+		return nil, err
+	}
+
+	for rows.Next() {
+		var hubUser hub.HubUserShort
+		err = rows.Scan(&hubUser.Handle, &hubUser.Name, &hubUser.ShortBio)
+		if err != nil {
+			p.log.Err("failed to scan hub user", "error", err)
+			return nil, err
+		}
+		hubUsers = append(hubUsers, hubUser)
+	}
+	if err := rows.Err(); err != nil {
+		p.log.Err("failed to iterate over rows", "error", err)
+		return nil, err
+	}
+
+	return hubUsers, nil
 }

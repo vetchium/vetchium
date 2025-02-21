@@ -10,6 +10,12 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
+model HubUserShort {
+    handle: Handle;
+    name: string;
+    short_bio: string;
+}
+
 model ConnectColleagueRequest {
     handle: Handle;
 }
@@ -68,7 +74,7 @@ interface MyColleagueApprovals {
     @useAuth(HubAuth)
     myColleagueApprovals(@body request: MyColleagueApprovalsRequest): {
         @statusCode statusCode: 200;
-        @body approvals: Handle[];
+        @body approvals: HubUserShort[];
     };
 }
 
@@ -80,7 +86,7 @@ interface MyColleagueSeeks {
     @useAuth(HubAuth)
     myColleagueSeeks(@body request: MyColleagueSeeksRequest): {
         @statusCode statusCode: 200;
-        @body seeks: Handle[];
+        @body seeks: HubUserShort[];
     };
 }
 

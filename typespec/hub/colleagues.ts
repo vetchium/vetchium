@@ -1,5 +1,11 @@
 import { Handle } from "../common/common";
 
+export interface HubUserShort {
+  handle: Handle;
+  name: string;
+  short_bio: string;
+}
+
 export interface ConnectColleagueRequest {
   handle: Handle;
 }

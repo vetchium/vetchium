@@ -25,10 +25,19 @@ func MyColleagueApprovals(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated request", "req", req)
 
-		// TODO: Implement DB call to get approvals
-		approvals := []string{} // Replace with actual data
+		if req.Limit == 0 {
+			h.Dbg("Limit is 0, setting to default of 40")
+			req.Limit = 40
+		}
 
-		if err := json.NewEncoder(w).Encode(approvals); err != nil {
+		hubUsers, err := h.DB().GetMyColleagueApprovals(r.Context(), req)
+		if err != nil {
+			h.Dbg("Error getting my colleague hub users", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(hubUsers); err != nil {
 			h.Err("Error encoding response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

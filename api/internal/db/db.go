@@ -305,6 +305,10 @@ type DB interface {
 
 	// Used by hermione - Colleagues related methods
 	ConnectColleague(ctx context.Context, handle string) error
+	GetMyColleagueApprovals(
+		ctx context.Context,
+		req hub.MyColleagueApprovalsRequest,
+	) ([]hub.HubUserShort, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
