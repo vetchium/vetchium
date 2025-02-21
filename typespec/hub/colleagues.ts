@@ -9,11 +9,13 @@ export interface UnlinkColleagueRequest {
 }
 
 export interface MyColleagueApprovalsRequest {
-  handle: Handle;
+  pagination_key?: string;
+  limit?: number;
 }
 
 export interface MyColleagueSeeksRequest {
-  handle: Handle;
+  pagination_key?: string;
+  limit?: number;
 }
 
 export interface ApproveColleagueRequest {

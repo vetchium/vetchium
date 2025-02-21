@@ -19,11 +19,19 @@ model UnlinkColleagueRequest {
 }
 
 model MyColleagueApprovalsRequest {
-    handle: Handle;
+    pagination_key?: string;
+
+    @minValue(1)
+    @maxValue(100)
+    limit?: numeric;
 }
 
 model MyColleagueSeeksRequest {
-    handle: Handle;
+    pagination_key?: string;
+
+    @minValue(1)
+    @maxValue(100)
+    limit?: numeric;
 }
 
 model ApproveColleagueRequest {

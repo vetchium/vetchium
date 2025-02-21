@@ -11,11 +11,13 @@ type UnlinkColleagueRequest struct {
 }
 
 type MyColleagueApprovalsRequest struct {
-	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
+	PaginationKey *string `json:"pagination_key"`
+	Limit         int     `json:"limit"          validate:"min=1,max=100"`
 }
 
 type MyColleagueSeeksRequest struct {
-	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
+	PaginationKey *string `json:"pagination_key"`
+	Limit         int     `json:"limit"          validate:"min=1,max=100"`
 }
 
 type ApproveColleagueRequest struct {
