@@ -303,6 +303,9 @@ type DB interface {
 		newPicturePath string,
 	) error
 
+	// Used by hermione - Colleagues related methods
+	ConnectColleague(ctx context.Context, handle string) error
+
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
 	GetStaleFiles(ctx context.Context, limit int) ([]StaleFile, error)

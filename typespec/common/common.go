@@ -9,6 +9,11 @@ type Password string
 type City string
 type Handle string
 
+func (h Handle) IsValid() bool {
+	// Need to do more validation here
+	return len(h) > 0 && len(h) <= 32
+}
+
 type CountryCode string
 
 const GlobalCountryCode CountryCode = "ZZG"

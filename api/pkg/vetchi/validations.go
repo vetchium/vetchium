@@ -512,6 +512,14 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_handle",
+		func(fl validator.FieldLevel) bool {
+			handle, ok := fl.Field().Interface().(common.Handle)
+			return ok && handle.IsValid()
+		},
+	)
+
 	return &Vator{validate: validate, log: log}, nil
 }
 

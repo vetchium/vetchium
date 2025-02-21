@@ -2,8 +2,10 @@ package colleagues
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -25,7 +27,25 @@ func ConnectColleague(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated request", "req", req)
 
-		// TODO: Implement DB call
+		err := h.DB().ConnectColleague(r.Context(), string(req.Handle))
+		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("Colleague not found", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			if errors.Is(err, db.ErrNotColleaguable) {
+				h.Dbg("handle is not colleaguable for the logged in user now")
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
+			h.Dbg("Error connecting colleague", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 	}
 }

@@ -74,4 +74,8 @@ var (
 	ErrOfficialEmailNotFound = errors.New("official email not found")
 
 	ErrInvalidVerificationCode = errors.New("invalid verification code")
+
+	ErrNotColleaguable = errors.New(
+		"cannot send colleague request to this user",
+	)
 )
