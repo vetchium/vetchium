@@ -30,14 +30,15 @@ func MyColleagueApprovals(h wand.Wand) http.HandlerFunc {
 			req.Limit = 40
 		}
 
-		hubUsers, err := h.DB().GetMyColleagueApprovals(r.Context(), req)
+		myColleagueApprovals, err := h.DB().
+			GetMyColleagueApprovals(r.Context(), req)
 		if err != nil {
 			h.Dbg("Error getting my colleague hub users", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		if err := json.NewEncoder(w).Encode(hubUsers); err != nil {
+		if err := json.NewEncoder(w).Encode(myColleagueApprovals); err != nil {
 			h.Err("Error encoding response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

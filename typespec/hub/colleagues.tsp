@@ -88,10 +88,11 @@ interface MyColleagueApprovalsAPI {
     };
 }
 
+// TODO: In future we can add a state filter to the request to get only seeks with a certain state
 @route("/hub/my-colleague-seeks")
 interface MyColleagueSeeksAPI {
     @tag("HubProfile")
-    @doc("Get the list of all handles to whom the logged in user has sought a colleague connection, in the last 60 days.")
+    @doc("Get the list of all handles to whom the logged in user has sought a colleague connection, and not yet approved or rejected by the requested handle.")
     @post
     @useAuth(HubAuth)
     myColleagueSeeks(@body request: MyColleagueSeeksRequest): {

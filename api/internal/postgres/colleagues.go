@@ -141,3 +141,67 @@ func (p *PG) GetMyColleagueApprovals(
 		PaginationKey: lastID,
 	}, nil
 }
+
+func (p *PG) GetMyColleagueSeeks(
+	ctx context.Context,
+	req hub.MyColleagueSeeksRequest,
+) (hub.MyColleagueSeeks, error) {
+	loggedInUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get logged in user ID", "error", err)
+		return hub.MyColleagueSeeks{}, err
+	}
+
+	query := `
+		SELECT 
+			cc.id,
+			hu.handle,
+			hu.full_name as name,
+			hu.short_bio
+		FROM colleague_connections cc
+		JOIN hub_users hu ON cc.requested_id = hu.id
+		WHERE cc.requester_id = $1
+		AND cc.state = $2`
+
+	if req.PaginationKey != nil {
+		query += ` AND cc.id < $3`
+	}
+
+	query += ` ORDER BY cc.id DESC LIMIT $4`
+
+	hubUsers := []hub.HubUserShort{}
+	var lastID string
+	rows, err := p.pool.Query(
+		ctx,
+		query,
+		loggedInUserID,
+		db.ColleaguePending,
+		req.PaginationKey,
+		req.Limit,
+	)
+	if err != nil {
+		p.log.Err("failed to get my colleague seeks", "error", err)
+		return hub.MyColleagueSeeks{}, err
+	}
+
+	for rows.Next() {
+		var hubUser hub.HubUserShort
+		var id string
+		err = rows.Scan(&id, &hubUser.Handle, &hubUser.Name, &hubUser.ShortBio)
+		if err != nil {
+			p.log.Err("failed to scan hub user", "error", err)
+			return hub.MyColleagueSeeks{}, err
+		}
+		lastID = id
+		hubUsers = append(hubUsers, hubUser)
+	}
+	if err := rows.Err(); err != nil {
+		p.log.Err("failed to iterate over rows", "error", err)
+		return hub.MyColleagueSeeks{}, err
+	}
+
+	return hub.MyColleagueSeeks{
+		Seeks:         hubUsers,
+		PaginationKey: lastID,
+	}, nil
+}
