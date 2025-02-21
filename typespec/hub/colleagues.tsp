@@ -32,12 +32,22 @@ model MyColleagueApprovalsRequest {
     limit?: numeric;
 }
 
+model MyColleagueApprovals {
+    approvals: HubUserShort[];
+    pagination_key?: string;
+}
+
 model MyColleagueSeeksRequest {
     pagination_key?: string;
 
     @minValue(1)
     @maxValue(100)
     limit?: numeric;
+}
+
+model MyColleagueSeeks {
+    seeks: HubUserShort[];
+    pagination_key?: string;
 }
 
 model ApproveColleagueRequest {
@@ -67,26 +77,26 @@ interface UnlinkColleague {
 }
 
 @route("/hub/my-colleague-approvals")
-interface MyColleagueApprovals {
+interface MyColleagueApprovalsAPI {
     @tag("HubProfile")
     @doc("Get the list of handles of all likely colleagues that have sought to connect with the logged in user, in the last 60 days.")
     @post
     @useAuth(HubAuth)
     myColleagueApprovals(@body request: MyColleagueApprovalsRequest): {
         @statusCode statusCode: 200;
-        @body approvals: HubUserShort[];
+        @body response: MyColleagueApprovals;
     };
 }
 
 @route("/hub/my-colleague-seeks")
-interface MyColleagueSeeks {
+interface MyColleagueSeeksAPI {
     @tag("HubProfile")
     @doc("Get the list of all handles to whom the logged in user has sought a colleague connection, in the last 60 days.")
     @post
     @useAuth(HubAuth)
     myColleagueSeeks(@body request: MyColleagueSeeksRequest): {
         @statusCode statusCode: 200;
-        @body seeks: HubUserShort[];
+        @body response: MyColleagueSeeks;
     };
 }
 

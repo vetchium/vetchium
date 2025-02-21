@@ -19,9 +19,19 @@ export interface MyColleagueApprovalsRequest {
   limit?: number;
 }
 
+export interface MyColleagueApprovals {
+  approvals: HubUserShort[];
+  pagination_key?: string;
+}
+
 export interface MyColleagueSeeksRequest {
   pagination_key?: string;
   limit?: number;
+}
+
+export interface MyColleagueSeeks {
+  seeks: HubUserShort[];
+  pagination_key?: string;
 }
 
 export interface ApproveColleagueRequest {

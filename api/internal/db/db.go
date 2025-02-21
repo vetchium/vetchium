@@ -308,7 +308,7 @@ type DB interface {
 	GetMyColleagueApprovals(
 		ctx context.Context,
 		req hub.MyColleagueApprovalsRequest,
-	) ([]hub.HubUserShort, error)
+	) (hub.MyColleagueApprovals, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
