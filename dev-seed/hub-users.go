@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -243,15 +243,16 @@ func initHubUsers(db *pgxpool.Pool) {
 }
 
 func loginHubUsers() {
+	var wg sync.WaitGroup
 	green := color.New(color.FgGreen).SprintFunc()
 	for _, user := range hubUsers {
 		go func(user HubUser) {
+			wg.Add(1)
 			fmt.Printf("%s\n", green(fmt.Sprintf("Logging in %s", user.Email)))
-			hubLogin(user.Email, "NewPassword123$")
+			hubLogin(user.Email, "NewPassword123$", &wg)
 		}(user)
 	}
 
-	// Wait for 10 seconds to allow hubLogin to complete populating
-	// the session tokens, as it needs to wait until TFA emails are sent
-	<-time.After(10 * time.Second)
+	// Wait for all hubLogin to complete
+	wg.Wait()
 }

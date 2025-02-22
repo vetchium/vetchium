@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/psankar/vetchi/typespec/common"
@@ -226,12 +227,8 @@ func employerSignin(email, password, clientID string) string {
 	return tfaResp.SessionToken
 }
 
-func hubLogin(email, password string) string {
-	// Check if we already have a token
-	if token, ok := hubSessionTokens.Load(email); ok {
-		return token.(string)
-	}
-
+func hubLogin(email, password string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	// Step 1: Login
 	loginRequest := hub.LoginRequest{
 		Email:    common.EmailAddress(email),
@@ -388,5 +385,4 @@ func hubLogin(email, password string) string {
 	}
 
 	hubSessionTokens.Store(email, tfaResponse.SessionToken)
-	return tfaResponse.SessionToken
 }
