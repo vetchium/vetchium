@@ -246,8 +246,8 @@ func loginHubUsers() {
 	var wg sync.WaitGroup
 	green := color.New(color.FgGreen).SprintFunc()
 	for _, user := range hubUsers {
+		wg.Add(1)
 		go func(user HubUser) {
-			wg.Add(1)
 			fmt.Printf("%s\n", green(fmt.Sprintf("Logging in %s", user.Email)))
 			hubLogin(user.Email, "NewPassword123$", &wg)
 		}(user)
