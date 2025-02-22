@@ -337,3 +337,77 @@ func (p *PG) RejectColleague(ctx context.Context, handle string) error {
 		"requested", loggedInUserID)
 	return nil
 }
+
+func (p *PG) UnlinkColleague(ctx context.Context, handle string) error {
+	loggedInUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get logged in user ID", "error", err)
+		return err
+	}
+
+	// Single query that handles all cases: user not found, no accepted connection, and successful update
+	query := `
+		WITH target_user AS (
+			SELECT id, true as user_exists
+			FROM hub_users
+			WHERE handle = $1
+		),
+		connection_update AS (
+			UPDATE colleague_connections cc
+			SET state = $2,
+				unlinked_by = $3,
+				unlinked_at = timezone('UTC', now()),
+				updated_at = timezone('UTC', now())
+			FROM target_user t
+			WHERE (
+				(cc.requester_id = t.id AND cc.requested_id = $3) OR
+				(cc.requester_id = $3 AND cc.requested_id = t.id)
+			)
+			AND cc.state = $4
+			RETURNING 
+				CASE 
+					WHEN cc.requester_id = $3 THEN cc.requested_id
+					ELSE cc.requester_id
+				END as other_user_id
+		)
+		SELECT
+			COALESCE(t.user_exists, false) as user_exists,
+			t.id as target_id,
+			cu.other_user_id as connection_updated
+		FROM target_user t
+		FULL OUTER JOIN connection_update cu ON true;
+	`
+
+	var userExists bool
+	var targetID, connectionUpdated *string
+	err = p.pool.QueryRow(
+		ctx,
+		query,
+		handle,
+		db.ColleagueUnlinked,
+		loggedInUserID,
+		db.ColleagueAccepted,
+	).Scan(&userExists, &targetID, &connectionUpdated)
+
+	if err != nil {
+		p.log.Err("failed to execute unlink colleague query", "error", err)
+		return err
+	}
+
+	if !userExists {
+		p.log.Dbg("no hub user found", "handle", handle)
+		return db.ErrNoHubUser
+	}
+
+	if connectionUpdated == nil {
+		p.log.Dbg("no accepted colleague connection found",
+			"handle", handle,
+			"user", loggedInUserID)
+		return db.ErrNoConnection
+	}
+
+	p.log.Dbg("colleague connection unlinked",
+		"user", loggedInUserID,
+		"other_user", *connectionUpdated)
+	return nil
+}

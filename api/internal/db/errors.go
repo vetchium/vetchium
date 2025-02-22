@@ -78,4 +78,6 @@ var (
 	ErrNotColleaguable = errors.New(
 		"cannot send colleague request to this user",
 	)
+
+	ErrNoConnection = errors.New("no active colleague connection found")
 )

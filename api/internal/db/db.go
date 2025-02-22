@@ -315,6 +315,7 @@ type DB interface {
 	) (hub.MyColleagueSeeks, error)
 	ApproveColleague(ctx context.Context, handle string) error
 	RejectColleague(ctx context.Context, handle string) error
+	UnlinkColleague(ctx context.Context, handle string) error
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
