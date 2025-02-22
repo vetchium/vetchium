@@ -35,6 +35,21 @@ INSERT INTO hub_users (
     'Profile Test User 2 was born in India and finished education at Delhi University.',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
+),
+(
+    '12345678-0019-0019-0019-000000000003',
+    'Profile Test User 3',
+    'profilepage_user3',
+    'user3@profilepage-hub.example',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    'ACTIVE_HUB_USER',
+    'IND',
+    'Chennai',
+    'en',
+    'Profile Test User 3',
+    'Profile Test User 3 is dedicated for profile picture end-to-end testing.',
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
 );
 
 COMMIT;

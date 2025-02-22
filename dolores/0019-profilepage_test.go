@@ -2,7 +2,6 @@ package dolores
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"net/textproto"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
@@ -20,7 +20,7 @@ import (
 
 var _ = FDescribe("Profile Page", Ordered, func() {
 	var db *pgxpool.Pool
-	var hubToken1, hubToken2 string
+	var hubToken1, hubToken2, hubToken3 string
 	var sampleImageBytes []byte
 
 	BeforeAll(func() {
@@ -34,7 +34,7 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
-		wg.Add(2)
+		wg.Add(3)
 		hubSigninAsync(
 			"user1@profilepage-hub.example",
 			"NewPassword123$",
@@ -45,6 +45,12 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 			"user2@profilepage-hub.example",
 			"NewPassword123$",
 			&hubToken2,
+			&wg,
+		)
+		hubSigninAsync(
+			"user3@profilepage-hub.example",
+			"NewPassword123$",
+			&hubToken3,
 			&wg,
 		)
 		wg.Wait()
@@ -167,17 +173,17 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 			emptyStr := ""
 
 			testCases := []updateBioTestCase{
-				// {
-				// 	description: "without authentication",
-				// 	token:       "",
-				// 	request: hub.UpdateBioRequest{
-				// 		Handle:   &handle1,
-				// 		FullName: &updatedName,
-				// 		ShortBio: &updatedShortBio,
-				// 		LongBio:  &updatedLongBio,
-				// 	},
-				// 	wantStatus: http.StatusUnauthorized,
-				// },
+				{
+					description: "without authentication",
+					token:       "",
+					request: hub.UpdateBioRequest{
+						Handle:   &handle1,
+						FullName: &updatedName,
+						ShortBio: &updatedShortBio,
+						LongBio:  &updatedLongBio,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
 				{
 					description: "update bio with new unique handle",
 					token:       hubToken1,
@@ -431,16 +437,21 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 		Describe("End-to-End Profile Picture Flow", func() {
 			It("should handle the complete profile picture lifecycle", func() {
 				// First try to get non-existent picture
+				fmt.Fprintf(
+					GinkgoWriter,
+					"get non-existent picture for profilepage_user3\n",
+				)
 				req, err := http.NewRequest(
 					http.MethodGet,
 					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user1",
+						"%s/hub/profile-picture/profilepage_user3?t=%d",
 						serverURL,
+						time.Now().UnixNano(),
 					),
 					nil,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken1)
+				req.Header.Set("Authorization", "Bearer "+hubToken3)
 
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -448,6 +459,10 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				resp.Body.Close()
 
 				// Upload a profile picture using multipart form
+				fmt.Fprintf(
+					GinkgoWriter,
+					"upload profile picture for profilepage_user3\n",
+				)
 				body := &bytes.Buffer{}
 				writer := multipart.NewWriter(body)
 
@@ -478,7 +493,7 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				req.Header.Set("Content-Type", writer.FormDataContentType())
-				req.Header.Set("Authorization", "Bearer "+hubToken1)
+				req.Header.Set("Authorization", "Bearer "+hubToken3)
 
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -486,34 +501,45 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				resp.Body.Close()
 
 				// Get the uploaded picture
+				fmt.Fprintf(
+					GinkgoWriter,
+					"get uploaded picture for profilepage_user3\n",
+				)
 				req, err = http.NewRequest(
 					http.MethodGet,
 					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user1",
+						"%s/hub/profile-picture/profilepage_user3?t=%d",
 						serverURL,
+						time.Now().UnixNano(),
 					),
 					nil,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken1)
+				req.Header.Set("Authorization", "Bearer "+hubToken3)
 
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 				responseBody, err := io.ReadAll(resp.Body)
 				Expect(err).ShouldNot(HaveOccurred())
-				_, err = base64.StdEncoding.DecodeString(string(responseBody))
-				Expect(err).ShouldNot(HaveOccurred())
+				Expect(len(responseBody)).Should(BeNumerically(">", 0))
+				Expect(
+					resp.Header.Get("Content-Type"),
+				).Should(Equal("image/jpeg"))
 				resp.Body.Close()
 
 				// Remove the profile picture
+				fmt.Fprintf(
+					GinkgoWriter,
+					"remove profile picture for profilepage_user3\n",
+				)
 				req, err = http.NewRequest(
 					http.MethodPost,
 					serverURL+"/hub/remove-profile-picture",
 					bytes.NewBuffer([]byte("{}")),
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken1)
+				req.Header.Set("Authorization", "Bearer "+hubToken3)
 				req.Header.Set("Content-Type", "application/json")
 
 				resp, err = http.DefaultClient.Do(req)
@@ -522,16 +548,21 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				resp.Body.Close()
 
 				// Verify picture is gone
+				fmt.Fprintf(
+					GinkgoWriter,
+					"verify picture is gone for profilepage_user3\n",
+				)
 				req, err = http.NewRequest(
 					http.MethodGet,
 					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user1",
+						"%s/hub/profile-picture/profilepage_user3?t=%d",
 						serverURL,
+						time.Now().UnixNano(),
 					),
 					nil,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken1)
+				req.Header.Set("Authorization", "Bearer "+hubToken3)
 
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
