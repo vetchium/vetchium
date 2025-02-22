@@ -515,14 +515,31 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_handle",
 		func(fl validator.FieldLevel) bool {
-			handle, ok := fl.Field().Interface().(string)
-			if !ok {
-				log.Dbg("invalid handle", "handle", handle)
-				return false
+			field := fl.Field().Interface()
+
+			// First try as common.Handle
+			if handle, ok := field.(common.Handle); ok {
+				valid := handle.IsValid()
+				log.Dbg(
+					"validating as common.Handle",
+					"handle",
+					handle,
+					"valid",
+					valid,
+				)
+				return valid
 			}
-			valid := common.Handle(handle).IsValid()
-			log.Dbg("handle validity", "handle", handle, "valid", valid)
-			return valid
+
+			// Then try as string
+			if str, ok := field.(string); ok {
+				handle := common.Handle(str)
+				valid := handle.IsValid()
+				log.Dbg("validating as string", "handle", str, "valid", valid)
+				return valid
+			}
+
+			log.Dbg("invalid handle type", "type", reflect.TypeOf(field))
+			return false
 		},
 	)
 	if err != nil {
