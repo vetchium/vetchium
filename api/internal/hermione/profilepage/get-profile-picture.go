@@ -44,7 +44,7 @@ func GetProfilePicture(h wand.Wand) http.HandlerFunc {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
-			h.Err("failed to get profile picture URL", "error", err)
+			h.Dbg("failed to get profile picture URL", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
@@ -55,6 +55,7 @@ func GetProfilePicture(h wand.Wand) http.HandlerFunc {
 			http.Error(w, "", http.StatusNotFound)
 			return
 		}
+		h.Dbg("got profile picture URL", "url", pictureURL)
 
 		cfg := h.Config()
 		s3Config := &aws.Config{
@@ -97,6 +98,8 @@ func GetProfilePicture(h wand.Wand) http.HandlerFunc {
 		w.Header().
 			Set("Cache-Control", "public, max-age=86400")
 			// Cache for 24 hours
+
+		h.Dbg("serving profile picture", "url", pictureURL)
 
 		// Stream the file to the response
 		_, err = io.Copy(w, result.Body)

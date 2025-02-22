@@ -41,7 +41,7 @@ func RemoveProfilePicture(h wand.Wand) http.HandlerFunc {
 		// If no profile picture is set, return 404
 		if pictureURL == "" {
 			h.Dbg("no profile picture set", "handle", hubUser.Handle)
-			w.WriteHeader(http.StatusOK)
+			http.Error(w, "", http.StatusNotFound)
 			return
 		}
 

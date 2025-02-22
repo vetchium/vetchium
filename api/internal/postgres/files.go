@@ -2,11 +2,12 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 )
@@ -165,7 +166,7 @@ func (p *PG) GetProfilePictureURL(
 		WHERE handle = $1
 	`, handle).Scan(&pictureURL)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return "", db.ErrNoHubUser
 		}
 		return "", fmt.Errorf("failed to get profile picture URL: %w", err)
