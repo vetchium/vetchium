@@ -42,6 +42,7 @@ func ApproveColleague(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("colleague approved", "handle", req.Handle)
 		w.WriteHeader(http.StatusOK)
 	}
 }

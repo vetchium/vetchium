@@ -314,6 +314,7 @@ type DB interface {
 		req hub.MyColleagueSeeksRequest,
 	) (hub.MyColleagueSeeks, error)
 	ApproveColleague(ctx context.Context, handle string) error
+	RejectColleague(ctx context.Context, handle string) error
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
