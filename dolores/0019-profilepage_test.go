@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"os"
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,10 +21,16 @@ import (
 var _ = FDescribe("Profile Page", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2 string
+	var sampleImageBytes []byte
 
 	BeforeAll(func() {
 		db = setupTestDB()
 		seedDatabase(db, "0019-profilepage-up.pgsql")
+
+		// Read test image file
+		var err error
+		sampleImageBytes, err = os.ReadFile("avatar1.jpg")
+		Expect(err).ShouldNot(HaveOccurred())
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
@@ -260,9 +269,6 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 	})
 
 	Describe("Profile Picture Operations", func() {
-		sampleImageBytes := []byte(
-			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-		)
 		invalidImageBytes := []byte("invalid-base64")
 		emptyImageBytes := []byte("")
 
@@ -270,7 +276,8 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 			type uploadProfilePictureTestCase struct {
 				description string
 				token       string
-				request     hub.UploadProfilePictureRequest
+				imageBytes  []byte
+				filename    string
 				wantStatus  int
 			}
 
@@ -279,34 +286,30 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 					{
 						description: "without authentication",
 						token:       "",
-						request: hub.UploadProfilePictureRequest{
-							Image: sampleImageBytes,
-						},
-						wantStatus: http.StatusUnauthorized,
+						imageBytes:  sampleImageBytes,
+						filename:    "avatar1.jpg",
+						wantStatus:  http.StatusUnauthorized,
 					},
 					{
 						description: "upload valid image",
 						token:       hubToken2,
-						request: hub.UploadProfilePictureRequest{
-							Image: sampleImageBytes,
-						},
-						wantStatus: http.StatusOK,
+						imageBytes:  sampleImageBytes,
+						filename:    "avatar1.jpg",
+						wantStatus:  http.StatusOK,
 					},
 					{
-						description: "upload invalid base64 data",
+						description: "upload invalid image data",
 						token:       hubToken2,
-						request: hub.UploadProfilePictureRequest{
-							Image: invalidImageBytes,
-						},
-						wantStatus: http.StatusBadRequest,
+						imageBytes:  invalidImageBytes,
+						filename:    "invalid.jpg",
+						wantStatus:  http.StatusBadRequest,
 					},
 					{
 						description: "upload empty image",
 						token:       hubToken2,
-						request: hub.UploadProfilePictureRequest{
-							Image: emptyImageBytes,
-						},
-						wantStatus: http.StatusBadRequest,
+						imageBytes:  emptyImageBytes,
+						filename:    "empty.jpg",
+						wantStatus:  http.StatusBadRequest,
 					},
 				}
 
@@ -316,12 +319,50 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 						"### Testing: %s\n",
 						tc.description,
 					)
-					testPOST(
-						tc.token,
-						tc.request,
-						"/hub/upload-profile-picture",
-						tc.wantStatus,
+
+					// Create multipart form data
+					body := &bytes.Buffer{}
+					writer := multipart.NewWriter(body)
+
+					// Create form file part with custom header for image/jpeg
+					header := make(textproto.MIMEHeader)
+					header.Set(
+						"Content-Disposition",
+						fmt.Sprintf(
+							`form-data; name="image"; filename="%s"`,
+							tc.filename,
+						),
 					)
+					header.Set("Content-Type", "image/jpeg")
+					var part io.Writer
+					part, err := writer.CreatePart(header)
+					Expect(err).ShouldNot(HaveOccurred())
+					_, err = io.Copy(part, bytes.NewReader(tc.imageBytes))
+					Expect(err).ShouldNot(HaveOccurred())
+
+					// Close the multipart writer
+					err = writer.Close()
+					Expect(err).ShouldNot(HaveOccurred())
+
+					// Create request
+					req, err := http.NewRequest(
+						http.MethodPost,
+						serverURL+"/hub/upload-profile-picture",
+						body,
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					// Set headers - only Authorization and Content-Type with boundary
+					if tc.token != "" {
+						req.Header.Set("Authorization", "Bearer "+tc.token)
+					}
+					req.Header.Set("Content-Type", writer.FormDataContentType())
+
+					// Send request
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
+					resp.Body.Close()
 				}
 			})
 		})
@@ -406,15 +447,43 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 				resp.Body.Close()
 
-				// Upload a profile picture
-				testPOST(
-					hubToken1,
-					hub.UploadProfilePictureRequest{
-						Image: sampleImageBytes,
-					},
-					"/hub/upload-profile-picture",
-					http.StatusOK,
+				// Upload a profile picture using multipart form
+				body := &bytes.Buffer{}
+				writer := multipart.NewWriter(body)
+
+				// Create form file part with custom header for image/jpeg
+				header := make(textproto.MIMEHeader)
+				header.Set(
+					"Content-Disposition",
+					fmt.Sprintf(
+						`form-data; name="image"; filename="%s"`,
+						"avatar1.jpg",
+					),
 				)
+				header.Set("Content-Type", "image/jpeg")
+				var part io.Writer
+				part, err = writer.CreatePart(header)
+				Expect(err).ShouldNot(HaveOccurred())
+				_, err = io.Copy(part, bytes.NewReader(sampleImageBytes))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Close the multipart writer
+				err = writer.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err = http.NewRequest(
+					http.MethodPost,
+					serverURL+"/hub/upload-profile-picture",
+					body,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Content-Type", writer.FormDataContentType())
+				req.Header.Set("Authorization", "Bearer "+hubToken1)
+
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+				resp.Body.Close()
 
 				// Get the uploaded picture
 				req, err = http.NewRequest(
@@ -431,9 +500,9 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
-				body, err := io.ReadAll(resp.Body)
+				responseBody, err := io.ReadAll(resp.Body)
 				Expect(err).ShouldNot(HaveOccurred())
-				_, err = base64.StdEncoding.DecodeString(string(body))
+				_, err = base64.StdEncoding.DecodeString(string(responseBody))
 				Expect(err).ShouldNot(HaveOccurred())
 				resp.Body.Close()
 
