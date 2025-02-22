@@ -21,7 +21,7 @@ func (h Handle) IsValid() bool {
 	if err != nil || !matched {
 		return false
 	}
-	return len(h) > 3 && len(h) <= 32
+	return len(h) > 1 && len(h) <= 32
 }
 
 type CountryCode string

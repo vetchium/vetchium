@@ -44,7 +44,8 @@ export default function ProfilePage() {
     error,
     refetch,
   } = useProfile(userHandle);
-  const { connectColleague, isConnecting } = useColleagues();
+  const { connectColleague, approveColleague, isConnecting, isApproving } =
+    useColleagues();
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   if (isLoadingHandle || isLoadingBio) {
@@ -75,8 +76,22 @@ export default function ProfilePage() {
     }
   };
 
-  const handleApproveRequest = () => {
-    console.log("Approve request clicked");
+  const handleApproveRequest = async () => {
+    if (!bio) return;
+
+    setConnectionError(null);
+
+    try {
+      await approveColleague(bio.handle);
+      // Refetch the profile to get updated connection state
+      await refetch();
+    } catch (error) {
+      setConnectionError(
+        error instanceof Error
+          ? t(error.message)
+          : t("profile.error.approvalFailed")
+      );
+    }
   };
 
   const handleDeclineRequest = () => {
@@ -140,11 +155,18 @@ export default function ProfilePage() {
             <Button
               variant="contained"
               color="success"
-              startIcon={<CheckCircleIcon />}
+              startIcon={
+                isApproving ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <CheckCircleIcon />
+                )
+              }
               onClick={handleApproveRequest}
+              disabled={isApproving}
               fullWidth
             >
-              {t("profile.approveRequest")}
+              {isApproving ? t("common.loading") : t("profile.approveRequest")}
             </Button>
             <Button
               variant="outlined"
@@ -155,6 +177,9 @@ export default function ProfilePage() {
             >
               {t("profile.declineRequest")}
             </Button>
+            {connectionError && (
+              <Alert severity="error">{connectionError}</Alert>
+            )}
           </Stack>
         );
 
