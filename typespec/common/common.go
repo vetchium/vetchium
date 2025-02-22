@@ -1,5 +1,7 @@
 package common
 
+import "regexp"
+
 type ValidationErrors struct {
 	Errors []string `json:"errors"`
 }
@@ -10,7 +12,18 @@ type City string
 type Handle string
 
 func (h Handle) IsValid() bool {
-	// Need to do more validation here
+	if len(h) == 0 {
+		return false
+	}
+	// The regex pattern allows hyphens but requires they not be at start/end
+	// and not be consecutive
+	matched, err := regexp.MatchString(
+		`^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$`,
+		string(h),
+	)
+	if err != nil || !matched {
+		return false
+	}
 	return len(h) > 0 && len(h) <= 32
 }
 

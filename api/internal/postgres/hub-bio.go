@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/hub"
@@ -54,7 +55,7 @@ GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
 		&bio.IsColleague,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			p.log.Dbg("no hub user found", "handle", handle)
 			return hub.Bio{}, db.ErrNoHubUser
 		}
@@ -91,6 +92,14 @@ WHERE id = $5
 		hubUserID,
 	)
 	if err != nil {
+		// Check if this is a unique constraint violation on handle
+		if pgerr, ok := err.(*pgconn.PgError); ok {
+			if pgerr.Code == "23505" &&
+				pgerr.ConstraintName == "hub_users_handle_unique" {
+				p.log.Dbg("duplicate handle", "handle", bio.Handle)
+				return db.ErrDupHandle
+			}
+		}
 		p.log.Err("failed to update bio", "error", err)
 		return err
 	}

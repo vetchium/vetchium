@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS hub_users (
     long_bio TEXT NOT NULL,
     profile_picture_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    CONSTRAINT hub_users_handle_unique UNIQUE (handle)
 );
 
 CREATE TYPE hub_user_token_types AS ENUM (

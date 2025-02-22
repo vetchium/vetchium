@@ -43,6 +43,7 @@ var (
 	ErrInvalidPasswordResetToken = errors.New("invalid password reset token")
 
 	ErrNoHubUser = errors.New("hub user not found")
+	ErrDupHandle = errors.New("handle already in use")
 
 	ErrBadResume = errors.New("bad resume")
 
