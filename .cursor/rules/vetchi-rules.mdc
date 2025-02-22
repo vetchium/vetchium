@@ -15,3 +15,5 @@ globs:
 - The typespec directory contains the employer and hub specific .tsp files, which document the API schema. From these files, [openapi.yaml](mdc:typespec/tsp-output/openapi.yaml) file is generated that contains the entire API spec compiled into a single file
 - When generating test code, try to create table driven tests. Try to use functions in [tests-helpers_test.go](mdc:dolores/tests-helpers_test.go) when creating tests under dolores directory
 - When generating test code, generate positive cases, negative cases, border conditions, invalid conditions, etc. Do not ignore any obvious failures.
+- When generating test code, for every It() function in the test case, create a new dedicated user and use that. Do not reuse user accounts across multiple It test cases which may cause problems.
+
