@@ -245,8 +245,10 @@ export const en = {
       connectionFailed: "Failed to send colleague request",
       approvalFailed: "Failed to approve colleague request",
       rejectFailed: "Failed to reject colleague request",
+      noRequestFound: "No pending request found",
       unlinkFailed: "Failed to unlink colleague connection",
       noConnectionFound: "No active connection found with this colleague",
+      handleMismatch: "The handle you entered does not match",
     },
     bio: {
       error: {

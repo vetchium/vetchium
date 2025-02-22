@@ -56,9 +56,11 @@ export default function ProfilePage() {
   const {
     connectColleague,
     approveColleague,
+    rejectColleague,
     unlinkColleague,
     isConnecting,
     isApproving,
+    isRejecting,
     isUnlinking,
   } = useColleagues();
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -112,8 +114,22 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeclineRequest = () => {
-    console.log("Decline request clicked");
+  const handleDeclineRequest = async () => {
+    if (!bio) return;
+
+    setConnectionError(null);
+
+    try {
+      await rejectColleague(bio.handle);
+      // Refetch the profile to get updated connection state
+      await refetch();
+    } catch (error) {
+      setConnectionError(
+        error instanceof Error
+          ? t(error.message)
+          : t("profile.error.rejectFailed")
+      );
+    }
   };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -217,7 +233,7 @@ export default function ProfilePage() {
                 )
               }
               onClick={handleApproveRequest}
-              disabled={isApproving}
+              disabled={isApproving || isRejecting}
               fullWidth
             >
               {isApproving ? t("common.loading") : t("profile.approveRequest")}
@@ -225,11 +241,14 @@ export default function ProfilePage() {
             <Button
               variant="outlined"
               color="error"
-              startIcon={<CancelIcon />}
+              startIcon={
+                isRejecting ? <CircularProgress size={20} /> : <CancelIcon />
+              }
               onClick={handleDeclineRequest}
+              disabled={isApproving || isRejecting}
               fullWidth
             >
-              {t("profile.declineRequest")}
+              {isRejecting ? t("common.loading") : t("profile.declineRequest")}
             </Button>
             {connectionError && (
               <Alert severity="error">{connectionError}</Alert>
