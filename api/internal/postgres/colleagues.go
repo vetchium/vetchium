@@ -89,7 +89,7 @@ func (p *PG) GetMyColleagueApprovals(
 	}
 
 	query := `
-		SELECT 
+		SELECT
 			cc.id,
 			hu.handle,
 			hu.full_name as name,
@@ -153,7 +153,7 @@ func (p *PG) GetMyColleagueSeeks(
 	}
 
 	query := `
-		SELECT 
+		SELECT
 			cc.id,
 			hu.handle,
 			hu.full_name as name,
@@ -204,4 +204,69 @@ func (p *PG) GetMyColleagueSeeks(
 		Seeks:         hubUsers,
 		PaginationKey: lastID,
 	}, nil
+}
+
+func (p *PG) ApproveColleague(ctx context.Context, handle string) error {
+	loggedInUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get logged in user ID", "error", err)
+		return err
+	}
+
+	// Single query that handles all cases: user not found, no pending request, and successful update
+	query := `
+		WITH requester AS (
+			SELECT id, true as user_exists
+			FROM hub_users
+			WHERE handle = $1
+		),
+		connection_update AS (
+			UPDATE colleague_connections cc
+			SET state = $2,
+				updated_at = timezone('UTC', now())
+			FROM requester r
+			WHERE cc.requester_id = r.id
+			AND cc.requested_id = $3
+			AND cc.state = $4
+			RETURNING cc.requester_id as updated_id
+		)
+		SELECT
+			COALESCE(r.user_exists, false) as user_exists,
+			r.id as requester_id,
+			cu.updated_id as connection_updated
+		FROM requester r
+		FULL OUTER JOIN connection_update cu ON true;
+	`
+
+	var userExists bool
+	var requesterID, connectionUpdated *string
+	err = p.pool.QueryRow(
+		ctx,
+		query,
+		handle,
+		db.ColleagueAccepted,
+		loggedInUserID,
+		db.ColleaguePending,
+	).Scan(&userExists, &requesterID, &connectionUpdated)
+	if err != nil {
+		p.log.Err("failed to execute approve colleague query", "error", err)
+		return err
+	}
+
+	if !userExists {
+		p.log.Dbg("no hub user found", "handle", handle)
+		return db.ErrNoHubUser
+	}
+
+	if connectionUpdated == nil {
+		p.log.Dbg("no pending colleague request found",
+			"handle", handle,
+			"requested", loggedInUserID)
+		return db.ErrNoApplication
+	}
+
+	p.log.Dbg("colleague connection approved",
+		"requester", *requesterID,
+		"requested", loggedInUserID)
+	return nil
 }
