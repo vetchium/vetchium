@@ -18,7 +18,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Profile Page", Ordered, func() {
+var _ = Describe("Profile Page", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2, hubToken3 string
 	var sampleImageBytes []byte
