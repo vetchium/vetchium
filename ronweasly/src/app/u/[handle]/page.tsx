@@ -7,6 +7,7 @@ import { config } from "@/config";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useColleagues } from "@/hooks/useColleagues";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -28,6 +29,7 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { useParams, useRouter } from "next/navigation";
 import { WorkHistory } from "./WorkHistory";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -36,7 +38,14 @@ export default function ProfilePage() {
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
   const { t } = useTranslation();
   const isOwnProfile = myHandle === userHandle;
-  const { bio, isLoading: isLoadingBio, error } = useProfile(userHandle);
+  const {
+    bio,
+    isLoading: isLoadingBio,
+    error,
+    refetch,
+  } = useProfile(userHandle);
+  const { connectColleague, isConnecting } = useColleagues();
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   if (isLoadingHandle || isLoadingBio) {
     return (
@@ -48,8 +57,22 @@ export default function ProfilePage() {
     );
   }
 
-  const handleAddColleague = () => {
-    console.log("Add colleague clicked");
+  const handleAddColleague = async () => {
+    if (!bio) return;
+
+    setConnectionError(null);
+
+    try {
+      await connectColleague(bio.handle);
+      // Refetch the profile to get updated connection state
+      await refetch();
+    } catch (error) {
+      setConnectionError(
+        error instanceof Error
+          ? t(error.message)
+          : t("profile.error.connectionFailed")
+      );
+    }
   };
 
   const handleApproveRequest = () => {
@@ -72,14 +95,26 @@ export default function ProfilePage() {
     switch (state) {
       case "CAN_SEND_REQUEST":
         return (
-          <Button
-            variant="outlined"
-            startIcon={<PersonAddIcon />}
-            onClick={handleAddColleague}
-            fullWidth
-          >
-            {t("profile.addAsColleague")}
-          </Button>
+          <Stack spacing={2}>
+            <Button
+              variant="outlined"
+              startIcon={
+                isConnecting ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <PersonAddIcon />
+                )
+              }
+              onClick={handleAddColleague}
+              disabled={isConnecting}
+              fullWidth
+            >
+              {isConnecting ? t("common.loading") : t("profile.addAsColleague")}
+            </Button>
+            {connectionError && (
+              <Alert severity="error">{connectionError}</Alert>
+            )}
+          </Stack>
         );
 
       case "CANNOT_SEND_REQUEST":

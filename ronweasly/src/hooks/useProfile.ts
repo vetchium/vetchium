@@ -58,7 +58,7 @@ export function useProfile(handle: string) {
       setError(null);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.error.serverError")
+        err instanceof Error ? err : new Error(t("common.error.serverError"))
       );
     } finally {
       setIsLoading(false);
@@ -104,7 +104,7 @@ export function useProfile(handle: string) {
       setError(null);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.error.serverError")
+        err instanceof Error ? err : new Error(t("common.error.serverError"))
       );
       throw err;
     } finally {
@@ -152,7 +152,7 @@ export function useProfile(handle: string) {
       setError(null);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("common.error.serverError")
+        err instanceof Error ? err : new Error(t("common.error.serverError"))
       );
       throw err;
     } finally {
@@ -167,5 +167,6 @@ export function useProfile(handle: string) {
     isSaving,
     updateBio,
     uploadProfilePicture,
+    refetch: fetchBio,
   };
 }

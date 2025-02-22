@@ -239,6 +239,14 @@ export const en = {
     theyRejectedYourRequest: "They previously rejected your connection request",
     youUnlinkedConnection: "You previously unlinked this connection",
     theyUnlinkedConnection: "They previously unlinked this connection",
+    error: {
+      userNotFound: "User not found",
+      cannotConnect: "Cannot connect with this user at this time",
+      connectionFailed: "Failed to send colleague request",
+      approvalFailed: "Failed to approve colleague request",
+      rejectFailed: "Failed to reject colleague request",
+      unlinkFailed: "Failed to unlink colleague connection",
+    },
     bio: {
       error: {
         fetchFailed: "Failed to load profile information",
@@ -265,6 +273,7 @@ export const en = {
       removeConfirmMessage:
         "Are you sure you want to remove your profile picture? This action cannot be undone.",
       removeConfirm: "Yes, Remove Picture",
+      fullSize: "View Full Size",
     },
   },
 };
