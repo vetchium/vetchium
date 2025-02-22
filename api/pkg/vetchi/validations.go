@@ -515,10 +515,20 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_handle",
 		func(fl validator.FieldLevel) bool {
-			handle, ok := fl.Field().Interface().(common.Handle)
-			return ok && handle.IsValid()
+			handle, ok := fl.Field().Interface().(string)
+			if !ok {
+				log.Dbg("invalid handle", "handle", handle)
+				return false
+			}
+			valid := common.Handle(handle).IsValid()
+			log.Dbg("handle validity", "handle", handle, "valid", valid)
+			return valid
 		},
 	)
+	if err != nil {
+		log.Err("failed to register handle validation", "error", err)
+		return nil, err
+	}
 
 	return &Vator{validate: validate, log: log}, nil
 }

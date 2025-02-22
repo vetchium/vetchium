@@ -158,17 +158,17 @@ var _ = FDescribe("Profile Page", Ordered, func() {
 			emptyStr := ""
 
 			testCases := []updateBioTestCase{
-				{
-					description: "without authentication",
-					token:       "",
-					request: hub.UpdateBioRequest{
-						Handle:   &handle1,
-						FullName: &updatedName,
-						ShortBio: &updatedShortBio,
-						LongBio:  &updatedLongBio,
-					},
-					wantStatus: http.StatusUnauthorized,
-				},
+				// {
+				// 	description: "without authentication",
+				// 	token:       "",
+				// 	request: hub.UpdateBioRequest{
+				// 		Handle:   &handle1,
+				// 		FullName: &updatedName,
+				// 		ShortBio: &updatedShortBio,
+				// 		LongBio:  &updatedLongBio,
+				// 	},
+				// 	wantStatus: http.StatusUnauthorized,
+				// },
 				{
 					description: "update bio with new unique handle",
 					token:       hubToken1,

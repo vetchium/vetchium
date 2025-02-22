@@ -12,19 +12,16 @@ type City string
 type Handle string
 
 func (h Handle) IsValid() bool {
-	if len(h) == 0 {
-		return false
-	}
-	// The regex pattern allows hyphens but requires they not be at start/end
+	// The regex pattern allows hyphens and underscores but requires they not be at start/end
 	// and not be consecutive
 	matched, err := regexp.MatchString(
-		`^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$`,
+		"^[A-Za-z][A-Za-z0-9_-]*$", // Updated regex
 		string(h),
 	)
 	if err != nil || !matched {
 		return false
 	}
-	return len(h) > 0 && len(h) <= 32
+	return len(h) > 3 && len(h) <= 32
 }
 
 type CountryCode string

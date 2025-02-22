@@ -27,7 +27,7 @@ func GetBio(h wand.Wand) http.HandlerFunc {
 		bio, err := h.DB().GetBio(r.Context(), getBioRequest.Handle)
 		if err != nil {
 			if errors.Is(err, db.ErrNoHubUser) {
-				h.Err("no hub user found", "error", err)
+				h.Dbg("no hub user found", "error", err)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
