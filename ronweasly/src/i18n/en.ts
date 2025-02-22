@@ -246,6 +246,7 @@ export const en = {
       approvalFailed: "Failed to approve colleague request",
       rejectFailed: "Failed to reject colleague request",
       unlinkFailed: "Failed to unlink colleague connection",
+      noConnectionFound: "No active connection found with this colleague",
     },
     bio: {
       error: {
@@ -275,5 +276,10 @@ export const en = {
       removeConfirm: "Yes, Remove Picture",
       fullSize: "View Full Size",
     },
+    unlinkConfirmTitle: "Unlink Colleague Connection",
+    unlinkConfirmMessage:
+      "To unlink your connection with {handle}, please type their handle below to confirm.",
+    unlinkConfirmHandleLabel: "Type handle to confirm",
+    unlinkConfirm: "Unlink Connection",
   },
 };

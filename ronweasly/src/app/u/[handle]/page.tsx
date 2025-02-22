@@ -30,6 +30,15 @@ import Stack from "@mui/material/Stack";
 import { useParams, useRouter } from "next/navigation";
 import { WorkHistory } from "./WorkHistory";
 import { useState } from "react";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -44,9 +53,18 @@ export default function ProfilePage() {
     error,
     refetch,
   } = useProfile(userHandle);
-  const { connectColleague, approveColleague, isConnecting, isApproving } =
-    useColleagues();
+  const {
+    connectColleague,
+    approveColleague,
+    unlinkColleague,
+    isConnecting,
+    isApproving,
+    isUnlinking,
+  } = useColleagues();
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
+  const [unlinkConfirmHandle, setUnlinkConfirmHandle] = useState("");
 
   if (isLoadingHandle || isLoadingBio) {
     return (
@@ -98,8 +116,44 @@ export default function ProfilePage() {
     console.log("Decline request clicked");
   };
 
-  const handleUnlinkConnection = () => {
-    console.log("Unlink connection clicked");
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  const handleUnlinkClick = () => {
+    handleMenuClose();
+    setUnlinkDialogOpen(true);
+  };
+
+  const handleUnlinkDialogClose = () => {
+    setUnlinkDialogOpen(false);
+    setUnlinkConfirmHandle("");
+    setConnectionError(null);
+  };
+
+  const handleUnlinkConfirm = async () => {
+    if (!bio) return;
+
+    if (unlinkConfirmHandle !== bio.handle) {
+      setConnectionError(t("profile.error.handleMismatch"));
+      return;
+    }
+
+    try {
+      await unlinkColleague(bio.handle);
+      handleUnlinkDialogClose();
+      await refetch();
+    } catch (error) {
+      setConnectionError(
+        error instanceof Error
+          ? t(error.message)
+          : t("profile.error.unlinkFailed")
+      );
+    }
   };
 
   const renderConnectionActions = () => {
@@ -189,15 +243,73 @@ export default function ProfilePage() {
             <Alert severity="success" icon={<VerifiedIcon />} sx={{ mb: 2 }}>
               {t("profile.connectedAsColleagues")}
             </Alert>
-            <Button
-              variant="outlined"
-              color="warning"
-              startIcon={<LinkOffIcon />}
-              onClick={handleUnlinkConnection}
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <IconButton onClick={handleMenuClick} size="small">
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem
+                onClick={handleUnlinkClick}
+                sx={{ color: "error.main" }}
+              >
+                <LinkOffIcon sx={{ mr: 1 }} />
+                {t("profile.unlinkConnection")}
+              </MenuItem>
+            </Menu>
+            <Dialog
+              open={unlinkDialogOpen}
+              onClose={handleUnlinkDialogClose}
+              maxWidth="sm"
               fullWidth
             >
-              {t("profile.unlinkConnection")}
-            </Button>
+              <DialogTitle sx={{ color: "error.main" }}>
+                {t("profile.unlinkConfirmTitle")}
+              </DialogTitle>
+              <DialogContent>
+                <Typography sx={{ mb: 2 }}>
+                  {t("profile.unlinkConfirmMessage", { handle: bio.handle })}
+                </Typography>
+                <TextField
+                  fullWidth
+                  label={t("profile.unlinkConfirmHandleLabel")}
+                  value={unlinkConfirmHandle}
+                  onChange={(e) => setUnlinkConfirmHandle(e.target.value)}
+                  error={Boolean(connectionError)}
+                  helperText={connectionError}
+                  sx={{ mt: 1 }}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleUnlinkDialogClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  onClick={handleUnlinkConfirm}
+                  color="error"
+                  variant="contained"
+                  disabled={isUnlinking || unlinkConfirmHandle !== bio.handle}
+                  startIcon={
+                    isUnlinking ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <LinkOffIcon />
+                    )
+                  }
+                >
+                  {isUnlinking
+                    ? t("common.loading")
+                    : t("profile.unlinkConfirm")}
+                </Button>
+              </DialogActions>
+            </Dialog>
+            {connectionError && (
+              <Alert severity="error">{connectionError}</Alert>
+            )}
           </Stack>
         );
 
