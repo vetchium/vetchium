@@ -33,14 +33,27 @@ type GetBioRequest struct {
 	Handle string `json:"handle" validate:"required"`
 }
 
+type ColleagueConnectionState string
+
+const (
+	CanSendRequestCCState         ColleagueConnectionState = "CAN_SEND_REQUEST"
+	CannotSendRequestCCState      ColleagueConnectionState = "CANNOT_SEND_REQUEST"
+	RequestSentPendingCCState     ColleagueConnectionState = "REQUEST_SENT_PENDING"
+	RequestReceivedPendingCCState ColleagueConnectionState = "REQUEST_RECEIVED_PENDING"
+	ConnectedCCState              ColleagueConnectionState = "CONNECTED"
+	RejectedByMeCCState           ColleagueConnectionState = "REJECTED_BY_ME"
+	RejectedByThemCCState         ColleagueConnectionState = "REJECTED_BY_THEM"
+	UnlinkedByMeCCState           ColleagueConnectionState = "UNLINKED_BY_ME"
+	UnlinkedByThemCCState         ColleagueConnectionState = "UNLINKED_BY_THEM"
+)
+
 type Bio struct {
-	Handle              string   `json:"handle"`
-	FullName            string   `json:"full_name"`
-	ShortBio            string   `json:"short_bio"`
-	LongBio             string   `json:"long_bio"`
-	VerifiedMailDomains []string `json:"verified_mail_domains"`
-	IsColleaguable      bool     `json:"is_colleaguable"`
-	IsColleague         bool     `json:"is_colleague"`
+	Handle                   string                   `json:"handle"`
+	FullName                 string                   `json:"full_name"`
+	ShortBio                 string                   `json:"short_bio"`
+	LongBio                  string                   `json:"long_bio"`
+	VerifiedMailDomains      []string                 `json:"verified_mail_domains"`
+	ColleagueConnectionState ColleagueConnectionState `json:"colleague_connection_state"`
 }
 
 type UpdateBioRequest struct {

@@ -32,15 +32,86 @@ WITH verified_domains AS (
 ),
 target_user_id AS (
 	SELECT id FROM hub_users WHERE handle = $1
+),
+connection_state AS (
+	SELECT 
+		CASE
+			-- Check if they are connected
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE (requester_id = $2 AND requested_id = (SELECT id FROM target_user_id)
+					OR requester_id = (SELECT id FROM target_user_id) AND requested_id = $2)
+				AND state = 'COLLEAGUING_ACCEPTED'
+			) THEN 'CONNECTED'
+			
+			-- Check if there's a pending request from logged-in user
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE requester_id = $2 
+				AND requested_id = (SELECT id FROM target_user_id)
+				AND state = 'COLLEAGUING_PENDING'
+			) THEN 'REQUEST_SENT_PENDING'
+			
+			-- Check if there's a pending request to logged-in user
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE requester_id = (SELECT id FROM target_user_id)
+				AND requested_id = $2
+				AND state = 'COLLEAGUING_PENDING'
+			) THEN 'REQUEST_RECEIVED_PENDING'
+			
+			-- Check if logged-in user rejected their request
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE requester_id = (SELECT id FROM target_user_id)
+				AND requested_id = $2
+				AND state = 'COLLEAGUING_REJECTED'
+				AND rejected_by = $2
+			) THEN 'REJECTED_BY_ME'
+			
+			-- Check if they rejected logged-in user's request
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE requester_id = $2
+				AND requested_id = (SELECT id FROM target_user_id)
+				AND state = 'COLLEAGUING_REJECTED'
+				AND rejected_by = (SELECT id FROM target_user_id)
+			) THEN 'REJECTED_BY_THEM'
+			
+			-- Check if logged-in user unlinked the connection
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE (requester_id = $2 AND requested_id = (SELECT id FROM target_user_id)
+					OR requester_id = (SELECT id FROM target_user_id) AND requested_id = $2)
+				AND state = 'COLLEAGUING_UNLINKED'
+				AND unlinked_by = $2
+			) THEN 'UNLINKED_BY_ME'
+			
+			-- Check if they unlinked the connection
+			WHEN EXISTS (
+				SELECT 1 FROM colleague_connections
+				WHERE (requester_id = $2 AND requested_id = (SELECT id FROM target_user_id)
+					OR requester_id = (SELECT id FROM target_user_id) AND requested_id = $2)
+				AND state = 'COLLEAGUING_UNLINKED'
+				AND unlinked_by = (SELECT id FROM target_user_id)
+			) THEN 'UNLINKED_BY_THEM'
+			
+			-- If none of the above, check if they can be colleagues
+			ELSE 
+				CASE 
+					WHEN is_colleaguable($2, (SELECT id FROM target_user_id), $3) THEN 'CAN_SEND_REQUEST'
+					ELSE 'CANNOT_SEND_REQUEST'
+				END
+		END as state
 )
 SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
 	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains,
-	is_colleaguable($2, (SELECT id FROM target_user_id), $3) as is_colleaguable,
-	are_colleagues($2, (SELECT id FROM target_user_id)) as is_colleague
+	cs.state as colleague_connection_state
 FROM hub_users hu
 LEFT JOIN verified_domains vd ON true
+CROSS JOIN connection_state cs
 WHERE hu.handle = $1
-GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
+GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio, cs.state
 `,
 		handle,
 		loggedInUserID,
@@ -51,8 +122,7 @@ GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
 		&bio.ShortBio,
 		&bio.LongBio,
 		&bio.VerifiedMailDomains,
-		&bio.IsColleaguable,
-		&bio.IsColleague,
+		&bio.ColleagueConnectionState,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

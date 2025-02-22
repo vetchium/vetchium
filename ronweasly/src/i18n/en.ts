@@ -225,6 +225,20 @@ export const en = {
     editMyProfile: "Edit My Profile",
     actions: "Actions",
     addAsColleague: "Add as Colleague",
+    verifiedColleague: "Verified Colleague",
+    cannotAddAsColleague:
+      "You need a verified email in a common domain to connect with this person",
+    requestPending: "Connection request pending",
+    receivedColleagueRequest:
+      "This person wants to connect with you as a colleague",
+    approveRequest: "Approve Request",
+    declineRequest: "Decline Request",
+    connectedAsColleagues: "You are connected as colleagues",
+    unlinkConnection: "Unlink Connection",
+    youRejectedTheirRequest: "You previously rejected their connection request",
+    theyRejectedYourRequest: "They previously rejected your connection request",
+    youUnlinkedConnection: "You previously unlinked this connection",
+    theyUnlinkedConnection: "They previously unlinked this connection",
     bio: {
       error: {
         fetchFailed: "Failed to load profile information",

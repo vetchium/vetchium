@@ -43,6 +43,36 @@ model GetBioRequest {
     handle: string;
 }
 
+@doc("Represents the state of a colleague connection from the perspective of the logged-in user")
+union ColleagueConnectionState {
+    @doc("No connection exists and the user can be sent a colleague request")
+    CAN_SEND_REQUEST: {},
+
+    @doc("No connection exists and the user cannot be sent a colleague request (e.g., no common verified domains)")
+    CANNOT_SEND_REQUEST: {},
+
+    @doc("The logged-in user has sent a request that is pending")
+    REQUEST_SENT_PENDING: {},
+
+    @doc("The target user has sent a request that is pending the logged-in user's action")
+    REQUEST_RECEIVED_PENDING: {},
+
+    @doc("The users are connected as colleagues")
+    CONNECTED: {},
+
+    @doc("The logged-in user previously rejected a request from this user")
+    REJECTED_BY_ME: {},
+
+    @doc("This user previously rejected a request from the logged-in user")
+    REJECTED_BY_THEM: {},
+
+    @doc("The logged-in user previously unlinked a connection with this user")
+    UNLINKED_BY_ME: {},
+
+    @doc("This user previously unlinked a connection with the logged-in user")
+    UNLINKED_BY_THEM: {},
+}
+
 model Bio {
     handle: string;
     full_name: string;
@@ -56,11 +86,8 @@ model Bio {
     @doc("The list of verified mail domains for the user.")
     verified_mail_domains?: string[];
 
-    @doc("Can this handle be marked as a colleague by the logged in user?")
-    is_colleaguable: boolean;
-
-    @doc("Is the handle already marked as a colleague by the logged in user?")
-    is_colleague: boolean;
+    @doc("The state of colleague connection with this user from the perspective of the logged-in user")
+    colleague_connection_state: ColleagueConnectionState;
 }
 
 model UpdateBioRequest {

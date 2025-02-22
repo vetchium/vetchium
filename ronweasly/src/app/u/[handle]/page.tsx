@@ -9,6 +9,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import BlockIcon from "@mui/icons-material/Block";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
+import PendingIcon from "@mui/icons-material/Pending";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -20,6 +25,7 @@ import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
 import { useParams, useRouter } from "next/navigation";
 import { WorkHistory } from "./WorkHistory";
 
@@ -43,8 +49,129 @@ export default function ProfilePage() {
   }
 
   const handleAddColleague = () => {
-    // TODO: Implement the add colleague functionality
     console.log("Add colleague clicked");
+  };
+
+  const handleApproveRequest = () => {
+    console.log("Approve request clicked");
+  };
+
+  const handleDeclineRequest = () => {
+    console.log("Decline request clicked");
+  };
+
+  const handleUnlinkConnection = () => {
+    console.log("Unlink connection clicked");
+  };
+
+  const renderConnectionActions = () => {
+    if (isOwnProfile || !bio) return null;
+
+    const state = bio.colleague_connection_state;
+
+    switch (state) {
+      case "CAN_SEND_REQUEST":
+        return (
+          <Button
+            variant="outlined"
+            startIcon={<PersonAddIcon />}
+            onClick={handleAddColleague}
+            fullWidth
+          >
+            {t("profile.addAsColleague")}
+          </Button>
+        );
+
+      case "CANNOT_SEND_REQUEST":
+        return (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t("profile.cannotAddAsColleague")}
+          </Alert>
+        );
+
+      case "REQUEST_SENT_PENDING":
+        return (
+          <Alert severity="info" icon={<PendingIcon />} sx={{ mb: 2 }}>
+            {t("profile.requestPending")}
+          </Alert>
+        );
+
+      case "REQUEST_RECEIVED_PENDING":
+        return (
+          <Stack spacing={2}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t("profile.receivedColleagueRequest")}
+            </Alert>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<CheckCircleIcon />}
+              onClick={handleApproveRequest}
+              fullWidth
+            >
+              {t("profile.approveRequest")}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<CancelIcon />}
+              onClick={handleDeclineRequest}
+              fullWidth
+            >
+              {t("profile.declineRequest")}
+            </Button>
+          </Stack>
+        );
+
+      case "CONNECTED":
+        return (
+          <Stack spacing={2}>
+            <Alert severity="success" icon={<VerifiedIcon />} sx={{ mb: 2 }}>
+              {t("profile.connectedAsColleagues")}
+            </Alert>
+            <Button
+              variant="outlined"
+              color="warning"
+              startIcon={<LinkOffIcon />}
+              onClick={handleUnlinkConnection}
+              fullWidth
+            >
+              {t("profile.unlinkConnection")}
+            </Button>
+          </Stack>
+        );
+
+      case "REJECTED_BY_ME":
+        return (
+          <Alert severity="warning" icon={<BlockIcon />} sx={{ mb: 2 }}>
+            {t("profile.youRejectedTheirRequest")}
+          </Alert>
+        );
+
+      case "REJECTED_BY_THEM":
+        return (
+          <Alert severity="warning" icon={<BlockIcon />} sx={{ mb: 2 }}>
+            {t("profile.theyRejectedYourRequest")}
+          </Alert>
+        );
+
+      case "UNLINKED_BY_ME":
+        return (
+          <Alert severity="info" icon={<LinkOffIcon />} sx={{ mb: 2 }}>
+            {t("profile.youUnlinkedConnection")}
+          </Alert>
+        );
+
+      case "UNLINKED_BY_THEM":
+        return (
+          <Alert severity="info" icon={<LinkOffIcon />} sx={{ mb: 2 }}>
+            {t("profile.theyUnlinkedConnection")}
+          </Alert>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -113,7 +240,7 @@ export default function ProfilePage() {
                       }}
                     >
                       <Bio bio={bio} isLoading={false} />
-                      {bio.is_colleague && (
+                      {bio.colleague_connection_state === "CONNECTED" && (
                         <Chip
                           icon={<VerifiedIcon />}
                           label={t("profile.verifiedColleague")}
@@ -136,21 +263,14 @@ export default function ProfilePage() {
             </Paper>
 
             {/* Actions sidebar */}
-            {!isOwnProfile && bio?.is_colleaguable && !bio?.is_colleague && (
+            {!isOwnProfile && (
               <Box sx={{ width: 280, flexShrink: 0 }}>
                 <Card elevation={0}>
                   <CardContent>
                     <Typography variant="h6" sx={{ mb: 2 }}>
                       {t("profile.actions")}
                     </Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PersonAddIcon />}
-                      onClick={handleAddColleague}
-                      fullWidth
-                    >
-                      {t("profile.addAsColleague")}
-                    </Button>
+                    {renderConnectionActions()}
                   </CardContent>
                 </Card>
               </Box>
