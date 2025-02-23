@@ -18,7 +18,7 @@ type UnlinkColleagueRequest struct {
 
 type MyColleagueApprovalsRequest struct {
 	PaginationKey *string `json:"pagination_key"`
-	Limit         int     `json:"limit"          validate:"min=1,max=100"`
+	Limit         int     `json:"limit"          validate:"min=0,max=100"`
 }
 
 type MyColleagueApprovals struct {

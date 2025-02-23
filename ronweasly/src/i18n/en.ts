@@ -8,6 +8,8 @@ export const en = {
     search: "Search",
     loading: "Loading...",
     cancel: "Cancel",
+    approve: "Approve",
+    reject: "Reject",
     error: {
       notAuthenticated: "Not authenticated. Please log in again.",
       sessionExpired: "Session expired. Please log in again.",
@@ -134,6 +136,7 @@ export const en = {
     myApplications: "My Applications",
     myCandidacies: "My Candidacies",
     myProfile: "My Profile",
+    myApprovals: "My Approvals",
   },
   candidacies: {
     viewCandidacy: "View Candidacy",
@@ -283,5 +286,13 @@ export const en = {
       "To unlink your connection with {handle}, please type their handle below to confirm.",
     unlinkConfirmHandleLabel: "Type handle to confirm",
     unlinkConfirm: "Unlink Connection",
+  },
+  approvals: {
+    title: "My Approvals",
+    colleagueApprovals: "Colleague Approvals",
+    noApprovals: "No pending approvals",
+    error: {
+      fetchFailed: "Failed to fetch approvals",
+    },
   },
 };

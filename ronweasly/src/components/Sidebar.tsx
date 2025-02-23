@@ -13,6 +13,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import PersonIcon from "@mui/icons-material/Person";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "@/hooks/useTranslation";
 import Cookies from "js-cookie";
@@ -58,6 +59,11 @@ export default function Sidebar({ open }: SidebarProps) {
       text: "myCandidacies",
       icon: <FolderSpecialIcon />,
       path: "/my-candidacies",
+    },
+    {
+      text: "myApprovals",
+      icon: <CheckCircleIcon />,
+      path: "/my-approvals",
     },
     {
       text: "myProfile",

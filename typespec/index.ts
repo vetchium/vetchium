@@ -14,6 +14,7 @@ export * from "./hub/hubusers";
 export * from "./hub/employers";
 export * from "./hub/workhistory";
 export * from "./hub/profilepage";
+export * from "./hub/colleagues";
 
 // Export employer types
 export * from "./employer/openings";
