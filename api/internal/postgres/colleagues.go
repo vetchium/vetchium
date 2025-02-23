@@ -163,22 +163,20 @@ func (p *PG) GetMyColleagueSeeks(
 		WHERE cc.requester_id = $1
 		AND cc.state = $2`
 
+	var args []interface{}
+	args = append(args, loggedInUserID, db.ColleaguePending)
+
 	if req.PaginationKey != nil {
-		query += ` AND cc.id < $3`
+		query += fmt.Sprintf(` AND cc.id < $%d`, len(args)+1)
+		args = append(args, *req.PaginationKey)
 	}
 
-	query += ` ORDER BY cc.id DESC LIMIT $4`
+	query += fmt.Sprintf(` ORDER BY cc.id DESC LIMIT $%d`, len(args)+1)
+	args = append(args, req.Limit)
 
 	hubUsers := []hub.HubUserShort{}
 	var lastID string
-	rows, err := p.pool.Query(
-		ctx,
-		query,
-		loggedInUserID,
-		db.ColleaguePending,
-		req.PaginationKey,
-		req.Limit,
-	)
+	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
 		p.log.Err("failed to get my colleague seeks", "error", err)
 		return hub.MyColleagueSeeks{}, err

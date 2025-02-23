@@ -137,6 +137,7 @@ export const en = {
     myCandidacies: "My Candidacies",
     myProfile: "My Profile",
     myApprovals: "My Approvals",
+    myRequisitions: "My Requisitions",
   },
   candidacies: {
     viewCandidacy: "View Candidacy",
@@ -293,6 +294,14 @@ export const en = {
     noApprovals: "No pending approvals",
     error: {
       fetchFailed: "Failed to fetch approvals",
+    },
+  },
+  requisitions: {
+    title: "My Requisitions",
+    colleagueSeeks: "Colleague Connection Requests",
+    noSeeks: "No pending connection requests",
+    error: {
+      fetchFailed: "Failed to fetch connection requests",
     },
   },
 };

@@ -14,6 +14,8 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import PersonIcon from "@mui/icons-material/Person";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PendingIcon from "@mui/icons-material/Pending";
+import SendIcon from "@mui/icons-material/Send";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "@/hooks/useTranslation";
 import Cookies from "js-cookie";
@@ -64,6 +66,11 @@ export default function Sidebar({ open }: SidebarProps) {
       text: "myApprovals",
       icon: <CheckCircleIcon />,
       path: "/my-approvals",
+    },
+    {
+      text: "myRequisitions",
+      icon: <SendIcon />,
+      path: "/my-requisitions",
     },
     {
       text: "myProfile",
