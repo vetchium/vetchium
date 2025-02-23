@@ -260,7 +260,7 @@ export default function ProfilePage() {
         return (
           <Stack spacing={2}>
             <Alert severity="success" icon={<VerifiedIcon />} sx={{ mb: 2 }}>
-              {t("profile.connectedAsColleagues")}
+              {t("profile.mutuallyVerifiedColleague")}
             </Alert>
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <IconButton onClick={handleMenuClick} size="small">
@@ -431,15 +431,6 @@ export default function ProfilePage() {
                       }}
                     >
                       <Bio bio={bio} isLoading={false} />
-                      {bio.colleague_connection_state === "CONNECTED" && (
-                        <Chip
-                          icon={<VerifiedIcon />}
-                          label={t("profile.verifiedColleague")}
-                          color="primary"
-                          variant="outlined"
-                          size="small"
-                        />
-                      )}
                     </Box>
                   </Box>
                 )}
