@@ -8,13 +8,14 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-import Avatar from "@mui/material/Avatar";
 import Link from "next/link";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useColleagueApprovals } from "@/hooks/useColleagueApprovals";
 import { useColleagues } from "@/hooks/useColleagues";
 import type { HubUserShort } from "@psankar/vetchi-typespec";
+import { config } from "@/config";
+import ProfilePicture from "@/components/ProfilePicture";
 
 export default function MyApprovalsPage() {
   const { t } = useTranslation();
@@ -79,7 +80,10 @@ export default function MyApprovalsPage() {
               {approvals?.approvals.map((user: HubUserShort) => (
                 <Paper key={user.handle} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar>{user.name.charAt(0).toUpperCase()}</Avatar>
+                    <ProfilePicture
+                      imageUrl={`${config.API_SERVER_PREFIX}/hub/profile-picture/${user.handle}`}
+                      size={40}
+                    />
                     <Box sx={{ flex: 1 }}>
                       <Link
                         href={`/u/${user.handle}`}
