@@ -15,6 +15,7 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 		domain      string
 		shortDomain string
 	}{
+		// Current employer options below
 		{
 			displayName: "Gryffindor",
 			email:       "admin@gryffindor.example",
@@ -38,6 +39,32 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 			email:       "admin@slytherin.example",
 			domain:      "slytherin.example",
 			shortDomain: "s.ex",
+		},
+
+		// Old employer options below
+		{
+			displayName: "Sun Vaja",
+			email:       "admin@sunvaja.example",
+			domain:      "sunvaja.example",
+			shortDomain: "sv.ex",
+		},
+		{
+			displayName: "Novell Tenware",
+			email:       "admin@novelltenware.example",
+			domain:      "novelltenware.example",
+			shortDomain: "nt.ex",
+		},
+		{
+			displayName: "DEC Dpd",
+			email:       "admin@dec.example",
+			domain:      "dec.example",
+			shortDomain: "de.ex",
+		},
+		{
+			displayName: "Nokia Bricks",
+			email:       "admin@nokia.example",
+			domain:      "nokia.example",
+			shortDomain: "no.ex",
 		},
 	}
 

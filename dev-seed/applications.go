@@ -7,7 +7,7 @@ import (
 
 func createApplications() {
 	for _, user := range hubUsers {
-		for _, companyDomain := range user.PreferredCompanyDomains {
+		for _, companyDomain := range user.ApplyToCompanyDomains {
 			firstOpeningID := activeOpenings[companyDomain][0]
 			createApplicationForOpening(user, companyDomain, firstOpeningID)
 

@@ -149,37 +149,31 @@ var jobs = []struct {
 
 func createWorkHistories() {
 	for _, user := range hubUsers {
-		// 90% chance of having a work history
-		if rand.Float32() < 0.9 {
-			// Get the auth token from the session map
-			tokenI, ok := hubSessionTokens.Load(user.Email)
-			if !ok {
-				log.Fatalf("no auth token found for %s", user.Email)
-			}
-			authToken := tokenI.(string)
-
-			err := createWorkHistory(authToken)
-			if err != nil {
-				log.Fatalf(
-					"error creating work history for %s: %v",
-					user.Email,
-					err,
-				)
-			}
-			color.Magenta("created work history for %s", user.Email)
+		tokenI, ok := hubSessionTokens.Load(user.Email)
+		if !ok {
+			log.Fatalf("no auth token found for %s", user.Email)
 		}
+		authToken := tokenI.(string)
+
+		err := createWorkHistory(authToken, user.WorkHistoryDomains)
+		if err != nil {
+			log.Fatalf(
+				"error creating work history for %s: %v",
+				user.Email,
+				err,
+			)
+		}
+		color.Magenta("created work history for %s", user.Email)
 	}
 }
 
-func createWorkHistory(authToken string) error {
-	numWorkHistories := rand.Intn(3) + 1
-
+func createWorkHistory(authToken string, workHistoryDomains []string) error {
 	// 1 year ago is the start date of the first work history
 	startDate := time.Now().AddDate(-1, 0, 0)
 	prevStartDate := startDate
 
 	// Fill work history in reverse chronological order
-	for i := 0; i < numWorkHistories; i++ {
+	for i, domain := range workHistoryDomains {
 		var endDatePtr *string
 		if i == 0 {
 			// First work history is current job
@@ -194,7 +188,12 @@ func createWorkHistory(authToken string) error {
 			prevStartDate = startDate
 		}
 
-		err := createWorkHistoryItem(authToken, startDate, endDatePtr)
+		err := createWorkHistoryItem(
+			authToken,
+			startDate,
+			endDatePtr,
+			domain,
+		)
 		if err != nil {
 			return err
 		}
@@ -206,9 +205,9 @@ func createWorkHistoryItem(
 	authToken string,
 	startDate time.Time,
 	endDatePtr *string,
+	employerDomain string,
 ) error {
 	job := jobs[rand.Intn(len(jobs))]
-	employerDomain := employerDomains[rand.Intn(len(employerDomains))]
 
 	var addWorkHistoryRequest = hub.AddWorkHistoryRequest{
 		EmployerDomain: employerDomain,
