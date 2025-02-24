@@ -38,8 +38,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Experienced software engineer with focus on backend development",
 		WorkHistoryDomains: []string{
 			"sunvaja.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -51,7 +51,7 @@ var hubUsers = []HubUser{
 		PreferredLanguage:  "en",
 		ShortBio:           "Product Manager",
 		LongBio:            "Product manager with experience in tech industry",
-		WorkHistoryDomains: []string{"novelltenware.example", "dec.example"},
+		WorkHistoryDomains: []string{"novelltenware.example", "decdpd.example"},
 	},
 	{
 		Name:              "User Three",
@@ -63,8 +63,8 @@ var hubUsers = []HubUser{
 		ShortBio:          "Frontend Developer",
 		LongBio:           "Frontend developer specializing in React and TypeScript",
 		WorkHistoryDomains: []string{
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -77,7 +77,7 @@ var hubUsers = []HubUser{
 		PreferredLanguage:  "fr",
 		ShortBio:           "DevOps Engineer",
 		LongBio:            "DevOps engineer with cloud expertise",
-		WorkHistoryDomains: []string{"nokia.example", "sunvaja.example"},
+		WorkHistoryDomains: []string{"nokiabricks.example", "sunvaja.example"},
 	},
 	{
 		Name:              "User Five",
@@ -90,8 +90,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Data scientist with ML expertise",
 		WorkHistoryDomains: []string{
 			"novelltenware.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -105,8 +105,8 @@ var hubUsers = []HubUser{
 		ShortBio:          "UX Designer",
 		LongBio:           "UX designer focused on user-centered design",
 		WorkHistoryDomains: []string{
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -119,7 +119,7 @@ var hubUsers = []HubUser{
 		PreferredLanguage:  "en",
 		ShortBio:           "System Architect",
 		LongBio:            "System architect with distributed systems experience",
-		WorkHistoryDomains: []string{"sunvaja.example", "nokia.example"},
+		WorkHistoryDomains: []string{"sunvaja.example", "nokiabricks.example"},
 	},
 	{
 		Name:              "User Eight",
@@ -132,8 +132,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Mobile developer specializing in iOS",
 		WorkHistoryDomains: []string{
 			"novelltenware.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -146,9 +146,9 @@ var hubUsers = []HubUser{
 		ShortBio:          "QA Engineer",
 		LongBio:           "QA engineer with automation expertise",
 		WorkHistoryDomains: []string{
-			"dec.example",
+			"decdpd.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -160,7 +160,7 @@ var hubUsers = []HubUser{
 		PreferredLanguage:  "nl",
 		ShortBio:           "Security Engineer",
 		LongBio:            "Security engineer focused on application security",
-		WorkHistoryDomains: []string{"nokia.example", "dec.example"},
+		WorkHistoryDomains: []string{"nokiabricks.example", "decdpd.example"},
 	},
 	{
 		Name:              "User Eleven",
@@ -173,8 +173,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Backend developer with Java expertise",
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -203,8 +203,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Backend developer with Go expertise",
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
-			"nokia.example",
-			"dec.example",
+			"nokiabricks.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -220,7 +220,7 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"sunvaja.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -234,7 +234,7 @@ var hubUsers = []HubUser{
 		LongBio:           "DevOps engineer with Kubernetes expertise",
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -249,7 +249,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Frontend developer with Vue.js expertise",
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -264,9 +264,9 @@ var hubUsers = []HubUser{
 		LongBio:           "Data engineer with Apache Spark expertise",
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -281,7 +281,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -296,7 +296,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"gryffindor.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -310,8 +310,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Cloud architect with AWS expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"nokia.example",
-			"dec.example",
+			"nokiabricks.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -325,7 +325,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Mobile developer with Android expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"dec.example",
+			"decdpd.example",
 			"sunvaja.example",
 		},
 	},
@@ -340,9 +340,9 @@ var hubUsers = []HubUser{
 		LongBio:           "UI designer with focus on mobile apps",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -357,7 +357,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
 			"sunvaja.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -371,7 +371,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Full stack developer with MERN stack expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"novelltenware.example",
 		},
 	},
@@ -386,9 +386,9 @@ var hubUsers = []HubUser{
 		LongBio:           "DevOps engineer with AWS expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"dec.example",
+			"decdpd.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -403,7 +403,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -418,7 +418,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -432,7 +432,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Security engineer with cloud security expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -447,7 +447,7 @@ var hubUsers = []HubUser{
 		LongBio:           "System architect with cloud native expertise",
 		WorkHistoryDomains: []string{
 			"hufflepuff.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -463,7 +463,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"slitherin.example",
 			"sunvaja.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -477,8 +477,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Backend developer with Node.js expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -494,7 +494,7 @@ var hubUsers = []HubUser{
 			"slitherin.example",
 			"sunvaja.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -508,7 +508,7 @@ var hubUsers = []HubUser{
 		LongBio:           "DevOps engineer with GCP expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -523,7 +523,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Data engineer with Apache Kafka expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -538,9 +538,9 @@ var hubUsers = []HubUser{
 		LongBio:           "Frontend developer with Svelte expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -555,7 +555,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"slitherin.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -570,7 +570,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"slitherin.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -584,7 +584,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Machine learning engineer with computer vision expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -599,7 +599,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Security engineer with DevSecOps expertise",
 		WorkHistoryDomains: []string{
 			"slitherin.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -614,7 +614,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Data engineer with big data expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"novelltenware.example",
 		},
 	},
@@ -629,8 +629,8 @@ var hubUsers = []HubUser{
 		LongBio:           "Backend developer with Ruby expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"dec.example",
-			"nokia.example",
+			"decdpd.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -646,7 +646,7 @@ var hubUsers = []HubUser{
 			"ravenclaw.example",
 			"sunvaja.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -660,7 +660,7 @@ var hubUsers = []HubUser{
 		LongBio:           "DevOps engineer with Azure expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},
@@ -675,7 +675,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Mobile developer with Flutter expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -690,9 +690,9 @@ var hubUsers = []HubUser{
 		LongBio:           "Data scientist with time series analysis expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -707,7 +707,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
 			"novelltenware.example",
-			"dec.example",
+			"decdpd.example",
 		},
 	},
 	{
@@ -722,7 +722,7 @@ var hubUsers = []HubUser{
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
 			"sunvaja.example",
-			"nokia.example",
+			"nokiabricks.example",
 		},
 	},
 	{
@@ -736,7 +736,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Security engineer with blockchain security expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"dec.example",
+			"decdpd.example",
 			"novelltenware.example",
 		},
 	},
@@ -751,7 +751,7 @@ var hubUsers = []HubUser{
 		LongBio:           "Machine learning engineer with reinforcement learning expertise",
 		WorkHistoryDomains: []string{
 			"ravenclaw.example",
-			"nokia.example",
+			"nokiabricks.example",
 			"sunvaja.example",
 		},
 	},

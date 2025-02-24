@@ -56,14 +56,14 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 		},
 		{
 			displayName: "DEC Dpd",
-			email:       "admin@dec.example",
-			domain:      "dec.example",
+			email:       "admin@decdpd.example",
+			domain:      "decdpd.example",
 			shortDomain: "de.ex",
 		},
 		{
 			displayName: "Nokia Bricks",
-			email:       "admin@nokia.example",
-			domain:      "nokia.example",
+			email:       "admin@nokiabricks.example",
+			domain:      "nokiabricks.example",
 			shortDomain: "no.ex",
 		},
 	}
