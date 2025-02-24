@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/psankar/vetchi/typespec/common"
@@ -16,17 +17,23 @@ import (
 )
 
 func addOfficialEmails() {
+	var wg sync.WaitGroup
 	for _, user := range hubUsers {
-		tokenI, ok := hubSessionTokens.Load(user.Email)
-		if !ok {
-			log.Fatalf("no auth token found for %s", user.Email)
-		}
-		authToken := tokenI.(string)
+		wg.Add(1)
+		go func(user HubUser) {
+			defer wg.Done()
+			tokenI, ok := hubSessionTokens.Load(user.Email)
+			if !ok {
+				log.Fatalf("no auth token found for %s", user.Email)
+			}
+			authToken := tokenI.(string)
 
-		for _, domain := range user.WorkHistoryDomains {
-			addOfficialEmail(user, authToken, domain)
-		}
+			for _, domain := range user.WorkHistoryDomains {
+				addOfficialEmail(user, authToken, domain)
+			}
+		}(user)
 	}
+	wg.Wait()
 }
 
 func addOfficialEmail(user HubUser, authToken string, domain string) {
@@ -58,7 +65,7 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("error adding official email: %v", resp.Status)
+		log.Fatalf("error adding official email: %q %v", email, resp.Status)
 	}
 
 	// Wait for the email to be sent
@@ -112,15 +119,59 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 		log.Fatalf("failed to read email body: %v", err)
 	}
 
+	// log.Printf("email body: %s", string(mailBody))
+
+	// Parse the email JSON
+	var emailContent struct {
+		Text string `json:"Text"`
+	}
+	if err := json.Unmarshal(mailBody, &emailContent); err != nil {
+		log.Fatalf("failed to parse email JSON: %v", err)
+	}
+
 	// Extract TFA code from email
 	re := regexp.MustCompile(
-		`profile page of your vetchi account:\s*([a-zA-Z0-9]+)\s*`,
+		`(?m)^\s*([a-zA-Z0-9]{4})\s*$`,
 	)
-	matches := re.FindStringSubmatch(string(mailBody))
+	matches := re.FindStringSubmatch(emailContent.Text)
 	if len(matches) < 2 {
 		log.Fatal("could not find TFA code in email")
 	}
-	tfaCode := matches[1]
+	emailConfirmationCode := matches[1]
 
-	log.Printf("TFA code: %s", tfaCode)
+	// log.Printf("Email Confirmation code: %s", emailConfirmationCode)
+
+	// Update the user's email confirmation code
+	mailConfirmBody := hub.VerifyOfficialEmailRequest{
+		Email: common.EmailAddress(email),
+		Code:  emailConfirmationCode,
+	}
+
+	mailConfirmJSON, err := json.Marshal(mailConfirmBody)
+	if err != nil {
+		log.Fatalf("failed to marshal mail confirm body: %v", err)
+	}
+
+	mailConfirmReq, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/hub/verify-official-email",
+		bytes.NewBuffer(mailConfirmJSON),
+	)
+	if err != nil {
+		log.Fatalf("failed to create mail confirm request: %v", err)
+	}
+	mailConfirmReq.Header.Set("Authorization", "Bearer "+authToken)
+	mailConfirmReq.Header.Set("Content-Type", "application/json")
+
+	mailConfirmResp, err := http.DefaultClient.Do(mailConfirmReq)
+	if err != nil {
+		log.Fatalf("failed to send mail confirm request: %v", err)
+	}
+	defer mailConfirmResp.Body.Close()
+
+	if mailConfirmResp.StatusCode != http.StatusOK {
+		log.Fatalf("failed to verify email: %v", mailConfirmResp.Status)
+	}
+
+	log.Printf("verified email: %s", email)
 }
