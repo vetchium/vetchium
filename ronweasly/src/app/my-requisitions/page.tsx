@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -15,12 +15,94 @@ import type { HubUserShort } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import ProfilePicture from "@/components/ProfilePicture";
 
+const PAGE_SIZE = 20;
+
 export default function MyRequisitionsPage() {
   const { t } = useTranslation();
-  const { seeks, isLoading, error, fetchSeeks } = useColleagueSeeks();
+  const [paginationKey, setPaginationKey] = useState<string | undefined>();
+  const [hasMore, setHasMore] = useState(true);
+  const [seeksList, setSeeksList] = useState<HubUserShort[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
+  const { isLoading, error, fetchSeeks } = useColleagueSeeks();
+
+  const loadMore = async () => {
+    if (!hasMore || isLoading) return;
+
+    try {
+      const result = await fetchSeeks(paginationKey, PAGE_SIZE);
+      if (result?.seeks) {
+        setSeeksList((prev) =>
+          isInitialLoad ? result.seeks : [...prev, ...result.seeks]
+        );
+        setIsInitialLoad(false);
+
+        // Get the last item's handle as the next pagination key
+        const lastItem = result.seeks[result.seeks.length - 1];
+        setPaginationKey(lastItem?.handle);
+        setHasMore(result.seeks.length === PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      // Error handling is done in the hook
+      setHasMore(false);
+    }
+  };
+
+  // Setup intersection observer
   useEffect(() => {
-    fetchSeeks();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !isLoading &&
+          !isInitialLoad
+        ) {
+          loadMore();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, isInitialLoad]);
+
+  // Handle observer connection/disconnection
+  useEffect(() => {
+    if (loadingRef.current && observerRef.current) {
+      observerRef.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [loadingRef.current]);
+
+  // Initial load
+  useEffect(() => {
+    setIsInitialLoad(true);
+    setPaginationKey(undefined);
+    setSeeksList([]);
+    setHasMore(true);
+    loadMore();
+
+    // Cleanup function
+    return () => {
+      setSeeksList([]);
+      setPaginationKey(undefined);
+      setHasMore(true);
+      setIsInitialLoad(true);
+    };
   }, []);
 
   return (
@@ -41,11 +123,7 @@ export default function MyRequisitionsPage() {
             </Alert>
           )}
 
-          {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : seeks?.seeks.length === 0 ? (
+          {seeksList.length === 0 && !isLoading ? (
             <Typography
               color="text.secondary"
               sx={{ textAlign: "center", p: 3 }}
@@ -54,7 +132,7 @@ export default function MyRequisitionsPage() {
             </Typography>
           ) : (
             <Stack spacing={2}>
-              {seeks?.seeks.map((user: HubUserShort) => (
+              {seeksList.map((user: HubUserShort) => (
                 <Paper key={user.handle} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <ProfilePicture
@@ -80,6 +158,14 @@ export default function MyRequisitionsPage() {
                   </Box>
                 </Paper>
               ))}
+
+              {/* Loading indicator */}
+              <Box
+                ref={loadingRef}
+                sx={{ height: 20, display: "flex", justifyContent: "center" }}
+              >
+                {isLoading && <CircularProgress size={20} />}
+              </Box>
             </Stack>
           )}
         </Paper>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -17,21 +17,114 @@ import type { HubUserShort } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import ProfilePicture from "@/components/ProfilePicture";
 
+const PAGE_SIZE = 20;
+
 export default function MyApprovalsPage() {
   const { t } = useTranslation();
-  const { approvals, isLoading, error, fetchApprovals } =
-    useColleagueApprovals();
+  const [paginationKey, setPaginationKey] = useState<string | undefined>();
+  const [hasMore, setHasMore] = useState(true);
+  const [approvalsList, setApprovalsList] = useState<HubUserShort[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const { isLoading, error, fetchApprovals } = useColleagueApprovals();
   const { approveColleague, rejectColleague, isApproving, isRejecting } =
     useColleagues();
 
+  const loadMore = async () => {
+    if (!hasMore || isLoading) return;
+
+    try {
+      const result = await fetchApprovals(paginationKey, PAGE_SIZE);
+      if (result?.approvals) {
+        setApprovalsList((prev) =>
+          isInitialLoad ? result.approvals : [...prev, ...result.approvals]
+        );
+        setIsInitialLoad(false);
+
+        // Get the last item's handle as the next pagination key
+        const lastItem = result.approvals[result.approvals.length - 1];
+        setPaginationKey(lastItem?.handle);
+        setHasMore(result.approvals.length === PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      // Error handling is done in the hook
+      setHasMore(false);
+    }
+  };
+
+  // Setup intersection observer
   useEffect(() => {
-    fetchApprovals();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !isLoading &&
+          !isInitialLoad
+        ) {
+          loadMore();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, isInitialLoad]);
+
+  // Handle observer connection/disconnection
+  useEffect(() => {
+    if (loadingRef.current && observerRef.current) {
+      observerRef.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [loadingRef.current]);
+
+  // Initial load
+  useEffect(() => {
+    setIsInitialLoad(true);
+    setPaginationKey(undefined);
+    setApprovalsList([]);
+    setHasMore(true);
+    loadMore();
+
+    // Cleanup function
+    return () => {
+      setApprovalsList([]);
+      setPaginationKey(undefined);
+      setHasMore(true);
+      setIsInitialLoad(true);
+    };
   }, []);
 
   const handleApprove = async (handle: string) => {
     try {
       await approveColleague(handle);
-      await fetchApprovals();
+      // Remove the approved user from the list
+      setApprovalsList((prev) => prev.filter((user) => user.handle !== handle));
+
+      // If the list is now empty or getting too short, fetch more
+      if (approvalsList.length <= 5) {
+        const result = await fetchApprovals(paginationKey, PAGE_SIZE);
+        if (result?.approvals) {
+          setApprovalsList((prev) => [...prev, ...result.approvals]);
+          const lastItem = result.approvals[result.approvals.length - 1];
+          setPaginationKey(lastItem?.handle);
+          setHasMore(result.approvals.length === PAGE_SIZE);
+        }
+      }
     } catch (err) {
       // Error handling is done in the hook
     }
@@ -40,7 +133,19 @@ export default function MyApprovalsPage() {
   const handleReject = async (handle: string) => {
     try {
       await rejectColleague(handle);
-      await fetchApprovals();
+      // Remove the rejected user from the list
+      setApprovalsList((prev) => prev.filter((user) => user.handle !== handle));
+
+      // If the list is now empty or getting too short, fetch more
+      if (approvalsList.length <= 5) {
+        const result = await fetchApprovals(paginationKey, PAGE_SIZE);
+        if (result?.approvals) {
+          setApprovalsList((prev) => [...prev, ...result.approvals]);
+          const lastItem = result.approvals[result.approvals.length - 1];
+          setPaginationKey(lastItem?.handle);
+          setHasMore(result.approvals.length === PAGE_SIZE);
+        }
+      }
     } catch (err) {
       // Error handling is done in the hook
     }
@@ -64,11 +169,7 @@ export default function MyApprovalsPage() {
             </Alert>
           )}
 
-          {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : approvals?.approvals.length === 0 ? (
+          {approvalsList.length === 0 && !isLoading ? (
             <Typography
               color="text.secondary"
               sx={{ textAlign: "center", p: 3 }}
@@ -77,7 +178,7 @@ export default function MyApprovalsPage() {
             </Typography>
           ) : (
             <Stack spacing={2}>
-              {approvals?.approvals.map((user: HubUserShort) => (
+              {approvalsList.map((user: HubUserShort) => (
                 <Paper key={user.handle} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <ProfilePicture
@@ -121,6 +222,14 @@ export default function MyApprovalsPage() {
                   </Box>
                 </Paper>
               ))}
+
+              {/* Loading indicator */}
+              <Box
+                ref={loadingRef}
+                sx={{ height: 20, display: "flex", justifyContent: "center" }}
+              >
+                {isLoading && <CircularProgress size={20} />}
+              </Box>
             </Stack>
           )}
         </Paper>

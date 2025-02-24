@@ -9,7 +9,10 @@ interface UseColleagueSeeksResult {
   seeks: MyColleagueSeeks | null;
   isLoading: boolean;
   error: Error | null;
-  fetchSeeks: () => Promise<void>;
+  fetchSeeks: (
+    pagination_key?: string,
+    limit?: number
+  ) => Promise<MyColleagueSeeks>;
 }
 
 export function useColleagueSeeks(): UseColleagueSeeksResult {
@@ -19,16 +22,17 @@ export function useColleagueSeeks(): UseColleagueSeeksResult {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const fetchSeeks = async () => {
+  const fetchSeeks = async (pagination_key?: string, limit: number = 20) => {
     setIsLoading(true);
     setError(null);
 
     const sessionToken = Cookies.get("session_token");
     if (!sessionToken) {
       router.push("/login");
-      setError(new Error(t("common.error.notAuthenticated")));
+      const error = new Error(t("common.error.notAuthenticated"));
+      setError(error);
       setIsLoading(false);
-      return;
+      throw error;
     }
 
     try {
@@ -42,7 +46,8 @@ export function useColleagueSeeks(): UseColleagueSeeksResult {
             Authorization: `Bearer ${sessionToken}`,
           },
           body: JSON.stringify({
-            limit: 40,
+            pagination_key,
+            limit,
           }),
         }
       );
@@ -57,8 +62,11 @@ export function useColleagueSeeks(): UseColleagueSeeksResult {
 
       const data = await response.json();
       setSeeks(data);
+      return data;
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

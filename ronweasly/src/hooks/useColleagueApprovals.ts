@@ -12,7 +12,10 @@ interface UseColleagueApprovalsResult {
   approvals: MyColleagueApprovals | null;
   isLoading: boolean;
   error: Error | null;
-  fetchApprovals: (paginationKey?: string, limit?: number) => Promise<void>;
+  fetchApprovals: (
+    pagination_key?: string,
+    limit?: number
+  ) => Promise<MyColleagueApprovals>;
 }
 
 export function useColleagueApprovals(): UseColleagueApprovalsResult {
@@ -22,7 +25,10 @@ export function useColleagueApprovals(): UseColleagueApprovalsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchApprovals = async (paginationKey?: string, limit?: number) => {
+  const fetchApprovals = async (
+    pagination_key?: string,
+    limit: number = 20
+  ) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -30,7 +36,7 @@ export function useColleagueApprovals(): UseColleagueApprovalsResult {
       const token = Cookies.get("session_token");
       if (!token) {
         router.push("/login");
-        return;
+        throw new Error("No session token");
       }
 
       const response = await fetch(
@@ -42,7 +48,7 @@ export function useColleagueApprovals(): UseColleagueApprovalsResult {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            pagination_key: paginationKey,
+            pagination_key,
             limit,
           }),
         }
@@ -51,7 +57,7 @@ export function useColleagueApprovals(): UseColleagueApprovalsResult {
       if (response.status === 401) {
         Cookies.remove("session_token");
         router.push("/login");
-        return;
+        throw new Error("Unauthorized");
       }
 
       if (!response.ok) {
@@ -60,11 +66,12 @@ export function useColleagueApprovals(): UseColleagueApprovalsResult {
 
       const data = await response.json();
       setApprovals(data);
+      return data;
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error(t("common.error.serverError"))
-      );
-      throw err;
+      const error =
+        err instanceof Error ? err : new Error(t("common.error.serverError"));
+      setError(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
