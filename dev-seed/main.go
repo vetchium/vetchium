@@ -36,6 +36,8 @@ func main() {
 
 	color.Cyan("Signing in hub users")
 	loginHubUsers()
+	color.Cyan("Add Professional Emails to Hub Users")
+	addOfficialEmails()
 	color.Cyan("Creating work histories")
 	createWorkHistories()
 	color.Cyan("Uploading profile pictures")
