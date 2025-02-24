@@ -53,7 +53,6 @@ var hubUsers = []HubUser{
 		LongBio:            "Product manager with experience in tech industry",
 		WorkHistoryDomains: []string{"novelltenware.example", "dec.example"},
 	},
-	// Users 3-10 with random current employers
 	{
 		Name:              "User Three",
 		Handle:            "user3",
@@ -163,7 +162,6 @@ var hubUsers = []HubUser{
 		LongBio:            "Security engineer focused on application security",
 		WorkHistoryDomains: []string{"nokia.example", "dec.example"},
 	},
-	// Users 11-19 with gryffindor.example as current employer
 	{
 		Name:              "User Eleven",
 		Handle:            "user11",
@@ -194,58 +192,6 @@ var hubUsers = []HubUser{
 			"novelltenware.example",
 		},
 	},
-	// Continue with users 13-19 with gryffindor.example
-	// Users 20-29 with hufflepuff.example as current employer
-	{
-		Name:              "User Twenty",
-		Handle:            "user20",
-		Email:             "user20@example.com",
-		ResidentCountry:   "USA",
-		ResidentCity:      "Seattle",
-		PreferredLanguage: "en",
-		ShortBio:          "Cloud Architect",
-		LongBio:           "Cloud architect with AWS expertise",
-		WorkHistoryDomains: []string{
-			"hufflepuff.example",
-			"nokia.example",
-			"dec.example",
-		},
-	},
-	// Continue with users 21-29 with hufflepuff.example
-	// Users 30-39 with slitherin.example as current employer
-	{
-		Name:              "User Thirty",
-		Handle:            "user30",
-		Email:             "user30@example.com",
-		ResidentCountry:   "DEU",
-		ResidentCity:      "Munich",
-		PreferredLanguage: "de",
-		ShortBio:          "ML Engineer",
-		LongBio:           "Machine learning engineer with deep learning expertise",
-		WorkHistoryDomains: []string{
-			"slitherin.example",
-			"sunvaja.example",
-			"dec.example",
-		},
-	},
-	// Continue with users 31-39 with slitherin.example
-	// Users 40-49 with ravenclaw.example as current employer
-	{
-		Name:              "User Forty",
-		Handle:            "user40",
-		Email:             "user40@example.com",
-		ResidentCountry:   "FRA",
-		ResidentCity:      "Lyon",
-		PreferredLanguage: "fr",
-		ShortBio:          "Data Engineer",
-		LongBio:           "Data engineer with big data expertise",
-		WorkHistoryDomains: []string{
-			"ravenclaw.example",
-			"nokia.example",
-			"novelltenware.example",
-		},
-	},
-	// Continue with remaining users 41-49 with ravenclaw.example
 	{
 		Name:              "User Thirteen",
 		Handle:            "user13",
@@ -353,7 +299,21 @@ var hubUsers = []HubUser{
 			"nokia.example",
 		},
 	},
-	// Previous user20 remains unchanged
+	{
+		Name:              "User Twenty",
+		Handle:            "user20",
+		Email:             "user20@example.com",
+		ResidentCountry:   "USA",
+		ResidentCity:      "Seattle",
+		PreferredLanguage: "en",
+		ShortBio:          "Cloud Architect",
+		LongBio:           "Cloud architect with AWS expertise",
+		WorkHistoryDomains: []string{
+			"hufflepuff.example",
+			"nokia.example",
+			"dec.example",
+		},
+	},
 	{
 		Name:              "User Twenty One",
 		Handle:            "user21",
@@ -491,7 +451,21 @@ var hubUsers = []HubUser{
 			"sunvaja.example",
 		},
 	},
-	// Previous user30 remains unchanged
+	{
+		Name:              "User Thirty",
+		Handle:            "user30",
+		Email:             "user30@example.com",
+		ResidentCountry:   "DEU",
+		ResidentCity:      "Munich",
+		PreferredLanguage: "de",
+		ShortBio:          "ML Engineer",
+		LongBio:           "Machine learning engineer with deep learning expertise",
+		WorkHistoryDomains: []string{
+			"slitherin.example",
+			"sunvaja.example",
+			"dec.example",
+		},
+	},
 	{
 		Name:              "User Thirty One",
 		Handle:            "user31",
@@ -629,7 +603,21 @@ var hubUsers = []HubUser{
 			"sunvaja.example",
 		},
 	},
-	// Previous user40 remains unchanged
+	{
+		Name:              "User Forty",
+		Handle:            "user40",
+		Email:             "user40@example.com",
+		ResidentCountry:   "FRA",
+		ResidentCity:      "Lyon",
+		PreferredLanguage: "fr",
+		ShortBio:          "Data Engineer",
+		LongBio:           "Data engineer with big data expertise",
+		WorkHistoryDomains: []string{
+			"ravenclaw.example",
+			"nokia.example",
+			"novelltenware.example",
+		},
+	},
 	{
 		Name:              "User Forty One",
 		Handle:            "user41",
