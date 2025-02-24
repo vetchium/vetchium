@@ -275,7 +275,8 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 	baseURL.RawQuery = query.Encode()
 
 	var messageID string
-	for i := 0; i < 3; i++ {
+	waitTime := 2 * time.Second
+	for i := 0; i < 4; i++ {
 		mailResp, err := http.Get(baseURL.String())
 		if err != nil {
 			log.Fatalf("failed to query mailpit: %v", err)
@@ -291,7 +292,8 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 			messageID = mailPitResp.Messages[0].ID
 			break
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(waitTime)
+		waitTime *= 3
 	}
 
 	if messageID == "" {

@@ -117,7 +117,7 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 		// Create primary domain
 		primaryDomainID := fmt.Sprintf(
 			"12345678-0000-0000-0000-00000000300%d",
-			i*2+1,
+			i+1,
 		)
 		_, err = tx.Exec(ctx, `
 			INSERT INTO domains (
@@ -136,8 +136,8 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 
 		// Create short domain
 		shortDomainID := fmt.Sprintf(
-			"12345678-0000-0000-0000-00000000300%d",
-			i*2+2,
+			"12345678-0000-0000-0000-00000000400%d",
+			i+1,
 		)
 		_, err = tx.Exec(ctx, `
 			INSERT INTO domains (
