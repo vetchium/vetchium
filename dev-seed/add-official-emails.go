@@ -84,7 +84,8 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 	baseURL.RawQuery = query.Encode()
 
 	var messageID string
-	for i := 0; i < 3; i++ {
+	sleepInterval := 5 * time.Second
+	for i := 0; i < 5; i++ {
 		mailResp, err := http.Get(baseURL.String())
 		if err != nil {
 			log.Fatalf("failed to query mailpit: %v", err)
@@ -100,11 +101,12 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 			messageID = mailPitResp.Messages[0].ID
 			break
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(sleepInterval)
+		sleepInterval *= 3
 	}
 
 	if messageID == "" {
-		log.Fatal("no verification email found in mailpit")
+		log.Fatalf("no verification email found in mailpit for %q", email)
 	}
 
 	// Get the email content
@@ -173,5 +175,38 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 		log.Fatalf("failed to verify email: %v", mailConfirmResp.Status)
 	}
 
-	log.Printf("verified email: %s", email)
+	cyan("verified email: %s\n", email)
+
+	// Delete the email from mailpit
+	deleteBody := struct {
+		IDs []string `json:"IDs"`
+	}{
+		IDs: []string{messageID},
+	}
+
+	deleteJSON, err := json.Marshal(deleteBody)
+	if err != nil {
+		log.Fatalf("failed to marshal delete request: %v", err)
+	}
+
+	deleteReq, err := http.NewRequest(
+		"DELETE",
+		mailPitURL+"/api/v1/messages",
+		bytes.NewBuffer(deleteJSON),
+	)
+	if err != nil {
+		log.Fatalf("failed to create delete request: %v", err)
+	}
+	deleteReq.Header.Set("Accept", "application/json")
+	deleteReq.Header.Set("Content-Type", "application/json")
+
+	deleteResp, err := http.DefaultClient.Do(deleteReq)
+	if err != nil {
+		log.Fatalf("failed to delete email: %v", err)
+	}
+	defer deleteResp.Body.Close()
+
+	if deleteResp.StatusCode != http.StatusOK {
+		log.Fatalf("failed to delete email. status: %d", deleteResp.StatusCode)
+	}
 }

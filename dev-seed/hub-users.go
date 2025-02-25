@@ -461,7 +461,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "ML Engineer",
 		LongBio:           "Machine learning engineer with deep learning expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"sunvaja.example",
 			"decdpd.example",
 		},
@@ -476,7 +476,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "Backend Developer",
 		LongBio:           "Backend developer with Node.js expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"decdpd.example",
 			"nokiabricks.example",
 		},
@@ -491,7 +491,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "Mobile Developer",
 		LongBio:           "Mobile developer with React Native expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"sunvaja.example",
 			"novelltenware.example",
 			"decdpd.example",
@@ -507,7 +507,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "DevOps Engineer",
 		LongBio:           "DevOps engineer with GCP expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"nokiabricks.example",
 			"sunvaja.example",
 		},
@@ -522,7 +522,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "Data Engineer",
 		LongBio:           "Data engineer with Apache Kafka expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"decdpd.example",
 			"novelltenware.example",
 		},
@@ -537,7 +537,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "Frontend Developer",
 		LongBio:           "Frontend developer with Svelte expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"nokiabricks.example",
 			"sunvaja.example",
 			"decdpd.example",
@@ -553,7 +553,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "UX Designer",
 		LongBio:           "UX designer with focus on web applications",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"novelltenware.example",
 			"decdpd.example",
 		},
@@ -568,7 +568,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "System Architect",
 		LongBio:           "System architect with serverless expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"sunvaja.example",
 			"nokiabricks.example",
 		},
@@ -583,7 +583,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "ML Engineer",
 		LongBio:           "Machine learning engineer with computer vision expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"decdpd.example",
 			"novelltenware.example",
 		},
@@ -598,7 +598,7 @@ var hubUsers = []HubUser{
 		ShortBio:          "Security Engineer",
 		LongBio:           "Security engineer with DevSecOps expertise",
 		WorkHistoryDomains: []string{
-			"slitherin.example",
+			"slytherin.example",
 			"nokiabricks.example",
 			"sunvaja.example",
 		},
@@ -764,10 +764,6 @@ func initHubUsers(db *pgxpool.Pool) {
 		log.Fatalf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
-
-	green := color.New(color.FgGreen).SprintFunc()
-	cyan := color.New(color.FgCyan).SprintFunc()
-	yellow := color.New(color.FgYellow).SprintFunc()
 
 	for i, user := range hubUsers {
 		userID := fmt.Sprintf("12345678-0000-0000-0000-000000050%03d", i+1)

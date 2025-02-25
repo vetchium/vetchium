@@ -14,6 +14,10 @@ import (
 var employerSessionTokens sync.Map
 var hubSessionTokens sync.Map
 
+var green = color.New(color.FgGreen).SprintFunc()
+var cyan = color.New(color.FgCyan).SprintFunc()
+var yellow = color.New(color.FgYellow).SprintFunc()
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 
