@@ -9,6 +9,9 @@
 - [x] Hub user Login
 - [x] Find Openings
 - [x] Communication on Candidacies (Realtime not done yet)
+- [x] Work history and Official emails for Hub
+- [x] Profile Photos on Hub
+- [x] Colleague Connections and various states and flows
 
 # Future Features
 
@@ -73,3 +76,18 @@ Current schema lacks employer branding features. Could add:
 
 ## 8. Domain Ownership Changes
 When a domain say x.com was owned by Paypal first and we had some employees verified their email address. Then the domain got transferred to Twitter. Now what happens to the old email addresses that were verified when it was with Paypal ? Will those employees show up as Twitter employees now ? We need a cleaner solution to deboard, re-onboard domains which are onboarded. There are a lot of corner cases involved in this kind of domain cross-ownerships.
+
+## 9. SSO and Directory sync for Employers
+Keycloak, Ory Kratos etc. used to do these, may not be worth building it from scratch. Needs investigation
+
+### 10. Better Prometheus integration
+
+### 11. Markdown support
+
+### 12. Payment support
+Depends on incorporation to choose a payment vendor.
+
+### 13. Automated load and scale tests
+k6s, jmeter ?
+
+### 14. DB monitoring
