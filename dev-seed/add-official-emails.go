@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -67,6 +68,7 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("error adding official email: %q %v", email, resp.Status)
 	}
+	color.Green("added official email: %q for %q\n", email, user.Handle)
 
 	// Wait for the email to be sent
 	<-time.After(2 * time.Second)
@@ -175,7 +177,7 @@ func addOfficialEmail(user HubUser, authToken string, domain string) {
 		log.Fatalf("failed to verify email: %v", mailConfirmResp.Status)
 	}
 
-	cyan("verified email: %s\n", email)
+	color.Cyan("verified email: %s\n", email)
 
 	// Delete the email from mailpit
 	deleteBody := struct {

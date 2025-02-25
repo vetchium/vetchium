@@ -14,10 +14,6 @@ import (
 var employerSessionTokens sync.Map
 var hubSessionTokens sync.Map
 
-var green = color.New(color.FgGreen).SprintFunc()
-var cyan = color.New(color.FgCyan).SprintFunc()
-var yellow = color.New(color.FgYellow).SprintFunc()
-
 func main() {
 	log.SetFlags(log.Lshortfile)
 
@@ -40,12 +36,14 @@ func main() {
 
 	color.Cyan("Signing in hub users")
 	loginHubUsers()
-	color.Cyan("Add Professional Emails to Hub Users")
+	color.Cyan("Add Official Emails to Hub Users")
 	addOfficialEmails()
 	color.Cyan("Creating work histories")
 	createWorkHistories()
 	color.Cyan("Uploading profile pictures")
 	uploadHubUserProfilePictures()
+	color.Cyan("Creating colleague connections")
+	createColleagueConnections()
 
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")

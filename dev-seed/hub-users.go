@@ -10,6 +10,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Define color functions
+var green = color.New(color.FgGreen).SprintFunc()
+var cyan = color.New(color.FgCyan).SprintFunc()
+var yellow = color.New(color.FgYellow).SprintFunc()
+
 type HubUser struct {
 	Name                   string
 	Handle                 string
@@ -783,11 +788,11 @@ func initHubUsers(db *pgxpool.Pool) {
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.Name, err)
 		}
-		fmt.Printf("%s %s %s\n",
-			green(fmt.Sprintf("created hub user %s", user.Name)),
-			cyan(fmt.Sprintf("<%s>", user.Email)),
-			yellow(fmt.Sprintf("@%s", user.Handle)),
-		)
+
+		// Print with color directly
+		color.New(color.FgGreen).Printf("created hub user %s ", user.Name)
+		color.New(color.FgCyan).Printf("<%s> ", user.Email)
+		color.New(color.FgYellow).Printf("@%s\n", user.Handle)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
@@ -797,11 +802,10 @@ func initHubUsers(db *pgxpool.Pool) {
 
 func loginHubUsers() {
 	var wg sync.WaitGroup
-	green := color.New(color.FgGreen).SprintFunc()
 	for _, user := range hubUsers {
 		wg.Add(1)
 		go func(user HubUser) {
-			fmt.Printf("%s\n", green(fmt.Sprintf("Logging in %s", user.Email)))
+			color.Green("Logging in %s", user.Email)
 			hubLogin(user.Email, "NewPassword123$", &wg)
 		}(user)
 	}
