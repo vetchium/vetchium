@@ -10,11 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Define color functions
-var green = color.New(color.FgGreen).SprintFunc()
-var cyan = color.New(color.FgCyan).SprintFunc()
-var yellow = color.New(color.FgYellow).SprintFunc()
-
 type HubUser struct {
 	Name                   string
 	Handle                 string
