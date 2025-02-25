@@ -316,6 +316,10 @@ type DB interface {
 	ApproveColleague(ctx context.Context, handle string) error
 	RejectColleague(ctx context.Context, handle string) error
 	UnlinkColleague(ctx context.Context, handle string) error
+	FilterColleagues(
+		ctx context.Context,
+		req hub.FilterColleaguesRequest,
+	) ([]hub.HubUserShort, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error

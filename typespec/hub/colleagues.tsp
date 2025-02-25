@@ -58,6 +58,18 @@ model RejectColleagueRequest {
     handle: Handle;
 }
 
+model FilterColleaguesRequest {
+    @doc("The prefix to match either the name or the handle of the colleagues of the logged in user")
+    @minLength(1)
+    @maxLength(12)
+    prefix: string;
+
+    @doc("The limit on the number of colleagues to return")
+    @minValue(1)
+    @maxValue(6)
+    limit: numeric;
+}
+
 @route("/hub/connect-colleague")
 interface ConnectColleague {
     @tag("HubProfile")
@@ -117,4 +129,16 @@ interface RejectColleague {
     @post
     @useAuth(HubAuth)
     rejectColleague(@body request: RejectColleagueRequest): {};
+}
+
+@route("/hub/filter-colleagues")
+interface FilterColleagues {
+    @tag("HubProfile")
+    @doc("Filter the list of colleagues of the logged in user")
+    @post
+    @useAuth(HubAuth)
+    filterColleagues(@body request: FilterColleaguesRequest): {
+        @statusCode statusCode: 200;
+        @body response: HubUserShort[];
+    };
 }

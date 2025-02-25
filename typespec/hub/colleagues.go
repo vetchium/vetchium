@@ -43,3 +43,8 @@ type ApproveColleagueRequest struct {
 type RejectColleagueRequest struct {
 	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
 }
+
+type FilterColleaguesRequest struct {
+	Prefix string `json:"prefix" validate:"required,min=1,max=12"`
+	Limit  int    `json:"limit"  validate:"required,min=1,max=6"`
+}

@@ -41,3 +41,8 @@ export interface ApproveColleagueRequest {
 export interface RejectColleagueRequest {
   handle: Handle;
 }
+
+export interface FilterColleaguesRequest {
+  filter: string;
+  limit: number;
+}
