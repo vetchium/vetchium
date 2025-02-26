@@ -752,4 +752,20 @@ CREATE TABLE stale_files (
     CONSTRAINT unique_file_path UNIQUE (file_path)
 );
 
+CREATE TYPE endorsement_states AS ENUM (
+    'SOUGHT_ENDORSEMENT',
+    'ENDORSED',
+    'DECLINED_ENDORSEMENT'
+);
+
+CREATE TABLE application_endorsements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id TEXT REFERENCES applications(id) NOT NULL,
+    endorser_id UUID REFERENCES hub_users(id) NOT NULL,
+    state endorsement_states NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    CONSTRAINT unique_application_endorser UNIQUE (application_id, endorser_id)
+);
+
 COMMIT;

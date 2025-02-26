@@ -1,0 +1,31 @@
+<html>
+  <body>
+    <p>Hello {{.endorser_name}},</p>
+
+    <p>
+      Your colleague
+      <strong>{{.applicant_name}}</strong> (@{{.applicant_handle}}) has
+      requested your endorsement for a job application at
+      <strong>{{.company_name}}</strong> for the position of
+      <strong>{{.job_title}}</strong>.
+    </p>
+
+    <p>
+      Your endorsement can significantly strengthen their application. Please
+      take a moment to review and respond to this request.
+    </p>
+
+    <p>
+      <a href="{{.endorse_url}}" class="button">Endorse</a>
+    </p>
+
+    <p>
+      If you have any questions, please contact {{.applicant_name}}
+      (@{{.applicant_handle}}) directly.
+    </p>
+    <p>
+      This is an automated message from Vetchi. Please do not reply to this
+      email.
+    </p>
+  </body>
+</html>

@@ -81,4 +81,8 @@ var (
 	)
 
 	ErrNoConnection = errors.New("no active colleague connection found")
+
+	ErrNotColleague = errors.New("one or more endorsers are not colleagues")
+
+	ErrTooManyEndorsers = errors.New("too many endorsers specified")
 )

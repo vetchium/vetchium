@@ -70,6 +70,7 @@ export interface ApplyForOpeningRequest {
   resume: string;
   filename: string;
   cover_letter?: string;
+  endorser_handles?: string[];
 }
 
 export interface ApplyForOpeningResponse {

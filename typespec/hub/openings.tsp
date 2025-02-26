@@ -111,6 +111,10 @@ model ApplyForOpeningRequest {
 
     @maxLength(256)
     filename: string;
+
+    @doc("Handles of colleagues who will endorse the application. Must be verified colleagues of the applicant.")
+    @maxItems(5)
+    endorser_handles?: Handle[];
 }
 
 model ApplyForOpeningResponse {

@@ -73,11 +73,12 @@ type HubOpeningDetails struct {
 }
 
 type ApplyForOpeningRequest struct {
-	OpeningIDWithinCompany string `json:"opening_id_within_company" validate:"required"`
-	CompanyDomain          string `json:"company_domain"            validate:"required"`
-	Resume                 string `json:"resume"                    validate:"required"`
-	Filename               string `json:"filename"                  validate:"required,max=256"`
-	CoverLetter            string `json:"cover_letter"              validate:"omitempty,max=4096"`
+	OpeningIDWithinCompany string          `json:"opening_id_within_company" validate:"required"`
+	CompanyDomain          string          `json:"company_domain"            validate:"required"`
+	Resume                 string          `json:"resume"                    validate:"required"`
+	Filename               string          `json:"filename"                  validate:"required,max=256"`
+	CoverLetter            string          `json:"cover_letter"              validate:"omitempty,max=4096"`
+	EndorserHandles        []common.Handle `json:"endorser_handles"          validate:"omitempty,dive,max=5"`
 }
 
 type ApplyForOpeningResponse struct {

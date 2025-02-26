@@ -14,6 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/hedwig"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
@@ -65,17 +67,54 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 		applicationID := util.RandomUniqueID(vetchi.ApplicationIDLenBytes)
 		h.Dbg("creating application in the db", "application_id", applicationID)
 
+		// TODO: Fetch the opening's title from the db
+		openingTitle := ""
+
+		// If there are endorsers, prepare endorsement emails
+		var endorsementEmails []db.Email
+		if len(applyForOpeningReq.EndorserHandles) > 0 {
+			endorsementEmails, err = prepareEndorsementEmails(
+				r.Context(),
+				h,
+				w,
+				applyForOpeningReq.EndorserHandles,
+				applyForOpeningReq.CompanyDomain,
+				openingTitle,
+			)
+			if err != nil {
+				h.Dbg("failed to prepare endorsement emails", "error", err)
+				return
+			}
+		}
+
 		err = h.DB().CreateApplication(r.Context(), db.ApplyOpeningReq{
 			ApplicationID:          applicationID,
 			OpeningIDWithinCompany: applyForOpeningReq.OpeningIDWithinCompany,
 			CompanyDomain:          applyForOpeningReq.CompanyDomain,
 			CoverLetter:            applyForOpeningReq.CoverLetter,
 			ResumeSHA:              filename,
+			EndorserHandles:        applyForOpeningReq.EndorserHandles,
+			EndorsementEmails:      endorsementEmails,
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrNoOpening) {
 				h.Dbg("either domain or opening does not exist", "error", err)
 				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			// This is unlikely to happen, but handling gracefully if it does
+			if errors.Is(err, db.ErrNotColleague) {
+				h.Dbg("one or more endorsers are not colleagues", "error", err)
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"endorsers"},
+				})
+				if err != nil {
+					h.Err("failed to encode response", "error", err)
+					http.Error(w, "", http.StatusInternalServerError)
+					return
+				}
 				return
 			}
 
@@ -181,4 +220,56 @@ func uploadResume(
 
 	h.Dbg("uploaded new resume", "filename", filename)
 	return filename, nil
+}
+
+func prepareEndorsementEmails(
+	ctx context.Context,
+	h wand.Wand,
+	w http.ResponseWriter,
+	endorserHandles []common.Handle,
+	companyName, openingTitle string,
+) ([]db.Email, error) {
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		h.Err("failed to get hub user from context")
+		http.Error(w, "", http.StatusInternalServerError)
+		return []db.Email{}, errors.New("failed to get hub user from context")
+	}
+
+	endorsementEmails := []db.Email{}
+	// Get all endorser details in one call
+	endorsers, err := h.DB().GetHubUsersByHandles(ctx, endorserHandles)
+	if err != nil {
+		h.Dbg("failed to get endorser details", "error", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return []db.Email{}, errors.New("failed to get endorser details")
+	}
+
+	// Create an email for each endorser
+	for _, endorser := range endorsers {
+		email, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
+			TemplateName: hedwig.EndorsementRequest,
+			Args: map[string]string{
+				"endorser_name":    endorser.FullName,
+				"applicant_name":   hubUser.FullName,
+				"applicant_handle": hubUser.Handle,
+				"company_name":     companyName,
+				"job_title":        openingTitle,
+				"endorse_url":      vetchi.HubBaseURL + "/my-approvals",
+			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{endorser.Email},
+
+			// TODO: This should be i18n enabled and come from the mail templates.
+			Subject: "Endorsement Request",
+		})
+		if err != nil {
+			h.Dbg("failed to generate endorsement email", "error", err)
+			return []db.Email{}, err
+		}
+
+		endorsementEmails = append(endorsementEmails, email)
+	}
+
+	return endorsementEmails, nil
 }

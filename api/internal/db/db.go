@@ -44,6 +44,12 @@ type StaleFile struct {
 	FilePath string
 }
 
+type HubUserContact struct {
+	Handle   string
+	FullName string
+	Email    string
+}
+
 type DB interface {
 	// Used by hermione and granger
 
@@ -329,4 +335,10 @@ type DB interface {
 		fileID uuid.UUID,
 		cleanedAt time.Time,
 	) error
+
+	// GetHubUsersByHandles gets the details of hub users by their handles
+	GetHubUsersByHandles(
+		ctx context.Context,
+		handles []common.Handle,
+	) ([]HubUserContact, error)
 }

@@ -1,0 +1,11 @@
+Hello {{.endorser_name}},
+
+Your colleague {{.applicant_name}} (@{{.applicant_handle}}) has requested your endorsement for a job application at {{.company_name}} for the position of {{.job_title}}.
+
+Your endorsement can significantly strengthen their application. Please take a moment to review and respond to this request.
+
+To endorse: {{.endorse_url}}
+
+If you have any questions, please contact {{.applicant_name}} (@{{.applicant_handle}}) directly.
+
+This is an automated message from Vetchi. Please do not reply to this email.

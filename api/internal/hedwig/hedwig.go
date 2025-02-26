@@ -24,6 +24,7 @@ const (
 	NotifyApplicantInterview     = "notify-applicant-interview"
 	NotifyCandidateOffer         = "notify-candidate-offer"
 	AddOfficialEmail             = "add-official-email"
+	EndorsementRequest           = "endorsement-request"
 )
 
 type Hedwig interface {
@@ -47,6 +48,7 @@ func NewHedwig(log util.Logger) (Hedwig, error) {
 		NotifyApplicantInterview,
 		NotifyCandidateOffer,
 		AddOfficialEmail,
+		EndorsementRequest,
 	} {
 		fi, err := os.Stat(filepath.Join("hedwig", "templates", tmpl+".txt"))
 		if err != nil {

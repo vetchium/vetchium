@@ -41,4 +41,6 @@ type ApplyOpeningReq struct {
 	CompanyDomain          string
 	CoverLetter            string
 	ResumeSHA              string
+	EndorserHandles        []common.Handle
+	EndorsementEmails      []Email
 }

@@ -39,6 +39,9 @@ const (
 
 	// Used for the code that is sent to the user's email for add official email
 	AddOfficialEmailCodeLenBytes = 2
+
+	// Used for the endorsement ID in application endorsements
+	EndorsementIDLenBytes = 32
 )
 
 const (
