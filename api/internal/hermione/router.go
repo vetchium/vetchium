@@ -414,6 +414,7 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/my-colleague-seeks", wrap(colleagues.MyColleagueSeeks(h)))
 	http.Handle("/hub/approve-colleague", wrap(colleagues.ApproveColleague(h)))
 	http.Handle("/hub/reject-colleague", wrap(colleagues.RejectColleague(h)))
+	http.Handle("/hub/filter-colleagues", wrap(colleagues.FilterColleagues(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
