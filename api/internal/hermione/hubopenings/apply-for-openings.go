@@ -107,14 +107,9 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 			if errors.Is(err, db.ErrNotColleague) {
 				h.Dbg("one or more endorsers are not colleagues", "error", err)
 				w.WriteHeader(http.StatusUnprocessableEntity)
-				err = json.NewEncoder(w).Encode(common.ValidationErrors{
-					Errors: []string{"endorsers"},
+				json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"endorser_handles"},
 				})
-				if err != nil {
-					h.Err("failed to encode response", "error", err)
-					http.Error(w, "", http.StatusInternalServerError)
-					return
-				}
 				return
 			}
 
@@ -243,6 +238,15 @@ func prepareEndorsementEmails(
 		h.Dbg("failed to get endorser details", "error", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return []db.Email{}, errors.New("failed to get endorser details")
+	}
+
+	if len(endorsers) != len(endorserHandles) {
+		h.Dbg("Duplicate/Missing endorsers", "endorserHandles", endorserHandles)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ValidationErrors{
+			Errors: []string{"endorser_handles"},
+		})
+		return []db.Email{}, errors.New("duplicate/missing endorsers")
 	}
 
 	// Create an email for each endorser
