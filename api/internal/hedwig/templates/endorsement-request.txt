@@ -6,6 +6,8 @@ Your endorsement can significantly strengthen their application. Please take a m
 
 To endorse: {{.endorse_url}}
 
+View opening: {{.opening_url}}
+
 If you have any questions, please contact {{.applicant_name}} (@{{.applicant_handle}}) directly.
 
 This is an automated message from Vetchi. Please do not reply to this email.

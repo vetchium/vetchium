@@ -69,6 +69,9 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 
 		// TODO: Fetch the opening's title from the db
 		openingTitle := ""
+		openingURL := vetchi.HubBaseURL + "/org/" +
+			applyForOpeningReq.CompanyDomain + "/opening/" +
+			applyForOpeningReq.OpeningIDWithinCompany
 
 		// If there are endorsers, prepare endorsement emails
 		var endorsementEmails []db.Email
@@ -80,6 +83,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 				applyForOpeningReq.EndorserHandles,
 				applyForOpeningReq.CompanyDomain,
 				openingTitle,
+				openingURL,
 			)
 			if err != nil {
 				h.Dbg("failed to prepare endorsement emails", "error", err)
@@ -222,7 +226,7 @@ func prepareEndorsementEmails(
 	h wand.Wand,
 	w http.ResponseWriter,
 	endorserHandles []common.Handle,
-	companyName, openingTitle string,
+	companyName, openingTitle, openingURL string,
 ) ([]db.Email, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
@@ -260,6 +264,7 @@ func prepareEndorsementEmails(
 				"company_name":     companyName,
 				"job_title":        openingTitle,
 				"endorse_url":      vetchi.HubBaseURL + "/my-approvals",
+				"opening_url":      openingURL,
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{endorser.Email},
