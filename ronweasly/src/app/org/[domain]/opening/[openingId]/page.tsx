@@ -133,7 +133,7 @@ export default function OpeningDetailsPage() {
 
   // New function to search for colleagues
   const searchColleagues = async (prefix: string) => {
-    if (prefix.length < 1) {
+    if (!prefix || prefix.length < 1) {
       setColleagueOptions([]);
       return;
     }
@@ -171,14 +171,7 @@ export default function OpeningDetailsPage() {
       }
 
       const data = await response.json();
-      // Filter out already selected endorsers
-      const filteredOptions = data.filter(
-        (colleague: HubUserShort) =>
-          !selectedEndorsers.some(
-            (endorser) => endorser.handle === colleague.handle
-          )
-      );
-      setColleagueOptions(filteredOptions);
+      setColleagueOptions(data);
     } catch (error) {
       console.error("Error fetching colleagues:", error);
     } finally {
@@ -189,7 +182,7 @@ export default function OpeningDetailsPage() {
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (colleagueSearchInput) {
+      if (colleagueSearchInput && colleagueSearchInput.length >= 1) {
         searchColleagues(colleagueSearchInput);
       }
     }, 300);
@@ -427,12 +420,17 @@ export default function OpeningDetailsPage() {
                   </Typography>
 
                   <Autocomplete
+                    multiple
                     id="endorsers-autocomplete"
                     options={colleagueOptions}
+                    value={selectedEndorsers}
                     loading={loadingColleagues}
                     disabled={selectedEndorsers.length >= 5 || uploading}
                     getOptionLabel={(option) =>
                       `${option.name} (@${option.handle})`
+                    }
+                    isOptionEqualToValue={(option, value) =>
+                      option.handle === value.handle
                     }
                     renderInput={(params) => (
                       <TextField
@@ -462,23 +460,13 @@ export default function OpeningDetailsPage() {
                         }
                       />
                     )}
-                    onChange={(_, value) => handleEndorserAdd(value)}
-                    value={null}
+                    onChange={(_, value) => {
+                      if (value.length <= 5) {
+                        setSelectedEndorsers(value);
+                      }
+                    }}
                     sx={{ mb: 2 }}
                   />
-
-                  {selectedEndorsers.length > 0 && (
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {selectedEndorsers.map((endorser) => (
-                        <Chip
-                          key={endorser.handle}
-                          label={`${endorser.name} (@${endorser.handle})`}
-                          onDelete={() => handleEndorserRemove(endorser.handle)}
-                          sx={{ mb: 1 }}
-                        />
-                      ))}
-                    </Stack>
-                  )}
                 </Box>
 
                 <Button

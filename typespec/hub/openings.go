@@ -78,7 +78,7 @@ type ApplyForOpeningRequest struct {
 	Resume                 string          `json:"resume"                    validate:"required"`
 	Filename               string          `json:"filename"                  validate:"required,max=256"`
 	CoverLetter            string          `json:"cover_letter"              validate:"omitempty,max=4096"`
-	EndorserHandles        []common.Handle `json:"endorser_handles"          validate:"omitempty,dive,max=5"`
+	EndorserHandles        []common.Handle `json:"endorser_handles"          validate:"omitempty"`
 }
 
 type ApplyForOpeningResponse struct {
