@@ -129,6 +129,16 @@ export const en = {
     },
     selectResume: "Select Resume (PDF)",
     resumeSelected: "Selected: {name}",
+    endorsers: {
+      title: "Endorsers",
+      description:
+        "Add up to 5 verified colleagues who can endorse your application. This can increase your chances of getting selected.",
+      search: "Search for colleagues",
+      maxReached: "Maximum 5 endorsers reached",
+      remaining: "{count} more endorsers can be added",
+      noColleagues:
+        "No verified colleagues found. Connect with colleagues to add endorsers.",
+    },
   },
   navigation: {
     home: "Home",

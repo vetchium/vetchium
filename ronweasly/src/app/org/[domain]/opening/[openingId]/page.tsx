@@ -9,6 +9,8 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import {
   HubOpeningDetails,
@@ -20,6 +22,7 @@ import {
   OpeningState,
   OpeningStates,
   ApplyForOpeningRequest,
+  HubUserShort,
 } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import Cookies from "js-cookie";
@@ -71,6 +74,12 @@ export default function OpeningDetailsPage() {
   const [opening, setOpening] = useState<HubOpeningDetails | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedEndorsers, setSelectedEndorsers] = useState<HubUserShort[]>(
+    []
+  );
+  const [colleagueSearchInput, setColleagueSearchInput] = useState("");
+  const [colleagueOptions, setColleagueOptions] = useState<HubUserShort[]>([]);
+  const [loadingColleagues, setLoadingColleagues] = useState(false);
 
   useEffect(() => {
     const fetchOpeningDetails = async () => {
@@ -122,6 +131,86 @@ export default function OpeningDetailsPage() {
     fetchOpeningDetails();
   }, [params.domain, params.openingId]);
 
+  // New function to search for colleagues
+  const searchColleagues = async (prefix: string) => {
+    if (prefix.length < 1) {
+      setColleagueOptions([]);
+      return;
+    }
+
+    setLoadingColleagues(true);
+    const token = Cookies.get("session_token");
+    if (!token) {
+      setError(t("common.error.notAuthenticated"));
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/filter-colleagues`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            prefix: prefix,
+            limit: 6,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError(t("common.error.sessionExpired"));
+          Cookies.remove("session_token", { path: "/" });
+          return;
+        }
+        throw new Error(`Failed to fetch colleagues: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      // Filter out already selected endorsers
+      const filteredOptions = data.filter(
+        (colleague: HubUserShort) =>
+          !selectedEndorsers.some(
+            (endorser) => endorser.handle === colleague.handle
+          )
+      );
+      setColleagueOptions(filteredOptions);
+    } catch (error) {
+      console.error("Error fetching colleagues:", error);
+    } finally {
+      setLoadingColleagues(false);
+    }
+  };
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (colleagueSearchInput) {
+        searchColleagues(colleagueSearchInput);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [colleagueSearchInput]);
+
+  const handleEndorserAdd = (newEndorser: HubUserShort | null) => {
+    if (newEndorser && selectedEndorsers.length < 5) {
+      setSelectedEndorsers([...selectedEndorsers, newEndorser]);
+      setColleagueSearchInput("");
+      setColleagueOptions([]);
+    }
+  };
+
+  const handleEndorserRemove = (handle: string) => {
+    setSelectedEndorsers(
+      selectedEndorsers.filter((endorser) => endorser.handle !== handle)
+    );
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
@@ -171,6 +260,7 @@ export default function OpeningDetailsPage() {
         company_domain: params.domain as string,
         resume: base64Resume,
         filename: resumeFile.name,
+        endorser_handles: selectedEndorsers.map((endorser) => endorser.handle),
       };
 
       const response = await fetch(
@@ -322,6 +412,75 @@ export default function OpeningDetailsPage() {
                       : t("openingDetails.selectResume")}
                   </Button>
                 </label>
+
+                {/* Endorsers Section */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    {t("openingDetails.endorsers.title")}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
+                    {t("openingDetails.endorsers.description")}
+                  </Typography>
+
+                  <Autocomplete
+                    id="endorsers-autocomplete"
+                    options={colleagueOptions}
+                    loading={loadingColleagues}
+                    disabled={selectedEndorsers.length >= 5 || uploading}
+                    getOptionLabel={(option) =>
+                      `${option.name} (@${option.handle})`
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t("openingDetails.endorsers.search")}
+                        variant="outlined"
+                        onChange={(e) =>
+                          setColleagueSearchInput(e.target.value)
+                        }
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loadingColleagues ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                        helperText={
+                          selectedEndorsers.length >= 5
+                            ? t("openingDetails.endorsers.maxReached")
+                            : t("openingDetails.endorsers.remaining", {
+                                count: 5 - selectedEndorsers.length,
+                              })
+                        }
+                      />
+                    )}
+                    onChange={(_, value) => handleEndorserAdd(value)}
+                    value={null}
+                    sx={{ mb: 2 }}
+                  />
+
+                  {selectedEndorsers.length > 0 && (
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {selectedEndorsers.map((endorser) => (
+                        <Chip
+                          key={endorser.handle}
+                          label={`${endorser.name} (@${endorser.handle})`}
+                          onDelete={() => handleEndorserRemove(endorser.handle)}
+                          sx={{ mb: 1 }}
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                </Box>
+
                 <Button
                   variant="contained"
                   color="primary"
