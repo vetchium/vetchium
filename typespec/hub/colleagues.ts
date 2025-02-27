@@ -69,7 +69,7 @@ export interface MyEndorseApproval {
   opening_title: string;
   opening_url: string;
   application_status: string;
-  application_created_at: string;
+  application_created_at: Date;
   endorsement_status: EndorsementState;
 }
 
