@@ -300,9 +300,19 @@ export const en = {
   approvals: {
     title: "My Approvals",
     colleagueApprovals: "Colleague Approvals",
+    endorsementApprovals: "Endorsement Approvals",
     noApprovals: "No pending approvals",
+    noEndorsements: "No pending endorsement requests",
     error: {
       fetchFailed: "Failed to fetch approvals",
+      endorsementActionFailed: "Failed to process endorsement request",
+    },
+    endorsement: {
+      from: "From",
+      for: "For",
+      at: "at",
+      appliedOn: "Applied on {date}",
+      viewOpening: "View Opening",
     },
   },
   requisitions: {
