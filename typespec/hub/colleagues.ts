@@ -77,3 +77,11 @@ export interface MyEndorseApprovalsResponse {
   endorsements: MyEndorseApproval[];
   pagination_key?: string;
 }
+
+export interface EndorseApplicationRequest {
+  application_id: string;
+}
+
+export interface RejectEndorsementRequest {
+  application_id: string;
+}

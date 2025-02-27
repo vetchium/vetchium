@@ -110,3 +110,11 @@ type MyEndorseApprovalsResponse struct {
 	Endorsements  []MyEndorseApproval `json:"endorsements"`
 	PaginationKey string              `json:"pagination_key,omitempty"`
 }
+
+type EndorseApplicationRequest struct {
+	ApplicationID string `json:"application_id" validate:"required"`
+}
+
+type RejectEndorsementRequest struct {
+	ApplicationID string `json:"application_id" validate:"required"`
+}

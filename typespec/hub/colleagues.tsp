@@ -109,6 +109,14 @@ model MyEndorseApprovalsResponse {
     pagination_key?: string;
 }
 
+model EndorseApplicationRequest {
+    application_id: string;
+}
+
+model RejectEndorsementRequest {
+    application_id: string;
+}
+
 @route("/hub/connect-colleague")
 interface ConnectColleague {
     @tag("HubProfile")
@@ -192,4 +200,22 @@ interface MyEndorseApprovals {
         @statusCode statusCode: 200;
         @body response: MyEndorseApprovalsResponse;
     };
+}
+
+@route("/hub/endorse-application")
+interface EndorseApplication {
+    @tag("HubProfile")
+    @doc("Endorse an application for a colleague")
+    @post
+    @useAuth(HubAuth)
+    endorseApplication(@body request: EndorseApplicationRequest): {};
+}
+
+@route("/hub/reject-endorsement")
+interface RejectEndorsement {
+    @tag("HubProfile")
+    @doc("Reject an endorsement for a colleague")
+    @post
+    @useAuth(HubAuth)
+    rejectEndorsement(@body request: RejectEndorsementRequest): {};
 }
