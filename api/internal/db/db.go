@@ -329,7 +329,7 @@ type DB interface {
 	GetMyEndorsementApprovals(
 		ctx context.Context,
 		req hub.MyEndorseApprovalsRequest,
-	) ([]hub.MyEndorseApproval, error)
+	) (hub.MyEndorseApprovalsResponse, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
