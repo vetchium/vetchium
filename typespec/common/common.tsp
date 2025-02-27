@@ -244,14 +244,3 @@ model EmployerAuth {
     @doc("bearer auth scheme")
     scheme: "bearer";
 }
-
-model DateIDPagination {
-    @doc("The date to paginate from, primarily")
-    date: utcDateTime;
-
-    @doc("The id to paginate from, secondarily")
-    id: string;
-
-    @doc("The order to paginate the 'date' from. The default is 'asc' The id will always be paginated in ascending order.")
-    order_by?: "asc" | "desc";
-}

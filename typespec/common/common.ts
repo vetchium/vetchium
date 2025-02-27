@@ -226,9 +226,3 @@ export interface EmployerAuth {
   type: "http";
   scheme: "bearer";
 }
-
-export interface DateIDPagination {
-  date: string;
-  id: string;
-  order_by?: "asc" | "desc";
-}

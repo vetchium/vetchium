@@ -78,7 +78,7 @@ union EndorsementState {
 }
 
 model MyEndorseApprovalsRequest {
-    pagination?: DateIDPagination;
+    pagination_key?: string;
 
     @doc("Filter and return only Endorsements in this state. By default only Endorsements in the SoughtEndorsement state are returned.")
     @maxItems(3)
@@ -106,7 +106,7 @@ model MyEndorseApproval {
 
 model MyEndorseApprovalsResponse {
     endorsements: MyEndorseApproval[];
-    next_page_key?: DateIDPagination;
+    pagination_key?: string;
 }
 
 @route("/hub/connect-colleague")
@@ -185,7 +185,7 @@ interface FilterColleagues {
 @route("/hub/my-endorse-approvals")
 interface MyEndorseApprovals {
     @tag("HubProfile")
-    @doc("Get the list of endorsement requests that the logged in user can either approve or reject")
+    @doc("Get the list of endorsement requests that the logged in user can either approve or reject. The list is paginated. The items are ordered primarily by the timestamp of the endorsement request, and then by the id of the endorsement request for items with the same timestamp.")
     @post
     @useAuth(HubAuth)
     myEndorseApprovals(@body request: MyEndorseApprovalsRequest): {
