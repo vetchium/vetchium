@@ -97,7 +97,7 @@ export function useEndorseApprovals(): UseEndorseApprovalsResult {
       }
 
       const response = await fetch(
-        `${config.API_SERVER_PREFIX}/hub/approve-endorsement`,
+        `${config.API_SERVER_PREFIX}/hub/endorse-application`,
         {
           method: "POST",
           headers: {
