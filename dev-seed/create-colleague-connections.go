@@ -33,7 +33,6 @@ func createConnectionRequests() {
 
 		// user13 is also connected to all 1 series users
 		{"user13@example.com", "user12"},
-		{"user13@example.com", "user13"},
 		{"user13@example.com", "user14"},
 		{"user13@example.com", "user15"},
 		{"user13@example.com", "user16"},
@@ -99,12 +98,15 @@ func approveConnectionRequests() {
 		{"user14@example.com", "user11"},
 		{"user15@example.com", "user11"},
 		{"user16@example.com", "user11"},
+		{"user17@example.com", "user11"},
 
 		{"user12@example.com", "user13"},
-		{"user13@example.com", "user13"},
 		{"user14@example.com", "user13"},
 		{"user15@example.com", "user13"},
 		{"user16@example.com", "user13"},
+		{"user17@example.com", "user13"},
+		{"user18@example.com", "user13"},
+		{"user19@example.com", "user13"},
 	}
 	for _, connectionRequest := range connectionRequests {
 		approveConnectionRequest(

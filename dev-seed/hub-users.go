@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 type HubUser struct {
@@ -22,6 +23,7 @@ type HubUser struct {
 	ProfilePictureFilename string
 
 	ApplyToCompanyDomains []string
+	Endorsers             []common.Handle
 
 	WorkHistoryDomains []string
 }
@@ -40,6 +42,9 @@ var hubUsers = []HubUser{
 			"sunvaja.example",
 			"decdpd.example",
 			"nokiabricks.example",
+		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
 		},
 	},
 	{
@@ -176,6 +181,13 @@ var hubUsers = []HubUser{
 			"decdpd.example",
 			"nokiabricks.example",
 		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user12"),
+			common.Handle("user13"),
+		},
 	},
 	{
 		Name:              "User Twelve",
@@ -190,6 +202,12 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"sunvaja.example",
 			"novelltenware.example",
+		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user13"),
 		},
 	},
 	{
@@ -222,6 +240,13 @@ var hubUsers = []HubUser{
 			"novelltenware.example",
 			"decdpd.example",
 		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user11"),
+			common.Handle("user13"),
+		},
 	},
 	{
 		Name:              "User Fifteen",
@@ -237,6 +262,13 @@ var hubUsers = []HubUser{
 			"nokiabricks.example",
 			"sunvaja.example",
 		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user11"),
+			common.Handle("user13"),
+		},
 	},
 	{
 		Name:              "User Sixteen",
@@ -251,6 +283,13 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"decdpd.example",
 			"novelltenware.example",
+		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user11"),
+			common.Handle("user13"),
 		},
 	},
 	{
@@ -268,6 +307,13 @@ var hubUsers = []HubUser{
 			"sunvaja.example",
 			"decdpd.example",
 		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user11"),
+			common.Handle("user13"),
+		},
 	},
 	{
 		Name:              "User Eighteen",
@@ -283,6 +329,12 @@ var hubUsers = []HubUser{
 			"novelltenware.example",
 			"decdpd.example",
 		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
+		},
+		Endorsers: []common.Handle{
+			common.Handle("user13"),
+		},
 	},
 	{
 		Name:              "User Nineteen",
@@ -297,6 +349,9 @@ var hubUsers = []HubUser{
 			"gryffindor.example",
 			"sunvaja.example",
 			"nokiabricks.example",
+		},
+		ApplyToCompanyDomains: []string{
+			"gryffindor.example",
 		},
 	},
 	{

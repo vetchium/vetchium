@@ -44,6 +44,7 @@ func createApplicationForOpening(
 		Resume:                 sampleResumePDF,
 		CoverLetter:            "I am excited to apply for this position...",
 		Filename:               user.Handle + "-resume.pdf",
+		EndorserHandles:        user.Endorsers,
 	}
 
 	// Make the API request and get the response
