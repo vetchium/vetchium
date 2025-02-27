@@ -21,40 +21,26 @@ func createConnectionRequests() {
 		HubUserEmail    string
 		ColleagueHandle string
 	}{
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user12",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user13",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user14",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user15",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user16",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user17",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user18",
-		},
-		{
-			HubUserEmail:    "user11@example.com",
-			ColleagueHandle: "user19",
-		},
-	}
+		// user11 connects to all other 1 series users
+		{"user11@example.com", "user12"},
+		{"user11@example.com", "user13"},
+		{"user11@example.com", "user14"},
+		{"user11@example.com", "user15"},
+		{"user11@example.com", "user16"},
+		{"user11@example.com", "user17"},
+		{"user11@example.com", "user18"},
+		{"user11@example.com", "user19"},
 
+		// user13 is also connected to all 1 series users
+		{"user13@example.com", "user12"},
+		{"user13@example.com", "user13"},
+		{"user13@example.com", "user14"},
+		{"user13@example.com", "user15"},
+		{"user13@example.com", "user16"},
+		{"user13@example.com", "user17"},
+		{"user13@example.com", "user18"},
+		{"user13@example.com", "user19"},
+	}
 	for _, connection := range connections {
 		createConnectionRequest(
 			connection.HubUserEmail,
@@ -108,26 +94,17 @@ func approveConnectionRequests() {
 		ApproverEmail   string
 		RequestorHandle string
 	}{
-		{
-			ApproverEmail:   "user12@example.com",
-			RequestorHandle: "user11",
-		},
-		{
-			ApproverEmail:   "user13@example.com",
-			RequestorHandle: "user11",
-		},
-		{
-			ApproverEmail:   "user14@example.com",
-			RequestorHandle: "user11",
-		},
-		{
-			ApproverEmail:   "user15@example.com",
-			RequestorHandle: "user11",
-		},
-		{
-			ApproverEmail:   "user16@example.com",
-			RequestorHandle: "user11",
-		},
+		{"user12@example.com", "user11"},
+		{"user13@example.com", "user11"},
+		{"user14@example.com", "user11"},
+		{"user15@example.com", "user11"},
+		{"user16@example.com", "user11"},
+
+		{"user12@example.com", "user13"},
+		{"user13@example.com", "user13"},
+		{"user14@example.com", "user13"},
+		{"user15@example.com", "user13"},
+		{"user16@example.com", "user13"},
 	}
 	for _, connectionRequest := range connectionRequests {
 		approveConnectionRequest(
