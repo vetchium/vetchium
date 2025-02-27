@@ -326,6 +326,10 @@ type DB interface {
 		ctx context.Context,
 		req hub.FilterColleaguesRequest,
 	) ([]hub.HubUserShort, error)
+	GetMyEndorsementApprovals(
+		ctx context.Context,
+		req hub.MyEndorseApprovalsRequest,
+	) ([]hub.MyEndorseApproval, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error

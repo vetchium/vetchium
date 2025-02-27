@@ -6,7 +6,7 @@ import (
 
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	"github.com/psankar/vetchi/api/internal/hermione/candidacy"
-	"github.com/psankar/vetchi/api/internal/hermione/colleagues"
+	co "github.com/psankar/vetchi/api/internal/hermione/colleagues"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
@@ -405,16 +405,14 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/update-work-history", wrap(wh.UpdateWorkHistory(h)))
 
 	// Colleague related endpoints
-	http.Handle("/hub/connect-colleague", wrap(colleagues.ConnectColleague(h)))
-	http.Handle("/hub/unlink-colleague", wrap(colleagues.UnlinkColleague(h)))
-	http.Handle(
-		"/hub/my-colleague-approvals",
-		wrap(colleagues.MyColleagueApprovals(h)),
-	)
-	http.Handle("/hub/my-colleague-seeks", wrap(colleagues.MyColleagueSeeks(h)))
-	http.Handle("/hub/approve-colleague", wrap(colleagues.ApproveColleague(h)))
-	http.Handle("/hub/reject-colleague", wrap(colleagues.RejectColleague(h)))
-	http.Handle("/hub/filter-colleagues", wrap(colleagues.FilterColleagues(h)))
+	http.Handle("/hub/connect-colleague", wrap(co.ConnectColleague(h)))
+	http.Handle("/hub/unlink-colleague", wrap(co.UnlinkColleague(h)))
+	http.Handle("/hub/my-colleague-approvals", wrap(co.MyColleagueApprovals(h)))
+	http.Handle("/hub/my-endorse-approvals", wrap(co.MyEndorseApprovals(h)))
+	http.Handle("/hub/my-colleague-seeks", wrap(co.MyColleagueSeeks(h)))
+	http.Handle("/hub/approve-colleague", wrap(co.ApproveColleague(h)))
+	http.Handle("/hub/reject-colleague", wrap(co.RejectColleague(h)))
+	http.Handle("/hub/filter-colleagues", wrap(co.FilterColleagues(h)))
 
 	port := fmt.Sprintf(":%d", h.Config().Port)
 	return http.ListenAndServe(port, nil)
