@@ -410,6 +410,8 @@ func (h *Hermione) Run() error {
 	http.Handle("/hub/my-colleague-approvals", wrap(co.MyColleagueApprovals(h)))
 	http.Handle("/hub/my-endorse-approvals", wrap(co.MyEndorseApprovals(h)))
 	http.Handle("/hub/my-colleague-seeks", wrap(co.MyColleagueSeeks(h)))
+	http.Handle("/hub/endorse-application", wrap(co.EndorseApplication(h)))
+	http.Handle("/hub/reject-endorsement", wrap(co.RejectEndorsement(h)))
 	http.Handle("/hub/approve-colleague", wrap(co.ApproveColleague(h)))
 	http.Handle("/hub/reject-colleague", wrap(co.RejectColleague(h)))
 	http.Handle("/hub/filter-colleagues", wrap(co.FilterColleagues(h)))

@@ -330,6 +330,14 @@ type DB interface {
 		ctx context.Context,
 		req hub.MyEndorseApprovalsRequest,
 	) (hub.MyEndorseApprovalsResponse, error)
+	EndorseApplication(
+		ctx context.Context,
+		endorseReq hub.EndorseApplicationRequest,
+	) error
+	RejectEndorsement(
+		ctx context.Context,
+		rejectReq hub.RejectEndorsementRequest,
+	) error
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
