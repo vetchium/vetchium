@@ -80,6 +80,7 @@ export default function OpeningDetailsPage() {
   const [colleagueSearchInput, setColleagueSearchInput] = useState("");
   const [colleagueOptions, setColleagueOptions] = useState<HubUserShort[]>([]);
   const [loadingColleagues, setLoadingColleagues] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   useEffect(() => {
     const fetchOpeningDetails = async () => {
@@ -425,21 +426,35 @@ export default function OpeningDetailsPage() {
                     options={colleagueOptions}
                     value={selectedEndorsers}
                     loading={loadingColleagues}
-                    disabled={selectedEndorsers.length >= 5 || uploading}
+                    disabled={uploading}
+                    inputValue={colleagueSearchInput}
+                    onInputChange={(event, newValue, reason) => {
+                      if (selectedEndorsers.length < 5) {
+                        setColleagueSearchInput(newValue);
+                      }
+                    }}
                     getOptionLabel={(option) =>
                       `${option.name} (@${option.handle})`
                     }
                     isOptionEqualToValue={(option, value) =>
                       option.handle === value.handle
                     }
+                    open={
+                      isPopupOpen &&
+                      selectedEndorsers.length < 5 &&
+                      colleagueOptions.length > 0
+                    }
+                    onOpen={() => {
+                      if (selectedEndorsers.length < 5) {
+                        setIsPopupOpen(true);
+                      }
+                    }}
+                    onClose={() => setIsPopupOpen(false)}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         label={t("openingDetails.endorsers.search")}
                         variant="outlined"
-                        onChange={(e) =>
-                          setColleagueSearchInput(e.target.value)
-                        }
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -463,6 +478,8 @@ export default function OpeningDetailsPage() {
                     onChange={(_, value) => {
                       if (value.length <= 5) {
                         setSelectedEndorsers(value);
+                        setColleagueSearchInput("");
+                        setIsPopupOpen(false);
                       }
                     }}
                     sx={{ mb: 2 }}
