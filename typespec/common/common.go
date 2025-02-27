@@ -1,6 +1,9 @@
 package common
 
-import "regexp"
+import (
+	"regexp"
+	"time"
+)
 
 type ValidationErrors struct {
 	Errors []string `json:"errors"`
@@ -283,3 +286,9 @@ const (
 	OrgUsersCRUD   OrgUserRole = "ORG_USERS_CRUD"
 	OrgUsersViewer OrgUserRole = "ORG_USERS_VIEWER"
 )
+
+type DateIDPagination struct {
+	Date    time.Time `json:"date"     validate:"required"`
+	ID      string    `json:"id"       validate:"required"`
+	OrderBy *string   `json:"order_by" validate:"oneof=asc desc"`
+}

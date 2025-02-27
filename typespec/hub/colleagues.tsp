@@ -70,6 +70,45 @@ model FilterColleaguesRequest {
     limit: numeric;
 }
 
+union EndorsementState {
+    SoughtEndorsement: "SOUGHT_ENDORSEMENT",
+    Endorsed: "ENDORSED",
+    DeclinedEndorsement: "DECLINED_ENDORSEMENT",
+    // TODO: We need a new state to migrate to, when an application is rejected/withdrawn/shortlisted but the Endorser has still not responded. Open Question: Should we hold off showing the Application to the Employer until the Endorser responds ?
+}
+
+model MyEndorseApprovalsRequest {
+    pagination?: DateIDPagination;
+
+    @doc("Filter and return only Endorsements in this state. By default only Endorsements in the SoughtEndorsement state are returned.")
+    @maxItems(3)
+    state: EndorsementState[];
+
+    @doc("The limit on the number of endorsements to return")
+    @minValue(1)
+    @maxValue(40)
+    limit?: numeric;
+}
+
+model MyEndorseApproval {
+    application_id: string;
+    applicant_handle: Handle;
+    applicant_name: string;
+    applicant_short_bio: string;
+    employer_name: string;
+    employer_domain: string;
+    opening_title: string;
+    opening_url: string;
+    application_status: string;
+    application_created_at: utcDateTime;
+    endorsement_status: EndorsementState;
+}
+
+model MyEndorseApprovalsResponse {
+    endorsements: MyEndorseApproval[];
+    next_page_key?: DateIDPagination;
+}
+
 @route("/hub/connect-colleague")
 interface ConnectColleague {
     @tag("HubProfile")
@@ -140,5 +179,17 @@ interface FilterColleagues {
     filterColleagues(@body request: FilterColleaguesRequest): {
         @statusCode statusCode: 200;
         @body response: HubUserShort[];
+    };
+}
+
+@route("/hub/my-endorse-approvals")
+interface MyEndorseApprovals {
+    @tag("HubProfile")
+    @doc("Get the list of endorsement requests that the logged in user can either approve or reject")
+    @post
+    @useAuth(HubAuth)
+    myEndorseApprovals(@body request: MyEndorseApprovalsRequest): {
+        @statusCode statusCode: 200;
+        @body response: MyEndorseApprovalsResponse;
     };
 }

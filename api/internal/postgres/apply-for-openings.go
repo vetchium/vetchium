@@ -8,6 +8,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
 
 func (p *PG) CreateApplication(
@@ -120,7 +121,7 @@ RETURNING id
 			) VALUES (
 				$1, $2, $3
 			)
-		`, applicationID, endorserID, db.SoughtEndorsement)
+		`, applicationID, endorserID, hub.SoughtEndorsement)
 		if err != nil {
 			p.log.Err("failed to create endorsement", "error", err)
 			return db.ErrInternal

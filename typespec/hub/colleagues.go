@@ -48,3 +48,36 @@ type FilterColleaguesRequest struct {
 	Prefix string `json:"prefix" validate:"required,min=1,max=12"`
 	Limit  int    `json:"limit"  validate:"required,min=1,max=6"`
 }
+
+type EndorsementState string
+
+const (
+	SoughtEndorsement   EndorsementState = "SOUGHT_ENDORSEMENT"
+	Endorsed            EndorsementState = "ENDORSED"
+	DeclinedEndorsement EndorsementState = "DECLINED_ENDORSEMENT"
+)
+
+type MyEndorseApprovalsRequest struct {
+	PaginationKey *string            `json:"pagination_key"`
+	Limit         int                `json:"limit"          validate:"min=0,max=100"`
+	State         []EndorsementState `json:"state"          validate:"min=0,max=3"`
+}
+
+type MyEndorseApproval struct {
+	ApplicationID        string           `json:"application_id"`
+	ApplicantHandle      common.Handle    `json:"applicant_handle"`
+	ApplicantName        string           `json:"applicant_name"`
+	ApplicantShortBio    string           `json:"applicant_short_bio"`
+	EmployerName         string           `json:"employer_name"`
+	EmployerDomain       string           `json:"employer_domain"`
+	OpeningTitle         string           `json:"opening_title"`
+	OpeningURL           string           `json:"opening_url"`
+	ApplicationStatus    string           `json:"application_status"`
+	ApplicationCreatedAt string           `json:"application_created_at"`
+	EndorsementStatus    EndorsementState `json:"endorsement_status"`
+}
+
+type MyEndorseApprovalsResponse struct {
+	Endorsements  []MyEndorseApproval `json:"endorsements"`
+	PaginationKey string              `json:"pagination_key,omitempty"`
+}
