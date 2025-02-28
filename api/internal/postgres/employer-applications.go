@@ -23,7 +23,7 @@ func (p *PG) GetApplicationsForEmployer(
 	query := `
 		WITH endorsed_applications AS (
 			SELECT 
-				ae.application_id,
+				a.id,
 				jsonb_agg(
 					jsonb_build_object(
 						'full_name', h.full_name,
@@ -38,10 +38,11 @@ func (p *PG) GetApplicationsForEmployer(
 						)
 					)
 				) as endorsers
-			FROM application_endorsements ae
-			JOIN hub_users h ON h.id = ae.endorser_id
+			FROM applications a
+			JOIN application_endorsements ae ON a.id = ae.application_id
+			JOIN hub_users h ON ae.endorser_id = h.id
 			WHERE ae.state = 'ENDORSED'
-			GROUP BY ae.application_id
+			GROUP BY a.id
 		)
 		SELECT
 			a.id,
@@ -51,20 +52,22 @@ func (p *PG) GetApplicationsForEmployer(
 			h.full_name as hub_user_name,
 			h.short_bio as hub_user_short_bio,
 			(
-				SELECT array_agg(d.domain_name)
-				FROM hub_users_official_emails hue
+				SELECT array_agg(d.domain_name ORDER BY hue.last_verified_at DESC)
+				FROM (
+					SELECT DISTINCT ON (hub_user_id) hub_user_id, domain_id, last_verified_at
+					FROM hub_users_official_emails
+					WHERE hub_user_id = h.id
+					AND last_verified_at IS NOT NULL
+					ORDER BY hub_user_id, last_verified_at DESC
+				) hue
 				JOIN domains d ON d.id = hue.domain_id
-				WHERE hue.hub_user_id = h.id
-				AND hue.last_verified_at IS NOT NULL
-				ORDER BY hue.last_verified_at DESC
-				LIMIT 1
 			) as hub_user_last_employer_domains,
 			a.application_state,
 			a.color_tag,
 			COALESCE(ea.endorsers, '[]'::jsonb) as endorsers
 		FROM applications a
 		JOIN hub_users h ON h.id = a.hub_user_id
-		LEFT JOIN endorsed_applications ea ON ea.application_id = a.id
+		LEFT JOIN endorsed_applications ea ON ea.id = a.id
 		WHERE a.employer_id = $1
 		AND a.opening_id = $2
 		AND a.application_state = $3
