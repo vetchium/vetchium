@@ -17,6 +17,13 @@ export interface GetApplicationsRequest {
   limit: number;
 }
 
+export interface Endorser {
+  full_name: string;
+  short_bio: string;
+  handle: string;
+  current_company_domains: string[];
+}
+
 export interface Application {
   id: string;
   cover_letter?: string;
@@ -26,6 +33,7 @@ export interface Application {
   hub_user_last_employer_domain?: string;
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
+  endorsers: Endorser[];
 }
 
 export interface SetApplicationColorTagRequest {

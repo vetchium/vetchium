@@ -37,6 +37,13 @@ model GetApplicationsRequest {
     limit: int64;
 }
 
+model Endorser {
+    full_name: string;
+    short_bio: string;
+    handle: string;
+    current_company_domains: string[];
+}
+
 model Application {
     id: string;
     cover_letter?: string;
@@ -46,6 +53,7 @@ model Application {
     hub_user_last_employer_domain?: string;
     state: ApplicationState;
     color_tag?: ApplicationColorTag;
+    endorsers: Endorser[];
 }
 
 model SetApplicationColorTagRequest {
