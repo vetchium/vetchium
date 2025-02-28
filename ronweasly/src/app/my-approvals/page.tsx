@@ -311,14 +311,6 @@ export default function MyApprovalsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "MMM d, yyyy");
-    } catch (error) {
-      return dateString;
-    }
-  };
-
   return (
     <AuthenticatedLayout>
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, px: 2 }}>
@@ -485,7 +477,10 @@ export default function MyApprovalsPage() {
                         sx={{ mb: 1 }}
                       >
                         {t("approvals.endorsement.appliedOn", {
-                          date: formatDate(endorsement.application_created_at),
+                          date: format(
+                            new Date(endorsement.application_created_at),
+                            "MMM d, yyyy"
+                          ),
                         })}
                       </Typography>
                       <Typography variant="body2" sx={{ mb: 2 }}>
