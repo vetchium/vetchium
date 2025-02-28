@@ -41,7 +41,7 @@ model Endorser {
     full_name: string;
     short_bio: string;
     handle: string;
-    current_company_domains: string[];
+    current_company_domains?: string[];
 }
 
 model Application {
@@ -50,9 +50,12 @@ model Application {
     created_at: utcDateTime;
     hub_user_handle: string;
     hub_user_name: string;
-    hub_user_last_employer_domain?: string;
+    hub_user_short_bio: string;
+    hub_user_last_employer_domains?: string[];
     state: ApplicationState;
     color_tag?: ApplicationColorTag;
+
+    @doc("List of all the Endorsers who have endorsed the Application")
     endorsers: Endorser[];
 }
 

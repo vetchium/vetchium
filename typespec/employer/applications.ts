@@ -21,7 +21,7 @@ export interface Endorser {
   full_name: string;
   short_bio: string;
   handle: string;
-  current_company_domains: string[];
+  current_company_domains?: string[];
 }
 
 export interface Application {
@@ -30,7 +30,8 @@ export interface Application {
   created_at: Date;
   hub_user_handle: string;
   hub_user_name: string;
-  hub_user_last_employer_domain?: string;
+  hub_user_short_bio: string;
+  hub_user_last_employer_domains?: string[];
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
   endorsers: Endorser[];
