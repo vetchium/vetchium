@@ -30,6 +30,7 @@ import {
   Link,
   Popover,
   Autocomplete,
+  Tooltip,
 } from "@mui/material";
 import {
   Visibility as VisibilityIcon,
@@ -37,6 +38,17 @@ import {
 } from "@mui/icons-material";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+
+interface Endorser {
+  full_name: string;
+  short_bio: string;
+  handle: string;
+  current_company_domains?: string[];
+}
+
+interface CandidacyWithEndorsers extends Candidacy {
+  endorsers?: Endorser[];
+}
 
 function CandidacyStateLabel({
   state,
@@ -175,7 +187,7 @@ function CandidaciesTable({
   candidacies,
   t,
 }: {
-  candidacies: Candidacy[];
+  candidacies: CandidacyWithEndorsers[];
   t: (key: string) => string;
 }) {
   const router = useRouter();
@@ -307,6 +319,9 @@ function CandidaciesTable({
               />
             </TableCell>
             <TableCell>
+              <Typography>{t("candidacies.endorsers")}</Typography>
+            </TableCell>
+            <TableCell>
               <Typography>{t("common.actions")}</Typography>
             </TableCell>
           </TableRow>
@@ -318,6 +333,45 @@ function CandidaciesTable({
               <TableCell>{candidacy.applicant_handle}</TableCell>
               <TableCell>
                 <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
+              </TableCell>
+              <TableCell>
+                {candidacy.endorsers && candidacy.endorsers.length > 0 ? (
+                  <Tooltip
+                    title={
+                      <Box>
+                        {candidacy.endorsers.map((endorser, idx) => (
+                          <Typography key={idx} variant="body2">
+                            {endorser.full_name} (@{endorser.handle})
+                            {endorser.current_company_domains &&
+                              endorser.current_company_domains.length > 0 && (
+                                <Typography
+                                  variant="caption"
+                                  component="div"
+                                  color="text.secondary"
+                                >
+                                  {endorser.current_company_domains.join(", ")}
+                                </Typography>
+                              )}
+                          </Typography>
+                        ))}
+                      </Box>
+                    }
+                  >
+                    <Chip
+                      label={`${candidacy.endorsers.length} ${
+                        candidacy.endorsers.length === 1
+                          ? t("candidacies.endorser")
+                          : t("candidacies.endorsers")
+                      }`}
+                      size="small"
+                      color="primary"
+                    />
+                  </Tooltip>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {t("candidacies.noEndorsers")}
+                  </Typography>
+                )}
               </TableCell>
               <TableCell>
                 <IconButton
@@ -349,7 +403,7 @@ function LoadingSkeleton() {
 export default function CandidaciesPage() {
   const params = useParams();
   const openingId = params.id as string;
-  const [candidacies, setCandidacies] = useState<Candidacy[]>([]);
+  const [candidacies, setCandidacies] = useState<CandidacyWithEndorsers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -410,7 +464,7 @@ export default function CandidaciesPage() {
         if (isMounted) {
           console.error("Error fetching candidacies:", error);
           setError(
-            error instanceof Error ? error.message : t("candidacies.fetchError")
+            error instanceof Error ? error.message : t("common.serverError")
           );
         }
       } finally {

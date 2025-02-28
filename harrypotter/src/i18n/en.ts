@@ -222,6 +222,10 @@ export const en = {
     noColor: "No color tag",
     clickToPreview: "Click to preview resume",
     pdfPreviewNotAvailable: "PDF preview not available",
+    lastEmployer: "Last Employer",
+    endorsers: "Endorsers",
+    noEndorsers: "No endorsers",
+    endorser: "Endorser",
   },
   candidacies: {
     title: "Candidacies",

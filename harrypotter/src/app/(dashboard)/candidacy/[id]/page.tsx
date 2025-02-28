@@ -54,6 +54,17 @@ import Cookies from "js-cookie";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 
+interface Endorser {
+  full_name: string;
+  short_bio: string;
+  handle: string;
+  current_company_domains?: string[];
+}
+
+interface CandidacyWithEndorsers extends Candidacy {
+  endorsers?: Endorser[];
+}
+
 function CandidacyStateLabel({
   state,
   t,
@@ -131,7 +142,9 @@ export default function CandidacyDetailPage() {
   const [loadingInterviews, setLoadingInterviews] = useState(true);
   const [loadingComments, setLoadingComments] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [candidacy, setCandidacy] = useState<Candidacy | null>(null);
+  const [candidacy, setCandidacy] = useState<CandidacyWithEndorsers | null>(
+    null
+  );
   const [comments, setComments] = useState<CandidacyComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -417,7 +430,7 @@ export default function CandidacyDetailPage() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          setError(t("common.error.sessionExpired"));
+          setError(t("auth.sessionExpired"));
           Cookies.remove("session_token");
           router.push("/signin");
           return;
@@ -437,13 +450,10 @@ export default function CandidacyDetailPage() {
         severity: "success",
       });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("common.error.serverError")
-      );
+      setError(err instanceof Error ? err.message : t("common.serverError"));
       setSnackbar({
         open: true,
-        message:
-          err instanceof Error ? err.message : t("common.error.serverError"),
+        message: err instanceof Error ? err.message : t("common.serverError"),
         severity: "error",
       });
     }
@@ -524,6 +534,55 @@ export default function CandidacyDetailPage() {
             >
               @{candidacy.applicant_handle}
             </Typography>
+
+            {/* Add Endorsers Section */}
+            {candidacy.endorsers && candidacy.endorsers.length > 0 && (
+              <Box sx={{ mt: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t("candidacies.endorsers")}
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {candidacy.endorsers.map((endorser, index) => (
+                    <Paper key={index} sx={{ p: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="subtitle2">
+                            {endorser.full_name} (@{endorser.handle})
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {endorser.short_bio}
+                          </Typography>
+                        </Box>
+                        {endorser.current_company_domains &&
+                          endorser.current_company_domains.length > 0 && (
+                            <Box
+                              sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                            >
+                              {endorser.current_company_domains.map(
+                                (domain, idx) => (
+                                  <Chip
+                                    key={idx}
+                                    label={domain}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                )
+                              )}
+                            </Box>
+                          )}
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
             <Divider sx={{ my: 2 }} />
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Link

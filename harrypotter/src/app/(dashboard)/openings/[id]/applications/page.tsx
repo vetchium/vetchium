@@ -46,11 +46,18 @@ interface Application {
   filename: string;
   hub_user_handle: string;
   hub_user_name: string;
-  hub_user_last_employer_domain?: string;
+  hub_user_short_bio: string;
+  hub_user_last_employer_domains?: string[];
   resume: string;
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
   resumeUrl?: string;
+  endorsers: {
+    full_name: string;
+    short_bio: string;
+    handle: string;
+    current_company_domains?: string[];
+  }[];
 }
 
 interface PageProps {
@@ -124,10 +131,10 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else {
-        setError(t("common.error"));
+        setError(t("common.serverError"));
       }
     } catch (err) {
-      setError(t("common.error"));
+      setError(t("common.serverError"));
     } finally {
       setIsLoading(false);
     }
@@ -172,10 +179,10 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else {
-        setError(t("common.error"));
+        setError(t("common.serverError"));
       }
     } catch (err) {
-      setError(t("common.error"));
+      setError(t("common.serverError"));
     } finally {
       setIsActionLoading(false);
     }
@@ -219,10 +226,10 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else {
-        setError(t("common.error"));
+        setError(t("common.serverError"));
       }
     } catch (err) {
-      setError(t("common.error"));
+      setError(t("common.serverError"));
     } finally {
       setIsActionLoading(false);
     }
@@ -274,10 +281,10 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else if (response.status === 401) {
         setError(t("auth.unauthorized"));
       } else {
-        setError(t("common.error"));
+        setError(t("common.serverError"));
       }
     } catch (err) {
-      setError(t("common.error"));
+      setError(t("common.serverError"));
     } finally {
       setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));
     }
@@ -378,10 +385,10 @@ export default function ApplicationsPage({ params }: PageProps) {
                   <Typography variant="h6">
                     {application.hub_user_name} ({application.hub_user_handle})
                   </Typography>
-                  {application.hub_user_last_employer_domain && (
+                  {application.hub_user_last_employer_domains && (
                     <Typography variant="body2" color="text.secondary">
                       {t("applications.lastEmployer")}:{" "}
-                      {application.hub_user_last_employer_domain}
+                      {application.hub_user_last_employer_domains.join(", ")}
                     </Typography>
                   )}
                 </Box>
@@ -553,6 +560,67 @@ export default function ApplicationsPage({ params }: PageProps) {
                 <Typography sx={{ mt: 2 }}>
                   {application.cover_letter}
                 </Typography>
+              )}
+
+              {/* Add Endorsers Section */}
+              {application.endorsers && application.endorsers.length > 0 && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ mb: 2, fontWeight: 500 }}
+                  >
+                    {t("applications.endorsers")}
+                  </Typography>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    {application.endorsers.map((endorser, index) => (
+                      <Paper
+                        key={index}
+                        sx={{ p: 2, bgcolor: "background.default" }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Box>
+                            <Typography variant="subtitle2">
+                              {endorser.full_name} (@{endorser.handle})
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {endorser.short_bio}
+                            </Typography>
+                          </Box>
+                          {endorser.current_company_domains &&
+                            endorser.current_company_domains.length > 0 && (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                {endorser.current_company_domains.map(
+                                  (domain, idx) => (
+                                    <Chip
+                                      key={idx}
+                                      label={domain}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{ bgcolor: "background.paper" }}
+                                    />
+                                  )
+                                )}
+                              </Box>
+                            )}
+                        </Box>
+                      </Paper>
+                    ))}
+                  </Box>
+                </Box>
               )}
             </CardContent>
           </Card>
