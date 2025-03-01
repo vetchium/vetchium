@@ -38,6 +38,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { LoadingButton } from "@mui/lab";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 interface Application {
   id: string;
@@ -382,9 +383,21 @@ export default function ApplicationsPage({ params }: PageProps) {
                 }}
               >
                 <Box>
-                  <Typography variant="h6">
-                    {application.hub_user_name} ({application.hub_user_handle})
-                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="h6">
+                      {application.hub_user_name} (@
+                      {application.hub_user_handle})
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      href={`/u/${application.hub_user_handle}`}
+                      target="_blank"
+                      component="a"
+                      sx={{ ml: 1 }}
+                    >
+                      <OpenInNewIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                   {application.hub_user_last_employer_domains && (
                     <Typography variant="body2" color="text.secondary">
                       {t("applications.lastEmployer")}:{" "}

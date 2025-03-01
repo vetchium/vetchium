@@ -35,6 +35,7 @@ import {
 import {
   Visibility as VisibilityIcon,
   FilterList as FilterListIcon,
+  OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -330,7 +331,18 @@ function CandidaciesTable({
           {filteredCandidacies.map((candidacy) => (
             <TableRow key={candidacy.candidacy_id}>
               <TableCell>{candidacy.applicant_name}</TableCell>
-              <TableCell>{candidacy.applicant_handle}</TableCell>
+              <TableCell>
+                {candidacy.applicant_handle}
+                <IconButton
+                  size="small"
+                  href={`/u/${candidacy.applicant_handle}`}
+                  target="_blank"
+                  component="a"
+                  sx={{ ml: 1 }}
+                >
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+              </TableCell>
               <TableCell>
                 <CandidacyStateLabel state={candidacy.candidacy_state} t={t} />
               </TableCell>

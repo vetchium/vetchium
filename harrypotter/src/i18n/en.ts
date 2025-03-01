@@ -432,4 +432,16 @@ export const en = {
       cancelButton: "Cancel",
     },
   },
+  hubUsers: {
+    profile: "User Profile",
+    notFound: "User not found",
+    shortBio: "About",
+    longBio: "Detailed Bio",
+    verifiedDomains: "Verified Work Domains",
+    fetchError: "Failed to fetch user profile",
+  },
+  errors: {
+    fetchFailed: "Failed to fetch data",
+    serverError: "An error occurred. Please try again later.",
+  },
 };
