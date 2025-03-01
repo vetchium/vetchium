@@ -25,3 +25,4 @@ export * from "./employer/locations";
 export * from "./employer/costcenters";
 export * from "./employer/applications";
 export * from "./employer/auth";
+export * from "./employer/profilepage";

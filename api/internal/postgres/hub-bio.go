@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -175,4 +176,49 @@ WHERE id = $5
 	}
 
 	return nil
+}
+
+func (p *PG) GetEmployerViewBio(
+	ctx context.Context,
+	handle string,
+) (employer.EmployerViewBio, error) {
+	var bio employer.EmployerViewBio
+
+	err := p.pool.QueryRow(
+		ctx,
+		`
+WITH verified_domains AS (
+	SELECT DISTINCT d.domain_name
+	FROM hub_users_official_emails hoe
+	JOIN domains d ON d.id = hoe.domain_id
+	JOIN hub_users hu ON hu.id = hoe.hub_user_id
+	WHERE hu.handle = $1
+	AND hoe.last_verified_at IS NOT NULL
+)
+SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
+	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains
+FROM hub_users hu
+LEFT JOIN verified_domains vd ON true
+WHERE hu.handle = $1
+GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
+`,
+		handle,
+	).Scan(
+		&bio.Handle,
+		&bio.FullName,
+		&bio.ShortBio,
+		&bio.LongBio,
+		&bio.VerifiedMailDomains,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("no hub user found", "handle", handle)
+			return employer.EmployerViewBio{}, db.ErrNoHubUser
+		}
+
+		p.log.Err("failed to get bio", "error", err)
+		return employer.EmployerViewBio{}, err
+	}
+
+	return bio, nil
 }

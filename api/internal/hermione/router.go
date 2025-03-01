@@ -342,6 +342,29 @@ func (h *Hermione) Run() error {
 		[]common.OrgUserRole{common.Any},
 	)
 
+	// Hub user profile related endpoints for employer
+	h.mw.Protect(
+		"/employer/get-hub-user-bio",
+		pp.GetHubUserBio(h),
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
+			common.ApplicationsViewer,
+		},
+	)
+	h.mw.Protect(
+		"/employer/get-hub-user-profile-picture/",
+		func(w http.ResponseWriter, r *http.Request) {
+			http.StripPrefix("/employer/get-hub-user-profile-picture/", pp.GetHubUserProfilePicture(h)).
+				ServeHTTP(w, r)
+		},
+		[]common.OrgUserRole{
+			common.Admin,
+			common.ApplicationsCRUD,
+			common.ApplicationsViewer,
+		},
+	)
+
 	wrap := func(fn http.Handler) http.Handler {
 		return h.mw.HubWrap(fn)
 	}

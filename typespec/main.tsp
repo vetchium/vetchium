@@ -10,6 +10,7 @@ import "./employer/orgusers.tsp";
 import "./employer/openings.tsp";
 import "./employer/candidacy.tsp";
 import "./employer/interviews.tsp";
+import "./employer/profilepage.tsp";
 
 import "./hub/applications.tsp";
 import "./hub/hubusers.tsp";

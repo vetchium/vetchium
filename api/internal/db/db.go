@@ -302,6 +302,10 @@ type DB interface {
 	VerifyOfficialEmail(ctx context.Context, email string, code string) error
 	DeleteOfficialEmail(ctx context.Context, email string) error
 	GetBio(ctx context.Context, handle string) (hub.Bio, error)
+	GetEmployerViewBio(
+		ctx context.Context,
+		handle string,
+	) (employer.EmployerViewBio, error)
 	UpdateBio(ctx context.Context, bio hub.UpdateBioRequest) error
 	UpdateProfilePictureWithCleanup(
 		ctx context.Context,
