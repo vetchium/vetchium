@@ -74,6 +74,8 @@ export const en = {
     locationRequiredError:
       "Please select at least one location option (office locations, remote timezones, remote countries) or mark the position as globally remote.",
     showClosed: "Show Closed Openings",
+    backToOpening: "Back to Opening",
+    backToList: "Back to All Openings",
     types: {
       FULL_TIME_OPENING: "Full Time",
       PART_TIME_OPENING: "Part Time",

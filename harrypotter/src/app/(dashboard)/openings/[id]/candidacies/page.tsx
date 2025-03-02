@@ -37,6 +37,7 @@ import {
   FilterList as FilterListIcon,
   OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
@@ -506,12 +507,15 @@ export default function CandidaciesPage() {
   if (candidacies.length === 0) {
     return (
       <Box sx={{ p: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-          <Typography variant="h4">{t("candidacies.title")}</Typography>
-          <Button variant="outlined" onClick={() => router.back()}>
-            {t("common.back")}
-          </Button>
-        </Box>
+        <Button
+          variant="text"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => router.push(`/openings/${openingId}`)}
+          sx={{ mb: 3 }}
+          size="small"
+        >
+          {t("openings.backToOpening")}
+        </Button>
         <Typography color="text.secondary">
           {t("candidacies.noCandidacies")}
         </Typography>
@@ -521,12 +525,15 @@ export default function CandidaciesPage() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">{t("candidacies.title")}</Typography>
-        <Button variant="outlined" onClick={() => router.back()}>
-          {t("common.back")}
-        </Button>
-      </Box>
+      <Button
+        variant="text"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => router.push(`/openings/${openingId}`)}
+        sx={{ mb: 3 }}
+        size="small"
+      >
+        {t("openings.backToOpening")}
+      </Button>
 
       {/* Opening Details */}
       <OpeningDetailsCard opening={candidacies[0]} t={t} />

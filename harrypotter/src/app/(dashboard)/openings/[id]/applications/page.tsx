@@ -47,6 +47,9 @@ import BusinessIcon from "@mui/icons-material/Business";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import PeopleIcon from "@mui/icons-material/People";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface PageProps {
   params: Promise<{
@@ -358,6 +361,16 @@ export default function ApplicationsPage({ params }: PageProps) {
 
   return (
     <Box sx={{ width: "100%", p: 3 }}>
+      <Button
+        variant="text"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => router.push(`/openings/${id}`)}
+        sx={{ mb: 3 }}
+        size="small"
+      >
+        {t("openings.backToOpening")}
+      </Button>
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
@@ -421,8 +434,17 @@ export default function ApplicationsPage({ params }: PageProps) {
                       variant="body2"
                       color="textSecondary"
                       gutterBottom
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
                       @{application.hub_user_handle}
+                      <IconButton
+                        size="small"
+                        href={`/u/${application.hub_user_handle}`}
+                        target="_blank"
+                        sx={{ padding: "2px" }}
+                      >
+                        <OpenInNewIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
                     </Typography>
                     <Typography variant="body1" paragraph>
                       {application.hub_user_short_bio}
@@ -565,50 +587,128 @@ export default function ApplicationsPage({ params }: PageProps) {
                   {application.endorsers.length > 0 && (
                     <Grid item xs={12}>
                       <Divider sx={{ my: 2 }} />
-                      <Typography
-                        variant="subtitle2"
-                        gutterBottom
-                        sx={{ display: "flex", alignItems: "center" }}
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          bgcolor: "grey.50",
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 2,
+                        }}
                       >
-                        <PeopleIcon sx={{ mr: 1 }} /> Endorsements (
-                        {application.endorsers.length})
-                      </Typography>
-                      <Stack spacing={2}>
-                        {application.endorsers.map((endorser, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              p: 2,
-                              bgcolor: "background.paper",
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Typography variant="subtitle2">
-                              {endorser.full_name} (@{endorser.handle})
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {endorser.short_bio}
-                            </Typography>
-                            {endorser.current_company_domains && (
+                        <Typography
+                          variant="subtitle2"
+                          gutterBottom
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            color: "text.primary",
+                            fontWeight: 600,
+                          }}
+                        >
+                          <PeopleIcon sx={{ mr: 1, color: "primary.main" }} />
+                          Endorsements ({application.endorsers.length})
+                        </Typography>
+                        <Stack spacing={2} sx={{ mt: 2 }}>
+                          {application.endorsers.map((endorser, index) => (
+                            <Paper
+                              key={index}
+                              elevation={0}
+                              sx={{
+                                p: 2,
+                                bgcolor: "background.paper",
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                "&:hover": {
+                                  bgcolor: "background.paper",
+                                  boxShadow: 1,
+                                },
+                              }}
+                            >
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                }}
+                              >
+                                {endorser.full_name}
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    color: "text.secondary",
+                                  }}
+                                >
+                                  (@{endorser.handle}
+                                  <IconButton
+                                    size="small"
+                                    href={`/u/${endorser.handle}`}
+                                    target="_blank"
+                                    sx={{ padding: "2px" }}
+                                  >
+                                    <OpenInNewIcon sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                  )
+                                </Box>
+                              </Typography>
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
                                 sx={{ mt: 1 }}
                               >
-                                <BusinessIcon
-                                  sx={{
-                                    fontSize: "small",
-                                    mr: 0.5,
-                                    verticalAlign: "middle",
-                                  }}
-                                />
-                                Currently at:{" "}
-                                {endorser.current_company_domains.join(", ")}
+                                {endorser.short_bio}
                               </Typography>
-                            )}
-                          </Box>
-                        ))}
-                      </Stack>
+                              {endorser.current_company_domains && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1,
+                                    mt: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                    }}
+                                  >
+                                    <EmailIcon sx={{ fontSize: "small" }} />
+                                    Confirmed Email Domains
+                                  </Typography>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    {endorser.current_company_domains.map(
+                                      (domain, idx) => (
+                                        <Chip
+                                          key={idx}
+                                          label={domain}
+                                          size="small"
+                                          variant="outlined"
+                                        />
+                                      )
+                                    )}
+                                  </Box>
+                                </Box>
+                              )}
+                            </Paper>
+                          ))}
+                        </Stack>
+                      </Paper>
                     </Grid>
                   )}
 

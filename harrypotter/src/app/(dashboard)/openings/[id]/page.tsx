@@ -27,6 +27,7 @@ import {
   OpeningState,
   OpeningStates,
 } from "@psankar/vetchi-typespec/common/openings";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface Opening {
   id: string;
@@ -194,18 +195,18 @@ export default function OpeningDetail({ params }: PageProps) {
 
   return (
     <Box sx={{ width: "100%", p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Box>
-          <Typography variant="h4">{opening.title}</Typography>
-          <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 1 }}>
-            {t(`openings.state.${opening.state}`)}
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button variant="outlined" onClick={() => router.back()}>
-            {t("common.back")}
-          </Button>
-        </Box>
+      <Button
+        variant="text"
+        startIcon={<ArrowBackIcon />}
+        onClick={() => router.push("/openings")}
+        sx={{ mb: 3 }}
+        size="small"
+      >
+        {t("openings.backToList")}
+      </Button>
+
+      <Box sx={{ display: "flex", mb: 3 }}>
+        <Typography variant="h4">{opening.title}</Typography>
       </Box>
 
       {error && (
