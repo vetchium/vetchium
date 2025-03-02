@@ -437,7 +437,7 @@ export const en = {
     notFound: "User not found",
     shortBio: "About",
     longBio: "Detailed Bio",
-    verifiedDomains: "Verified Work Domains",
+    verifiedOfficialEmailDomains: "Verified Official Email Domains",
     fetchError: "Failed to fetch user profile",
   },
   errors: {
