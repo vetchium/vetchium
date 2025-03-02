@@ -24,6 +24,9 @@ import {
   Tooltip,
   Menu,
   Stack,
+  Avatar,
+  Grid,
+  Divider,
 } from "@mui/material";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -32,6 +35,7 @@ import { useRouter } from "next/navigation";
 import {
   ApplicationState,
   ApplicationColorTag,
+  Application,
 } from "@psankar/vetchi-typespec";
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -39,27 +43,10 @@ import { LoadingButton } from "@mui/lab";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-
-interface Application {
-  id: string;
-  cover_letter?: string;
-  created_at: string;
-  filename: string;
-  hub_user_handle: string;
-  hub_user_name: string;
-  hub_user_short_bio: string;
-  hub_user_last_employer_domains?: string[];
-  resume: string;
-  state: ApplicationState;
-  color_tag?: ApplicationColorTag;
-  resumeUrl?: string;
-  endorsers: {
-    full_name: string;
-    short_bio: string;
-    handle: string;
-    current_company_domains?: string[];
-  }[];
-}
+import BusinessIcon from "@mui/icons-material/Business";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import PeopleIcon from "@mui/icons-material/People";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
 
 interface PageProps {
   params: Promise<{
@@ -67,14 +54,62 @@ interface PageProps {
   }>;
 }
 
+interface ExtendedApplication extends Application {
+  resumeUrl?: string;
+}
+
 const ITEMS_PER_PAGE = 10;
+
+const getColorTagStyles = (colorTag: ApplicationColorTag) => {
+  switch (colorTag) {
+    case "GREEN":
+      return {
+        bgcolor: "success.main",
+        color: "white",
+        "& .MuiChip-deleteIcon": {
+          color: "white",
+          "&:hover": {
+            color: "error.light",
+          },
+        },
+      };
+    case "YELLOW":
+      return {
+        bgcolor: "#FFD700", // Pure yellow color
+        color: "black", // Black text for better contrast on yellow
+        "& .MuiChip-deleteIcon": {
+          color: "black",
+          "&:hover": {
+            color: "error.dark",
+          },
+        },
+      };
+    case "RED":
+      return {
+        bgcolor: "error.main",
+        color: "white",
+        "& .MuiChip-deleteIcon": {
+          color: "white",
+          "&:hover": {
+            color: "error.light",
+          },
+        },
+      };
+  }
+};
 
 export default function ApplicationsPage({ params }: PageProps) {
   const { id } = use(params);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<ExtendedApplication[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedResume, setSelectedResume] = useState<string | null>(null);
+  const [zoomedResume, setZoomedResume] = useState<{
+    url: string | null;
+    applicationId: string | null;
+  }>({
+    url: null,
+    applicationId: null,
+  });
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [colorTagFilter, setColorTagFilter] = useState<
     ApplicationColorTag | ""
@@ -94,6 +129,7 @@ export default function ApplicationsPage({ params }: PageProps) {
   const router = useRouter();
 
   const fetchApplications = async (newPage?: number) => {
+    console.log("Fetching applications, page:", newPage);
     setIsLoading(true);
     setError("");
 
@@ -125,8 +161,12 @@ export default function ApplicationsPage({ params }: PageProps) {
 
       if (response.status === 200) {
         const data = await response.json();
-        setApplications(data || []);
-        if (data?.length === ITEMS_PER_PAGE) {
+        console.log("Applications fetched:", data);
+        console.log("Response data:", data);
+        console.log("Setting applications state with:", data);
+        setApplications(data ?? []);
+        setTotalPages(Math.ceil((data.total_count || 0) / ITEMS_PER_PAGE));
+        if (data.length === ITEMS_PER_PAGE) {
           setPaginationKey(data[data.length - 1].id);
         }
       } else if (response.status === 401) {
@@ -142,8 +182,22 @@ export default function ApplicationsPage({ params }: PageProps) {
   };
 
   useEffect(() => {
+    console.log("Fetching applications for opening ID:", id);
     fetchApplications(1);
   }, [id, colorTagFilter]);
+
+  useEffect(() => {
+    console.log("Applications state updated:", applications);
+  }, [applications]);
+
+  useEffect(() => {
+    // Remove auto-opening of resume
+    applications.forEach((application) => {
+      if (!application.resumeUrl && !loadingResumes[application.id]) {
+        handleViewResume(application);
+      }
+    });
+  }, [applications]);
 
   const handleAction = async (
     applicationId: string,
@@ -244,8 +298,11 @@ export default function ApplicationsPage({ params }: PageProps) {
     fetchApplications(value);
   };
 
-  const fetchResume = async (application: Application) => {
-    if (application.resumeUrl) return; // Already fetched
+  const handleViewResume = async (application: ExtendedApplication) => {
+    if (application.resumeUrl) {
+      // Don't auto-open the resume in full screen
+      return;
+    }
 
     setLoadingResumes((prev) => ({ ...prev, [application.id]: true }));
     setError("");
@@ -291,26 +348,6 @@ export default function ApplicationsPage({ params }: PageProps) {
     }
   };
 
-  // Fetch resumes for visible applications
-  useEffect(() => {
-    applications.forEach((application) => {
-      if (!application.resumeUrl && !loadingResumes[application.id]) {
-        fetchResume(application);
-      }
-    });
-  }, [applications]);
-
-  // Cleanup object URLs when component unmounts
-  useEffect(() => {
-    return () => {
-      applications.forEach((app) => {
-        if (app.resumeUrl) {
-          URL.revokeObjectURL(app.resumeUrl);
-        }
-      });
-    };
-  }, []);
-
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
@@ -321,327 +358,289 @@ export default function ApplicationsPage({ params }: PageProps) {
 
   return (
     <Box sx={{ width: "100%", p: 3 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">{t("applications.title")}</Typography>
-        <Button variant="outlined" onClick={() => router.back()}>
-          {t("common.back")}
-        </Button>
-      </Box>
-
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
       <Box sx={{ mb: 3 }}>
         <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>{t("applications.filterByColor")}</InputLabel>
+          <InputLabel>Filter by Color Tag</InputLabel>
           <Select
             value={colorTagFilter}
+            label="Filter by Color Tag"
             onChange={(e) =>
               setColorTagFilter(e.target.value as ApplicationColorTag | "")
             }
-            label={t("applications.filterByColor")}
           >
-            <MenuItem value="">
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {t("applications.allColors")}
-              </Box>
-            </MenuItem>
+            <MenuItem value="">All</MenuItem>
             <MenuItem value="GREEN">
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <FiberManualRecordIcon sx={{ color: "success.main" }} />
-                {t("applications.colorGreen")}
-              </Box>
+              <FiberManualRecordIcon sx={{ color: "success.main" }} /> Green
             </MenuItem>
             <MenuItem value="YELLOW">
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <FiberManualRecordIcon sx={{ color: "warning.main" }} />
-                {t("applications.colorYellow")}
-              </Box>
+              <FiberManualRecordIcon sx={{ color: "#FFD700" }} /> Yellow
             </MenuItem>
             <MenuItem value="RED">
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <FiberManualRecordIcon sx={{ color: "error.main" }} />
-                {t("applications.colorRed")}
-              </Box>
+              <FiberManualRecordIcon sx={{ color: "error.main" }} /> Red
             </MenuItem>
           </Select>
         </FormControl>
       </Box>
 
-      <Stack spacing={3}>
-        {applications?.map((application) => (
-          <Card key={application.id}>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 2,
-                }}
-              >
-                <Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography variant="h6">
-                      {application.hub_user_name} (@
-                      {application.hub_user_handle})
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      href={`/u/${application.hub_user_handle}`}
-                      target="_blank"
-                      component="a"
-                      sx={{ ml: 1 }}
-                    >
-                      <OpenInNewIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                  {application.hub_user_last_employer_domains && (
-                    <Typography variant="body2" color="text.secondary">
-                      {t("applications.lastEmployer")}:{" "}
-                      {application.hub_user_last_employer_domains.join(", ")}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 3,
-                  mb: 3,
-                }}
-              >
-                <Box
-                  sx={{
-                    position: "relative",
-                    width: 100,
-                    height: 140,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    "&:hover": {
-                      boxShadow: 1,
-                    },
-                  }}
-                  onClick={() =>
-                    setSelectedResume(application.resumeUrl || null)
-                  }
-                >
-                  {loadingResumes[application.id] ? (
+      <Grid container spacing={3}>
+        {applications.map((application) => (
+          <Grid item xs={12} key={application.id}>
+            <Card elevation={2}>
+              <CardContent>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
+                        justifyContent: "space-between",
+                        mb: 2,
                       }}
                     >
-                      <CircularProgress size={24} />
-                    </Box>
-                  ) : application.resumeUrl ? (
-                    <object
-                      data={application.resumeUrl}
-                      type="application/pdf"
-                      width="100%"
-                      height="100%"
-                      style={{ pointerEvents: "none" }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: "100%",
-                          bgcolor: "action.hover",
-                          color: "text.secondary",
-                          p: 1,
-                          textAlign: "center",
-                        }}
+                      <Typography variant="h6">
+                        {application.hub_user_name}
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleAction(application.id, "reject")}
+                        disabled={isActionLoading}
                       >
-                        <Typography variant="caption">
-                          {t("applications.pdfPreviewNotAvailable")}
+                        Reject
+                      </Button>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={8}>
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      @{application.hub_user_handle}
+                    </Typography>
+                    <Typography variant="body1" paragraph>
+                      {application.hub_user_short_bio}
+                    </Typography>
+
+                    {application.hub_user_last_employer_domains && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
+                        <BusinessIcon sx={{ mr: 1, color: "text.secondary" }} />
+                        <Typography variant="body2">
+                          Last worked at:{" "}
+                          {application.hub_user_last_employer_domains.join(
+                            ", "
+                          )}
                         </Typography>
                       </Box>
-                    </object>
-                  ) : (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        bgcolor: "action.hover",
-                        color: "text.secondary",
-                        p: 1,
-                      }}
-                    >
-                      <CircularProgress size={24} />
-                    </Box>
-                  )}
-                </Box>
+                    )}
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    px: 4, // Add horizontal padding for better spacing from edges
-                  }}
-                >
-                  <LoadingButton
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleAction(application.id, "shortlist")}
-                    loading={isActionLoading}
-                    sx={{ minWidth: 120 }} // Ensure consistent button width
-                  >
-                    {t("applications.shortlist")}
-                  </LoadingButton>
+                    {application.cover_letter && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 2 }}
+                      >
+                        <strong>Cover Letter:</strong>{" "}
+                        {application.cover_letter}
+                      </Typography>
+                    )}
+                  </Grid>
 
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {application.color_tag ? (
+                  <Grid item xs={12} md={4}>
+                    {application.resumeUrl ? (
                       <Box
                         sx={{
                           display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          border: "1px solid",
-                          borderColor: "divider",
-                          borderRadius: 1,
-                          padding: "2px 8px", // Increased horizontal padding
+                          flexDirection: "column",
+                          gap: 2,
                         }}
-                      >
-                        <FiberManualRecordIcon
-                          sx={{
-                            color:
-                              application.color_tag === "GREEN"
-                                ? "success.main"
-                                : application.color_tag === "YELLOW"
-                                ? "warning.main"
-                                : "error.main",
-                          }}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={() => handleColorTag(application.id, null)}
-                        >
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    ) : (
-                      <Tooltip title={t("applications.setColor")}>
-                        <IconButton
-                          size="medium" // Increased button size
-                          onClick={(event) => {
-                            setAnchorEl(event.currentTarget);
-                            setSelectedApplicationId(application.id);
-                          }}
-                          sx={{
-                            border: "1px solid",
-                            borderColor: "divider",
-                            p: 1,
-                          }}
-                        >
-                          <ColorLensIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-
-                  <LoadingButton
-                    variant="contained"
-                    color="error"
-                    onClick={() => handleAction(application.id, "reject")}
-                    loading={isActionLoading}
-                    sx={{ minWidth: 120 }} // Ensure consistent button width
-                  >
-                    {t("applications.reject")}
-                  </LoadingButton>
-                </Box>
-              </Box>
-
-              {application.cover_letter && (
-                <Typography sx={{ mt: 2 }}>
-                  {application.cover_letter}
-                </Typography>
-              )}
-
-              {/* Add Endorsers Section */}
-              {application.endorsers && application.endorsers.length > 0 && (
-                <Box sx={{ mt: 3 }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ mb: 2, fontWeight: 500 }}
-                  >
-                    {t("applications.endorsers")}
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                  >
-                    {application.endorsers.map((endorser, index) => (
-                      <Paper
-                        key={index}
-                        sx={{ p: 2, bgcolor: "background.default" }}
                       >
                         <Box
                           sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 1,
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            height: "300px",
+                            position: "relative",
                           }}
+                          onClick={() =>
+                            setZoomedResume({
+                              url: application.resumeUrl!,
+                              applicationId: application.id,
+                            })
+                          }
                         >
-                          <Box>
+                          <iframe
+                            src={application.resumeUrl}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              border: "none",
+                            }}
+                            title="Resume Preview"
+                          />
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              bgcolor: "rgba(0, 0, 0, 0.1)",
+                              opacity: 0,
+                              transition: "opacity 0.2s",
+                              "&:hover": {
+                                opacity: 1,
+                              },
+                            }}
+                          >
+                            <ZoomInIcon
+                              sx={{ fontSize: 40, color: "common.white" }}
+                            />
+                          </Box>
+                        </Box>
+                        <Box
+                          sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                        >
+                          <Button
+                            variant="outlined"
+                            startIcon={<ColorLensIcon />}
+                            onClick={(e) => {
+                              setSelectedApplicationId(application.id);
+                              setAnchorEl(e.currentTarget);
+                            }}
+                            fullWidth
+                          >
+                            {application.color_tag
+                              ? "Change Color"
+                              : "Color Tag"}
+                          </Button>
+                          {application.color_tag && (
+                            <Chip
+                              icon={
+                                <FiberManualRecordIcon
+                                  sx={{ color: "inherit" }}
+                                />
+                              }
+                              label={application.color_tag}
+                              onDelete={() =>
+                                handleColorTag(application.id, null)
+                              }
+                              sx={{
+                                borderRadius: 1,
+                                ...getColorTagStyles(application.color_tag),
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          height: "300px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 1,
+                        }}
+                      >
+                        <CircularProgress />
+                      </Box>
+                    )}
+                  </Grid>
+
+                  {application.endorsers.length > 0 && (
+                    <Grid item xs={12}>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography
+                        variant="subtitle2"
+                        gutterBottom
+                        sx={{ display: "flex", alignItems: "center" }}
+                      >
+                        <PeopleIcon sx={{ mr: 1 }} /> Endorsements (
+                        {application.endorsers.length})
+                      </Typography>
+                      <Stack spacing={2}>
+                        {application.endorsers.map((endorser, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              p: 2,
+                              bgcolor: "background.paper",
+                              borderRadius: 1,
+                            }}
+                          >
                             <Typography variant="subtitle2">
                               {endorser.full_name} (@{endorser.handle})
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {endorser.short_bio}
                             </Typography>
-                          </Box>
-                          {endorser.current_company_domains &&
-                            endorser.current_company_domains.length > 0 && (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1,
-                                  flexWrap: "wrap",
-                                }}
+                            {endorser.current_company_domains && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ mt: 1 }}
                               >
-                                {endorser.current_company_domains.map(
-                                  (domain, idx) => (
-                                    <Chip
-                                      key={idx}
-                                      label={domain}
-                                      size="small"
-                                      variant="outlined"
-                                      sx={{ bgcolor: "background.paper" }}
-                                    />
-                                  )
-                                )}
-                              </Box>
+                                <BusinessIcon
+                                  sx={{
+                                    fontSize: "small",
+                                    mr: 0.5,
+                                    verticalAlign: "middle",
+                                  }}
+                                />
+                                Currently at:{" "}
+                                {endorser.current_company_domains.join(", ")}
+                              </Typography>
                             )}
-                        </Box>
-                      </Paper>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        mt: 2,
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        color="success"
+                        onClick={() =>
+                          handleAction(application.id, "shortlist")
+                        }
+                        disabled={isActionLoading}
+                      >
+                        Shortlist
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </Stack>
+      </Grid>
 
       {applications.length > 0 && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <Pagination
             count={totalPages}
             page={page}
@@ -651,89 +650,54 @@ export default function ApplicationsPage({ params }: PageProps) {
         </Box>
       )}
 
-      <Dialog
-        open={!!selectedResume}
-        onClose={() => {
-          setSelectedResume(null);
-        }}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            {t("applications.resumePreview")}
-            <IconButton
-              onClick={() => {
-                setSelectedResume(null);
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {selectedResume && (
-            <Box sx={{ height: "80vh" }}>
-              <iframe
-                src={selectedResume}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                title={t("applications.resumePreview")}
-              />
-            </Box>
-          )}
-        </DialogContent>
-      </Dialog>
-
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
-          setSelectedApplicationId(null);
-        }}
+        onClose={() => setAnchorEl(null)}
       >
-        <MenuItem
-          onClick={() => {
-            handleColorTag(selectedApplicationId!, "GREEN");
-            setAnchorEl(null);
-            setSelectedApplicationId(null);
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <FiberManualRecordIcon sx={{ color: "success.main" }} />
-            {t("applications.colorGreen")}
-          </Box>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleColorTag(selectedApplicationId!, "YELLOW");
-            setAnchorEl(null);
-            setSelectedApplicationId(null);
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <FiberManualRecordIcon sx={{ color: "warning.main" }} />
-            {t("applications.colorYellow")}
-          </Box>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleColorTag(selectedApplicationId!, "RED");
-            setAnchorEl(null);
-            setSelectedApplicationId(null);
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <FiberManualRecordIcon sx={{ color: "error.main" }} />
-            {t("applications.colorRed")}
-          </Box>
-        </MenuItem>
+        {(!selectedApplicationId ||
+          !applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag ||
+          applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag !== "GREEN") && (
+          <MenuItem
+            onClick={() => {
+              handleColorTag(selectedApplicationId!, "GREEN");
+              setAnchorEl(null);
+            }}
+          >
+            <FiberManualRecordIcon sx={{ color: "success.main", mr: 1 }} />{" "}
+            Green
+          </MenuItem>
+        )}
+        {(!selectedApplicationId ||
+          !applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag ||
+          applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag !== "YELLOW") && (
+          <MenuItem
+            onClick={() => {
+              handleColorTag(selectedApplicationId!, "YELLOW");
+              setAnchorEl(null);
+            }}
+          >
+            <FiberManualRecordIcon sx={{ color: "#FFD700", mr: 1 }} /> Yellow
+          </MenuItem>
+        )}
+        {(!selectedApplicationId ||
+          !applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag ||
+          applications.find((a) => a.id === selectedApplicationId)
+            ?.color_tag !== "RED") && (
+          <MenuItem
+            onClick={() => {
+              handleColorTag(selectedApplicationId!, "RED");
+              setAnchorEl(null);
+            }}
+          >
+            <FiberManualRecordIcon sx={{ color: "error.main", mr: 1 }} /> Red
+          </MenuItem>
+        )}
         {selectedApplicationId &&
           applications.find((a) => a.id === selectedApplicationId)
             ?.color_tag && (
@@ -741,16 +705,49 @@ export default function ApplicationsPage({ params }: PageProps) {
               onClick={() => {
                 handleColorTag(selectedApplicationId!, null);
                 setAnchorEl(null);
-                setSelectedApplicationId(null);
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <CloseIcon fontSize="small" />
-                {t("applications.removeColor")}
-              </Box>
+              <CloseIcon sx={{ mr: 1 }} /> Remove Tag
             </MenuItem>
           )}
       </Menu>
+
+      <Dialog
+        open={!!zoomedResume.url}
+        onClose={() => setZoomedResume({ url: null, applicationId: null })}
+        maxWidth={false}
+        fullScreen
+      >
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          Resume
+          <IconButton
+            aria-label="close"
+            onClick={() => setZoomedResume({ url: null, applicationId: null })}
+            sx={{
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+          {zoomedResume.url && (
+            <iframe
+              src={zoomedResume.url}
+              style={{ width: "100%", height: "100%", border: "none" }}
+              title="Resume Full Preview"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
