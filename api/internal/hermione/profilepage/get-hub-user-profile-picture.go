@@ -18,14 +18,9 @@ func GetHubUserProfilePicture(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.Dbg("Entered GetHubUserProfilePicture")
 
-		// Get the requested handle from URL path
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 5 { // /employer/get-hub-user-profile-picture/{handle}
-			h.Dbg("invalid URL path", "path", r.URL.Path)
-			http.Error(w, "", http.StatusBadRequest)
-			return
-		}
-		requestedHandle := parts[4]
+		// From /employer/get-hub-user-profile-picture/{handle}
+		// the prefix is stripped off in router.go
+		requestedHandle := r.URL.Path
 
 		// Get the profile picture URL for the requested handle
 		pictureURL, err := h.DB().
