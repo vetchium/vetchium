@@ -578,8 +578,8 @@ CREATE TABLE work_history (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     employer_id UUID REFERENCES employers(id) NOT NULL,
     title TEXT NOT NULL,
-    start_date TEXT NOT NULL,
-    end_date TEXT,
+    start_date DATE NOT NULL,
+    end_date DATE,
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())

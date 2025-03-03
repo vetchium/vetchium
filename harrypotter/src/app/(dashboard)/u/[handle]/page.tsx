@@ -53,7 +53,8 @@ export default function UserProfilePage() {
           setProfilePicture(null);
         }
       } else {
-        console.error("Failed to fetch profile picture:", response.status);
+        // The User may not have set a profile picture
+        console.debug("Failed to fetch profile picture:", response.status);
         setProfilePicture(null);
       }
     } catch (error) {

@@ -208,8 +208,8 @@ work_history_info AS (
                 'employer_domain', d.domain_name,
                 'employer_name', e.company_name,
                 'title', wh.title,
-                'start_date', wh.start_date,
-                'end_date', wh.end_date,
+                'start_date', wh.start_date::TEXT,
+                'end_date', COALESCE(wh.end_date::TEXT, NULL),
                 'description', wh.description
             ) ORDER BY wh.start_date DESC
         ) as work_history

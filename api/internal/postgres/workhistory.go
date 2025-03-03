@@ -56,7 +56,7 @@ func (p *PG) AddWorkHistory(
 			end_date,
 			description
 		) VALUES (
-			$1, $2, $3, $4, $5, $6
+			$1, $2, $3, $4::DATE, $5::DATE, $6
 		) RETURNING id
 	`, hubUserID, employerID, req.Title, req.StartDate, req.EndDate, req.Description).Scan(&id)
 
@@ -152,8 +152,8 @@ func (p *PG) ListWorkHistory(
 			d.domain_name,
 			e.company_name,
 			w.title,
-			w.start_date,
-			w.end_date,
+			w.start_date::TEXT,
+			w.end_date::TEXT,
 			w.description
 		FROM work_history w
 		JOIN employers e ON e.id = w.employer_id
@@ -229,8 +229,8 @@ func (p *PG) UpdateWorkHistory(
 		UPDATE work_history
 		SET 
 			title = $1,
-			start_date = $2,
-			end_date = $3,
+			start_date = $2::DATE,
+			end_date = $3::DATE,
 			description = $4,
 			updated_at = $5
 		WHERE id = $6 AND hub_user_id = $7
