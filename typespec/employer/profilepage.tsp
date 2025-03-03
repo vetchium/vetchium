@@ -12,6 +12,23 @@ model GetHubUserBioRequest {
     handle: string;
 }
 
+model EmployerWorkHistory {
+    id: string;
+    employer_domain: string;
+
+    @doc("In case the employer is not yet onboarded, the field will be empty")
+    employer_name?: string;
+
+    @doc("The title of the Job")
+    title: string;
+
+    start_date: plainDate;
+    end_date?: plainDate;
+
+    @maxLength(1024)
+    description?: string;
+}
+
 @doc("Bio information of a hub user from employer's perspective")
 model EmployerViewBio {
     @doc("The handle of the hub user")
@@ -28,6 +45,9 @@ model EmployerViewBio {
 
     @doc("The list of verified mail domains for the user.")
     verified_mail_domains?: string[];
+
+    @doc("The work history of the hubuser")
+    work_history: EmployerWorkHistory[];
 }
 
 @route("/employer/get-hub-user-bio")
