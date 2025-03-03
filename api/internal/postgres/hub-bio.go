@@ -187,20 +187,47 @@ func (p *PG) GetEmployerViewBio(
 	err := p.pool.QueryRow(
 		ctx,
 		`
-WITH verified_domains AS (
-	SELECT DISTINCT d.domain_name
-	FROM hub_users_official_emails hoe
-	JOIN domains d ON d.id = hoe.domain_id
-	JOIN hub_users hu ON hu.id = hoe.hub_user_id
-	WHERE hu.handle = $1
-	AND hoe.last_verified_at IS NOT NULL
+WITH hub_user_info AS (
+    SELECT 
+        hu.handle,
+        hu.full_name,
+        hu.short_bio,
+        hu.long_bio,
+        COALESCE(array_agg(DISTINCT d.domain_name) FILTER (WHERE d.domain_name IS NOT NULL), '{}') as verified_mail_domains
+    FROM hub_users hu
+    LEFT JOIN hub_users_official_emails hoe ON hu.id = hoe.hub_user_id AND hoe.last_verified_at IS NOT NULL
+    LEFT JOIN domains d ON hoe.domain_id = d.id
+    WHERE hu.handle = $1
+    GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
+),
+work_history_info AS (
+    SELECT 
+        jsonb_agg(
+            jsonb_build_object(
+                'id', wh.id,
+                'employer_domain', d.domain_name,
+                'employer_name', e.company_name,
+                'title', wh.title,
+                'start_date', wh.start_date,
+                'end_date', wh.end_date,
+                'description', wh.description
+            ) ORDER BY wh.start_date DESC
+        ) as work_history
+    FROM hub_users hu
+    JOIN work_history wh ON hu.id = wh.hub_user_id
+    JOIN employers e ON e.id = wh.employer_id
+    JOIN domains d ON d.employer_id = e.id AND d.id = (
+        SELECT epd.domain_id 
+        FROM employer_primary_domains epd 
+        WHERE epd.employer_id = e.id
+    )
+    WHERE hu.handle = $1
 )
-SELECT hu.handle, hu.full_name, hu.short_bio, hu.long_bio,
-	COALESCE(array_agg(vd.domain_name) FILTER (WHERE vd.domain_name IS NOT NULL), '{}') as verified_mail_domains
-FROM hub_users hu
-LEFT JOIN verified_domains vd ON true
-WHERE hu.handle = $1
-GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
+SELECT 
+    hui.*,
+    COALESCE(whi.work_history, '[]'::jsonb) as work_history
+FROM hub_user_info hui
+LEFT JOIN work_history_info whi ON true
 `,
 		handle,
 	).Scan(
@@ -209,6 +236,7 @@ GROUP BY hu.handle, hu.full_name, hu.short_bio, hu.long_bio
 		&bio.ShortBio,
 		&bio.LongBio,
 		&bio.VerifiedMailDomains,
+		&bio.WorkHistory,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
