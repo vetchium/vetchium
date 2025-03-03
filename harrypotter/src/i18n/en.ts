@@ -441,6 +441,10 @@ export const en = {
     longBio: "Detailed Bio",
     verifiedOfficialEmailDomains: "Verified Official Email Domains",
     fetchError: "Failed to fetch user profile",
+    workHistory: "Work History",
+    currentlyWorking: "Present",
+    employmentPeriod: "{{startDate}} - {{endDate}}",
+    noWorkHistory: "No work history available",
   },
   errors: {
     fetchFailed: "Failed to fetch data",

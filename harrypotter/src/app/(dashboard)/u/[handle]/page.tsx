@@ -261,6 +261,67 @@ export default function UserProfilePage() {
           </>
         )}
       </Paper>
+
+      {/* Work History Section */}
+      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom color="primary">
+          {t("hubUsers.workHistory")}
+        </Typography>
+
+        {bio.work_history && bio.work_history.length > 0 ? (
+          <Box>
+            {bio.work_history.map((work, index) => (
+              <Box
+                key={work.id}
+                sx={{
+                  mb: 3,
+                  "&:last-child": { mb: 0 },
+                }}
+              >
+                <Typography variant="h6" component="div">
+                  {work.title}
+                </Typography>
+                <Typography color="text.secondary">
+                  {work.employer_name
+                    ? `${work.employer_name} (${work.employer_domain})`
+                    : work.employer_domain}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {new Date(work.start_date).toLocaleDateString(undefined, {
+                    month: "long",
+                    year: "numeric",
+                  })}{" "}
+                  -{" "}
+                  {work.end_date
+                    ? new Date(work.end_date).toLocaleDateString(undefined, {
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : t("hubUsers.currentlyWorking")}
+                </Typography>
+                {work.description && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {work.description}
+                  </Typography>
+                )}
+                {index < bio.work_history.length - 1 && (
+                  <Divider sx={{ mt: 3 }} />
+                )}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography color="text.secondary">
+            {t("hubUsers.noWorkHistory")}
+          </Typography>
+        )}
+      </Paper>
     </Box>
   );
 }
