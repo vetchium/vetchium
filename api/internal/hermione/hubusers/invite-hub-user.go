@@ -64,7 +64,7 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 			if errors.Is(err, db.ErrInviteNotNeeded) {
 				// Either the user is already a hubuser
 				// or an invite was sent recently
-				h.Dbg("already exists", "hubUserInviteReq", hubUserInviteReq)
+				h.Dbg("New invite not needed")
 				w.WriteHeader(http.StatusOK)
 				return
 			}
