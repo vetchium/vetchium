@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 type EmployerTokenType string
@@ -54,8 +55,9 @@ type OrgUserInviteReq struct {
 	ValidityDuration time.Duration
 }
 
-type HubUserInviteReq struct {
-	Token              string
-	ValidityDuration   time.Duration
-	ReferringHubUserID uuid.UUID
+type InviteHubUserReq struct {
+	EmailAddress common.EmailAddress
+	InviteMail   Email
+	Token        string
+	ValidTill    time.Time
 }

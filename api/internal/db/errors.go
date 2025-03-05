@@ -85,4 +85,10 @@ var (
 	ErrNotColleague = errors.New("one or more endorsers are not colleagues")
 
 	ErrTooManyEndorsers = errors.New("too many endorsers specified")
+
+	// ErrInviteNotNeeded is returned when the invite is not needed
+	// because the user is already a hub user or the invite is already
+	// sent recently or the user does not want to receive invites.
+	// TODO: Implement support for users to block invites !?
+	ErrInviteNotNeeded = errors.New("invite not needed")
 )
