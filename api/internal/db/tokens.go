@@ -59,5 +59,4 @@ type InviteHubUserReq struct {
 	EmailAddress common.EmailAddress
 	InviteMail   Email
 	Token        string
-	ValidTill    time.Time
 }

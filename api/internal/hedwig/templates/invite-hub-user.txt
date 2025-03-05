@@ -4,7 +4,7 @@ You are invited by {{ inviter }} to join Vetchi. To join, please click on the be
 
 {{ link }}
 
-This link is valid till {{ valid_till }} days approximately. Please ignore this email if you are not interested in signing up for Vetchi.
+This link is valid till 3 days approximately. Please ignore this email if you are not interested in signing up for Vetchi.
 
 Thanks,
 Vetchi Team

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/hedwig"
@@ -40,14 +39,12 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 		}
 
 		token := util.RandomUniqueID(vetchi.HubUerInviteTokenLenBytes)
-		validTill := time.Now().UTC().Add(vetchi.HubUserInviteTokenValidity)
 
 		inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.InviteHubUser,
 			Args: map[string]string{
-				"inviter":    hubUser.FullName,
-				"link":       vetchi.HubBaseURL + "/signup-hubuser/" + token,
-				"valid_till": validTill.Format("2006-01-02 15:04:05"),
+				"inviter": hubUser.FullName,
+				"link":    vetchi.HubBaseURL + "/signup-hubuser/" + token,
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{string(hubUserInviteReq.Email)},
@@ -62,7 +59,6 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 			EmailAddress: hubUserInviteReq.Email,
 			InviteMail:   inviteMail,
 			Token:        token,
-			ValidTill:    validTill,
 		})
 		if err != nil {
 			if errors.Is(err, db.ErrInviteNotNeeded) {
@@ -78,6 +74,7 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("hubuser invite mail added", "hubUserInviteReq", hubUserInviteReq)
 		w.WriteHeader(http.StatusOK)
 	})
 }
