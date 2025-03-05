@@ -8,6 +8,7 @@ import (
 
 func InviteHubUser(w wand.Wand) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		w.WriteHeader(http.StatusOK)
 	})
 }

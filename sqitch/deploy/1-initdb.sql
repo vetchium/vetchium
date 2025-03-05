@@ -2,6 +2,14 @@
 
 BEGIN;
 
+CREATE TABLE hub_user_invites (
+    email TEXT,
+    token TEXT,
+    token_valid_till TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT unique_user UNIQUE (email),
+    CONSTRAINT unique_token UNIQUE (token)
+);
+
 CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER', 'DELETED_HUB_USER');
 CREATE TABLE IF NOT EXISTS hub_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

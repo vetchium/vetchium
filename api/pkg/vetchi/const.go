@@ -16,6 +16,9 @@ const (
 	// Sent in the email to the org users
 	OrgUserInviteTokenLenBytes = 16
 
+	// Sent in the invite email to new hub users
+	HubUerInviteTokenLenBytes = 16
+
 	// Triggered by the forgot password request and sent to the user's email
 	PasswordResetTokenLenBytes = 16
 
