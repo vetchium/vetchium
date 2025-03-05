@@ -56,6 +56,10 @@ union HubUserState {
     ActiveHubUserState: "ACTIVE_HUB_USER",
 }
 
+model HubUserInviteRequest {
+    email: EmailAddress;
+}
+
 @route("/hub/login")
 interface Login {
     @tag("HubUsers")
@@ -126,5 +130,15 @@ interface GetMyHandle {
     getMyHandle(): {
         @statusCode statusCode: 200;
         @body getMyHandleResponse: GetMyHandleResponse;
+    };
+}
+
+@route("/hub/invite-hub-user")
+interface HubUserInvite {
+    @tag("HubUsers")
+    @post
+    @useAuth(HubAuth)
+    hubUserInvite(@body inviteHubUserRequest: HubUserInviteRequest): {
+        @statusCode statusCode: 200;
     };
 }

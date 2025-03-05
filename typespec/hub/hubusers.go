@@ -46,3 +46,7 @@ type HubUserState string
 const (
 	ActiveHubUserState HubUserState = "ACTIVE_HUB_USER"
 )
+
+type HubUserInviteRequest struct {
+	Email common.EmailAddress `json:"email" validate:"required,email"`
+}
