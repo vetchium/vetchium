@@ -43,7 +43,7 @@ func generateOrgUserInvite(
 	domainList := strings.Join(domains, ", ")
 
 	// Ensures secrecy
-	token := util.RandomString(vetchi.InviteTokenLenBytes)
+	token := util.RandomString(vetchi.OrgUserInviteTokenLenBytes)
 	// Ensures uniqueness. This is not needed mostly, but good to have
 	token = token + strconv.FormatInt(time.Now().UnixNano(), 36)
 

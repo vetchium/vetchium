@@ -14,7 +14,7 @@ const (
 
 const (
 	// Sent in the email to the org users
-	InviteTokenLenBytes = 16
+	OrgUserInviteTokenLenBytes = 16
 
 	// Triggered by the forgot password request and sent to the user's email
 	PasswordResetTokenLenBytes = 16
