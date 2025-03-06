@@ -30,6 +30,12 @@ func RegisterHubRoutes(h *Hermione) {
 	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
 	http.Handle("/hub/invite-hub-user", wrap(hu.InviteHubUser(h)))
+	http.Handle("/hub/onboard-user", wrap(hu.OnboardHubUser(h)))
+	http.Handle(
+		"/hub/check-handle-availability",
+		wrap(hu.CheckHandleAvailability(h)),
+	)
+	http.Handle("/hub/set-handle", wrap(hu.SetHandle(h)))
 
 	// Official Email related endpoints
 	http.Handle("/hub/add-official-email", wrap(pp.AddOfficialEmail(h)))

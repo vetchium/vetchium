@@ -357,4 +357,10 @@ type DB interface {
 		ctx context.Context,
 		handles []common.Handle,
 	) ([]HubUserContact, error)
+
+	InviteHubUser(ctx context.Context, inviteHubUserReq InviteHubUserReq) error
+	OnboardHubUser(
+		ctx context.Context,
+		onboardHubUserReq hub.OnboardHubUserRequest,
+	) (hub.OnboardHubUserResponse, error)
 }
