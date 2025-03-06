@@ -13,17 +13,35 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { HubUserInviteRequest } from "@/types/hub/hubusers";
 import { config } from "@/config";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 
 export default function Settings() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    const token = Cookies.get("session_token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
+
   const handleInviteUser = async () => {
     if (!email) {
       setError(t("settings.inviteUser.error.invalidEmail"));
+      return;
+    }
+
+    const token = Cookies.get("session_token");
+    if (!token) {
+      router.push("/login");
       return;
     }
 
@@ -42,12 +60,18 @@ export default function Settings() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(request),
         }
       );
 
       if (!response.ok) {
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/login");
+          return;
+        }
         throw new Error(t("settings.inviteUser.error.failed"));
       }
 
@@ -65,63 +89,65 @@ export default function Settings() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {t("settings.title")}
-      </Typography>
-
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          {t("settings.inviteUser.title")}
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          {t("settings.inviteUser.description")}
+    <AuthenticatedLayout>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          {t("settings.title")}
         </Typography>
 
-        <Box component="form" noValidate sx={{ mt: 2 }}>
-          <TextField
-            fullWidth
-            label={t("common.email")}
-            placeholder={t("settings.inviteUser.emailPlaceholder")}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            type="email"
-            margin="normal"
-          />
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t("settings.inviteUser.title")}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph>
+            {t("settings.inviteUser.description")}
+          </Typography>
 
-          <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              variant="contained"
-              onClick={handleInviteUser}
+          <Box component="form" noValidate sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label={t("common.email")}
+              placeholder={t("settings.inviteUser.emailPlaceholder")}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : undefined}
-            >
-              {t("settings.inviteUser.inviteButton")}
-            </Button>
+              type="email"
+              margin="normal"
+            />
+
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="contained"
+                onClick={handleInviteUser}
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} /> : undefined}
+              >
+                {t("settings.inviteUser.inviteButton")}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </Paper>
+        </Paper>
 
-      <Snackbar
-        open={error !== null}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-      >
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      </Snackbar>
+        <Snackbar
+          open={error !== null}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+        >
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Snackbar>
 
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={() => setSuccess(false)}
-      >
-        <Alert severity="success" onClose={() => setSuccess(false)}>
-          {t("settings.inviteUser.success")}
-        </Alert>
-      </Snackbar>
-    </Container>
+        <Snackbar
+          open={success}
+          autoHideDuration={6000}
+          onClose={() => setSuccess(false)}
+        >
+          <Alert severity="success" onClose={() => setSuccess(false)}>
+            {t("settings.inviteUser.success")}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </AuthenticatedLayout>
   );
 }
