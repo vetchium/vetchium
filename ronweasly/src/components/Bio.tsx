@@ -55,18 +55,11 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
             fullWidth
             required
           />
-          <TextField
-            label={t("profile.bio.handle")}
-            value={editedBio.handle}
-            onChange={(e) =>
-              setEditedBio({ ...editedBio, handle: e.target.value })
-            }
-            fullWidth
-            required
-            InputProps={{
-              startAdornment: "@",
-            }}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body1" color="text.secondary">
+              @{editedBio.handle}
+            </Typography>
+          </Box>
           <TextField
             label={t("profile.bio.shortBio")}
             value={editedBio.short_bio}

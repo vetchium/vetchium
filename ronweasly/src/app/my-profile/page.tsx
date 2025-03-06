@@ -1,20 +1,19 @@
 "use client";
 
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import Bio from "@/components/Bio";
+import OfficialEmails from "@/components/OfficialEmails";
+import ProfilePicture from "@/components/ProfilePicture";
+import { config } from "@/config";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
-import { WorkHistory } from "../u/[handle]/WorkHistory";
 import { useTranslation } from "@/hooks/useTranslation";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import OfficialEmails from "@/components/OfficialEmails";
-import Divider from "@mui/material/Divider";
-import Bio from "@/components/Bio";
-import ProfilePicture from "@/components/ProfilePicture";
 import Alert from "@mui/material/Alert";
-import { config } from "@/config";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
 import { useState } from "react";
+import { WorkHistory } from "../u/[handle]/WorkHistory";
 
 export default function MyProfilePage() {
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();

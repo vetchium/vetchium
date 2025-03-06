@@ -3,7 +3,11 @@ import { config } from "@/config";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Bio } from "@psankar/vetchi-typespec";
+import type {
+  Bio,
+  UpdateBioRequest,
+  GetBioRequest,
+} from "@psankar/vetchi-typespec";
 
 export function useProfile(handle: string) {
   const router = useRouter();
@@ -40,7 +44,7 @@ export function useProfile(handle: string) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ handle }),
+        body: JSON.stringify({ handle } satisfies GetBioRequest),
       });
 
       if (response.status === 401) {
@@ -86,7 +90,11 @@ export function useProfile(handle: string) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(updatedBio),
+          body: JSON.stringify({
+            full_name: updatedBio.full_name,
+            short_bio: updatedBio.short_bio,
+            long_bio: updatedBio.long_bio,
+          } satisfies UpdateBioRequest),
         }
       );
 
