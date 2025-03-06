@@ -75,10 +75,8 @@ type OnboardHubUserRequest struct {
 }
 
 type OnboardHubUserResponse struct {
-	HubUserID       string `json:"hub_user_id"      validate:"required"`
 	SessionToken    string `json:"session_token"    validate:"required"`
 	GeneratedHandle string `json:"generated_handle" validate:"required"`
-	RequiresPayment bool   `json:"requires_payment" validate:"required"`
 }
 
 type CheckHandleAvailabilityResponse struct {

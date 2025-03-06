@@ -93,17 +93,11 @@ model OnboardHubUserRequest {
 }
 
 model OnboardHubUserResponse {
-    @doc("The ID of the newly created hub user")
-    hub_user_id: string;
-
     @doc("The session token for the newly created user")
     session_token: string;
 
     @doc("The auto-generated handle for the user")
     generated_handle: string;
-
-    @doc("Whether the user needs to complete payment to activate paid tier")
-    requires_payment: boolean;
 }
 
 model CheckHandleAvailabilityResponse {

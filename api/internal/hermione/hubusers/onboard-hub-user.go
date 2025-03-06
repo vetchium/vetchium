@@ -2,9 +2,11 @@ package hubusers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/util"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/hub"
@@ -38,6 +40,8 @@ func OnboardHubUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		sessionToken := util.RandomString(vetchi.SessionTokenLenBytes)
+
 		generatedHandle, err := h.DB().
 			OnboardHubUser(r.Context(), db.OnboardHubUserReq{
 				InviteToken:         onboardHubUserRequest.Token,
@@ -51,14 +55,25 @@ func OnboardHubUser(h wand.Wand) http.HandlerFunc {
 
 				ShortBio: onboardHubUserRequest.ShortBio,
 				LongBio:  onboardHubUserRequest.LongBio,
+
+				SessionToken:                 sessionToken,
+				SessionTokenValidityDuration: h.Config().Hub.SessionTokLife,
+				SessionTokenType:             db.HubUserSessionToken,
 			})
 		if err != nil {
+			if errors.Is(err, db.ErrInviteTokenNotFound) {
+				h.Dbg("token not found", "token", onboardHubUserRequest.Token)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Err("failed to onboard hub user", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
 		onBoardHubUserReponse := hub.OnboardHubUserResponse{
+			SessionToken:    sessionToken,
 			GeneratedHandle: generatedHandle,
 		}
 

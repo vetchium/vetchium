@@ -46,6 +46,7 @@ type ApplyOpeningReq struct {
 }
 
 type OnboardHubUserReq struct {
+	// Comes from the user
 	InviteToken         string
 	FullName            string
 	PasswordHash        string
@@ -54,4 +55,9 @@ type OnboardHubUserReq struct {
 	PreferredLanguage   string
 	ShortBio            string
 	LongBio             string
+
+	// Generated internally in the handler
+	SessionToken                 string
+	SessionTokenValidityDuration time.Duration
+	SessionTokenType             HubTokenType
 }

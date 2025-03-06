@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -19,7 +21,7 @@ func (p *PG) OnboardHubUser(
 		p.log.Err("Failed to begin transaction", "error", err)
 		return "", fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	// Create new user with generated handle, using email from invite
 	userQuery := `
@@ -41,10 +43,10 @@ INSERT INTO hub_users (
 	long_bio,
 	state
 )
-SELECT
-	$2, handle, email, $3, $4, $5, $6, $7, $8, $9
-FROM new_handle, invite
-RETURNING handle`
+SELECT $2, nh.handle, i.email, $3, $4, $5, $6, $7, $8, $9
+FROM new_handle nh, invite i
+RETURNING handle
+`
 
 	var handle string
 	err = tx.QueryRow(
@@ -61,6 +63,11 @@ RETURNING handle`
 		hub.ActiveHubUserState,
 	).Scan(&handle)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("token not found", "token", onboardHubUserReq.InviteToken)
+			return "", db.ErrInviteTokenNotFound
+		}
+
 		return "", fmt.Errorf("failed to create hub user: %w", err)
 	}
 
@@ -73,6 +80,29 @@ RETURNING handle`
 	if err != nil {
 		p.log.Err("Failed to delete invite token", "error", err)
 		return "", fmt.Errorf("failed to delete invite token: %w", err)
+	}
+
+	// Insert the session token
+	sessionTokenQuery := `
+INSERT INTO hub_user_tokens (
+	token,
+	token_type,
+	validity_duration,
+	hub_user_id
+)
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), (SELECT id FROM hub_users WHERE handle = $4))
+`
+	_, err = tx.Exec(
+		ctx,
+		sessionTokenQuery,
+		onboardHubUserReq.SessionToken,
+		onboardHubUserReq.SessionTokenType,
+		onboardHubUserReq.SessionTokenValidityDuration,
+		handle,
+	)
+	if err != nil {
+		p.log.Err("Failed to insert session token", "error", err)
+		return "", fmt.Errorf("failed to insert session token: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

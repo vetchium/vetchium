@@ -69,10 +69,8 @@ export interface OnboardHubUserRequest {
 }
 
 export interface OnboardHubUserResponse {
-  hub_user_id: string;
   session_token: string;
   generated_handle: string;
-  requires_payment: boolean;
 }
 
 export interface CheckHandleAvailabilityResponse {
