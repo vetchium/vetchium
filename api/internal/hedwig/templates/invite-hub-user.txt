@@ -1,8 +1,8 @@
 Hi
 
-You are invited by {{ inviter }} to join Vetchi. To join, please click on the below link:
+You are invited by {{ .inviter }} to join Vetchi. To join, please click on the below link:
 
-{{ link }}
+{{ .link }}
 
 This link is valid till 3 days approximately. Please ignore this email if you are not interested in signing up for Vetchi.
 
