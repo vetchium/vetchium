@@ -11,6 +11,57 @@ CREATE TABLE hub_user_invites (
 );
 
 CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER', 'DELETED_HUB_USER');
+
+CREATE TYPE hub_user_tiers AS ENUM ('FREE_TIER', 'PAID_TIER');
+
+-- Function to generate a unique handle based on full name and a random suffix
+CREATE OR REPLACE FUNCTION generate_unique_handle(p_full_name TEXT) RETURNS TEXT AS $$
+DECLARE
+    name_part TEXT;
+    random_part TEXT;
+    candidate_handle TEXT;
+    counter INTEGER := 0;
+BEGIN
+    -- Extract up to 4 letters from the name (removing non-alphabetic characters)
+    name_part := substring(lower(regexp_replace(p_full_name, '[^a-zA-Z]', '', 'g')), 1, 4);
+
+    -- If we couldn't get 4 letters, pad with 'u' for 'user'
+    IF length(name_part) < 4 THEN
+        name_part := rpad(name_part, 4, 'u');
+    END IF;
+
+    -- Try to create a unique handle with random alphanumeric suffix
+    LOOP
+        -- Generate a random alphanumeric string (6 characters)
+        random_part := '';
+        FOR i IN 1..6 LOOP
+            -- Mix of numbers and lowercase letters
+            IF random() < 0.5 THEN
+                -- Add a random digit (0-9)
+                random_part := random_part || floor(random() * 10)::text;
+            ELSE
+                -- Add a random lowercase letter (a-z)
+                random_part := random_part || chr(97 + floor(random() * 26)::integer);
+            END IF;
+        END LOOP;
+
+        candidate_handle := name_part || random_part;
+
+        -- Check if this handle is already taken
+        IF NOT EXISTS (SELECT 1 FROM hub_users WHERE handle = candidate_handle) THEN
+            RETURN candidate_handle;
+        END IF;
+
+        counter := counter + 1;
+        -- Avoid infinite loops
+        IF counter >= 100 THEN
+            -- If we tried 100 times, use a timestamp-based approach
+            RETURN 'u' || substring(md5(now()::text || random()::text), 1, 10);
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE IF NOT EXISTS hub_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name TEXT NOT NULL,
@@ -18,6 +69,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     state hub_user_states NOT NULL,
+    tier hub_user_tiers NOT NULL DEFAULT 'FREE_TIER',
     resident_country_code TEXT NOT NULL,
     resident_city TEXT,
     preferred_language TEXT NOT NULL,
@@ -700,7 +752,7 @@ BEGIN
     -- Check if target_user has previously rejected/unlinked a connection from seeking_user
     IF EXISTS (
         SELECT 1 FROM colleague_connections
-        WHERE requester_id = seeking_user 
+        WHERE requester_id = seeking_user
         AND requested_id = target_user
         AND (
             (state = 'COLLEAGUING_REJECTED' AND rejected_by = target_user) OR
@@ -713,7 +765,7 @@ BEGIN
     -- Check if seeking_user has previously rejected/unlinked a connection from target_user
     IF EXISTS (
         SELECT 1 FROM colleague_connections
-        WHERE requester_id = target_user 
+        WHERE requester_id = target_user
         AND requested_id = seeking_user
         AND (
             (state = 'COLLEAGUING_REJECTED' AND rejected_by = seeking_user) OR

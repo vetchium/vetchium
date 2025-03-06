@@ -60,6 +60,70 @@ model HubUserInviteRequest {
     email: EmailAddress;
 }
 
+@doc("Enum representing the possible tiers for a hub user")
+union HubUserTier {
+    FreeTier: "FREE_TIER",
+    PaidTier: "PAID_TIER",
+}
+
+model OnboardHubUserRequest {
+    @doc("The token from the invite email")
+    token: string;
+
+    @doc("The full name of the user")
+    full_name: string;
+
+    @doc("The country code where the user resides")
+    resident_country_code: CountryCode;
+
+    @doc("The password for the user account")
+    password: Password;
+
+    @doc("The tier selected by the user during onboarding")
+    selected_tier: HubUserTier;
+
+    @doc("Optional preferred language for the user")
+    preferred_language?: string;
+
+    @doc("Optional short bio for the user profile")
+    short_bio?: string;
+
+    @doc("Optional long bio for the user profile")
+    long_bio?: string;
+}
+
+model OnboardHubUserResponse {
+    @doc("The ID of the newly created hub user")
+    hub_user_id: string;
+
+    @doc("The session token for the newly created user")
+    session_token: string;
+
+    @doc("The auto-generated handle for the user")
+    generated_handle: string;
+
+    @doc("Whether the user needs to complete payment to activate paid tier")
+    requires_payment: boolean;
+}
+
+model CheckHandleAvailabilityRequest {
+    @doc("The handle to check for availability")
+    handle: string;
+}
+
+model CheckHandleAvailabilityResponse {
+    @doc("Whether the handle is available for use")
+    is_available: boolean;
+
+    @doc("Suggested alternative handles if the requested one is not available")
+    suggested_alternatives?: string[];
+}
+
+model SetHandleRequest {
+    @doc("The handle sought by the logged inuser")
+    handle: string;
+}
+
 @route("/hub/login")
 interface Login {
     @tag("HubUsers")
@@ -140,5 +204,45 @@ interface HubUserInvite {
     @useAuth(HubAuth)
     hubUserInvite(@body inviteHubUserRequest: HubUserInviteRequest): {
         @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/onboard-user")
+interface OnboardHubUser {
+    @tag("HubUsers")
+    @post
+    onboardHubUser(@body onboardHubUserRequest: OnboardHubUserRequest): {
+        @statusCode statusCode: 200;
+        @body onboardHubUserResponse: OnboardHubUserResponse;
+    };
+}
+
+@route("/hub/check-handle-availability")
+interface CheckHandleAvailability {
+    @tag("HubUsers")
+    @post
+    checkHandleAvailability(
+        @body checkHandleAvailabilityRequest: CheckHandleAvailabilityRequest,
+    ): {
+        @statusCode statusCode: 200;
+        @body checkHandleAvailabilityResponse: CheckHandleAvailabilityResponse;
+    };
+}
+
+@route("/hub/set-handle")
+interface SetHandle {
+    @tag("HubUsers")
+    @post
+    @useAuth(HubAuth)
+    setHandle(@body setHandleRequest: SetHandleRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("The user is not eligible to set a handle (not a paid tier user)")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @doc("The requested handle is not available")
+        @statusCode
+        statusCode: 409;
     };
 }
