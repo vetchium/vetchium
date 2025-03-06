@@ -1,4 +1,4 @@
-import { EmailAddress, Password } from "../common/common";
+import { CountryCode, EmailAddress, Password } from "../common/common";
 
 export interface LoginRequest {
   email: EmailAddress;
@@ -53,4 +53,33 @@ export function isValidHubUserState(state: string): state is HubUserState {
 
 export interface HubUserInviteRequest {
   email: EmailAddress;
+}
+
+export type HubUserTier = "FREE_HUB_USER" | "PAID_HUB_USER";
+
+export interface OnboardHubUserRequest {
+  token: string;
+  full_name: string;
+  resident_country_code: CountryCode;
+  password: Password;
+  selected_tier: HubUserTier;
+  preferred_language?: string;
+  short_bio?: string;
+  long_bio?: string;
+}
+
+export interface OnboardHubUserResponse {
+  hub_user_id: string;
+  session_token: string;
+  generated_handle: string;
+  requires_payment: boolean;
+}
+
+export interface CheckHandleAvailabilityResponse {
+  is_available: boolean;
+  suggested_alternatives?: string[];
+}
+
+export interface SetHandleRequest {
+  handle: string;
 }
