@@ -16,6 +16,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
 import SendIcon from "@mui/icons-material/Send";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { styled } from "@mui/material/styles";
 import { useTranslation } from "@/hooks/useTranslation";
 import Cookies from "js-cookie";
@@ -77,6 +78,11 @@ export default function Sidebar({ open }: SidebarProps) {
       icon: <PersonIcon />,
       path: "#",
       onClick: handleProfileClick,
+    },
+    {
+      text: "settings",
+      icon: <SettingsIcon />,
+      path: "/settings",
     },
   ];
 

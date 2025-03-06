@@ -148,6 +148,7 @@ export const en = {
     myProfile: "My Profile",
     myApprovals: "My Approvals",
     myRequisitions: "My Requisitions",
+    settings: "Settings",
   },
   candidacies: {
     viewCandidacy: "View Candidacy",
@@ -321,6 +322,20 @@ export const en = {
     noSeeks: "No pending connection requests",
     error: {
       fetchFailed: "Failed to fetch connection requests",
+    },
+  },
+  settings: {
+    title: "Settings",
+    inviteUser: {
+      title: "Invite User",
+      description: "Invite a new user to join the platform",
+      emailPlaceholder: "Enter email address",
+      inviteButton: "Send Invite",
+      success: "Invitation sent successfully",
+      error: {
+        failed: "Failed to send invitation",
+        invalidEmail: "Please enter a valid email address",
+      },
     },
   },
 };
