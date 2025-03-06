@@ -44,3 +44,14 @@ type ApplyOpeningReq struct {
 	EndorserHandles        []common.Handle
 	EndorsementEmails      []Email
 }
+
+type OnboardHubUserReq struct {
+	InviteToken         string
+	FullName            string
+	PasswordHash        string
+	Tier                hub.HubUserTier
+	ResidentCountryCode common.CountryCode
+	PreferredLanguage   string
+	ShortBio            string
+	LongBio             string
+}

@@ -343,6 +343,17 @@ type DB interface {
 		rejectReq hub.RejectEndorsementRequest,
 	) error
 
+	// Used by hermione - HubUsers related methods
+	GetHubUsersByHandles(
+		ctx context.Context,
+		handles []common.Handle,
+	) ([]HubUserContact, error)
+	InviteHubUser(ctx context.Context, inviteHubUserReq InviteHubUserReq) error
+	OnboardHubUser(
+		context.Context,
+		OnboardHubUserReq,
+	) (generatedHandle string, err error)
+
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error
 	GetStaleFiles(ctx context.Context, limit int) ([]StaleFile, error)
@@ -351,16 +362,4 @@ type DB interface {
 		fileID uuid.UUID,
 		cleanedAt time.Time,
 	) error
-
-	// GetHubUsersByHandles gets the details of hub users by their handles
-	GetHubUsersByHandles(
-		ctx context.Context,
-		handles []common.Handle,
-	) ([]HubUserContact, error)
-
-	InviteHubUser(ctx context.Context, inviteHubUserReq InviteHubUserReq) error
-	OnboardHubUser(
-		ctx context.Context,
-		onboardHubUserReq hub.OnboardHubUserRequest,
-	) (hub.OnboardHubUserResponse, error)
 }

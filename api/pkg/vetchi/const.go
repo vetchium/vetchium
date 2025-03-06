@@ -66,3 +66,7 @@ const (
 	MaxProfilePictureDim     = 2048
 	ProfilePictureIDLenBytes = 16
 )
+
+const (
+	PreferredLanguage = "en"
+)

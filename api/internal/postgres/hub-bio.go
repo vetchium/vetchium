@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/pkg/vetchi"
 	"github.com/psankar/vetchi/typespec/employer"
@@ -147,30 +146,20 @@ func (p *PG) UpdateBio(ctx context.Context, bio hub.UpdateBioRequest) error {
 	query := `
 UPDATE hub_users
 SET
-    handle = COALESCE($1, handle),
-    full_name = COALESCE($2, full_name),
-    short_bio = COALESCE($3, short_bio),
-    long_bio = COALESCE($4, long_bio)
+	full_name = COALESCE($1, full_name),
+    short_bio = COALESCE($2, short_bio),
+    long_bio = COALESCE($3, long_bio)
 WHERE id = $5
 `
 	_, err = p.pool.Exec(
 		ctx,
 		query,
-		bio.Handle,
 		bio.FullName,
 		bio.ShortBio,
 		bio.LongBio,
 		hubUserID,
 	)
 	if err != nil {
-		// Check if this is a unique constraint violation on handle
-		if pgerr, ok := err.(*pgconn.PgError); ok {
-			if pgerr.Code == "23505" &&
-				pgerr.ConstraintName == "hub_users_handle_unique" {
-				p.log.Dbg("duplicate handle", "handle", bio.Handle)
-				return db.ErrDupHandle
-			}
-		}
 		p.log.Err("failed to update bio", "error", err)
 		return err
 	}

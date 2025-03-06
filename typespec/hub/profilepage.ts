@@ -59,7 +59,6 @@ export interface Bio {
 }
 
 export interface UpdateBioRequest {
-  handle?: string;
   full_name?: string;
   short_bio?: string;
   long_bio?: string;
