@@ -87,7 +87,7 @@ RETURNING handle
 INSERT INTO hub_user_tokens (
 	token,
 	token_type,
-	validity_duration,
+	token_valid_till,
 	hub_user_id
 )
 VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), (SELECT id FROM hub_users WHERE handle = $4))
@@ -97,7 +97,7 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), (SELECT
 		sessionTokenQuery,
 		onboardHubUserReq.SessionToken,
 		onboardHubUserReq.SessionTokenType,
-		onboardHubUserReq.SessionTokenValidityDuration,
+		onboardHubUserReq.SessionTokenValidityDuration.Minutes(),
 		handle,
 	)
 	if err != nil {
