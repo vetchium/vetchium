@@ -346,6 +346,8 @@ export const en = {
       fullNamePlaceholder: "Enter your full name",
       password: "Password",
       passwordPlaceholder: "Choose a secure password",
+      confirmPassword: "Confirm Password",
+      confirmPasswordPlaceholder: "Re-enter your password",
       countryCode: "Country of Residence",
       countryCodePlaceholder: "Select your country",
       tier: {
@@ -370,6 +372,7 @@ export const en = {
       onboardingFailed: "Failed to complete registration. Please try again.",
       requiredField: "This field is required",
       passwordTooShort: "Password must be at least 8 characters long",
+      passwordMismatch: "Passwords do not match",
     },
     success: {
       title: "Registration Complete!",

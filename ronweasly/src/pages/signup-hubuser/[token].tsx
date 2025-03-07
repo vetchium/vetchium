@@ -1,35 +1,29 @@
-import React, { useState } from "react";
-import { useRouter } from "next/router";
-import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  FormControl,
-  Box,
-  Alert,
-  CircularProgress,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-} from "@mui/material";
-import { config } from "../../config";
-import { CountrySelect } from "../../components/CountrySelect";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CircularProgress,
+  Container,
+  IconButton,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
+import { CountrySelect } from "../../components/CountrySelect";
+import { config } from "../../config";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import type {
+  OnboardHubUserRequest,
+  OnboardHubUserResponse,
+} from "@psankar/vetchi-typespec";
 
-interface OnboardFormData {
-  full_name: string;
-  resident_country_code: string;
-  password: string;
-  selected_tier: "FREE_TIER" | "PAID_TIER";
-  short_bio?: string;
-  long_bio?: string;
-}
-
-interface OnboardResponse {
-  session_token: string;
-  generated_handle: string;
+interface FormData extends Omit<OnboardHubUserRequest, "token"> {
+  confirm_password: string;
 }
 
 export default function SignupHubUser() {
@@ -45,22 +39,25 @@ export default function SignupHubUser() {
     }
   }, []);
 
-  const [formData, setFormData] = useState<OnboardFormData>({
+  const [formData, setFormData] = useState<FormData>({
     full_name: "",
     resident_country_code: "",
     password: "",
-    selected_tier: "FREE_TIER",
+    confirm_password: "",
+    selected_tier: "PAID_HUB_USER",
   });
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof OnboardFormData, string>>
-  >({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
+    {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<OnboardResponse | null>(null);
+  const [success, setSuccess] = useState<OnboardHubUserResponse | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof OnboardFormData, string>> = {};
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
 
     if (!formData.full_name.trim()) {
       newErrors.full_name = t("hubUserOnboarding.error.requiredField");
@@ -76,9 +73,54 @@ export default function SignupHubUser() {
       newErrors.password = t("hubUserOnboarding.error.passwordTooShort");
     }
 
+    if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = t(
+        "hubUserOnboarding.error.passwordMismatch"
+      );
+    }
+
+    if (!formData.short_bio?.trim()) {
+      newErrors.short_bio = t("hubUserOnboarding.error.requiredField");
+    }
+
+    if (!formData.long_bio?.trim()) {
+      newErrors.long_bio = t("hubUserOnboarding.error.requiredField");
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const isFormValid = (): boolean => {
+    // Check for required fields
+    if (
+      !formData.full_name.trim() ||
+      !formData.resident_country_code ||
+      !formData.password ||
+      !formData.confirm_password ||
+      !formData.short_bio?.trim() ||
+      !formData.long_bio?.trim()
+    ) {
+      return false;
+    }
+
+    // Check password length
+    if (formData.password.length < 8) {
+      return false;
+    }
+
+    // Check if passwords match
+    if (formData.password !== formData.confirm_password) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // Add effect to validate form whenever form data changes
+  React.useEffect(() => {
+    validateForm();
+  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +152,7 @@ export default function SignupHubUser() {
         throw new Error(t("hubUserOnboarding.error.onboardingFailed"));
       }
 
-      const data: OnboardResponse = await response.json();
+      const data: OnboardHubUserResponse = await response.json();
       setSuccess(data);
 
       // Store the session token
@@ -132,7 +174,7 @@ export default function SignupHubUser() {
   };
 
   const handleInputChange =
-    (field: keyof OnboardFormData) =>
+    (field: keyof FormData) =>
     (
       e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
     ) => {
@@ -149,204 +191,349 @@ export default function SignupHubUser() {
       }
     };
 
+  const handleConfirmPasswordBlur = () => {
+    if (
+      formData.confirm_password &&
+      formData.password !== formData.confirm_password
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        confirm_password: t("hubUserOnboarding.error.passwordMismatch"),
+      }));
+    }
+  };
+
   if (existingSession) {
     return (
-      <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Another User is Already Signed In
-            </Typography>
-            <Typography>
-              Please sign out of the current account before creating a new one.
-            </Typography>
-          </Alert>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={() => {
-              localStorage.removeItem("sessionToken");
-              window.location.reload();
-            }}
-          >
-            Sign Out
-          </Button>
-        </Paper>
-      </Container>
+      <Box sx={{ bgcolor: "#f5f8fa", minHeight: "100vh", py: 4 }}>
+        <Container maxWidth="md">
+          <Paper elevation={3} sx={{ p: 4, bgcolor: "white" }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Another User is Already Signed In
+              </Typography>
+              <Typography>
+                Please sign out of the current account before creating a new
+                one.
+              </Typography>
+            </Alert>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={() => {
+                localStorage.removeItem("sessionToken");
+                window.location.reload();
+              }}
+            >
+              Sign Out
+            </Button>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   if (success) {
     return (
-      <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            {t("hubUserOnboarding.success.title")}
-          </Typography>
-          <Typography paragraph>
-            {t("hubUserOnboarding.success.description")}
-          </Typography>
-          <Typography paragraph>
-            {t("hubUserOnboarding.success.handle", {
-              handle: success.generated_handle,
-            })}
-          </Typography>
-          <Typography color="textSecondary">
-            {t("hubUserOnboarding.success.redirecting")}
-          </Typography>
-          <CircularProgress sx={{ mt: 2 }} />
-        </Paper>
-      </Container>
+      <Box sx={{ bgcolor: "#f5f8fa", minHeight: "100vh", py: 4 }}>
+        <Container maxWidth="md">
+          <Paper elevation={3} sx={{ p: 4, bgcolor: "white" }}>
+            <Typography variant="h5" gutterBottom>
+              {t("hubUserOnboarding.success.title")}
+            </Typography>
+            <Typography paragraph>
+              {t("hubUserOnboarding.success.description")}
+            </Typography>
+            <Typography paragraph>
+              {t("hubUserOnboarding.success.handle", {
+                handle: success.generated_handle,
+              })}
+            </Typography>
+            <Typography color="textSecondary">
+              {t("hubUserOnboarding.success.redirecting")}
+            </Typography>
+            <CircularProgress sx={{ mt: 2 }} />
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {t("hubUserOnboarding.title")}
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          {t("hubUserOnboarding.subtitle")}
-        </Typography>
+    <Box sx={{ bgcolor: "#f5f8fa", minHeight: "100vh", py: 4 }}>
+      <Container maxWidth="md">
+        <Paper elevation={3} sx={{ p: 4, bgcolor: "white" }}>
+          <Typography variant="h4" gutterBottom>
+            {t("hubUserOnboarding.title")}
+          </Typography>
 
-        {apiError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {apiError}
-          </Alert>
-        )}
+          {apiError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {apiError}
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label={t("hubUserOnboarding.form.fullName")}
-            placeholder={t("hubUserOnboarding.form.fullNamePlaceholder")}
-            value={formData.full_name}
-            onChange={handleInputChange("full_name")}
-            error={!!errors.full_name}
-            helperText={errors.full_name}
-            margin="normal"
-            required
-          />
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label={t("hubUserOnboarding.form.fullName")}
+              placeholder={t("hubUserOnboarding.form.fullNamePlaceholder")}
+              value={formData.full_name}
+              onChange={handleInputChange("full_name")}
+              error={!!errors.full_name}
+              helperText={errors.full_name}
+              margin="normal"
+              required
+            />
 
-          <TextField
-            fullWidth
-            type="password"
-            label={t("hubUserOnboarding.form.password")}
-            placeholder={t("hubUserOnboarding.form.passwordPlaceholder")}
-            value={formData.password}
-            onChange={handleInputChange("password")}
-            error={!!errors.password}
-            helperText={errors.password}
-            margin="normal"
-            required
-          />
+            <TextField
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              label={t("hubUserOnboarding.form.password")}
+              placeholder={t("hubUserOnboarding.form.passwordPlaceholder")}
+              value={formData.password}
+              onChange={handleInputChange("password")}
+              error={!!errors.password}
+              helperText={errors.password}
+              margin="normal"
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
 
-          <CountrySelect
-            value={formData.resident_country_code}
-            onChange={(value: string) => {
-              setFormData((prev) => ({
-                ...prev,
-                resident_country_code: value,
-              }));
-            }}
-            error={!!errors.resident_country_code}
-            helperText={errors.resident_country_code}
-          />
+            <TextField
+              fullWidth
+              type={showConfirmPassword ? "text" : "password"}
+              label={t("hubUserOnboarding.form.confirmPassword")}
+              placeholder={t(
+                "hubUserOnboarding.form.confirmPasswordPlaceholder"
+              )}
+              value={formData.confirm_password}
+              onChange={handleInputChange("confirm_password")}
+              onBlur={handleConfirmPasswordBlur}
+              error={!!errors.confirm_password}
+              helperText={errors.confirm_password}
+              margin="normal"
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
 
-          <FormControl component="fieldset" margin="normal" fullWidth>
-            <Typography variant="subtitle2" gutterBottom>
-              {t("hubUserOnboarding.form.tier.label")}
-            </Typography>
-            <RadioGroup
-              value={formData.selected_tier}
-              onChange={handleInputChange("selected_tier")}
-            >
-              <FormControlLabel
-                value="FREE_TIER"
-                control={<Radio />}
-                label={
-                  <Box>
-                    <Typography variant="body1">
+            <CountrySelect
+              value={formData.resident_country_code}
+              onChange={(value: string) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  resident_country_code: value,
+                }));
+              }}
+              error={!!errors.resident_country_code}
+              helperText={errors.resident_country_code}
+            />
+
+            <Box sx={{ my: 4 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
+                <Card
+                  sx={{
+                    p: 3,
+                    cursor: "pointer",
+                    border: (theme) =>
+                      formData.selected_tier === "FREE_HUB_USER"
+                        ? `2px solid ${theme.palette.primary.main}`
+                        : "1px solid #e0e0e0",
+                    bgcolor: (theme) =>
+                      formData.selected_tier === "FREE_HUB_USER"
+                        ? theme.palette.primary.light + "20"
+                        : "#ffffff",
+                    opacity:
+                      formData.selected_tier === "FREE_HUB_USER" ? 1 : 0.6,
+                    transform:
+                      formData.selected_tier === "FREE_HUB_USER"
+                        ? "scale(1.02)"
+                        : "none",
+                    boxShadow:
+                      formData.selected_tier === "FREE_HUB_USER" ? 4 : 1,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      transform: "scale(1.02)",
+                      boxShadow: 4,
+                      opacity: 1,
+                    },
+                  }}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      selected_tier: "FREE_HUB_USER",
+                    }))
+                  }
+                >
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="h5" gutterBottom>
                       {t("hubUserOnboarding.form.tier.free")}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {t("hubUserOnboarding.form.tier.freeDescription")}
+                    <Typography
+                      variant="h4"
+                      color="primary"
+                      sx={{ mb: 2, fontWeight: "bold" }}
+                    >
+                      Free
                     </Typography>
                   </Box>
-                }
-              />
-              <FormControlLabel
-                value="PAID_TIER"
-                control={<Radio />}
-                label={
-                  <Box>
-                    <Typography variant="body1">
+                  <Box sx={{ mt: 2 }}>
+                    <Typography component="ul" sx={{ pl: 2 }}>
+                      <Typography component="li">Profile</Typography>
+                      <Typography component="li">Job search</Typography>
+                      <Typography component="li">Ads</Typography>
+                    </Typography>
+                  </Box>
+                </Card>
+
+                <Card
+                  sx={{
+                    p: 3,
+                    cursor: "pointer",
+                    border: (theme) =>
+                      formData.selected_tier === "PAID_HUB_USER"
+                        ? `2px solid ${theme.palette.primary.main}`
+                        : "1px solid #e0e0e0",
+                    bgcolor: (theme) =>
+                      formData.selected_tier === "PAID_HUB_USER"
+                        ? theme.palette.primary.light + "20"
+                        : "#ffffff",
+                    opacity:
+                      formData.selected_tier === "PAID_HUB_USER" ? 1 : 0.6,
+                    transform:
+                      formData.selected_tier === "PAID_HUB_USER"
+                        ? "scale(1.02)"
+                        : "none",
+                    boxShadow:
+                      formData.selected_tier === "PAID_HUB_USER" ? 4 : 1,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      transform: "scale(1.02)",
+                      boxShadow: 4,
+                      opacity: 1,
+                    },
+                  }}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      selected_tier: "PAID_HUB_USER",
+                    }))
+                  }
+                >
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="h5" gutterBottom>
                       {t("hubUserOnboarding.form.tier.paid")}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {t("hubUserOnboarding.form.tier.paidDescription")}
+                    <Typography
+                      variant="h4"
+                      color="primary"
+                      sx={{ mb: 2, fontWeight: "bold" }}
+                    >
+                      99$ per year
                     </Typography>
                   </Box>
-                }
-              />
-            </RadioGroup>
-          </FormControl>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography component="ul" sx={{ pl: 2 }}>
+                      <Typography component="li">All in Free Tier</Typography>
+                      <Typography component="li">No Ads</Typography>
+                      <Typography component="li">
+                        Support Open Source Software development
+                      </Typography>
+                    </Typography>
+                  </Box>
+                </Card>
+              </Box>
+            </Box>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={2}
-            label={t("hubUserOnboarding.form.shortBio")}
-            placeholder={t("hubUserOnboarding.form.shortBioPlaceholder")}
-            value={formData.short_bio || ""}
-            onChange={handleInputChange("short_bio")}
-            margin="normal"
-            required
-            error={!!errors.short_bio}
-            helperText={
-              errors.short_bio ||
-              `${(formData.short_bio || "").length}/64 characters`
-            }
-            inputProps={{ maxLength: 64 }}
-          />
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label={t("hubUserOnboarding.form.shortBio")}
+              placeholder={t("hubUserOnboarding.form.shortBioPlaceholder")}
+              value={formData.short_bio || ""}
+              onChange={handleInputChange("short_bio")}
+              margin="normal"
+              required
+              error={!!errors.short_bio}
+              helperText={
+                errors.short_bio ||
+                `${(formData.short_bio || "").length}/64 characters`
+              }
+              inputProps={{ maxLength: 64 }}
+            />
 
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label={t("hubUserOnboarding.form.longBio")}
-            placeholder={t("hubUserOnboarding.form.longBioPlaceholder")}
-            value={formData.long_bio || ""}
-            onChange={handleInputChange("long_bio")}
-            margin="normal"
-            required
-            error={!!errors.long_bio}
-            helperText={
-              errors.long_bio ||
-              `${(formData.long_bio || "").length}/1024 characters`
-            }
-            inputProps={{ maxLength: 1024 }}
-          />
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label={t("hubUserOnboarding.form.longBio")}
+              placeholder={t("hubUserOnboarding.form.longBioPlaceholder")}
+              value={formData.long_bio || ""}
+              onChange={handleInputChange("long_bio")}
+              margin="normal"
+              required
+              error={!!errors.long_bio}
+              helperText={
+                errors.long_bio ||
+                `${(formData.long_bio || "").length}/1024 characters`
+              }
+              inputProps={{ maxLength: 1024 }}
+            />
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            size="large"
-            disabled={isSubmitting}
-            sx={{ mt: 3 }}
-          >
-            {isSubmitting ? (
-              <CircularProgress size={24} />
-            ) : (
-              t("hubUserOnboarding.form.submit")
-            )}
-          </Button>
-        </form>
-      </Paper>
-    </Container>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              size="large"
+              disabled={isSubmitting || !isFormValid()}
+              sx={{ mt: 3 }}
+            >
+              {isSubmitting ? (
+                <CircularProgress size={24} />
+              ) : (
+                t("hubUserOnboarding.form.submit")
+              )}
+            </Button>
+          </form>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
