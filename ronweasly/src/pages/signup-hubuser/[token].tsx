@@ -69,8 +69,12 @@ export default function SignupHubUser() {
       );
     }
 
-    if (!formData.password || formData.password.length < 8) {
-      newErrors.password = t("hubUserOnboarding.error.passwordTooShort");
+    if (
+      !formData.password ||
+      formData.password.length < 12 ||
+      formData.password.length > 64
+    ) {
+      newErrors.password = t("hubUserOnboarding.error.passwordLength");
     }
 
     if (formData.password !== formData.confirm_password) {
@@ -105,7 +109,7 @@ export default function SignupHubUser() {
     }
 
     // Check password length
-    if (formData.password.length < 8) {
+    if (formData.password.length < 12 || formData.password.length > 64) {
       return false;
     }
 
@@ -149,6 +153,19 @@ export default function SignupHubUser() {
       );
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(t("hubUserOnboarding.error.invalidToken"));
+        }
+
+        if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(
+            t("hubUserOnboarding.error.validationError", {
+              details: errorData.message,
+            })
+          );
+        }
+
         throw new Error(t("hubUserOnboarding.error.onboardingFailed"));
       }
 

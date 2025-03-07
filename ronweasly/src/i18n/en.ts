@@ -368,11 +368,13 @@ export const en = {
       submit: "Complete Registration",
     },
     error: {
-      invalidToken: "Invalid or expired invitation token",
+      invalidToken:
+        "The invitation token is invalid or has expired. Please request a new invitation.",
       onboardingFailed: "Failed to complete registration. Please try again.",
       requiredField: "This field is required",
-      passwordTooShort: "Password must be at least 8 characters long",
+      passwordLength: "Password must be between 12 and 64 characters",
       passwordMismatch: "Passwords do not match",
+      validationError: "Please correct the following errors: {details}",
     },
     success: {
       title: "Registration Complete!",

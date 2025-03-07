@@ -12,7 +12,8 @@ CREATE TABLE hub_user_invites (
 
 CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER', 'DELETED_HUB_USER');
 
-CREATE TYPE hub_user_tiers AS ENUM ('FREE_TIER', 'PAID_TIER');
+-- Should correspond to the tiers in typespec/hub/hubusers.tsp
+CREATE TYPE hub_user_tiers AS ENUM ('FREE_HUB_USER', 'PAID_HUB_USER');
 
 -- Function to generate a unique handle based on full name and a random suffix
 CREATE OR REPLACE FUNCTION generate_unique_handle(p_full_name TEXT) RETURNS TEXT AS $$
@@ -69,7 +70,7 @@ CREATE TABLE IF NOT EXISTS hub_users (
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     state hub_user_states NOT NULL,
-    tier hub_user_tiers NOT NULL DEFAULT 'FREE_TIER',
+    tier hub_user_tiers NOT NULL,
     resident_country_code TEXT NOT NULL,
     resident_city TEXT,
     preferred_language TEXT NOT NULL,
