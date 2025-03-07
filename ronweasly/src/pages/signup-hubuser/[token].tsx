@@ -21,6 +21,7 @@ import type {
   OnboardHubUserRequest,
   OnboardHubUserResponse,
 } from "@psankar/vetchi-typespec";
+import Cookies from "js-cookie";
 
 interface FormData extends Omit<OnboardHubUserRequest, "token"> {
   confirm_password: string;
@@ -172,12 +173,13 @@ export default function SignupHubUser() {
       const data: OnboardHubUserResponse = await response.json();
       setSuccess(data);
 
-      // Store the session token
-      localStorage.setItem("sessionToken", data.session_token);
+      // Store the session token in a cookie
+      Cookies.set("session_token", data.session_token, { path: "/" });
 
       // Redirect after 3 seconds
       setTimeout(() => {
-        router.push("/dashboard");
+        // TODO: If the account type is PAID_HUB_USER, redirect to the payments page
+        router.push("/");
       }, 3000);
     } catch (error) {
       setApiError(
