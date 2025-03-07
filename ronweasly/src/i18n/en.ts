@@ -338,4 +338,44 @@ export const en = {
       },
     },
   },
+  hubUserOnboarding: {
+    title: "Welcome to Vetchi",
+    subtitle: "Complete your profile to get started",
+    form: {
+      fullName: "Full Name",
+      fullNamePlaceholder: "Enter your full name",
+      password: "Password",
+      passwordPlaceholder: "Choose a secure password",
+      countryCode: "Country of Residence",
+      countryCodePlaceholder: "Select your country",
+      tier: {
+        label: "Select Your Plan",
+        free: "Free Tier",
+        paid: "Paid Tier",
+        freeDescription: "Apply for Jobs, Look at Posts, See Ads",
+        paidDescription: "Support Open Source software, No Ads",
+      },
+      preferredLanguage: "Preferred Language",
+      preferredLanguagePlaceholder: "Select your preferred language",
+      shortBio: "Short Bio",
+      shortBioPlaceholder:
+        "Brief introduction about yourself (max 64 characters)",
+      longBio: "Long Bio",
+      longBioPlaceholder:
+        "Detailed description about your background and expertise (max 1024 characters)",
+      submit: "Complete Registration",
+    },
+    error: {
+      invalidToken: "Invalid or expired invitation token",
+      onboardingFailed: "Failed to complete registration. Please try again.",
+      requiredField: "This field is required",
+      passwordTooShort: "Password must be at least 8 characters long",
+    },
+    success: {
+      title: "Registration Complete!",
+      description: "Your account has been created successfully.",
+      handle: "Your generated handle is: {handle}",
+      redirecting: "Redirecting to dashboard...",
+    },
+  },
 };
