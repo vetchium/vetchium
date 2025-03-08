@@ -25,6 +25,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = Cookies.get("session_token");
@@ -33,8 +34,23 @@ export default function Settings() {
     }
   }, [router]);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (newEmail && !validateEmail(newEmail)) {
+      setEmailError(t("settings.inviteUser.error.invalidEmail"));
+    } else {
+      setEmailError(null);
+    }
+  };
+
   const handleInviteUser = async () => {
-    if (!email) {
+    if (!email || !validateEmail(email)) {
       setError(t("settings.inviteUser.error.invalidEmail"));
       return;
     }
@@ -103,22 +119,36 @@ export default function Settings() {
             {t("settings.inviteUser.description")}
           </Typography>
 
-          <Box component="form" noValidate sx={{ mt: 2 }}>
+          <Box
+            component="form"
+            noValidate
+            sx={{ mt: 2 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleInviteUser();
+            }}
+          >
             <TextField
               fullWidth
               label={t("common.email")}
               placeholder={t("settings.inviteUser.emailPlaceholder")}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               disabled={loading}
               type="email"
+              required
+              error={!!emailError}
+              helperText={emailError}
+              inputProps={{
+                pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              }}
               margin="normal"
             />
 
             <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 variant="contained"
-                onClick={handleInviteUser}
+                type="submit"
                 disabled={loading}
                 startIcon={loading ? <CircularProgress size={20} /> : undefined}
               >
