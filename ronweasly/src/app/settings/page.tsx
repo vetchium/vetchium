@@ -111,6 +111,18 @@ export default function Settings() {
           {t("settings.title")}
         </Typography>
 
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {t("settings.inviteUser.success")}
+          </Alert>
+        )}
+
         <Paper sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom>
             {t("settings.inviteUser.title")}
@@ -157,26 +169,6 @@ export default function Settings() {
             </Box>
           </Box>
         </Paper>
-
-        <Snackbar
-          open={error !== null}
-          autoHideDuration={6000}
-          onClose={() => setError(null)}
-        >
-          <Alert severity="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        </Snackbar>
-
-        <Snackbar
-          open={success}
-          autoHideDuration={6000}
-          onClose={() => setSuccess(false)}
-        >
-          <Alert severity="success" onClose={() => setSuccess(false)}>
-            {t("settings.inviteUser.success")}
-          </Alert>
-        </Snackbar>
       </Container>
     </AuthenticatedLayout>
   );
