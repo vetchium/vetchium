@@ -53,8 +53,8 @@ import {
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Theme } from '@mui/material/styles';
-import { styled, alpha } from '@mui/material/styles';
+import { Theme } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 
 // Helper function for consistent date formatting
 const formatDateTime = (
@@ -101,7 +101,7 @@ interface FeedbackWidgetProps {
   placeholder: string;
   icon?: React.ReactNode;
   customStyle?: {
-    '& .MuiCardContent-root'?: React.CSSProperties;
+    "& .MuiCardContent-root"?: React.CSSProperties;
     [key: string]: unknown;
   };
 }
@@ -109,8 +109,8 @@ interface FeedbackWidgetProps {
 const StyledFeedbackCard = styled(Card)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   border: `1px solid ${theme.palette.divider}`,
-  boxShadow: 'none',
-  '& .MuiCardContent-root': {
+  boxShadow: "none",
+  "& .MuiCardContent-root": {
     backgroundColor: `${theme.palette.warning.light}10`,
   },
 }));
@@ -118,7 +118,7 @@ const StyledFeedbackCard = styled(Card)(({ theme }) => ({
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   marginBottom: theme.spacing(3),
-  backgroundColor: alpha(theme.palette.warning.light, 0.1)
+  backgroundColor: alpha(theme.palette.warning.light, 0.1),
 }));
 
 // Update FeedbackWidget to use StyledFeedbackCard
@@ -130,12 +130,12 @@ function FeedbackWidget({
   customStyle,
 }: FeedbackWidgetProps) {
   return (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         mb: 2,
-        '& .MuiCardContent-root': {
-          bgcolor: (theme) => alpha(theme.palette.warning.light, 0.1)
-        }
+        "& .MuiCardContent-root": {
+          bgcolor: (theme) => alpha(theme.palette.warning.light, 0.1),
+        },
       }}
     >
       <CardContent>
@@ -236,8 +236,8 @@ export default function InterviewDetailPage() {
 
       const data = await response.json();
       setInterview(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("interviews.fetchError"));
+    } catch {
+      setError(t("interviews.fetchError"));
     } finally {
       setLoading(false);
     }
@@ -312,8 +312,8 @@ export default function InterviewDetailPage() {
 
       setSuccessMessage(t("interviews.assessment.rsvpSuccess"));
       await fetchInterview();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
+    } catch {
+      setError(t("common.error"));
     } finally {
       setRsvpLoading(false);
     }
@@ -372,8 +372,8 @@ export default function InterviewDetailPage() {
 
       setSuccessMessage(t("interviews.assessment.saveSuccess"));
       await fetchInterview();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
+    } catch {
+      setError(t("common.error"));
     } finally {
       setSaving(false);
     }
@@ -902,14 +902,14 @@ export default function InterviewDetailPage() {
                     {interview?.interviewers_decision && (
                       <Chip
                         label={t(
-                          `interviews.assessment.ratings.${
-                            Object.keys(InterviewersDecisions).find(
-                              (key) =>
-                                InterviewersDecisions[
-                                  key as keyof typeof InterviewersDecisions
-                                ] === interview.interviewers_decision
-                            )
-                          }`
+                          `interviews.assessment.ratings.${Object.keys(
+                            InterviewersDecisions
+                          ).find(
+                            (key) =>
+                              InterviewersDecisions[
+                                key as keyof typeof InterviewersDecisions
+                              ] === interview.interviewers_decision
+                          )}`
                         )}
                         size="small"
                         color={
@@ -951,14 +951,14 @@ export default function InterviewDetailPage() {
                     value={
                       interview?.interviewers_decision
                         ? t(
-                            `interviews.assessment.ratings.${
-                              Object.keys(InterviewersDecisions).find(
-                                (key) =>
-                                  InterviewersDecisions[
-                                    key as keyof typeof InterviewersDecisions
-                                  ] === interview.interviewers_decision
-                              )
-                            }`
+                            `interviews.assessment.ratings.${Object.keys(
+                              InterviewersDecisions
+                            ).find(
+                              (key) =>
+                                InterviewersDecisions[
+                                  key as keyof typeof InterviewersDecisions
+                                ] === interview.interviewers_decision
+                            )}`
                           )
                         : ""
                     }
@@ -1050,20 +1050,18 @@ export default function InterviewDetailPage() {
                             }))
                           }
                         >
-                          {Object.keys(InterviewersDecisions).map(
-                            (key) => (
-                              <MenuItem
-                                key={key}
-                                value={
-                                  InterviewersDecisions[
-                                    key as keyof typeof InterviewersDecisions
-                                  ]
-                                }
-                              >
-                                {t(`interviews.assessment.ratings.${key}`)}
-                              </MenuItem>
-                            )
-                          )}
+                          {Object.keys(InterviewersDecisions).map((key) => (
+                            <MenuItem
+                              key={key}
+                              value={
+                                InterviewersDecisions[
+                                  key as keyof typeof InterviewersDecisions
+                                ]
+                              }
+                            >
+                              {t(`interviews.assessment.ratings.${key}`)}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
 
@@ -1127,7 +1125,9 @@ export default function InterviewDetailPage() {
                           multiline
                           rows={4}
                           label={t("interviews.assessment.feedback")}
-                          placeholder={t("interviews.assessment.feedbackPlaceholder")}
+                          placeholder={t(
+                            "interviews.assessment.feedbackPlaceholder"
+                          )}
                           value={editFormData.feedback_to_candidate}
                           onChange={(e) =>
                             setEditFormData((prev) => ({

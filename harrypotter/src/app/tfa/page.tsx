@@ -72,7 +72,7 @@ export default function TFA() {
       } else {
         setError(t("auth.invalidCredentials"));
       }
-    } catch (err) {
+    } catch {
       setError(t("auth.serverError"));
     }
   };

@@ -31,17 +31,6 @@ export default function CostCenterActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  useEffect(() => {
-    if (isEdit) {
-      const costCenterName = window.location.search.split("name=")[1];
-      if (costCenterName) {
-        fetchCostCenter(decodeURIComponent(costCenterName));
-      } else {
-        router.push("/cost-centers");
-      }
-    }
-  }, [isEdit, fetchCostCenter, router]);
-
   const fetchCostCenter = async (costCenterName: string) => {
     try {
       setIsLoading(true);
@@ -88,6 +77,17 @@ export default function CostCenterActionPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isEdit) {
+      const costCenterName = window.location.search.split("name=")[1];
+      if (costCenterName) {
+        fetchCostCenter(decodeURIComponent(costCenterName));
+      } else {
+        router.push("/cost-centers");
+      }
+    }
+  }, [isEdit, fetchCostCenter, router]);
 
   const handleSave = async () => {
     try {

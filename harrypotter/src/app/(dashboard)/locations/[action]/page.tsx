@@ -39,17 +39,6 @@ export default function LocationActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  useEffect(() => {
-    if (isEdit) {
-      const locationId = window.location.search.split("id=")[1];
-      if (locationId) {
-        fetchLocation(locationId);
-      } else {
-        router.push("/locations");
-      }
-    }
-  }, [isEdit, fetchLocation, router]);
-
   const fetchLocation = async (locationTitle: string) => {
     try {
       setIsLoading(true);
@@ -98,6 +87,17 @@ export default function LocationActionPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isEdit) {
+      const locationId = window.location.search.split("id=")[1];
+      if (locationId) {
+        fetchLocation(locationId);
+      } else {
+        router.push("/locations");
+      }
+    }
+  }, [isEdit, fetchLocation, router]);
 
   const handleAddCityAka = () => {
     if (cityAkaInput.trim() && cityAka.length < 3) {

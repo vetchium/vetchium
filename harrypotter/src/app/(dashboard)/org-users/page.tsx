@@ -60,6 +60,10 @@ export default function OrgUsersPage() {
     fetchUsers(includeDisabled);
   }, [includeDisabled]);
 
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]); // Add fetchUsers to dependencies
+
   const filteredUsers = users?.filter(
     (user: OrgUser) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||

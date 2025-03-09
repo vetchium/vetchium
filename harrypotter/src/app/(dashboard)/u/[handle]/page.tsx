@@ -106,7 +106,7 @@ export default function UserProfilePage() {
       );
       setLoading(false);
     }
-  }, [handle, router]);
+  }, [handle, router, t]);
 
   useEffect(() => {
     fetchUserBio();

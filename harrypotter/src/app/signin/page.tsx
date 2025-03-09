@@ -62,7 +62,7 @@ export default function SignIn() {
         setShowCredentials(true);
         setError("");
       }
-    } catch (err) {
+    } catch {
       setError(t("auth.serverError"));
     }
   };
@@ -98,7 +98,7 @@ export default function SignIn() {
       } else {
         setError(t("auth.invalidCredentials"));
       }
-    } catch (err) {
+    } catch {
       setError(t("auth.serverError"));
     }
   };

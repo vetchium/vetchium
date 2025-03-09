@@ -92,13 +92,6 @@ export default function CreateOpeningPage() {
     );
   }, [isGloballyRemote]);
 
-  useEffect(() => {
-    fetchCostCenters();
-    fetchLocations();
-    fetchOrgUsers();
-    fetchTags();
-  }, [fetchCostCenters, fetchLocations, fetchOrgUsers, fetchTags]);
-
   const fetchOrgUsers = async (searchPrefix?: string) => {
     try {
       const token = Cookies.get("session_token");
@@ -239,6 +232,13 @@ export default function CreateOpeningPage() {
       );
     }
   };
+
+  useEffect(() => {
+    fetchCostCenters();
+    fetchLocations();
+    fetchOrgUsers();
+    fetchTags();
+  }, [fetchCostCenters, fetchLocations, fetchOrgUsers, fetchTags]);
 
   const handleTagSearch = (query: string) => {
     setNewTag(query);
