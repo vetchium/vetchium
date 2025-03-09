@@ -2,6 +2,20 @@ global:
   environment: staging
   domain: vetchi.org
 
+# MinIO Configuration
+minio:
+  mode: standalone
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin"
+  persistence:
+    enabled: true
+    size: 10Gi
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
 # PostgreSQL Cluster Configuration
 postgresCluster:
   instances: 3

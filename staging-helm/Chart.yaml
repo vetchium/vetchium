@@ -8,3 +8,6 @@ dependencies:
   - name: cloudnative-pg
     version: "0.18.2"
     repository: "https://cloudnative-pg.github.io/charts"
+  - name: minio
+    version: "5.0.14"
+    repository: "https://charts.min.io/"
