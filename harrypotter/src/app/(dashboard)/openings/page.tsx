@@ -80,7 +80,7 @@ export default function Openings() {
       setShowClosed(newValue);
       localStorage.setItem("showClosedOpenings", JSON.stringify(newValue));
     },
-    []
+    [] // Remove unnecessary t dependency
   );
 
   // Fetch openings function
@@ -119,14 +119,16 @@ export default function Openings() {
           setError("common.error");
         }
       } catch {
-        setError(t("openings.fetchError"));
+        if (isMounted) {
+          setError(t("openings.fetchError"));
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
         }
       }
     },
-    [states]
+    [states, t] // Add missing t dependency
   );
 
   useEffect(() => {

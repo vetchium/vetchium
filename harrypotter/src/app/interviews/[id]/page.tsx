@@ -53,7 +53,6 @@ import {
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Theme } from "@mui/material/styles";
 import { styled, alpha } from "@mui/material/styles";
 
 // Helper function for consistent date formatting
@@ -100,20 +99,7 @@ interface FeedbackWidgetProps {
   value: string;
   placeholder: string;
   icon?: React.ReactNode;
-  customStyle?: {
-    "& .MuiCardContent-root"?: React.CSSProperties;
-    [key: string]: unknown;
-  };
 }
-
-const StyledFeedbackCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  border: `1px solid ${theme.palette.divider}`,
-  boxShadow: "none",
-  "& .MuiCardContent-root": {
-    backgroundColor: `${theme.palette.warning.light}10`,
-  },
-}));
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -127,7 +113,6 @@ function FeedbackWidget({
   value,
   placeholder,
   icon,
-  customStyle,
 }: FeedbackWidgetProps) {
   return (
     <Card
@@ -994,11 +979,6 @@ export default function InterviewDetailPage() {
                     value={interview?.feedback_to_candidate || ""}
                     placeholder={t("interviews.assessment.feedbackPlaceholder")}
                     icon={<PublicIcon color="action" fontSize="small" />}
-                    customStyle={{
-                      "& .MuiCardContent-root": {
-                        backgroundColor: "rgba(244, 165, 18, 0.1)",
-                      },
-                    }}
                   />
 
                   {interview?.feedback_submitted_by && (

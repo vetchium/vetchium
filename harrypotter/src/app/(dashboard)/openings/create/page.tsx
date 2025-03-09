@@ -33,7 +33,7 @@ import {
 import countries from "@psankar/vetchi-typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function CreateOpeningPage() {
   const { t } = useTranslation();
@@ -92,7 +92,7 @@ export default function CreateOpeningPage() {
     );
   }, [isGloballyRemote]);
 
-  const fetchOrgUsers = async (searchPrefix?: string) => {
+  const fetchOrgUsers = useCallback(async (searchPrefix?: string) => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -130,9 +130,9 @@ export default function CreateOpeningPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("openings.fetchError"));
     }
-  };
+  }, [router, t]);
 
-  const fetchCostCenters = async () => {
+  const fetchCostCenters = useCallback(async () => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -163,9 +163,9 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchCostCentersError")
       );
     }
-  };
+  }, [router, t]);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -196,9 +196,9 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchLocationsError")
       );
     }
-  };
+  }, [router, t]);
 
-  const fetchTags = async (searchPrefix?: string) => {
+  const fetchTags = useCallback(async (searchPrefix?: string) => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -231,7 +231,7 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchTagsError")
       );
     }
-  };
+  }, [router, t]);
 
   useEffect(() => {
     fetchCostCenters();

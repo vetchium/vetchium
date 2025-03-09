@@ -18,7 +18,7 @@ import {
 } from "@psankar/vetchi-typespec/employer/costcenters";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function CostCenterActionPage() {
   const [name, setName] = useState("");
@@ -31,7 +31,7 @@ export default function CostCenterActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  const fetchCostCenter = async (costCenterName: string) => {
+  const fetchCostCenter = useCallback(async (costCenterName: string) => {
     try {
       setIsLoading(true);
       const token = Cookies.get("session_token");
@@ -76,7 +76,7 @@ export default function CostCenterActionPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, t]);
 
   useEffect(() => {
     if (isEdit) {

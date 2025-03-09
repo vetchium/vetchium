@@ -11,9 +11,10 @@ import {
   Grid,
   Paper,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -31,14 +32,18 @@ export default function CostCentersPage() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("includeDefunctCostCenters") === "true";
   });
+  const [isLoading, setIsLoading] = useState(false); // Add isLoading state
+
   const router = useRouter();
   const { t } = useTranslation();
 
-  const fetchCostCenters = async () => {
+  const fetchCostCenters = useCallback(async () => {
     try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
+      setIsLoading(true); // Set loading state
+      const sessionToken = Cookies.get("session_token");
+      if (!sessionToken) {
+        setError(t("auth.unauthorized"));
+        setIsLoading(false);
         return;
       }
 
@@ -52,7 +57,7 @@ export default function CostCentersPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${sessionToken}`,
           },
           body: JSON.stringify(request),
         }
@@ -65,17 +70,17 @@ export default function CostCentersPage() {
       }
 
       if (!response.ok) {
-        throw new Error(t("costCenters.fetchError"));
+        throw new Error(t("common.error"));
       }
 
       const data = await response.json();
       setCostCenters(data || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("costCenters.fetchError")
-      );
+    } catch {
+      setError(t("common.error"));
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [includeDefunct, router, t]);
 
   useEffect(() => {
     fetchCostCenters();
@@ -168,7 +173,11 @@ export default function CostCentersPage() {
         </Alert>
       )}
 
-      {costCenters.length > 0 ? (
+      {isLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : costCenters.length > 0 ? (
         <Grid container spacing={2}>
           {costCenters.map((costCenter) => (
             <Grid item xs={12} md={6} lg={4} key={costCenter.name}>

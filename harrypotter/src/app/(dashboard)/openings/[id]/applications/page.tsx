@@ -38,7 +38,7 @@ import {
 import { Application, ApplicationColorTag } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 
 interface PageProps {
   params: Promise<{
@@ -120,67 +120,119 @@ export default function ApplicationsPage({ params }: PageProps) {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const fetchApplications = async (newPage?: number) => {
-    console.log("Fetching applications, page:", newPage);
-    setIsLoading(true);
-    setError("");
+  const fetchApplications = useCallback(
+    async (newPage?: number) => {
+      console.log("Fetching applications, page:", newPage);
+      setIsLoading(true);
+      setError("");
 
-    try {
-      const sessionToken = Cookies.get("session_token");
-      if (!sessionToken) {
-        setError(t("auth.unauthorized"));
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-applications`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionToken}`,
-          },
-          body: JSON.stringify({
-            opening_id: id,
-            state: "APPLIED",
-            limit: ITEMS_PER_PAGE,
-            pagination_key: newPage === 1 ? null : paginationKey,
-            color_tag_filter: colorTagFilter || undefined,
-          }),
+      try {
+        const sessionToken = Cookies.get("session_token");
+        if (!sessionToken) {
+          setError(t("auth.unauthorized"));
+          setIsLoading(false);
+          return;
         }
-      );
 
-      if (response.status === 200) {
-        const data = await response.json();
-        console.log("Applications fetched:", data);
-        console.log("Response data:", data);
-        console.log("Setting applications state with:", data);
-        setApplications(data ?? []);
-        setTotalPages(Math.ceil((data.total_count || 0) / ITEMS_PER_PAGE));
-        if (data.length === ITEMS_PER_PAGE) {
-          setPaginationKey(data[data.length - 1].id);
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/get-applications`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionToken}`,
+            },
+            body: JSON.stringify({
+              opening_id: id,
+              state: "APPLIED",
+              limit: ITEMS_PER_PAGE,
+              pagination_key: newPage === 1 ? null : paginationKey,
+              color_tag_filter: colorTagFilter || undefined,
+            }),
+          }
+        );
+
+        if (response.status === 200) {
+          const data = await response.json();
+          console.log("Applications fetched:", data);
+          console.log("Response data:", data);
+          console.log("Setting applications state with:", data);
+          setApplications(data ?? []);
+          setTotalPages(Math.ceil((data.total_count || 0) / ITEMS_PER_PAGE));
+          if (data.length === ITEMS_PER_PAGE) {
+            setPaginationKey(data[data.length - 1].id);
+          }
+        } else if (response.status === 401) {
+          setError(t("auth.unauthorized"));
+        } else {
+          setError(t("common.serverError"));
         }
-      } else if (response.status === 401) {
-        setError(t("auth.unauthorized"));
-      } else {
+      } catch {
         setError(t("common.serverError"));
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      setError(t("common.serverError"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [id, colorTagFilter, paginationKey, t]
+  );
 
   useEffect(() => {
     console.log("Fetching applications for opening ID:", id);
     fetchApplications(1);
-  }, [id, colorTagFilter]);
+  }, [id, colorTagFilter, fetchApplications]);
 
-  useEffect(() => {
-    console.log("Applications state updated:", applications);
-  }, [applications]);
+  const handleViewResume = useCallback(
+    async (application: ExtendedApplication) => {
+      if (application.resumeUrl) {
+        // Don't auto-open the resume in full screen
+        return;
+      }
+
+      setLoadingResumes((prev) => ({ ...prev, [application.id]: true }));
+      setError("");
+
+      try {
+        const sessionToken = Cookies.get("session_token");
+        if (!sessionToken) {
+          setError(t("auth.unauthorized"));
+          return;
+        }
+
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/get-resume`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionToken}`,
+            },
+            body: JSON.stringify({
+              application_id: application.id,
+            }),
+          }
+        );
+
+        if (response.status === 200) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setApplications((prevApps) =>
+            prevApps.map((app) =>
+              app.id === application.id ? { ...app, resumeUrl: url } : app
+            )
+          );
+        } else if (response.status === 401) {
+          setError(t("auth.unauthorized"));
+        } else {
+          setError(t("common.serverError"));
+        }
+      } catch {
+        setError(t("common.serverError"));
+      } finally {
+        setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     // Remove auto-opening of resume
@@ -190,6 +242,21 @@ export default function ApplicationsPage({ params }: PageProps) {
       }
     });
   }, [applications]);
+
+  useEffect(() => {
+    console.log("Fetching applications, page:", page);
+    fetchApplications(page);
+  }, [fetchApplications, page]);
+
+  useEffect(() => {
+    if (loadingResumes) {
+      applications.forEach((application) => {
+        if (!application.resumeUrl && !loadingResumes[application.id]) {
+          handleViewResume(application);
+        }
+      });
+    }
+  }, [applications, loadingResumes, handleViewResume]);
 
   const handleAction = async (
     applicationId: string,
@@ -288,56 +355,6 @@ export default function ApplicationsPage({ params }: PageProps) {
   ) => {
     setPage(value);
     fetchApplications(value);
-  };
-
-  const handleViewResume = async (application: ExtendedApplication) => {
-    if (application.resumeUrl) {
-      // Don't auto-open the resume in full screen
-      return;
-    }
-
-    setLoadingResumes((prev) => ({ ...prev, [application.id]: true }));
-    setError("");
-
-    try {
-      const sessionToken = Cookies.get("session_token");
-      if (!sessionToken) {
-        setError(t("auth.unauthorized"));
-        return;
-      }
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-resume`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionToken}`,
-          },
-          body: JSON.stringify({
-            application_id: application.id,
-          }),
-        }
-      );
-
-      if (response.status === 200) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setApplications((prevApps) =>
-          prevApps.map((app) =>
-            app.id === application.id ? { ...app, resumeUrl: url } : app
-          )
-        );
-      } else if (response.status === 401) {
-        setError(t("auth.unauthorized"));
-      } else {
-        setError(t("common.serverError"));
-      }
-    } catch {
-      setError(t("common.serverError"));
-    } finally {
-      setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));
-    }
   };
 
   if (isLoading) {

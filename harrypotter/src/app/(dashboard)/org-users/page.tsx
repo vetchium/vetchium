@@ -58,11 +58,7 @@ export default function OrgUsersPage() {
   // Fetch users when includeDisabled changes
   useEffect(() => {
     fetchUsers(includeDisabled);
-  }, [includeDisabled]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]); // Add fetchUsers to dependencies
+  }, [includeDisabled, fetchUsers]); // Added fetchUsers to dependencies
 
   const filteredUsers = users?.filter(
     (user: OrgUser) =>

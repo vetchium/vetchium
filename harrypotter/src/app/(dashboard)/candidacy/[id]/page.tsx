@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Avatar,
   Box,
@@ -42,10 +42,6 @@ import {
   EmployerInterview as Interview,
   InterviewState,
   InterviewStates,
-  InterviewType,
-  InterviewTypes,
-  TimeZone,
-  validTimezones,
   OrgUserShort,
   OfferToCandidateRequest,
 } from "@psankar/vetchi-typespec";
@@ -184,7 +180,7 @@ export default function CandidacyDetailPage() {
   }, [interviews, expandedInterviews]);
 
   // Fetch candidacy info, comments, and interviews
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadingInterviews(true);
     setLoadingComments(true);
@@ -270,7 +266,7 @@ export default function CandidacyDetailPage() {
       setLoadingInterviews(false);
       setLoadingComments(false);
     }
-  };
+  }, [router, t, candidacyId]);
 
   // Add new comment
   const handleAddComment = async () => {

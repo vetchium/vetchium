@@ -11,13 +11,12 @@ import {
   IconButton,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import {
-  Location,
   GetLocationRequest,
   AddLocationRequest,
   UpdateLocationRequest,
@@ -39,7 +38,7 @@ export default function LocationActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  const fetchLocation = async (locationTitle: string) => {
+  const fetchLocation = useCallback(async (locationTitle: string) => {
     try {
       setIsLoading(true);
       const token = Cookies.get("session_token");
@@ -86,7 +85,7 @@ export default function LocationActionPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, t]);
 
   useEffect(() => {
     if (isEdit) {

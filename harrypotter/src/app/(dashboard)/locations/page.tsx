@@ -19,7 +19,7 @@ import {
   Delete as DeleteIcon,
   Map as MapIcon,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -38,7 +38,7 @@ export default function LocationsPage() {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const token = Cookies.get("session_token");
       if (!token) {
@@ -79,7 +79,7 @@ export default function LocationsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("locations.fetchError"));
     }
-  };
+  }, [includeDefunct, router, t]);
 
   useEffect(() => {
     const savedValue = localStorage.getItem("includeDefunctLocations");
