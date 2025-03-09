@@ -1,0 +1,316 @@
+# PostgreSQL CRD and Operator
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: clusters.postgresql.cnpg.io
+spec:
+  group: postgresql.cnpg.io
+  names:
+    kind: Cluster
+    listKind: ClusterList
+    plural: clusters
+    singular: cluster
+  scope: Namespaced
+  versions:
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                instances:
+                  type: integer
+                storage:
+                  type: object
+                  properties:
+                    size:
+                      type: string
+                monitoring:
+                  type: object
+                  properties:
+                    enablePodMonitor:
+                      type: boolean
+                inheritedMetadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                bootstrap:
+                  type: object
+                  properties:
+                    initdb:
+                      type: object
+                      properties:
+                        database:
+                          type: string
+                        owner:
+                          type: string
+                        secret:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                superuserSecret:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                primaryUpdateStrategy:
+                  type: string
+      served: true
+      storage: true
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+---
+# PostgreSQL Operator ServiceAccount and RBAC
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cnpg-controller
+  namespace: staging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cnpg-controller
+rules:
+  - apiGroups: ["postgresql.cnpg.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources:
+      [
+        "pods",
+        "services",
+        "configmaps",
+        "secrets",
+        "persistentvolumeclaims",
+        "events",
+      ]
+    verbs: ["*"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["*"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cnpg-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cnpg-controller
+subjects:
+  - kind: ServiceAccount
+    name: cnpg-controller
+    namespace: staging
+---
+# PostgreSQL Operator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cnpg-controller
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cnpg-controller
+  template:
+    metadata:
+      labels:
+        app: cnpg-controller
+    spec:
+      serviceAccountName: cnpg-controller
+      containers:
+        - name: manager
+          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.22.0
+          args:
+            - manager
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-app
+  namespace: staging
+type: Opaque
+stringData:
+  uri: postgresql://postgres:postgres@postgres-rw:5432/vetchi?sslmode=disable
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vetchi-secrets
+  namespace: staging
+type: Opaque
+stringData:
+  SMTP_PASSWORD: password
+  S3_SECRET_KEY: minioadmin
+---
+# MinIO Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2024-03-10T02-53-48Z
+          args:
+            - server
+            - /data
+          env:
+            - name: MINIO_ROOT_USER
+              value: minioadmin
+            - name: MINIO_ROOT_PASSWORD
+              value: minioadmin
+          ports:
+            - name: api
+              containerPort: 9000
+            - name: console
+              containerPort: 9001
+          resources:
+            requests:
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-data
+---
+# MinIO PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# MinIO Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: staging
+spec:
+  selector:
+    app: minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: api
+    - name: console
+      port: 9001
+      targetPort: console
+---
+# Mailpit Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mailpit
+  template:
+    metadata:
+      labels:
+        app: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:v1.12
+          ports:
+            - name: smtp
+              containerPort: 1025
+            - name: http
+              containerPort: 8025
+          resources:
+            requests:
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+---
+# Mailpit Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  namespace: staging
+spec:
+  selector:
+    app: mailpit
+  ports:
+    - name: smtp
+      port: 1025
+      targetPort: smtp
+    - name: http
+      port: 8025
+      targetPort: http
+---
+# PostgreSQL Cluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: staging
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+  monitoring:
+    enablePodMonitor: true
+  bootstrap:
+    initdb:
+      database: vetchi
+      owner: postgres
+      secret:
+        name: postgres-app
+  superuserSecret:
+    name: postgres-app
+  primaryUpdateStrategy: unsupervised
