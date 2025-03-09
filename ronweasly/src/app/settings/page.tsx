@@ -1,22 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
+import { HubUserInviteRequest } from "@/types/hub/hubusers";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import Snackbar from "@mui/material/Snackbar";
-import { HubUserInviteRequest } from "@/types/hub/hubusers";
-import { config } from "@/config";
+import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useEffect, useState } from "react";
 
 export default function Settings() {
   const { t } = useTranslation();
