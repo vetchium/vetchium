@@ -1,0 +1,4 @@
+*.yaml
+*.yml
+templates/*.yaml
+templates/*.yml 
