@@ -1,0 +1,19 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To get the application URLs, run these commands:
+
+Backend Services:
+  - Hermione API: http://hermione.{{ .Release.Namespace }}:8080
+  - Granger API: http://granger.{{ .Release.Namespace }}:8080
+
+Frontend Applications:
+  - Ron Weasley: http://ronweasly.{{ .Release.Namespace }}
+  - Harry Potter: http://harrypotter.{{ .Release.Namespace }}
+
+PostgreSQL Database:
+  - Primary: postgres-rw.{{ .Release.Namespace }}:5432
+  - Replicas: postgres-ro.{{ .Release.Namespace }}:5432
+
+For more information about the deployment, please check the documentation. 

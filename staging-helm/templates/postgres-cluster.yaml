@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: { { .Release.Namespace } }
+spec:
+  instances: { { .Values.postgresCluster.instances } }
+  storage:
+    size: { { .Values.postgresCluster.storage.size } }
+  monitoring:
+    enablePodMonitor:
+      { { .Values.postgresCluster.monitoring.enablePodMonitor } }
+  inheritedMetadata:
+    labels:
+      {
+        {
+          - toYaml .Values.postgresCluster.inheritedMetadata.labels | nindent 6,
+        },
+      }
