@@ -161,7 +161,11 @@ build-images:
 	$(call print_step,Building Granger backend...)
 	nix develop -c docker build -f ../api/Dockerfile-granger -t $(DOCKER_REGISTRY)/granger:latest ..
 	$(call print_step,Building Ron Weasly frontend...)
-	nix develop -c docker build -f Dockerfile.ronweasly -t $(DOCKER_REGISTRY)/ronweasly:latest ..
+	mkdir -p build-context/ronweasly
+	cp -r ../ronweasly/* build-context/ronweasly/
+	cp -r ../typespec build-context/typespec/
+	nix develop -c docker build -f Dockerfile.ronweasly -t $(DOCKER_REGISTRY)/ronweasly:latest build-context
+	rm -rf build-context
 	$(call print_step,Building Harry Potter frontend...)
 	nix develop -c docker build -f Dockerfile.harrypotter -t $(DOCKER_REGISTRY)/harrypotter:latest ..
 	$(call print_success,All images built successfully)
