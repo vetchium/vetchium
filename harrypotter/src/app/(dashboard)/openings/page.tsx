@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
+  Alert,
   Box,
+  Button,
+  CircularProgress,
+  FormControlLabel,
   Paper,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -11,21 +17,15 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Alert,
-  CircularProgress,
-  Button,
-  FormControlLabel,
-  Switch,
 } from "@mui/material";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   OpeningState,
   OpeningStates,
 } from "@psankar/vetchi-typespec/common/openings";
+import Cookies from "js-cookie";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface Opening {
   id: string;
@@ -118,10 +118,8 @@ export default function Openings() {
         } else {
           setError("common.error");
         }
-      } catch (err) {
-        if (isMounted) {
-          setError("common.error");
-        }
+      } catch {
+        setError(t("openings.fetchError"));
       } finally {
         if (isMounted) {
           setIsLoading(false);

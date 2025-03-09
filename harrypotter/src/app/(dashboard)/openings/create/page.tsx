@@ -1,82 +1,80 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Container,
-  TextField,
-  Typography,
-  Alert,
-  Paper,
-  Autocomplete,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Chip,
-  FormControlLabel,
-  Switch,
-} from "@mui/material";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
-import Cookies from "js-cookie";
+import { FeatureFlags } from "@/config/features";
+import { useTranslation } from "@/hooks/useTranslation";
+import Alert from "@mui/material/Alert";
+import Autocomplete from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Container from "@mui/material/Container";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
+import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import {
   CreateOpeningRequest,
-  OrgUserShort,
-  OpeningType,
   EducationLevel,
-  validTimezones,
-  TimeZone,
-  OpeningTypes,
   EducationLevels,
-  GlobalCountryCode,
-  OpeningTag,
+  Location,
+  LocationStates,
   OpeningTagID,
+  OpeningType,
+  OpeningTypes,
+  OrgUserShort,
+  validTimezones,
 } from "@psankar/vetchi-typespec";
-import { Location, LocationStates } from "@psankar/vetchi-typespec";
 import countries from "@psankar/vetchi-typespec/common/countries.json";
-import { FeatureFlags } from "@/config/features";
-
-interface Country {
-  country_code: string;
-  en: string;
-}
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function CreateOpeningPage() {
+  const { t } = useTranslation();
+  const router = useRouter();
+
+  // Form state
   const [title, setTitle] = useState("");
-  const [positions, setPositions] = useState<number>(1);
-  const [jd, setJd] = useState("");
-  const [recruiter, setRecruiter] = useState<OrgUserShort | null>(null);
-  const [hiringManager, setHiringManager] = useState<OrgUserShort | null>(null);
-  const [costCenterName, setCostCenterName] = useState("");
-  const [openingType, setOpeningType] = useState<OpeningType>(
+  const [positions, setPositions] = useState(1);
+  const [jobDescription, setJobDescription] = useState("");
+  const [employerNotes, setEmployerNotes] = useState("");
+  const [selectedType, setSelectedType] = useState<OpeningType>(
     OpeningTypes.FULL_TIME
   );
-  const [yoeMin, setYoeMin] = useState<number>(1);
-  const [yoeMax, setYoeMax] = useState<number>(80);
-  const [minEducationLevel, setMinEducationLevel] = useState<EducationLevel>(
+  const [yoeMin, setYoeMin] = useState(0);
+  const [yoeMax, setYoeMax] = useState(1);
+  const [selectedEducation, setSelectedEducation] = useState<EducationLevel>(
     EducationLevels.UNSPECIFIED
   );
-  const [employerNotes, setEmployerNotes] = useState("");
-  const [remoteTimezones, setRemoteTimezones] = useState<string[]>([]);
+  const [selectedRecruiter, setSelectedRecruiter] =
+    useState<OrgUserShort | null>(null);
+  const [selectedHiringManager, setSelectedHiringManager] =
+    useState<OrgUserShort | null>(null);
+  const [selectedCostCenter, setSelectedCostCenter] = useState("");
+
+  // Location state
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [remoteCountries, setRemoteCountries] = useState<string[]>([]);
+  const [selectedTimezones, setSelectedTimezones] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [isGloballyRemote, setIsGloballyRemote] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
+  // Loading and error state
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Data state
   const [orgUsers, setOrgUsers] = useState<OrgUserShort[]>([]);
   const [costCenters, setCostCenters] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
-  const [newTags, setNewTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<OpeningTag[]>([]);
-  const [tagSearchQuery, setTagSearchQuery] = useState("");
-
-  const router = useRouter();
-  const { t } = useTranslation();
+  const [selectedTags, setSelectedTags] = useState<OpeningTagID[]>([]);
+  const [tags, setTags] = useState<OpeningTagID[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   // Initialize from sessionStorage on mount
   useEffect(() => {
@@ -95,11 +93,11 @@ export default function CreateOpeningPage() {
   }, [isGloballyRemote]);
 
   useEffect(() => {
-    fetchOrgUsers();
     fetchCostCenters();
     fetchLocations();
+    fetchOrgUsers();
     fetchTags();
-  }, []);
+  }, [fetchCostCenters, fetchLocations, fetchOrgUsers, fetchTags]);
 
   const fetchOrgUsers = async (searchPrefix?: string) => {
     try {
@@ -234,7 +232,7 @@ export default function CreateOpeningPage() {
       }
 
       const data = await response.json();
-      setAvailableTags(data || []);
+      setTags(data || []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t("openings.fetchTagsError")
@@ -243,90 +241,98 @@ export default function CreateOpeningPage() {
   };
 
   const handleTagSearch = (query: string) => {
-    setTagSearchQuery(query);
+    setNewTag(query);
     fetchTags(query);
   };
 
   const handleAddNewTag = (newTag: string) => {
-    if (selectedTags.length + newTags.length >= 3) {
+    if (selectedTags.length + tags.length >= 3) {
       setError(t("openings.maxTagsError"));
       return;
     }
-    if (newTag.trim() && !newTags.includes(newTag.trim())) {
-      setNewTags([...newTags, newTag.trim()]);
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
     }
   };
 
   const handleRemoveNewTag = (tagToRemove: string) => {
-    setNewTags(newTags.filter((tag) => tag !== tagToRemove));
-  };
-
-  const handleRemoveSelectedTag = (tagToRemove: OpeningTag) => {
-    setSelectedTags(selectedTags.filter((tag) => tag.id !== tagToRemove.id));
-  };
-
-  const handleTagSelect = (tag: OpeningTag | null) => {
-    if (tag && !selectedTags.find((t) => t.id === tag.id)) {
-      if (selectedTags.length + newTags.length >= 3) {
-        setError(t("openings.maxTagsError"));
-        return;
-      }
-      setSelectedTags([...selectedTags, tag]);
-    }
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+
+      // Validate required fields
+      if (!title || title.length < 3 || title.length > 32) {
+        setError(t("validation.title.lengthError"));
+        return;
+      }
+
+      if (positions < 1 || positions > 20) {
+        setError(t("validation.positions.range.1.20"));
+        return;
+      }
+
+      if (
+        !jobDescription ||
+        jobDescription.length < 10 ||
+        jobDescription.length > 1024
+      ) {
+        setError(t("validation.jobDescription.lengthError"));
+        return;
+      }
+
+      if (employerNotes && employerNotes.length > 1024) {
+        setError(t("validation.employerNotes.maxLength.1024"));
+        return;
+      }
+
+      if (!selectedRecruiter || !selectedHiringManager) {
+        setError(t("validation.roles.required"));
+        return;
+      }
+
+      // Location validation
+      if (
+        !isGloballyRemote &&
+        selectedLocations.length === 0 &&
+        selectedTimezones.length === 0 &&
+        selectedCountries.length === 0
+      ) {
+        setError(t("openings.locationRequiredError"));
+        return;
+      }
+
       const token = Cookies.get("session_token");
       if (!token) {
         router.push("/signin");
         return;
       }
 
-      if (!recruiter || !hiringManager) {
-        setError(t("openings.missingUserError"));
-        return;
-      }
-
-      if (
-        !isGloballyRemote &&
-        selectedLocations.length === 0 &&
-        remoteTimezones.length === 0 &&
-        remoteCountries.length === 0
-      ) {
-        setError(t("openings.locationRequiredError"));
-        return;
-      }
-
-      if (selectedTags.length + newTags.length === 0) {
-        setError(t("openings.tagsRequiredError"));
-        return;
-      }
-
       const request: CreateOpeningRequest = {
         title,
         positions,
-        jd,
-        recruiter: recruiter.email,
-        hiring_manager: hiringManager.email,
-        cost_center_name: costCenterName,
-        opening_type: openingType,
+        jd: jobDescription,
+        employer_notes: employerNotes || undefined,
+        opening_type: selectedType,
         yoe_min: yoeMin,
         yoe_max: yoeMax,
-        min_education_level: minEducationLevel,
-        employer_notes: employerNotes || undefined,
+        min_education_level: selectedEducation,
+        recruiter: selectedRecruiter?.email || "",
+        hiring_manager: selectedHiringManager?.email || "",
+        cost_center_name: selectedCostCenter,
+        location_titles: selectedLocations,
         remote_timezones:
-          remoteTimezones.length > 0 ? remoteTimezones : undefined,
-        location_titles:
-          selectedLocations.length > 0 ? selectedLocations : undefined,
+          selectedTimezones.length > 0 ? selectedTimezones : undefined,
         remote_country_codes: isGloballyRemote
-          ? [GlobalCountryCode]
-          : remoteCountries.length > 0
-          ? remoteCountries
+          ? ["GLOBAL"]
+          : selectedCountries.length > 0
+          ? selectedCountries
           : undefined,
-        tags: selectedTags.map((tag) => tag.id),
-        new_tags: newTags.length > 0 ? newTags : undefined,
+        tags: selectedTags,
+        new_tags: tags.length > 0 ? tags : undefined,
       };
 
       const response = await fetch(
@@ -431,12 +437,16 @@ export default function CreateOpeningPage() {
             multiline
             rows={4}
             label={t("openings.jobDescription")}
-            value={jd}
-            onChange={(e) => setJd(e.target.value)}
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
             inputProps={{ minLength: 10, maxLength: 1024 }}
-            error={jd.length > 0 && (jd.length < 10 || jd.length > 1024)}
+            error={
+              jobDescription.length > 0 &&
+              (jobDescription.length < 10 || jobDescription.length > 1024)
+            }
             helperText={
-              jd.length > 0 && (jd.length < 10 || jd.length > 1024)
+              jobDescription.length > 0 &&
+              (jobDescription.length < 10 || jobDescription.length > 1024)
                 ? t("validation.jobDescription.lengthError")
                 : ""
             }
@@ -445,8 +455,8 @@ export default function CreateOpeningPage() {
           <Autocomplete
             options={orgUsers}
             getOptionLabel={(option) => `${option.name} (${option.email})`}
-            value={recruiter}
-            onChange={(_, newValue) => setRecruiter(newValue)}
+            value={selectedRecruiter}
+            onChange={(_, newValue) => setSelectedRecruiter(newValue)}
             onInputChange={(_, value) => fetchOrgUsers(value)}
             renderInput={(params) => (
               <TextField
@@ -461,8 +471,8 @@ export default function CreateOpeningPage() {
           <Autocomplete
             options={orgUsers}
             getOptionLabel={(option) => `${option.name} (${option.email})`}
-            value={hiringManager}
-            onChange={(_, newValue) => setHiringManager(newValue)}
+            value={selectedHiringManager}
+            onChange={(_, newValue) => setSelectedHiringManager(newValue)}
             onInputChange={(_, value) => fetchOrgUsers(value)}
             renderInput={(params) => (
               <TextField
@@ -476,8 +486,8 @@ export default function CreateOpeningPage() {
 
           <Autocomplete
             options={costCenters}
-            value={costCenterName}
-            onChange={(_, newValue) => setCostCenterName(newValue || "")}
+            value={selectedCostCenter}
+            onChange={(_, newValue) => setSelectedCostCenter(newValue || "")}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -491,8 +501,8 @@ export default function CreateOpeningPage() {
           <FormControl fullWidth margin="normal" required>
             <InputLabel>{t("openings.type")}</InputLabel>
             <Select
-              value={openingType}
-              onChange={(e) => setOpeningType(e.target.value as OpeningType)}
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as OpeningType)}
               label={t("openings.type")}
             >
               {Object.values(OpeningTypes).map((type) => (
@@ -530,9 +540,9 @@ export default function CreateOpeningPage() {
           <FormControl fullWidth margin="normal">
             <InputLabel>{t("openings.minEducation")}</InputLabel>
             <Select
-              value={minEducationLevel}
+              value={selectedEducation}
               onChange={(e) =>
-                setMinEducationLevel(e.target.value as EducationLevel)
+                setSelectedEducation(e.target.value as EducationLevel)
               }
               label={t("openings.minEducation")}
             >
@@ -551,8 +561,8 @@ export default function CreateOpeningPage() {
                 onChange={(e) => {
                   setIsGloballyRemote(e.target.checked);
                   if (e.target.checked) {
-                    setRemoteCountries([]);
-                    setRemoteTimezones([]);
+                    setSelectedCountries([]);
+                    setSelectedTimezones([]);
                   }
                 }}
                 color="primary"
@@ -567,10 +577,10 @@ export default function CreateOpeningPage() {
             options={countries}
             getOptionLabel={(option) => option.en}
             value={countries.filter((c) =>
-              remoteCountries.includes(c.country_code)
+              selectedCountries.includes(c.country_code)
             )}
             onChange={(_, newValue) =>
-              setRemoteCountries(newValue.map((c) => c.country_code))
+              setSelectedCountries(newValue.map((c) => c.country_code))
             }
             disabled={isGloballyRemote}
             renderInput={(params) => (
@@ -595,8 +605,8 @@ export default function CreateOpeningPage() {
             <Autocomplete
               multiple
               options={Array.from(validTimezones)}
-              value={remoteTimezones}
-              onChange={(_, newValue) => setRemoteTimezones(newValue)}
+              value={selectedTimezones}
+              onChange={(_, newValue) => setSelectedTimezones(newValue)}
               disabled={isGloballyRemote}
               renderInput={(params) => (
                 <TextField
@@ -663,27 +673,25 @@ export default function CreateOpeningPage() {
             </Typography>
             <Autocomplete
               multiple
-              options={availableTags.filter(
-                (tag) => !selectedTags.find((t) => t.id === tag.id)
-              )}
-              getOptionLabel={(option) => option.name}
+              options={tags.filter((tag) => !selectedTags.includes(tag))}
+              getOptionLabel={(option) => option}
               value={selectedTags}
               onChange={(_, newValue) => {
-                if (newValue.length + newTags.length <= 3) {
+                if (newValue.length + tags.length <= 3) {
                   setSelectedTags(newValue);
                 } else {
                   setError(t("openings.maxTagsError"));
                 }
               }}
               onInputChange={(_, value) => handleTagSearch(value)}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
+              isOptionEqualToValue={(option, value) => option === value}
               filterSelectedOptions
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label={t("openings.selectTags")}
                   placeholder={
-                    selectedTags.length + newTags.length < 3
+                    selectedTags.length + tags.length < 3
                       ? t("openings.selectTagsPlaceholder")
                       : t("openings.maxTagsReached")
                   }
@@ -693,15 +701,15 @@ export default function CreateOpeningPage() {
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
-                    label={option.name}
+                    label={option}
                     {...getTagProps({ index })}
-                    key={option.id}
+                    key={option}
                     sx={{ m: 0.5 }}
                   />
                 ))
               }
               noOptionsText={
-                selectedTags.length + newTags.length >= 3
+                selectedTags.length + tags.length >= 3
                   ? t("openings.maxTagsReached")
                   : t("openings.noTagsFound")
               }
@@ -712,15 +720,15 @@ export default function CreateOpeningPage() {
               <TextField
                 fullWidth
                 label={t("openings.addNewTag")}
-                value={tagSearchQuery}
+                value={newTag}
                 onChange={(e) => {
                   if (e.target.value.length <= 32) {
                     // Add character limit for new tags
-                    setTagSearchQuery(e.target.value);
+                    setNewTag(e.target.value);
                   }
                 }}
                 placeholder={
-                  selectedTags.length + newTags.length < 3
+                  selectedTags.length + tags.length < 3
                     ? t("openings.addNewTagPlaceholder")
                     : t("openings.maxTagsReached")
                 }
@@ -728,18 +736,18 @@ export default function CreateOpeningPage() {
                   endAdornment: (
                     <Button
                       onClick={() => {
-                        if (selectedTags.length + newTags.length < 3) {
-                          handleAddNewTag(tagSearchQuery);
-                          setTagSearchQuery(""); // Clear input after adding
+                        if (selectedTags.length + tags.length < 3) {
+                          handleAddNewTag(newTag);
+                          setNewTag(""); // Clear input after adding
                         } else {
                           setError(t("openings.maxTagsError"));
                         }
                       }}
                       disabled={
-                        !tagSearchQuery.trim() ||
-                        selectedTags.length + newTags.length >= 3 ||
-                        newTags.includes(tagSearchQuery.trim()) ||
-                        tagSearchQuery.length > 32
+                        !newTag.trim() ||
+                        selectedTags.length + tags.length >= 3 ||
+                        tags.includes(newTag.trim()) ||
+                        newTag.length > 32
                       }
                     >
                       {t("common.add")}
@@ -747,17 +755,17 @@ export default function CreateOpeningPage() {
                   ),
                 }}
                 helperText={
-                  tagSearchQuery.length > 32
+                  newTag.length > 32
                     ? t("openings.tagLengthError")
                     : t("openings.newTagHelp")
                 }
-                error={tagSearchQuery.length > 32}
-                disabled={selectedTags.length + newTags.length >= 3}
+                error={newTag.length > 32}
+                disabled={selectedTags.length + tags.length >= 3}
                 inputProps={{ maxLength: 32 }} // Hard limit on input length
               />
             </Box>
             <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {newTags.map((tag) => (
+              {tags.map((tag) => (
                 <Chip
                   key={tag}
                   label={tag}
@@ -784,22 +792,22 @@ export default function CreateOpeningPage() {
                 !positions ||
                 positions < 1 ||
                 positions > 20 ||
-                !jd ||
-                jd.length < 10 ||
-                jd.length > 1024 ||
-                !recruiter ||
-                !hiringManager ||
-                !costCenterName ||
-                !openingType ||
+                !jobDescription ||
+                jobDescription.length < 10 ||
+                jobDescription.length > 1024 ||
+                !selectedRecruiter ||
+                !selectedHiringManager ||
+                !selectedCostCenter ||
+                !selectedType ||
                 yoeMin < 0 ||
                 yoeMax <= yoeMin ||
                 yoeMin > 100 ||
                 yoeMax > 100 ||
                 (!isGloballyRemote &&
                   selectedLocations.length === 0 &&
-                  remoteTimezones.length === 0 &&
-                  remoteCountries.length === 0) ||
-                selectedTags.length + newTags.length === 0
+                  selectedTimezones.length === 0 &&
+                  selectedCountries.length === 0) ||
+                selectedTags.length + tags.length === 0
               }
             >
               {isLoading ? t("common.loading") : t("common.save")}

@@ -1,33 +1,32 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { LoadingButton } from "@mui/lab";
 import {
-  Box,
-  Paper,
-  Typography,
   Alert,
-  CircularProgress,
+  Box,
   Button,
-  Grid,
-  Divider,
   Card,
   CardContent,
+  CircularProgress,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
   DialogContentText,
+  DialogTitle,
+  Divider,
+  Grid,
+  Typography,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 import {
   OpeningState,
   OpeningStates,
 } from "@psankar/vetchi-typespec/common/openings";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
 interface Opening {
   id: string;
@@ -107,7 +106,7 @@ export default function OpeningDetail({ params }: PageProps) {
         } else {
           setError(t("common.error"));
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setError(t("common.error"));
         }
@@ -123,7 +122,7 @@ export default function OpeningDetail({ params }: PageProps) {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, t]);
 
   const handleStateChange = async (toState: OpeningState) => {
     if (!opening) return;
@@ -166,7 +165,7 @@ export default function OpeningDetail({ params }: PageProps) {
       } else {
         setError(t("common.error"));
       }
-    } catch (err) {
+    } catch {
       setError(t("common.error"));
     } finally {
       setIsStateChanging(false);

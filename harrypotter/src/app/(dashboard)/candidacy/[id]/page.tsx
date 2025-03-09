@@ -181,67 +181,7 @@ export default function CandidacyDetailPage() {
     if (Object.keys(newExpandedState).length > 0) {
       setExpandedInterviews((prev) => ({ ...prev, ...newExpandedState }));
     }
-  }, [interviews]);
-
-  // Get user's timezone and find closest matching TimeZone enum value
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const userOffset = new Date().getTimezoneOffset();
-  const offsetHours = Math.floor(Math.abs(userOffset) / 60);
-  const offsetMinutes = Math.abs(userOffset) % 60;
-  const offsetStr = `${userOffset <= 0 ? "+" : "-"}${offsetHours
-    .toString()
-    .padStart(2, "0")}${offsetMinutes.toString().padStart(2, "0")}`;
-
-  // Find the closest matching timezone from validTimezones
-  const defaultTimezone =
-    Array.from(validTimezones).find((tz) => tz.includes(`GMT${offsetStr}`)) ||
-    "UTC Coordinated Universal Time GMT+0000";
-
-  const [newInterview, setNewInterview] = useState<{
-    startTime: string;
-    endTime: string;
-    type: InterviewType;
-    description: string;
-    timezone: TimeZone;
-  }>({
-    startTime: "",
-    endTime: "",
-    type: InterviewTypes.VIDEO_CALL,
-    description: "",
-    timezone: defaultTimezone,
-  });
-
-  const [allowPastDates, setAllowPastDates] = useState(false);
-  const [use24HourFormat, setUse24HourFormat] = useState(true);
-
-  // Handle localStorage in useEffect to avoid SSR issues
-  useEffect(() => {
-    const saved = localStorage.getItem("create_interview_24hour_format");
-    if (saved !== null) {
-      setUse24HourFormat(saved === "true");
-    }
-  }, []);
-
-  // Update localStorage when time format preference changes
-  useEffect(() => {
-    localStorage.setItem(
-      "create_interview_24hour_format",
-      use24HourFormat.toString()
-    );
-  }, [use24HourFormat]);
-
-  // Reset interview form with default timezone
-  const resetInterviewForm = () => {
-    setNewInterview({
-      startTime: "",
-      endTime: "",
-      type: InterviewTypes.VIDEO_CALL,
-      description: "",
-      timezone: defaultTimezone,
-    });
-    setAllowPastDates(false);
-    // Don't reset the time format preference
-  };
+  }, [interviews, expandedInterviews]);
 
   // Fetch candidacy info, comments, and interviews
   const fetchData = async () => {
@@ -378,7 +318,7 @@ export default function CandidacyDetailPage() {
   // Fetch data on mount
   useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [fetchData]); // Add fetchData to dependencies
 
   // Handler for file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

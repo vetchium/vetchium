@@ -46,8 +46,7 @@ export default function AddInterviewPage() {
   );
   const [isLoadingInterviewers, setIsLoadingInterviewers] = useState(false);
 
-  // Get user's timezone and find closest matching TimeZone enum value
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Get user's timezone offset for finding matching TimeZone enum value
   const userOffset = new Date().getTimezoneOffset();
   const offsetHours = Math.floor(Math.abs(userOffset) / 60);
   const offsetMinutes = Math.abs(userOffset) % 60;

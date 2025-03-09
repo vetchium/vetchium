@@ -33,7 +33,6 @@ export default function LocationActionPage() {
   const [error, setError] = useState<string | null>(null);
   const [cityAkaInput, setCityAkaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [initialLocation, setInitialLocation] = useState<Location | null>(null);
 
   const router = useRouter();
   const params = useParams();
@@ -42,14 +41,14 @@ export default function LocationActionPage() {
 
   useEffect(() => {
     if (isEdit) {
-      const locationTitle = window.location.search.split("title=")[1];
-      if (locationTitle) {
-        fetchLocation(decodeURIComponent(locationTitle));
+      const locationId = window.location.search.split("id=")[1];
+      if (locationId) {
+        fetchLocation(locationId);
       } else {
         router.push("/locations");
       }
     }
-  }, [isEdit]);
+  }, [isEdit, fetchLocation, router]);
 
   const fetchLocation = async (locationTitle: string) => {
     try {
@@ -87,7 +86,6 @@ export default function LocationActionPage() {
       }
 
       const location = await response.json();
-      setInitialLocation(location);
       setTitle(location.title);
       setCountryCode(location.country_code);
       setPostalAddress(location.postal_address);

@@ -1,44 +1,48 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
-  Box,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon,
+  Person as PersonIcon,
+  Public as PublicIcon,
+} from "@mui/icons-material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
-  CircularProgress,
-  Container,
-  Paper,
-  Grid,
+  Box,
+  Button,
+  ButtonGroup,
   Card,
   CardContent,
-  Chip,
-  Avatar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  ButtonGroup,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  FormControlLabel,
   Checkbox,
+  Chip,
+  CircularProgress,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography,
 } from "@mui/material";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
 import {
   EmployerInterview,
-  GetInterviewDetailsRequest,
   InterviewersDecision,
   InterviewersDecisions,
   PutAssessmentRequest,
@@ -46,16 +50,11 @@ import {
   RSVPStatus,
   RSVPStatuses,
 } from "@psankar/vetchi-typespec";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import {
-  Person as PersonIcon,
-  ExpandMore as ExpandMoreIcon,
-  Public as PublicIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Edit as EditIcon,
-} from "@mui/icons-material";
-import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { Theme } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 
 // Helper function for consistent date formatting
 const formatDateTime = (
@@ -101,9 +100,28 @@ interface FeedbackWidgetProps {
   value: string;
   placeholder: string;
   icon?: React.ReactNode;
-  customStyle?: any;
+  customStyle?: {
+    '& .MuiCardContent-root'?: React.CSSProperties;
+    [key: string]: unknown;
+  };
 }
 
+const StyledFeedbackCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  border: `1px solid ${theme.palette.divider}`,
+  boxShadow: 'none',
+  '& .MuiCardContent-root': {
+    backgroundColor: `${theme.palette.warning.light}10`,
+  },
+}));
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(3),
+  backgroundColor: alpha(theme.palette.warning.light, 0.1)
+}));
+
+// Update FeedbackWidget to use StyledFeedbackCard
 function FeedbackWidget({
   title,
   value,
@@ -112,15 +130,12 @@ function FeedbackWidget({
   customStyle,
 }: FeedbackWidgetProps) {
   return (
-    <Card
-      sx={{
+    <Card 
+      sx={{ 
         mb: 2,
-        border: (theme) => `1px solid ${theme.palette.divider}`,
-        "& .MuiCardContent-root": {
-          ...customStyle?.["& .MuiCardContent-root"],
-        },
-        boxShadow: "none",
-        ...customStyle,
+        '& .MuiCardContent-root': {
+          bgcolor: (theme) => alpha(theme.palette.warning.light, 0.1)
+        }
       }}
     >
       <CardContent>
@@ -155,8 +170,8 @@ function FeedbackWidget({
 export default function InterviewDetailPage() {
   const params = useParams();
   const interviewId = params.id as string;
-  const { t } = useTranslation();
   const router = useRouter();
+  const { t } = useTranslation();
   const { userEmail } = useAuth();
 
   const [interview, setInterview] = useState<EmployerInterview | null>(null);
@@ -189,12 +204,11 @@ export default function InterviewDetailPage() {
     mark_interview_completed: false,
   });
 
-  useEffect(() => {
-    fetchInterview();
-  }, [interviewId]);
-
-  const fetchInterview = async () => {
+  const fetchInterview = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       const token = Cookies.get("session_token");
       if (!token) {
         router.push("/signin");
@@ -202,16 +216,11 @@ export default function InterviewDetailPage() {
       }
 
       const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-interview-details`,
+        `${config.API_SERVER_PREFIX}/employer/get-interview/${interviewId}`,
         {
-          method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            interview_id: interviewId,
-          } satisfies GetInterviewDetailsRequest),
         }
       );
 
@@ -222,85 +231,23 @@ export default function InterviewDetailPage() {
       }
 
       if (!response.ok) {
-        throw new Error(t("interviews.assessment.fetchError"));
+        throw new Error(t("interviews.fetchError"));
       }
 
       const data = await response.json();
       setInterview(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
+      setError(err instanceof Error ? err.message : t("interviews.fetchError"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [interviewId, router, t]);
 
-  const handleSave = async () => {
-    if (!interview) return;
+  useEffect(() => {
+    fetchInterview();
+  }, [fetchInterview]);
 
-    try {
-      setSaving(true);
-      setError(null);
-      setSuccessMessage(null);
-
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const request: PutAssessmentRequest = {
-        interview_id: interviewId,
-        decision: interview.interviewers_decision,
-        positives: interview.positives,
-        negatives: interview.negatives,
-        overall_assessment: interview.overall_assessment,
-        feedback_to_candidate: interview.feedback_to_candidate,
-      };
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/put-assessment`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
-        }
-      );
-
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
-      }
-
-      if (response.status === 403) {
-        throw new Error(t("interviews.assessment.forbiddenError"));
-      }
-
-      if (response.status === 404) {
-        throw new Error(t("interviews.assessment.notFoundError"));
-      }
-
-      if (response.status === 422) {
-        throw new Error(t("interviews.assessment.validationError"));
-      }
-
-      if (!response.ok) {
-        throw new Error(t("interviews.assessment.saveError"));
-      }
-
-      setSuccessMessage(t("interviews.assessment.saveSuccess"));
-      await fetchInterview();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleRSVPClick = (status: RSVPStatus, currentStatus: RSVPStatus) => {
+  const handleRSVPClick = (status: RSVPStatus) => {
     setConfirmDialog({
       open: true,
       status,
@@ -784,10 +731,7 @@ export default function InterviewDetailPage() {
                                             : "outlined"
                                         }
                                         onClick={() =>
-                                          handleRSVPClick(
-                                            RSVPStatuses.YES,
-                                            interviewer.rsvp_status
-                                          )
+                                          handleRSVPClick(RSVPStatuses.YES)
                                         }
                                         color="success"
                                         disabled={
@@ -822,10 +766,7 @@ export default function InterviewDetailPage() {
                                             : "outlined"
                                         }
                                         onClick={() =>
-                                          handleRSVPClick(
-                                            RSVPStatuses.NO,
-                                            interviewer.rsvp_status
-                                          )
+                                          handleRSVPClick(RSVPStatuses.NO)
                                         }
                                         color="error"
                                         disabled={
@@ -962,10 +903,12 @@ export default function InterviewDetailPage() {
                       <Chip
                         label={t(
                           `interviews.assessment.ratings.${
-                            Object.entries(InterviewersDecisions).find(
-                              ([_, value]) =>
-                                value === interview.interviewers_decision
-                            )?.[0]
+                            Object.keys(InterviewersDecisions).find(
+                              (key) =>
+                                InterviewersDecisions[
+                                  key as keyof typeof InterviewersDecisions
+                                ] === interview.interviewers_decision
+                            )
                           }`
                         )}
                         size="small"
@@ -1009,10 +952,12 @@ export default function InterviewDetailPage() {
                       interview?.interviewers_decision
                         ? t(
                             `interviews.assessment.ratings.${
-                              Object.entries(InterviewersDecisions).find(
-                                ([_, value]) =>
-                                  value === interview.interviewers_decision
-                              )?.[0]
+                              Object.keys(InterviewersDecisions).find(
+                                (key) =>
+                                  InterviewersDecisions[
+                                    key as keyof typeof InterviewersDecisions
+                                  ] === interview.interviewers_decision
+                              )
                             }`
                           )
                         : ""
@@ -1051,8 +996,7 @@ export default function InterviewDetailPage() {
                     icon={<PublicIcon color="action" fontSize="small" />}
                     customStyle={{
                       "& .MuiCardContent-root": {
-                        bgcolor: (theme: any) =>
-                          theme.palette.warning.light + "10",
+                        backgroundColor: "rgba(244, 165, 18, 0.1)",
                       },
                     }}
                   />
@@ -1106,8 +1050,8 @@ export default function InterviewDetailPage() {
                             }))
                           }
                         >
-                          {Object.entries(InterviewersDecisions).map(
-                            ([key]) => (
+                          {Object.keys(InterviewersDecisions).map(
+                            (key) => (
                               <MenuItem
                                 key={key}
                                 value={
@@ -1177,29 +1121,22 @@ export default function InterviewDetailPage() {
                         sx={{ mb: 3 }}
                       />
 
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={4}
-                        label={t("interviews.assessment.feedback")}
-                        placeholder={t(
-                          "interviews.assessment.feedbackPlaceholder"
-                        )}
-                        value={editFormData.feedback_to_candidate}
-                        onChange={(e) =>
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            feedback_to_candidate: e.target.value,
-                          }))
-                        }
-                        sx={{
-                          mb: 3,
-                          "& .MuiOutlinedInput-root": {
-                            bgcolor: (theme) =>
-                              theme.palette.warning.light + "10",
-                          },
-                        }}
-                      />
+                      <StyledPaper elevation={0}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={4}
+                          label={t("interviews.assessment.feedback")}
+                          placeholder={t("interviews.assessment.feedbackPlaceholder")}
+                          value={editFormData.feedback_to_candidate}
+                          onChange={(e) =>
+                            setEditFormData((prev) => ({
+                              ...prev,
+                              feedback_to_candidate: e.target.value,
+                            }))
+                          }
+                        />
+                      </StyledPaper>
 
                       <Box sx={{ mb: 3, mt: 2 }}>
                         <FormControlLabel

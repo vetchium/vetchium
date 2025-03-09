@@ -1,55 +1,44 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BusinessIcon from "@mui/icons-material/Business";
+import CloseIcon from "@mui/icons-material/Close";
+import ColorLensIcon from "@mui/icons-material/ColorLens";
+import EmailIcon from "@mui/icons-material/Email";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PeopleIcon from "@mui/icons-material/People";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import {
-  Box,
-  Paper,
-  Typography,
   Alert,
-  CircularProgress,
+  Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Divider,
   FormControl,
+  Grid,
+  IconButton,
   InputLabel,
-  Select,
+  Menu,
   MenuItem,
   Pagination,
-  Tooltip,
-  Menu,
+  Paper,
+  Select,
   Stack,
-  Avatar,
-  Grid,
-  Divider,
+  Typography,
 } from "@mui/material";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
+import { Application, ApplicationColorTag } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import {
-  ApplicationState,
-  ApplicationColorTag,
-  Application,
-} from "@psankar/vetchi-typespec";
-import CloseIcon from "@mui/icons-material/Close";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import { LoadingButton } from "@mui/lab";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import ColorLensIcon from "@mui/icons-material/ColorLens";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import BusinessIcon from "@mui/icons-material/Business";
-import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
-import PeopleIcon from "@mui/icons-material/People";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { use, useEffect, useState } from "react";
 
 interface PageProps {
   params: Promise<{
@@ -177,7 +166,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else {
         setError(t("common.serverError"));
       }
-    } catch (err) {
+    } catch {
       setError(t("common.serverError"));
     } finally {
       setIsLoading(false);
@@ -239,7 +228,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else {
         setError(t("common.serverError"));
       }
-    } catch (err) {
+    } catch {
       setError(t("common.serverError"));
     } finally {
       setIsActionLoading(false);
@@ -286,7 +275,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else {
         setError(t("common.serverError"));
       }
-    } catch (err) {
+    } catch {
       setError(t("common.serverError"));
     } finally {
       setIsActionLoading(false);
@@ -344,7 +333,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       } else {
         setError(t("common.serverError"));
       }
-    } catch (err) {
+    } catch {
       setError(t("common.serverError"));
     } finally {
       setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));

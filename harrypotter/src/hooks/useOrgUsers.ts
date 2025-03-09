@@ -1,35 +1,7 @@
 import { useState, useEffect } from "react";
 import { config } from "@/config";
 import Cookies from "js-cookie";
-
-interface OrgUser {
-  id: string;
-  email: string;
-  name: string;
-  roles: string[];
-  state: "ACTIVE_ORG_USER" | "ADDED_ORG_USER" | "DISABLED_ORG_USER";
-}
-
-interface AddOrgUserRequest {
-  email: string;
-  name: string;
-  roles: string[];
-}
-
-interface DisableOrgUserRequest {
-  email: string;
-}
-
-interface EnableOrgUserRequest {
-  email: string;
-}
-
-interface FilterOrgUsersRequest {
-  prefix?: string;
-  pagination_key?: string;
-  limit?: number;
-  state?: string[];
-}
+import { AddOrgUserRequest, OrgUser } from "@psankar/vetchi-typespec";
 
 export function useOrgUsers() {
   const [users, setUsers] = useState<OrgUser[]>([]);

@@ -29,17 +29,9 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
-import { AddOrgUserForm } from "./AddOrgUserForm";
 import { useOrgUsers } from "@/hooks/useOrgUsers";
 import { useRouter } from "next/navigation";
-
-interface OrgUser {
-  id: string;
-  email: string;
-  name: string;
-  roles: string[];
-  state: "ACTIVE_ORG_USER" | "ADDED_ORG_USER" | "DISABLED_ORG_USER";
-}
+import { OrgUser } from "@psankar/vetchi-typespec";
 
 export default function OrgUsersPage() {
   const { t } = useTranslation();

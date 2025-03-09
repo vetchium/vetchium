@@ -90,7 +90,7 @@ export default function LocationsPage() {
 
   useEffect(() => {
     fetchLocations();
-  }, [includeDefunct]);
+  }, [fetchLocations]);
 
   const handleDelete = async (location: Location) => {
     try {

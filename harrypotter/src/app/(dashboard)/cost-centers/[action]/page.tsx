@@ -1,34 +1,30 @@
 "use client";
 
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
+  Alert,
   Box,
   Button,
   Container,
+  Paper,
   TextField,
   Typography,
-  Alert,
-  Paper,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
 import {
-  CostCenter,
-  GetCostCenterRequest,
   AddCostCenterRequest,
+  GetCostCenterRequest,
   UpdateCostCenterRequest,
 } from "@psankar/vetchi-typespec/employer/costcenters";
+import Cookies from "js-cookie";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function CostCenterActionPage() {
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [initialCostCenter, setInitialCostCenter] = useState<CostCenter | null>(
-    null
-  );
 
   const router = useRouter();
   const params = useParams();
@@ -44,7 +40,7 @@ export default function CostCenterActionPage() {
         router.push("/cost-centers");
       }
     }
-  }, [isEdit]);
+  }, [isEdit, fetchCostCenter, router]);
 
   const fetchCostCenter = async (costCenterName: string) => {
     try {
@@ -82,7 +78,6 @@ export default function CostCenterActionPage() {
       }
 
       const costCenter = await response.json();
-      setInitialCostCenter(costCenter);
       setName(costCenter.name);
       setNotes(costCenter.notes || "");
     } catch (err) {

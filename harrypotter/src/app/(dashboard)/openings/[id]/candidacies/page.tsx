@@ -1,45 +1,43 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  Candidacy,
-  CandidacyState,
-  FilterCandidacyInfosRequest,
-} from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
+  FilterList as FilterListIcon,
+  OpenInNew as OpenInNewIcon,
+  Visibility as VisibilityIcon,
+} from "@mui/icons-material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  Alert,
+  Autocomplete,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
-  Alert,
-  CircularProgress,
   Chip,
-  Button,
+  CircularProgress,
+  IconButton,
+  Paper,
+  Popover,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   TextField,
-  IconButton,
-  Link,
-  Popover,
-  Autocomplete,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import {
-  Visibility as VisibilityIcon,
-  FilterList as FilterListIcon,
-  OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+  Candidacy,
+  CandidacyState,
+  FilterCandidacyInfosRequest,
+} from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Endorser {
   full_name: string;

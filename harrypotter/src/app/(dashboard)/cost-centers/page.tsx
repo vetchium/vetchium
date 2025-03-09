@@ -79,7 +79,7 @@ export default function CostCentersPage() {
 
   useEffect(() => {
     fetchCostCenters();
-  }, [includeDefunct]);
+  }, [fetchCostCenters]);
 
   const handleDelete = async (costCenter: CostCenter) => {
     try {
