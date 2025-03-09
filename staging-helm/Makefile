@@ -1,34 +1,37 @@
 .PHONY: setup install-nix create-cluster build-images load-images install-chart uninstall clean verify check-deps
 
+SHELL := /bin/bash
+.SHELLFLAGS := -ec
+
 CLUSTER_NAME = vetchi-staging
 NAMESPACE = staging
 HELM_RELEASE = vetchi-staging
 DOCKER_REGISTRY = psankar
 
 # ANSI color codes
-BLUE := \033[1;34m
-GREEN := \033[1;32m
-YELLOW := \033[1;33m
-RED := \033[1;31m
-RESET := \033[0m
-CHECK := $(GREEN)✓$(RESET)
-ARROW := $(BLUE)→$(RESET)
+BLUE = \033[1;34m
+GREEN = \033[1;32m
+YELLOW = \033[1;33m
+RED = \033[1;31m
+RESET = \033[0m
+CHECK = $(GREEN)✓$(RESET)
+ARROW = $(BLUE)→$(RESET)
 
 # Helper function to print section headers
 define print_header
-	@echo "\n$(BLUE)════════════════════════════════════════════════════════════════$(RESET)"
-	@echo "$(BLUE)   $1$(RESET)"
-	@echo "$(BLUE)════════════════════════════════════════════════════════════════$(RESET)\n"
+	printf "\n$(BLUE)════════════════════════════════════════════════════════════════$(RESET)\n"
+	printf "$(BLUE)   %s$(RESET)\n" "$(1)"
+	printf "$(BLUE)════════════════════════════════════════════════════════════════$(RESET)\n\n"
 endef
 
 # Helper function to print step progress
 define print_step
-	@echo "$(ARROW) $1"
+	printf "$(ARROW) %s\n" "$(1)"
 endef
 
 # Helper function to print success
 define print_success
-	@echo "$(CHECK) $1"
+	printf "$(CHECK) %s\n" "$(1)"
 endef
 
 # Check if command exists
@@ -39,10 +42,10 @@ install-nix:
 	$(call print_header,Checking and Installing Nix)
 ifeq ($(call check_cmd,nix),)
 	$(call print_step,Creating required system group 'nixbld'...)
-	@if ! getent group nixbld > /dev/null 2>&1; then \
-		sudo groupadd -r nixbld; \
+	if ! getent group nixbld > /dev/null 2>&1; then \
+		sudo groupadd -r nixbld || true; \
 		for i in $$(seq 1 10); do \
-			sudo useradd -c "Nix build user $$i" -d /var/empty -g nixbld -G nixbld -M -N -r -s "$(shell which nologin)" nixbld$$i; \
+			sudo useradd -c "Nix build user $$i" -d /var/empty -g nixbld -G nixbld -M -N -r -s $$(which nologin) nixbld$$i || true; \
 		done; \
 		$(call print_success,Created nixbld group and users); \
 	else \
@@ -50,33 +53,31 @@ ifeq ($(call check_cmd,nix),)
 	fi
 
 	$(call print_step,Installing Nix...)
-	@if ! sh <(curl -L https://nixos.org/nix/install) --daemon; then \
-		echo "$(RED)Failed to install Nix. Trying single-user installation...$(RESET)"; \
-		if ! sh <(curl -L https://nixos.org/nix/install) --no-daemon; then \
-			echo "$(RED)Error: Both multi-user and single-user Nix installation failed.$(RESET)"; \
-			echo "$(RED)Please check the following:$(RESET)"; \
-			echo "  • Ensure you have sudo privileges"; \
-			echo "  • Check if /nix directory exists and is writable"; \
-			echo "  • Check system requirements at https://nixos.org/manual/nix/stable/installation/prerequisites.html"; \
+	if ! curl -L https://nixos.org/nix/install | sudo sh -s -- --daemon; then \
+		printf "$(RED)Failed to install Nix. Trying single-user installation...$(RESET)\n"; \
+		if ! curl -L https://nixos.org/nix/install | sh -s -- --no-daemon; then \
+			printf "$(RED)Error: Both multi-user and single-user Nix installation failed.$(RESET)\n"; \
+			printf "$(RED)Please check the following:$(RESET)\n"; \
+			printf "  • Ensure you have sudo privileges\n"; \
+			printf "  • Check if /nix directory exists and is writable\n"; \
+			printf "  • Check system requirements at https://nixos.org/manual/nix/stable/installation/prerequisites.html\n"; \
 			exit 1; \
 		fi; \
 	fi
 
 	$(call print_step,Configuring Nix environment...)
-	@{ \
-		echo 'if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then'; \
-		echo '  . ~/.nix-profile/etc/profile.d/nix.sh'; \
-		echo 'fi'; \
-	} >> ~/.bashrc
-	@{ \
-		echo 'if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then'; \
-		echo '  . ~/.nix-profile/etc/profile.d/nix.sh'; \
-		echo 'fi'; \
-	} >> ~/.zshrc
+	mkdir -p ~/.config/nix
+	printf 'experimental-features = nix-command flakes\n' > ~/.config/nix/nix.conf
+	if [ -f "$$HOME/.bashrc" ]; then \
+		printf '\nif [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then\n  . ~/.nix-profile/etc/profile.d/nix.sh\nfi\n' >> ~/.bashrc; \
+	fi
+	if [ -f "$$HOME/.zshrc" ]; then \
+		printf '\nif [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then\n  . ~/.nix-profile/etc/profile.d/nix.sh\nfi\n' >> ~/.zshrc; \
+	fi
 
 	$(call print_success,Nix installed successfully)
-	@echo "$(YELLOW)Important: You need to restart your shell or run:$(RESET)"
-	@echo "  source ~/.nix-profile/etc/profile.d/nix.sh"
+	printf "$(YELLOW)Important: You need to restart your shell or run:$(RESET)\n"
+	printf "  source ~/.nix-profile/etc/profile.d/nix.sh\n"
 else
 	$(call print_success,Nix is already installed)
 endif
