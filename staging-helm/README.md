@@ -6,6 +6,12 @@ This Helm chart deploys the complete Vetchi application stack in a staging envir
 - Backend services (Hermione and Granger)
 - Frontend applications (Ron Weasly and Harry Potter)
 
+## Prerequisites
+
+- Linux or macOS system
+- Sudo privileges
+- Basic build tools (usually installed by default)
+
 ## Quick Start
 
 Simply run:
@@ -23,6 +29,44 @@ This will:
 6. Verify the installation
 
 The setup process includes clear progress indicators and helpful messages at each step.
+
+### First-Time Setup Notes
+
+If this is your first time running the setup:
+
+1. After Nix installation, you may need to:
+   ```bash
+   # Either restart your shell
+   exec $SHELL
+
+   # Or source the Nix profile
+   source ~/.nix-profile/etc/profile.d/nix.sh
+   ```
+
+2. Then run setup again:
+   ```bash
+   make setup
+   ```
+
+### Installation Troubleshooting
+
+If you encounter Nix installation issues:
+
+1. **Missing nixbld group**: The setup will automatically create this for you
+2. **Permission Issues**:
+   ```bash
+   # Ensure /nix directory has correct permissions
+   sudo mkdir -p /nix
+   sudo chown -R $USER:$USER /nix
+   ```
+3. **Shell Integration**:
+   - The setup automatically adds Nix to both `.bashrc` and `.zshrc`
+   - You may need to restart your shell after installation
+
+4. **Other Issues**:
+   - Ensure you have sudo privileges
+   - Check system requirements at https://nixos.org/manual/nix/stable/installation/prerequisites.html
+   - The setup will attempt both multi-user and single-user installations if needed
 
 ## Directory Structure
 
@@ -83,7 +127,7 @@ Each component (Hermione, Granger, frontends) has its own configuration section 
    ```bash
    # If you modified Docker images
    make build-images load-images
-   
+
    # Update Helm release
    make install-chart
    ```
@@ -114,7 +158,7 @@ After installation, services are available at:
    # Frontend logs
    kubectl logs -f -l app=harrypotter -n staging
    kubectl logs -f -l app=ronweasly -n staging
-   
+
    # Backend logs
    kubectl logs -f -l app=hermione -n staging
    kubectl logs -f -l app=granger -n staging

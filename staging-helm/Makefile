@@ -38,14 +38,48 @@ check_cmd = $(shell command -v $(1) 2> /dev/null)
 install-nix:
 	$(call print_header,Checking and Installing Nix)
 ifeq ($(call check_cmd,nix),)
+	$(call print_step,Creating required system group 'nixbld'...)
+	@if ! getent group nixbld > /dev/null 2>&1; then \
+		sudo groupadd -r nixbld; \
+		for i in $$(seq 1 10); do \
+			sudo useradd -c "Nix build user $$i" -d /var/empty -g nixbld -G nixbld -M -N -r -s "$(shell which nologin)" nixbld$$i; \
+		done; \
+		$(call print_success,Created nixbld group and users); \
+	else \
+		$(call print_success,nixbld group already exists); \
+	fi
+
 	$(call print_step,Installing Nix...)
-	@curl -L https://nixos.org/nix/install | sh
-	@. ~/.nix-profile/etc/profile.d/nix.sh
+	@if ! sh <(curl -L https://nixos.org/nix/install) --daemon; then \
+		echo "$(RED)Failed to install Nix. Trying single-user installation...$(RESET)"; \
+		if ! sh <(curl -L https://nixos.org/nix/install) --no-daemon; then \
+			echo "$(RED)Error: Both multi-user and single-user Nix installation failed.$(RESET)"; \
+			echo "$(RED)Please check the following:$(RESET)"; \
+			echo "  • Ensure you have sudo privileges"; \
+			echo "  • Check if /nix directory exists and is writable"; \
+			echo "  • Check system requirements at https://nixos.org/manual/nix/stable/installation/prerequisites.html"; \
+			exit 1; \
+		fi; \
+	fi
+
+	$(call print_step,Configuring Nix environment...)
+	@{ \
+		echo 'if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then'; \
+		echo '  . ~/.nix-profile/etc/profile.d/nix.sh'; \
+		echo 'fi'; \
+	} >> ~/.bashrc
+	@{ \
+		echo 'if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then'; \
+		echo '  . ~/.nix-profile/etc/profile.d/nix.sh'; \
+		echo 'fi'; \
+	} >> ~/.zshrc
+
 	$(call print_success,Nix installed successfully)
+	@echo "$(YELLOW)Important: You need to restart your shell or run:$(RESET)"
+	@echo "  source ~/.nix-profile/etc/profile.d/nix.sh"
 else
 	$(call print_success,Nix is already installed)
 endif
-	@echo "$(YELLOW)Note: If this is your first time installing Nix, you may need to restart your shell$(RESET)"
 
 # Check for required tools
 check-deps:
@@ -145,4 +179,4 @@ setup: install-nix check-deps create-cluster build-images load-images install-ch
 	@echo "  • View all pods:        kubectl get pods -n $(NAMESPACE)"
 	@echo "  • View logs:            kubectl logs -f <pod-name> -n $(NAMESPACE)"
 	@echo "\n$(YELLOW)To clean up:$(RESET)"
-	@echo "  • Run:                  make clean" 
+	@echo "  • Run:                  make clean"
