@@ -17,8 +17,8 @@ RUN npm ci
 # Now copy the rest of the application
 COPY ronweasly/ .
 
-# Build the application
-RUN npm run build
+# Build the application with error handling
+RUN npm run build 2>&1 || (echo "Build failed. Check the error above." && exit 1)
 
 # Production image
 FROM node:20-alpine

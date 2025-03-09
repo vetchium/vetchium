@@ -82,6 +82,24 @@ export default function OpeningDetailsPage() {
   const [loadingColleagues, setLoadingColleagues] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  if (!params?.domain || !params?.openingId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">{t("common.error.invalidParams")}</Typography>
+        <Button
+          variant="contained"
+          onClick={() => router.back()}
+          sx={{ mt: 2 }}
+        >
+          {t("common.back")}
+        </Button>
+      </Box>
+    );
+  }
+
+  const companyDomain = params.domain as string;
+  const openingId = params.openingId as string;
+
   useEffect(() => {
     const fetchOpeningDetails = async () => {
       const token = Cookies.get("session_token");
@@ -92,8 +110,8 @@ export default function OpeningDetailsPage() {
 
       try {
         const request: GetHubOpeningDetailsRequest = {
-          company_domain: params.domain as string,
-          opening_id_within_company: params.openingId as string,
+          company_domain: companyDomain,
+          opening_id_within_company: openingId,
         };
 
         const response = await fetch(
@@ -130,7 +148,7 @@ export default function OpeningDetailsPage() {
     };
 
     fetchOpeningDetails();
-  }, [params.domain, params.openingId]);
+  }, [companyDomain, openingId]);
 
   // New function to search for colleagues
   const searchColleagues = async (prefix: string) => {
@@ -250,8 +268,8 @@ export default function OpeningDetailsPage() {
       const base64Resume = await base64Promise;
 
       const request: ApplyForOpeningRequest = {
-        opening_id_within_company: params.openingId as string,
-        company_domain: params.domain as string,
+        opening_id_within_company: openingId,
+        company_domain: companyDomain,
         resume: base64Resume,
         filename: resumeFile.name,
         endorser_handles: selectedEndorsers.map((endorser) => endorser.handle),

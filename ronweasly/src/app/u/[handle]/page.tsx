@@ -40,12 +40,28 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 
-export default function ProfilePage() {
+export default function UserProfilePage() {
+  const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
+
+  if (!params?.handle) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">{t("common.error.invalidParams")}</Typography>
+        <Button
+          variant="contained"
+          onClick={() => router.back()}
+          sx={{ mt: 2 }}
+        >
+          {t("common.back")}
+        </Button>
+      </Box>
+    );
+  }
+
   const userHandle = params.handle as string;
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
-  const { t } = useTranslation();
   const isOwnProfile = myHandle === userHandle;
   const {
     bio,

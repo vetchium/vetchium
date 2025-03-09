@@ -117,7 +117,10 @@ const RSVPStatusIcon = ({ status }: { status: RSVPStatus }) => {
 
 export default function CandidacyDetailPage() {
   const params = useParams();
-  const candidacyId = params.id as string;
+  const candidacyId = params?.id as string;
+  if (!candidacyId) {
+    return <div>Invalid candidacy ID</div>;
+  }
   const { t } = useTranslation();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
