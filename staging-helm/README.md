@@ -68,13 +68,7 @@ k3d image import psankar/hermione:latest psankar/granger:latest \
 
 ## Install the Helm Chart
 
-1. Create namespace:
-
-```bash
-kubectl create namespace staging
-```
-
-2. Install the chart:
+Install the chart with a single command:
 
 ```bash
 helm install vetchi-staging ./staging-helm \
@@ -82,6 +76,14 @@ helm install vetchi-staging ./staging-helm \
   --set global.domain=vetchi.local \
   --set global.environment=staging
 ```
+
+The chart will automatically:
+1. Create and configure the namespace
+2. Install all required CRDs
+3. Set up PostgreSQL with proper initialization
+4. Configure MinIO and Mailpit
+5. Create necessary secrets and RBAC roles
+6. Deploy all application components
 
 ## Verify Installation
 
