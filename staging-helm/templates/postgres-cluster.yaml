@@ -2,18 +2,17 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: postgres
-  namespace: { { .Release.Namespace } }
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
 spec:
-  instances: { { .Values.postgresCluster.instances } }
+  instances: {{ .Values.postgresCluster.instances }}
   storage:
-    size: { { .Values.postgresCluster.storage.size } }
+    size: {{ .Values.postgresCluster.storage.size }}
   monitoring:
-    enablePodMonitor:
-      { { .Values.postgresCluster.monitoring.enablePodMonitor } }
+    enablePodMonitor: {{ .Values.postgresCluster.monitoring.enablePodMonitor }}
   inheritedMetadata:
     labels:
-      {
-        {
-          - toYaml .Values.postgresCluster.inheritedMetadata.labels | nindent 6,
-        },
-      }
+      {{- with .Values.postgresCluster.inheritedMetadata.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
