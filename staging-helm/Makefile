@@ -40,6 +40,40 @@ endef
 # Check if command exists
 check_cmd = $(shell command -v $(1) 2> /dev/null)
 
+# Check if service is running
+check_service = $(shell systemctl is-active $(1) 2>/dev/null)
+
+# Check and start Docker
+ensure-docker:
+	$(call print_header,Checking Docker Status)
+	$(call print_step,Verifying Docker installation...)
+	command -v docker >/dev/null 2>&1 || { \
+		printf "$(RED)Error: Docker is not installed. Installing...$(RESET)\n"; \
+		curl -fsSL https://get.docker.com | sudo sh; \
+	}
+	$(call print_step,Checking Docker service...)
+	if [ "$(call check_service,docker)" != "active" ]; then \
+		printf "$(YELLOW)Docker service is not running. Starting...$(RESET)\n"; \
+		sudo systemctl start docker || { \
+			printf "$(RED)Failed to start Docker service. Please check:$(RESET)\n"; \
+			printf "  • Run 'sudo systemctl status docker' for details\n"; \
+			printf "  • Ensure your user is in the docker group: sudo usermod -aG docker $$USER\n"; \
+			printf "  • You might need to log out and back in for group changes to take effect\n"; \
+			exit 1; \
+		}; \
+		printf "Waiting for Docker to be ready...\n"; \
+		sleep 5; \
+	fi
+	$(call print_success,Docker is running)
+	$(call print_step,Checking user permissions...)
+	if ! docker ps >/dev/null 2>&1; then \
+		printf "$(YELLOW)Adding current user to docker group...$(RESET)\n"; \
+		sudo usermod -aG docker $$USER; \
+		printf "$(RED)Please log out and back in for group changes to take effect, then run make setup again$(RESET)\n"; \
+		exit 1; \
+	fi
+	$(call print_success,Docker permissions verified)
+
 # Help target
 help:
 	printf "Available targets:\n"
@@ -133,7 +167,7 @@ build-images:
 	$(call print_success,All images built successfully)
 
 # Load images into k3d cluster
-load-images:
+load-images: ensure-docker
 	$(call print_header,Loading Images into Cluster)
 	$(call print_step,Importing images into k3d...)
 	nix develop -c k3d image import \
