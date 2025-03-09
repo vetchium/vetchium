@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqitch-migrations
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: sqitch
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: sqitch
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: sqitch
+        image: {{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag }}
+        imagePullPolicy: Always
+        command: ["sqitch"]
+        args: ["deploy"]
+        env:
+        - name: SQITCH_TARGET
+          value: {{ .Values.sqitch.config.target | quote }}
+        volumeMounts:
+        - name: sqitch-files
+          mountPath: /sqitch
+      volumes:
+      - name: sqitch-files
+        configMap:
+          name: sqitch-files 

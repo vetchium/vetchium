@@ -12,6 +12,9 @@ kind: Deployment
 metadata:
   name: granger
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: granger
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.granger.replicas }}
   selector:
@@ -22,6 +25,10 @@ spec:
       labels:
         app: granger
     spec:
+      initContainers:
+      - name: wait-for-migrations
+        image: bitnami/kubectl:latest
+        command: ['sh', '-c', 'until kubectl get job sqitch-migrations -n {{ .Release.Namespace }} -o jsonpath="{.status.succeeded}" | grep 1; do echo "waiting for sqitch migrations to complete"; sleep 5; done']
       containers:
         - name: granger
           image: {{ .Values.granger.image.repository }}:{{ .Values.granger.image.tag }}

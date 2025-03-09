@@ -56,7 +56,7 @@ k3d cluster create vetchi-staging \
 # Build backend images
 docker build -f api/Dockerfile-hermione -t psankar/hermione:latest .
 docker build -f api/Dockerfile-granger -t psankar/granger:latest .
-docker build -f sqitch/Dockerfile -t psankar/sqitch:latest .
+docker build -f sqitch/Dockerfile -t psankar/sqitch:latest sqitch
 
 # Build frontend images
 docker build -f staging-helm/Dockerfile-ronweasly -t psankar/ronweasly:latest .
@@ -64,7 +64,8 @@ docker build -f staging-helm/Dockerfile-harrypotter -t psankar/harrypotter:lates
 
 # Import images into k3d cluster
 k3d image import psankar/hermione:latest psankar/granger:latest \
-  psankar/ronweasly:latest psankar/harrypotter:latest -c vetchi-staging
+  psankar/ronweasly:latest psankar/harrypotter:latest \
+  psankar/sqitch:latest -c vetchi-staging
 ```
 
 ## Install the Helm Chart

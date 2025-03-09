@@ -83,3 +83,11 @@ secrets:
     password: "password"
   postgres:
     uri: "postgresql://postgres:postgres@postgres-rw:5432/vetchi?sslmode=disable"
+
+# Sqitch Configuration
+sqitch:
+  image:
+    repository: psankar/sqitch
+    tag: latest
+  config:
+    target: "db:pg://postgres:postgres@postgres-rw:5432/vetchi"

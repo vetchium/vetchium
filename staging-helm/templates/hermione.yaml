@@ -12,6 +12,9 @@ kind: Deployment
 metadata:
   name: hermione
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: hermione
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.hermione.replicas }}
   selector:
@@ -22,6 +25,10 @@ spec:
       labels:
         app: hermione
     spec:
+      initContainers:
+      - name: wait-for-migrations
+        image: bitnami/kubectl:latest
+        command: ['sh', '-c', 'until kubectl get job sqitch-migrations -n {{ .Release.Namespace }} -o jsonpath="{.status.succeeded}" | grep 1; do echo "waiting for sqitch migrations to complete"; sleep 5; done']
       serviceAccountName: hermione-sa
       containers:
         - name: hermione
