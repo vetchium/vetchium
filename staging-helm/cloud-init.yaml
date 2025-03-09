@@ -16,15 +16,14 @@ runcmd:
   # Add user to docker group (optional, for non-root usage)
   - usermod -aG docker ubuntu
 
-  # Install kubectl
-  - curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
-  - echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-  - apt-get update
-  - apt-get install -y kubectl
+  # Install kubectl (updated method)
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x kubectl
+  - mv kubectl /usr/local/bin/
 
-  # Install Helm 
+  # Install Helm
   - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  
+
   # Add Helm repo for CloudNativePG
   - helm repo add cnpg https://cloudnative-pg.github.io/charts
   - helm repo update
@@ -32,11 +31,15 @@ runcmd:
   # Install k3d (Lightweight Kubernetes)
   - curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-  # Create a test Kubernetes cluster with k3d
-  - k3d cluster create my-cluster
+  # Create a Kubernetes cluster with k3d with proper port mappings
+  - k3d cluster delete my-cluster || true
+  - k3d cluster create my-cluster --api-port 6550 --port "80:80@loadbalancer" --port "443:443@loadbalancer" --agents 2
+  - sleep 10 # Wait for cluster to be ready
+  - k3d kubeconfig merge my-cluster --kubeconfig-switch-context
 
   # Verify installation (store output in a log file)
   - docker --version > /root/install-log.txt
   - kubectl version --client >> /root/install-log.txt
   - helm version >> /root/install-log.txt
   - k3d --version >> /root/install-log.txt
+  - kubectl get nodes >> /root/install-log.txt

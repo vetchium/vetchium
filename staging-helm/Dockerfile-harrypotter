@@ -5,6 +5,12 @@ WORKDIR /app
 # First, copy and install typespec
 COPY typespec/ typespec/
 
+# Install and build typespec first
+WORKDIR /app/typespec
+RUN npm ci && \
+    npm install -g typescript && \
+    npm run build
+
 # Setup harrypotter directory
 WORKDIR /app/harrypotter
 
