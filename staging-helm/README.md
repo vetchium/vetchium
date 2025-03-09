@@ -18,12 +18,10 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ```
 
-3. Install Helm and add the CloudnativePG repo
+3. Install Helm:
 
 ```bash
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-helm repo add cnpg https://cloudnative-pg.github.io/charts
-helm repo update
 ```
 
 4. Install k3d (lightweight Kubernetes):
@@ -105,6 +103,8 @@ kubectl get services -n staging
 - Ron Weasly Frontend: http://localhost/ronweasly
 - Hermione API: http://localhost/api/hermione
 - Granger API: http://localhost/api/granger
+- MinIO Console: http://localhost:9001
+- MinIO API: http://localhost:9000
 
 ## Troubleshooting
 
@@ -115,6 +115,8 @@ kubectl logs -f -l app=harrypotter -n staging
 kubectl logs -f -l app=ronweasly -n staging
 kubectl logs -f -l app=hermione -n staging
 kubectl logs -f -l app=granger -n staging
+kubectl logs -f -l app=minio -n staging
+kubectl logs -f -l app=postgres -n staging
 ```
 
 2. Check pod status:
@@ -127,7 +129,7 @@ kubectl describe pods -n staging
 
 ```bash
 kubectl get postgresql -n staging
-kubectl get pods -l postgresql -n staging
+kubectl get pods -l app=postgres -n staging
 ```
 
 ## Uninstall

@@ -24,10 +24,6 @@ runcmd:
   # Install Helm
   - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-  # Add Helm repo for CloudNativePG
-  - helm repo add cnpg https://cloudnative-pg.github.io/charts
-  - helm repo update
-
   # Install k3d (Lightweight Kubernetes)
   - curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
