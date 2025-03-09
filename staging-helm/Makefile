@@ -1,5 +1,8 @@
 .PHONY: setup install-nix create-cluster build-images load-images install-chart uninstall clean verify check-deps
 
+# Make setup the default target
+.DEFAULT_GOAL := setup
+
 SHELL := /bin/bash
 .SHELLFLAGS := -ec
 
@@ -36,6 +39,19 @@ endef
 
 # Check if command exists
 check_cmd = $(shell command -v $(1) 2> /dev/null)
+
+# Help target
+help:
+	printf "Available targets:\n"
+	printf "  setup         - Complete setup (installs Nix, creates cluster, deploys applications)\n"
+	printf "  install-nix   - Install Nix package manager\n"
+	printf "  create-cluster- Create k3d cluster\n"
+	printf "  build-images  - Build all Docker images\n"
+	printf "  load-images   - Load images into cluster\n"
+	printf "  install-chart - Install Helm chart\n"
+	printf "  verify        - Check installation status\n"
+	printf "  uninstall     - Remove the application\n"
+	printf "  clean         - Remove everything\n"
 
 # Install Nix if not present
 install-nix:
@@ -86,41 +102,41 @@ endif
 check-deps:
 	$(call print_header,Checking Dependencies)
 	$(call print_step,Verifying Nix installation...)
-	@command -v nix >/dev/null 2>&1 || { echo "$(RED)Error: Nix is required but not installed. Run 'make install-nix' first.$(RESET)"; exit 1; }
+	command -v nix >/dev/null 2>&1 || { printf "$(RED)Error: Nix is required but not installed. Run 'make install-nix' first.$(RESET)\n"; exit 1; }
 	$(call print_success,All dependencies verified)
 
 # Create k3d cluster
 create-cluster:
 	$(call print_header,Creating Kubernetes Cluster)
 	$(call print_step,Creating k3d cluster '$(CLUSTER_NAME)'...)
-	@nix develop -c k3d cluster create $(CLUSTER_NAME) \
+	nix develop -c k3d cluster create $(CLUSTER_NAME) \
 		--api-port 6550 \
 		--port "80:80@loadbalancer" \
 		--port "443:443@loadbalancer" \
 		--agents 2
 	$(call print_step,Adding PostgreSQL Helm repository...)
-	@nix develop -c helm repo add cnpg https://cloudnative-pg.github.io/charts
-	@nix develop -c helm repo update
+	nix develop -c helm repo add cnpg https://cloudnative-pg.github.io/charts
+	nix develop -c helm repo update
 	$(call print_success,Cluster created successfully)
 
 # Build all Docker images
 build-images:
 	$(call print_header,Building Docker Images)
 	$(call print_step,Building Hermione backend...)
-	@nix develop -c docker build -f ../api/Dockerfile-hermione -t $(DOCKER_REGISTRY)/hermione:latest ..
+	nix develop -c docker build -f ../api/Dockerfile-hermione -t $(DOCKER_REGISTRY)/hermione:latest ..
 	$(call print_step,Building Granger backend...)
-	@nix develop -c docker build -f ../api/Dockerfile-granger -t $(DOCKER_REGISTRY)/granger:latest ..
+	nix develop -c docker build -f ../api/Dockerfile-granger -t $(DOCKER_REGISTRY)/granger:latest ..
 	$(call print_step,Building Ron Weasly frontend...)
-	@nix develop -c docker build -f Dockerfile.ronweasly -t $(DOCKER_REGISTRY)/ronweasly:latest ..
+	nix develop -c docker build -f Dockerfile.ronweasly -t $(DOCKER_REGISTRY)/ronweasly:latest ..
 	$(call print_step,Building Harry Potter frontend...)
-	@nix develop -c docker build -f Dockerfile.harrypotter -t $(DOCKER_REGISTRY)/harrypotter:latest ..
+	nix develop -c docker build -f Dockerfile.harrypotter -t $(DOCKER_REGISTRY)/harrypotter:latest ..
 	$(call print_success,All images built successfully)
 
 # Load images into k3d cluster
 load-images:
 	$(call print_header,Loading Images into Cluster)
 	$(call print_step,Importing images into k3d...)
-	@nix develop -c k3d image import \
+	nix develop -c k3d image import \
 		$(DOCKER_REGISTRY)/hermione:latest \
 		$(DOCKER_REGISTRY)/granger:latest \
 		$(DOCKER_REGISTRY)/ronweasly:latest \
@@ -132,9 +148,9 @@ load-images:
 install-chart:
 	$(call print_header,Installing Helm Chart)
 	$(call print_step,Creating namespace '$(NAMESPACE)'...)
-	@nix develop -c kubectl create namespace $(NAMESPACE) 2>/dev/null || true
+	nix develop -c kubectl create namespace $(NAMESPACE) 2>/dev/null || true
 	$(call print_step,Installing Helm chart...)
-	@nix develop -c helm install $(HELM_RELEASE) . \
+	nix develop -c helm install $(HELM_RELEASE) . \
 		--namespace $(NAMESPACE) \
 		--set global.domain=vetchi.local \
 		--set global.environment=staging
@@ -144,40 +160,40 @@ install-chart:
 verify:
 	$(call print_header,Verifying Installation)
 	$(call print_step,Checking pod status...)
-	@nix develop -c kubectl get pods -n $(NAMESPACE)
+	nix develop -c kubectl get pods -n $(NAMESPACE)
 	$(call print_step,Checking services...)
-	@nix develop -c kubectl get services -n $(NAMESPACE)
+	nix develop -c kubectl get services -n $(NAMESPACE)
 	$(call print_step,Checking PostgreSQL cluster...)
-	@nix develop -c kubectl get postgresql -n $(NAMESPACE)
+	nix develop -c kubectl get postgresql -n $(NAMESPACE)
 	$(call print_success,Verification complete)
 
 # Uninstall Helm chart
 uninstall:
 	$(call print_header,Uninstalling Application)
 	$(call print_step,Removing Helm release...)
-	@nix develop -c helm uninstall $(HELM_RELEASE) -n $(NAMESPACE) 2>/dev/null || true
+	nix develop -c helm uninstall $(HELM_RELEASE) -n $(NAMESPACE) 2>/dev/null || true
 	$(call print_step,Removing namespace...)
-	@nix develop -c kubectl delete namespace $(NAMESPACE) 2>/dev/null || true
+	nix develop -c kubectl delete namespace $(NAMESPACE) 2>/dev/null || true
 	$(call print_success,Uninstallation complete)
 
 # Clean up everything
 clean: uninstall
 	$(call print_header,Cleaning Up Environment)
 	$(call print_step,Deleting k3d cluster...)
-	@nix develop -c k3d cluster delete $(CLUSTER_NAME) 2>/dev/null || true
+	nix develop -c k3d cluster delete $(CLUSTER_NAME) 2>/dev/null || true
 	$(call print_success,Cleanup complete)
 
 # All-in-one setup
 setup: install-nix check-deps create-cluster build-images load-images install-chart verify
 	$(call print_header,Setup Complete)
-	@echo "$(GREEN)✨ Vetchi staging environment is ready!$(RESET)"
-	@echo "\n$(YELLOW)Access your applications at:$(RESET)"
-	@echo "  • Harry Potter Frontend: http://localhost/harrypotter"
-	@echo "  • Ron Weasly Frontend:  http://localhost/ronweasly"
-	@echo "  • Hermione API:         http://localhost/api/hermione"
-	@echo "  • Granger API:          http://localhost/api/granger"
-	@echo "\n$(YELLOW)To view logs and monitor the system:$(RESET)"
-	@echo "  • View all pods:        kubectl get pods -n $(NAMESPACE)"
-	@echo "  • View logs:            kubectl logs -f <pod-name> -n $(NAMESPACE)"
-	@echo "\n$(YELLOW)To clean up:$(RESET)"
-	@echo "  • Run:                  make clean"
+	printf "$(GREEN)✨ Vetchi staging environment is ready!$(RESET)\n"
+	printf "\n$(YELLOW)Access your applications at:$(RESET)\n"
+	printf "  • Harry Potter Frontend: http://localhost/harrypotter\n"
+	printf "  • Ron Weasly Frontend:  http://localhost/ronweasly\n"
+	printf "  • Hermione API:         http://localhost/api/hermione\n"
+	printf "  • Granger API:          http://localhost/api/granger\n"
+	printf "\n$(YELLOW)To view logs and monitor the system:$(RESET)\n"
+	printf "  • View all pods:        kubectl get pods -n $(NAMESPACE)\n"
+	printf "  • View logs:            kubectl logs -f <pod-name> -n $(NAMESPACE)\n"
+	printf "\n$(YELLOW)To clean up:$(RESET)\n"
+	printf "  • Run:                  make clean\n"
