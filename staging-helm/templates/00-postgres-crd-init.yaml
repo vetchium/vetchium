@@ -1,0 +1,127 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-crd-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  template:
+    spec:
+      serviceAccountName: postgres-crd-init
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: apiextensions.k8s.io/v1
+          kind: CustomResourceDefinition
+          metadata:
+            name: clusters.postgresql.cnpg.io
+          spec:
+            group: postgresql.cnpg.io
+            names:
+              kind: Cluster
+              listKind: ClusterList
+              plural: clusters
+              singular: cluster
+            scope: Namespaced
+            versions:
+              - name: v1
+                schema:
+                  openAPIV3Schema:
+                    type: object
+                    properties:
+                      spec:
+                        type: object
+                        properties:
+                          instances:
+                            type: integer
+                          storage:
+                            type: object
+                            properties:
+                              size:
+                                type: string
+                          monitoring:
+                            type: object
+                            properties:
+                              enablePodMonitor:
+                                type: boolean
+                          inheritedMetadata:
+                            type: object
+                            properties:
+                              labels:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                          bootstrap:
+                            type: object
+                            properties:
+                              initdb:
+                                type: object
+                                properties:
+                                  database:
+                                    type: string
+                                  owner:
+                                    type: string
+                                  secret:
+                                    type: object
+                                    properties:
+                                      name:
+                                        type: string
+                          superuserSecret:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                          primaryUpdateStrategy:
+                            type: string
+                served: true
+                storage: true
+          EOF
+          kubectl wait --for=condition=established crd/clusters.postgresql.cnpg.io --timeout=60s
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres-crd-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-6"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-crd-init
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-6"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "get", "list", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: postgres-crd-init
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-6"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-crd-init
+subjects:
+- kind: ServiceAccount
+  name: postgres-crd-init
+  namespace: {{ .Release.Namespace }} 
