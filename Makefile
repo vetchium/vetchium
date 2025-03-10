@@ -42,6 +42,25 @@ devtest: docker
 	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidevtest
-	for file in devtest-env/*.yaml; do \
-		envsubst < $$file | kubectl apply -f -; \
-	done
+	# First apply CNPG operator
+	kubectl apply -f devtest-env/cnpg-1.25.1.yaml
+	echo "Waiting for CNPG operator to be ready..."
+	sleep 30
+	# Then apply core infrastructure
+	kubectl apply -f devtest-env/full-access-cluster-role.yaml
+	kubectl apply -f devtest-env/postgres-cluster.yaml
+	kubectl apply -f devtest-env/minio.yaml
+	kubectl apply -f devtest-env/mailpit.yaml
+	echo "Waiting for PostgreSQL to be ready..."
+	sleep 30
+	# Apply other secrets after postgres is ready
+	kubectl apply -f devtest-env/secrets.yaml
+	# Then apply backend services
+	kubectl apply -f devtest-env/sqitch.yaml
+	echo "Waiting for Sqitch to complete..."
+	sleep 30
+	envsubst < devtest-env/hermione.yaml | kubectl apply -f -
+	envsubst < devtest-env/granger.yaml | kubectl apply -f -
+	# Finally apply frontend services
+	envsubst < devtest-env/harrypotter.yaml | kubectl apply -f -
+	envsubst < devtest-env/ronweasly.yaml | kubectl apply -f -

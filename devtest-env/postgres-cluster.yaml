@@ -12,3 +12,10 @@ spec:
   inheritedMetadata:
     labels:
       app: postgres
+  superuserSecret:
+    name: superuser
+  bootstrap:
+    initdb:
+      database: postgres
+      owner: postgres
+  secretName: postgres-app

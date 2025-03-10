@@ -45,6 +45,7 @@ metadata:
   name: hermione
   namespace: vetchidevtest
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: hermione

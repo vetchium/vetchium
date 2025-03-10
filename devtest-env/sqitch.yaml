@@ -4,9 +4,9 @@ metadata:
   name: sqitch
   namespace: vetchidevtest
 spec:
+  backoffLimit: 5
   template:
     spec:
-      backoffLimit: 5
       serviceAccountName: sqitch-sa
       initContainers:
         - name: wait-for-postgres
