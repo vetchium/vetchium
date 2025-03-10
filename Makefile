@@ -44,22 +44,26 @@ devtest: docker
 	kubectl create namespace vetchidevtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
-	sleep 30
+	kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
+
 	# Then apply core infrastructure
 	kubectl apply -f devtest-env/full-access-cluster-role.yaml
 	kubectl apply -f devtest-env/postgres-cluster.yaml
 	kubectl apply -f devtest-env/minio.yaml
 	kubectl apply -f devtest-env/mailpit.yaml
-	echo "Waiting for PostgreSQL to be ready..."
-	sleep 30
-	# Apply other secrets after postgres is ready
 	kubectl apply -f devtest-env/secrets.yaml
+
+	sleep 5 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
+
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/sqitch.yaml | kubectl apply -f -
+	echo "Waiting for sqitch job to complete..."
+	kubectl wait --for=condition=complete job/sqitch -n vetchidevtest --timeout=5m
+
 	# Then apply backend services
-	kubectl apply -f devtest-env/sqitch.yaml
-	echo "Waiting for Sqitch to complete..."
-	sleep 30
-	envsubst < devtest-env/hermione.yaml | kubectl apply -f -
-	envsubst < devtest-env/granger.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/granger.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/hermione.yaml | kubectl apply -f -
 	# Finally apply frontend services
-	envsubst < devtest-env/harrypotter.yaml | kubectl apply -f -
-	envsubst < devtest-env/ronweasly.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/harrypotter.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/ronweasly.yaml | kubectl apply -f -
