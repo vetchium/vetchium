@@ -1,4 +1,4 @@
-FROM golang:1.23.2-bullseye AS builder
+FROM golang:1.24.1-bullseye AS builder
 WORKDIR /app
 COPY api/go.mod api/go.sum ./
 # For production builds, remove the replace directive
@@ -9,7 +9,7 @@ COPY typespec/ ../typespec/
 RUN go build -o hermione ./cmd/hermione
 
 # build a minimal container
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base-debian12
 WORKDIR /app
 COPY --from=builder /app/internal/hedwig/templates ./hedwig/templates
 COPY --from=builder /app/hermione .

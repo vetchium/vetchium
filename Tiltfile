@@ -28,3 +28,22 @@ k8s_resource('mailpit', port_forwards='8025:8025')
 k8s_resource('granger', port_forwards='8080:8080')
 k8s_resource('hermione', port_forwards='8081:8080')
 k8s_resource('sqitch')
+
+# Function to wait for the Kubernetes service to be ready
+def wait_for_service(namespace, service):
+    print("Waiting for service {service} in namespace {namespace}...")
+
+    while True:
+        result = local("kubectl -n {} get service {}".format(namespace, service), quiet=True)
+        if "NotFound" not in result and "No resources found" not in result:
+            print("Service {service} is now available.")
+            break
+
+# Define a local resource to handle port-forwarding
+local_resource(
+    "postgres-port-forward",
+    cmd="sh -c 'while ! kubectl -n vetchidev get service postgres-rw; do sleep 10; done && kubectl -n vetchidev port-forward service/postgres-rw 5432:5432'",
+    deps=["tiltenv/postgres-cluster.yaml"],  # Ensures Postgres exists before starting port-forward
+    allow_parallel=True,
+    serve_cmd="kubectl -n vetchidev port-forward service/postgres-rw 5432:5432"
+)

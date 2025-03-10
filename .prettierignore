@@ -1,2 +1,1 @@
-staging-helm/**/*.yaml
-staging-helm/**/*.yml 
+api/internal/hedwig/templates/*.html

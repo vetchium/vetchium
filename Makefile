@@ -5,8 +5,6 @@ dev:
 	kubectl delete namespace vetchidev --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidev
 	tilt up
-	kubectl -n vetchidev wait --for=condition=ready pod -l cnpg.io/podRole=instance --timeout=240s
-	kubectl -n vetchidev port-forward service/postgres-rw 5432:5432 &
 
 test:
 	@ORIG_URI=$$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
