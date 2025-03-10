@@ -15,7 +15,7 @@ import {
   AddCostCenterRequest,
   GetCostCenterRequest,
   UpdateCostCenterRequest,
-} from "@psankar/vetchi-typespec/employer/costcenters";
+} from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -31,52 +31,55 @@ export default function CostCenterActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  const fetchCostCenter = useCallback(async (costCenterName: string) => {
-    try {
-      setIsLoading(true);
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const request: GetCostCenterRequest = {
-        name: costCenterName,
-      };
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-cost-center`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
+  const fetchCostCenter = useCallback(
+    async (costCenterName: string) => {
+      try {
+        setIsLoading(true);
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/signin");
+          return;
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
+        const request: GetCostCenterRequest = {
+          name: costCenterName,
+        };
+
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/get-cost-center`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+          }
+        );
+
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/signin");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(t("costCenters.fetchError"));
+        }
+
+        const costCenter = await response.json();
+        setName(costCenter.name);
+        setNotes(costCenter.notes || "");
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : t("costCenters.fetchError")
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      if (!response.ok) {
-        throw new Error(t("costCenters.fetchError"));
-      }
-
-      const costCenter = await response.json();
-      setName(costCenter.name);
-      setNotes(costCenter.notes || "");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("costCenters.fetchError")
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, t]);
+    },
+    [router, t]
+  );
 
   useEffect(() => {
     if (isEdit) {

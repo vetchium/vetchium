@@ -20,7 +20,7 @@ import {
   GetOnboardStatusRequest,
   EmployerSignInRequest,
   EmployerSignInResponse,
-} from "@psankar/vetchi-typespec/employer/auth";
+} from "@psankar/vetchi-typespec";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");

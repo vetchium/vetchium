@@ -1,12 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   output: "standalone",
+  reactStrictMode: true,
   async rewrites() {
     return [
       {
-        source: "/api/:path*", // Match all requests to /api
-        destination: "http://localhost:8081/:path*", // Proxy to your API server
+        source: "/api/:path*",
+        destination: "http://localhost:8081/:path*",
       },
     ];
   },

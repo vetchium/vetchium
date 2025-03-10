@@ -20,3 +20,10 @@ lib:
 	cd typespec && tsp compile . && npm run build && \
 	cd ../harrypotter && npm install ../typespec && \
 	cd ../ronweasly && npm install ../typespec
+
+docker:
+	$(eval GIT_SHA=$(shell git rev-parse --short HEAD))
+	docker build -f Dockerfile-harrypotter -t vetchi/harrypotter:$(GIT_SHA) .
+	docker build -f Dockerfile-ronweasly -t vetchi/ronweasly:$(GIT_SHA) .
+	docker tag vetchi/harrypotter:$(GIT_SHA) vetchi/harrypotter:latest
+	docker tag vetchi/ronweasly:$(GIT_SHA) vetchi/ronweasly:latest

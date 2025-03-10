@@ -18,7 +18,7 @@ import Cookies from "js-cookie";
 import {
   EmployerTFARequest,
   EmployerTFAResponse,
-} from "@psankar/vetchi-typespec/employer/auth";
+} from "@psankar/vetchi-typespec";
 
 export default function TFA() {
   const router = useRouter();

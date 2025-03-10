@@ -45,7 +45,7 @@ import {
   OrgUserShort,
   OfferToCandidateRequest,
 } from "@psankar/vetchi-typespec";
-import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec/employer/candidacy";
+import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
