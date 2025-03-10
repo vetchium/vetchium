@@ -3,17 +3,16 @@
 ## Development
 
 ### Prerequisites
-- [Helm](https://helm.sh/docs/intro/install/)
+
 - [Tilt](https://docs.tilt.dev/install.html)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
 - [Go](https://golang.org/doc/install)
 
 To bring the services up, run the following commands:
+
 ```bash
 # Bring up the backend services
-# mailpit, cloudnative-pg (postgresql) will be brought up as helm charts
-# hermione, granger, sqitch will be brought up in tilt
 vetchi$ make
 
 # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
@@ -48,17 +47,20 @@ password: NewPassword123$
 ```
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
+
 ```
 $ POSTGRES_URI=$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchidev/localhost/g')
 $ psql "$POSTGRES_URI"
 ```
 
 To connect to the port-forwarded Postgres using DBeaver or some such JDBC client, use:
+
 ```
 $ kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
 ```
 
 To run tests, use the following command:
+
 ```
 $ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
 vetchi $ make test ; # tilt up should be running
@@ -67,12 +69,14 @@ vetchi $ make test ; # tilt up should be running
 ### Tear down
 
 To tear down the services, run the following command:
+
 ```
 vetchi $ tilt down
 vetchi $ kubectl delete namespace vetchidev
 ```
 
 ### Code Structure
+
 - [hermione](api/hermione) contains the stateless API server that can be scaled horizontally. Almost all HTTP handlers should be implemented here.
 - [granger](api/granger) contains the singleton API server with global variables, that should NOT be scaled horizontally. Almost no HTTP handler should be implemented here. This should be used for periodic tasks and other such bookkeeping on the backend.
 - [hermione](api/hermione) and [granger](api/granger) share the same go.mod and go.sum and together they implement the Vetchi API
@@ -88,9 +92,11 @@ vetchi $ kubectl delete namespace vetchidev
 - [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt up` to be running before this. This will also serve as some basic sanity testing.
 
 ## Engineering Notes
+
 Following are some rules that you should follow while working on the code. It is okay to break these rules, if that would make the code more readable. But your interest to break rules should not spawn from your inability to follow rules.
 
 #### Backend
+
 - Readability > Scalability > Performance. Optimise in this order.
 - We are a simple CRUD application that just needs to scale well. No need for anything fancy. Use boring, stable, battle-tested technologies. Try to keep things simple but do not make anything that would be impossible to scale later without a lot of rework. An example of this is: We chose postgres and neither sqlite (difficult to scale later for multiple machines) nor spanner (huh !?)
 - Do not use fancy algorithms. Use simple and scalable solutions.
@@ -115,15 +121,16 @@ Following are some rules that you should follow while working on the code. It is
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
 - Maintain 80 column limits for all the code. The test files under dolores do not have a 80 column limit. Sometimes the SQL under the postgres package may also make things difficult to fit under 80 columns which we have to live with. But ensure that the code is readable.
 - Try to have a maximum of about 200 lines per file. Be miserly in creating new packages and be generous in creating new files under existing packages.
-- Use https://sqlformat.darold.net/ to format SQL within the postgres.go file and dolores/*.pgsql files. This does not do a good job at breaking long line or aligning complex queries, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.
+- Use https://sqlformat.darold.net/ to format SQL within the postgres.go file and dolores/\*.pgsql files. This does not do a good job at breaking long line or aligning complex queries, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.
 - In the backend, log errors with the `Err` method. Log as Error only on the place where the error actually happens. This will help us get maximum debug information. In all the above layers of the call stack, if you want to log, use the `Dbg` method. The only exceptions to this are when the services are coming up. In that case, the errors are logged in the main function. Always, strive to log an error as Err only once. This will help us avoid generating too many tickets in SIEM/EventMgmt systems (such as Sentry).
 
 #### Frontend
+
 - Format all code with prettier
 - Do not duplicate any structs to send requests to the backend or parse the responses from the server. Use the library imported from typespec.
 - Material UI is used for the frontend styling. Stick to the same styling guidelines to keep the UI consistent. Do not import any new icon families or components from other libraries.
 - Some of the libraries may be using deprecated versions. Always try to upgrade to the latest stable releases.
 
-
 #### Others
-Sometimes we are forced to use longer names in the libraries. For example, we use  employer.EmployerInterview instead of just employer.Interview as any Go programmer would do. The reason for this is, typespec does not allow creating duplicate structures as we compile into one large openapi.yaml in the end. So we have to live with the longer names. But try to minimize the length of variables as much as you can.
+
+Sometimes we are forced to use longer names in the libraries. For example, we use employer.EmployerInterview instead of just employer.Interview as any Go programmer would do. The reason for this is, typespec does not allow creating duplicate structures as we compile into one large openapi.yaml in the end. So we have to live with the longer names. But try to minimize the length of variables as much as you can.
