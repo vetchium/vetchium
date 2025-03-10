@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: vetchidevtest
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+  monitoring:
+    enablePodMonitor: true
+  inheritedMetadata:
+    labels:
+      app: postgres
