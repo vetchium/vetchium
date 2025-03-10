@@ -25,5 +25,11 @@ docker:
 	$(eval GIT_SHA=$(shell git rev-parse --short HEAD))
 	docker build -f Dockerfile-harrypotter -t vetchi/harrypotter:$(GIT_SHA) .
 	docker build -f Dockerfile-ronweasly -t vetchi/ronweasly:$(GIT_SHA) .
+	docker build -f api/Dockerfile-hermione -t vetchi/hermione:$(GIT_SHA) .
+	docker build -f api/Dockerfile-granger -t vetchi/granger:$(GIT_SHA) .
+	docker build -f sqitch/Dockerfile -t vetchi/sqitch:$(GIT_SHA) .
 	docker tag vetchi/harrypotter:$(GIT_SHA) vetchi/harrypotter:latest
 	docker tag vetchi/ronweasly:$(GIT_SHA) vetchi/ronweasly:latest
+	docker tag vetchi/hermione:$(GIT_SHA) vetchi/hermione:latest
+	docker tag vetchi/granger:$(GIT_SHA) vetchi/granger:latest
+	docker tag vetchi/sqitch:$(GIT_SHA) vetchi/sqitch:latest
