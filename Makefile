@@ -42,7 +42,7 @@ devtest: docker
 	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidevtest
-	kubectl apply --server-side -f devtest-env/cnpg-1.25.1.yaml
+	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
 	sleep 30
 	# Then apply core infrastructure
