@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: harrypotter
+  namespace: vetchidevtest
+spec:
+  selector:
+    matchLabels:
+      app: harrypotter
+  template:
+    metadata:
+      labels:
+        app: harrypotter
+    spec:
+      containers:
+        - name: harrypotter
+          image: vetchi/harrypotter:${GIT_SHA}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harrypotter
+  namespace: vetchidevtest
+spec:
+  selector:
+    app: harrypotter
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

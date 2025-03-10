@@ -37,3 +37,11 @@ docker:
 	docker tag vetchi/hermione:$(GIT_SHA) vetchi/hermione:latest
 	docker tag vetchi/granger:$(GIT_SHA) vetchi/granger:latest
 	docker tag vetchi/sqitch:$(GIT_SHA) vetchi/sqitch:latest
+
+devtest: docker
+	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
+	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
+	kubectl create namespace vetchidevtest
+	for file in devtest-env/*.yaml; do \
+		envsubst < $$file | kubectl apply -f -; \
+	done
