@@ -2,6 +2,9 @@
 **/dist
 **/.next
 **/out
+**/build
+**/*.tsbuildinfo
+**/.env*
 **/.git
 **/.DS_Store
 **/npm-debug.log*
