@@ -1,22 +1,25 @@
 FROM node:22.11.0-alpine AS typespec-builder
 WORKDIR /app/typespec
-# Copy all typespec files first
-COPY typespec/ ./
-# Install dependencies including devDependencies for build
-RUN npm install && \
-    npm run build && \
-    npm pack
+# Copy only package files first for better caching
+COPY typespec/package*.json ./
+RUN npm install
+# Then copy source files
+COPY typespec/*.json typespec/*.ts ./
+COPY typespec/src ./src
+RUN npm run build && npm pack
 
 FROM node:22.11.0-alpine AS builder
 WORKDIR /app
-# Copy project files
-COPY ronweasly/ .
+# Copy package files first
+COPY ronweasly/package*.json ./
 # Copy the typespec archive
 COPY --from=typespec-builder /app/typespec/psankar-vetchi-typespec-0.1.0.tgz ./
-# Install all dependencies including the local typespec
+# Install dependencies first (better layer caching)
 RUN npm install ./psankar-vetchi-typespec-0.1.0.tgz && \
-    npm install && \
-    npm run build
+    npm install
+# Then copy source files
+COPY ronweasly/ .
+RUN npm run build
 
 FROM node:22.11.0-alpine AS runner
 WORKDIR /app
