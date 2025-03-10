@@ -31,7 +31,7 @@ docker:
 	docker build -f Dockerfile-ronweasly -t vetchi/ronweasly:$(GIT_SHA) .
 	docker build -f api/Dockerfile-hermione -t vetchi/hermione:$(GIT_SHA) .
 	docker build -f api/Dockerfile-granger -t vetchi/granger:$(GIT_SHA) .
-	docker build -f sqitch/Dockerfile -t vetchi/sqitch:$(GIT_SHA) .
+	docker build -f sqitch/Dockerfile -t vetchi/sqitch:$(GIT_SHA) sqitch
 	docker tag vetchi/harrypotter:$(GIT_SHA) vetchi/harrypotter:latest
 	docker tag vetchi/ronweasly:$(GIT_SHA) vetchi/ronweasly:latest
 	docker tag vetchi/hermione:$(GIT_SHA) vetchi/hermione:latest
