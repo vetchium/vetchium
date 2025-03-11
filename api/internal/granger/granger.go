@@ -25,12 +25,6 @@ type Config struct {
 	OnboardTokenLife string `json:"onboard_token_life" validate:"required,min=1"`
 
 	Port string `json:"port" validate:"required,min=1,number"`
-
-	SMTP struct {
-		Host string `json:"host" validate:"required,min=1"`
-		Port string `json:"port" validate:"required,min=1,number"`
-		User string `json:"user" validate:"required,min=1"`
-	} `json:"smtp" validate:"required"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -63,7 +57,7 @@ func LoadConfig() (*Config, error) {
 	return config, nil
 }
 
-type smtp struct {
+type smtpCredentials struct {
 	host     string
 	port     int
 	user     string
@@ -75,7 +69,7 @@ type Granger struct {
 	env              string
 	onboardTokenLife time.Duration
 	port             string
-	smtp             smtp
+	smtp             smtpCredentials
 
 	// These are initialized programatically in NewGranger()
 	db  db.DB
@@ -101,6 +95,27 @@ func NewGranger() (*Granger, error) {
 		})),
 	}
 
+	var sc smtpCredentials
+	sc.host = os.Getenv("SMTP_HOST")
+	if sc.host == "" {
+		return nil, fmt.Errorf("SMTP_HOST not set")
+	}
+
+	portStr := os.Getenv("SMTP_PORT")
+	if portStr == "" {
+		sc.port = 587
+	} else {
+		sc.port, err = strconv.Atoi(portStr)
+		if err != nil {
+			return nil, fmt.Errorf("SMTP_PORT is invalid: %w", err)
+		}
+	}
+
+	sc.user = os.Getenv("SMTP_USER")
+	if sc.user == "" {
+		return nil, fmt.Errorf("SMTP_USER not set")
+	}
+
 	smtpPassword := os.Getenv("SMTP_PASSWORD")
 	if smtpPassword == "" {
 		return nil, fmt.Errorf("SMTP_PASSWORD not set")
@@ -111,25 +126,15 @@ func NewGranger() (*Granger, error) {
 		return nil, err
 	}
 
-	smtpPort, err := strconv.Atoi(config.SMTP.Port)
-	if err != nil {
-		return nil, fmt.Errorf("SMTP_PORT is invalid: %w", err)
-	}
-
 	tokenDuration, err := time.ParseDuration(config.OnboardTokenLife)
 	if err != nil {
 		return nil, fmt.Errorf("OnboardTokenLife is invalid: %w", err)
 	}
 
 	return &Granger{
-		env:  config.Env,
-		port: fmt.Sprintf(":%s", config.Port),
-		smtp: smtp{
-			host:     config.SMTP.Host,
-			port:     smtpPort,
-			user:     config.SMTP.User,
-			password: smtpPassword,
-		},
+		env:              config.Env,
+		port:             fmt.Sprintf(":%s", config.Port),
+		smtp:             sc,
 		onboardTokenLife: tokenDuration,
 
 		db:  db,
