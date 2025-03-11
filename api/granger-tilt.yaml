@@ -46,7 +46,7 @@ spec:
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: vetchi-secrets
+                  name: smtp-credentials
                   key: SMTP_PASSWORD
           volumeMounts:
             - name: config-volume
