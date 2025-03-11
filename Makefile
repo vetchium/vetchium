@@ -32,11 +32,14 @@ docker:
 	docker build -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
 	docker build -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
 	docker build -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
-	docker tag psankar/vetchi-harrypotter:$(GIT_SHA) psankar/vetchi-harrypotter:latest
-	docker tag psankar/vetchi-ronweasly:$(GIT_SHA) psankar/vetchi-ronweasly:latest
-	docker tag psankar/vetchi-hermione:$(GIT_SHA) psankar/vetchi-hermione:latest
-	docker tag psankar/vetchi-granger:$(GIT_SHA) psankar/vetchi-granger:latest
-	docker tag psankar/vetchi-sqitch:$(GIT_SHA) psankar/vetchi-sqitch:latest
+
+publish: docker
+	$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
+	docker push psankar/vetchi-harrypotter:$(GIT_SHA)
+	docker push psankar/vetchi-ronweasly:$(GIT_SHA)
+	docker push psankar/vetchi-hermione:$(GIT_SHA)
+	docker push psankar/vetchi-granger:$(GIT_SHA)
+	docker push psankar/vetchi-sqitch:$(GIT_SHA)
 
 devtest: docker
 	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
