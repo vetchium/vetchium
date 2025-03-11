@@ -27,16 +27,16 @@ docker:
 		exit 1; \
 	fi
 	$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
-	docker build -f Dockerfile-harrypotter -t vetchi/harrypotter:$(GIT_SHA) .
-	docker build -f Dockerfile-ronweasly -t vetchi/ronweasly:$(GIT_SHA) .
-	docker build -f api/Dockerfile-hermione -t vetchi/hermione:$(GIT_SHA) .
-	docker build -f api/Dockerfile-granger -t vetchi/granger:$(GIT_SHA) .
-	docker build -f sqitch/Dockerfile -t vetchi/sqitch:$(GIT_SHA) sqitch
-	docker tag vetchi/harrypotter:$(GIT_SHA) vetchi/harrypotter:latest
-	docker tag vetchi/ronweasly:$(GIT_SHA) vetchi/ronweasly:latest
-	docker tag vetchi/hermione:$(GIT_SHA) vetchi/hermione:latest
-	docker tag vetchi/granger:$(GIT_SHA) vetchi/granger:latest
-	docker tag vetchi/sqitch:$(GIT_SHA) vetchi/sqitch:latest
+	docker build -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
+	docker build -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
+	docker build -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
+	docker build -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
+	docker build -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+	docker tag psankar/vetchi-harrypotter:$(GIT_SHA) psankar/vetchi-harrypotter:latest
+	docker tag psankar/vetchi-ronweasly:$(GIT_SHA) psankar/vetchi-ronweasly:latest
+	docker tag psankar/vetchi-hermione:$(GIT_SHA) psankar/vetchi-hermione:latest
+	docker tag psankar/vetchi-granger:$(GIT_SHA) psankar/vetchi-granger:latest
+	docker tag psankar/vetchi-sqitch:$(GIT_SHA) psankar/vetchi-sqitch:latest
 
 devtest: docker
 	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))

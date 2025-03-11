@@ -34,7 +34,7 @@ spec:
       serviceAccountName: granger-sa
       containers:
         - name: granger
-          image: vetchi/granger:${GIT_SHA}
+          image: psankar/vetchi-granger:${GIT_SHA}
           ports:
             - containerPort: 8080
           env:

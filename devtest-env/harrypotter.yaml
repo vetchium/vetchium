@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: harrypotter
-          image: vetchi/harrypotter:${GIT_SHA}
+          image: psankar/vetchi-harrypotter:${GIT_SHA}
           ports:
             - containerPort: 3000
           env:

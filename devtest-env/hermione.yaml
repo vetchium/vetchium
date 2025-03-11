@@ -68,7 +68,7 @@ spec:
               done
       containers:
         - name: hermione
-          image: vetchi/hermione:${GIT_SHA}
+          image: psankar/vetchi-hermione:${GIT_SHA}
           ports:
             - containerPort: 8080
           env:

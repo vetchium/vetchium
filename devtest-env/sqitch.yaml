@@ -20,7 +20,7 @@ spec:
               done
       containers:
         - name: sqitch
-          image: vetchi/sqitch:${GIT_SHA}
+          image: psankar/vetchi-sqitch:${GIT_SHA}
           command: ["sh", "-c"]
           args:
             - |
