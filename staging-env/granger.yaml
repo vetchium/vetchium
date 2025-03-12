@@ -9,11 +9,6 @@ data:
       "env": "dev",
       "onboard_token_life": "3m",
       "port": "8080",
-      "smtp": {
-        "host": "mailpit",
-        "port": "1025",
-        "user": "user"
-      }
     }
 ---
 apiVersion: apps/v1
@@ -43,11 +38,26 @@ spec:
                 secretKeyRef:
                   name: postgres-app
                   key: uri
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
+                  key: host
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
+                  key: port
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
+                  key: user
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: smtp-credentials
-                  key: SMTP_PASSWORD
+                  key: password
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config
