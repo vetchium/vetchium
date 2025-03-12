@@ -17,7 +17,7 @@ spec:
         - name: ronweasly
           image: psankar/vetchi-ronweasly:${GIT_SHA}
           ports:
-            - containerPort: 3000
+            - containerPort: 3001
           env:
             - name: NODE_ENV
               value: "production"
@@ -34,6 +34,7 @@ spec:
   selector:
     app: ronweasly
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 3001
