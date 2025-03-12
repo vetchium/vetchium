@@ -36,9 +36,9 @@ spec:
       app: hermione
   template:
     metadata:
-      generateName: hermione-${GIT_SHA}-
       labels:
         app: hermione
+        version: ${GIT_SHA}
     spec:
       serviceAccountName: hermione-sa
       initContainers:

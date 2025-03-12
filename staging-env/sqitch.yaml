@@ -8,6 +8,10 @@ metadata:
 spec:
   backoffLimit: 5
   template:
+    metadata:
+      labels:
+        app: sqitch
+        version: ${GIT_SHA}
     spec:
       serviceAccountName: sqitch-sa
       initContainers:

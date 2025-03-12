@@ -9,9 +9,9 @@ spec:
       app: harrypotter
   template:
     metadata:
-      generateName: harrypotter-${GIT_SHA}-
       labels:
         app: harrypotter
+        version: ${GIT_SHA}
     spec:
       containers:
         - name: harrypotter
