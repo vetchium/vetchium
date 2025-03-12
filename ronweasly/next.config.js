@@ -1,12 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   output: "standalone",
+  reactStrictMode: true,
   async rewrites() {
+    // Get API endpoint from env var with localhost fallback for development
+    const apiEndpoint = process.env.API_ENDPOINT || "http://localhost:8081";
     return [
       {
-        source: "/api/:path*", // Match all requests to /api
-        destination: "http://localhost:8081/:path*", // Proxy to your API server
+        source: "/api/:path*",
+        destination: `${apiEndpoint}/:path*`,
       },
     ];
   },

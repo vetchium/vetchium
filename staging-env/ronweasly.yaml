@@ -21,6 +21,8 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
+            - name: API_ENDPOINT
+              value: "http://granger:8081"
 ---
 apiVersion: v1
 kind: Service
