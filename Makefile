@@ -90,7 +90,7 @@ staging-init:
 
 	sleep 5 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchistaging --timeout=5m
 
-staging:
+staging: publish
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/sqitch.yaml | kubectl apply -f -
 	echo "Waiting for sqitch job to complete..."
 	kubectl wait --for=condition=complete job/sqitch -n vetchistaging --timeout=5m
