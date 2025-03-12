@@ -23,9 +23,22 @@ lib:
 	cd ../harrypotter && npm install ../typespec && \
 	cd ../ronweasly && npm install ../typespec
 
+# Build local images for the host platform
 docker:
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "Error: There are uncommitted changes. Please commit them before building docker images."; \
+		exit 1; \
+	fi
+	docker buildx build --load -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
+	docker buildx build --load -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
+	docker buildx build --load -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
+	docker buildx build --load -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
+	docker buildx build --load -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+
+# Build multi-platform images and push them to registry
+publish:
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "Error: There are uncommitted changes. Please commit them before publishing docker images."; \
 		exit 1; \
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
@@ -34,13 +47,6 @@ docker:
 	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) --push .
 	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) --push .
 	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch
-
-publish: docker
-	docker push psankar/vetchi-harrypotter:$(GIT_SHA)
-	docker push psankar/vetchi-ronweasly:$(GIT_SHA)
-	docker push psankar/vetchi-hermione:$(GIT_SHA)
-	docker push psankar/vetchi-granger:$(GIT_SHA)
-	docker push psankar/vetchi-sqitch:$(GIT_SHA)
 
 devtest: docker
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
