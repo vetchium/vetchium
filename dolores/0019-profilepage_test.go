@@ -164,12 +164,9 @@ var _ = Describe("Profile Page", Ordered, func() {
 		It("should handle various test cases correctly", func() {
 			// Test data
 			handle1 := "profilepage_user1"
-			handle2 := "profilepage_user2" // Already used by another user
-			newHandle := "new_unique_handle"
 			updatedName := "Updated Name"
 			updatedShortBio := "Updated short bio"
 			updatedLongBio := "Updated long bio"
-			invalidHandle := "inv@lid_handle"
 			emptyStr := ""
 
 			testCases := []updateBioTestCase{
@@ -177,7 +174,6 @@ var _ = Describe("Profile Page", Ordered, func() {
 					description: "without authentication",
 					token:       "",
 					request: hub.UpdateBioRequest{
-						Handle:   &handle1,
 						FullName: &updatedName,
 						ShortBio: &updatedShortBio,
 						LongBio:  &updatedLongBio,
@@ -185,54 +181,19 @@ var _ = Describe("Profile Page", Ordered, func() {
 					wantStatus: http.StatusUnauthorized,
 				},
 				{
-					description: "update bio with new unique handle",
+					description: "update bio with valid data",
 					token:       hubToken1,
 					request: hub.UpdateBioRequest{
-						Handle:   &newHandle,
 						FullName: &updatedName,
 						ShortBio: &updatedShortBio,
 						LongBio:  &updatedLongBio,
 					},
 					wantStatus: http.StatusOK,
-				},
-				{
-					description: "update bio with duplicate handle",
-					token:       hubToken1,
-					request: hub.UpdateBioRequest{
-						Handle:   &handle2, // Try to use handle that's already taken by user2
-						FullName: &updatedName,
-						ShortBio: &updatedShortBio,
-						LongBio:  &updatedLongBio,
-					},
-					wantStatus: http.StatusConflict,
-				},
-				{
-					description: "update bio without changing handle",
-					token:       hubToken2,
-					request: hub.UpdateBioRequest{
-						Handle:   &handle2, // Keep same handle
-						FullName: &updatedName,
-						ShortBio: &updatedShortBio,
-						LongBio:  &updatedLongBio,
-					},
-					wantStatus: http.StatusOK,
-				},
-				{
-					description: "update with invalid handle format",
-					token:       hubToken1,
-					request: hub.UpdateBioRequest{
-						Handle:   &invalidHandle,
-						FullName: &updatedName,
-						ShortBio: &updatedShortBio,
-						LongBio:  &updatedLongBio,
-					},
-					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "update with empty required fields",
 					token:       hubToken1,
 					request: hub.UpdateBioRequest{
-						Handle:   &handle1,
 						FullName: &emptyStr,
 						ShortBio: &emptyStr,
 						LongBio:  &emptyStr,
@@ -256,7 +217,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 					resp := testPOSTGetResp(
 						tc.token,
 						hub.GetBioRequest{
-							Handle: *tc.request.Handle,
+							Handle: handle1,
 						},
 						"/hub/get-bio",
 						http.StatusOK,
@@ -265,7 +226,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 					var bio hub.Bio
 					err := json.Unmarshal(resp.([]byte), &bio)
 					Expect(err).ShouldNot(HaveOccurred())
-					Expect(bio.Handle).Should(Equal(*tc.request.Handle))
+					Expect(bio.Handle).Should(Equal(handle1))
 					Expect(bio.FullName).Should(Equal(*tc.request.FullName))
 					Expect(bio.ShortBio).Should(Equal(*tc.request.ShortBio))
 					Expect(bio.LongBio).Should(Equal(*tc.request.LongBio))
