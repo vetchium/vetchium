@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ronweasly-${GIT_SHA}
+  name: ronweasly
   namespace: vetchistaging
 spec:
   selector:

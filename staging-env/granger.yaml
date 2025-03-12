@@ -14,7 +14,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: granger-${GIT_SHA}
+  name: granger
   namespace: vetchistaging
 spec:
   replicas: 1

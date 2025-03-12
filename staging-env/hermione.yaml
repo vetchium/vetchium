@@ -27,7 +27,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hermione-${GIT_SHA}
+  name: hermione
   namespace: vetchistaging
 spec:
   replicas: 3
