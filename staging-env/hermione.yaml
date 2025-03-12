@@ -36,6 +36,7 @@ spec:
       app: hermione
   template:
     metadata:
+      generateName: hermione-${GIT_SHA}-
       labels:
         app: hermione
     spec:

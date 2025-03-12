@@ -17,12 +17,13 @@ metadata:
   name: granger
   namespace: vetchistaging
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: granger
   template:
     metadata:
+      generateName: granger-${GIT_SHA}-
       labels:
         app: granger
     spec:

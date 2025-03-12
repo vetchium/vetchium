@@ -9,6 +9,7 @@ spec:
       app: ronweasly
   template:
     metadata:
+      generateName: ronweasly-${GIT_SHA}-
       labels:
         app: ronweasly
     spec:

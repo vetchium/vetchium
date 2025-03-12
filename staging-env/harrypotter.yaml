@@ -9,6 +9,7 @@ spec:
       app: harrypotter
   template:
     metadata:
+      generateName: harrypotter-${GIT_SHA}-
       labels:
         app: harrypotter
     spec:
