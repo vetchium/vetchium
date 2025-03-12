@@ -28,11 +28,12 @@ docker:
 		echo "Error: There are uncommitted changes. Please commit them before building docker images."; \
 		exit 1; \
 	fi
-	docker build -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
-	docker build -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
-	docker build -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
-	docker build -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
-	docker build -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
+	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch
 
 publish: docker
 	$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
