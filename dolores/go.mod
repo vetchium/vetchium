@@ -7,7 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
-	github.com/psankar/vetchi/typespec v0.0.0-20250304063150-b65f53ce53fc
+	github.com/psankar/vetchi/typespec v0.0.0-20250312091303-ed59a0b0db34
 )
 
 replace github.com/psankar/vetchi/typespec => ../typespec

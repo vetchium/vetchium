@@ -52,7 +52,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: vetchidev-full-access
+  name: full-access
 subjects:
   - kind: ServiceAccount
     name: sqitch-sa

@@ -3,7 +3,6 @@ secret_settings(disable_scrub=True)
 k8s_kind('Cluster', api_version='postgresql.cnpg.io/v1')
 
 # Load Kubernetes YAML files
-k8s_yaml('tiltenv/cnpg-1.25.1.yaml')
 k8s_yaml('tiltenv/postgres-cluster.yaml')
 k8s_yaml('tiltenv/mailpit.yaml')
 k8s_yaml('tiltenv/minio.yaml')
