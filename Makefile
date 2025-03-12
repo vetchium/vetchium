@@ -88,7 +88,9 @@ staging-init:
 	kubectl apply -f staging-env/postgres-cluster.yaml
 	kubectl apply -f staging-env/secrets.yaml
 
-	sleep 5 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchistaging --timeout=5m
+	kubectl get pods -A
+	echo "Waiting for postgres to be ready..."
+	sleep 10 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchistaging --timeout=5m
 
 staging: publish
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/sqitch.yaml | kubectl apply -f -
