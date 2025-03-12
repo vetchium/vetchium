@@ -149,7 +149,7 @@ SET
 	full_name = COALESCE($1, full_name),
     short_bio = COALESCE($2, short_bio),
     long_bio = COALESCE($3, long_bio)
-WHERE id = $5
+WHERE id = $4
 `
 	_, err = p.pool.Exec(
 		ctx,
