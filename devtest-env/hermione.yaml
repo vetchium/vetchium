@@ -38,6 +38,7 @@ spec:
     metadata:
       labels:
         app: hermione
+        version: ${GIT_SHA}
     spec:
       serviceAccountName: hermione-sa
       initContainers:

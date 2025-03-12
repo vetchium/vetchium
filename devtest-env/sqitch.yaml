@@ -3,9 +3,15 @@ kind: Job
 metadata:
   name: sqitch-${GIT_SHA}
   namespace: vetchidevtest
+  labels:
+    app: sqitch
 spec:
   backoffLimit: 5
   template:
+    metadata:
+      labels:
+        app: sqitch
+        version: ${GIT_SHA}
     spec:
       serviceAccountName: sqitch-sa
       initContainers:

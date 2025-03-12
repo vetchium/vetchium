@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: ronweasly
+        version: ${GIT_SHA}
     spec:
       containers:
         - name: ronweasly

@@ -25,6 +25,7 @@ spec:
     metadata:
       labels:
         app: granger
+        version: ${GIT_SHA}
     spec:
       serviceAccountName: granger-sa
       containers:
