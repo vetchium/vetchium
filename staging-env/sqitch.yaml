@@ -3,6 +3,8 @@ kind: Job
 metadata:
   name: sqitch-${GIT_SHA}
   namespace: vetchistaging
+  labels:
+    app: sqitch
 spec:
   backoffLimit: 5
   template:
