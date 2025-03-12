@@ -1,3 +1,5 @@
+$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
+
 dev:
 	tilt down
 	time kubectl delete pvc -n vetchidev --all --ignore-not-found
@@ -26,7 +28,6 @@ docker:
 		echo "Error: There are uncommitted changes. Please commit them before building docker images."; \
 		exit 1; \
 	fi
-	$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 	docker build -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
 	docker build -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
 	docker build -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
