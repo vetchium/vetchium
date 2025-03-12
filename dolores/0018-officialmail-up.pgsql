@@ -3,7 +3,7 @@ BEGIN;
 -- Create test hub users (one for each API test)
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
-    state, resident_country_code, resident_city, preferred_language,
+    state, tier, resident_country_code, resident_city, preferred_language,
     short_bio, long_bio, created_at, updated_at
 ) VALUES
 -- User for add official email tests
@@ -14,6 +14,7 @@ INSERT INTO hub_users (
     'addemailuser@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Bangalore',
     'en',
@@ -30,6 +31,7 @@ INSERT INTO hub_users (
     'deleteemailuser@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Chennai',
     'en',
@@ -46,6 +48,7 @@ INSERT INTO hub_users (
     'triggeruser@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Pune',
     'en',
@@ -62,6 +65,7 @@ INSERT INTO hub_users (
     'verifyuser@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Hyderabad',
     'en',
@@ -78,6 +82,7 @@ INSERT INTO hub_users (
     'listemailsuser@hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Kolkata',
     'en',

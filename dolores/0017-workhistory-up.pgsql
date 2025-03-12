@@ -3,7 +3,7 @@ BEGIN;
 -- Create test hub users
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
-    state, resident_country_code, resident_city, preferred_language,
+    state, tier, resident_country_code, resident_city, preferred_language,
     short_bio, long_bio, created_at, updated_at
 ) VALUES
 (
@@ -13,6 +13,7 @@ INSERT INTO hub_users (
     'user1@workhistory-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Mumbai',
     'en',
@@ -28,6 +29,7 @@ INSERT INTO hub_users (
     'user2@workhistory-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
     'IND',
     'Delhi',
     'en',
