@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hermione-config
-  namespace: vetchidevtest
+  namespace: vetchistaging
 data:
   config.json: |
     {
@@ -28,7 +28,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hermione
-  namespace: vetchidevtest
+  namespace: vetchistaging
 spec:
   replicas: 3
   selector:
@@ -47,7 +47,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              until kubectl get job sqitch -n vetchidevtest -o jsonpath='{.status.succeeded}' | grep -q '1'; do
+              until kubectl get job sqitch -n vetchistaging -o jsonpath='{.status.succeeded}' | grep -q '1'; do
                 echo "Waiting for sqitch job to complete..."
                 sleep 5
               done
@@ -99,7 +99,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hermione
-  namespace: vetchidevtest
+  namespace: vetchistaging
 spec:
   selector:
     app: hermione
@@ -112,7 +112,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: hermione-sa
-  namespace: vetchidevtest
+  namespace: vetchistaging
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -125,4 +125,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: hermione-sa
-    namespace: vetchidevtest
+    namespace: vetchistaging
