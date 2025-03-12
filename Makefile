@@ -29,14 +29,13 @@ docker:
 		exit 1; \
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
-	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch
+	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
 
 publish: docker
-	$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 	docker push psankar/vetchi-harrypotter:$(GIT_SHA)
 	docker push psankar/vetchi-ronweasly:$(GIT_SHA)
 	docker push psankar/vetchi-hermione:$(GIT_SHA)
@@ -44,7 +43,6 @@ publish: docker
 	docker push psankar/vetchi-sqitch:$(GIT_SHA)
 
 devtest: docker
-	@$(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidevtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
