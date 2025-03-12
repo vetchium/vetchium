@@ -47,8 +47,8 @@ spec:
             - /bin/sh
             - -c
             - |
-              until kubectl get job sqitch -n vetchistaging -o jsonpath='{.status.succeeded}' | grep -q '1'; do
-                echo "Waiting for sqitch job to complete..."
+              until kubectl get jobs -l app=sqitch -n vetchistaging -o jsonpath='{.items[-1].status.succeeded}' | grep -q '1'; do
+                echo "Waiting for latest sqitch job to complete..."
                 sleep 5
               done
       containers:
