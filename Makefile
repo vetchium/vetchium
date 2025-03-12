@@ -95,7 +95,7 @@ staging-init:
 staging: publish
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/sqitch.yaml | kubectl apply -f -
 	echo "Waiting for sqitch job to complete..."
-	kubectl wait --for=condition=complete job/sqitch -n vetchistaging --timeout=5m
+	kubectl wait --for=condition=complete job -l app=sqitch -n vetchistaging --timeout=5m
 
 	# Then apply backend services
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/granger.yaml | kubectl apply -f -
