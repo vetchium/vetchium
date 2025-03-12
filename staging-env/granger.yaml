@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: granger-config
+  namespace: vetchidevtest
+data:
+  config.json: |
+    {
+      "env": "dev",
+      "onboard_token_life": "3m",
+      "port": "8080",
+      "smtp": {
+        "host": "mailpit",
+        "port": "1025",
+        "user": "user"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granger
+  namespace: vetchidevtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: granger
+  template:
+    metadata:
+      labels:
+        app: granger
+    spec:
+      serviceAccountName: granger-sa
+      containers:
+        - name: granger
+          image: psankar/vetchi-granger:${GIT_SHA}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-app
+                  key: uri
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
+                  key: SMTP_PASSWORD
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/granger-config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: granger-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granger
+  namespace: vetchidevtest
+spec:
+  selector:
+    app: granger
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: granger-sa
+  namespace: vetchidevtest
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: granger-full-access-binding-devtest
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: full-access
+subjects:
+  - kind: ServiceAccount
+    name: granger-sa
+    namespace: vetchidevtest

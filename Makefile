@@ -70,3 +70,28 @@ devtest: docker
 	# Finally apply frontend services
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/harrypotter.yaml | kubectl apply -f -
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/ronweasly.yaml | kubectl apply -f -
+
+staging-init:
+	kubectl create namespace vetchistaging
+	kubectl apply --server-side --force-conflicts -f staging-env/cnpg-1.25.1.yaml
+	echo "Waiting for CNPG operator to be ready..."
+	kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
+
+	# Then apply core infrastructure
+	kubectl apply -f staging-env/full-access-cluster-role.yaml
+	kubectl apply -f staging-env/postgres-cluster.yaml
+	kubectl apply -f staging-env/secrets.yaml
+
+	sleep 5 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchistaging --timeout=5m
+
+staging:
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/sqitch.yaml | kubectl apply -f -
+	echo "Waiting for sqitch job to complete..."
+	kubectl wait --for=condition=complete job/sqitch -n vetchistaging --timeout=5m
+
+	# Then apply backend services
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/granger.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/hermione.yaml | kubectl apply -f -
+	# Finally apply frontend services
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/harrypotter.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/ronweasly.yaml | kubectl apply -f -
