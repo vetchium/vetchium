@@ -3,10 +3,15 @@ kind: Job
 metadata:
   name: sqitch
   namespace: vetchidev
+  labels:
+    app: sqitch
 spec:
+  backoffLimit: 5
   template:
+    metadata:
+      labels:
+        app: sqitch
     spec:
-      backoffLimit: 5
       serviceAccountName: sqitch-sa
       initContainers:
         - name: wait-for-postgres
@@ -20,7 +25,7 @@ spec:
               done
       containers:
         - name: sqitch
-          image: psankar/vetchi-sqitch:latest
+          image: psankar/vetchi-sqitch
           command: ["sh", "-c"]
           args:
             - |
@@ -37,7 +42,6 @@ spec:
           secret:
             secretName: postgres-app
       restartPolicy: Never
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -48,7 +52,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sqitch-full-access-binding
+  name: sqitch-full-access-binding-devtest
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

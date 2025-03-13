@@ -2,18 +2,13 @@
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  // Make API_ENDPOINT available at runtime
-  env: {
-    API_ENDPOINT: process.env.API_ENDPOINT || "http://localhost:8081",
-  },
   async rewrites() {
-    // Use the runtime env variable
+    // Get API endpoint from env var
+    const apiEndpoint = process.env.API_ENDPOINT || "http://VETCHI_MISSED_URL";
     return [
       {
         source: "/api/:path*",
-        destination: `${
-          process.env.API_ENDPOINT || "http://localhost:8081"
-        }/:path*`,
+        destination: `${apiEndpoint}/:path*`,
       },
     ];
   },

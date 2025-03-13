@@ -3,8 +3,8 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   async rewrites() {
-    // Get API endpoint from env var with localhost fallback for development
-    const apiEndpoint = process.env.API_ENDPOINT || "http://localhost:8081";
+    // Get API endpoint from env var
+    const apiEndpoint = process.env.API_ENDPOINT || "http://VETCHI_MISSED_URL";
     return [
       {
         source: "/api/:path*",

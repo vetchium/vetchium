@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	serverURL  = "http://localhost:8081"
+	serverURL  = "http://localhost:8080"
 	mailPitURL = "http://localhost:8025"
 )
 

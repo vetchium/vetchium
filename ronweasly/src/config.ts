@@ -1,4 +1,4 @@
 export const config = {
-  API_SERVER_PREFIX: process.env.API_ENDPOINT || "http://localhost:8081",
+  API_SERVER_PREFIX: "http://hermione",
   // Add any other configuration values here
 };

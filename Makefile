@@ -6,7 +6,7 @@ dev:
 	kubectl delete pv -n vetchidev --all --ignore-not-found
 	kubectl delete namespace vetchidev --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidev
-	kubectl apply --server-side --force-conflicts -f tiltenv/cnpg-1.25.1.yaml
+	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
 	sleep 10 && kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 	tilt up
@@ -28,8 +28,8 @@ lib:
 
 # Build local images for the host platform
 docker:
-	docker buildx build --load -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
-	docker buildx build --load -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
+	docker buildx build --load -f harrypotter/Dockerfile -t psankar/vetchi-harrypotter:$(GIT_SHA) .
+	docker buildx build --load -f ronweasly/Dockerfile -t psankar/vetchi-ronweasly:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
 	docker buildx build --load -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch

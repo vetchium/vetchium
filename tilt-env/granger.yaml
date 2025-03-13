@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: granger-config
-  namespace: vetchistaging
+  namespace: vetchidev
 data:
   config.json: |
     {
@@ -15,9 +15,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: granger
-  namespace: vetchistaging
+  namespace: vetchidev
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: granger
@@ -30,7 +30,7 @@ spec:
       serviceAccountName: granger-sa
       containers:
         - name: granger
-          image: psankar/vetchi-granger:${GIT_SHA}
+          image: psankar/vetchi-granger
           ports:
             - containerPort: 8080
           env:
@@ -71,7 +71,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: granger
-  namespace: vetchistaging
+  namespace: vetchidev
 spec:
   selector:
     app: granger
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: granger-sa
-  namespace: vetchistaging
+  namespace: vetchidev
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -97,4 +97,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: granger-sa
-    namespace: vetchistaging
+    namespace: vetchidev
