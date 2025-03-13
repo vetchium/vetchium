@@ -51,8 +51,8 @@ docker_build(
 k8s_resource('mailpit', port_forwards='8025:8025')
 k8s_resource('hermione', port_forwards='8080:8080')
 k8s_resource('granger', port_forwards='8081:8080')
-k8s_resource('harrypotter', port_forwards=['3001:3000', '9229:9229'])  # Added debug port forward
-k8s_resource('ronweasly', port_forwards=['3002:3000', '9229:9229'])  # Added debug port forward
+k8s_resource('harrypotter', port_forwards='3001:3000')
+k8s_resource('ronweasly', port_forwards='3002:3000')
 
 # The cnpg operator takes a lot of time for the pg pods to get ready
 # So we need to do all the below magic for pg port_forward alone unlike
