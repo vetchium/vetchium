@@ -15,11 +15,11 @@ k8s_yaml('tilt-env/harrypotter.yaml')
 k8s_yaml('tilt-env/ronweasly.yaml')
 
 # Define Docker builds with root context to include typespec
-docker_build('psankar/vetchi-granger', 'api', dockerfile='api/Dockerfile-granger' )
-docker_build('psankar/vetchi-hermione', 'api', dockerfile='api/Dockerfile-hermione')
+docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger' )
+docker_build('psankar/vetchi-hermione', '.', dockerfile='api/Dockerfile-hermione')
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
-docker_build('psankar/vetchi-harrypotter', 'harrypotter', dockerfile='harrypotter/Dockerfile')
-docker_build('psankar/vetchi-ronweasly', 'ronweasly', dockerfile='ronweasly/Dockerfile')
+docker_build('psankar/vetchi-harrypotter', '.', dockerfile='harrypotter/Dockerfile')
+docker_build('psankar/vetchi-ronweasly', '.', dockerfile='ronweasly/Dockerfile')
 
 k8s_resource('mailpit', port_forwards='8025:8025')
 k8s_resource('hermione', port_forwards='8080:8080')
