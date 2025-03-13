@@ -14,6 +14,10 @@ RUN npm run build && npm pack
 
 FROM node:22.11.0-alpine AS builder
 WORKDIR /app
+
+ARG API_ENDPOINT
+ENV API_ENDPOINT=$API_ENDPOINT
+
 # Copy package files first
 COPY ronweasly/package*.json ./
 # Copy the typespec archive
@@ -42,5 +46,8 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+# The runner stage inherits environment variables from the builder stage
+ENV API_ENDPOINT=$API_ENDPOINT
 
 CMD ["node", "server.js"]
