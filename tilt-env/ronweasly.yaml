@@ -17,9 +17,6 @@ spec:
           image: psankar/vetchi-ronweasly
           ports:
             - containerPort: 3000
-          env:
-            - name: NODE_ENV
-              value: "production"
 ---
 apiVersion: v1
 kind: Service

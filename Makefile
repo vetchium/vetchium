@@ -28,8 +28,8 @@ lib:
 
 # Build local images for the host platform
 docker:
-	docker buildx build --load -f harrypotter/Dockerfile -t psankar/vetchi-harrypotter:$(GIT_SHA) .
-	docker buildx build --load -f ronweasly/Dockerfile -t psankar/vetchi-ronweasly:$(GIT_SHA) .
+	docker buildx build --load -f harrypotter/Dockerfile-optimized -t psankar/vetchi-harrypotter:$(GIT_SHA) .
+	docker buildx build --load -f ronweasly/Dockerfile-optimized -t psankar/vetchi-ronweasly:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
 	docker buildx build --load -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
@@ -41,8 +41,8 @@ publish:
 		exit 1; \
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
-	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f harrypotter/Dockerfile-optimized -t psankar/vetchi-harrypotter:$(GIT_SHA) --push .
+	docker buildx build --platform=linux/amd64,linux/arm64 -f ronweasly/Dockerfile-optimized -t psankar/vetchi-ronweasly:$(GIT_SHA) --push .
 	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) --push .
 	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) --push .
 	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch

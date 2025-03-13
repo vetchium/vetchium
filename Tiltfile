@@ -23,29 +23,15 @@ docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
 docker_build(
     'psankar/vetchi-harrypotter',
     '.',
-    dockerfile='harrypotter/Dockerfile',
-    target='dev-runner',
-    build_args={'API_ENDPOINT': 'http://hermione:8080'},
-    live_update=[
-        sync('./harrypotter', '/app'),
-        sync('./typespec', '/app/typespec'),
-        run('cd /app && npm install', trigger=['./harrypotter/package.json', './harrypotter/package-lock.json']),
-        run('cd /app/typespec && npm install', trigger=['./typespec/package.json', './typespec/package-lock.json'])
-    ]
+    dockerfile='harrypotter/Dockerfile-tilt',
+    build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
 docker_build(
     'psankar/vetchi-ronweasly',
     '.',
-    dockerfile='ronweasly/Dockerfile',
-    target='dev-runner',
-    build_args={'API_ENDPOINT': 'http://hermione:8080'},
-    live_update=[
-        sync('./ronweasly', '/app'),
-        sync('./typespec', '/app/typespec'),
-        run('cd /app && npm install', trigger=['./ronweasly/package.json', './ronweasly/package-lock.json']),
-        run('cd /app/typespec && npm install', trigger=['./typespec/package.json', './typespec/package-lock.json'])
-    ]
+    dockerfile='ronweasly/Dockerfile-tilt',
+    build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
 k8s_resource('mailpit', port_forwards='8025:8025')

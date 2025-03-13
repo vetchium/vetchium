@@ -1,0 +1,31 @@
+FROM node:22.11.0
+ARG API_ENDPOINT
+ENV API_ENDPOINT=$API_ENDPOINT
+ENV NEXT_TELEMETRY_DISABLED=1
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+WORKDIR /app/typespec
+
+# Copy only package files first for better caching
+COPY typespec/package*.json ./
+# Then copy source files
+COPY typespec/*.json typespec/*.ts typespec/*.tsp typespec/*.yaml ./
+COPY typespec/common ./common
+COPY typespec/employer ./employer
+COPY typespec/hub ./hub
+# Now run the build explicitly
+RUN npm install
+
+WORKDIR /app/harrypotter
+# Copy package files first
+COPY harrypotter/package*.json ./
+RUN npm install
+RUN npm install ../typespec
+
+# Copy source files
+COPY harrypotter/ .
+RUN npm run build
+
+CMD ["npm", "run", "start"]

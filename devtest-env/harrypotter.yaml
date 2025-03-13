@@ -18,9 +18,6 @@ spec:
           image: psankar/vetchi-harrypotter:${GIT_SHA}
           ports:
             - containerPort: 3000
-          env:
-            - name: NODE_ENV
-              value: "production"
           resources:
             requests:
               cpu: "100m"
