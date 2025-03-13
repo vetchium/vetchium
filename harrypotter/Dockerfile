@@ -12,24 +12,66 @@ COPY typespec/hub ./hub
 # Now run the build explicitly
 RUN npm run build && npm pack
 
-FROM node:22.11.0-alpine AS builder
+# Development build stage
+FROM node:22.11.0-alpine AS dev-builder
 WORKDIR /app
 
 ARG API_ENDPOINT
 ENV API_ENDPOINT=$API_ENDPOINT
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy package files first
 COPY harrypotter/package*.json ./
 # Copy the typespec archive
 COPY --from=typespec-builder /app/typespec/psankar-vetchi-typespec-0.1.0.tgz ./
-# Install dependencies first (better layer caching)
+# Install dependencies with all devDependencies for better development experience
 RUN npm install ./psankar-vetchi-typespec-0.1.0.tgz && \
     npm install
-# Then copy source files
+
+# Copy source files
 COPY harrypotter/ .
+
+# Development runner stage
+FROM dev-builder AS dev-runner
+WORKDIR /app
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Enable source maps and debugging
+ENV NEXT_SHARP_PATH=/app/node_modules/sharp
+ENV NODE_OPTIONS='--inspect=0.0.0.0:9229'
+
+CMD ["npm", "run", "dev"]
+
+# Production build stage
+FROM node:22.11.0-alpine AS prod-builder
+WORKDIR /app
+
+ARG API_ENDPOINT
+ENV API_ENDPOINT=$API_ENDPOINT
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy package files first
+COPY harrypotter/package*.json ./
+# Copy the typespec archive
+COPY --from=typespec-builder /app/typespec/psankar-vetchi-typespec-0.1.0.tgz ./
+# Install dependencies without devDependencies for production
+RUN npm install ./psankar-vetchi-typespec-0.1.0.tgz && \
+    npm install --omit=dev
+
+# Copy source files
+COPY harrypotter/ .
+# Build for production with optimizations
 RUN npm run build
 
-FROM node:22.11.0-alpine AS runner
+# Production runner stage
+FROM node:22.11.0-alpine AS prod-runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -37,9 +79,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=prod-builder /app/public ./public
+COPY --from=prod-builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=prod-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 

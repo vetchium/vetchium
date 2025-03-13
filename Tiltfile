@@ -15,17 +15,44 @@ k8s_yaml('tilt-env/harrypotter.yaml')
 k8s_yaml('tilt-env/ronweasly.yaml')
 
 # Define Docker builds with root context to include typespec
-docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger' )
+docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger')
 docker_build('psankar/vetchi-hermione', '.', dockerfile='api/Dockerfile-hermione')
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
-docker_build('psankar/vetchi-harrypotter', '.', dockerfile='harrypotter/Dockerfile', build_args={'API_ENDPOINT': 'http://hermione:8080'})
-docker_build('psankar/vetchi-ronweasly', '.', dockerfile='ronweasly/Dockerfile', build_args={'API_ENDPOINT': 'http://hermione:8080'})
+
+# Development builds for Next.js apps with live reload
+docker_build(
+    'psankar/vetchi-harrypotter',
+    '.',
+    dockerfile='harrypotter/Dockerfile',
+    target='dev-runner',
+    build_args={'API_ENDPOINT': 'http://hermione:8080'},
+    live_update=[
+        sync('./harrypotter', '/app'),
+        sync('./typespec', '/app/typespec'),
+        run('cd /app && npm install', trigger=['./harrypotter/package.json', './harrypotter/package-lock.json']),
+        run('cd /app/typespec && npm install', trigger=['./typespec/package.json', './typespec/package-lock.json'])
+    ]
+)
+
+docker_build(
+    'psankar/vetchi-ronweasly',
+    '.',
+    dockerfile='ronweasly/Dockerfile',
+    target='dev-runner',
+    build_args={'API_ENDPOINT': 'http://hermione:8080'},
+    live_update=[
+        sync('./ronweasly', '/app'),
+        sync('./typespec', '/app/typespec'),
+        run('cd /app && npm install', trigger=['./ronweasly/package.json', './ronweasly/package-lock.json']),
+        run('cd /app/typespec && npm install', trigger=['./typespec/package.json', './typespec/package-lock.json'])
+    ]
+)
 
 k8s_resource('mailpit', port_forwards='8025:8025')
 k8s_resource('hermione', port_forwards='8080:8080')
 k8s_resource('granger', port_forwards='8081:8080')
-k8s_resource('harrypotter', port_forwards='3001:3000')
-k8s_resource('ronweasly', port_forwards='3002:3000')
+k8s_resource('harrypotter', port_forwards=['3001:3000', '9229:9229'])  # Added debug port forward
+k8s_resource('ronweasly', port_forwards=['3002:3000', '9229:9229'])  # Added debug port forward
 
 # The cnpg operator takes a lot of time for the pg pods to get ready
 # So we need to do all the below magic for pg port_forward alone unlike
