@@ -1,11 +1,11 @@
+*.md
 *.test
 .cursor/**
 .vscode/**
 charts/**
+devtest-env/**
 dev-seed/**
 dolores/**
-harrypotter/**
-ronweasly/**
 typespec/dist
 typespec/dist/**
 typespec/tsp-output

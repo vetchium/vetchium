@@ -2,7 +2,7 @@
 
 ## Development
 
-### Prerequisites
+### Pre-requisites
 
 - [Tilt](https://docs.tilt.dev/install.html)
 - [Docker](https://docs.docker.com/get-docker/)
@@ -16,52 +16,40 @@ To bring the services up, run the following commands:
 vetchi$ make
 
 # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
-
-# Setup typespec
-vetchi$ cd typespec && npm install && npm run build && cd ..
-
-# Generate libraries for front-end
-# When any typespec/**/*.{tsp,ts} files are changed, do:
-vetchi$ make lib
+# http://localhost:3001 for the Employer Site - harrypotter
+# http://localhost:3002 for the Hub site - ronweasly
+# http://localhost:8025 for the fake SMTP
+# :5432 for postgres
 
 # Seed some test data (tilt up should be running)
 vetchi$ make seed
 
-# Bring up the frontend services
-vetchi$ cd harrypotter && make
-vetchi$ cd ronweasly && make
-# Visit http://localhost:3000 and http://localhost:3001
-```
+# Employer credentials
+# domain: gryffindor.example
+# username: hermione@gryffindor.example (or) admin@gryffindor.example
+# password: NewPassword123$
 
-```
-http://localhost:3000 contains the Employer site. Login with:
-domain: gryffindor.example
-username: hermione@gryffindor.example (or) admin@gryffindor.example
-password: NewPassword123$
-```
-
-```
-http://localhost:3001 contains the Hub site. Login with:
-user: hagrid@hub.example (or) minerva@hub.example
-password: NewPassword123$
+# Hub credentials
+# email: user10@example.com
+# password: NewPassword123$
 ```
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 
-```
+```bash
 $ POSTGRES_URI=$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchidev/localhost/g')
 $ psql "$POSTGRES_URI"
 ```
 
 To connect to the port-forwarded Postgres using DBeaver or some such JDBC client, use:
 
-```
+```bash
 $ kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
 ```
 
 To run tests, use the following command:
 
-```
+```bash
 $ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
 vetchi $ make test ; # tilt up should be running
 ```
@@ -70,7 +58,7 @@ vetchi $ make test ; # tilt up should be running
 
 To tear down the services, run the following command:
 
-```
+```bash
 vetchi $ tilt down
 vetchi $ kubectl delete namespace vetchidev
 ```
