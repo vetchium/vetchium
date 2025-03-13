@@ -28,10 +28,6 @@ lib:
 
 # Build local images for the host platform
 docker:
-	@if [ -n "$$(git status --porcelain)" ]; then \
-		echo "Error: There are uncommitted changes. Please commit them before building docker images."; \
-		exit 1; \
-	fi
 	docker buildx build --load -f Dockerfile-harrypotter -t psankar/vetchi-harrypotter:$(GIT_SHA) .
 	docker buildx build --load -f Dockerfile-ronweasly -t psankar/vetchi-ronweasly:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
@@ -65,13 +61,13 @@ devtest: docker
 	kubectl apply -f devtest-env/mailpit.yaml
 	kubectl apply -f devtest-env/secrets.yaml
 
-	sleep 5 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
+	sleep 10 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
 
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/sqitch.yaml | kubectl apply -f -
 	echo "Waiting for sqitch job to complete..."
-	kubectl wait --for=condition=complete job/sqitch -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=complete job -l app=sqitch -n vetchidevtest --timeout=5m
 
 	# Then apply backend services
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/granger.yaml | kubectl apply -f -

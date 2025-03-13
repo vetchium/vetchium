@@ -30,7 +30,6 @@ metadata:
   name: harrypotter
   namespace: vetchistaging
 spec:
-  type: LoadBalancer
   selector:
     app: harrypotter
   ports:

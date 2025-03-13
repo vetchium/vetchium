@@ -2,13 +2,18 @@
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  // Make API_ENDPOINT available at runtime
+  env: {
+    API_ENDPOINT: process.env.API_ENDPOINT || "http://localhost:8081",
+  },
   async rewrites() {
-    // Get API endpoint from env var with localhost fallback for development
-    const apiEndpoint = process.env.API_ENDPOINT || "http://localhost:8081";
+    // Use the runtime env variable
     return [
       {
         source: "/api/:path*",
-        destination: `${apiEndpoint}/:path*`,
+        destination: `${
+          process.env.API_ENDPOINT || "http://localhost:8081"
+        }/:path*`,
       },
     ];
   },

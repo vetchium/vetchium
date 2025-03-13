@@ -30,7 +30,6 @@ metadata:
   name: ronweasly
   namespace: vetchidevtest
 spec:
-  type: LoadBalancer
   selector:
     app: ronweasly
   ports:
