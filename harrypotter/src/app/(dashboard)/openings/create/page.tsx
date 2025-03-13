@@ -132,7 +132,7 @@ export default function CreateOpeningPage() {
         setError(err instanceof Error ? err.message : t("openings.fetchError"));
       }
     },
-    [router]
+    [orgUsers]
   );
 
   const fetchCostCenters = useCallback(async () => {
@@ -166,7 +166,7 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchCostCentersError")
       );
     }
-  }, [router]);
+  }, [costCenters]);
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -199,7 +199,7 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchLocationsError")
       );
     }
-  }, [router]);
+  }, [locations]);
 
   const fetchTags = useCallback(
     async (searchPrefix?: string) => {
@@ -236,7 +236,7 @@ export default function CreateOpeningPage() {
         );
       }
     },
-    [router, t]
+    [tags]
   );
 
   useEffect(() => {
