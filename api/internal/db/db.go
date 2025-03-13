@@ -252,7 +252,6 @@ type DB interface {
 		context.Context,
 		hub.GetHubOpeningDetailsRequest,
 	) (hub.HubOpeningDetails, error)
-	GetMyHandle(context.Context) (string, error)
 	GetMyCandidacies(
 		context.Context,
 		hub.MyCandidaciesRequest,

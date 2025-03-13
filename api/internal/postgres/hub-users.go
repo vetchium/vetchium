@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
 )
 
 func (p *PG) GetHubUserByEmail(
@@ -221,16 +220,6 @@ func (p *PG) Logout(ctx context.Context, token string) error {
 	}
 
 	return nil
-}
-
-func (p *PG) GetMyHandle(ctx context.Context) (string, error) {
-	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
-	if !ok {
-		p.log.Err("failed to get hubUser from context")
-		return "", db.ErrInternal
-	}
-
-	return hubUser.Handle, nil
 }
 
 func (p *PG) AuthHubUser(
