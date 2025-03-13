@@ -119,7 +119,7 @@ export default function OpeningDetail({ params }: PageProps) {
     return () => {
       isMounted = false;
     };
-  }, [id, t]);
+  }, [id]);
 
   const handleStateChange = async (toState: OpeningState) => {
     if (!opening) return;

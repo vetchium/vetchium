@@ -38,54 +38,59 @@ export default function LocationActionPage() {
   const { t } = useTranslation();
   const isEdit = params.action === "edit";
 
-  const fetchLocation = useCallback(async (locationTitle: string) => {
-    try {
-      setIsLoading(true);
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const request: GetLocationRequest = {
-        title: locationTitle,
-      };
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-location`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
+  const fetchLocation = useCallback(
+    async (locationTitle: string) => {
+      try {
+        setIsLoading(true);
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/signin");
+          return;
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
+        const request: GetLocationRequest = {
+          title: locationTitle,
+        };
+
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/get-location`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+          }
+        );
+
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/signin");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(t("locations.fetchError"));
+        }
+
+        const location = await response.json();
+        setTitle(location.title);
+        setCountryCode(location.country_code);
+        setPostalAddress(location.postal_address);
+        setPostalCode(location.postal_code);
+        setOpenstreetmapUrl(location.openstreetmap_url || "");
+        setCityAka(location.city_aka || []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : t("locations.fetchError")
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      if (!response.ok) {
-        throw new Error(t("locations.fetchError"));
-      }
-
-      const location = await response.json();
-      setTitle(location.title);
-      setCountryCode(location.country_code);
-      setPostalAddress(location.postal_address);
-      setPostalCode(location.postal_code);
-      setOpenstreetmapUrl(location.openstreetmap_url || "");
-      setCityAka(location.city_aka || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("locations.fetchError"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, t]);
+    },
+    [router]
+  );
 
   useEffect(() => {
     if (isEdit) {

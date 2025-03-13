@@ -92,45 +92,48 @@ export default function CreateOpeningPage() {
     );
   }, [isGloballyRemote]);
 
-  const fetchOrgUsers = useCallback(async (searchPrefix?: string) => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/filter-org-users`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            prefix: searchPrefix,
-            limit: 40,
-          }),
+  const fetchOrgUsers = useCallback(
+    async (searchPrefix?: string) => {
+      try {
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/signin");
+          return;
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/signin");
-        return;
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/filter-org-users`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              prefix: searchPrefix,
+              limit: 40,
+            }),
+          }
+        );
+
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/signin");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(t("openings.fetchError"));
+        }
+
+        const data = await response.json();
+        setOrgUsers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("openings.fetchError"));
       }
-
-      if (!response.ok) {
-        throw new Error(t("openings.fetchError"));
-      }
-
-      const data = await response.json();
-      setOrgUsers(data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("openings.fetchError"));
-    }
-  }, [router, t]);
+    },
+    [router]
+  );
 
   const fetchCostCenters = useCallback(async () => {
     try {
@@ -163,7 +166,7 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchCostCentersError")
       );
     }
-  }, [router, t]);
+  }, [router]);
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -196,42 +199,45 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchLocationsError")
       );
     }
-  }, [router, t]);
+  }, [router]);
 
-  const fetchTags = useCallback(async (searchPrefix?: string) => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/signin");
-        return;
-      }
-
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/filter-opening-tags`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            prefix: searchPrefix,
-          }),
+  const fetchTags = useCallback(
+    async (searchPrefix?: string) => {
+      try {
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/signin");
+          return;
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(t("openings.fetchTagsError"));
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/employer/filter-opening-tags`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              prefix: searchPrefix,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(t("openings.fetchTagsError"));
+        }
+
+        const data = await response.json();
+        setTags(data || []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : t("openings.fetchTagsError")
+        );
       }
-
-      const data = await response.json();
-      setTags(data || []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("openings.fetchTagsError")
-      );
-    }
-  }, [router, t]);
+    },
+    [router, t]
+  );
 
   useEffect(() => {
     fetchCostCenters();

@@ -226,7 +226,7 @@ export default function InterviewDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [interviewId, router, t]);
+  }, [interviewId, router]);
 
   useEffect(() => {
     fetchInterview();

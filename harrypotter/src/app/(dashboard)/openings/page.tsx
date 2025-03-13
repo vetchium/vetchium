@@ -125,7 +125,7 @@ export default function Openings() {
         }
       }
     },
-    [states, t] // Add missing t dependency
+    [states]
   );
 
   useEffect(() => {

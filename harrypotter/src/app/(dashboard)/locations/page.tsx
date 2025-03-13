@@ -79,7 +79,7 @@ export default function LocationsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("locations.fetchError"));
     }
-  }, [includeDefunct, router, t]);
+  }, [includeDefunct, router]);
 
   useEffect(() => {
     const savedValue = localStorage.getItem("includeDefunctLocations");

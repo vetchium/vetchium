@@ -80,7 +80,7 @@ export default function CostCentersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [includeDefunct, router, t]);
+  }, [includeDefunct, router]);
 
   useEffect(() => {
     fetchCostCenters();

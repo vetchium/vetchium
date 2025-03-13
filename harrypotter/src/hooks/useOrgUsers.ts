@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { AddOrgUserRequest, OrgUser } from "@psankar/vetchi-typespec";
@@ -8,7 +8,7 @@ export function useOrgUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchUsers = async (includeDisabled: boolean = false) => {
+  const fetchUsers = useCallback(async (includeDisabled: boolean = false) => {
     try {
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/filter-org-users`,
@@ -42,7 +42,7 @@ export function useOrgUsers() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty deps array as it only uses external constants
 
   const addUser = async (data: AddOrgUserRequest) => {
     try {
