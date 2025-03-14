@@ -57,6 +57,10 @@ spec:
                 secretKeyRef:
                   name: smtp-credentials
                   key: password
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config
@@ -93,3 +97,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: granger-sa
+    namespace: ${NAMESPACE}

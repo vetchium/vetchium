@@ -19,7 +19,7 @@ spec:
           command: ["sh", "-c"]
           args:
             - |
-              until kubectl get pods -l app=postgres -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+              until kubectl get pods -l app=postgres -n ${NAMESPACE} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
                 echo "Waiting for PostgreSQL to be ready..."
                 sleep 5
               done
@@ -59,3 +59,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: sqitch-sa
+    namespace: ${NAMESPACE}

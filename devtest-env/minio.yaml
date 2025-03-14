@@ -63,6 +63,10 @@ spec:
               port: 9000
             initialDelaySeconds: 10
             periodSeconds: 10
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "500Mi"
       volumes:
         - name: storage
           persistentVolumeClaim:

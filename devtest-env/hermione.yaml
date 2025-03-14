@@ -89,6 +89,10 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/hermione-config
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
       volumes:
         - name: config-volume
           configMap:
@@ -122,3 +126,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: hermione-sa
+    namespace: ${NAMESPACE}

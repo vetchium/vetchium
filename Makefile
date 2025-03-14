@@ -54,7 +54,6 @@ publish: ## Build multi-platform Docker images and publish them to the container
 	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch
 
 devtest: ## Brings up an environment with the local docker images. No live reload.
-	docker
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidevtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
@@ -72,16 +71,16 @@ devtest: ## Brings up an environment with the local docker images. No live reloa
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
 
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/sqitch.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sqitch.yaml | kubectl apply -n vetchidevtest -f -
 	echo "Waiting for sqitch job to complete..."
 	kubectl wait --for=condition=complete job -l app=sqitch -n vetchidevtest --timeout=5m
 
 	# Then apply backend services
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/granger.yaml | kubectl apply -n vetchidevtest -f -
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/hermione.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/granger.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/hermione.yaml | kubectl apply -n vetchidevtest -f -
 	# Finally apply frontend services
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging

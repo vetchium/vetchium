@@ -19,6 +19,10 @@ spec:
             - containerPort: 1025 # SMTP server
             - containerPort: 8025 # Web UI
           args: ["--listen", "0.0.0.0:8025", "--smtp", "0.0.0.0:1025"]
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
 ---
 apiVersion: v1
 kind: Service
