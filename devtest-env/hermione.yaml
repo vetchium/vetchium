@@ -2,7 +2,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hermione-config
-  namespace: ${NAMESPACE}
 data:
   config.json: |
     {
@@ -28,7 +27,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hermione
-  namespace: ${NAMESPACE}
 spec:
   replicas: 3
   selector:
@@ -100,7 +98,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hermione
-  namespace: ${NAMESPACE}
 spec:
   selector:
     app: hermione
@@ -113,7 +110,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: hermione-sa
-  namespace: ${NAMESPACE}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -126,4 +122,3 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: hermione-sa
-    namespace: ${NAMESPACE}

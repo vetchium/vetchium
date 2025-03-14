@@ -62,26 +62,26 @@ devtest: ## Brings up an environment with the local docker images. No live reloa
 	kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 
 	# Then apply core infrastructure
-	kubectl apply -f devtest-env/full-access-cluster-role.yaml
-	kubectl apply -f devtest-env/postgres-cluster.yaml
-	kubectl apply -f devtest-env/minio.yaml
-	kubectl apply -f devtest-env/mailpit.yaml
-	kubectl apply -f devtest-env/secrets.yaml
+	kubectl apply -n vetchidevtest -f devtest-env/full-access-cluster-role.yaml
+	kubectl apply -n vetchidevtest -f devtest-env/postgres-cluster.yaml
+	kubectl apply -n vetchidevtest -f devtest-env/minio.yaml
+	kubectl apply -n vetchidevtest -f devtest-env/mailpit.yaml
+	kubectl apply -n vetchidevtest -f devtest-env/secrets.yaml
 
 	sleep 10 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
 
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/sqitch.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/sqitch.yaml | kubectl apply -n vetchidevtest -f -
 	echo "Waiting for sqitch job to complete..."
 	kubectl wait --for=condition=complete job -l app=sqitch -n vetchidevtest --timeout=5m
 
 	# Then apply backend services
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/granger.yaml | kubectl apply -f -
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/hermione.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/granger.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/hermione.yaml | kubectl apply -n vetchidevtest -f -
 	# Finally apply frontend services
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/harrypotter.yaml | kubectl apply -f -
-	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/ronweasly.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging
