@@ -89,7 +89,7 @@ export default function LocationActionPage() {
         setIsLoading(false);
       }
     },
-    [router]
+    [router, t]
   );
 
   useEffect(() => {

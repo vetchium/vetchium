@@ -125,7 +125,7 @@ export default function Openings() {
         }
       }
     },
-    [states]
+    [states, t]
   );
 
   useEffect(() => {

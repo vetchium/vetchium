@@ -725,7 +725,7 @@ export default function CreateOpeningPage() {
               if (typeof option === "string") {
                 return (
                   <li key={key} {...otherProps}>
-                    {t("openings.createNewTag")}: "{option}"
+                    {t("openings.createNewTag")}: &ldquo;{option}&rdquo;
                   </li>
                 );
               }

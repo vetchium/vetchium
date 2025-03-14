@@ -1,5 +1,6 @@
 export const en = {
   common: {
+    error: "Error",
     home: "Home",
     openings: "Openings",
     logout: "Logout",

@@ -14,7 +14,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/hooks/useTranslation";
 import { config } from "@/config";
@@ -32,17 +32,26 @@ export default function CostCentersPage() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("includeDefunctCostCenters") === "true";
   });
-  const [isLoading, setIsLoading] = useState(false); // Add isLoading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
   const { t } = useTranslation();
 
+  // Memoize error messages
+  const errorMessages = useMemo(
+    () => ({
+      unauthorized: t("auth.unauthorized"),
+      commonError: t("common.error"),
+    }),
+    [t]
+  );
+
   const fetchCostCenters = useCallback(async () => {
     try {
-      setIsLoading(true); // Set loading state
+      setIsLoading(true);
       const sessionToken = Cookies.get("session_token");
       if (!sessionToken) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
         setIsLoading(false);
         return;
       }
@@ -70,17 +79,17 @@ export default function CostCentersPage() {
       }
 
       if (!response.ok) {
-        throw new Error(t("common.error"));
+        throw new Error(errorMessages.commonError);
       }
 
       const data = await response.json();
       setCostCenters(data || []);
     } catch {
-      setError(t("common.error"));
+      setError(errorMessages.commonError);
     } finally {
       setIsLoading(false);
     }
-  }, [includeDefunct, router]);
+  }, [includeDefunct, router, errorMessages]);
 
   useEffect(() => {
     fetchCostCenters();

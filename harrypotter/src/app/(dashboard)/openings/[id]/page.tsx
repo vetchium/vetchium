@@ -23,7 +23,7 @@ import {
 import { OpeningState, OpeningStates } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useMemo, useRef } from "react";
 
 interface Opening {
   id: string;
@@ -67,6 +67,22 @@ export default function OpeningDetail({ params }: PageProps) {
   const { t } = useTranslation();
   const router = useRouter();
 
+  // Memoize error messages
+  const errorMessages = useMemo(
+    () => ({
+      unauthorized: t("auth.unauthorized"),
+      commonError: t("common.error"),
+      invalidStateTransition: t("openings.invalidStateTransition"),
+    }),
+    [t]
+  );
+
+  // Store id in ref to avoid dependency issues
+  const idRef = useRef(id);
+  useEffect(() => {
+    idRef.current = id;
+  }, [id]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -75,7 +91,7 @@ export default function OpeningDetail({ params }: PageProps) {
         const sessionToken = Cookies.get("session_token");
         if (!sessionToken) {
           if (isMounted) {
-            setError(t("auth.unauthorized"));
+            setError(errorMessages.unauthorized);
             setIsLoading(false);
           }
           return;
@@ -89,7 +105,7 @@ export default function OpeningDetail({ params }: PageProps) {
               "Content-Type": "application/json",
               Authorization: `Bearer ${sessionToken}`,
             },
-            body: JSON.stringify({ id }),
+            body: JSON.stringify({ id: idRef.current }),
           }
         );
 
@@ -99,13 +115,13 @@ export default function OpeningDetail({ params }: PageProps) {
           const data = await response.json();
           setOpening(data);
         } else if (response.status === 401) {
-          setError(t("auth.unauthorized"));
+          setError(errorMessages.unauthorized);
         } else {
-          setError(t("common.error"));
+          setError(errorMessages.commonError);
         }
       } catch {
         if (isMounted) {
-          setError(t("common.error"));
+          setError(errorMessages.commonError);
         }
       } finally {
         if (isMounted) {
@@ -119,7 +135,7 @@ export default function OpeningDetail({ params }: PageProps) {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [params, router, errorMessages]);
 
   const handleStateChange = async (toState: OpeningState) => {
     if (!opening) return;
@@ -131,7 +147,7 @@ export default function OpeningDetail({ params }: PageProps) {
     try {
       const sessionToken = Cookies.get("session_token");
       if (!sessionToken) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
         return;
       }
 
@@ -156,14 +172,14 @@ export default function OpeningDetail({ params }: PageProps) {
         setSuccessMessage(t("openings.stateChangeSuccess"));
         setShowCloseConfirm(false);
       } else if (response.status === 401) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
       } else if (response.status === 409) {
-        setError(t("openings.invalidStateTransition"));
+        setError(errorMessages.invalidStateTransition);
       } else {
-        setError(t("common.error"));
+        setError(errorMessages.commonError);
       }
     } catch {
-      setError(t("common.error"));
+      setError(errorMessages.commonError);
     } finally {
       setIsStateChanging(false);
     }

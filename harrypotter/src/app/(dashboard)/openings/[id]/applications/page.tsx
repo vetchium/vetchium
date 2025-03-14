@@ -38,7 +38,7 @@ import {
 import { Application, ApplicationColorTag } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback, useRef, useMemo } from "react";
 
 interface PageProps {
   params: Promise<{
@@ -117,8 +117,22 @@ export default function ApplicationsPage({ params }: PageProps) {
     [key: string]: boolean;
   }>({});
 
+  const loadingResumesRef = useRef(loadingResumes);
+  useEffect(() => {
+    loadingResumesRef.current = loadingResumes;
+  }, [loadingResumes]);
+
   const { t } = useTranslation();
   const router = useRouter();
+
+  // Memoize error messages
+  const errorMessages = useMemo(
+    () => ({
+      unauthorized: t("auth.unauthorized"),
+      serverError: t("common.serverError"),
+    }),
+    [t]
+  );
 
   const fetchApplications = useCallback(
     async (newPage?: number) => {
@@ -129,7 +143,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       try {
         const sessionToken = Cookies.get("session_token");
         if (!sessionToken) {
-          setError(t("auth.unauthorized"));
+          setError(errorMessages.unauthorized);
           setIsLoading(false);
           return;
         }
@@ -163,17 +177,17 @@ export default function ApplicationsPage({ params }: PageProps) {
             setPaginationKey(data[data.length - 1].id);
           }
         } else if (response.status === 401) {
-          setError(t("auth.unauthorized"));
+          setError(errorMessages.unauthorized);
         } else {
-          setError(t("common.serverError"));
+          setError(errorMessages.serverError);
         }
       } catch {
-        setError(t("common.serverError"));
+        setError(errorMessages.serverError);
       } finally {
         setIsLoading(false);
       }
     },
-    [id, colorTagFilter, paginationKey, t]
+    [id, colorTagFilter, paginationKey, errorMessages]
   );
 
   useEffect(() => {
@@ -194,7 +208,7 @@ export default function ApplicationsPage({ params }: PageProps) {
       try {
         const sessionToken = Cookies.get("session_token");
         if (!sessionToken) {
-          setError(t("auth.unauthorized"));
+          setError(errorMessages.unauthorized);
           return;
         }
 
@@ -221,42 +235,42 @@ export default function ApplicationsPage({ params }: PageProps) {
             )
           );
         } else if (response.status === 401) {
-          setError(t("auth.unauthorized"));
+          setError(errorMessages.unauthorized);
         } else {
-          setError(t("common.serverError"));
+          setError(errorMessages.serverError);
         }
       } catch {
-        setError(t("common.serverError"));
+        setError(errorMessages.serverError);
       } finally {
         setLoadingResumes((prev) => ({ ...prev, [application.id]: false }));
       }
     },
-    [t]
+    [errorMessages]
   );
 
+  const handleViewResumeRef = useRef(handleViewResume);
   useEffect(() => {
-    // Remove auto-opening of resume
-    applications.forEach((application) => {
-      if (!application.resumeUrl && !loadingResumes[application.id]) {
-        handleViewResume(application);
-      }
-    });
+    handleViewResumeRef.current = handleViewResume;
+  }, [handleViewResume]);
+
+  useEffect(() => {
+    const loadResumes = () => {
+      applications.forEach((application) => {
+        if (
+          !application.resumeUrl &&
+          !loadingResumesRef.current[application.id]
+        ) {
+          handleViewResumeRef.current(application);
+        }
+      });
+    };
+    loadResumes();
   }, [applications]);
 
   useEffect(() => {
     console.log("Fetching applications, page:", page);
     fetchApplications(page);
   }, [fetchApplications, page]);
-
-  useEffect(() => {
-    if (loadingResumes) {
-      applications.forEach((application) => {
-        if (!application.resumeUrl && !loadingResumes[application.id]) {
-          handleViewResume(application);
-        }
-      });
-    }
-  }, [applications, loadingResumes, handleViewResume]);
 
   const handleAction = async (
     applicationId: string,
@@ -268,7 +282,7 @@ export default function ApplicationsPage({ params }: PageProps) {
     try {
       const sessionToken = Cookies.get("session_token");
       if (!sessionToken) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
         return;
       }
 
@@ -291,12 +305,12 @@ export default function ApplicationsPage({ params }: PageProps) {
       if (response.status === 200) {
         fetchApplications(page);
       } else if (response.status === 401) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
       } else {
-        setError(t("common.serverError"));
+        setError(errorMessages.serverError);
       }
     } catch {
-      setError(t("common.serverError"));
+      setError(errorMessages.serverError);
     } finally {
       setIsActionLoading(false);
     }
@@ -312,7 +326,7 @@ export default function ApplicationsPage({ params }: PageProps) {
     try {
       const sessionToken = Cookies.get("session_token");
       if (!sessionToken) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
         return;
       }
 
@@ -338,12 +352,12 @@ export default function ApplicationsPage({ params }: PageProps) {
       if (response.status === 200) {
         fetchApplications(page);
       } else if (response.status === 401) {
-        setError(t("auth.unauthorized"));
+        setError(errorMessages.unauthorized);
       } else {
-        setError(t("common.serverError"));
+        setError(errorMessages.serverError);
       }
     } catch {
-      setError(t("common.serverError"));
+      setError(errorMessages.serverError);
     } finally {
       setIsActionLoading(false);
     }

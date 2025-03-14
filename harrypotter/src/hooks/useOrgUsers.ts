@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { config } from "@/config";
 import Cookies from "js-cookie";
 import { AddOrgUserRequest, OrgUser } from "@psankar/vetchi-typespec";
@@ -8,7 +8,7 @@ export function useOrgUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchUsers = useCallback(async (includeDisabled: boolean = false) => {
+  const fetchUsersRef = useRef(async (includeDisabled: boolean = false) => {
     try {
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/employer/filter-org-users`,
@@ -42,7 +42,11 @@ export function useOrgUsers() {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Empty deps array as it only uses external constants
+  });
+
+  useEffect(() => {
+    fetchUsersRef.current();
+  }, []);
 
   const addUser = async (data: AddOrgUserRequest) => {
     try {
@@ -62,7 +66,7 @@ export function useOrgUsers() {
         throw new Error("Failed to add organization user");
       }
 
-      await fetchUsers(); // Refresh the list after adding
+      await fetchUsersRef.current(); // Use the ref here
     } catch (err) {
       throw err instanceof Error
         ? err
@@ -88,7 +92,7 @@ export function useOrgUsers() {
         throw new Error("Failed to disable organization user");
       }
 
-      await fetchUsers(); // Refresh the list after disabling
+      await fetchUsersRef.current(); // Use the ref here
     } catch (err) {
       throw err instanceof Error
         ? err
@@ -114,17 +118,13 @@ export function useOrgUsers() {
         throw new Error("Failed to enable organization user");
       }
 
-      await fetchUsers(); // Refresh the list after enabling
+      await fetchUsersRef.current(); // Use the ref here
     } catch (err) {
       throw err instanceof Error
         ? err
         : new Error("Failed to enable organization user");
     }
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   return {
     users,
@@ -133,6 +133,6 @@ export function useOrgUsers() {
     addUser,
     disableUser,
     enableUser,
-    fetchUsers,
+    fetchUsers: fetchUsersRef.current,
   };
 }
