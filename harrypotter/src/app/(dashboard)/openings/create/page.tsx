@@ -22,8 +22,10 @@ import {
   CreateOpeningRequest,
   EducationLevel,
   EducationLevels,
+  GlobalCountryCode,
   Location,
   LocationStates,
+  OpeningTag,
   OpeningTagID,
   OpeningType,
   OpeningTypes,
@@ -34,6 +36,7 @@ import countries from "@psankar/vetchi-typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export default function CreateOpeningPage() {
   const { t } = useTranslation();
@@ -72,9 +75,10 @@ export default function CreateOpeningPage() {
   const [orgUsers, setOrgUsers] = useState<OrgUserShort[]>([]);
   const [costCenters, setCostCenters] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedTags, setSelectedTags] = useState<OpeningTagID[]>([]);
-  const [tags, setTags] = useState<OpeningTagID[]>([]);
-  const [newTag, setNewTag] = useState("");
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
+  const [availableTags, setAvailableTags] = useState<OpeningTag[]>([]);
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   // Initialize from sessionStorage on mount
   useEffect(() => {
@@ -132,7 +136,7 @@ export default function CreateOpeningPage() {
         setError(err instanceof Error ? err.message : t("openings.fetchError"));
       }
     },
-    [orgUsers]
+    [router, t]
   );
 
   const fetchCostCenters = useCallback(async () => {
@@ -166,7 +170,7 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchCostCentersError")
       );
     }
-  }, [costCenters]);
+  }, [router, t]);
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -199,11 +203,12 @@ export default function CreateOpeningPage() {
         err instanceof Error ? err.message : t("openings.fetchLocationsError")
       );
     }
-  }, [locations]);
+  }, [router, t]);
 
   const fetchTags = useCallback(
     async (searchPrefix?: string) => {
       try {
+        setIsLoadingTags(true);
         const token = Cookies.get("session_token");
         if (!token) {
           router.push("/signin");
@@ -229,40 +234,53 @@ export default function CreateOpeningPage() {
         }
 
         const data = await response.json();
-        setTags(data || []);
+        setAvailableTags(data || []);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : t("openings.fetchTagsError")
         );
+      } finally {
+        setIsLoadingTags(false);
       }
     },
-    [tags]
+    [router, t]
   );
 
   useEffect(() => {
-    fetchCostCenters();
-    fetchLocations();
-    fetchOrgUsers();
-    fetchTags();
-  }, [fetchCostCenters, fetchLocations, fetchOrgUsers, fetchTags]);
+    if (!isInitialDataLoaded) {
+      const loadInitialData = async () => {
+        await Promise.all([
+          fetchCostCenters(),
+          fetchLocations(),
+          fetchOrgUsers(),
+        ]);
+        setIsInitialDataLoaded(true);
+      };
+      loadInitialData();
+    }
+  }, [fetchCostCenters, fetchLocations, fetchOrgUsers, isInitialDataLoaded]);
 
-  const handleTagSearch = (query: string) => {
-    setNewTag(query);
-    fetchTags(query);
-  };
+  const handleTagChange = (
+    event: React.SyntheticEvent,
+    newValue: (OpeningTag | string)[]
+  ) => {
+    const processedTags = newValue.map((tag): OpeningTag => {
+      if (typeof tag === "string") {
+        // This is a new tag
+        return {
+          id: "" as OpeningTagID,
+          name: tag.trim(),
+        };
+      }
+      return tag;
+    });
 
-  const handleAddNewTag = (newTag: string) => {
-    if (selectedTags.length + tags.length >= 3) {
+    if (processedTags.length > 3) {
       setError(t("openings.maxTagsError"));
       return;
     }
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-    }
-  };
 
-  const handleRemoveNewTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+    setSelectedTags(processedTags);
   };
 
   const handleSave = async () => {
@@ -311,11 +329,22 @@ export default function CreateOpeningPage() {
         return;
       }
 
+      if (selectedTags.length === 0) {
+        setError(t("openings.tagsRequired"));
+        return;
+      }
+
       const token = Cookies.get("session_token");
       if (!token) {
         router.push("/signin");
         return;
       }
+
+      // Separate existing tags and new tags
+      const existingTags = selectedTags.filter((tag) => tag.id !== "");
+      const newTags = selectedTags
+        .filter((tag) => tag.id === "")
+        .map((tag) => tag.name);
 
       const request: CreateOpeningRequest = {
         title,
@@ -333,12 +362,12 @@ export default function CreateOpeningPage() {
         remote_timezones:
           selectedTimezones.length > 0 ? selectedTimezones : undefined,
         remote_country_codes: isGloballyRemote
-          ? ["GLOBAL"]
+          ? [GlobalCountryCode]
           : selectedCountries.length > 0
           ? selectedCountries
-          : undefined,
-        tags: selectedTags,
-        new_tags: tags.length > 0 ? tags : undefined,
+          : [],
+        tags: existingTags.map((tag) => tag.id),
+        new_tags: newTags.length > 0 ? newTags : undefined,
       };
 
       const response = await fetch(
@@ -673,115 +702,109 @@ export default function CreateOpeningPage() {
             }
           />
 
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              {t("openings.tags")}
-            </Typography>
-            <Autocomplete
-              multiple
-              options={tags.filter((tag) => !selectedTags.includes(tag))}
-              getOptionLabel={(option) => option}
-              value={selectedTags}
-              onChange={(_, newValue) => {
-                if (newValue.length + tags.length <= 3) {
-                  setSelectedTags(newValue);
-                } else {
-                  setError(t("openings.maxTagsError"));
-                }
-              }}
-              onInputChange={(_, value) => handleTagSearch(value)}
-              isOptionEqualToValue={(option, value) => option === value}
-              filterSelectedOptions
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={t("openings.selectTags")}
-                  placeholder={
-                    selectedTags.length + tags.length < 3
-                      ? t("openings.selectTagsPlaceholder")
-                      : t("openings.maxTagsReached")
-                  }
-                  helperText={t("openings.tagsHelp")}
-                />
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    label={option}
-                    {...getTagProps({ index })}
-                    key={option}
-                    sx={{ m: 0.5 }}
-                  />
-                ))
+          <Autocomplete
+            multiple
+            options={availableTags}
+            getOptionLabel={(option: OpeningTag | string) => {
+              if (typeof option === "string") {
+                return option;
               }
-              noOptionsText={
-                selectedTags.length + tags.length >= 3
-                  ? t("openings.maxTagsReached")
-                  : t("openings.noTagsFound")
+              return option.name;
+            }}
+            value={selectedTags}
+            onChange={handleTagChange}
+            onInputChange={(_, value) => {
+              fetchTags(value);
+            }}
+            loading={isLoadingTags}
+            freeSolo
+            filterSelectedOptions
+            renderOption={(props, option) => {
+              // Extract key from props
+              const { key, ...otherProps } = props;
+              if (typeof option === "string") {
+                return (
+                  <li key={key} {...otherProps}>
+                    {t("openings.createNewTag")}: "{option}"
+                  </li>
+                );
               }
-              limitTags={3}
-            />
-
-            <Box sx={{ mt: 2 }}>
+              return (
+                <li key={key} {...otherProps}>
+                  {option.name}
+                </li>
+              );
+            }}
+            renderInput={(params) => (
               <TextField
-                fullWidth
-                label={t("openings.addNewTag")}
-                value={newTag}
-                onChange={(e) => {
-                  if (e.target.value.length <= 32) {
-                    // Add character limit for new tags
-                    setNewTag(e.target.value);
-                  }
-                }}
+                {...params}
+                required
+                margin="normal"
+                label={t("openings.tags")}
                 placeholder={
-                  selectedTags.length + tags.length < 3
-                    ? t("openings.addNewTagPlaceholder")
+                  selectedTags.length < 3
+                    ? t("openings.selectOrCreateTag")
                     : t("openings.maxTagsReached")
                 }
+                helperText={t("openings.tagsHelp")}
                 InputProps={{
+                  ...params.InputProps,
                   endAdornment: (
-                    <Button
-                      onClick={() => {
-                        if (selectedTags.length + tags.length < 3) {
-                          handleAddNewTag(newTag);
-                          setNewTag(""); // Clear input after adding
-                        } else {
-                          setError(t("openings.maxTagsError"));
-                        }
-                      }}
-                      disabled={
-                        !newTag.trim() ||
-                        selectedTags.length + tags.length >= 3 ||
-                        tags.includes(newTag.trim()) ||
-                        newTag.length > 32
-                      }
-                    >
-                      {t("common.add")}
-                    </Button>
+                    <>
+                      {isLoadingTags ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </>
                   ),
                 }}
-                helperText={
-                  newTag.length > 32
-                    ? t("openings.tagLengthError")
-                    : t("openings.newTagHelp")
-                }
-                error={newTag.length > 32}
-                disabled={selectedTags.length + tags.length >= 3}
-                inputProps={{ maxLength: 32 }} // Hard limit on input length
               />
-            </Box>
-            <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {tags.map((tag) => (
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
                 <Chip
-                  key={tag}
-                  label={tag}
-                  onDelete={() => handleRemoveNewTag(tag)}
-                  color="primary"
-                  variant="outlined"
+                  label={typeof option === "string" ? option : option.name}
+                  {...getTagProps({ index })}
+                  key={
+                    typeof option === "string"
+                      ? option
+                      : option.id || option.name
+                  }
                 />
-              ))}
-            </Box>
-          </Box>
+              ))
+            }
+            filterOptions={(options, params) => {
+              const filtered = options.filter((option) =>
+                typeof option === "string"
+                  ? option
+                      .toLowerCase()
+                      .includes(params.inputValue.toLowerCase())
+                  : option.name
+                      .toLowerCase()
+                      .includes(params.inputValue.toLowerCase())
+              );
+
+              // Add option to create a new tag if input value exists and doesn't match exactly
+              const inputValue = params.inputValue.trim();
+              if (
+                inputValue !== "" &&
+                !options.some((option) =>
+                  typeof option === "string"
+                    ? option.toLowerCase() === inputValue.toLowerCase()
+                    : option.name.toLowerCase() === inputValue.toLowerCase()
+                )
+              ) {
+                filtered.push(inputValue);
+              }
+
+              return filtered;
+            }}
+            noOptionsText={
+              selectedTags.length >= 3
+                ? t("openings.maxTagsReached")
+                : t("openings.createNewTag")
+            }
+          />
 
           <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
             <Button variant="outlined" onClick={() => router.push("/openings")}>
@@ -813,7 +836,7 @@ export default function CreateOpeningPage() {
                   selectedLocations.length === 0 &&
                   selectedTimezones.length === 0 &&
                   selectedCountries.length === 0) ||
-                selectedTags.length + tags.length === 0
+                selectedTags.length === 0
               }
             >
               {isLoading ? t("common.loading") : t("common.save")}

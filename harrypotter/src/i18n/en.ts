@@ -134,6 +134,9 @@ export const en = {
     tagsRequiredError: "Please select at least one tag or add a new tag",
     fetchTagsError: "Failed to fetch opening tags",
     tagLengthError: "Tag must not exceed 32 characters",
+    tagsRequired: "At least one tag is required",
+    selectOrCreateTag: "Type to search or create a tag",
+    createNewTag: "Press Enter to create a new tag",
   },
   costCenters: {
     title: "Cost Centers",
