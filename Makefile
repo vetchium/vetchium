@@ -91,7 +91,7 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl apply -n vetchidevtest -f devtest-env/mailpit.yaml
 	kubectl apply -n vetchidevtest -f devtest-env/secrets.yaml
 
-	sleep 10 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
+	sleep 20 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
 
