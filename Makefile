@@ -35,11 +35,18 @@ lib: ## Build TypeSpec and install dependencies
 	cd ../ronweasly && npm install ../typespec
 
 docker: ## Build local Docker images for a single platform where it is run
-	docker buildx build --load -f harrypotter/Dockerfile-optimized -t psankar/vetchi-harrypotter:$(GIT_SHA) .
-	docker buildx build --load -f ronweasly/Dockerfile-optimized -t psankar/vetchi-ronweasly:$(GIT_SHA) .
-	docker buildx build --load -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) .
-	docker buildx build --load -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) .
-	docker buildx build --load -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+	docker buildx build --load -f harrypotter/Dockerfile-optimized \
+		-t psankar/vetchi-harrypotter:$(GIT_SHA) \
+		--build-arg API_ENDPOINT="http://hermione:8080" .
+	docker buildx build --load -f ronweasly/Dockerfile-optimized \
+		-t psankar/vetchi-ronweasly:$(GIT_SHA) \
+		--build-arg API_ENDPOINT="http://hermione:8080" .
+	docker buildx build --load -f api/Dockerfile-hermione \
+		-t psankar/vetchi-hermione:$(GIT_SHA) .
+	docker buildx build --load -f api/Dockerfile-granger \
+		-t psankar/vetchi-granger:$(GIT_SHA) .
+	docker buildx build --load -f sqitch/Dockerfile \
+		-t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -47,18 +54,35 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		exit 1; \
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
-	docker buildx build --platform=linux/amd64,linux/arm64 -f harrypotter/Dockerfile-optimized -t psankar/vetchi-harrypotter:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f ronweasly/Dockerfile-optimized -t psankar/vetchi-ronweasly:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-hermione -t psankar/vetchi-hermione:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f api/Dockerfile-granger -t psankar/vetchi-granger:$(GIT_SHA) --push .
-	docker buildx build --platform=linux/amd64,linux/arm64 -f sqitch/Dockerfile -t psankar/vetchi-sqitch:$(GIT_SHA) --push sqitch
+	docker buildx build -f harrypotter/Dockerfile-optimized \
+		-t psankar/vetchi-harrypotter:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--build-arg API_ENDPOINT="http://hermione:8080" \
+		--push .
+	docker buildx build -f ronweasly/Dockerfile-optimized \
+		-t psankar/vetchi-ronweasly:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--build-arg API_ENDPOINT="http://hermione:8080" \
+		--push .
+	docker buildx build -f api/Dockerfile-hermione \
+		-t psankar/vetchi-hermione:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--push .
+	docker buildx build -f api/Dockerfile-granger \
+		-t psankar/vetchi-granger:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--push .
+	docker buildx build -f sqitch/Dockerfile \
+		-t psankar/vetchi-sqitch:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--push sqitch
 
-devtest: ## Brings up an environment with the local docker images. No live reload.
+devtest: docker ## Brings up an environment with the local docker images. No live reload.
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchidevtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
-	kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
+	sleep 20 && kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 
 	# Then apply core infrastructure
 	kubectl apply -n vetchidevtest -f devtest-env/full-access-cluster-role.yaml
