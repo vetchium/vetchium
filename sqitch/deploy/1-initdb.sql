@@ -829,4 +829,62 @@ CREATE TABLE application_endorsements (
     CONSTRAINT unique_application_endorser UNIQUE (application_id, endorser_id)
 );
 
+-- Master seed data
+INSERT INTO emails (
+    email_from, email_to, email_cc, email_bcc,
+    email_subject, email_html_body, email_text_body,
+    email_state, created_at, processed_at
+) VALUES (
+    'no-reply@vetchi.org', ARRAY['admin@vdev.example'], NULL, NULL,
+    'Welcome to Vetchi', 'Welcome HTML', 'Welcome Text',
+    'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now())
+);
+
+INSERT INTO employers (
+    client_id_type, employer_state, company_name,
+    onboard_admin_email, onboard_secret_token, token_valid_till,
+    onboard_email_id, created_at
+) VALUES (
+    'DOMAIN', 'ONBOARDED', 'Vetchi Dev', 'admin@vdev.example', 'blah',
+    timezone('UTC'::text, now()) + interval '1 day',
+    (SELECT email_key FROM emails WHERE 'admin@vdev.example' = ANY(email_to)),
+    timezone('UTC'::text, now())
+);
+
+INSERT INTO domains (
+    domain_name, domain_state, employer_id, created_at
+) VALUES (
+    'vdev.example', 'VERIFIED',
+    (SELECT id FROM employers WHERE company_name = 'Vetchi Dev'),
+    timezone('UTC'::text, now())
+);
+
+INSERT INTO employer_primary_domains (employer_id, domain_id)
+VALUES (
+    (SELECT id FROM employers WHERE company_name = 'Vetchi Dev'),
+    (SELECT id FROM domains WHERE domain_name = 'vdev.example')
+);
+
+INSERT INTO org_users (
+    email, name, password_hash,
+    org_user_roles, org_user_state, employer_id, created_at
+) VALUES (
+    'admin@vdev.example', 'Admin User',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER',
+    (SELECT id FROM employers WHERE company_name='Vetchi Dev'),
+    timezone('UTC'::text, now())
+);
+
+INSERT INTO hub_users (
+    full_name, handle, email, password_hash,
+    state, tier, resident_country_code, resident_city,
+    preferred_language, short_bio, long_bio
+) VALUES (
+    'Amala', 'amala', 'amala@example.com',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    'ACTIVE_HUB_USER', 'FREE_HUB_USER', 'IND', 'Chennai', 'ta', 'The Best',
+    'சலங்கையிட்டாள் ஒரு மாது, சங்கீதம் நீ பாடு'
+);
+
 COMMIT;
