@@ -15,7 +15,7 @@ spec:
     barmanObjectStore:
       # db-backups below is the bucket name
       destinationPath: "s3://db-backups/barman"
-      endpointURL: "minio:9000"
+      endpointURL: "http://minio:9000"
       s3Credentials:
         accessKeyId:
           name: s3-credentials
