@@ -19,7 +19,7 @@ k8s_yaml('tilt-env/sortinghat.yaml')
 docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger')
 docker_build('psankar/vetchi-hermione', '.', dockerfile='api/Dockerfile-hermione')
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
-docker_build('psankar/vetchi-sortinghat', '.', dockerfile='sorting-hat/Dockerfile')
+docker_build('psankar/vetchi-sortinghat', '.', dockerfile='sortinghat/Dockerfile')
 
 # Development builds for Next.js apps with live reload
 docker_build(

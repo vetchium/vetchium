@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger("sorting-hat")
+logger = logging.getLogger("sortinghat")
 
 app = FastAPI(title="Sorting Hat", description="Resume scoring against job descriptions")
 
