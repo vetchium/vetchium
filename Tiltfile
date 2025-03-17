@@ -13,11 +13,13 @@ k8s_yaml('tilt-env/hermione.yaml')
 k8s_yaml('tilt-env/granger.yaml')
 k8s_yaml('tilt-env/harrypotter.yaml')
 k8s_yaml('tilt-env/ronweasly.yaml')
+k8s_yaml('tilt-env/sortinghat.yaml')
 
 # Define Docker builds with root context to include typespec
 docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger')
 docker_build('psankar/vetchi-hermione', '.', dockerfile='api/Dockerfile-hermione')
 docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
+docker_build('psankar/vetchi-sortinghat', '.', dockerfile='sorting-hat/Dockerfile')
 
 # Development builds for Next.js apps with live reload
 docker_build(
@@ -39,6 +41,7 @@ k8s_resource('hermione', port_forwards='8080:8080')
 k8s_resource('granger', port_forwards='8081:8080')
 k8s_resource('harrypotter', port_forwards='3001:3000')
 k8s_resource('ronweasly', port_forwards='3002:3000')
+k8s_resource('sortinghat', port_forwards='8082:8080')
 
 # The cnpg operator takes a lot of time for the pg pods to get ready
 # So we need to do all the below magic for pg port_forward alone unlike
