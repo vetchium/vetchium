@@ -2,16 +2,16 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install minimal dependencies for model downloads
-RUN pip install --no-cache-dir sentence-transformers spacy
+# Update pip
+RUN pip install --no-cache-dir --upgrade pip
 
-# Download models first - these rarely change and can be cached
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-RUN python -m spacy download en_core_web_md
-
-# Install all other dependencies - this layer will change more frequently
+# Install dependencies
 COPY sorting-hat/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download sentence-transformers model
+# This step caches the model to avoid downloading at runtime
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy application code
 COPY sorting-hat/main.py .
