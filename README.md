@@ -13,15 +13,19 @@ To bring the services up, run the following commands:
 
 ```bash
 # Bring up the backend services
-vetchi$ make
+vetchi$ make dev
 
 # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
 # http://localhost:3001 for the Employer Site - harrypotter
 # http://localhost:3002 for the Hub site - ronweasly
 # http://localhost:8025 for the fake SMTP
+# http://localhost:8080 for the hermione API server
+# http://localhost:8081 for the granger API server
+# http://localhost:8083 for the sortinghat API server
+# :9000 for minio
 # :5432 for postgres
 
-# Seed some test data (tilt up should be running)
+# Seed some test data (tilt should be running with all services green (except postgres-port-forward not completing))
 vetchi$ make seed
 
 # Employer credentials
@@ -50,8 +54,20 @@ $ kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base6
 To run tests, use the following command:
 
 ```bash
-$ go install github.com/onsi/ginkgo/v2/ginkgo; # Only once
-vetchi $ make test ; # tilt up should be running
+# Install ginkgo once
+$ go install github.com/onsi/ginkgo/v2/ginkgo
+
+vetchi $ make test ; # tilt should be running
+```
+
+To see the minio files (for resumes, profile pictures, etc.):
+
+```bash
+# Install minio client once
+$ brew install minio/stable/mc
+
+$ mc alias set local http://localhost:9000 minioadmin minioadmin
+$ mc ls -r local
 ```
 
 ### Tear down
@@ -77,7 +93,7 @@ vetchi $ kubectl delete namespace vetchidev
 - Use [Gomega](https://onsi.github.io/gomega/) for assertions
 - Use [golines](https://github.com/segmentio/golines) to format the Go code. Do NOT manually format the code or split the parameters to multiple lines. Write a really long line with all parameters and then summon golines to format it.
 - Use [prettier](https://prettier.io/) to format the typescript code. Do not manually format the code or split the parameters to multiple lines.
-- [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt up` to be running before this. This will also serve as some basic sanity testing.
+- [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt` to be running before this. This will also serve as some basic sanity testing.
 
 ## Engineering Notes
 
