@@ -36,10 +36,10 @@ docker_build(
     build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
-# Infra services
+# Infra services - postgres is port-forwarded differently because of the
+# cnpg operator packaging semantics with multiple deployments, pods coming up.
 k8s_resource('mailpit', port_forwards='8025:8025')
 k8s_resource('minio', port_forwards='9000:9000')
-k8s_resource('postgres', port_forwards='5432:5432')
 
 # Backend API services
 k8s_resource('hermione', port_forwards='8080:8080')
