@@ -36,12 +36,20 @@ docker_build(
     build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
+# Infra services
 k8s_resource('mailpit', port_forwards='8025:8025')
+k8s_resource('minio', port_forwards='9000:9000')
+k8s_resource('postgres', port_forwards='5432:5432')
+
+# Backend API services
 k8s_resource('hermione', port_forwards='8080:8080')
 k8s_resource('granger', port_forwards='8081:8080')
+k8s_resource('sortinghat', port_forwards='8082:8080')
+
+# Frontend apps
 k8s_resource('harrypotter', port_forwards='3001:3000')
 k8s_resource('ronweasly', port_forwards='3002:3000')
-k8s_resource('sortinghat', port_forwards='8082:8080')
+
 
 # The cnpg operator takes a lot of time for the pg pods to get ready
 # So we need to do all the below magic for pg port_forward alone unlike
