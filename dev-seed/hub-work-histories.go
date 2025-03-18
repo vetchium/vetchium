@@ -34,18 +34,22 @@ func createWorkHistories() {
 }
 
 func createWorkHistory(authToken string, jobs []Job) error {
+	var prevStartDate time.Time
+
 	for i := len(jobs) - 1; i >= 0; i-- {
 		job := jobs[i]
 
-		var prevStartDate, startDateRaw time.Time
+		var startDateRaw time.Time
 		var startDate string
 		var endDatePtr *string
 
 		if i == len(jobs)-1 {
 			// Last job is current job
 			endDatePtr = nil
-			startDateRaw = time.Now()
+			randYears := rand.Intn(7) + 1
+			startDateRaw = time.Now().AddDate(-randYears, 0, 0)
 			startDate = startDateRaw.Format("2006-01-02")
+			prevStartDate = startDateRaw
 		} else {
 			// Assuming that a 30 day gap exists between jobs
 			gapDays := rand.Intn(30) + 30
@@ -53,7 +57,7 @@ func createWorkHistory(authToken string, jobs []Job) error {
 			endDateStr := endDate.Format("2006-01-02")
 			endDatePtr = &endDateStr
 
-			numberOfYears := rand.Intn(7)
+			numberOfYears := rand.Intn(7) + 1
 			startDateRaw = endDate.AddDate(-numberOfYears, 0, 0)
 			startDate = startDateRaw.Format("2006-01-02")
 
