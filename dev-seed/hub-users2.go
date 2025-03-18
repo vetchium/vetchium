@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
 )
 
 type Job struct {
@@ -693,7 +692,6 @@ var employers = []struct {
 }
 
 func generateEmployees(num int) []Employee {
-	rand.Seed(time.Now().UnixNano())
 	var employees []Employee
 	for i := 0; i < num; i++ {
 		name := fmt.Sprintf(
