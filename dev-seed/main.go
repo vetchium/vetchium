@@ -15,6 +15,11 @@ var employerSessionTokens sync.Map
 var hubSessionTokens sync.Map
 
 func main() {
+	if true {
+		initHubUsers2()
+		return
+	}
+
 	log.SetFlags(log.Lshortfile)
 
 	connStr := os.Getenv("POSTGRES_URI")
