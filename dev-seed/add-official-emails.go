@@ -65,8 +65,12 @@ func addOfficialEmail(user HubSeedUser, authToken string, domain string) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK &&
-		resp.StatusCode != http.StatusConflict {
+	if resp.StatusCode == http.StatusConflict {
+		color.Yellow("skipping %q because it already exists", email)
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("error adding official email: %q %v", email, resp.Status)
 	}
 	color.Green("added official email: %q for %q\n", email, user.Handle)
