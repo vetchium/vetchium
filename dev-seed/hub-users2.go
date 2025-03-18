@@ -6,15 +6,14 @@ import (
 )
 
 type Job struct {
-	Title    string
-	Employer string
-	Website  string
-	Years    int
+	Title   string
+	Website string
 }
 
-type Employee struct {
-	Name string
-	Jobs []Job
+type HubSeedUser struct {
+	Name   string
+	Handle string
+	Jobs   []Job
 }
 
 type CareerPath struct {
@@ -691,15 +690,15 @@ var employers = []struct {
 	},
 }
 
-func generateEmployees(num int) []Employee {
-	var employees []Employee
+func generateHubSeedUsers(num int) []HubSeedUser {
+	var employees []HubSeedUser
 	for i := 0; i < num; i++ {
 		name := fmt.Sprintf(
 			"%s %s",
 			firstNames[rand.Intn(len(firstNames))],
 			lastNames[rand.Intn(len(lastNames))],
 		)
-		employee := Employee{Name: name}
+		employee := HubSeedUser{Name: name, Handle: fmt.Sprintf("user%d", i)}
 		career := careerPaths[rand.Intn(len(careerPaths))]
 		levels := rand.Intn(len(career.Steps)) + 1
 		for j := 0; j < levels; j++ {
@@ -727,30 +726,12 @@ func generateEmployees(num int) []Employee {
 			}
 			employer := possibleEmployers[rand.Intn(len(possibleEmployers))]
 			job := Job{
-				Title:    career.Steps[j],
-				Employer: employer.Name,
-				Website:  employer.Website,
-				Years:    rand.Intn(10) + 1,
+				Title:   career.Steps[j],
+				Website: employer.Website,
 			}
 			employee.Jobs = append(employee.Jobs, job)
 		}
 		employees = append(employees, employee)
 	}
 	return employees
-}
-
-func initHubUsers2() {
-	employees := generateEmployees(50)
-	for i, e := range employees {
-		fmt.Printf("%d) Name: %s\n", i+1, e.Name)
-		for _, job := range e.Jobs {
-			fmt.Printf(
-				"  - %s at %s (%s) for %d years\n",
-				job.Title,
-				job.Employer,
-				job.Website,
-				job.Years,
-			)
-		}
-	}
 }
