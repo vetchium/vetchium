@@ -18,7 +18,7 @@ func createApplications() {
 }
 
 func createApplicationForOpening(
-	user HubUser,
+	user HubSeedUser,
 	company string,
 	openingID string,
 ) {

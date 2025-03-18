@@ -3,7 +3,86 @@ package main
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/hub"
 )
+
+var countries = []string{
+	"IND",
+	"USA",
+	"PRC",
+	"JAP",
+	"GBR",
+	"CAN",
+	"AUS",
+	"DEU",
+	"FRA",
+	"ITA",
+}
+
+var cities map[string][]string
+
+func init() {
+	cities = make(map[string][]string)
+	cities["IND"] = []string{
+		"Chennai",
+		"Bengaluru",
+		"Mumbai",
+		"Delhi",
+		"Hyderabad",
+	}
+	cities["USA"] = []string{
+		"New York",
+		"Los Angeles",
+		"Chicago",
+		"Houston",
+		"Miami",
+	}
+	cities["PRC"] = []string{
+		"Beijing",
+		"Shanghai",
+		"Guangzhou",
+		"Shenzhen",
+		"Chengdu",
+	}
+	cities["JAP"] = []string{"Tokyo", "Osaka", "Nagoya", "Sapporo", "Fukuoka"}
+	cities["GBR"] = []string{
+		"London",
+		"Manchester",
+		"Birmingham",
+		"Glasgow",
+		"Edinburgh",
+	}
+	cities["CAN"] = []string{
+		"Toronto",
+		"Vancouver",
+		"Montreal",
+		"Calgary",
+		"Edmonton",
+	}
+	cities["AUS"] = []string{
+		"Sydney",
+		"Melbourne",
+		"Brisbane",
+		"Perth",
+		"Adelaide",
+	}
+	cities["DEU"] = []string{
+		"Berlin",
+		"Hamburg",
+		"Munich",
+		"Frankfurt",
+		"Hamburg",
+	}
+	cities["FRA"] = []string{"Paris", "Marseille", "Lyon", "Toulouse", "Nice"}
+	cities["ITA"] = []string{"Rome", "Milan", "Naples", "Turin", "Palermo"}
+}
+
+type CareerPath struct {
+	Tag   string
+	Steps []string
+}
 
 type Job struct {
 	Title   string
@@ -11,14 +90,22 @@ type Job struct {
 }
 
 type HubSeedUser struct {
-	Name   string
-	Handle string
-	Jobs   []Job
-}
+	Name                   string
+	Handle                 string
+	Email                  string
+	Tier                   hub.HubUserTier
+	ResidentCountry        string
+	ResidentCity           string
+	PreferredLanguage      string
+	ShortBio               string
+	LongBio                string
+	ProfilePictureFilename string
 
-type CareerPath struct {
-	Tag   string
-	Steps []string
+	Jobs []Job
+
+	// TODO: Find out how we can efficiently populate these
+	Endorsers             []common.Handle
+	ApplyToCompanyDomains []string
 }
 
 var firstNames = []string{
@@ -691,17 +778,30 @@ var employers = []struct {
 }
 
 func generateHubSeedUsers(num int) []HubSeedUser {
-	var employees []HubSeedUser
+	var hubSeedUsers []HubSeedUser
 	for i := 0; i < num; i++ {
 		name := fmt.Sprintf(
 			"%s %s",
 			firstNames[rand.Intn(len(firstNames))],
 			lastNames[rand.Intn(len(lastNames))],
 		)
-		employee := HubSeedUser{Name: name, Handle: fmt.Sprintf("user%d", i)}
+
+		tier := hub.FreeHubUserTier
+		if rand.Int()%2 == 0 {
+			tier = hub.PaidHubUserTier
+		}
+
+		country := countries[rand.Intn(len(countries))]
+		city := cities[country][rand.Intn(len(cities[country]))]
+		pic := fmt.Sprintf("avatar%d.jpg", rand.Intn(17)+1)
+
 		career := careerPaths[rand.Intn(len(careerPaths))]
 		levels := rand.Intn(len(career.Steps)) + 1
+
+		jobs := make([]Job, levels)
+
 		for j := 0; j < levels; j++ {
+			// TODO: possibleEmployers should be calculated in init
 			var possibleEmployers []struct {
 				Name    string
 				Website string
@@ -729,9 +829,23 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 				Title:   career.Steps[j],
 				Website: employer.Website,
 			}
-			employee.Jobs = append(employee.Jobs, job)
+			jobs[j] = job
 		}
-		employees = append(employees, employee)
+
+		hubUser := HubSeedUser{
+			Name:                   name,
+			Handle:                 fmt.Sprintf("user%d", i),
+			Email:                  fmt.Sprintf("user%d@example.com", i),
+			Tier:                   tier,
+			ResidentCountry:        country,
+			ResidentCity:           city,
+			PreferredLanguage:      "en",
+			ShortBio:               jobs[len(jobs)-1].Title,
+			LongBio:                "TODO from hubuser-jobtitle-bio-map",
+			ProfilePictureFilename: pic,
+			Jobs:                   jobs,
+		}
+		hubSeedUsers = append(hubSeedUsers, hubUser)
 	}
-	return employees
+	return hubSeedUsers
 }

@@ -21,7 +21,7 @@ func addOfficialEmails() {
 	var wg sync.WaitGroup
 	for _, user := range hubUsers {
 		wg.Add(1)
-		go func(user HubUser) {
+		go func(user HubSeedUser) {
 			defer wg.Done()
 			tokenI, ok := hubSessionTokens.Load(user.Email)
 			if !ok {
@@ -29,15 +29,15 @@ func addOfficialEmails() {
 			}
 			authToken := tokenI.(string)
 
-			for _, domain := range user.WorkHistoryDomains {
-				addOfficialEmail(user, authToken, domain)
+			for _, job := range user.Jobs {
+				addOfficialEmail(user, authToken, job.Website)
 			}
 		}(user)
 	}
 	wg.Wait()
 }
 
-func addOfficialEmail(user HubUser, authToken string, domain string) {
+func addOfficialEmail(user HubSeedUser, authToken string, domain string) {
 	email := user.Handle + "@" + domain
 	body := hub.AddOfficialEmailRequest{
 		Email: common.EmailAddress(email),

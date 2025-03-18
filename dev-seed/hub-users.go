@@ -2,33 +2,14 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/hub"
 )
 
-type HubUser struct {
-	Name                   string
-	Handle                 string
-	Email                  string
-	Tier                   hub.HubUserTier
-	ResidentCountry        string
-	ResidentCity           string
-	PreferredLanguage      string
-	ShortBio               string
-	LongBio                string
-	ProfilePictureFilename string
-
-	ApplyToCompanyDomains []string
-	Endorsers             []common.Handle
-
-	WorkHistoryDomains []string
-}
+var hubUsers []HubSeedUser
 
 func initHubUsers(db *pgxpool.Pool) {
 	ctx := context.Background()
@@ -38,23 +19,32 @@ func initHubUsers(db *pgxpool.Pool) {
 	}
 	defer tx.Rollback(ctx)
 
-	hubUsers := generateHubSeedUsers(50)
+	hubUsers = generateHubSeedUsers(50)
 
-	for i, user := range hubUsers {
-		userID := fmt.Sprintf("12345678-0000-0000-0000-000000050%03d", i+1)
-		_, err = tx.Exec(ctx, `
-			INSERT INTO hub_users (
-				id, full_name, handle, email, password_hash,
-				state, tier, resident_country_code, resident_city,
-				preferred_language, short_bio, long_bio
-			) VALUES (
-				$1, $2, $3, $4,
-				'$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-				'ACTIVE_HUB_USER', $5, $6, $7, $8, $9, $10
-			)
-		`, userID, user.Name, user.Handle, user.Email,
-			user.Tier, user.ResidentCountry, user.ResidentCity,
-			user.PreferredLanguage, user.ShortBio, user.LongBio)
+	for _, user := range hubUsers {
+		query := `
+INSERT INTO hub_users (
+	full_name, handle, email, password_hash,
+	state, tier, resident_country_code, resident_city,
+	preferred_language, short_bio, long_bio
+) VALUES (
+	$1, $2, $3,
+	'$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+	'ACTIVE_HUB_USER', $4, $5, $6, $7, $8, $9
+)`
+		_, err = tx.Exec(
+			ctx,
+			query,
+			user.Name,
+			user.Handle,
+			user.Email,
+			user.Tier,
+			user.ResidentCountry,
+			user.ResidentCity,
+			user.PreferredLanguage,
+			user.ShortBio,
+			user.LongBio,
+		)
 		if err != nil {
 			log.Fatalf("failed to create hub user %s: %v", user.Name, err)
 		}
@@ -74,7 +64,7 @@ func loginHubUsers() {
 	var wg sync.WaitGroup
 	for _, user := range hubUsers {
 		wg.Add(1)
-		go func(user HubUser) {
+		go func(user HubSeedUser) {
 			color.Green("Logging in %s", user.Email)
 			hubLogin(user.Email, "NewPassword123$", &wg)
 		}(user)
