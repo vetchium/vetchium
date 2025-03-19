@@ -832,6 +832,9 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 			jobs[j] = job
 		}
 
+		longBioOpts := jobBioMap[jobs[len(jobs)-1].Title]
+		longBio := longBioOpts[rand.Intn(len(longBioOpts))]
+
 		hubUser := HubSeedUser{
 			Name:                   name,
 			Handle:                 fmt.Sprintf("user%d", i),
@@ -841,7 +844,7 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 			ResidentCity:           city,
 			PreferredLanguage:      "en",
 			ShortBio:               jobs[len(jobs)-1].Title,
-			LongBio:                "TODO from hubuser-jobtitle-bio-map",
+			LongBio:                longBio,
 			ProfilePictureFilename: pic,
 			Jobs:                   jobs,
 		}
