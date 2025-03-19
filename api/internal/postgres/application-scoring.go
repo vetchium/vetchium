@@ -6,25 +6,24 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/typespec/common"
 )
 
 // GetActiveApplicationScoringModels returns all active scoring models
 func (p *PG) GetActiveApplicationScoringModels(
 	ctx context.Context,
 ) ([]db.ApplicationScoringModel, error) {
+	p.log.Dbg("getting active application scoring models")
 	query := `
-		SELECT model_name, description, is_active, created_at
-		FROM application_scoring_models
-		WHERE is_active = true
-	`
+SELECT model_name, description, is_active, created_at
+FROM application_scoring_models
+WHERE is_active = true
+`
 
 	rows, err := p.pool.Query(ctx, query)
 	if err != nil {
 		p.log.Err("Failed to query application scoring models", "error", err)
-		return nil, fmt.Errorf(
-			"failed to query application scoring models: %w",
-			err,
-		)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -48,17 +47,10 @@ func (p *PG) GetActiveApplicationScoringModels(
 
 	if err := rows.Err(); err != nil {
 		p.log.Err("Error iterating application scoring models", "error", err)
-		return nil, fmt.Errorf(
-			"error iterating application scoring models: %w",
-			err,
-		)
+		return nil, err
 	}
 
-	p.log.Dbg(
-		"Retrieved active application scoring models",
-		"count",
-		len(models),
-	)
+	p.log.Dbg("Got active application scoring models", "count", len(models))
 	return models, nil
 }
 
@@ -66,29 +58,23 @@ func (p *PG) GetActiveApplicationScoringModels(
 func (p *PG) GetOpeningsWithUnscoredApplications(
 	ctx context.Context,
 ) ([]db.OpeningForScoring, error) {
+	p.log.Dbg("getting openings with unscored applications")
 	query := `
-		SELECT DISTINCT o.employer_id, o.id
-		FROM openings o
-		JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
-		WHERE a.application_state = 'APPLIED'
-		AND NOT EXISTS (
-			SELECT 1 FROM application_scores s
-			JOIN application_scoring_models m ON s.model_name = m.model_name
-			WHERE s.application_id = a.id AND m.is_active = true
-		)
-	`
+SELECT DISTINCT o.employer_id, o.id
+FROM openings o
+JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
+WHERE a.application_state = $1
+AND NOT EXISTS (
+	SELECT 1 FROM application_scores s
+	JOIN application_scoring_models m ON s.model_name = m.model_name
+	WHERE s.application_id = a.id AND m.is_active = true
+)
+`
 
-	rows, err := p.pool.Query(ctx, query)
+	rows, err := p.pool.Query(ctx, query, common.AppliedAppState)
 	if err != nil {
-		p.log.Err(
-			"Failed to query openings with unscored applications",
-			"error",
-			err,
-		)
-		return nil, fmt.Errorf(
-			"failed to query openings with unscored applications: %w",
-			err,
-		)
+		p.log.Err("query openings with unscored applications", "error", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -107,11 +93,7 @@ func (p *PG) GetOpeningsWithUnscoredApplications(
 		return nil, fmt.Errorf("error iterating openings: %w", err)
 	}
 
-	p.log.Dbg(
-		"Retrieved openings with unscored applications",
-		"count",
-		len(openings),
-	)
+	p.log.Dbg("Got openings with unscored applications", "count", len(openings))
 	return openings, nil
 }
 
@@ -120,36 +102,21 @@ func (p *PG) GetOpeningJD(
 	ctx context.Context,
 	employerID, openingID string,
 ) (string, error) {
+	p.log.Dbg("Get JD", "employer_id", employerID, "opening_id", openingID)
 	query := `
-		SELECT jd
-		FROM openings
-		WHERE employer_id = $1 AND id = $2
-	`
+SELECT jd
+FROM openings
+WHERE employer_id = $1 AND id = $2
+`
 
 	var jd string
 	err := p.pool.QueryRow(ctx, query, employerID, openingID).Scan(&jd)
 	if err != nil {
-		p.log.Err(
-			"Failed to get opening JD",
-			"employer_id",
-			employerID,
-			"opening_id",
-			openingID,
-			"error",
-			err,
-		)
+		p.log.Err("JD", "emp", employerID, "opening", openingID, "err", err)
 		return "", fmt.Errorf("failed to get opening JD: %w", err)
 	}
 
-	p.log.Dbg(
-		"Retrieved job description",
-		"employer_id",
-		employerID,
-		"opening_id",
-		openingID,
-		"jd_length",
-		len(jd),
-	)
+	p.log.Dbg("Got JD", "employer_id", employerID, "opening_id", openingID)
 	return jd, nil
 }
 
@@ -159,31 +126,32 @@ func (p *PG) GetUnscoredApplicationsForOpening(
 	employerID, openingID string,
 	limit int,
 ) ([]db.ApplicationForScoring, error) {
-	query := `
-		SELECT a.id, a.resume_sha
-		FROM applications a
-		WHERE a.employer_id = $1
-		AND a.opening_id = $2
-		AND a.application_state = 'APPLIED'
-		AND NOT EXISTS (
-			SELECT 1 FROM application_scores s
-			JOIN application_scoring_models m ON s.model_name = m.model_name
-			WHERE s.application_id = a.id AND m.is_active = true
-		)
-		LIMIT $3
-	`
+	p.log.Dbg("unscored applications", "emp", employerID, "opening", openingID)
 
-	rows, err := p.pool.Query(ctx, query, employerID, openingID, limit)
+	query := `
+SELECT a.id, a.resume_sha
+FROM applications a
+WHERE a.employer_id = $1
+AND a.opening_id = $2
+AND a.application_state = $3
+AND NOT EXISTS (
+	SELECT 1 FROM application_scores s
+	JOIN application_scoring_models m ON s.model_name = m.model_name
+	WHERE s.application_id = a.id AND m.is_active = true
+)
+LIMIT $4
+`
+
+	rows, err := p.pool.Query(
+		ctx,
+		query,
+		employerID,
+		openingID,
+		common.AppliedAppState,
+		limit,
+	)
 	if err != nil {
-		p.log.Err(
-			"Failed to query unscored applications",
-			"employer_id",
-			employerID,
-			"opening_id",
-			openingID,
-			"error",
-			err,
-		)
+		p.log.Err("failed to query unscored applications", "err", err)
 		return nil, fmt.Errorf("failed to query unscored applications: %w", err)
 	}
 	defer rows.Close()
@@ -203,15 +171,7 @@ func (p *PG) GetUnscoredApplicationsForOpening(
 		return nil, fmt.Errorf("error iterating applications: %w", err)
 	}
 
-	p.log.Dbg(
-		"Retrieved unscored applications",
-		"employer_id",
-		employerID,
-		"opening_id",
-		openingID,
-		"count",
-		len(applications),
-	)
+	p.log.Dbg("got unscored applications", "count", len(applications))
 	return applications, nil
 }
 
@@ -220,6 +180,7 @@ func (p *PG) SaveApplicationScores(
 	ctx context.Context,
 	scores []db.ApplicationScore,
 ) error {
+	p.log.Dbg("saving application scores", "count", len(scores))
 	if len(scores) == 0 {
 		p.log.Dbg("No scores to save, returning early")
 		return nil
@@ -230,21 +191,15 @@ func (p *PG) SaveApplicationScores(
 		p.log.Err("Failed to begin transaction", "error", err)
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(ctx); rbErr != nil {
-				p.log.Err("Failed to rollback transaction", "error", rbErr)
-			}
-		}
-	}()
+	defer tx.Rollback(context.Background())
 
 	// Prepare the query
 	query := `
-		INSERT INTO application_scores (application_id, model_name, score)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (application_id, model_name) DO UPDATE
-		SET score = $3
-	`
+INSERT INTO application_scores (application_id, model_name, score)
+VALUES ($1, $2, $3)
+ON CONFLICT (application_id, model_name) DO UPDATE
+SET score = $3
+`
 
 	// Use a batch for efficiency
 	batch := &pgx.Batch{}
@@ -266,7 +221,7 @@ func (p *PG) SaveApplicationScores(
 	}
 
 	// Commit the transaction
-	if err = tx.Commit(ctx); err != nil {
+	if err = tx.Commit(context.Background()); err != nil {
 		p.log.Err("Failed to commit transaction", "error", err)
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}

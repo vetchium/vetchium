@@ -70,3 +70,7 @@ const (
 const (
 	PreferredLanguage = "en"
 )
+
+const (
+	MaxApplicationsToScorePerBatch = 10
+)
