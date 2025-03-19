@@ -50,6 +50,35 @@ type HubUserContact struct {
 	Email    string
 }
 
+// ApplicationScoringModel represents an AI model used for resume scoring
+type ApplicationScoringModel struct {
+	ModelName   string
+	Description string
+	IsActive    bool
+	CreatedAt   time.Time
+}
+
+// ApplicationScore represents a score given to an application by an AI model
+type ApplicationScore struct {
+	ID            string
+	ApplicationID string
+	ModelName     string
+	Score         int
+	CreatedAt     time.Time
+}
+
+// Opening represents a job opening with minimal fields needed for resume scoring
+type OpeningForScoring struct {
+	EmployerID string
+	ID         string
+}
+
+// Application represents an application with minimal fields needed for resume scoring
+type ApplicationForScoring struct {
+	ID        string
+	ResumeSHA string
+}
+
 type DB interface {
 	// Used by hermione and granger
 
@@ -361,4 +390,22 @@ type DB interface {
 		fileID uuid.UUID,
 		cleanedAt time.Time,
 	) error
+
+	// Application scoring methods
+	GetActiveApplicationScoringModels(
+		ctx context.Context,
+	) ([]ApplicationScoringModel, error)
+	GetOpeningsWithUnscoredApplications(
+		ctx context.Context,
+	) ([]OpeningForScoring, error)
+	GetOpeningJD(
+		ctx context.Context,
+		employerID, openingID string,
+	) (string, error)
+	GetUnscoredApplicationsForOpening(
+		ctx context.Context,
+		employerID, openingID string,
+		limit int,
+	) ([]ApplicationForScoring, error)
+	SaveApplicationScores(ctx context.Context, scores []ApplicationScore) error
 }

@@ -131,7 +131,7 @@ func NewGranger() (*Granger, error) {
 		return nil, fmt.Errorf("OnboardTokenLife is invalid: %w", err)
 	}
 
-	return &Granger{
+	g := &Granger{
 		env:              config.Env,
 		port:             fmt.Sprintf(":%s", config.Port),
 		smtp:             sc,
@@ -139,7 +139,9 @@ func NewGranger() (*Granger, error) {
 
 		db:  db,
 		log: logger,
-	}, nil
+	}
+
+	return g, nil
 }
 
 func (g *Granger) Run() error {
@@ -159,6 +161,10 @@ func (g *Granger) Run() error {
 	mailSenderQuit := make(chan struct{})
 	go g.mailSender(mailSenderQuit)
 
+	g.wg.Add(1)
+	scoreApplicationsQuit := make(chan struct{})
+	go g.scoreApplications(scoreApplicationsQuit)
+
 	go func() {
 		// For now, we don't have any routes to serve
 		// but we will keep this around for future use
@@ -176,7 +182,9 @@ func (g *Granger) Run() error {
 		<-signalChan
 		close(pruneTokensQuit)
 		close(createOnboardEmailsQuit)
+		close(pruneOfficialEmailCodesQuit)
 		close(mailSenderQuit)
+		close(scoreApplicationsQuit)
 	}()
 
 	g.wg.Wait()

@@ -58,6 +58,11 @@ spec:
                 secretKeyRef:
                   name: smtp-credentials
                   key: password
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: bucket
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config

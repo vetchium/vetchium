@@ -887,4 +887,29 @@ INSERT INTO hub_users (
     'சலங்கையிட்டாள் ஒரு மாது, சங்கீதம் நீ பாடு'
 );
 
+-- Tables for AI resume scoring
+CREATE TABLE application_scoring_models (
+    model_name TEXT PRIMARY KEY,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+-- Table to store resume scoring results
+CREATE TABLE application_scores (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id TEXT REFERENCES applications(id) NOT NULL,
+    model_name TEXT REFERENCES application_scoring_models(model_name) NOT NULL,
+    score INTEGER NOT NULL, -- 0-100 score
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    CONSTRAINT score_range CHECK (score >= 0 AND score <= 100),
+    CONSTRAINT unique_application_model UNIQUE (application_id, model_name)
+);
+
+-- Insert default models from sortinghat
+INSERT INTO application_scoring_models (model_name, description, is_active) 
+VALUES 
+    ('sentence-transformers-all-MiniLM-L6-v2', 'Sentence Transformer model (all-MiniLM-L6-v2)', TRUE),
+    ('tfidf-1.0', 'TF-IDF vectorizer model', TRUE);
+
 COMMIT;
