@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Dict, List, Any
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from pydantic import BaseModel
 import boto3
 from botocore.client import Config
@@ -93,18 +93,26 @@ def score_with_tfidf(resume_text: str, job_description: str) -> float:
     logger.debug(f"TF-IDF raw similarity: {similarity}, scaled score: {score}")
     return score
 
-class ScoringResponse(BaseModel):
-    resume: str
-    compatibility_scores: Dict[str, float]
+# Pydantic models below should match the ones in api/pkg/vetchi/resume-scoring.go
+class ModelScore(BaseModel):
+    model_name: str
+    score: int
 
-@app.get("/score-resumes-jd", response_model=List[ScoringResponse])
-async def score_resumes(
-    fileurl: str = Query(..., description="S3 URI to the resume PDF"),
-    job_description: str = Query(..., description="Job description to compare against")
-):
+class SortingHatScore(BaseModel):
+    application_id: str
+    model_scores: List[ModelScore]
+
+class SortingHatRequest(BaseModel):
+    job_description: str
+    resume_paths: List[str]
+
+class SortingHatResponse(BaseModel):
+    scores: List[SortingHatScore]
+
+def score_single_resume(fileurl: str, job_description: str) -> Dict[str, Any]:
+    """Score a single resume against a job description"""
     logger.info(f"Processing resume: {fileurl}")
-    logger.info(f"Job description length: {len(job_description)} characters")
-
+    
     try:
         # Parse S3 URL to extract bucket and key
         if not fileurl.startswith("s3://"):
@@ -144,25 +152,46 @@ async def score_resumes(
         tfidf_score = score_with_tfidf(resume_text, job_description)
         logger.info(f"Scoring complete - Sentence Transformer: {sbert_score:.2f}, TF-IDF: {tfidf_score:.2f}")
 
-        # Prepare response
-        result = ScoringResponse(
-            resume=fileurl,
-            compatibility_scores={
-                "sentence-transformers": round(sbert_score, 2),
-                "tfidf": round(tfidf_score, 2)
-            }
-        )
-
-        logger.info(f"Returning scores for resume: {fileurl}")
-        logger.info(f"Final scores - Sentence Transformer: {round(sbert_score, 2)}, TF-IDF: {round(tfidf_score, 2)}")
-
-        return [result]
-
+        # Prepare model scores
+        model_scores = [
+            ModelScore(model_name="sentence-transformers-all-MiniLM-L6-v2", score=round(sbert_score)),
+            ModelScore(model_name="tfidf-1.0", score=round(tfidf_score))
+        ]
+        
+        return {
+            "application_id": key,  # Use the key as the application ID
+            "model_scores": model_scores
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Unexpected error while processing resume: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.post("/score-batch", response_model=SortingHatResponse)
+async def score_batch(request: SortingHatRequest = Body(...)):
+    """Score multiple resumes against a job description in a single batch"""
+    logger.info(f"Processing batch of {len(request.resume_paths)} resumes")
+    logger.info(f"Job description length: {len(request.job_description)} characters")
+    
+    scores = []
+    
+    # Process each resume in the batch
+    for resume_path in request.resume_paths:
+        try:
+            score_result = score_single_resume(resume_path, request.job_description)
+            scores.append(SortingHatScore(**score_result))
+        except HTTPException as e:
+            logger.error(f"Error processing resume {resume_path}: {e.detail}")
+            # Continue with other resumes even if one fails
+            continue
+        except Exception as e:
+            logger.exception(f"Unexpected error processing resume {resume_path}: {str(e)}")
+            continue
+    
+    logger.info(f"Completed batch processing. Scored {len(scores)} out of {len(request.resume_paths)} resumes")
+    return SortingHatResponse(scores=scores)
 
 @app.get("/health")
 async def health_check():

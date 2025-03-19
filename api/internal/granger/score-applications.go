@@ -1,6 +1,7 @@
 package granger
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -106,98 +107,92 @@ func (g *Granger) scoreApplicationBatch(
 		return fmt.Errorf("S3_BUCKET environment variable not set")
 	}
 
-	// Collect all scores for all applications to save in a single transaction
-	var allScores []db.ApplicationScore
+	// Prepare batch request
+	resumePaths := make([]string, 0, len(applications))
+	appIDMap := make(map[string]string) // Map resume paths to application IDs
 
 	for _, app := range applications {
 		// Format fileurl as expected by sortinghat: s3://bucket/key
 		fileurl := fmt.Sprintf("s3://%s/%s", bucket, app.ResumeSHA)
-		g.log.Dbg("Scoring resume", "application", app.ID, "fileurl", fileurl)
+		resumePaths = append(resumePaths, fileurl)
+		appIDMap[fileurl] = app.ID
+	}
 
-		// Build request URL with query parameters
-		apiURL := "http://sortinghat:8080/score-resumes-jd"
-		req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
-		if err != nil {
-			g.log.Err("failed to create request", "err", err)
-			return fmt.Errorf("failed to create request: %w", err)
-		}
+	g.log.Dbg("Scoring batch of resumes", "count", len(resumePaths))
 
-		// Add query parameters
-		q := req.URL.Query()
-		q.Add("fileurl", fileurl)
-		q.Add("job_description", jd)
-		req.URL.RawQuery = q.Encode()
+	// Create request payload
+	request := vetchi.SortingHatRequest{
+		JobDescription: jd,
+		ResumePaths:    resumePaths,
+	}
 
-		// Execute request
-		resp, err := client.Do(req)
-		if err != nil {
-			g.log.Err("failed to call sortinghat API", "err", err)
-			continue
-		}
-		defer resp.Body.Close()
+	// Convert request to JSON
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		g.log.Err("failed to marshal request", "err", err)
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
 
-		if resp.StatusCode != http.StatusOK {
-			g.log.Err(
-				"sortinghat API",
-				"application",
-				app.ID,
-				"status",
-				resp.Status,
-			)
-			continue
-		}
+	// Build request
+	apiURL := "http://sortinghat:8080/score-batch"
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		apiURL,
+		bytes.NewBuffer(requestBody),
+	)
+	if err != nil {
+		g.log.Err("failed to create request", "err", err)
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
 
-		// Parse response
-		var scoreResponse []resumeScoreResponse
-		if err := json.NewDecoder(resp.Body).Decode(&scoreResponse); err != nil {
-			g.log.Err("failed to decode sortinghat response", "err", err)
-			continue
-		}
+	// Execute request
+	resp, err := client.Do(req)
+	if err != nil {
+		g.log.Err("failed to call sortinghat API", "err", err)
+		return fmt.Errorf("failed to call sortinghat API: %w", err)
+	}
+	defer resp.Body.Close()
 
-		if len(scoreResponse) == 0 {
-			g.log.Err("empty response from sortinghat", "application", app.ID)
-			continue
-		}
+	if resp.StatusCode != http.StatusOK {
+		g.log.Err(
+			"sortinghat API returned non-OK status",
+			"status",
+			resp.Status,
+		)
+		return fmt.Errorf("sortinghat API returned status %s", resp.Status)
+	}
 
-		scores := scoreResponse[0].CompatibilityScores
-		g.log.Dbg("Got scores", "application", app.ID, "scores", scores)
+	// Parse response
+	var response vetchi.SortingHatResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		g.log.Err("failed to decode sortinghat response", "err", err)
+		return fmt.Errorf("failed to decode sortinghat response: %w", err)
+	}
 
-		// Process scores for this application
-		for _, model := range models {
-			// Map sortinghat model names to our model names
-			// We have to do this because the model_names in the response don't match our database exactly
-			var scoreKey string
-			if model.ModelName == "sentence-transformers-all-MiniLM-L6-v2" {
-				scoreKey = "sentence-transformers"
-			} else if model.ModelName == "tfidf-1.0" {
-				scoreKey = "tfidf"
-			} else {
-				g.log.Err("unknown model name", "model_name", model.ModelName)
-				continue
-			}
+	// Collect all scores to save in a single transaction
+	var allScores []db.ApplicationScore
 
-			score, ok := scores[scoreKey]
-			if !ok {
-				g.log.Dbg("no score for model", "model", model.ModelName)
-				continue
-			}
+	// Process scores from the response
+	for _, score := range response.Scores {
+		appID := score.ApplicationID
 
-			// Convert to integer score
-			intScore := int(score)
-
+		// Map model scores to database scores
+		for _, modelScore := range score.ModelScores {
 			allScores = append(allScores, db.ApplicationScore{
-				ApplicationID: app.ID,
-				ModelName:     model.ModelName,
-				Score:         intScore,
+				ApplicationID: appID,
+				ModelName:     modelScore.ModelName,
+				Score:         modelScore.Score,
 			})
 		}
 	}
 
-	// Save all scores for all applications in a single transaction
+	// Save all scores in a single transaction
 	if len(allScores) > 0 {
 		err := g.db.SaveApplicationScores(ctx, allScores)
 		if err != nil {
-			g.log.Dbg("failed to save application scores", "err", err)
+			g.log.Err("failed to save application scores", "err", err)
 			return fmt.Errorf("failed to save application scores: %w", err)
 		}
 		g.log.Dbg("Saved all application scores", "count", len(allScores))

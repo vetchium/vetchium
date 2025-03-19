@@ -4,36 +4,65 @@ A resume scoring service that evaluates the compatibility of resumes against job
 
 ## Features
 
-- HTTP endpoint for scoring resumes against job descriptions
+- HTTP endpoint for batch scoring of resumes against job descriptions
 - Uses multiple AI models for comparison:
   - Sentence Transformers (all-MiniLM-L6-v2)
-  - spaCy (en_core_web_md)
+  - TF-IDF vectorizer
 - Reads resume PDFs from S3/Minio storage
 - Returns compatibility scores on a scale of 0-100
 
 ## API Endpoint
 
-### `GET /score-resumes-jd`
+### `POST /score-batch`
 
-Scores a resume against a job description.
+Scores multiple resumes against a job description in a single batch request.
 
-**Parameters:**
+**Request:**
 
-- `fileurl` (required): S3 URL to the resume PDF (format: `s3://bucket/path/to/file.pdf`)
-- `job_description` (required): Job description text to compare against
+```json
+{
+  "job_description": "Full job description text...",
+  "resume_paths": [
+    "s3://bucket/path/to/resume1.pdf",
+    "s3://bucket/path/to/resume2.pdf",
+    "s3://bucket/path/to/resume3.pdf"
+  ]
+}
+```
 
 **Response:**
 
 ```json
-[
-  {
-    "resume": "s3://bucket/path/to/file.pdf",
-    "compatibility_scores": {
-      "sentence-transformers": 78.45,
-      "spacy": 82.31
+{
+  "scores": [
+    {
+      "application_id": "path/to/resume1.pdf",
+      "model_scores": [
+        {
+          "model_name": "sentence-transformers-all-MiniLM-L6-v2",
+          "score": 78
+        },
+        {
+          "model_name": "tfidf-1.0",
+          "score": 82
+        }
+      ]
+    },
+    {
+      "application_id": "path/to/resume2.pdf",
+      "model_scores": [
+        {
+          "model_name": "sentence-transformers-all-MiniLM-L6-v2",
+          "score": 65
+        },
+        {
+          "model_name": "tfidf-1.0",
+          "score": 71
+        }
+      ]
     }
-  }
-]
+  ]
+}
 ```
 
 ### `GET /health`
@@ -48,14 +77,12 @@ The service requires the following environment variables:
 - `S3_ACCESS_KEY`: S3/Minio access key
 - `S3_SECRET_KEY`: S3/Minio secret key
 - `S3_REGION`: S3 region (default: us-east-1)
-- `S3_BUCKET`: Bucket name
 - `PORT`: Port for the HTTP server (default: 8080)
 
 ## Development
 
 1. Install dependencies: `pip install -r requirements.txt`
-2. Download spaCy model: `python -m spacy download en_core_web_md`
-3. Run the server: `python main.py`
+2. Run the server: `python main.py`
 
 ## Docker
 
