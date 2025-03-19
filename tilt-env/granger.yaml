@@ -63,6 +63,10 @@ spec:
                 secretKeyRef:
                   name: s3-credentials
                   key: bucket
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config
