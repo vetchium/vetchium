@@ -52,7 +52,7 @@ type Opening struct {
 type CreateOpeningRequest struct {
 	Title          string                `json:"title"                     validate:"required,min=3,max=32"`
 	Positions      int                   `json:"positions"                 validate:"required,min=1,max=20"`
-	JD             string                `json:"jd"                        validate:"required,min=10,max=1024"`
+	JD             string                `json:"jd"                        validate:"required,min=10,max=8192"`
 	Recruiter      common.EmailAddress   `json:"recruiter"                 validate:"required"`
 	HiringManager  common.EmailAddress   `json:"hiring_manager"            validate:"required"`
 	HiringTeam     []common.EmailAddress `json:"hiring_team,omitempty"     validate:"omitempty,max=10"`
