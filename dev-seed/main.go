@@ -42,8 +42,6 @@ func main() {
 	addOfficialEmails()
 	color.Cyan("Uploading profile pictures")
 	uploadHubUserProfilePictures()
-	color.Cyan("Creating colleague connections")
-	createColleagueConnections()
 
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")
@@ -55,6 +53,11 @@ func main() {
 	color.Cyan("Create Openings")
 	createOpenings()
 
-	color.Cyan("Creating applications")
-	createApplications()
+	if false {
+		// We need to track per-user workhistory before creating connections
+		color.Cyan("Creating colleague connections")
+		createColleagueConnections()
+		color.Cyan("Creating applications")
+		createApplications()
+	}
 }
