@@ -9,61 +9,11 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-// GetActiveApplicationScoringModels returns all active scoring models
-func (p *PG) GetActiveApplicationScoringModels(
-	ctx context.Context,
-) ([]db.ApplicationScoringModel, error) {
-	p.log.Dbg("getting active application scoring models")
-	query := `
-SELECT model_name, description, is_active, created_at
-FROM application_scoring_models
-WHERE is_active = true
-`
-
-	rows, err := p.pool.Query(ctx, query)
-	if err != nil {
-		p.log.Err("Failed to query application scoring models", "error", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var models []db.ApplicationScoringModel
-	for rows.Next() {
-		var model db.ApplicationScoringModel
-		if err := rows.Scan(
-			&model.ModelName,
-			&model.Description,
-			&model.IsActive,
-			&model.CreatedAt,
-		); err != nil {
-			p.log.Err("Failed to scan application scoring model", "error", err)
-			return nil, fmt.Errorf(
-				"failed to scan application scoring model: %w",
-				err,
-			)
-		}
-		models = append(models, model)
-	}
-
-	if err := rows.Err(); err != nil {
-		p.log.Err("Error iterating application scoring models", "error", err)
-		return nil, err
-	}
-
-	p.log.Dbg("Got active application scoring models", "count", len(models))
-	return models, nil
-}
-
 // GetUnscoredApplication returns a random opening with unscored applications
 func (p *PG) GetUnscoredApplication(
 	ctx context.Context,
 	limit int,
 ) (*db.UnscoredApplicationBatch, error) {
-	p.log.Dbg("getting unscored application batch")
-	if limit <= 0 {
-		limit = 10 // Default to max 10 applications
-	}
-
 	query := `
 WITH candidate_openings AS (
 	SELECT DISTINCT o.employer_id, o.id, o.jd
@@ -106,14 +56,10 @@ LIMIT 1
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			p.log.Dbg("No unscored applications found")
 			return nil, nil
 		}
 		p.log.Err("Failed to query unscored application batch", "error", err)
-		return nil, fmt.Errorf(
-			"failed to query unscored application batch: %w",
-			err,
-		)
+		return nil, err
 	}
 
 	// Create result struct

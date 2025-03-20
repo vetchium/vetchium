@@ -393,10 +393,6 @@ type DB interface {
 		cleanedAt time.Time,
 	) error
 
-	// Application scoring methods
-	GetActiveApplicationScoringModels(
-		ctx context.Context,
-	) ([]ApplicationScoringModel, error)
 	GetUnscoredApplication(
 		ctx context.Context,
 		limit int,
