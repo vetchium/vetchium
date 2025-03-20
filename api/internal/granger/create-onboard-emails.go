@@ -62,7 +62,6 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			return
 		case <-ticker.C:
 			ticker.Stop()
-			g.log.Dbg("createOnboardEmails ticker received signal")
 			ctx := context.Background()
 			onboardInfo, err := g.db.DeQOnboard(ctx)
 			if err != nil {
@@ -71,7 +70,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			}
 
 			if onboardInfo == nil {
-				g.log.Dbg("no pending employer onboard email generation")
+				// g.log.Dbg("no pending employer onboard email generation")
 				ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 				continue
 			}

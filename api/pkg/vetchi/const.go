@@ -81,5 +81,5 @@ const (
 	CreateOnboardEmailsInterval     = 3 * time.Second
 	PruneOfficialEmailCodesInterval = 5 * time.Minute
 	MailSenderInterval              = 5 * time.Second
-	ScoreApplicationsInterval       = 15 * time.Minute
+	ScoreApplicationsInterval       = 1 * time.Minute
 )

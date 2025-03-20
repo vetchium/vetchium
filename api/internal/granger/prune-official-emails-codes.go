@@ -22,8 +22,6 @@ func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
 			return
 		case <-ticker.C:
 			ticker.Stop()
-			g.log.Dbg("pruneOfficialEmailCodes ticker received signal")
-			// TODO: Read the time interval from config
 			err := g.db.PruneOfficialEmailCodes(context.Background())
 			if err != nil {
 				g.log.Err("failed to prune official email codes", "error", err)
