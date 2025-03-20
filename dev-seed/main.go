@@ -57,6 +57,10 @@ func main() {
 	color.Cyan("Initializing PDF directory for resumes")
 	initResumePDFDirectory()
 
+	// Generate PDF resumes for all users
+	color.Cyan("Generating PDF resumes for all users")
+	generateResumesForAllUsers()
+
 	if false {
 		// We need to track per-user workhistory before creating connections
 		color.Cyan("Creating colleague connections")
