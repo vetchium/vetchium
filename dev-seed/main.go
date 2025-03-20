@@ -53,6 +53,10 @@ func main() {
 	color.Cyan("Create Openings")
 	createOpenings()
 
+	// Initialize the PDF directory for resumes
+	color.Cyan("Initializing PDF directory for resumes")
+	initResumePDFDirectory()
+
 	if false {
 		// We need to track per-user workhistory before creating connections
 		color.Cyan("Creating colleague connections")

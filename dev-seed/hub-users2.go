@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
@@ -89,6 +90,16 @@ type Job struct {
 	Website string
 }
 
+// WorkHistoryItem stores detailed information about a job including dates
+type WorkHistoryItem struct {
+	EmployerID   string
+	EmployerName string
+	StartDate    time.Time
+	EndDate      *time.Time
+	JobTitle     string
+	Description  string
+}
+
 type HubSeedUser struct {
 	Name                   string
 	Handle                 string
@@ -102,6 +113,9 @@ type HubSeedUser struct {
 	ProfilePictureFilename string
 
 	Jobs []Job
+
+	// Track detailed work history for each user
+	WorkHistoryItems []WorkHistoryItem
 
 	// TODO: Find out how we can efficiently populate these
 	Endorsers             []common.Handle
@@ -848,7 +862,65 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 			ProfilePictureFilename: pic,
 			Jobs:                   jobs,
 		}
+
+		// Generate work history details for this user
+		trackWorkHistory(&hubUser)
+
 		hubSeedUsers = append(hubSeedUsers, hubUser)
 	}
 	return hubSeedUsers
+}
+
+// trackWorkHistory generates detailed work history items with dates for a user
+func trackWorkHistory(user *HubSeedUser) {
+	var prevStartDate time.Time
+
+	// Initialize the work history items slice
+	user.WorkHistoryItems = make([]WorkHistoryItem, 0, len(user.Jobs))
+
+	for i := len(user.Jobs) - 1; i >= 0; i-- {
+		job := user.Jobs[i]
+
+		var startDateRaw time.Time
+		var endDatePtr *time.Time
+
+		if i == len(user.Jobs)-1 {
+			// Last job is current job
+			endDatePtr = nil
+			randYears := rand.Intn(7) + 1
+			startDateRaw = time.Now().AddDate(-randYears, 0, 0)
+			prevStartDate = startDateRaw
+		} else {
+			// Assuming a 30-90 day gap exists between jobs
+			gapDays := rand.Intn(60) + 30
+			endDate := prevStartDate.AddDate(0, 0, -gapDays)
+			endDateCopy := endDate // Create a copy to avoid pointer issues
+			endDatePtr = &endDateCopy
+
+			numberOfYears := rand.Intn(7) + 1
+			startDateRaw = endDate.AddDate(-numberOfYears, 0, 0)
+			prevStartDate = startDateRaw
+		}
+
+		// Find employer name from website
+		var employerName string
+		for _, employer := range employers {
+			if employer.Website == job.Website {
+				employerName = employer.Name
+				break
+			}
+		}
+
+		// Create and add the work history item
+		workItem := WorkHistoryItem{
+			EmployerID:   job.Website,
+			EmployerName: employerName,
+			StartDate:    startDateRaw,
+			EndDate:      endDatePtr,
+			JobTitle:     job.Title,
+			Description:  job.Title, // Using job title as default description
+		}
+
+		user.WorkHistoryItems = append(user.WorkHistoryItems, workItem)
+	}
 }
