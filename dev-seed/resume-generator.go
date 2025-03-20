@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -139,7 +138,7 @@ func generateResumePDF(user HubSeedUser) (string, []byte, error) {
 	}
 
 	// Read the file back to return the bytes
-	pdfBytes, err := ioutil.ReadFile(filename)
+	pdfBytes, err := os.ReadFile(filename)
 	if err != nil {
 		return filename, nil, err
 	}
