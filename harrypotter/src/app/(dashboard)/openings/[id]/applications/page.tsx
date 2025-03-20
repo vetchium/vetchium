@@ -11,6 +11,7 @@ import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PeopleIcon from "@mui/icons-material/People";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import {
   Alert,
   Box,
@@ -27,6 +28,7 @@ import {
   Grid,
   IconButton,
   InputLabel,
+  LinearProgress,
   Menu,
   MenuItem,
   Pagination,
@@ -728,6 +730,97 @@ export default function ApplicationsPage({ params }: PageProps) {
                             </Paper>
                           ))}
                         </Stack>
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {application.scores && application.scores.length > 0 && (
+                    <Grid item xs={12}>
+                      <Divider sx={{ my: 2 }} />
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          bgcolor: "grey.50",
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          gutterBottom
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            color: "text.primary",
+                            fontWeight: 600,
+                          }}
+                        >
+                          <AssessmentIcon sx={{ mr: 1, color: "info.main" }} />
+                          {t("applications.aiCompatibilityScore")}
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                          {application.scores.map((score, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                mb: 2,
+                                p: 2,
+                                bgcolor: "background.paper",
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  position: "relative",
+                                  display: "inline-flex",
+                                  mr: 2,
+                                }}
+                              >
+                                <CircularProgress
+                                  variant="determinate"
+                                  value={score.score}
+                                  size={60}
+                                  thickness={4}
+                                  sx={{
+                                    color:
+                                      score.score > 80
+                                        ? "success.main"
+                                        : score.score > 50
+                                        ? "warning.main"
+                                        : "error.main",
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    top: 0,
+                                    left: 0,
+                                    bottom: 0,
+                                    right: 0,
+                                    position: "absolute",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    component="div"
+                                    sx={{ fontWeight: "bold" }}
+                                  >{`${Math.round(score.score)}%`}</Typography>
+                                </Box>
+                              </Box>
+                              <Typography variant="subtitle2">
+                                {score.model_name}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
                       </Paper>
                     </Grid>
                   )}

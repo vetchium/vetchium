@@ -232,6 +232,8 @@ export const en = {
     endorsers: "Endorsers",
     noEndorsers: "No endorsers",
     endorser: "Endorser",
+    aiCompatibilityScore: "AI Compatibility Score",
+    modelScore: "{{modelName}}",
   },
   candidacies: {
     title: "Candidacies",
