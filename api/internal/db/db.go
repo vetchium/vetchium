@@ -75,8 +75,8 @@ type OpeningForScoring struct {
 
 // Application represents an application with minimal fields needed for resume scoring
 type ApplicationForScoring struct {
-	ID        string
-	ResumeSHA string
+	ApplicationID string
+	ResumeSHA     string
 }
 
 type DB interface {

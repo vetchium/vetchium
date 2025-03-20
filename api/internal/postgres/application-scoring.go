@@ -159,7 +159,7 @@ LIMIT $4
 	var applications []db.ApplicationForScoring
 	for rows.Next() {
 		var app db.ApplicationForScoring
-		if err := rows.Scan(&app.ID, &app.ResumeSHA); err != nil {
+		if err := rows.Scan(&app.ApplicationID, &app.ResumeSHA); err != nil {
 			p.log.Err("Failed to scan application", "error", err)
 			return nil, fmt.Errorf("failed to scan application: %w", err)
 		}

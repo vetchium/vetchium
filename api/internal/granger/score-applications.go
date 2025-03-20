@@ -107,7 +107,7 @@ func (g *Granger) scoreApplicationBatch(
 		// Format fileurl as expected by sortinghat: s3://bucket/key
 		fileurl := fmt.Sprintf("s3://%s/%s", bucket, app.ResumeSHA)
 		resumePaths = append(resumePaths, fileurl)
-		appIDMap[fileurl] = app.ID
+		appIDMap[fileurl] = app.ApplicationID
 	}
 
 	g.log.Dbg("Scoring batch of resumes", "count", len(resumePaths))
