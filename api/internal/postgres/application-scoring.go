@@ -54,125 +54,98 @@ WHERE is_active = true
 	return models, nil
 }
 
-// GetOpeningsWithUnscoredApplications returns openings that have applications in APPLIED state without scores
-func (p *PG) GetOpeningsWithUnscoredApplications(
+// GetUnscoredApplication returns a random opening with unscored applications
+func (p *PG) GetUnscoredApplication(
 	ctx context.Context,
-) ([]db.OpeningForScoring, error) {
-	p.log.Dbg("getting openings with unscored applications")
+	limit int,
+) (*db.UnscoredApplicationBatch, error) {
+	p.log.Dbg("getting unscored application batch")
+	if limit <= 0 {
+		limit = 10 // Default to max 10 applications
+	}
+
 	query := `
-SELECT DISTINCT o.employer_id, o.id
-FROM openings o
-JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
+WITH candidate_openings AS (
+	SELECT DISTINCT o.employer_id, o.id, o.jd
+	FROM openings o
+	JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
+	WHERE a.application_state = $1
+	AND (o.opening_state = $2 OR o.opening_state = $3)
+	AND NOT EXISTS (
+		SELECT 1 FROM application_scores s
+		JOIN application_scoring_models m ON s.model_name = m.model_name
+		WHERE s.application_id = a.id AND m.is_active = true
+	)
+	LIMIT 1
+)
+SELECT co.employer_id, co.id, co.jd, 
+	array_agg(a.id) AS app_ids,
+	array_agg(a.resume_sha) AS resume_shas
+FROM candidate_openings co
+JOIN applications a ON co.employer_id = a.employer_id AND co.id = a.opening_id
 WHERE a.application_state = $1
 AND NOT EXISTS (
 	SELECT 1 FROM application_scores s
 	JOIN application_scoring_models m ON s.model_name = m.model_name
 	WHERE s.application_id = a.id AND m.is_active = true
 )
+GROUP BY co.employer_id, co.id, co.jd
+LIMIT 1
 `
 
-	rows, err := p.pool.Query(ctx, query, common.AppliedAppState)
-	if err != nil {
-		p.log.Err("query openings with unscored applications", "error", err)
-		return nil, err
-	}
-	defer rows.Close()
+	var employerID, openingID, jd string
+	var appIDs, resumeSHAs []string
 
-	var openings []db.OpeningForScoring
-	for rows.Next() {
-		var opening db.OpeningForScoring
-		if err := rows.Scan(&opening.EmployerID, &opening.ID); err != nil {
-			p.log.Err("Failed to scan opening", "error", err)
-			return nil, fmt.Errorf("failed to scan opening: %w", err)
-		}
-		openings = append(openings, opening)
-	}
-
-	if err := rows.Err(); err != nil {
-		p.log.Err("Error iterating openings", "error", err)
-		return nil, fmt.Errorf("error iterating openings: %w", err)
-	}
-
-	p.log.Dbg("Got openings with unscored applications", "count", len(openings))
-	return openings, nil
-}
-
-// GetOpeningJD returns the job description for an opening
-func (p *PG) GetOpeningJD(
-	ctx context.Context,
-	employerID, openingID string,
-) (string, error) {
-	p.log.Dbg("Get JD", "employer_id", employerID, "opening_id", openingID)
-	query := `
-SELECT jd
-FROM openings
-WHERE employer_id = $1 AND id = $2
-`
-
-	var jd string
-	err := p.pool.QueryRow(ctx, query, employerID, openingID).Scan(&jd)
-	if err != nil {
-		p.log.Err("JD", "emp", employerID, "opening", openingID, "err", err)
-		return "", fmt.Errorf("failed to get opening JD: %w", err)
-	}
-
-	p.log.Dbg("Got JD", "employer_id", employerID, "opening_id", openingID)
-	return jd, nil
-}
-
-// GetUnscoredApplicationsForOpening returns applications for an opening that have not been scored yet
-func (p *PG) GetUnscoredApplicationsForOpening(
-	ctx context.Context,
-	employerID, openingID string,
-	limit int,
-) ([]db.ApplicationForScoring, error) {
-	p.log.Dbg("unscored applications", "emp", employerID, "opening", openingID)
-
-	query := `
-SELECT a.id, a.resume_sha
-FROM applications a
-WHERE a.employer_id = $1
-AND a.opening_id = $2
-AND a.application_state = $3
-AND NOT EXISTS (
-	SELECT 1 FROM application_scores s
-	JOIN application_scoring_models m ON s.model_name = m.model_name
-	WHERE s.application_id = a.id AND m.is_active = true
-)
-LIMIT $4
-`
-
-	rows, err := p.pool.Query(
+	err := p.pool.QueryRow(
 		ctx,
 		query,
-		employerID,
-		openingID,
 		common.AppliedAppState,
-		limit,
-	)
+		common.ActiveOpening,
+		common.SuspendedOpening,
+	).Scan(&employerID, &openingID, &jd, &appIDs, &resumeSHAs)
+
 	if err != nil {
-		p.log.Err("failed to query unscored applications", "err", err)
-		return nil, fmt.Errorf("failed to query unscored applications: %w", err)
-	}
-	defer rows.Close()
-
-	var applications []db.ApplicationForScoring
-	for rows.Next() {
-		var app db.ApplicationForScoring
-		if err := rows.Scan(&app.ApplicationID, &app.ResumeSHA); err != nil {
-			p.log.Err("Failed to scan application", "error", err)
-			return nil, fmt.Errorf("failed to scan application: %w", err)
+		if err == pgx.ErrNoRows {
+			p.log.Dbg("No unscored applications found")
+			return nil, nil
 		}
-		applications = append(applications, app)
+		p.log.Err("Failed to query unscored application batch", "error", err)
+		return nil, fmt.Errorf(
+			"failed to query unscored application batch: %w",
+			err,
+		)
 	}
 
-	if err := rows.Err(); err != nil {
-		p.log.Err("Error iterating applications", "error", err)
-		return nil, fmt.Errorf("error iterating applications: %w", err)
+	// Create result struct
+	batch := &db.UnscoredApplicationBatch{
+		EmployerID:   employerID,
+		OpeningID:    openingID,
+		JD:           jd,
+		Applications: make([]db.ApplicationForScoring, 0, len(appIDs)),
 	}
 
-	p.log.Dbg("got unscored applications", "count", len(applications))
-	return applications, nil
+	// Populate applications (up to limit)
+	maxApps := len(appIDs)
+	if maxApps > limit {
+		maxApps = limit
+	}
+
+	for i := 0; i < maxApps; i++ {
+		batch.Applications = append(
+			batch.Applications,
+			db.ApplicationForScoring{
+				ApplicationID: appIDs[i],
+				ResumeSHA:     resumeSHAs[i],
+			},
+		)
+	}
+
+	p.log.Dbg("Got unscored application batch",
+		"employer_id", employerID,
+		"opening_id", openingID,
+		"app_count", len(batch.Applications))
+
+	return batch, nil
 }
 
 // SaveApplicationScores saves multiple scores for an application in a single transaction

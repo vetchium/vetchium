@@ -67,16 +67,18 @@ type ApplicationScore struct {
 	CreatedAt     time.Time
 }
 
-// Opening represents a job opening with minimal fields needed for resume scoring
-type OpeningForScoring struct {
-	EmployerID string
-	ID         string
-}
-
 // Application represents an application with minimal fields needed for resume scoring
 type ApplicationForScoring struct {
 	ApplicationID string
 	ResumeSHA     string
+}
+
+// UnscoredApplicationBatch represents a batch of unscored applications for a single opening
+type UnscoredApplicationBatch struct {
+	EmployerID   string
+	OpeningID    string
+	JD           string
+	Applications []ApplicationForScoring // max 10 elements
 }
 
 type DB interface {
@@ -395,17 +397,9 @@ type DB interface {
 	GetActiveApplicationScoringModels(
 		ctx context.Context,
 	) ([]ApplicationScoringModel, error)
-	GetOpeningsWithUnscoredApplications(
+	GetUnscoredApplication(
 		ctx context.Context,
-	) ([]OpeningForScoring, error)
-	GetOpeningJD(
-		ctx context.Context,
-		employerID, openingID string,
-	) (string, error)
-	GetUnscoredApplicationsForOpening(
-		ctx context.Context,
-		employerID, openingID string,
 		limit int,
-	) ([]ApplicationForScoring, error)
+	) (*UnscoredApplicationBatch, error)
 	SaveApplicationScores(ctx context.Context, scores []ApplicationScore) error
 }

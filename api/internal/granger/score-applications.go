@@ -38,46 +38,31 @@ func (g *Granger) scoreApplications(quit <-chan struct{}) {
 }
 
 func (g *Granger) processApplicationsForScoring(ctx context.Context) error {
-	// Get openings with unscored applications in APPLIED state
-	openings, err := g.db.GetOpeningsWithUnscoredApplications(ctx)
+	// Get an unscored application batch
+	batch, err := g.db.GetUnscoredApplication(
+		ctx,
+		vetchi.MaxApplicationsToScorePerBatch,
+	)
 	if err != nil {
 		return err
 	}
-	g.log.Dbg("Got openings with unscored applications", "count", len(openings))
 
-	// Process each opening
-	for _, opening := range openings {
-		// Get job description for this opening
-		jd, err := g.db.GetOpeningJD(ctx, opening.EmployerID, opening.ID)
-		if err != nil {
-			g.log.Dbg("failed to get job description", "err", err)
-			continue
-		}
-		g.log.Dbg("Got job description", "jd_length", len(jd))
+	// If no unscored applications found, return early
+	if batch == nil {
+		g.log.Dbg("No unscored applications found")
+		return nil
+	}
 
-		// Get unscore applications for this opening (max 10 at a time)
-		applications, err := g.db.GetUnscoredApplicationsForOpening(
-			ctx,
-			opening.EmployerID,
-			opening.ID,
-			vetchi.MaxApplicationsToScorePerBatch,
-		)
-		if err != nil {
-			g.log.Dbg("failed to get unscored applications", "err", err)
-			continue
-		}
-		g.log.Dbg("Got unscored applications", "count", len(applications))
+	g.log.Dbg("Got unscored application batch",
+		"employer_id", batch.EmployerID,
+		"opening_id", batch.OpeningID,
+		"app_count", len(batch.Applications))
 
-		if len(applications) == 0 {
-			continue
-		}
-
-		// Process this batch of applications
-		err = g.scoreApplicationBatch(ctx, applications, jd)
-		if err != nil {
-			g.log.Dbg("failed to score application batch", "err", err)
-			continue
-		}
+	// Score the batch of applications
+	err = g.scoreApplicationBatch(ctx, batch.Applications, batch.JD)
+	if err != nil {
+		g.log.Dbg("failed to score application batch", "err", err)
+		return err
 	}
 
 	return nil
