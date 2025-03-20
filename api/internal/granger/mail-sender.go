@@ -16,9 +16,8 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 	defer g.log.Dbg("mailSender job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(vetchi.MailSenderInterval)
-
 	for {
+		ticker := time.NewTicker(vetchi.MailSenderInterval)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -29,7 +28,6 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 			ctx := context.Background()
 			emails, err := g.db.GetOldestUnsentEmails(ctx)
 			if err != nil {
-				ticker = time.NewTicker(vetchi.MailSenderInterval)
 				continue
 			}
 
@@ -51,8 +49,6 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 					continue
 				}
 			}
-
-			ticker = time.NewTicker(vetchi.MailSenderInterval)
 		}
 	}
 }

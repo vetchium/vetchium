@@ -12,9 +12,8 @@ func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
 	defer g.log.Dbg("pruneOfficialEmailCodes job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(vetchi.PruneOfficialEmailCodesInterval)
-
 	for {
+		ticker := time.NewTicker(vetchi.PruneOfficialEmailCodesInterval)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -26,7 +25,6 @@ func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
 			if err != nil {
 				g.log.Err("failed to prune official email codes", "error", err)
 			}
-			ticker = time.NewTicker(vetchi.PruneOfficialEmailCodesInterval)
 		}
 	}
 }
