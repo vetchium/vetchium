@@ -61,11 +61,11 @@ func main() {
 	color.Cyan("Generating PDF resumes for all users")
 	generateResumesForAllUsers()
 
-	if false {
-		// We need to track per-user workhistory before creating connections
-		color.Cyan("Creating colleague connections")
-		createColleagueConnections()
-		color.Cyan("Creating applications")
-		createApplications()
-	}
+	// Create colleague connections based on overlapping work history
+	color.Cyan("Creating colleague connections")
+	createColleagueConnections()
+
+	// Create applications with generated PDF resumes
+	color.Cyan("Creating applications")
+	createApplications()
 }
