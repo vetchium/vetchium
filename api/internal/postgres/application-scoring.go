@@ -70,7 +70,7 @@ WITH candidate_openings AS (
 	FROM openings o
 	JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
 	WHERE a.application_state = $1
-	AND (o.opening_state = $2 OR o.opening_state = $3)
+	AND (o.state = $2 OR o.state = $3)
 	AND NOT EXISTS (
 		SELECT 1 FROM application_scores s
 		JOIN application_scoring_models m ON s.model_name = m.model_name
@@ -174,31 +174,27 @@ ON CONFLICT (application_id, model_name) DO UPDATE
 SET score = $3
 `
 
-	// Use a batch for efficiency
-	batch := &pgx.Batch{}
+	// Execute individual SQL statements within the transaction
 	for _, score := range scores {
-		batch.Queue(query, score.ApplicationID, score.ModelName, score.Score)
-	}
-
-	// Send the batch
-	results := tx.SendBatch(ctx, batch)
-	defer results.Close()
-
-	// Process each result
-	for i := 0; i < batch.Len(); i++ {
-		_, err = results.Exec()
+		_, err := tx.Exec(
+			ctx,
+			query,
+			score.ApplicationID,
+			score.ModelName,
+			score.Score,
+		)
 		if err != nil {
-			p.log.Err("Failed to execute batch query", "index", i, "error", err)
-			return fmt.Errorf("failed to execute batch query: %w", err)
+			p.log.Err("INSERT to application_scores failed", "error", err)
+			return err
 		}
 	}
 
 	// Commit the transaction
 	if err = tx.Commit(context.Background()); err != nil {
 		p.log.Err("Failed to commit transaction", "error", err)
-		return fmt.Errorf("failed to commit transaction: %w", err)
+		return err
 	}
 
-	p.log.Dbg("Successfully saved batch of scores", "count", len(scores))
+	p.log.Dbg("Successfully saved scores", "count", len(scores))
 	return nil
 }

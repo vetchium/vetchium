@@ -102,16 +102,20 @@ class SortingHatScore(BaseModel):
     application_id: str
     model_scores: List[ModelScore]
 
+class ApplicationSortRequest(BaseModel):
+    application_id: str
+    resume_path: str
+
 class SortingHatRequest(BaseModel):
     job_description: str
-    resume_paths: List[str]
+    application_sort_requests: List[ApplicationSortRequest]
 
 class SortingHatResponse(BaseModel):
     scores: List[SortingHatScore]
 
-def score_single_resume(fileurl: str, job_description: str) -> Dict[str, Any]:
+def score_single_resume(application_id: str, fileurl: str, job_description: str) -> Dict[str, Any]:
     """Score a single resume against a job description"""
-    logger.info(f"Processing resume: {fileurl}")
+    logger.info(f"Processing resume: {fileurl} for application {application_id}")
     
     try:
         # Parse S3 URL to extract bucket and key
@@ -159,7 +163,7 @@ def score_single_resume(fileurl: str, job_description: str) -> Dict[str, Any]:
         ]
         
         return {
-            "application_id": key,  # Use the key as the application ID
+            "application_id": application_id,
             "model_scores": model_scores
         }
         
@@ -172,25 +176,29 @@ def score_single_resume(fileurl: str, job_description: str) -> Dict[str, Any]:
 @app.post("/score-batch", response_model=SortingHatResponse)
 async def score_batch(request: SortingHatRequest = Body(...)):
     """Score multiple resumes against a job description in a single batch"""
-    logger.info(f"Processing batch of {len(request.resume_paths)} resumes")
+    logger.info(f"Processing batch of {len(request.application_sort_requests)} resumes")
     logger.info(f"Job description length: {len(request.job_description)} characters")
     
     scores = []
     
     # Process each resume in the batch
-    for resume_path in request.resume_paths:
+    for app_request in request.application_sort_requests:
         try:
-            score_result = score_single_resume(resume_path, request.job_description)
+            score_result = score_single_resume(
+                app_request.application_id,
+                app_request.resume_path, 
+                request.job_description
+            )
             scores.append(SortingHatScore(**score_result))
         except HTTPException as e:
-            logger.error(f"Error processing resume {resume_path}: {e.detail}")
+            logger.error(f"Error processing resume {app_request.resume_path}: {e.detail}")
             # Continue with other resumes even if one fails
             continue
         except Exception as e:
-            logger.exception(f"Unexpected error processing resume {resume_path}: {str(e)}")
+            logger.exception(f"Unexpected error processing resume {app_request.resume_path}: {str(e)}")
             continue
     
-    logger.info(f"Completed batch processing. Scored {len(scores)} out of {len(request.resume_paths)} resumes")
+    logger.info(f"Completed batch processing. Scored {len(scores)} out of {len(request.application_sort_requests)} resumes")
     return SortingHatResponse(scores=scores)
 
 @app.get("/health")

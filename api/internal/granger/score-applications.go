@@ -85,22 +85,29 @@ func (g *Granger) scoreApplicationBatch(
 	}
 
 	// Prepare batch request
-	resumePaths := make([]string, 0, len(applications))
+	appSortRequests := make(
+		[]vetchi.ApplicationSortRequest,
+		0,
+		len(applications),
+	)
 	appIDMap := make(map[string]string) // Map resume paths to application IDs
 
 	for _, app := range applications {
 		// Format fileurl as expected by sortinghat: s3://bucket/key
 		fileurl := fmt.Sprintf("s3://%s/%s", bucket, app.ResumeSHA)
-		resumePaths = append(resumePaths, fileurl)
+		appSortRequests = append(appSortRequests, vetchi.ApplicationSortRequest{
+			ApplicationID: app.ApplicationID,
+			ResumePath:    fileurl,
+		})
 		appIDMap[fileurl] = app.ApplicationID
 	}
 
-	g.log.Dbg("Scoring batch of resumes", "count", len(resumePaths))
+	g.log.Dbg("Scoring batch of resumes", "count", len(appSortRequests))
 
 	// Create request payload
 	request := vetchi.SortingHatRequest{
-		JobDescription: jd,
-		ResumePaths:    resumePaths,
+		JobDescription:          jd,
+		ApplicationSortRequests: appSortRequests,
 	}
 
 	// Convert request to JSON
@@ -147,6 +154,8 @@ func (g *Granger) scoreApplicationBatch(
 		g.log.Err("failed to decode sortinghat response", "err", err)
 		return fmt.Errorf("failed to decode sortinghat response: %w", err)
 	}
+
+	g.log.Dbg("Sortinghat response", "response", response)
 
 	// Collect all scores to save in a single transaction
 	var allScores []db.ApplicationScore
