@@ -37,6 +37,11 @@ type Endorser struct {
 	CurrentCompanyDomains []string `json:"current_company_domains"`
 }
 
+type ModelScore struct {
+	ModelName string `json:"model_name"`
+	Score     int    `json:"score"`
+}
+
 type Application struct {
 	ID                         string                  `json:"id"`
 	CoverLetter                *string                 `json:"cover_letter,omitempty"`
@@ -48,6 +53,7 @@ type Application struct {
 	State                      common.ApplicationState `json:"state"`
 	ColorTag                   *ApplicationColorTag    `json:"color_tag,omitempty"`
 	Endorsers                  []Endorser              `json:"endorsers"`
+	Scores                     []ModelScore            `json:"scores"`
 }
 
 type SetApplicationColorTagRequest struct {

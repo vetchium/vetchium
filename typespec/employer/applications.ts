@@ -24,6 +24,11 @@ export interface Endorser {
   current_company_domains?: string[];
 }
 
+export interface ModelScore {
+  model_name: string;
+  score: number;
+}
+
 export interface Application {
   id: string;
   cover_letter?: string;
@@ -35,6 +40,7 @@ export interface Application {
   state: ApplicationState;
   color_tag?: ApplicationColorTag;
   endorsers: Endorser[];
+  scores: ModelScore[];
 }
 
 export interface SetApplicationColorTagRequest {

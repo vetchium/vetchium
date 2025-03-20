@@ -15,6 +15,7 @@
 - [x] Colleague Connections and various states and flows
 - [x] Interviews - Scheduling, RSVPs
 - [x] Candidacy state changes after Interviews
+- [x] Rudimentary scoring of Applicants
 
 # Features needed before launch
 

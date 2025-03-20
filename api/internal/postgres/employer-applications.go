@@ -20,9 +20,11 @@ func (p *PG) GetApplicationsForEmployer(
 		return nil, db.ErrInternal
 	}
 
+	// TODO: We need a better way to ORDER BY the applications
+	// based on the scores across multiple models
 	query := `
 		WITH endorsed_applications AS (
-			SELECT 
+			SELECT
 				a.id,
 				jsonb_agg(
 					jsonb_build_object(
@@ -43,6 +45,18 @@ func (p *PG) GetApplicationsForEmployer(
 			JOIN hub_users h ON ae.endorser_id = h.id
 			WHERE ae.state = 'ENDORSED'
 			GROUP BY a.id
+		),
+		application_model_scores AS (
+			SELECT
+				application_id,
+				jsonb_agg(
+					jsonb_build_object(
+						'model_name', model_name,
+						'score', score
+					)
+				) as scores
+			FROM application_scores
+			GROUP BY application_id
 		)
 		SELECT
 			a.id,
@@ -64,10 +78,12 @@ func (p *PG) GetApplicationsForEmployer(
 			) as hub_user_last_employer_domains,
 			a.application_state,
 			a.color_tag,
-			COALESCE(ea.endorsers, '[]'::jsonb) as endorsers
+			COALESCE(ea.endorsers, '[]'::jsonb) as endorsers,
+			COALESCE(ams.scores, '[]'::jsonb) as scores
 		FROM applications a
 		JOIN hub_users h ON h.id = a.hub_user_id
 		LEFT JOIN endorsed_applications ea ON ea.id = a.id
+		LEFT JOIN application_model_scores ams ON ams.application_id = a.id
 		WHERE a.employer_id = $1
 		AND a.opening_id = $2
 		AND a.application_state = $3
@@ -125,6 +141,7 @@ func (p *PG) GetApplicationsForEmployer(
 			&app.State,
 			&app.ColorTag,
 			&app.Endorsers,
+			&app.Scores,
 		)
 		if err != nil {
 			p.log.Err("failed to scan application", "error", err)

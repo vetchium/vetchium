@@ -44,6 +44,11 @@ model Endorser {
     current_company_domains?: string[];
 }
 
+model ModelScore {
+    model_name: string;
+    score: numeric;
+}
+
 model Application {
     id: string;
     cover_letter?: string;
@@ -57,6 +62,9 @@ model Application {
 
     @doc("List of all the Endorsers who have endorsed the Application")
     endorsers: Endorser[];
+
+    @doc("The scores of the Application by various models")
+    scores: ModelScore[];
 }
 
 model SetApplicationColorTagRequest {
