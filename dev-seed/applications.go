@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -313,13 +314,16 @@ func createApplicationForOpening(
 	// Generate a custom cover letter based on the user's experience
 	coverLetter := generateCoverLetter(user, companyDomain, openingID)
 
+	// Convert PDF data to base64 string as expected by the backend
+	resumeBase64 := base64.StdEncoding.EncodeToString(resumeData)
+
 	// Create the application request
 	req := hub.ApplyForOpeningRequest{
 		OpeningIDWithinCompany: openingID,
 		CompanyDomain:          companyDomain,
-		Resume:                 string(resumeData),
-		CoverLetter:            coverLetter,
+		Resume:                 resumeBase64,
 		Filename:               filepath.Base(resumeFilename),
+		CoverLetter:            coverLetter,
 		EndorserHandles:        endorsers,
 	}
 
