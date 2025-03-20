@@ -12,14 +12,21 @@ import (
 )
 
 func (g *Granger) mailSender(quit <-chan struct{}) {
+	g.log.Dbg("Starting mailSender job")
+	defer g.log.Dbg("mailSender job finished")
 	defer g.wg.Done()
 
+	ticker := time.NewTicker(5 * time.Second)
+
 	for {
+		ticker.Reset(5 * time.Second)
 		select {
 		case <-quit:
+			ticker.Stop()
 			g.log.Dbg("mailSender quitting")
 			return
-		case <-time.After(5 * time.Second):
+		case <-ticker.C:
+			ticker.Stop()
 			ctx := context.Background()
 			emails, err := g.db.GetOldestUnsentEmails(ctx)
 			if err != nil {
@@ -44,7 +51,6 @@ func (g *Granger) mailSender(quit <-chan struct{}) {
 					continue
 				}
 			}
-
 		}
 	}
 }

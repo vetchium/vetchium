@@ -14,37 +14,30 @@ import (
 )
 
 func (g *Granger) scoreApplications(quit <-chan struct{}) {
+	g.log.Dbg("Starting scoreApplications job")
+	defer g.log.Dbg("scoreApplications job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(15 * time.Minute)
-	defer ticker.Stop()
+	ticker := time.NewTicker(2 * time.Minute)
 
 	for {
+		ticker.Reset(10 * time.Second)
 		select {
 		case <-quit:
+			ticker.Stop()
 			g.log.Dbg("Resume scoring job received quit signal")
 			return
 		case <-ticker.C:
-			g.log.Dbg("Starting resume scoring job")
+			ticker.Stop()
+			g.log.Dbg("Executing scoreApplications job")
 			if err := g.processApplicationsForScoring(context.Background()); err != nil {
-				g.log.Err(
-					"Failed to process applications for scoring",
-					"error",
-					err,
-				)
+				g.log.Dbg("process applications for scoring", "error", err)
 			}
 		}
 	}
 }
 
 func (g *Granger) processApplicationsForScoring(ctx context.Context) error {
-	// Get all active scoring models
-	models, err := g.db.GetActiveApplicationScoringModels(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get active scoring models: %w", err)
-	}
-	g.log.Dbg("Got active scoring models", "count", len(models))
-
 	// Get openings with unscored applications in APPLIED state
 	openings, err := g.db.GetOpeningsWithUnscoredApplications(ctx)
 	if err != nil {
@@ -80,7 +73,7 @@ func (g *Granger) processApplicationsForScoring(ctx context.Context) error {
 		}
 
 		// Process this batch of applications
-		err = g.scoreApplicationBatch(ctx, applications, jd, models)
+		err = g.scoreApplicationBatch(ctx, applications, jd)
 		if err != nil {
 			g.log.Dbg("failed to score application batch", "err", err)
 			continue
@@ -94,7 +87,6 @@ func (g *Granger) scoreApplicationBatch(
 	ctx context.Context,
 	applications []db.ApplicationForScoring,
 	jd string,
-	models []db.ApplicationScoringModel,
 ) error {
 	client := &http.Client{
 		Timeout: 30 * time.Second,

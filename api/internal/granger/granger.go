@@ -176,10 +176,11 @@ func (g *Granger) Run() error {
 	}()
 
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChan, syscall.SIGTERM)
 
 	go func() {
 		<-signalChan
+		g.log.Dbg("Received TERM signal, closing all channels")
 		close(pruneTokensQuit)
 		close(createOnboardEmailsQuit)
 		close(pruneOfficialEmailCodesQuit)

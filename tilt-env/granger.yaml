@@ -18,6 +18,8 @@ metadata:
   namespace: vetchidev
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: granger
@@ -27,6 +29,16 @@ spec:
         app: granger
     spec:
       serviceAccountName: granger-sa
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - granger
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: granger
           image: psankar/vetchi-granger

@@ -48,14 +48,22 @@ The Vetchi Team
 `
 
 func (g *Granger) createOnboardEmails(quit chan struct{}) {
+	g.log.Dbg("Starting createOnboardEmails job")
+	defer g.log.Dbg("createOnboardEmails job finished")
 	defer g.wg.Done()
 
+	ticker := time.NewTicker(3 * time.Second)
+
 	for {
+		ticker.Reset(3 * time.Second)
 		select {
 		case <-quit:
+			ticker.Stop()
 			g.log.Dbg("createOnboardEmails quitting")
 			return
-		case <-time.After(3 * time.Second):
+		case <-ticker.C:
+			ticker.Stop()
+			g.log.Dbg("createOnboardEmails ticker received signal")
 			ctx := context.Background()
 			onboardInfo, err := g.db.DeQOnboard(ctx)
 			if err != nil {
@@ -74,6 +82,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 
 			link := vetchi.EmployerBaseURL + "/onboard/" + token
 
+			// TODO: Should migrate this to hedwig
 			var textBody bytes.Buffer
 			err = ttmpl.Must(
 				ttmpl.New("text").Parse(textMailTemplate),
