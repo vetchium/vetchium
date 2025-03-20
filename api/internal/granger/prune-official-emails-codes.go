@@ -3,6 +3,8 @@ package granger
 import (
 	"context"
 	"time"
+
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
@@ -10,10 +12,9 @@ func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
 	defer g.log.Dbg("pruneOfficialEmailCodes job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(vetchi.PruneOfficialEmailCodesInterval)
 
 	for {
-		ticker.Reset(5 * time.Minute)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -27,6 +28,7 @@ func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {
 			if err != nil {
 				g.log.Err("failed to prune official email codes", "error", err)
 			}
+			ticker = time.NewTicker(vetchi.PruneOfficialEmailCodesInterval)
 		}
 	}
 }

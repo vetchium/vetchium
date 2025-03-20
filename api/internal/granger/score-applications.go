@@ -18,10 +18,9 @@ func (g *Granger) scoreApplications(quit <-chan struct{}) {
 	defer g.log.Dbg("scoreApplications job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(2 * time.Minute)
+	ticker := time.NewTicker(vetchi.ScoreApplicationsInterval)
 
 	for {
-		ticker.Reset(10 * time.Second)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -33,6 +32,7 @@ func (g *Granger) scoreApplications(quit <-chan struct{}) {
 			if err := g.processApplicationsForScoring(context.Background()); err != nil {
 				g.log.Dbg("process applications for scoring", "error", err)
 			}
+			ticker = time.NewTicker(vetchi.ScoreApplicationsInterval)
 		}
 	}
 }

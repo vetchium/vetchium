@@ -74,3 +74,12 @@ const (
 const (
 	MaxApplicationsToScorePerBatch = 10
 )
+
+// Timer intervals for granger background jobs
+const (
+	PruneTokensInterval             = 1 * time.Minute
+	CreateOnboardEmailsInterval     = 3 * time.Second
+	PruneOfficialEmailCodesInterval = 5 * time.Minute
+	MailSenderInterval              = 5 * time.Second
+	ScoreApplicationsInterval       = 15 * time.Minute
+)

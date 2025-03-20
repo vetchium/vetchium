@@ -52,10 +52,9 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 	defer g.log.Dbg("createOnboardEmails job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 
 	for {
-		ticker.Reset(3 * time.Second)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -67,11 +66,13 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			ctx := context.Background()
 			onboardInfo, err := g.db.DeQOnboard(ctx)
 			if err != nil {
+				ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 				continue
 			}
 
 			if onboardInfo == nil {
 				g.log.Dbg("no pending employer onboard email generation")
+				ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 				continue
 			}
 
@@ -92,6 +93,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			})
 			if err != nil {
 				g.log.Err("email text template failed", "error", err)
+				ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 				continue
 			}
 
@@ -104,6 +106,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			})
 			if err != nil {
 				g.log.Err("email html template failed", "error", err)
+				ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 				continue
 			}
 
@@ -125,6 +128,9 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 					Email:              email,
 				},
 			)
+
+			// Create a new ticker after processing is complete
+			ticker = time.NewTicker(vetchi.CreateOnboardEmailsInterval)
 		}
 	}
 }

@@ -3,6 +3,8 @@ package granger
 import (
 	"context"
 	"time"
+
+	"github.com/psankar/vetchi/api/pkg/vetchi"
 )
 
 func (g *Granger) pruneTokens(quit chan struct{}) {
@@ -10,10 +12,9 @@ func (g *Granger) pruneTokens(quit chan struct{}) {
 	defer g.log.Dbg("pruneTokens job finished")
 	defer g.wg.Done()
 
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(vetchi.PruneTokensInterval)
 
 	for {
-		ticker.Reset(1 * time.Minute)
 		select {
 		case <-quit:
 			ticker.Stop()
@@ -22,6 +23,7 @@ func (g *Granger) pruneTokens(quit chan struct{}) {
 		case <-ticker.C:
 			ticker.Stop()
 			_ = g.db.PruneTokens(context.Background())
+			ticker = time.NewTicker(vetchi.PruneTokensInterval)
 		}
 	}
 }
