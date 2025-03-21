@@ -48,7 +48,7 @@ docker: ## Build local Docker images for a single platform where it is run
 	docker buildx build --load -f sqitch/Dockerfile \
 		-t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
 	docker buildx build --load -f sortinghat/Dockerfile \
-		-t psankar/vetchi-sortinghat:$(GIT_SHA) sortinghat
+		-t psankar/vetchi-sortinghat:$(GIT_SHA) .
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
