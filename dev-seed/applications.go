@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -211,7 +211,7 @@ func extractKeywords(title string) []string {
 
 	for _, word := range words {
 		word = strings.ToLower(word)
-		if !commonWords[word] && len(word) > 2 {
+		if !commonWords[word] {
 			keywords = append(keywords, word)
 		}
 	}
@@ -445,7 +445,11 @@ func sendRequest(
 
 	// Check the response status
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %v", err)
+		}
+
 		return fmt.Errorf(
 			"request failed with status %d: %s",
 			resp.StatusCode,
@@ -455,7 +459,7 @@ func sendRequest(
 
 	// Parse the response
 	if respBody != nil {
-		respData, err := ioutil.ReadAll(resp.Body)
+		respData, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed to read response body: %v", err)
 		}
