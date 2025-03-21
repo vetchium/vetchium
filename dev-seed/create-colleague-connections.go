@@ -13,116 +13,69 @@ import (
 )
 
 func createColleagueConnections() {
-	// Map to store users by employer
-	employerToUsers := make(map[string][]struct {
-		UserEmail string
-		StartDate time.Time
-		EndDate   *time.Time
-	})
+	color.Cyan(
+		"Finding potential colleague connections based on work history overlap",
+	)
 
-	// Group users by employer
-	for _, user := range hubUsers {
-		for _, workItem := range user.WorkHistoryItems {
-			employerToUsers[workItem.EmployerID] = append(
-				employerToUsers[workItem.EmployerID],
-				struct {
-					UserEmail string
-					StartDate time.Time
-					EndDate   *time.Time
-				}{
-					UserEmail: user.Email,
-					StartDate: workItem.StartDate,
-					EndDate:   workItem.EndDate,
-				},
-			)
-		}
-	}
-
-	// Track connections to be created
+	// Track connections to create and avoid duplicates
+	processedPairs := make(map[string]bool)
 	connectionsToCreate := make([]struct {
 		HubUserEmail    string
 		ColleagueHandle string
 	}, 0)
 
-	// Find users with overlapping work periods
-	connectionCount := 0
-	for employerID, users := range employerToUsers {
-		// Skip employers with only one user
-		if len(users) <= 1 {
-			continue
-		}
-
-		employerName := "Unknown"
-		for _, employer := range employers {
-			if employer.Website == employerID {
-				employerName = employer.Name
-				break
-			}
-		}
-
-		color.Blue(
-			"Finding colleague connections at %s (%s)",
-			employerName,
-			employerID,
-		)
-
-		// Create connections between users with overlapping work periods
-		for i := 0; i < len(users); i++ {
-			user1 := users[i]
-
-			// Find user1's handle
-			var handle1 string
-			for _, hubUser := range hubUsers {
-				if hubUser.Email == user1.UserEmail {
-					handle1 = hubUser.Handle
-					break
-				}
+	// Find overlapping work periods between users
+	for email1, workHistory1 := range WorkHistoryMap {
+		for email2, workHistory2 := range WorkHistoryMap {
+			// Skip self-connections
+			if email1 == email2 {
+				continue
 			}
 
-			for j := i + 1; j < len(users); j++ {
-				user2 := users[j]
+			// Create a unique key for this user pair to avoid duplicate processing
+			pairKey := getPairKey(email1, email2)
+			if processedPairs[pairKey] {
+				continue
+			}
 
-				// Find user2's handle
-				var handle2 string
-				for _, hubUser := range hubUsers {
-					if hubUser.Email == user2.UserEmail {
-						handle2 = hubUser.Handle
-						break
+			processedPairs[pairKey] = true
+
+			// Find overlapping work periods
+			for _, item1 := range workHistory1 {
+				for _, item2 := range workHistory2 {
+					// Check if they worked at the same employer
+					if item1.EmployerDomain == item2.EmployerDomain {
+						// Check if time periods overlap
+						if periodsOverlap(
+							item1.StartDate,
+							item1.EndDate,
+							item2.StartDate,
+							item2.EndDate,
+						) {
+							handle2 := findHandleByEmail(email2)
+
+							color.Yellow(
+								"Found connection: %s and %s worked together at %s",
+								email1,
+								email2,
+								item1.EmployerDomain,
+							)
+
+							// Add connection from email1 to handle2
+							connectionsToCreate = append(
+								connectionsToCreate,
+								struct {
+									HubUserEmail    string
+									ColleagueHandle string
+								}{
+									HubUserEmail:    email1,
+									ColleagueHandle: handle2,
+								},
+							)
+
+							break // No need to check other work items for this pair
+						}
 					}
-				}
-
-				// Check if they worked together (overlapping time periods)
-				if periodsOverlap(
-					user1.StartDate,
-					user1.EndDate,
-					user2.StartDate,
-					user2.EndDate,
-				) {
-					color.Yellow(
-						"Found connection: %s and %s worked together at %s",
-						user1.UserEmail,
-						user2.UserEmail,
-						employerName,
-					)
-
-					// Add connections both ways
-					connectionsToCreate = append(connectionsToCreate, struct {
-						HubUserEmail    string
-						ColleagueHandle string
-					}{
-						HubUserEmail:    user1.UserEmail,
-						ColleagueHandle: handle2,
-					})
-
-					connectionsToCreate = append(connectionsToCreate, struct {
-						HubUserEmail    string
-						ColleagueHandle string
-					}{
-						HubUserEmail:    user2.UserEmail,
-						ColleagueHandle: handle1,
-					})
-
-					connectionCount += 2
 				}
 			}
 		}
@@ -130,36 +83,45 @@ func createColleagueConnections() {
 
 	// Limit the number of connections to prevent overwhelming the system
 	maxConnections := 100
-	if connectionCount > maxConnections {
+	if len(connectionsToCreate) > maxConnections {
 		color.Magenta(
 			"Limiting connections from %d to %d",
-			connectionCount,
+			len(connectionsToCreate),
 			maxConnections,
 		)
 		connectionsToCreate = connectionsToCreate[:maxConnections]
 	}
 
 	// Create the connection requests
+	successCount := 0
 	for _, connection := range connectionsToCreate {
-		createConnectionRequest(
+		success := createConnectionRequest(
 			connection.HubUserEmail,
 			connection.ColleagueHandle,
 		)
-	}
+		if success {
+			successCount++
 
-	// Approve all connection requests
-	for _, connection := range connectionsToCreate {
-		// The approval is done by the person who received the request
-		approveConnectionRequest(
-			findEmailByHandle(connection.ColleagueHandle),
-			findHandleByEmail(connection.HubUserEmail),
-		)
+			// Check to see if we need to approve the request
+			checkAndApproveRequest(
+				findEmailByHandle(connection.ColleagueHandle),
+				findHandleByEmail(connection.HubUserEmail),
+			)
+		}
 	}
 
 	color.Green(
-		"Created and approved %d colleague connections",
-		len(connectionsToCreate),
+		"Created %d colleague connections",
+		successCount,
 	)
+}
+
+// Create a unique key for a pair of users
+func getPairKey(email1, email2 string) string {
+	if email1 < email2 {
+		return email1 + "|" + email2
+	}
+	return email2 + "|" + email1
 }
 
 // Check if two time periods overlap
@@ -186,6 +148,16 @@ func periodsOverlap(
 }
 
 // Helper function to find email by handle
+func findEmailByEmail(email string) string {
+	for _, user := range hubUsers {
+		if user.Email == email {
+			return user.Email
+		}
+	}
+	return ""
+}
+
+// Helper function to find email by handle
 func findEmailByHandle(handle string) string {
 	for _, user := range hubUsers {
 		if user.Handle == handle {
@@ -205,14 +177,15 @@ func findHandleByEmail(email string) string {
 	return ""
 }
 
-func createConnectionRequest(hubUserEmail, colleagueHandle string) {
+// Create connection request between two users
+func createConnectionRequest(hubUserEmail, colleagueHandle string) bool {
 	tokenI, ok := hubSessionTokens.Load(hubUserEmail)
 	if !ok {
 		log.Printf(
 			"No auth token found for %s, skipping connection request",
 			hubUserEmail,
 		)
-		return
+		return false
 	}
 	authToken := tokenI.(string)
 
@@ -223,42 +196,50 @@ func createConnectionRequest(hubUserEmail, colleagueHandle string) {
 	connectionReqJSON, err := json.Marshal(connectionReq)
 	if err != nil {
 		log.Printf("Failed to marshal connection request: %v", err)
-		return
+		return false
 	}
 
 	req, err := http.NewRequest(
-		"POST",
+		http.MethodPost,
 		serverURL+"/hub/connect-colleague",
 		bytes.NewBuffer(connectionReqJSON),
 	)
 	if err != nil {
 		log.Printf("Failed to create connection request: %v", err)
-		return
+		return false
 	}
+
 	req.Header.Set("Authorization", "Bearer "+authToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Printf("Failed to send connection request: %v", err)
-		return
+		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to send connection request: %v", resp.Status)
-		return
+		log.Printf(
+			"Failed to create connection from %s to %s: %s",
+			hubUserEmail,
+			colleagueHandle,
+			resp.Status,
+		)
+		return false
 	}
 
 	color.Blue("Connect request from %s to %s", hubUserEmail, colleagueHandle)
+	return true
 }
 
-func approveConnectionRequest(approverEmail, requestorHandle string) {
+// Check for and approve connection requests
+func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 	if approverEmail == "" || requestorHandle == "" {
 		log.Printf(
 			"Invalid approver email or requestor handle, skipping approval",
 		)
-		return
+		return false
 	}
 
 	tokenI, ok := hubSessionTokens.Load(approverEmail)
@@ -267,47 +248,95 @@ func approveConnectionRequest(approverEmail, requestorHandle string) {
 			"No auth token found for %s, skipping approval",
 			approverEmail,
 		)
-		return
+		return false
 	}
 	authToken := tokenI.(string)
 
-	approveColleagueReq := hub.ApproveColleagueRequest{
-		Handle: common.Handle(requestorHandle),
-	}
-
-	approveColleagueReqJSON, err := json.Marshal(approveColleagueReq)
-	if err != nil {
-		log.Printf("Failed to marshal approve colleague request: %v", err)
-		return
-	}
-
+	// Get pending approvals
 	req, err := http.NewRequest(
-		"POST",
-		serverURL+"/hub/approve-colleague",
-		bytes.NewBuffer(approveColleagueReqJSON),
+		http.MethodGet,
+		serverURL+"/hub/my-colleague-approvals",
+		nil,
 	)
 	if err != nil {
-		log.Printf("Failed to create approve colleague request: %v", err)
-		return
+		log.Printf("Failed to create approvals request: %v", err)
+		return false
 	}
+
 	req.Header.Set("Authorization", "Bearer "+authToken)
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Printf("Failed to send approve colleague request: %v", err)
-		return
+		log.Printf("Failed to get approvals: %v", err)
+		return false
+	}
+
+	var approvals []struct {
+		Handle string `json:"handle"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&approvals); err != nil {
+		resp.Body.Close()
+		log.Printf("Failed to decode approvals: %v", err)
+		return false
+	}
+	resp.Body.Close()
+
+	// Check if the requestor is in the pending approvals
+	found := false
+	for _, approval := range approvals {
+		if approval.Handle == requestorHandle {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Request not found yet, wait a moment and try again
+		time.Sleep(1 * time.Second)
+		return checkAndApproveRequest(approverEmail, requestorHandle)
+	}
+
+	// Approve the request
+	approveReq := hub.ApproveColleagueRequest{
+		Handle: common.Handle(requestorHandle),
+	}
+
+	approveReqJSON, err := json.Marshal(approveReq)
+	if err != nil {
+		log.Printf("Failed to marshal approve request: %v", err)
+		return false
+	}
+
+	req, err = http.NewRequest(
+		http.MethodPost,
+		serverURL+"/hub/approve-colleague",
+		bytes.NewBuffer(approveReqJSON),
+	)
+	if err != nil {
+		log.Printf("Failed to create approve request: %v", err)
+		return false
+	}
+
+	req.Header.Set("Authorization", "Bearer "+authToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		log.Printf("Failed to send approve request: %v", err)
+		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to send approve colleague request: %v", resp.Status)
-		return
+		log.Printf("Failed to approve connection request: %s", resp.Status)
+		return false
 	}
 
-	color.Yellow(
-		"Approved request from %s to %s",
-		approverEmail,
+	color.Green(
+		"Approved connection from %s to %s",
 		requestorHandle,
+		approverEmail,
 	)
+	return true
 }

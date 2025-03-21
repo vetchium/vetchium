@@ -13,6 +13,17 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
+// HistoryItem represents a work history item with employer and time info
+type HistoryItem struct {
+	EmployerDomain string
+	Title          string
+	StartDate      time.Time
+	EndDate        *time.Time
+}
+
+// WorkHistoryMap stores work histories organized by hub user email
+var WorkHistoryMap = make(map[string][]HistoryItem)
+
 func createWorkHistories() {
 	for _, user := range hubUsers {
 		tokenI, ok := hubSessionTokens.Load(user.Email)
@@ -21,7 +32,7 @@ func createWorkHistories() {
 		}
 		authToken := tokenI.(string)
 
-		err := createWorkHistory(authToken, user.Jobs)
+		workHistoryItems, err := createWorkHistory(authToken, user.Jobs)
 		if err != nil {
 			log.Fatalf(
 				"error creating work history for %s: %v",
@@ -29,12 +40,20 @@ func createWorkHistories() {
 				err,
 			)
 		}
+
+		// Store work history in the map
+		WorkHistoryMap[user.Email] = workHistoryItems
+
 		color.Magenta("created work history for %s", user.Email)
 	}
 }
 
-func createWorkHistory(authToken string, jobs []Job) error {
+func createWorkHistory(
+	authToken string,
+	jobs []Job,
+) ([]HistoryItem, error) {
 	var prevStartDate time.Time
+	var workHistoryItems []HistoryItem
 
 	for i := len(jobs) - 1; i >= 0; i-- {
 		job := jobs[i]
@@ -42,6 +61,7 @@ func createWorkHistory(authToken string, jobs []Job) error {
 		var startDateRaw time.Time
 		var startDate string
 		var endDatePtr *string
+		var endDateRaw *time.Time
 
 		if i == len(jobs)-1 {
 			// Last job is current job
@@ -56,6 +76,7 @@ func createWorkHistory(authToken string, jobs []Job) error {
 			endDate := prevStartDate.AddDate(0, 0, -gapDays)
 			endDateStr := endDate.Format("2006-01-02")
 			endDatePtr = &endDateStr
+			endDateRaw = &endDate
 
 			numberOfYears := rand.Intn(7) + 1
 			startDateRaw = endDate.AddDate(-numberOfYears, 0, 0)
@@ -71,10 +92,18 @@ func createWorkHistory(authToken string, jobs []Job) error {
 			job,
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
+		// Add to our local tracking
+		workHistoryItems = append(workHistoryItems, HistoryItem{
+			EmployerDomain: job.Website,
+			Title:          job.Title,
+			StartDate:      startDateRaw,
+			EndDate:        endDateRaw,
+		})
 	}
-	return nil
+	return workHistoryItems, nil
 }
 
 func createWorkHistoryItem(

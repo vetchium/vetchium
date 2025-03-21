@@ -35,6 +35,8 @@ func addOfficialEmails() {
 		}(user)
 	}
 	wg.Wait()
+
+	color.Green("All official emails have been added and verified")
 }
 
 func addOfficialEmail(user HubSeedUser, authToken string, domain string) {

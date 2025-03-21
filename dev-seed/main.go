@@ -52,8 +52,8 @@ func main() {
 	generateResumesForAllUsers()
 
 	// Create colleague connections based on overlapping work history
-	// color.Cyan("Creating colleague connections")
-	// createColleagueConnections()
+	color.Cyan("Creating colleague connections")
+	createColleagueConnections()
 
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")
