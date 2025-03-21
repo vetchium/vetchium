@@ -35,8 +35,8 @@ spec:
               memory: "512Mi"
               cpu: "200m"
             limits:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: "3Gi"
+              cpu: "3"
           env:
             - name: S3_ENDPOINT
               valueFrom:
