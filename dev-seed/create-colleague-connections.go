@@ -103,9 +103,24 @@ func createColleagueConnections() {
 			successCount++
 
 			// Check to see if we need to approve the request
-			checkAndApproveRequest(
+			approved := checkAndApproveRequest(
 				findEmailByHandle(connection.ColleagueHandle),
 				findHandleByEmail(connection.HubUserEmail),
+			)
+			if approved {
+				successCount++
+			} else {
+				color.Red(
+					"Failed to approve connection from %s to %s",
+					connection.HubUserEmail,
+					connection.ColleagueHandle,
+				)
+			}
+		} else {
+			color.Red(
+				"Failed to create connection from %s to %s",
+				connection.HubUserEmail,
+				connection.ColleagueHandle,
 			)
 		}
 	}
@@ -253,10 +268,18 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 	authToken := tokenI.(string)
 
 	// Get pending approvals
+	var reqBody bytes.Buffer
+	if err := json.NewEncoder(&reqBody).Encode(
+		hub.MyColleagueApprovalsRequest{},
+	); err != nil {
+		log.Printf("Failed to encode request body: %v", err)
+		return false
+	}
+
 	req, err := http.NewRequest(
-		http.MethodGet,
+		http.MethodPost,
 		serverURL+"/hub/my-colleague-approvals",
-		nil,
+		&reqBody,
 	)
 	if err != nil {
 		log.Printf("Failed to create approvals request: %v", err)
@@ -271,10 +294,12 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		return false
 	}
 
-	var approvals []struct {
-		Handle string `json:"handle"`
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to get approvals: %s", resp.Status)
+		return false
 	}
 
+	var approvals hub.MyColleagueApprovals
 	if err := json.NewDecoder(resp.Body).Decode(&approvals); err != nil {
 		resp.Body.Close()
 		log.Printf("Failed to decode approvals: %v", err)
@@ -284,17 +309,20 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 
 	// Check if the requestor is in the pending approvals
 	found := false
-	for _, approval := range approvals {
-		if approval.Handle == requestorHandle {
+	for _, approval := range approvals.Approvals {
+		if approval.Handle == common.Handle(requestorHandle) {
 			found = true
 			break
 		}
 	}
 
 	if !found {
-		// Request not found yet, wait a moment and try again
-		time.Sleep(1 * time.Second)
-		return checkAndApproveRequest(approverEmail, requestorHandle)
+		color.Red(
+			"Requestor %s not found in pending approvals for %s",
+			requestorHandle,
+			approverEmail,
+		)
+		return false
 	}
 
 	// Approve the request

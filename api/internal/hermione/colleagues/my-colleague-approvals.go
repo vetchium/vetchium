@@ -15,7 +15,7 @@ func MyColleagueApprovals(h wand.Wand) http.HandlerFunc {
 		var req hub.MyColleagueApprovalsRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			h.Dbg("Error decoding request body", "error", err)
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
