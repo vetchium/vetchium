@@ -47,6 +47,8 @@ docker: ## Build local Docker images for a single platform where it is run
 		-t psankar/vetchi-granger:$(GIT_SHA) .
 	docker buildx build --load -f sqitch/Dockerfile \
 		-t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+	docker buildx build --load -f sortinghat/Dockerfile \
+		-t psankar/vetchi-sortinghat:$(GIT_SHA) sortinghat
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -76,6 +78,10 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		-t psankar/vetchi-sqitch:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push sqitch
+	docker buildx build -f sortinghat/Dockerfile \
+		-t psankar/vetchi-sortinghat:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--push .
 
 devtest: docker ## Brings up an environment with the local docker images. No live reload.
 	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
@@ -105,6 +111,7 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	# Finally apply frontend services
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchidevtest -f -
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging
@@ -133,3 +140,4 @@ staging: ## Deploy to staging environment
 	# Finally apply frontend services
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/harrypotter.yaml | kubectl apply -f -
 	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/ronweasly.yaml | kubectl apply -f -
+	GIT_SHA=$(GIT_SHA) envsubst '$$GIT_SHA' < staging-env/sortinghat.yaml | kubectl apply -f -

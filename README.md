@@ -8,6 +8,7 @@
 - [Docker](https://docs.docker.com/get-docker/)
 - [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
 - [Go](https://golang.org/doc/install)
+- [Python](https://www.python.org/downloads/) If you want to work on the AI stuff
 
 To bring the services up, run the following commands:
 
@@ -34,7 +35,7 @@ vetchi$ make seed
 # password: NewPassword123$
 
 # Hub credentials
-# email: user10@example.com
+# email: user0@example.com
 # password: NewPassword123$
 ```
 
@@ -70,16 +71,6 @@ $ mc alias set local http://localhost:9000 minioadmin minioadmin
 $ mc ls -r local
 ```
 
-If you want to just evaluate the sortinghat, after uploading the file, do:
-
-```bash
-curl -X GET "http://localhost:8082/score-resumes-jd" \
-  --get \
-  --data-urlencode "fileurl=s3://vetchi-tilt-storage/resumes/6e1f6880f61ef61a2f740e60ef8d8d0dfd1043624601acef0e3270fa3e5bfb162a7cb8de3fee1983720d2d9bbb3a13e7624c38e4b94df755df1ab15c01946eec.pdf" \
-  --data-urlencode "job_description=Senior Backend Engineer with 10+ years experience in designing and implementing high-performance, scalable systems. Must have expert-level knowledge in at least one backend language such as Go, Java, or Python. Experience with distributed systems, microservices architecture, and cloud platforms (AWS, GCP, or Azure). Strong understanding of database technologies (SQL and NoSQL), messaging systems, and caching solutions. Proficiency in container technologies (Docker, Kubernetes) and CI/CD pipelines. Demonstrated experience in system design, performance optimization, and handling high-traffic applications. Must be able to lead technical teams and mentor junior engineers." \
-  -H "accept: application/json"
-```
-
 ### Tear down
 
 To tear down the services, run the following command:
@@ -104,6 +95,7 @@ vetchi $ kubectl delete namespace vetchidev
 - Use [golines](https://github.com/segmentio/golines) to format the Go code. Do NOT manually format the code or split the parameters to multiple lines. Write a really long line with all parameters and then summon golines to format it.
 - Use [prettier](https://prettier.io/) to format the typescript code. Do not manually format the code or split the parameters to multiple lines.
 - [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt` to be running before this. This will also serve as some basic sanity testing.
+- [sortinghat](sortinghat) is a way to score resumes against a JD. It is quite rudimentary and uses opensource models for the scoring. In future, we could develop a model specifically for our needs. Unlike the rest of the modules, this is done in Python, to make it easy for using various AI libraries.
 
 ## Engineering Notes
 
