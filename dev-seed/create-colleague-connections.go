@@ -17,8 +17,11 @@ func createColleagueConnections() {
 		"Finding potential colleague connections based on work history overlap",
 	)
 
-	// Track connections to create and avoid duplicates
+	// This map tracks all user pairs we've processed or added as connections
+	// to avoid duplicates in either direction (user1->user2 or user2->user1)
 	processedPairs := make(map[string]bool)
+
+	// This slice will store only the connections we want to create
 	connectionsToCreate := make([]struct {
 		HubUserEmail    string
 		ColleagueHandle string
@@ -35,13 +38,20 @@ func createColleagueConnections() {
 			// Create a unique key for this user pair to avoid duplicate processing
 			pairKey := getPairKey(email1, email2)
 			if processedPairs[pairKey] {
+				// We've already processed this pair, skip it
 				continue
 			}
 
+			// Mark that we've processed this pair regardless of outcome
 			processedPairs[pairKey] = true
 
 			// Find overlapping work periods
+			foundConnection := false
 			for _, item1 := range workHistory1 {
+				if foundConnection {
+					break
+				}
+
 				for _, item2 := range workHistory2 {
 					// Check if they worked at the same employer
 					if item1.EmployerDomain == item2.EmployerDomain {
@@ -61,7 +71,8 @@ func createColleagueConnections() {
 								item1.EmployerDomain,
 							)
 
-							// Add connection from email1 to handle2
+							// Add only ONE direction of the connection
+							// We'll only create a connection from email1 to handle2
 							connectionsToCreate = append(
 								connectionsToCreate,
 								struct {
@@ -73,6 +84,7 @@ func createColleagueConnections() {
 								},
 							)
 
+							foundConnection = true
 							break // No need to check other work items for this pair
 						}
 					}
