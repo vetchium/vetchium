@@ -130,12 +130,11 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchidevtest -f -
 	kubectl wait --for=condition=complete job -l app=dev-seed -n vetchidevtest --timeout=5m
-	kubectl port-forward svc/harrypotter -n vetchidevtest 3001:3000 &
-	kubectl port-forward svc/ronweasly -n vetchidevtest 3002:3000 &
+	kubectl port-forward svc/harrypotter -n vetchidevtest 3001:80 &
+	kubectl port-forward svc/ronweasly -n vetchidevtest 3002:80 &
 	kubectl port-forward svc/mailpit -n vetchidevtest 8025:8025 &
 	kubectl port-forward svc/postgres-1 -n vetchidevtest 5432:5432 &
 	kubectl port-forward svc/minio -n vetchidevtest 9000:9000 &
-	kubectl port-forward svc/minio-console -n vetchidevtest 9001:9001 &
 	echo "Dev-seed job applied. Run 'kubectl logs -n vetchidevtest -l app=dev-seed' to follow dev-seed job logs."
 
 staging-init: ## Initialize staging environment infrastructure
