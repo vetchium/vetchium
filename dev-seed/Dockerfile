@@ -13,7 +13,10 @@ RUN go build -o seed-app .
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
+
 COPY --from=builder /workspace/dev-seed/seed-app .
+# Copy avatar files
+COPY --from=builder /workspace/dev-seed/avatar*.jpg .
 RUN chmod +x /root/seed-app
 
 ENV POSTGRES_URI=""
