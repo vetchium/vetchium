@@ -20,7 +20,7 @@
 # Features needed before launch
 
 - [] Better Email Templates
-- [] Database Indexes
+- [] Database Profiling and Indexes
 - [] Automated Scale testing
 - [] CandiateOffer RSVP and some signing (Docusign, Zohosign, etc.) integrations
 - [] Scoring of match for Openings and Applicants !?
@@ -28,6 +28,7 @@
 - [] Certifications
 - [] Patents, Publications
 - [] Posts, Timelines and Follows !?
+- [] VibeCheck for posts
 
 # Future Features
 
