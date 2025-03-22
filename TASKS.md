@@ -22,8 +22,11 @@
 - [] Better Email Templates
 - [] Database Indexes
 - [] Automated Scale testing
-- [] Offer RSVP and some signing (Docusign, Zohosign, etc.) integrations
+- [] CandiateOffer RSVP and some signing (Docusign, Zohosign, etc.) integrations
 - [] Scoring of match for Openings and Applicants !?
+- [] Academia support to add educational institutions, degrees, etc.
+- [] Certifications
+- [] Patents, Publications
 - [] Posts, Timelines and Follows !?
 
 # Future Features
