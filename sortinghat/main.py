@@ -88,8 +88,8 @@ def score_with_tfidf(resume_text: str, job_description: str) -> float:
     logger.debug("Calculating cosine similarity between TF-IDF vectors")
     similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
 
-    # Convert to 0-100 scale
-    score = similarity * 100
+    # Convert to 0-100 scale (same transformation as transformer model)
+    score = max(0, min(100, (similarity + 1) * 50))
     logger.debug(f"TF-IDF raw similarity: {similarity}, scaled score: {score}")
     return score
 
