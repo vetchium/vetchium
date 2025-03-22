@@ -50,7 +50,7 @@ docker: ## Build local Docker images for a single platform where it is run
 	docker buildx build --load -f sortinghat/Dockerfile \
 		-t psankar/vetchi-sortinghat:$(GIT_SHA) .
 	docker buildx build --load -f dev-seed/Dockerfile \
-		-t psankar/vetchi-dev-seed:$(GIT_SHA) dev-seed
+		-t psankar/vetchi-dev-seed:$(GIT_SHA) .
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -82,6 +82,10 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--push sqitch
 	docker buildx build -f sortinghat/Dockerfile \
 		-t psankar/vetchi-sortinghat:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--push .
+	docker buildx build -f dev-seed/Dockerfile \
+		-t psankar/vetchi-dev-seed:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 
@@ -116,14 +120,14 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchidevtest -f -
 
 	# Apply seed job last, after all services are up
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/seed.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchidevtest -f -
 	kubectl port-forward svc/harrypotter -n vetchidevtest 3001:3000 &
 	kubectl port-forward svc/ronweasly -n vetchidevtest 3002:3000 &
 	kubectl port-forward svc/mailpit -n vetchidevtest 8025:8025 &
 	kubectl port-forward svc/postgres-1 -n vetchidevtest 5432:5432 &
 	kubectl port-forward svc/minio -n vetchidevtest 9000:9000 &
 	kubectl port-forward svc/minio-console -n vetchidevtest 9001:9001 &
-	echo "Seed job applied. Run 'kubectl logs -n vetchidevtest -l app=seed' to follow seed job logs."
+	echo "Dev-seed job applied. Run 'kubectl logs -n vetchidevtest -l app=dev-seed' to follow dev-seed job logs."
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging
