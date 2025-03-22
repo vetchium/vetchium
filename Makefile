@@ -49,6 +49,8 @@ docker: ## Build local Docker images for a single platform where it is run
 		-t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
 	docker buildx build --load -f sortinghat/Dockerfile \
 		-t psankar/vetchi-sortinghat:$(GIT_SHA) .
+	docker buildx build --load -f dev-seed/Dockerfile \
+		-t psankar/vetchi-dev-seed:$(GIT_SHA) dev-seed
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -112,6 +114,10 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchidevtest -f -
+
+	# Apply seed job last, after all services are up
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/seed.yaml | kubectl apply -n vetchidevtest -f -
+	echo "Seed job applied. Run 'kubectl logs -n vetchidevtest -l app=seed' to follow seed job logs."
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging
