@@ -14,6 +14,9 @@ import (
 var employerSessionTokens sync.Map
 var hubSessionTokens sync.Map
 
+var serverURL = "http://localhost:8080"
+var mailPitURL = "http://localhost:8025"
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 
@@ -24,6 +27,14 @@ func main() {
 	db, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
+	}
+
+	if os.Getenv("SERVER_URL") != "" {
+		serverURL = os.Getenv("SERVER_URL")
+	}
+
+	if os.Getenv("MAIL_PIT_URL") != "" {
+		mailPitURL = os.Getenv("MAIL_PIT_URL")
 	}
 
 	// Directly write to the database

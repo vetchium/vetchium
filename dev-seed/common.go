@@ -9,11 +9,6 @@ import (
 	"runtime/debug"
 )
 
-const (
-	serverURL  = "http://localhost:8080"
-	mailPitURL = "http://localhost:8025"
-)
-
 // makeRequest is a helper function to make HTTP requests
 func makeRequest(
 	method, path string,
