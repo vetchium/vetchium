@@ -12,7 +12,7 @@ spec:
         app: dev-seed
         version: ${GIT_SHA}
     spec:
-      serviceAccountName: seed-sa
+      serviceAccountName: dev-seed-sa
       initContainers:
         - name: wait-for-dependencies
           image: bitnami/kubectl:latest

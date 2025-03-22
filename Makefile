@@ -120,7 +120,16 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchidevtest -f -
 
 	# Apply seed job last, after all services are up
+	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=harrypotter -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=ronweasly -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=granger -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=sortinghat -n vetchidevtest --timeout=5m
+
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchidevtest -f -
+	kubectl wait --for=condition=complete job -l app=dev-seed -n vetchidevtest --timeout=5m
 	kubectl port-forward svc/harrypotter -n vetchidevtest 3001:3000 &
 	kubectl port-forward svc/ronweasly -n vetchidevtest 3002:3000 &
 	kubectl port-forward svc/mailpit -n vetchidevtest 8025:8025 &
