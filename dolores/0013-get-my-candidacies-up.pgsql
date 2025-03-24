@@ -186,7 +186,7 @@ WITH inserted_applications AS (
         created_at
     )
     SELECT
-        '12345678-0013-0013-' || o.id,
+        gen_random_uuid(),
         o.employer_id,
         o.id,
         '12345678-0013-0013-0013-000000050001'::uuid,
@@ -207,7 +207,7 @@ INSERT INTO candidacies (
     created_at
 )
 SELECT
-    '12345678-0013-0013-' || opening_id || '-candidacy',
+    gen_random_uuid(),
     id,
     employer_id,
     opening_id,
