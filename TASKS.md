@@ -29,6 +29,7 @@
 - [] Patents, Publications
 - [] Posts, Timelines and Follows !?
 - [] VibeCheck for posts
+- [] Bulk load of employer (F500+ more) names & domains from a configmap !? Or should we seed in the db ?!
 
 # Future Features
 
