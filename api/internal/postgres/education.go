@@ -75,3 +75,24 @@ RETURNING id
 
 	return id, nil
 }
+
+func (pg *PG) DeleteEducation(
+	ctx context.Context,
+	req hub.DeleteEducationRequest,
+) error {
+	return nil
+}
+
+func (pg *PG) ListEducation(
+	ctx context.Context,
+	req hub.ListEducationRequest,
+) ([]hub.Education, error) {
+	return nil, nil
+}
+
+func (pg *PG) FilterInstitutes(
+	ctx context.Context,
+	req hub.FilterInstitutesRequest,
+) ([]hub.Institute, error) {
+	return nil, nil
+}
