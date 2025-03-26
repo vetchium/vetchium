@@ -22,7 +22,7 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	// Check if user has reached the maximum allowed official emails
 	countQuery := `
@@ -128,7 +128,7 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err

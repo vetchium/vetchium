@@ -116,7 +116,7 @@ func initOrgUsers(db *pgxpool.Pool) {
 	if err != nil {
 		log.Fatalf("failed to begin transaction: %v", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	for i, emp := range users {
 		// Create admin user first
@@ -174,7 +174,7 @@ func initOrgUsers(db *pgxpool.Pool) {
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(context.Background()); err != nil {
 		log.Fatalf("failed to commit transaction: %v", err)
 	}
 }

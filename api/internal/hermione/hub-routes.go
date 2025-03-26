@@ -6,6 +6,7 @@ import (
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	ca "github.com/psankar/vetchi/api/internal/hermione/candidacy"
 	co "github.com/psankar/vetchi/api/internal/hermione/colleagues"
+	ed "github.com/psankar/vetchi/api/internal/hermione/education"
 	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
 	he "github.com/psankar/vetchi/api/internal/hermione/hubemp"
 	ho "github.com/psankar/vetchi/api/internal/hermione/hubopenings"
@@ -50,6 +51,11 @@ func RegisterHubRoutes(h *Hermione) {
 	http.Handle("/hub/upload-profile-picture", wrap(pp.UploadProfilePicture(h)))
 	http.Handle("/hub/profile-picture/", wrap(pp.GetProfilePicture(h)))
 	http.Handle("/hub/remove-profile-picture", wrap(pp.RemoveProfilePicture(h)))
+
+	http.Handle("/hub/add-education", wrap(ed.AddEducation(h)))
+	http.Handle("/hub/filter-institutes", wrap(ed.FilterInstitutes(h)))
+	http.Handle("/hub/delete-education", wrap(ed.DeleteEducation(h)))
+	http.Handle("/hub/list-education", wrap(ed.ListEducation(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
 	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))

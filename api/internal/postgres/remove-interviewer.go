@@ -29,7 +29,7 @@ func (p *PG) RemoveInterviewer(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 	p.log.Dbg("Transaction started")
 
 	query := `
@@ -151,7 +151,7 @@ RETURNING email_key
 		return db.ErrInternal
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal

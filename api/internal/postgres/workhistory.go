@@ -27,7 +27,7 @@ func (p *PG) AddWorkHistory(
 		p.log.Err("failed to begin transaction", "error", err)
 		return "", db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	// Get or create employer for the domain
 	var employerID string
@@ -65,7 +65,7 @@ func (p *PG) AddWorkHistory(
 		return "", db.ErrInternal
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return "", db.ErrInternal

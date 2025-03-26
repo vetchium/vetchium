@@ -25,7 +25,7 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 		p.log.Err("failed to begin transaction", "error", err)
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	// Get current profile picture URL if exists
 	var oldPicturePath *string
@@ -89,7 +89,7 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(context.Background()); err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}

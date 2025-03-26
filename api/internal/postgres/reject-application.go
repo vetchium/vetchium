@@ -29,7 +29,7 @@ func (p *PG) RejectApplication(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	applicationQuery := `
 WITH application_check AS (
@@ -117,7 +117,7 @@ RETURNING
 	}
 	p.log.Dbg("RejectApplication email added", "email_key", emailKey)
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal

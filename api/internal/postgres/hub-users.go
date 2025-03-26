@@ -56,7 +56,7 @@ func (p *PG) InitHubUserTFA(
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	tfaTokenQuery := `
 INSERT INTO
@@ -117,7 +117,7 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err
@@ -295,7 +295,7 @@ func (p *PG) InitHubUserPasswordReset(
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	tokensQuery := `
 INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) 
@@ -331,7 +331,7 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err

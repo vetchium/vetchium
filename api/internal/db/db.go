@@ -321,6 +321,18 @@ type DB interface {
 	) ([]hub.WorkHistory, error)
 	UpdateWorkHistory(context.Context, hub.UpdateWorkHistoryRequest) error
 
+	// Education
+	AddEducation(context.Context, hub.AddEducationRequest) (string, error)
+	DeleteEducation(context.Context, hub.DeleteEducationRequest) error
+	ListEducation(
+		context.Context,
+		hub.ListEducationRequest,
+	) ([]hub.Education, error)
+	FilterInstitutes(
+		context.Context,
+		hub.FilterInstitutesRequest,
+	) ([]hub.Institute, error)
+
 	// Used by hermione - Profile page related methods
 	AddOfficialEmail(AddOfficialEmailReq) error
 	GetMyOfficialEmails(context.Context) ([]hub.OfficialEmail, error)

@@ -804,6 +804,66 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE FUNCTION get_or_create_dummy_institute(p_domain_name text)
+RETURNS UUID AS $$
+DECLARE
+    institute_id UUID;
+BEGIN
+    -- First check if domain already exists and has an institute
+    SELECT id.institute_id INTO institute_id
+    FROM institute_domains id
+    WHERE id.domain = p_domain_name;
+
+    IF FOUND THEN
+        RETURN institute_id;
+    END IF;
+
+    -- TODO: There is a problem here when an institute can have multiple domains. We will have multiple institute_id for the same institute. When we implement the onboard-institute feature, we will have to merge the multiple institute_id for the same institute into a single institute_id, for all the hubusers who refer to either of the institute_id in their education records.
+
+    -- Create dummy institute if not exists
+    INSERT INTO institutes (institute_name, logo_url) VALUES (NULL, NULL)
+    RETURNING id INTO institute_id;
+
+    -- Create dummy institute domain
+    INSERT INTO institute_domains (domain, institute_id) VALUES (p_domain_name, institute_id);
+
+    RETURN institute_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE institutes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- TODO: The institute name and logo should be set when we implement the onboard-institute feature. Will be filled with NULL till then.
+    institute_name TEXT,
+    logo_url TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE institute_domains (
+    domain TEXT PRIMARY KEY,
+    institute_id UUID REFERENCES institutes(id) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE education (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    institute_id UUID REFERENCES institutes(id) NOT NULL,
+    degree TEXT,
+    start_date DATE,
+    end_date DATE,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+
+
+
 -- Table to track old files that need cleanup
 CREATE TABLE stale_files (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

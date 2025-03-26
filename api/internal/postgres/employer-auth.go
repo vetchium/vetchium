@@ -67,7 +67,7 @@ func (p *PG) InitEmployerAndDomain(
 		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	employerInsertQuery := `
 INSERT INTO employers (
@@ -120,7 +120,7 @@ RETURNING id`
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err
@@ -280,7 +280,7 @@ WHERE
 		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	orgUserInsertQuery := `
 INSERT INTO org_users (
@@ -345,7 +345,7 @@ UPDATE employers SET employer_state = $1 WHERE id = $2
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err
@@ -445,7 +445,7 @@ func (p *PG) InitEmployerTFA(
 		p.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	_, err = tx.Exec(
 		ctx,
@@ -508,7 +508,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 		return err
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err

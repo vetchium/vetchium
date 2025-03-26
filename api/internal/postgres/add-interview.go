@@ -25,7 +25,7 @@ func (p *PG) AddInterview(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	const (
 		statusNoCandidacy  = "no_candidacy"
@@ -331,7 +331,7 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 		}
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal

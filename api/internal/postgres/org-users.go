@@ -23,7 +23,7 @@ func (p *PG) AddOrgUser(
 		return uuid.UUID{}, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	orgUserQuery := `
 INSERT INTO org_users (name, email, employer_id, org_user_roles, org_user_state)
@@ -102,7 +102,7 @@ RETURNING email_key
 	}
 	p.log.Dbg("invite email added", "email_key", emailKey)
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return uuid.UUID{}, err
@@ -217,7 +217,7 @@ func (p *PG) EnableOrgUser(
 		return err
 	}
 
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	getOrgUserQuery := `
 SELECT
@@ -295,7 +295,7 @@ RETURNING email_key
 	}
 	p.log.Dbg("invite email added", "email_key", emailKey)
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return err

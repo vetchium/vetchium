@@ -27,7 +27,7 @@ func (p *PG) CreateApplication(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	// Validate endorsers are colleagues (if any)
 	if len(req.EndorserHandles) > 0 {
@@ -152,7 +152,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 	}
 
 	// Commit the transaction
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(context.Background()); err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal
 	}

@@ -108,7 +108,7 @@ SELECT COALESCE(
 		return db.ErrInternal
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "err", err)
 		return db.ErrInternal

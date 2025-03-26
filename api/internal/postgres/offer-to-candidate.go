@@ -26,7 +26,7 @@ func (p *PG) OfferToCandidate(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	query := `
 UPDATE candidacies
@@ -140,7 +140,7 @@ VALUES (
 		return db.ErrInternal
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal

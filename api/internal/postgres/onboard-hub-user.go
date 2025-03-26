@@ -105,7 +105,7 @@ VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), (SELECT
 		return "", fmt.Errorf("failed to insert session token: %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(context.Background()); err != nil {
 		p.log.Err("Failed to commit transaction", "error", err)
 		return "", fmt.Errorf("failed to commit transaction: %w", err)
 	}

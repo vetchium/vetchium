@@ -17,7 +17,7 @@ func initHubUsers(db *pgxpool.Pool) {
 	if err != nil {
 		log.Fatalf("failed to begin transaction: %v", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	hubUsers = generateHubSeedUsers(50)
 
@@ -55,7 +55,7 @@ INSERT INTO hub_users (
 		color.New(color.FgYellow).Printf("@%s\n", user.Handle)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(context.Background()); err != nil {
 		log.Fatalf("failed to commit transaction: %v", err)
 	}
 }

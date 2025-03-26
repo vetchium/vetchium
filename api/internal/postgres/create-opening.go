@@ -33,7 +33,7 @@ func (p *PG) CreateOpening(
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	var costCenterID uuid.UUID
 	ccQuery := `
@@ -414,7 +414,7 @@ WHERE employer_id = $1 AND opening_id = $2
 		return "", errors.New("maximum of three tags allowed per opening")
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return "", err

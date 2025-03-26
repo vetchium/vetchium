@@ -32,7 +32,7 @@ func (p *PG) AddInterviewer(
 		p.log.Err("failed to begin transaction", "error", err)
 		return db.ErrInternal
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.Background())
 
 	interviewersQuery := `
 WITH interview_check AS (
@@ -170,7 +170,7 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 		return db.ErrInternal
 	}
 
-	err = tx.Commit(ctx)
+	err = tx.Commit(context.Background())
 	if err != nil {
 		p.log.Err("failed to commit transaction", "error", err)
 		return db.ErrInternal
