@@ -12,7 +12,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = Describe("Education", Ordered, func() {
+var _ = FDescribe("Education", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2 string
 

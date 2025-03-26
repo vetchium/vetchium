@@ -42,9 +42,7 @@ func (pg *PG) AddEducation(
 
 	// Insert education
 	var id string
-	err = tx.QueryRow(
-		ctx,
-		`
+	query := `
 INSERT INTO education (
 	hub_user_id,
 	institute_id,
@@ -54,12 +52,27 @@ INSERT INTO education (
 	description
 ) VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id
-`,
+`
+	// Handle possible null date values
+	var startDate, endDate interface{}
+
+	// Use nil for empty/invalid dates to properly handle NULL in database
+	if req.StartDate != nil {
+		startDate = *req.StartDate
+	}
+
+	if req.EndDate != nil {
+		endDate = *req.EndDate
+	}
+
+	err = tx.QueryRow(
+		ctx,
+		query,
 		hubUserID,
 		instituteID,
 		req.Degree,
-		req.StartDate,
-		req.EndDate,
+		startDate,
+		endDate,
 		req.Description,
 	).Scan(&id)
 	if err != nil {

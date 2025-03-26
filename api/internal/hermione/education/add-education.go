@@ -34,7 +34,13 @@ func AddEducation(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("education added", "educationID", educationID)
 
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(educationID))
+		err = json.NewEncoder(w).Encode(hub.AddEducationResponse{
+			EducationID: educationID,
+		})
+		if err != nil {
+			h.Dbg("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }

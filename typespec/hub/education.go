@@ -3,11 +3,11 @@ package hub
 import "github.com/psankar/vetchi/typespec/common"
 
 type AddEducationRequest struct {
-	InstituteDomain common.Domain `json:"institute_domain"`
-	Degree          string        `json:"degree"`
-	StartDate       *string       `json:"start_date"`
-	EndDate         *string       `json:"end_date"`
-	Description     *string       `json:"description"`
+	InstituteDomain common.Domain `json:"institute_domain" validate:"required,validate_domain"`
+	Degree          string        `json:"degree"           validate:"required,min=3,max=64"`
+	StartDate       *string       `json:"start_date"       validate:"omitempty,date"`
+	EndDate         *string       `json:"end_date"         validate:"omitempty,date,gtfield=StartDate"`
+	Description     *string       `json:"description"      validate:"omitempty,max=1024"`
 }
 
 type AddEducationResponse struct {

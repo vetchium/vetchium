@@ -19,7 +19,10 @@ model AddEducationRequest {
     @doc("TODO: In future, we could make the institutes to add the unique list of degrees that they offer and allow users to only select from that list. But that can be done only after Vetchi becomes a big platform.")
     degree?: string;
 
+    @doc("If specified, the start date should be earlier than the end date")
     start_date?: plainDate;
+
+    @doc("If specified, the end date should be later than the start date")
     end_date?: plainDate;
 
     @maxLength(1024)
