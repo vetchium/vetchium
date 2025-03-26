@@ -38,7 +38,7 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
-	domainReg := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
+	domainReg := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z0-9-]{2,}$`)
 	err = validate.RegisterValidation(
 		"client_id",
 		func(fl validator.FieldLevel) bool {
@@ -264,9 +264,16 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"validate_domain",
 		func(fl validator.FieldLevel) bool {
-			domain, ok := fl.Field().Interface().(string)
-			if !ok {
-				log.Dbg("invalid domain", "field", fl.Field().Interface())
+			var domain string
+
+			// Handle different types that could be passed
+			switch v := fl.Field().Interface().(type) {
+			case string:
+				domain = v
+			case common.Domain:
+				domain = string(v)
+			default:
+				log.Dbg("invalid domain type", "field", fl.Field().Interface(), "type", reflect.TypeOf(fl.Field().Interface()))
 				return false
 			}
 
@@ -302,27 +309,91 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"date_after",
 		func(fl validator.FieldLevel) bool {
-			endDateStr := fl.Field().String()
+			// Get end date string
+			var endDateStr string
+			if fl.Field().Kind() == reflect.Ptr {
+				if fl.Field().IsNil() {
+					// Nil pointer is valid due to omitempty handling
+					return true
+				}
+				ptr := fl.Field().Interface().(*string)
+				if ptr == nil {
+					return true
+				}
+				endDateStr = *ptr
+			} else {
+				endDateStr = fl.Field().String()
+			}
+
+			if endDateStr == "" {
+				// Empty string is valid due to omitempty handling
+				return true
+			}
+
+			// Find start date field by name
 			startDateField := fl.Parent().FieldByName(fl.Param())
 			if !startDateField.IsValid() {
 				log.Dbg("start date field not found", "field", fl.Param())
 				return false
 			}
-			startDateStr := startDateField.String()
 
+			// Get start date string
+			var startDateStr string
+			if startDateField.Kind() == reflect.Ptr {
+				if startDateField.IsNil() {
+					// If the start date is not provided, there's nothing to compare with
+					return true
+				}
+				ptr := startDateField.Interface().(*string)
+				if ptr == nil {
+					return true
+				}
+				startDateStr = *ptr
+			} else {
+				startDateStr = startDateField.String()
+			}
+
+			if startDateStr == "" {
+				// If the start date is not provided, there's nothing to compare with
+				return true
+			}
+
+			// Parse dates
 			endDate, err := time.Parse("2006-01-02", endDateStr)
 			if err != nil {
-				log.Dbg("failed to parse end date", "error", err)
+				log.Dbg(
+					"failed to parse end date",
+					"error",
+					err,
+					"date",
+					endDateStr,
+				)
 				return false
 			}
 
 			startDate, err := time.Parse("2006-01-02", startDateStr)
 			if err != nil {
-				log.Dbg("failed to parse start date", "error", err)
+				log.Dbg(
+					"failed to parse start date",
+					"error",
+					err,
+					"date",
+					startDateStr,
+				)
 				return false
 			}
 
-			return endDate.After(startDate) || endDate.Equal(startDate)
+			result := endDate.After(startDate) || endDate.Equal(startDate)
+			if !result {
+				log.Dbg(
+					"end date is before start date",
+					"start",
+					startDateStr,
+					"end",
+					endDateStr,
+				)
+			}
+			return result
 		},
 	)
 	if err != nil {

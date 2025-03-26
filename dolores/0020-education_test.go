@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -145,9 +146,8 @@ var _ = FDescribe("Education", Ordered, func() {
 					token:       hubToken1,
 					request: hub.AddEducationRequest{
 						InstituteDomain: "stanford.example",
-						Degree: "This is an extremely long degree name that exceeds the maximum " +
-							"allowed length of 64 characters according to the API specification",
-						StartDate: strptr("2022-01-01"),
+						Degree:          strings.Repeat("x", 65),
+						StartDate:       strptr("2022-01-01"),
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -159,21 +159,7 @@ var _ = FDescribe("Education", Ordered, func() {
 						Degree:          "PhD in Computer Science",
 						StartDate:       strptr("2022-01-01"),
 						Description: strptr(
-							"This is an extremely long description that exceeds the maximum " +
-								"allowed length of 1024 characters according to the API specification. " +
-								"It contains a lot of unnecessary text just to make it longer and longer " +
-								"until it reaches and exceeds the 1024 character limit. This text is being " +
-								"repeated multiple times to ensure that it exceeds the limit. " +
-								"This is an extremely long description that exceeds the maximum " +
-								"allowed length of 1024 characters according to the API specification. " +
-								"It contains a lot of unnecessary text just to make it longer and longer " +
-								"until it reaches and exceeds the 1024 character limit. This text is being " +
-								"repeated multiple times to ensure that it exceeds the limit. " +
-								"This is an extremely long description that exceeds the maximum " +
-								"allowed length of 1024 characters according to the API specification. " +
-								"It contains a lot of unnecessary text just to make it longer and longer " +
-								"until it reaches and exceeds the 1024 character limit. This text is being " +
-								"repeated multiple times to ensure that it exceeds the limit.",
+							strings.Repeat("x", 1025),
 						),
 					},
 					wantStatus: http.StatusBadRequest,
