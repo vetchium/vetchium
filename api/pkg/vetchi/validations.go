@@ -513,6 +513,108 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	}
 
 	err = validate.RegisterValidation(
+		"validate_date",
+		func(fl validator.FieldLevel) bool {
+			var dateStr string
+
+			// Handle both string and *string fields
+			if fl.Field().Kind() == reflect.Ptr {
+				if fl.Field().IsNil() {
+					// Nil pointer is valid due to omitempty handling
+					return true
+				}
+				ptr := fl.Field().Interface().(*string)
+				if ptr == nil {
+					return true
+				}
+				dateStr = *ptr
+			} else {
+				dateStr = fl.Field().String()
+			}
+
+			if dateStr == "" {
+				// Empty string is valid due to omitempty handling
+				return true
+			}
+
+			// Validate date format YYYY-MM-DD
+			_, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				log.Dbg(
+					"invalid date format, must be YYYY-MM-DD",
+					"date",
+					dateStr,
+					"error",
+					err,
+				)
+				return false
+			}
+			return true
+		},
+	)
+	if err != nil {
+		log.Err("failed to register date validation", "error", err)
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
+		"no_future_date",
+		func(fl validator.FieldLevel) bool {
+			var dateStr string
+
+			// Handle both string and *string fields
+			if fl.Field().Kind() == reflect.Ptr {
+				if fl.Field().IsNil() {
+					// Nil pointer is valid due to omitempty handling
+					return true
+				}
+				ptr := fl.Field().Interface().(*string)
+				if ptr == nil {
+					return true
+				}
+				dateStr = *ptr
+			} else {
+				dateStr = fl.Field().String()
+			}
+
+			if dateStr == "" {
+				// Empty string is valid due to omitempty handling
+				return true
+			}
+
+			// Parse the date
+			date, err := time.Parse("2006-01-02", dateStr)
+			if err != nil {
+				// Let validate_date handle format errors
+				return true
+			}
+
+			// Check if date is in the future
+			today := time.Now()
+			today = time.Date(
+				today.Year(),
+				today.Month(),
+				today.Day(),
+				0,
+				0,
+				0,
+				0,
+				today.Location(),
+			)
+
+			if date.After(today) {
+				log.Dbg("date cannot be in the future", "date", dateStr)
+				return false
+			}
+			return true
+		},
+	)
+	if err != nil {
+		log.Err("failed to register no_future_date validation", "error", err)
+		return nil, err
+	}
+
+	err = validate.RegisterValidation(
 		"validate_handle",
 		func(fl validator.FieldLevel) bool {
 			field := fl.Field().Interface()
