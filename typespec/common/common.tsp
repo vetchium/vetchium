@@ -37,6 +37,11 @@ alias GlobalCountryCode = "ZZG";
 @doc("One of the active ISO 4217 currency codes")
 scalar Currency extends string;
 
+@doc("A valid domain name")
+@format("domain")
+// TODO: This needs to be used in places like addWorkHistoryRequest.employer_domain
+scalar Domain extends string;
+
 @doc("Supported timezone values with their GMT offsets")
 union TimeZone {
     "ACDT Australian Central Daylight Time GMT+1030",
