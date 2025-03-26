@@ -12,6 +12,7 @@ type EmailAddress string
 type Password string
 type City string
 type Handle string
+type Domain string
 
 func (h Handle) IsValid() bool {
 	// The regex pattern allows hyphens and underscores but requires they not be at start/end

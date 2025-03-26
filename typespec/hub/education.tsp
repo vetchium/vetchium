@@ -54,6 +54,7 @@ model Education {
     degree?: string;
     start_date?: plainDate;
     end_date?: plainDate;
+    description?: string;
 }
 
 model ListEducationRequest {
