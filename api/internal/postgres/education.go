@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -100,7 +101,50 @@ func (pg *PG) ListEducation(
 	ctx context.Context,
 	req hub.ListEducationRequest,
 ) ([]hub.Education, error) {
-	return nil, nil
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		return []hub.Education{}, db.ErrInternal
+	}
+
+	educationQuery := `
+SELECT id, institute_domains.domain, degree, start_date, end_date, description
+FROM education
+JOIN institute_domains ON education.institute_id = institute_domains.id
+WHERE hub_user_id = (
+	SELECT id FROM hub_users WHERE handle = COALESCE($1, $2)
+)
+`
+
+	rows, err := pg.pool.Query(
+		ctx,
+		educationQuery,
+		req.UserHandle,
+		hubUser.Handle,
+	)
+	if err != nil {
+		pg.log.Err("failed to query education", "error", err)
+		return nil, err
+	}
+
+	educations := []hub.Education{}
+	for rows.Next() {
+		var education hub.Education
+		err = rows.Scan(
+			&education.ID,
+			&education.InstituteDomain,
+			&education.Degree,
+			&education.StartDate,
+			&education.EndDate,
+			&education.Description,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan education", "error", err)
+			return nil, err
+		}
+		educations = append(educations, education)
+	}
+
+	return educations, nil
 }
 
 func (pg *PG) FilterInstitutes(
