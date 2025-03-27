@@ -141,6 +141,12 @@ WHERE hub_user_id = (
 			pg.log.Err("failed to scan education", "error", err)
 			return nil, err
 		}
+
+		if req.UserHandle != nil && *req.UserHandle != hubUser.Handle {
+			// Expose the ID only to the owner of the education
+			education.ID = ""
+		}
+
 		educations = append(educations, education)
 	}
 
