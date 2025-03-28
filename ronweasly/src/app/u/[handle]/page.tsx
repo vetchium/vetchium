@@ -2,43 +2,43 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import Bio from "@/components/Bio";
+import { Education } from "@/components/Education";
 import ProfilePicture from "@/components/ProfilePicture";
 import { config } from "@/config";
+import { useColleagues } from "@/hooks/useColleagues";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useColleagues } from "@/hooks/useColleagues";
+import BlockIcon from "@mui/icons-material/Block";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PendingIcon from "@mui/icons-material/Pending";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VerifiedIcon from "@mui/icons-material/Verified";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-import BlockIcon from "@mui/icons-material/Block";
-import LinkOffIcon from "@mui/icons-material/LinkOff";
-import PendingIcon from "@mui/icons-material/Pending";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import { useParams, useRouter } from "next/navigation";
-import { WorkHistory } from "./WorkHistory";
-import { useState } from "react";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { WorkHistory } from "./WorkHistory";
 
 export default function UserProfilePage() {
   const { t } = useTranslation();
@@ -457,6 +457,13 @@ export default function UserProfilePage() {
               {/* Work History section */}
               <Box>
                 <WorkHistory userHandle={userHandle} canEdit={false} />
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              {/* Education section */}
+              <Box>
+                <Education userHandle={userHandle} canEdit={false} />
               </Box>
             </Paper>
 
