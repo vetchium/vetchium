@@ -20,7 +20,7 @@ type Institute struct {
 }
 
 type FilterInstitutesRequest struct {
-	Prefix string `json:"prefix"`
+	Prefix string `json:"prefix" validate:"required,min=3,max=64"`
 }
 
 type DeleteEducationRequest struct {

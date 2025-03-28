@@ -42,7 +42,7 @@ model FilterInstitutesRequest {
     @minLength(3)
     @maxLength(12)
     @doc("The prefix of the institute name or domain")
-    prefix?: string;
+    prefix: string;
 }
 
 model DeleteEducationRequest {
@@ -88,6 +88,7 @@ interface FilterInstitutes {
     @post
     @useAuth(HubAuth)
     @tag("Education")
+    @doc("Filter institutes by prefix. Maximum 10 matching institutes will be returned in random order. The match could be in either the name of the domain. The response is not paginated.")
     filterInstitutes(@body request: FilterInstitutesRequest): {
         @statusCode statusCode: 200;
         @body Institutes: Institute[];

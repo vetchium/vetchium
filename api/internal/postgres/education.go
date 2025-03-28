@@ -176,7 +176,29 @@ WHERE hub_user_id = (
 
 func (pg *PG) FilterInstitutes(
 	ctx context.Context,
-	req hub.FilterInstitutesRequest,
+	filterInstitutesReq hub.FilterInstitutesRequest,
 ) ([]hub.Institute, error) {
-	return nil, nil
+	rows, err := pg.pool.Query(ctx, `
+		SELECT domain, name FROM institutes
+		WHERE name ILIKE $1 OR domain ILIKE $1
+		LIMIT 10
+	`, "%"+filterInstitutesReq.Prefix+"%")
+	if err != nil {
+		pg.log.Err("failed to filter institutes", "error", err)
+		return nil, err
+	}
+
+	institutes := []hub.Institute{}
+	for rows.Next() {
+		var institute hub.Institute
+		err = rows.Scan(&institute.Domain, &institute.Name)
+		if err != nil {
+			pg.log.Err("failed to scan institute", "error", err)
+			return nil, err
+		}
+
+		institutes = append(institutes, institute)
+	}
+
+	return institutes, nil
 }

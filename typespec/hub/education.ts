@@ -16,7 +16,7 @@ export interface Institute {
 }
 
 export interface FilterInstitutesRequest {
-  prefix?: string;
+  prefix: string;
 }
 
 export interface DeleteEducationRequest {
@@ -37,5 +37,6 @@ export interface ListEducationRequest {
 }
 
 export interface FilterInstitutesResponse {
+  // Maximum 10 institutes will be returned in random order.
   institutes: Institute[];
 }
