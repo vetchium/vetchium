@@ -91,4 +91,6 @@ var (
 	// sent recently or the user does not want to receive invites.
 	// TODO: Implement support for users to block invites !?
 	ErrInviteNotNeeded = errors.New("invite not needed")
+
+	ErrNoEducation = errors.New("education not found")
 )

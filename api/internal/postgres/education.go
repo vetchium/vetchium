@@ -10,7 +10,7 @@ import (
 
 func (pg *PG) AddEducation(
 	ctx context.Context,
-	req hub.AddEducationRequest,
+	addEducationReq hub.AddEducationRequest,
 ) (string, error) {
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
@@ -29,14 +29,14 @@ func (pg *PG) AddEducation(
 	var instituteID string
 	err = tx.QueryRow(ctx, `
 		SELECT get_or_create_dummy_institute($1)
-	`, req.InstituteDomain).Scan(&instituteID)
+	`, addEducationReq.InstituteDomain).Scan(&instituteID)
 	if err != nil {
 		pg.log.Err(
 			"failed to get or create dummy institute",
 			"error",
 			err,
 			"domain",
-			req.InstituteDomain,
+			addEducationReq.InstituteDomain,
 		)
 		return "", db.ErrInternal
 	}
@@ -58,12 +58,12 @@ RETURNING id
 	var startDate, endDate interface{}
 
 	// Use nil for empty/invalid dates to properly handle NULL in database
-	if req.StartDate != nil {
-		startDate = *req.StartDate
+	if addEducationReq.StartDate != nil {
+		startDate = *addEducationReq.StartDate
 	}
 
-	if req.EndDate != nil {
-		endDate = *req.EndDate
+	if addEducationReq.EndDate != nil {
+		endDate = *addEducationReq.EndDate
 	}
 
 	err = tx.QueryRow(
@@ -71,10 +71,10 @@ RETURNING id
 		query,
 		hubUserID,
 		instituteID,
-		req.Degree,
+		addEducationReq.Degree,
 		startDate,
 		endDate,
-		req.Description,
+		addEducationReq.Description,
 	).Scan(&id)
 	if err != nil {
 		pg.log.Err("failed to insert education", "error", err)
@@ -92,14 +92,34 @@ RETURNING id
 
 func (pg *PG) DeleteEducation(
 	ctx context.Context,
-	req hub.DeleteEducationRequest,
+	deleteEducationReq hub.DeleteEducationRequest,
 ) error {
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return db.ErrInternal
+	}
+
+	res, err := pg.pool.Exec(ctx, `
+		DELETE FROM education
+		WHERE id = $1 AND hub_user_id = $2
+	`, deleteEducationReq.EducationID, hubUserID)
+	if err != nil {
+		pg.log.Err("failed to delete education", "error", err)
+		return db.ErrInternal
+	}
+
+	if res.RowsAffected() == 0 {
+		pg.log.Dbg("not found", "education_id", deleteEducationReq.EducationID)
+		return db.ErrNoEducation
+	}
+
 	return nil
 }
 
 func (pg *PG) ListEducation(
 	ctx context.Context,
-	req hub.ListEducationRequest,
+	listEducationReq hub.ListEducationRequest,
 ) ([]hub.Education, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
@@ -118,7 +138,7 @@ WHERE hub_user_id = (
 	rows, err := pg.pool.Query(
 		ctx,
 		educationQuery,
-		req.UserHandle,
+		listEducationReq.UserHandle,
 		hubUser.Handle,
 	)
 	if err != nil {
@@ -142,7 +162,8 @@ WHERE hub_user_id = (
 			return nil, err
 		}
 
-		if req.UserHandle != nil && *req.UserHandle != hubUser.Handle {
+		if listEducationReq.UserHandle != nil &&
+			*listEducationReq.UserHandle != hubUser.Handle {
 			// Expose the ID only to the owner of the education
 			education.ID = ""
 		}
