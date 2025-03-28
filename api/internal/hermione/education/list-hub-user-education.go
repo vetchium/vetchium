@@ -2,8 +2,10 @@ package education
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/employer"
 )
@@ -32,6 +34,12 @@ func ListHubUserEducation(h wand.Wand) http.HandlerFunc {
 		educations, err := h.DB().
 			ListHubUserEducation(r.Context(), listHubUserEducationReq)
 		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("failed to list education", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("failed to list education", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

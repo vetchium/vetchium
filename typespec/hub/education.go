@@ -23,5 +23,5 @@ type DeleteEducationRequest struct {
 }
 
 type ListEducationRequest struct {
-	UserHandle *common.Handle `json:"user_handle"`
+	UserHandle *common.Handle `json:"user_handle" validate:"omitempty,validate_handle"`
 }

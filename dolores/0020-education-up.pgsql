@@ -101,6 +101,22 @@ INSERT INTO hub_users (
     'This user is dedicated to testing the complete education workflow.',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
+),
+(
+    '12345678-0020-0020-0020-000000000030',
+    'Education Org View Test User',
+    'org-view-education-user',
+    'org-view-user@education-hub.example',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
+    'USA',
+    'San Francisco',
+    'en',
+    'User for testing org view of education',
+    'This user is dedicated to testing org user view of education.',
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
 );
 
 -- Create test institutes
@@ -176,6 +192,13 @@ INSERT INTO institutes (
     NULL,
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
+),
+(
+    '12345678-0020-0020-0020-000000000031',
+    'Harvard University',
+    NULL,
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
 );
 
 -- Create institute domains
@@ -241,6 +264,12 @@ INSERT INTO institute_domains (
     '12345678-0020-0020-0020-000000000020',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
+),
+(
+    'harvard.example',
+    '12345678-0020-0020-0020-000000000031',
+    timezone('UTC'::text, now()),
+    timezone('UTC'::text, now())
 );
 
 -- Create some initial education entries
@@ -291,6 +320,70 @@ INSERT INTO education (
     '2022-01-01',
     '2024-01-01',
     'Specialized in AI'
+),
+(
+    '12345678-0020-0020-0020-000000000032',
+    '12345678-0020-0020-0020-000000000030',
+    '12345678-0020-0020-0020-000000000031',
+    'Bachelor of Arts',
+    '2016-09-01',
+    '2020-05-31',
+    'Economics'
+),
+(
+    '12345678-0020-0020-0020-000000000033',
+    '12345678-0020-0020-0020-000000000030',
+    '12345678-0020-0020-0020-000000000018',
+    'Master of Business Administration',
+    '2021-09-01',
+    '2023-05-31',
+    'Finance'
+);
+
+-- Create test employer for org user testing
+INSERT INTO employers (
+    id, client_id_type, employer_state, company_name, onboard_admin_email
+) VALUES 
+(
+    '12345678-0020-0020-0020-000000000034',
+    'DOMAIN',
+    'ONBOARDED',
+    'Education Test Employer',
+    'admin@edu-employer.example'
+);
+
+-- Create domain for test employer
+INSERT INTO domains (
+    id, domain_name, domain_state, employer_id
+) VALUES
+(
+    '12345678-0020-0020-0020-000000000035',
+    'edu-employer.example',
+    'VERIFIED',
+    '12345678-0020-0020-0020-000000000034'
+);
+
+-- Set primary domain for employer
+INSERT INTO employer_primary_domains (
+    employer_id, domain_id
+) VALUES
+(
+    '12345678-0020-0020-0020-000000000034',
+    '12345678-0020-0020-0020-000000000035'
+);
+
+-- Create org users for testing
+INSERT INTO org_users (
+    id, email, name, password_hash, org_user_roles, org_user_state, employer_id
+) VALUES
+(
+    '12345678-0020-0020-0020-000000000036',
+    'admin@edu-employer.example',
+    'Education Employer Admin',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    ARRAY['ADMIN']::org_user_roles[],
+    'ACTIVE_ORG_USER',
+    '12345678-0020-0020-0020-000000000034'
 );
 
 COMMIT;

@@ -2,8 +2,10 @@ package education
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/wand"
 	"github.com/psankar/vetchi/typespec/hub"
 )
@@ -28,6 +30,12 @@ func ListEducation(h wand.Wand) http.HandlerFunc {
 		// There may be no plural educations grammatically, but it makes it easier to understand
 		educations, err := h.DB().ListEducation(r.Context(), listEducationReq)
 		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("failed to list education", "error", err)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("failed to list education", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

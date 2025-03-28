@@ -91,6 +91,10 @@ RETURNING id
 		return "", db.ErrInternal
 	}
 
+	pg.log.Dbg("education added successfully",
+		"id", id,
+		"hub_user_id", hubUserID,
+		"institute_domain", addEducationReq.InstituteDomain)
 	return id, nil
 }
 
@@ -114,10 +118,15 @@ func (pg *PG) DeleteEducation(
 	}
 
 	if res.RowsAffected() == 0 {
-		pg.log.Dbg("not found", "education_id", deleteEducationReq.EducationID)
+		pg.log.Dbg("education not found for deletion",
+			"education_id", deleteEducationReq.EducationID,
+			"hub_user_id", hubUserID)
 		return db.ErrNoEducation
 	}
 
+	pg.log.Dbg("education deleted successfully",
+		"education_id", deleteEducationReq.EducationID,
+		"hub_user_id", hubUserID)
 	return nil
 }
 
@@ -127,7 +136,36 @@ func (pg *PG) ListEducation(
 ) ([]common.Education, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
+		pg.log.Err(
+			"failed to get hub user from context",
+			"error",
+			db.ErrInternal,
+		)
 		return []common.Education{}, db.ErrInternal
+	}
+
+	// If a user handle is provided, check if the user exists
+	if listEducationReq.UserHandle != nil {
+		var exists bool
+		err := pg.pool.QueryRow(
+			ctx,
+			"SELECT EXISTS(SELECT 1 FROM hub_users WHERE handle = $1)",
+			*listEducationReq.UserHandle,
+		).Scan(&exists)
+
+		if err != nil {
+			pg.log.Err("failed to check if user exists", "error", err)
+			return nil, db.ErrInternal
+		}
+
+		if !exists {
+			pg.log.Dbg(
+				"hub user not found",
+				"handle",
+				*listEducationReq.UserHandle,
+			)
+			return nil, db.ErrNoHubUser
+		}
 	}
 
 	educationQuery := `
@@ -199,6 +237,10 @@ WHERE education.hub_user_id = (
 		return nil, err
 	}
 
+	pg.log.Dbg("list education successful",
+		"handle", listEducationReq.UserHandle,
+		"count", len(educations),
+		"current_user", hubUser.Handle)
 	return educations, nil
 }
 
@@ -230,6 +272,9 @@ func (pg *PG) FilterInstitutes(
 		institutes = append(institutes, institute)
 	}
 
+	pg.log.Dbg("institutes filtered successfully",
+		"prefix", filterInstitutesReq.Prefix,
+		"count", len(institutes))
 	return institutes, nil
 }
 
@@ -237,6 +282,25 @@ func (pg *PG) ListHubUserEducation(
 	ctx context.Context,
 	listHubUserEducationReq employer.ListHubUserEducationRequest,
 ) ([]common.Education, error) {
+	// Check if the user handle exists
+	var exists bool
+	err := pg.pool.QueryRow(
+		ctx,
+		"SELECT EXISTS(SELECT 1 FROM hub_users WHERE handle = $1)",
+		listHubUserEducationReq.Handle,
+	).Scan(&exists)
+
+	if err != nil {
+		pg.log.Err("failed to check if user exists", "error", err)
+		return nil, db.ErrInternal
+	}
+
+	if !exists {
+		pg.log.Dbg("hub user not found for org user's query",
+			"handle", listHubUserEducationReq.Handle)
+		return nil, db.ErrNoHubUser
+	}
+
 	educationQuery := `
 SELECT institute_domains.domain, education.degree, education.start_date, education.end_date, education.description
 FROM education
@@ -294,5 +358,8 @@ WHERE education.hub_user_id = (
 		return nil, err
 	}
 
+	pg.log.Dbg("list hub user education by org user successful",
+		"handle", listHubUserEducationReq.Handle,
+		"count", len(educations))
 	return educations, nil
 }

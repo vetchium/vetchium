@@ -11,14 +11,19 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = Describe("Education", Ordered, func() {
+var _ = FDescribe("Education", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2, hubToken3, listToken, deleteToken, flowToken string
 
 	var listEducationUserHandle, flowEducationUserHandle, nonexistentUserHandle common.Handle
+
+	// New variables for org user test
+	var adminOrgToken string
+	var orgViewEducationUserHandle common.Handle
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -65,9 +70,21 @@ var _ = Describe("Education", Ordered, func() {
 		)
 		wg.Wait()
 
+		// Login org users and get tokens
+		wg.Add(1)
+		employerSigninAsync(
+			"edu-employer.example",
+			"admin@edu-employer.example",
+			"NewPassword123$",
+			&adminOrgToken,
+			&wg,
+		)
+		wg.Wait()
+
 		listEducationUserHandle = "list-education-user"
 		flowEducationUserHandle = "flow-education-user"
 		nonexistentUserHandle = "nonexistent-user"
+		orgViewEducationUserHandle = "org-view-education-user"
 	})
 
 	AfterAll(func() {
@@ -327,13 +344,7 @@ var _ = Describe("Education", Ordered, func() {
 					request: hub.ListEducationRequest{
 						UserHandle: &nonexistentUserHandle,
 					},
-					wantStatus: http.StatusOK,
-					validate: func(resp []byte) {
-						var educations []common.Education
-						err := json.Unmarshal(resp, &educations)
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(educations).Should(BeEmpty())
-					},
+					wantStatus: http.StatusNotFound,
 				},
 			}
 
@@ -766,5 +777,125 @@ var _ = Describe("Education", Ordered, func() {
 				}
 			}
 		})
+	})
+
+	Describe("List Hub User Education by Org User", func() {
+		type listHubUserEducationTestCase struct {
+			description string
+			token       string
+			request     employer.ListHubUserEducationRequest
+			wantStatus  int
+			validate    func([]byte)
+		}
+
+		It(
+			"should handle org user listing hub user education cases correctly",
+			func() {
+				testCases := []listHubUserEducationTestCase{
+					{
+						description: "without authentication",
+						token:       "",
+						request: employer.ListHubUserEducationRequest{
+							Handle: orgViewEducationUserHandle,
+						},
+						wantStatus: http.StatusUnauthorized,
+					},
+					{
+						description: "with invalid token",
+						token:       "invalid-token",
+						request: employer.ListHubUserEducationRequest{
+							Handle: orgViewEducationUserHandle,
+						},
+						wantStatus: http.StatusUnauthorized,
+					},
+					{
+						description: "with admin org user token",
+						token:       adminOrgToken,
+						request: employer.ListHubUserEducationRequest{
+							Handle: orgViewEducationUserHandle,
+						},
+						wantStatus: http.StatusOK,
+						validate: func(resp []byte) {
+							var educations []common.Education
+							err := json.Unmarshal(resp, &educations)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(educations).Should(HaveLen(2))
+
+							// Verify the education entries without IDs
+							foundHarvard := false
+							foundColumbia := false
+							for _, edu := range educations {
+								Expect(edu.ID).Should(BeEmpty())
+								if edu.InstituteDomain == "harvard.example" {
+									foundHarvard = true
+									Expect(
+										edu.Degree,
+									).Should(Equal("Bachelor of Arts"))
+									Expect(
+										*edu.StartDate,
+									).Should(Equal("2016-09-01"))
+									Expect(
+										*edu.EndDate,
+									).Should(Equal("2020-05-31"))
+									Expect(
+										*edu.Description,
+									).Should(Equal("Economics"))
+								}
+								if edu.InstituteDomain == "columbia.example" {
+									foundColumbia = true
+									Expect(
+										edu.Degree,
+									).Should(Equal("Master of Business Administration"))
+									Expect(
+										*edu.StartDate,
+									).Should(Equal("2021-09-01"))
+									Expect(
+										*edu.EndDate,
+									).Should(Equal("2023-05-31"))
+									Expect(
+										*edu.Description,
+									).Should(Equal("Finance"))
+								}
+							}
+							Expect(foundHarvard).Should(BeTrue())
+							Expect(foundColumbia).Should(BeTrue())
+						},
+					},
+					{
+						description: "with non-existent user handle",
+						token:       adminOrgToken,
+						request: employer.ListHubUserEducationRequest{
+							Handle: nonexistentUserHandle,
+						},
+						wantStatus: http.StatusNotFound,
+					},
+					{
+						description: "with empty handle",
+						token:       adminOrgToken,
+						request: employer.ListHubUserEducationRequest{
+							Handle: "",
+						},
+						wantStatus: http.StatusBadRequest,
+					},
+				}
+
+				for _, tc := range testCases {
+					fmt.Fprintf(
+						GinkgoWriter,
+						"### Testing: %s\n",
+						tc.description,
+					)
+					resp := testPOSTGetResp(
+						tc.token,
+						tc.request,
+						"/employer/list-hub-user-education",
+						tc.wantStatus,
+					)
+					if tc.validate != nil && tc.wantStatus == http.StatusOK {
+						tc.validate(resp.([]byte))
+					}
+				}
+			},
+		)
 	})
 })

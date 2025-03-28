@@ -6,6 +6,7 @@ import (
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	"github.com/psankar/vetchi/api/internal/hermione/candidacy"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
+	"github.com/psankar/vetchi/api/internal/hermione/education"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
 	he "github.com/psankar/vetchi/api/internal/hermione/hubemp"
 	"github.com/psankar/vetchi/api/internal/hermione/interview"
@@ -360,5 +361,10 @@ func RegisterEmployerRoutes(h *Hermione) {
 			common.ApplicationsCRUD,
 			common.ApplicationsViewer,
 		},
+	)
+	h.mw.Protect(
+		"/employer/list-hub-user-education",
+		education.ListHubUserEducation(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
 }
