@@ -6,6 +6,7 @@ import "./employer/applications.tsp";
 import "./employer/auth.tsp";
 import "./employer/candidacy.tsp";
 import "./employer/costcenters.tsp";
+import "./employer/education.tsp";
 import "./employer/interviews.tsp";
 import "./employer/locations.tsp";
 import "./employer/openings.tsp";

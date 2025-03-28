@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -122,10 +123,10 @@ func (pg *PG) DeleteEducation(
 func (pg *PG) ListEducation(
 	ctx context.Context,
 	listEducationReq hub.ListEducationRequest,
-) ([]hub.Education, error) {
+) ([]common.Education, error) {
 	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
 	if !ok {
-		return []hub.Education{}, db.ErrInternal
+		return []common.Education{}, db.ErrInternal
 	}
 
 	educationQuery := `
@@ -150,9 +151,9 @@ WHERE education.hub_user_id = (
 	}
 	defer rows.Close()
 
-	educations := []hub.Education{}
+	educations := []common.Education{}
 	for rows.Next() {
-		var education hub.Education
+		var education common.Education
 		var startDate, endDate interface{}
 		var id uuid.UUID
 
@@ -203,7 +204,7 @@ WHERE education.hub_user_id = (
 func (pg *PG) FilterInstitutes(
 	ctx context.Context,
 	filterInstitutesReq hub.FilterInstitutesRequest,
-) ([]hub.Institute, error) {
+) ([]common.Institute, error) {
 	rows, err := pg.pool.Query(ctx, `
 		SELECT id.domain, COALESCE(i.institute_name, id.domain) as name 
 		FROM institute_domains id
@@ -216,9 +217,9 @@ func (pg *PG) FilterInstitutes(
 		return nil, err
 	}
 
-	institutes := []hub.Institute{}
+	institutes := []common.Institute{}
 	for rows.Next() {
-		var institute hub.Institute
+		var institute common.Institute
 		err = rows.Scan(&institute.Domain, &institute.Name)
 		if err != nil {
 			pg.log.Err("failed to scan institute", "error", err)

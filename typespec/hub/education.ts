@@ -1,3 +1,4 @@
+import { Handle } from "../common/common";
 import { Institute } from "../common/education";
 
 export interface AddEducationRequest {
@@ -21,7 +22,7 @@ export interface DeleteEducationRequest {
 }
 
 export interface ListEducationRequest {
-  user_handle?: string;
+  user_handle?: Handle;
 }
 
 export interface FilterInstitutesResponse {

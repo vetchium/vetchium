@@ -327,11 +327,11 @@ type DB interface {
 	ListEducation(
 		context.Context,
 		hub.ListEducationRequest,
-	) ([]hub.Education, error)
+	) ([]common.Education, error)
 	FilterInstitutes(
 		context.Context,
 		hub.FilterInstitutesRequest,
-	) ([]hub.Institute, error)
+	) ([]common.Institute, error)
 
 	// Used by hermione - Profile page related methods
 	AddOfficialEmail(AddOfficialEmailReq) error

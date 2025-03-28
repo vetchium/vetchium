@@ -47,7 +47,7 @@ model DeleteEducationRequest {
 
 model ListEducationRequest {
     @doc("The user handle of the user to list the education for. If not provided, the education of the current user will be listed.")
-    user_handle?: string;
+    user_handle?: Handle;
 }
 
 @route("/hub/add-education")

@@ -2,6 +2,7 @@
 export * from "./common/applications";
 export * from "./common/candidacies";
 export * from "./common/common";
+export * from "./common/education";
 export * from "./common/interviews";
 export * from "./common/openings";
 
@@ -22,6 +23,7 @@ export * from "./employer/applications";
 export * from "./employer/auth";
 export * from "./employer/candidacy";
 export * from "./employer/costcenters";
+export * from "./employer/education";
 export * from "./employer/interviews";
 export * from "./employer/locations";
 export * from "./employer/openings";

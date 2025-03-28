@@ -10,12 +10,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
 var _ = Describe("Education", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2, hubToken3, listToken, deleteToken, flowToken string
+
+	var listEducationUserHandle, flowEducationUserHandle, nonexistentUserHandle common.Handle
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -61,6 +64,10 @@ var _ = Describe("Education", Ordered, func() {
 			&wg,
 		)
 		wg.Wait()
+
+		listEducationUserHandle = "list-education-user"
+		flowEducationUserHandle = "flow-education-user"
+		nonexistentUserHandle = "nonexistent-user"
 	})
 
 	AfterAll(func() {
@@ -239,7 +246,7 @@ var _ = Describe("Education", Ordered, func() {
 					request:     hub.ListEducationRequest{},
 					wantStatus:  http.StatusOK,
 					validate: func(resp []byte) {
-						var educations []hub.Education
+						var educations []common.Education
 						err := json.Unmarshal(resp, &educations)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(educations).Should(HaveLen(2))
@@ -283,11 +290,11 @@ var _ = Describe("Education", Ordered, func() {
 					description: "list other user's education (should not include IDs)",
 					token:       hubToken2,
 					request: hub.ListEducationRequest{
-						UserHandle: strptr("list-education-user"),
+						UserHandle: &listEducationUserHandle,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
-						var educations []hub.Education
+						var educations []common.Education
 						err := json.Unmarshal(resp, &educations)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(educations).Should(HaveLen(2))
@@ -318,11 +325,11 @@ var _ = Describe("Education", Ordered, func() {
 					description: "list education for non-existent user",
 					token:       hubToken1,
 					request: hub.ListEducationRequest{
-						UserHandle: strptr("nonexistent-user"),
+						UserHandle: &nonexistentUserHandle,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
-						var educations []hub.Education
+						var educations []common.Education
 						err := json.Unmarshal(resp, &educations)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(educations).Should(BeEmpty())
@@ -365,7 +372,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var educationsBefore []hub.Education
+			var educationsBefore []common.Education
 			err := json.Unmarshal(listResp.([]byte), &educationsBefore)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -457,7 +464,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var educationsAfter []hub.Education
+			var educationsAfter []common.Education
 			err = json.Unmarshal(listRespAfter.([]byte), &educationsAfter)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -485,7 +492,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var initialEducations []hub.Education
+			var initialEducations []common.Education
 			err := json.Unmarshal(listResp1.([]byte), &initialEducations)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(initialEducations).Should(BeEmpty())
@@ -536,7 +543,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var educationsAfterAddition []hub.Education
+			var educationsAfterAddition []common.Education
 			err = json.Unmarshal(listResp2.([]byte), &educationsAfterAddition)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(educationsAfterAddition).Should(HaveLen(2))
@@ -559,7 +566,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var educationsAfterFirstDeletion []hub.Education
+			var educationsAfterFirstDeletion []common.Education
 			err = json.Unmarshal(
 				listResp3.([]byte),
 				&educationsAfterFirstDeletion,
@@ -591,7 +598,7 @@ var _ = Describe("Education", Ordered, func() {
 				http.StatusOK,
 			)
 
-			var educationsAfterSecondDeletion []hub.Education
+			var educationsAfterSecondDeletion []common.Education
 			err = json.Unmarshal(
 				listResp4.([]byte),
 				&educationsAfterSecondDeletion,
@@ -622,13 +629,13 @@ var _ = Describe("Education", Ordered, func() {
 			listRespByUser1 := testPOSTGetResp(
 				hubToken1,
 				hub.ListEducationRequest{
-					UserHandle: strptr("flow-education-user"),
+					UserHandle: &flowEducationUserHandle,
 				},
 				"/hub/list-education",
 				http.StatusOK,
 			)
 
-			var educationsViewedByUser1 []hub.Education
+			var educationsViewedByUser1 []common.Education
 			err = json.Unmarshal(
 				listRespByUser1.([]byte),
 				&educationsViewedByUser1,
@@ -696,7 +703,7 @@ var _ = Describe("Education", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
-						var institutes []hub.Institute
+						var institutes []common.Institute
 						err := json.Unmarshal(resp, &institutes)
 						Expect(err).ShouldNot(HaveOccurred())
 						foundStanford := false
@@ -717,7 +724,7 @@ var _ = Describe("Education", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
-						var institutes []hub.Institute
+						var institutes []common.Institute
 						err := json.Unmarshal(resp, &institutes)
 						Expect(err).ShouldNot(HaveOccurred())
 						foundCaltech := false
@@ -738,7 +745,7 @@ var _ = Describe("Education", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
-						var institutes []hub.Institute
+						var institutes []common.Institute
 						err := json.Unmarshal(resp, &institutes)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(institutes).Should(BeEmpty())
