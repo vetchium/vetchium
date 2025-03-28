@@ -451,6 +451,10 @@ export const en = {
     currentlyWorking: "Present",
     employmentPeriod: "{{startDate}} - {{endDate}}",
     noWorkHistory: "No work history available",
+    education: "Education",
+    educationDegree: "Degree",
+    currentlyStudying: "Present",
+    noEducation: "No education information available",
   },
   errors: {
     fetchFailed: "Failed to fetch data",

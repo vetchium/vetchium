@@ -16,9 +16,9 @@ model ListHubUserEducationRequest {
 
 @route("/employer/list-hub-user-education")
 interface EmployerEducation {
-    @get
+    @post
     @useAuth(EmployerAuth)
-    listEducation(@query request: ListHubUserEducationRequest): {
+    listEducation(@body request: ListHubUserEducationRequest): {
         @statusCode statusCode: 200;
         @body Education: Education[];
     };

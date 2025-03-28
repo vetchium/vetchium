@@ -1,22 +1,22 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import type { EmployerViewBio } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  Box,
-  Typography,
   Alert,
-  CircularProgress,
-  Chip,
-  Button,
-  Paper,
-  Divider,
   Avatar,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Divider,
+  Paper,
+  Typography,
 } from "@mui/material";
+import type { Education, EmployerViewBio } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -27,6 +27,8 @@ export default function UserProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [profilePictureLoading, setProfilePictureLoading] = useState(false);
+  const [education, setEducation] = useState<Education[]>([]);
+  const [educationLoading, setEducationLoading] = useState(false);
   const { t } = useTranslation();
   const sessionToken = Cookies.get("session_token");
 
@@ -108,6 +110,38 @@ export default function UserProfilePage() {
     }
   }, [handle, router, t]);
 
+  const fetchEducation = useCallback(async () => {
+    if (!sessionToken || !handle) return;
+
+    try {
+      setEducationLoading(true);
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/employer/list-hub-user-education`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+          },
+          body: JSON.stringify({ handle }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setEducation(data);
+      } else {
+        console.debug("Failed to fetch education:", response.status);
+        setEducation([]);
+      }
+    } catch (error) {
+      console.error("Error fetching education:", error);
+      setEducation([]);
+    } finally {
+      setEducationLoading(false);
+    }
+  }, [handle, sessionToken]);
+
   useEffect(() => {
     fetchUserBio();
   }, [fetchUserBio]);
@@ -115,8 +149,9 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (bio) {
       fetchProfilePicture();
+      fetchEducation();
     }
-  }, [bio, fetchProfilePicture]);
+  }, [bio, fetchProfilePicture, fetchEducation]);
 
   // Cleanup object URL on unmount
   useEffect(() => {
@@ -263,7 +298,7 @@ export default function UserProfilePage() {
       </Paper>
 
       {/* Work History Section */}
-      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
         <Typography variant="h6" gutterBottom color="primary">
           {t("hubUsers.workHistory")}
         </Typography>
@@ -319,6 +354,69 @@ export default function UserProfilePage() {
         ) : (
           <Typography color="text.secondary">
             {t("hubUsers.noWorkHistory")}
+          </Typography>
+        )}
+      </Paper>
+
+      {/* Education Section */}
+      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom color="primary">
+          {t("hubUsers.education")}
+        </Typography>
+
+        {educationLoading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : education && education.length > 0 ? (
+          <Box>
+            {education.map((edu, index) => (
+              <Box
+                key={edu.id || index}
+                sx={{
+                  mb: 3,
+                  "&:last-child": { mb: 0 },
+                }}
+              >
+                <Typography variant="h6" component="div">
+                  {edu.degree || t("hubUsers.educationDegree")}
+                </Typography>
+                <Typography color="text.secondary">
+                  {edu.institute_domain}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {edu.start_date
+                    ? new Date(edu.start_date).toLocaleDateString(undefined, {
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : ""}{" "}
+                  {edu.start_date && "-"}{" "}
+                  {edu.end_date
+                    ? new Date(edu.end_date).toLocaleDateString(undefined, {
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : t("hubUsers.currentlyStudying")}
+                </Typography>
+                {edu.description && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {edu.description}
+                  </Typography>
+                )}
+                {index < education.length - 1 && <Divider sx={{ mt: 3 }} />}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography color="text.secondary">
+            {t("hubUsers.noEducation")}
           </Typography>
         )}
       </Paper>
