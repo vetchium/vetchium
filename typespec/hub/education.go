@@ -24,7 +24,7 @@ type FilterInstitutesRequest struct {
 }
 
 type DeleteEducationRequest struct {
-	EducationID string `json:"education_id"`
+	EducationID string `json:"education_id" validate:"required,uuid"`
 }
 
 type Education struct {

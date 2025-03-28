@@ -20,7 +20,7 @@ func DeleteEducation(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		if !h.Vator().Struct(w, deleteEducationReq) {
+		if !h.Vator().Struct(w, &deleteEducationReq) {
 			h.Dbg("invalid request", "request", deleteEducationReq)
 			return
 		}

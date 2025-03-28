@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/hub"
@@ -127,10 +129,11 @@ func (pg *PG) ListEducation(
 	}
 
 	educationQuery := `
-SELECT id, institute_domains.domain, degree, start_date, end_date, description
+SELECT education.id, institute_domains.domain, education.degree, education.start_date, education.end_date, education.description
 FROM education
-JOIN institute_domains ON education.institute_id = institute_domains.id
-WHERE hub_user_id = (
+JOIN institutes ON education.institute_id = institutes.id
+JOIN institute_domains ON institutes.id = institute_domains.institute_id
+WHERE education.hub_user_id = (
 	SELECT id FROM hub_users WHERE handle = COALESCE($1, $2)
 )
 `
@@ -145,21 +148,39 @@ WHERE hub_user_id = (
 		pg.log.Err("failed to query education", "error", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	educations := []hub.Education{}
 	for rows.Next() {
 		var education hub.Education
+		var startDate, endDate interface{}
+		var id uuid.UUID
+
 		err = rows.Scan(
-			&education.ID,
+			&id,
 			&education.InstituteDomain,
 			&education.Degree,
-			&education.StartDate,
-			&education.EndDate,
+			&startDate,
+			&endDate,
 			&education.Description,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan education", "error", err)
 			return nil, err
+		}
+
+		// Convert UUID to string
+		education.ID = id.String()
+
+		// Convert date to string if not null
+		if startDate != nil {
+			startDateStr := startDate.(time.Time).Format("2006-01-02")
+			education.StartDate = &startDateStr
+		}
+
+		if endDate != nil {
+			endDateStr := endDate.(time.Time).Format("2006-01-02")
+			education.EndDate = &endDateStr
 		}
 
 		if listEducationReq.UserHandle != nil &&
@@ -169,6 +190,11 @@ WHERE hub_user_id = (
 		}
 
 		educations = append(educations, education)
+	}
+
+	if err = rows.Err(); err != nil {
+		pg.log.Err("error iterating rows", "error", err)
+		return nil, err
 	}
 
 	return educations, nil
