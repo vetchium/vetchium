@@ -205,8 +205,10 @@ func (pg *PG) FilterInstitutes(
 	filterInstitutesReq hub.FilterInstitutesRequest,
 ) ([]hub.Institute, error) {
 	rows, err := pg.pool.Query(ctx, `
-		SELECT domain, name FROM institutes
-		WHERE name ILIKE $1 OR domain ILIKE $1
+		SELECT id.domain, COALESCE(i.institute_name, id.domain) as name 
+		FROM institute_domains id
+		JOIN institutes i ON id.institute_id = i.id
+		WHERE id.domain ILIKE $1 OR i.institute_name ILIKE $1
 		LIMIT 10
 	`, "%"+filterInstitutesReq.Prefix+"%")
 	if err != nil {

@@ -40,7 +40,7 @@ model Institute {
 
 model FilterInstitutesRequest {
     @minLength(3)
-    @maxLength(12)
+    @maxLength(64)
     @doc("The prefix of the institute name or domain")
     prefix: string;
 }

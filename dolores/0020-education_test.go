@@ -13,7 +13,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Education", Ordered, func() {
+var _ = Describe("Education", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2, hubToken3, listToken, deleteToken, flowToken string
 
@@ -642,6 +642,122 @@ var _ = FDescribe("Education", Ordered, func() {
 			Expect(
 				educationsViewedByUser1[0].Degree,
 			).Should(Equal("PhD in Psychology"))
+		})
+	})
+
+	Describe("Filter Institutes", func() {
+		type filterInstitutesTestCase struct {
+			description string
+			token       string
+			request     hub.FilterInstitutesRequest
+			wantStatus  int
+			validate    func([]byte)
+		}
+
+		It("should handle filter institutes cases correctly", func() {
+			testCases := []filterInstitutesTestCase{
+				{
+					description: "filter institutes without authentication",
+					token:       "",
+					request: hub.FilterInstitutesRequest{
+						Prefix: "stan",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "filter institutes with invalid token",
+					token:       "invalid-token",
+					request: hub.FilterInstitutesRequest{
+						Prefix: "stan",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "filter with prefix too short",
+					token:       hubToken1,
+					request: hub.FilterInstitutesRequest{
+						Prefix: "st",
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "filter with prefix too long",
+					token:       hubToken1,
+					request: hub.FilterInstitutesRequest{
+						Prefix: strings.Repeat("x", 65),
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "filter with valid prefix (matching domains)",
+					token:       hubToken1,
+					request: hub.FilterInstitutesRequest{
+						Prefix: "stan",
+					},
+					wantStatus: http.StatusOK,
+					validate: func(resp []byte) {
+						var institutes []hub.Institute
+						err := json.Unmarshal(resp, &institutes)
+						Expect(err).ShouldNot(HaveOccurred())
+						foundStanford := false
+						for _, inst := range institutes {
+							if inst.Domain == "stanford.example" {
+								foundStanford = true
+								break
+							}
+						}
+						Expect(foundStanford).Should(BeTrue())
+					},
+				},
+				{
+					description: "filter with valid prefix (matching institute names)",
+					token:       hubToken2,
+					request: hub.FilterInstitutesRequest{
+						Prefix: "cal",
+					},
+					wantStatus: http.StatusOK,
+					validate: func(resp []byte) {
+						var institutes []hub.Institute
+						err := json.Unmarshal(resp, &institutes)
+						Expect(err).ShouldNot(HaveOccurred())
+						foundCaltech := false
+						for _, inst := range institutes {
+							if inst.Domain == "caltech.example" {
+								foundCaltech = true
+								break
+							}
+						}
+						Expect(foundCaltech).Should(BeTrue())
+					},
+				},
+				{
+					description: "filter with prefix that doesn't match any institute",
+					token:       hubToken3,
+					request: hub.FilterInstitutesRequest{
+						Prefix: "xyz123",
+					},
+					wantStatus: http.StatusOK,
+					validate: func(resp []byte) {
+						var institutes []hub.Institute
+						err := json.Unmarshal(resp, &institutes)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(institutes).Should(BeEmpty())
+					},
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
+				resp := testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/filter-institutes",
+					tc.wantStatus,
+				)
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
+			}
 		})
 	})
 })
