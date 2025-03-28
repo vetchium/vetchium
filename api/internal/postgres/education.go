@@ -8,6 +8,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/db"
 	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
+	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -185,7 +186,7 @@ WHERE education.hub_user_id = (
 		}
 
 		if listEducationReq.UserHandle != nil &&
-			*listEducationReq.UserHandle != hubUser.Handle {
+			string(*listEducationReq.UserHandle) != hubUser.Handle {
 			// Expose the ID only to the owner of the education
 			education.ID = ""
 		}
@@ -230,4 +231,68 @@ func (pg *PG) FilterInstitutes(
 	}
 
 	return institutes, nil
+}
+
+func (pg *PG) ListHubUserEducation(
+	ctx context.Context,
+	listHubUserEducationReq employer.ListHubUserEducationRequest,
+) ([]common.Education, error) {
+	educationQuery := `
+SELECT institute_domains.domain, education.degree, education.start_date, education.end_date, education.description
+FROM education
+JOIN institutes ON education.institute_id = institutes.id
+JOIN institute_domains ON institutes.id = institute_domains.institute_id
+WHERE education.hub_user_id = (
+	SELECT id FROM hub_users WHERE handle = $1
+)
+`
+
+	rows, err := pg.pool.Query(
+		ctx,
+		educationQuery,
+		listHubUserEducationReq.Handle,
+	)
+	if err != nil {
+		pg.log.Err("failed to query education", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	educations := []common.Education{}
+	for rows.Next() {
+		var education common.Education
+		var startDate, endDate interface{}
+
+		err = rows.Scan(
+			&education.InstituteDomain,
+			&education.Degree,
+			&startDate,
+			&endDate,
+			&education.Description,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan education", "error", err)
+			return nil, err
+		}
+
+		// Convert date to string if not null
+		if startDate != nil {
+			startDateStr := startDate.(time.Time).Format("2006-01-02")
+			education.StartDate = &startDateStr
+		}
+
+		if endDate != nil {
+			endDateStr := endDate.(time.Time).Format("2006-01-02")
+			education.EndDate = &endDateStr
+		}
+
+		educations = append(educations, education)
+	}
+
+	if err = rows.Err(); err != nil {
+		pg.log.Err("error iterating rows", "error", err)
+		return nil, err
+	}
+
+	return educations, nil
 }

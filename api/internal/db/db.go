@@ -328,6 +328,10 @@ type DB interface {
 		context.Context,
 		hub.ListEducationRequest,
 	) ([]common.Education, error)
+	ListHubUserEducation(
+		context.Context,
+		employer.ListHubUserEducationRequest,
+	) ([]common.Education, error)
 	FilterInstitutes(
 		context.Context,
 		hub.FilterInstitutesRequest,
