@@ -4,6 +4,7 @@ import "@typespec/openapi3";
 
 import "../common/common.tsp";
 import "../common/openings.tsp";
+import "../common/education.tsp";
 
 using TypeSpec.Http;
 using TypeSpec.Rest;
@@ -33,11 +34,6 @@ model AddEducationResponse {
     education_id: string;
 }
 
-model Institute {
-    domain: Domain;
-    name: string;
-}
-
 model FilterInstitutesRequest {
     @minLength(3)
     @maxLength(64)
@@ -47,17 +43,6 @@ model FilterInstitutesRequest {
 
 model DeleteEducationRequest {
     education_id: string;
-}
-
-model Education {
-    @doc("This would be non-empty only for the ListEducationResponse of the logged in user. For other users, this would be empty")
-    id?: string;
-
-    institute_domain: Domain;
-    degree?: string;
-    start_date?: plainDate;
-    end_date?: plainDate;
-    description?: string;
 }
 
 model ListEducationRequest {

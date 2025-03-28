@@ -14,26 +14,12 @@ type AddEducationResponse struct {
 	EducationID string `json:"education_id"`
 }
 
-type Institute struct {
-	Domain string `json:"domain"`
-	Name   string `json:"name"`
-}
-
 type FilterInstitutesRequest struct {
 	Prefix string `json:"prefix" validate:"required,min=3,max=64"`
 }
 
 type DeleteEducationRequest struct {
 	EducationID string `json:"education_id" validate:"required,uuid"`
-}
-
-type Education struct {
-	ID              string  `json:"id"`
-	InstituteDomain string  `json:"institute_domain"`
-	Degree          string  `json:"degree"`
-	StartDate       *string `json:"start_date"`
-	EndDate         *string `json:"end_date"`
-	Description     *string `json:"description"`
 }
 
 type ListEducationRequest struct {
