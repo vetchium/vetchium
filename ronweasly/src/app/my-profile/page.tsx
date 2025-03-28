@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import Bio from "@/components/Bio";
+import { Education } from "@/components/Education";
 import OfficialEmails from "@/components/OfficialEmails";
 import ProfilePicture from "@/components/ProfilePicture";
 import { config } from "@/config";
@@ -74,8 +75,14 @@ export default function MyProfilePage() {
 
         <Divider sx={{ my: 6 }} />
 
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4, mb: 4 }}>
           <WorkHistory userHandle={myHandle} canEdit={true} />
+        </Box>
+
+        <Divider sx={{ my: 6 }} />
+
+        <Box sx={{ mt: 4 }}>
+          <Education userHandle={myHandle} canEdit={true} />
         </Box>
       </Box>
     </AuthenticatedLayout>
