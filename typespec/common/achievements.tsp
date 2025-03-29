@@ -11,7 +11,9 @@ union AchievementType {
 }
 
 model Achievement {
+    @doc("The unique identifier of the achievement. This will be non-empty only for the hubuser who owns the achievement. For everyone else, it will be empty.")
     id: string;
+
     type: AchievementType;
     title: string;
     description: string;

@@ -8,16 +8,16 @@ using TypeSpec.Rest;
 
 namespace Vetchi;
 
-model ListAchievementsRequest {
+model ListHubUserAchievementsRequest {
     handle: Handle;
 }
 
 @route("/employer/list-hub-user-achievements")
-interface EmployerAchievements {
+interface ListHubUserAchievements {
     @post
     @useAuth(EmployerAuth)
-    listAchievements(@body request: ListAchievementsRequest): {
+    listHubUserAchievements(@body request: ListHubUserAchievementsRequest): {
         @statusCode statusCode: 200;
-        @body Achievement: Achievement[];
+        @body Achievements: Achievement[];
     };
 }

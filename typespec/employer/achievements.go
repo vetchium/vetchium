@@ -4,6 +4,6 @@ import (
 	"github.com/psankar/vetchi/typespec/common"
 )
 
-type ListAchievementsRequest struct {
+type ListHubUserAchievementsRequest struct {
 	Handle common.Handle `json:"handle"`
 }

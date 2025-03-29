@@ -32,6 +32,19 @@ model AddAchievementResponse {
     id: string;
 }
 
+model ListAchievementsRequest {
+    type: AchievementType;
+
+    @doc("If passed, the achievements of that user will alone be returned. If not passed, the logged in hubuser's achievements will be returned.")
+    handle?: Handle;
+    // TODO: Should we paginate this API ?
+}
+
+model DeleteAchievementRequest {
+    @doc("The unique identifier of the achievement")
+    id: string;
+}
+
 @route("/hub/add-achievement")
 interface HubAchievements {
     @post
@@ -39,5 +52,24 @@ interface HubAchievements {
     addAchievement(@body request: AddAchievementRequest): {
         @statusCode statusCode: 200;
         @body AddAchievementResponse: AddAchievementResponse;
+    };
+}
+
+@route("/hub/list-achievements")
+interface ListAchievements {
+    @post
+    @useAuth(HubAuth)
+    listAchievements(@body request: ListAchievementsRequest): {
+        @statusCode statusCode: 200;
+        @body Achievements: Achievement[];
+    };
+}
+
+@route("/hub/delete-achievement")
+interface DeleteAchievement {
+    @post
+    @useAuth(HubAuth)
+    deleteAchievement(@body request: DeleteAchievementRequest): {
+        @statusCode statusCode: 200;
     };
 }

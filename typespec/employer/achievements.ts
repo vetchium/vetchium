@@ -1,5 +1,5 @@
 import { Handle } from "../common/common";
 
-export interface ListAchievementsRequest {
+export interface ListHubUserAchievementsRequest {
   handle: Handle;
 }
