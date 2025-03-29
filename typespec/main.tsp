@@ -2,6 +2,7 @@ import "@typespec/http";
 import "@typespec/openapi3";
 import "@typespec/rest";
 
+import "./employer/achievements.tsp";
 import "./employer/applications.tsp";
 import "./employer/auth.tsp";
 import "./employer/candidacy.tsp";
@@ -13,6 +14,7 @@ import "./employer/openings.tsp";
 import "./employer/orgusers.tsp";
 import "./employer/profilepage.tsp";
 
+import "./hub/achievements.tsp";
 import "./hub/applications.tsp";
 import "./hub/candidacy.tsp";
 import "./hub/colleagues.tsp";
