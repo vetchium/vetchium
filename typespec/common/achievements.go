@@ -1,6 +1,8 @@
 package common
 
-import "time"
+import (
+	"time"
+)
 
 type AchievementType string
 
@@ -17,4 +19,12 @@ type Achievement struct {
 	Description string          `json:"description"`
 	URL         string          `json:"url"`
 	At          time.Time       `json:"at"`
+}
+
+func (a AchievementType) IsValid() bool {
+	switch a {
+	case Patent, Publication, Certification:
+		return true
+	}
+	return false
 }

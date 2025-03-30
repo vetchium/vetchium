@@ -3,6 +3,7 @@ package hermione
 import (
 	"net/http"
 
+	ach "github.com/psankar/vetchi/api/internal/hermione/achievements"
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	ca "github.com/psankar/vetchi/api/internal/hermione/candidacy"
 	co "github.com/psankar/vetchi/api/internal/hermione/colleagues"
@@ -56,6 +57,10 @@ func RegisterHubRoutes(h *Hermione) {
 	http.Handle("/hub/filter-institutes", wrap(ed.FilterInstitutes(h)))
 	http.Handle("/hub/delete-education", wrap(ed.DeleteEducation(h)))
 	http.Handle("/hub/list-education", wrap(ed.ListEducation(h)))
+
+	http.Handle("/hub/add-achievement", wrap(ach.AddAchievement(h)))
+	http.Handle("/hub/list-achievements", wrap(ach.ListAchievements(h)))
+	http.Handle("/hub/delete-achievement", wrap(ach.DeleteAchievement(h)))
 
 	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
 	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))

@@ -93,4 +93,6 @@ var (
 	ErrInviteNotNeeded = errors.New("invite not needed")
 
 	ErrNoEducation = errors.New("education not found")
+
+	ErrNoAchievement = errors.New("achievement not found")
 )

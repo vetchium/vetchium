@@ -861,8 +861,16 @@ CREATE TABLE education (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
-
-
+CREATE TABLE achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    url TEXT,
+    at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
 
 -- Table to track old files that need cleanup
 CREATE TABLE stale_files (

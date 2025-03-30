@@ -337,6 +337,18 @@ type DB interface {
 		hub.FilterInstitutesRequest,
 	) ([]common.Institute, error)
 
+	// Achievements
+	AddAchievement(context.Context, hub.AddAchievementRequest) (string, error)
+	ListAchievements(
+		context.Context,
+		hub.ListAchievementsRequest,
+	) ([]common.Achievement, error)
+	ListHubUserAchievements(
+		context.Context,
+		employer.ListHubUserAchievementsRequest,
+	) ([]common.Achievement, error)
+	DeleteAchievement(context.Context, hub.DeleteAchievementRequest) error
+
 	// Used by hermione - Profile page related methods
 	AddOfficialEmail(AddOfficialEmailReq) error
 	GetMyOfficialEmails(context.Context) ([]hub.OfficialEmail, error)

@@ -3,6 +3,7 @@ package hermione
 import (
 	"net/http"
 
+	"github.com/psankar/vetchi/api/internal/hermione/achievements"
 	app "github.com/psankar/vetchi/api/internal/hermione/applications"
 	"github.com/psankar/vetchi/api/internal/hermione/candidacy"
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
@@ -365,6 +366,12 @@ func RegisterEmployerRoutes(h *Hermione) {
 	h.mw.Protect(
 		"/employer/list-hub-user-education",
 		education.ListHubUserEducation(h),
+		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	)
+
+	h.mw.Protect(
+		"/employer/list-hub-user-achievements",
+		achievements.ListHubUserAchievements(h),
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
 	)
 }
