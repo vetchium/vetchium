@@ -15,7 +15,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Education", Ordered, func() {
+var _ = Describe("Education", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubToken1, hubToken2, hubToken3, listToken, deleteToken, flowToken string
 

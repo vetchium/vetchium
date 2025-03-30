@@ -34,6 +34,7 @@ func AddEducation(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("education added", "educationID", educationID)
 
+		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(hub.AddEducationResponse{
 			EducationID: educationID,
 		})

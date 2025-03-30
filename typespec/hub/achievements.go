@@ -8,10 +8,10 @@ import (
 
 type AddAchievementRequest struct {
 	Type        common.AchievementType `json:"type"        validate:"required"`
-	Title       string                 `json:"title"       validate:"required,max=128"`
+	Title       string                 `json:"title"       validate:"required,min=3,max=128"`
 	Description *string                `json:"description" validate:"omitempty,min=3,max=1024"`
 	URL         *string                `json:"url"         validate:"omitempty,min=3,max=1024"`
-	At          *time.Time             `json:"at"          validate:"omitempty"`
+	At          *time.Time             `json:"at"          validate:"omitempty,ltefield=now"`
 }
 
 type AddAchievementResponse struct {

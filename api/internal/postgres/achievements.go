@@ -25,11 +25,11 @@ func (pg *PG) AddAchievement(
 
 	var id uuid.UUID
 	err = pg.pool.QueryRow(ctx, `
-INSERT INTO achievements (hub_user_id, title, description, url, at)
-    VALUES ($1, $2, $3, $4, $5)
+INSERT INTO achievements (hub_user_id, title, description, url, at, achievement_type)
+    VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING
     id
-`, hubUserID, addAchievementReq.Title, addAchievementReq.Description, addAchievementReq.URL, addAchievementReq.At).Scan(&id)
+`, hubUserID, addAchievementReq.Title, addAchievementReq.Description, addAchievementReq.URL, addAchievementReq.At, addAchievementReq.Type).Scan(&id)
 	if err != nil {
 		pg.log.Err("failed to add achievement", "error", err)
 		return "", err

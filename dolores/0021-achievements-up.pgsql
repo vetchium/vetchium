@@ -105,60 +105,60 @@ INSERT INTO hub_users (
 
 -- Create some initial achievements
 INSERT INTO achievements (
-    id, hub_user_id, achievement_type, title, description, url, achieved_at, created_at, updated_at
+    id, hub_user_id, title, description, url, at, achievement_type, created_at, updated_at
 ) VALUES
 (
     '12345678-0021-0021-0021-000000000010',
     '12345678-0021-0021-0021-000000000002',
-    'PATENT',
     'Machine Learning Patent',
     'A patent for innovative ML algorithms',
     'https://patent.example.com/ml-innovation',
     '2022-06-15',
+    'PATENT',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0021-0021-0021-000000000011',
     '12345678-0021-0021-0021-000000000002',
-    'PUBLICATION',
     'Research on AI Ethics',
     'Publication about ethical considerations in AI development',
     'https://journal.example.com/ai-ethics',
     '2023-03-10',
+    'PUBLICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0021-0021-0021-000000000012',
     '12345678-0021-0021-0021-000000000003',
-    'CERTIFICATION',
     'AWS Solutions Architect',
     'Professional certification for AWS architecture',
     'https://aws.example.com/certification',
     '2021-11-20',
+    'CERTIFICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0021-0021-0021-000000000013',
     '12345678-0021-0021-0021-000000000006',
-    'PATENT',
     'Blockchain Security Patent',
     'Patent for innovative blockchain security mechanisms',
     'https://patent.example.com/blockchain-security',
     '2020-08-05',
+    'PATENT',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0021-0021-0021-000000000014',
     '12345678-0021-0021-0021-000000000006',
-    'PUBLICATION',
     'Research on Quantum Computing',
     'Publication about quantum computing applications',
     'https://journal.example.com/quantum-computing',
     '2022-01-15',
+    'PUBLICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );

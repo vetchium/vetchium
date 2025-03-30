@@ -11,7 +11,8 @@ import (
 func AddAchievement(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var addAchievementReq hub.AddAchievementRequest
-		if err := json.NewDecoder(r.Body).Decode(&addAchievementReq); err != nil {
+		err := json.NewDecoder(r.Body).Decode(&addAchievementReq)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -23,8 +24,10 @@ func AddAchievement(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("validated", "addAchievementReq", addAchievementReq)
 
-		achievementID, err := h.DB().
-			AddAchievement(r.Context(), addAchievementReq)
+		achievementID, err := h.DB().AddAchievement(
+			r.Context(),
+			addAchievementReq,
+		)
 		if err != nil {
 			h.Dbg("failed to add achievement", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
@@ -33,7 +36,13 @@ func AddAchievement(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("achievement added", "achievementID", achievementID)
 
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(hub.AddAchievementResponse{ID: achievementID})
+		err = json.NewEncoder(w).Encode(hub.AddAchievementResponse{
+			ID: achievementID,
+		})
+		if err != nil {
+			h.Dbg("failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }
