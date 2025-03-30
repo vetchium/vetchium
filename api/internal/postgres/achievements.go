@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
 	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/employer"
 	"github.com/psankar/vetchi/typespec/hub"
@@ -42,6 +43,12 @@ func (pg *PG) ListAchievements(
 	ctx context.Context,
 	listAchievementsReq hub.ListAchievementsRequest,
 ) ([]common.Achievement, error) {
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		pg.log.Err("failed to get hub user", "error", db.ErrInternal)
+		return []common.Achievement{}, db.ErrInternal
+	}
+
 	// If a handle is provided, check if it exists
 	if listAchievementsReq.Handle != nil {
 		var exists bool
@@ -119,8 +126,9 @@ WHERE `
 	achievements := []common.Achievement{}
 	for rows.Next() {
 		var achievement common.Achievement
+		var achievementID uuid.UUID
 		err = rows.Scan(
-			&achievement.ID,
+			&achievementID,
 			&achievement.Title,
 			&achievement.Description,
 			&achievement.URL,
@@ -131,6 +139,12 @@ WHERE `
 			pg.log.Err("failed to scan achievement", "error", err)
 			return nil, db.ErrInternal
 		}
+
+		if listAchievementsReq.Handle != nil &&
+			string(*listAchievementsReq.Handle) == hubUser.Handle {
+			achievement.ID = achievementID.String()
+		}
+
 		achievements = append(achievements, achievement)
 	}
 
@@ -202,7 +216,7 @@ func (pg *PG) ListHubUserAchievements(
 	queryParams = append(queryParams, listHubUserAchievementsReq.Handle)
 
 	achievementsQuery := `
-SELECT id, title, description, url, at, achievement_type as type
+SELECT title, description, url, at, achievement_type as type
 FROM achievements
 WHERE hub_user_id = (SELECT id FROM hub_users WHERE handle = $1)
 `
@@ -223,7 +237,6 @@ WHERE hub_user_id = (SELECT id FROM hub_users WHERE handle = $1)
 	for rows.Next() {
 		var achievement common.Achievement
 		err = rows.Scan(
-			&achievement.ID,
 			&achievement.Title,
 			&achievement.Description,
 			&achievement.URL,
