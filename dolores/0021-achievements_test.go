@@ -295,7 +295,7 @@ var _ = FDescribe("Achievements", Ordered, func() {
 						Expect(
 							achievement.ID,
 						).Should(Equal("12345678-0021-0021-0021-000000000010"))
-						Expect(achievement.Type).Should(Equal("PATENT"))
+						Expect(string(achievement.Type)).Should(Equal("PATENT"))
 						Expect(
 							achievement.Title,
 						).Should(Equal("Machine Learning Patent"))
@@ -305,6 +305,7 @@ var _ = FDescribe("Achievements", Ordered, func() {
 						Expect(
 							achievement.URL,
 						).Should(Equal("https://patent.example.com/ml-innovation"))
+						Expect(achievement.At).ShouldNot(BeNil())
 					},
 				},
 				{
@@ -324,7 +325,9 @@ var _ = FDescribe("Achievements", Ordered, func() {
 						Expect(
 							achievement.ID,
 						).Should(Equal("12345678-0021-0021-0021-000000000011"))
-						Expect(achievement.Type).Should(Equal("PUBLICATION"))
+						Expect(
+							string(achievement.Type),
+						).Should(Equal("PUBLICATION"))
 						Expect(
 							achievement.Title,
 						).Should(Equal("Research on AI Ethics"))
@@ -361,7 +364,7 @@ var _ = FDescribe("Achievements", Ordered, func() {
 						// When viewed by another user, ID should be empty
 						achievement := achievements[0]
 						Expect(achievement.ID).Should(BeEmpty())
-						Expect(achievement.Type).Should(Equal("PATENT"))
+						Expect(string(achievement.Type)).Should(Equal("PATENT"))
 						Expect(
 							achievement.Title,
 						).Should(Equal("Blockchain Security Patent"))

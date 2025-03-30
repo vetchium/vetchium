@@ -18,7 +18,7 @@ type Achievement struct {
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
 	URL         string          `json:"url"`
-	At          time.Time       `json:"at"`
+	At          *time.Time      `json:"at"`
 }
 
 func (a AchievementType) IsValid() bool {

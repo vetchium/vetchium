@@ -113,7 +113,7 @@ INSERT INTO achievements (
     'Machine Learning Patent',
     'A patent for innovative ML algorithms',
     'https://patent.example.com/ml-innovation',
-    '2022-06-15',
+    '2022-06-15 12:00:00+00',
     'PATENT',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
@@ -124,7 +124,7 @@ INSERT INTO achievements (
     'Research on AI Ethics',
     'Publication about ethical considerations in AI development',
     'https://journal.example.com/ai-ethics',
-    '2023-03-10',
+    '2023-03-10 12:00:00+00',
     'PUBLICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
@@ -135,7 +135,7 @@ INSERT INTO achievements (
     'AWS Solutions Architect',
     'Professional certification for AWS architecture',
     'https://aws.example.com/certification',
-    '2021-11-20',
+    '2021-11-20 12:00:00+00',
     'CERTIFICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
@@ -146,7 +146,7 @@ INSERT INTO achievements (
     'Blockchain Security Patent',
     'Patent for innovative blockchain security mechanisms',
     'https://patent.example.com/blockchain-security',
-    '2020-08-05',
+    '2020-08-05 12:00:00+00',
     'PATENT',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
@@ -157,7 +157,7 @@ INSERT INTO achievements (
     'Research on Quantum Computing',
     'Publication about quantum computing applications',
     'https://journal.example.com/quantum-computing',
-    '2022-01-15',
+    '2022-01-15 12:00:00+00',
     'PUBLICATION',
     timezone('UTC'::text, now()),
     timezone('UTC'::text, now())

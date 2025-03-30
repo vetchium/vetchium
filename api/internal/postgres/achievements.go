@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/psankar/vetchi/api/internal/db"
@@ -80,7 +81,9 @@ FROM achievements
 WHERE `
 
 	// Handle user selection: if handle is provided, use it; otherwise, use logged-in user
+	var targetHandle string
 	if listAchievementsReq.Handle != nil {
+		targetHandle = string(*listAchievementsReq.Handle)
 		paramCounter++
 		queryConditions = append(
 			queryConditions,
@@ -89,7 +92,7 @@ WHERE `
 				paramCounter,
 			),
 		)
-		queryParams = append(queryParams, string(*listAchievementsReq.Handle))
+		queryParams = append(queryParams, targetHandle)
 	} else {
 		// Get logged-in user ID
 		hubUserID, err := getHubUserID(ctx)
@@ -100,6 +103,7 @@ WHERE `
 		paramCounter++
 		queryConditions = append(queryConditions, fmt.Sprintf("hub_user_id = $%d", paramCounter))
 		queryParams = append(queryParams, hubUserID)
+		targetHandle = hubUser.Handle
 	}
 
 	// Filter by type if provided
@@ -127,12 +131,14 @@ WHERE `
 	for rows.Next() {
 		var achievement common.Achievement
 		var achievementID uuid.UUID
+		var atTime *time.Time // Use a nullable time type for scanning
+
 		err = rows.Scan(
 			&achievementID,
 			&achievement.Title,
 			&achievement.Description,
 			&achievement.URL,
-			&achievement.At,
+			&atTime,
 			&achievement.Type,
 		)
 		if err != nil {
@@ -140,8 +146,11 @@ WHERE `
 			return nil, db.ErrInternal
 		}
 
-		if listAchievementsReq.Handle != nil &&
-			string(*listAchievementsReq.Handle) == hubUser.Handle {
+		// Set the pointer directly
+		achievement.At = atTime
+
+		// Include the ID if it's the user's own achievement or the handle matches the user's handle
+		if listAchievementsReq.Handle == nil || targetHandle == hubUser.Handle {
 			achievement.ID = achievementID.String()
 		}
 
@@ -236,17 +245,23 @@ WHERE hub_user_id = (SELECT id FROM hub_users WHERE handle = $1)
 	achievements := []common.Achievement{}
 	for rows.Next() {
 		var achievement common.Achievement
+		var atTime *time.Time // Use a nullable time type for scanning
+
 		err = rows.Scan(
 			&achievement.Title,
 			&achievement.Description,
 			&achievement.URL,
-			&achievement.At,
+			&atTime,
 			&achievement.Type,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan achievement", "error", err)
 			return nil, db.ErrInternal
 		}
+
+		// Set the pointer directly
+		achievement.At = atTime
+
 		achievements = append(achievements, achievement)
 	}
 

@@ -862,7 +862,7 @@ CREATE TABLE education (
 );
 
 -- Achievement type enum
-CREATE TYPE achievement_types AS ENUM ('PATENT', 'PUBLICATION', 'CERTIFICATION', 'OTHER');
+CREATE TYPE achievement_types AS ENUM ('PATENT', 'PUBLICATION', 'CERTIFICATION');
 
 CREATE TABLE achievements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -871,7 +871,7 @@ CREATE TABLE achievements (
     description TEXT,
     url TEXT,
     at TIMESTAMP WITH TIME ZONE,
-    achievement_type achievement_types NOT NULL DEFAULT 'OTHER',
+    achievement_type achievement_types NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );

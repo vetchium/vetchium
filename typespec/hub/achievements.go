@@ -19,7 +19,7 @@ type AddAchievementResponse struct {
 }
 
 type ListAchievementsRequest struct {
-	Type   common.AchievementType `json:"type"   validate:"omitempty,validatate_achievement_type"`
+	Type   common.AchievementType `json:"type"   validate:"omitempty,validate_achievement_type"`
 	Handle *common.Handle         `json:"handle" validate:"omitempty,validate_handle"`
 }
 
