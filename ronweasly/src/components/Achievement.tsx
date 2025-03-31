@@ -17,6 +17,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -150,6 +151,16 @@ export function AchievementSection({
     resetForm();
   };
 
+  const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let inputUrl = event.target.value;
+
+    // Remove any protocol prefix the user might type or paste
+    inputUrl = inputUrl.replace(/^(https?:\/\/|ftp:\/\/|\/\/)/i, "");
+
+    setUrl(inputUrl);
+    setUrlError("");
+  };
+
   const validateForm = () => {
     let isValid = true;
 
@@ -179,16 +190,15 @@ export function AchievementSection({
         isValid = false;
       } else {
         try {
-          // Basic URL validation
-          new URL(url.startsWith("http") ? url : `https://${url}`);
+          // Validate URL with https protocol
+          const urlWithProtocol = `https://${url.trim()}`;
+          new URL(urlWithProtocol);
           setUrlError("");
         } catch (e) {
           setUrlError(t(`${transSection}.error.invalidUrl`));
           isValid = false;
         }
       }
-    } else {
-      setUrlError("");
     }
 
     // Date validation (optional)
@@ -209,8 +219,6 @@ export function AchievementSection({
           setDateError("");
         }
       }
-    } else {
-      setDateError("");
     }
 
     return isValid;
@@ -240,9 +248,7 @@ export function AchievementSection({
       }
 
       if (url.trim()) {
-        request.url = url.trim().startsWith("http")
-          ? url.trim()
-          : `https://${url.trim()}`;
+        request.url = `https://${url.trim()}`;
       }
 
       if (date.trim()) {
@@ -525,15 +531,18 @@ export function AchievementSection({
             sx={{ mb: 2 }}
           />
           <TextField
-            margin="dense"
-            label={t(`${transSection}.url`)}
-            type="text"
             fullWidth
+            label={t(`${transSection}.url`)}
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={handleUrlChange}
             error={!!urlError}
             helperText={urlError}
-            sx={{ mb: 2 }}
+            sx={{ mt: 2 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">https://</InputAdornment>
+              ),
+            }}
           />
           <TextField
             margin="dense"
