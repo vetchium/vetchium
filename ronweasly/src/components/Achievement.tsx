@@ -54,6 +54,8 @@ export function AchievementSection({
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openUrlWarningDialog, setOpenUrlWarningDialog] = useState(false);
+  const [selectedUrl, setSelectedUrl] = useState("");
   const [selectedAchievement, setSelectedAchievement] =
     useState<Achievement | null>(null);
 
@@ -350,6 +352,22 @@ export function AchievementSection({
     return date.toLocaleDateString();
   };
 
+  const handleUrlClick = (url: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setSelectedUrl(url);
+    setOpenUrlWarningDialog(true);
+  };
+
+  const handleExternalNavigation = () => {
+    window.open(selectedUrl, "_blank", "noopener,noreferrer");
+    setOpenUrlWarningDialog(false);
+  };
+
+  const handleCloseUrlWarningDialog = () => {
+    setOpenUrlWarningDialog(false);
+    setSelectedUrl("");
+  };
+
   return (
     <Box>
       <Box
@@ -436,6 +454,7 @@ export function AchievementSection({
                         href={achievement.url}
                         target="_blank"
                         rel="noopener"
+                        onClick={(e) => handleUrlClick(achievement.url!, e)}
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",
@@ -539,6 +558,31 @@ export function AchievementSection({
             startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
             {t("achievements.actions.save")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* URL Warning Dialog */}
+      <Dialog open={openUrlWarningDialog} onClose={handleCloseUrlWarningDialog}>
+        <DialogTitle>{t("common.warning")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("common.external_url_warning")}
+            <Typography component="div" sx={{ mt: 2, wordBreak: "break-all" }}>
+              {selectedUrl}
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUrlWarningDialog}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleExternalNavigation}
+            variant="contained"
+            color="primary"
+          >
+            {t("common.proceed")}
           </Button>
         </DialogActions>
       </Dialog>
