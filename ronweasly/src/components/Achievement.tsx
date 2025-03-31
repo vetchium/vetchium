@@ -31,6 +31,8 @@ import {
   Handle,
   ListAchievementsRequest,
 } from "@psankar/vetchi-typespec";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface AchievementProps {
@@ -44,6 +46,7 @@ export function AchievementSection({
   achievementType,
   canEdit,
 }: AchievementProps) {
+  const router = useRouter();
   const { t } = useTranslation();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,6 +81,12 @@ export function AchievementSection({
     setError(null);
 
     try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const request: ListAchievementsRequest = {
         type: achievementType,
         handle: userHandle,
@@ -87,11 +96,20 @@ export function AchievementSection({
         `${config.API_SERVER_PREFIX}/hub/list-achievements`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(request),
           credentials: "include",
         }
       );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(t(`${transSection}.error.fetchFailed`));
@@ -104,7 +122,7 @@ export function AchievementSection({
     } finally {
       setIsLoading(false);
     }
-  }, [achievementType, userHandle, t, transSection]);
+  }, [achievementType, userHandle, t, transSection, router]);
 
   useEffect(() => {
     fetchAchievements();
@@ -219,6 +237,12 @@ export function AchievementSection({
     setIsSubmitting(true);
 
     try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const request: AddAchievementRequest = {
         type: achievementType,
         title: title.trim(),
@@ -247,11 +271,20 @@ export function AchievementSection({
         `${config.API_SERVER_PREFIX}/hub/add-achievement`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(request),
           credentials: "include",
         }
       );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(t(`${transSection}.error.saveFailed`));
@@ -283,17 +316,32 @@ export function AchievementSection({
     setIsSubmitting(true);
 
     try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const request: DeleteAchievementRequest = { id };
 
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/hub/delete-achievement`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(request),
           credentials: "include",
         }
       );
+
+      if (response.status === 401) {
+        Cookies.remove("session_token");
+        router.push("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(t(`${transSection}.error.deleteFailed`));
