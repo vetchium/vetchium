@@ -10,6 +10,7 @@ namespace Vetchi;
 
 model ListHubUserAchievementsRequest {
     handle: Handle;
+    type: AchievementType;
 }
 
 @route("/employer/list-hub-user-achievements")
