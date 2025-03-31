@@ -4,7 +4,6 @@ import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -137,24 +136,10 @@ export function AchievementSection({
     setDescriptionError("");
     setUrlError("");
     setDateError("");
-    setSelectedAchievement(null);
   };
 
-  const handleOpenDialog = (achievement?: Achievement) => {
+  const handleOpenDialog = () => {
     resetForm();
-
-    if (achievement) {
-      setSelectedAchievement(achievement);
-      setTitle(achievement.title);
-      setDescription(achievement.description || "");
-      setUrl(achievement.url || "");
-      setDate(
-        achievement.at
-          ? new Date(achievement.at).toISOString().split("T")[0]
-          : ""
-      );
-    }
-
     setOpenDialog(true);
   };
 
@@ -262,11 +247,6 @@ export function AchievementSection({
         request.at = new Date(date);
       }
 
-      // If editing an existing achievement, delete it first
-      if (selectedAchievement) {
-        await deleteAchievement(selectedAchievement.id, false);
-      }
-
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/hub/add-achievement`,
         {
@@ -292,7 +272,6 @@ export function AchievementSection({
 
       const data: AddAchievementResponse = await response.json();
 
-      // Refresh the list after adding/updating
       await fetchAchievements();
       handleCloseDialog();
     } catch (err) {
@@ -472,12 +451,6 @@ export function AchievementSection({
                   {canEdit && (
                     <Box>
                       <IconButton
-                        aria-label={t("achievements.actions.edit")}
-                        onClick={() => handleOpenDialog(achievement)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
                         aria-label={t("achievements.actions.delete")}
                         onClick={() => handleOpenDeleteDialog(achievement)}
                       >
@@ -492,7 +465,7 @@ export function AchievementSection({
         </Stack>
       )}
 
-      {/* Add/Edit Dialog */}
+      {/* Add Dialog */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -500,19 +473,11 @@ export function AchievementSection({
         fullWidth
       >
         <DialogTitle>
-          {selectedAchievement
-            ? t(
-                `${transSection}.update${
-                  achievementType.charAt(0) +
-                  achievementType.slice(1).toLowerCase()
-                }`
-              )
-            : t(
-                `${transSection}.add${
-                  achievementType.charAt(0) +
-                  achievementType.slice(1).toLowerCase()
-                }`
-              )}
+          {t(
+            `${transSection}.add${
+              achievementType.charAt(0) + achievementType.slice(1).toLowerCase()
+            }`
+          )}
         </DialogTitle>
         <DialogContent>
           <TextField
