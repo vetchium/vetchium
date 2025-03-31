@@ -2,8 +2,11 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import Bio from "@/components/Bio";
+import { Certifications } from "@/components/Certifications";
 import { Education } from "@/components/Education";
+import { Patents } from "@/components/Patents";
 import ProfilePicture from "@/components/ProfilePicture";
+import { Publications } from "@/components/Publications";
 import { config } from "@/config";
 import { useColleagues } from "@/hooks/useColleagues";
 import { useMyHandle } from "@/hooks/useMyHandle";
@@ -464,6 +467,27 @@ export default function UserProfilePage() {
               {/* Education section */}
               <Box>
                 <Education userHandle={userHandle} canEdit={false} />
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              {/* Patents section */}
+              <Box>
+                <Patents userHandle={userHandle} canEdit={false} />
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              {/* Publications section */}
+              <Box>
+                <Publications userHandle={userHandle} canEdit={false} />
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              {/* Certifications section */}
+              <Box>
+                <Certifications userHandle={userHandle} canEdit={false} />
               </Box>
             </Paper>
 

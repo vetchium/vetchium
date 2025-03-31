@@ -2,9 +2,12 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import Bio from "@/components/Bio";
+import { Certifications } from "@/components/Certifications";
 import { Education } from "@/components/Education";
 import OfficialEmails from "@/components/OfficialEmails";
+import { Patents } from "@/components/Patents";
 import ProfilePicture from "@/components/ProfilePicture";
+import { Publications } from "@/components/Publications";
 import { config } from "@/config";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
@@ -81,8 +84,26 @@ export default function MyProfilePage() {
 
         <Divider sx={{ my: 6 }} />
 
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4, mb: 4 }}>
           <Education userHandle={myHandle} canEdit={true} />
+        </Box>
+
+        <Divider sx={{ my: 6 }} />
+
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Patents userHandle={myHandle} canEdit={true} />
+        </Box>
+
+        <Divider sx={{ my: 6 }} />
+
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Publications userHandle={myHandle} canEdit={true} />
+        </Box>
+
+        <Divider sx={{ my: 6 }} />
+
+        <Box sx={{ mt: 4 }}>
+          <Certifications userHandle={myHandle} canEdit={true} />
         </Box>
       </Box>
     </AuthenticatedLayout>

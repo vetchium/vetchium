@@ -1,4 +1,5 @@
 // Export common types
+export * from "./common/achievements";
 export * from "./common/applications";
 export * from "./common/candidacies";
 export * from "./common/common";
@@ -7,6 +8,7 @@ export * from "./common/interviews";
 export * from "./common/openings";
 
 // Export hub types
+export * from "./hub/achievements";
 export * from "./hub/applications";
 export * from "./hub/candidacy";
 export * from "./hub/colleagues";
