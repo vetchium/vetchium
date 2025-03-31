@@ -16,7 +16,7 @@ model Achievement {
 
     type: AchievementType;
     title: string;
-    description: string;
-    url: string;
-    at: utcDateTime;
+    description?: string;
+    url?: string;
+    at?: utcDateTime;
 }

@@ -8,6 +8,7 @@ export interface Achievement {
   id: string;
   type: AchievementType;
   title: string;
-  description: string;
-  url: string;
+  description?: string;
+  url?: string;
+  at?: Date;
 }

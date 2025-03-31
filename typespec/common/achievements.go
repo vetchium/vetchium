@@ -16,8 +16,8 @@ type Achievement struct {
 	ID          string          `json:"id"`
 	Type        AchievementType `json:"type"`
 	Title       string          `json:"title"`
-	Description string          `json:"description"`
-	URL         string          `json:"url"`
+	Description *string         `json:"description"`
+	URL         *string         `json:"url"`
 	At          *time.Time      `json:"at"`
 }
 
