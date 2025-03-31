@@ -13,6 +13,10 @@ export const en = {
     add: "Add",
     save: "Save",
     cancel: "Cancel",
+    warning: "Warning",
+    proceed: "Proceed",
+    external_url_warning:
+      "You are about to leave Vetchi and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
     loadMore: "Load More",
     serverError: "Please try again after some time.",
     none: "None",
@@ -459,5 +463,31 @@ export const en = {
   errors: {
     fetchFailed: "Failed to fetch data",
     serverError: "An error occurred. Please try again later.",
+  },
+  achievements: {
+    patents: {
+      title: "Patents",
+      noEntries: "No patents available",
+      url: "View Patent",
+      error: {
+        fetchFailed: "Failed to fetch patents",
+      },
+    },
+    publications: {
+      title: "Publications",
+      noEntries: "No publications available",
+      url: "View Publication",
+      error: {
+        fetchFailed: "Failed to fetch publications",
+      },
+    },
+    certifications: {
+      title: "Certifications",
+      noEntries: "No certifications available",
+      url: "View Certificate",
+      error: {
+        fetchFailed: "Failed to fetch certifications",
+      },
+    },
   },
 };

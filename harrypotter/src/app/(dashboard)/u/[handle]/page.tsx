@@ -1,5 +1,6 @@
 "use client";
 
+import { AchievementSection } from "@/components/Achievement";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -11,9 +12,11 @@ import {
   CircularProgress,
   Divider,
   Paper,
+  Stack,
   Typography,
 } from "@mui/material";
 import type { Education, EmployerViewBio } from "@psankar/vetchi-typespec";
+import { AchievementType } from "@psankar/vetchi-typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -276,150 +279,180 @@ export default function UserProfilePage() {
         </Box>
       </Box>
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-        {bio.short_bio && (
-          <>
-            <Typography variant="h6" gutterBottom color="primary">
-              {t("hubUsers.shortBio")}
-            </Typography>
-            <Typography paragraph>{bio.short_bio}</Typography>
-          </>
-        )}
+      <Stack spacing={3}>
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          {bio.short_bio && (
+            <>
+              <Typography variant="h6" gutterBottom color="primary">
+                {t("hubUsers.shortBio")}
+              </Typography>
+              <Typography paragraph>{bio.short_bio}</Typography>
+            </>
+          )}
 
-        {bio.long_bio && (
-          <>
-            <Divider sx={{ my: 3 }} />
-            <Typography variant="h6" gutterBottom color="primary">
-              {t("hubUsers.longBio")}
-            </Typography>
-            <Typography>{bio.long_bio}</Typography>
-          </>
-        )}
-      </Paper>
+          {bio.long_bio && (
+            <>
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" gutterBottom color="primary">
+                {t("hubUsers.longBio")}
+              </Typography>
+              <Typography>{bio.long_bio}</Typography>
+            </>
+          )}
+        </Paper>
 
-      {/* Work History Section */}
-      <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          {t("hubUsers.workHistory")}
-        </Typography>
-
-        {bio.work_history && bio.work_history.length > 0 ? (
-          <Box>
-            {bio.work_history.map((work, index) => (
-              <Box
-                key={work.id}
-                sx={{
-                  mb: 3,
-                  "&:last-child": { mb: 0 },
-                }}
-              >
-                <Typography variant="h6" component="div">
-                  {work.title}
-                </Typography>
-                <Typography color="text.secondary">
-                  {work.employer_name
-                    ? `${work.employer_name} (${work.employer_domain})`
-                    : work.employer_domain}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {new Date(work.start_date).toLocaleDateString(undefined, {
-                    month: "long",
-                    year: "numeric",
-                  })}{" "}
-                  -{" "}
-                  {work.end_date
-                    ? new Date(work.end_date).toLocaleDateString(undefined, {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : t("hubUsers.currentlyWorking")}
-                </Typography>
-                {work.description && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {work.description}
-                  </Typography>
-                )}
-                {index < bio.work_history.length - 1 && (
-                  <Divider sx={{ mt: 3 }} />
-                )}
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography color="text.secondary">
-            {t("hubUsers.noWorkHistory")}
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            {t("hubUsers.workHistory")}
           </Typography>
-        )}
-      </Paper>
 
-      {/* Education Section */}
-      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          {t("hubUsers.education")}
-        </Typography>
-
-        {educationLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
-            <CircularProgress size={24} />
-          </Box>
-        ) : education && education.length > 0 ? (
-          <Box>
-            {education.map((edu, index) => (
-              <Box
-                key={edu.id || index}
-                sx={{
-                  mb: 3,
-                  "&:last-child": { mb: 0 },
-                }}
-              >
-                <Typography variant="h6" component="div">
-                  {edu.degree || t("hubUsers.educationDegree")}
-                </Typography>
-                <Typography color="text.secondary">
-                  {edu.institute_domain}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {edu.start_date
-                    ? new Date(edu.start_date).toLocaleDateString(undefined, {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : ""}{" "}
-                  {edu.start_date && "-"}{" "}
-                  {edu.end_date
-                    ? new Date(edu.end_date).toLocaleDateString(undefined, {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : t("hubUsers.currentlyStudying")}
-                </Typography>
-                {edu.description && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      mt: 1,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {edu.description}
+          {bio.work_history && bio.work_history.length > 0 ? (
+            <Box>
+              {bio.work_history.map((work, index) => (
+                <Box
+                  key={work.id}
+                  sx={{
+                    mb: 3,
+                    "&:last-child": { mb: 0 },
+                  }}
+                >
+                  <Typography variant="h6" component="div">
+                    {work.title}
                   </Typography>
-                )}
-                {index < education.length - 1 && <Divider sx={{ mt: 3 }} />}
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography color="text.secondary">
-            {t("hubUsers.noEducation")}
+                  <Typography color="text.secondary">
+                    {work.employer_name
+                      ? `${work.employer_name} (${work.employer_domain})`
+                      : work.employer_domain}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {new Date(work.start_date).toLocaleDateString(undefined, {
+                      month: "long",
+                      year: "numeric",
+                    })}{" "}
+                    -{" "}
+                    {work.end_date
+                      ? new Date(work.end_date).toLocaleDateString(undefined, {
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : t("hubUsers.currentlyWorking")}
+                  </Typography>
+                  {work.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 1,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {work.description}
+                    </Typography>
+                  )}
+                  {index < bio.work_history.length - 1 && (
+                    <Divider sx={{ mt: 3 }} />
+                  )}
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography color="text.secondary">
+              {t("hubUsers.noWorkHistory")}
+            </Typography>
+          )}
+        </Paper>
+
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            {t("hubUsers.education")}
           </Typography>
-        )}
-      </Paper>
+
+          {educationLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : education && education.length > 0 ? (
+            <Box>
+              {education.map((edu, index) => (
+                <Box
+                  key={edu.id || index}
+                  sx={{
+                    mb: 3,
+                    "&:last-child": { mb: 0 },
+                  }}
+                >
+                  <Typography variant="h6" component="div">
+                    {edu.degree || t("hubUsers.educationDegree")}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    {edu.institute_domain}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {edu.start_date
+                      ? new Date(edu.start_date).toLocaleDateString(undefined, {
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : ""}{" "}
+                    {edu.start_date && "-"}{" "}
+                    {edu.end_date
+                      ? new Date(edu.end_date).toLocaleDateString(undefined, {
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : t("hubUsers.currentlyStudying")}
+                  </Typography>
+                  {edu.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 1,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {edu.description}
+                    </Typography>
+                  )}
+                  {index < education.length - 1 && <Divider sx={{ mt: 3 }} />}
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography color="text.secondary">
+              {t("hubUsers.noEducation")}
+            </Typography>
+          )}
+        </Paper>
+
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            {t("achievements.patents.title")}
+          </Typography>
+          <AchievementSection
+            userHandle={handle}
+            achievementType={AchievementType.PATENT}
+          />
+        </Paper>
+
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            {t("achievements.publications.title")}
+          </Typography>
+          <AchievementSection
+            userHandle={handle}
+            achievementType={AchievementType.PUBLICATION}
+          />
+        </Paper>
+
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            {t("achievements.certifications.title")}
+          </Typography>
+          <AchievementSection
+            userHandle={handle}
+            achievementType={AchievementType.CERTIFICATION}
+          />
+        </Paper>
+      </Stack>
     </Box>
   );
 }
