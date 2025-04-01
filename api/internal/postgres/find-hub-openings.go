@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/psankar/vetchi/typespec/common"
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
@@ -14,6 +16,14 @@ func (p *PG) FindHubOpenings(
 	req *hub.FindHubOpeningsRequest,
 ) ([]hub.HubOpening, error) {
 	query := `
+WITH applicable_openings AS (
+	SELECT
+		o.id as opening_id,
+		o.employer_id,
+		can_apply($1, o.employer_id, o.id) as can_apply
+	FROM openings o
+	WHERE o.state = $2
+)
 SELECT
 	o.id as opening_id_within_company,
 	d.domain_name as company_domain,
@@ -25,24 +35,40 @@ FROM openings o
 	JOIN employers e ON o.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id
 	JOIN domains d ON epd.domain_id = d.id
+	JOIN applicable_openings ao ON o.id = ao.opening_id AND o.employer_id = ao.employer_id
 	LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	LEFT JOIN locations l ON ol.location_id = l.id
 	LEFT JOIN opening_tag_mappings otm ON o.employer_id = otm.employer_id AND o.id = otm.opening_id
 	LEFT JOIN opening_tags ot ON otm.tag_id = ot.id
-	WHERE o.state = 'ACTIVE_OPENING_STATE'
+	WHERE o.state = $2
+		AND ao.can_apply = true
 		AND (
-			COALESCE(l.country_code, '') = $1 
-			OR 'ZZG' = ANY(o.remote_country_codes)
-			OR $1 = ANY(o.remote_country_codes)
+			COALESCE(l.country_code, '') = $3
+			OR $4 = ANY(o.remote_country_codes)
+			OR $3 = ANY(o.remote_country_codes)
 		)`
 
 	args := []interface{}{}
 
-	// $1 is for country_code
+	// $1 is for hub_user_id from context
+	hubUser, ok := ctx.Value(middleware.HubUserCtxKey).(db.HubUserTO)
+	if !ok {
+		p.log.Err("failed to get hubUser from context")
+		return nil, db.ErrInternal
+	}
+	args = append(args, hubUser.ID)
+
+	// $2 is for opening state
+	args = append(args, common.ActiveOpening)
+
+	// $3 is for country_code
 	args = append(args, string(req.CountryCode))
 
-	// $1 already filled, so we start from $2
-	argPos := 2
+	// $4 is for global country code
+	args = append(args, string(common.GlobalCountryCode))
+
+	// Previous parameters filled, so we start from $5
+	argPos := 5
 
 	// Add city filter if specified
 	if len(req.Cities) > 0 {
