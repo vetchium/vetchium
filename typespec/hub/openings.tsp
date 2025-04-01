@@ -152,6 +152,10 @@ interface ApplyForOpening {
     applyForOpening(@body request: ApplyForOpeningRequest): {
         @statusCode statusCode: 200;
         @body ApplyForOpeningResponse: ApplyForOpeningResponse;
+    } | {
+        @doc("User is not allowed to apply for this Opening")
+        @statusCode
+        statusCode: 422;
     };
 }
 
