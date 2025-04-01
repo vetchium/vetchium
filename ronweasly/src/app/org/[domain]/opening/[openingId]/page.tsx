@@ -294,6 +294,11 @@ export default function OpeningDetailsPage() {
           return;
         }
 
+        if (response.status === 422) {
+          setError(t("openingDetails.cannotApply"));
+          return;
+        }
+
         const errorData = await response.json();
         if (response.status === 400 && errorData.errors) {
           setError(errorData.errors.join(", "));
