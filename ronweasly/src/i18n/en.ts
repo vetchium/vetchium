@@ -106,6 +106,7 @@ export const en = {
     hiringManager: "Hiring Manager",
     yearsExperience: "{min}-{max} years experience",
     apply: "Apply for this Opening",
+    cannotApply: "You cannot apply to this Opening",
     educationLevel: {
       bachelor: "Bachelor's Degree",
       master: "Master's Degree",

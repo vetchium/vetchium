@@ -1,32 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
-import Autocomplete from "@mui/material/Autocomplete";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import Typography from "@mui/material/Typography";
 import {
-  HubOpeningDetails,
-  OpeningType,
+  ApplyForOpeningRequest,
   EducationLevel,
-  OpeningTypes,
   EducationLevels,
   GetHubOpeningDetailsRequest,
+  HubOpeningDetails,
+  HubUserShort,
   OpeningState,
   OpeningStates,
-  ApplyForOpeningRequest,
-  HubUserShort,
+  OpeningType,
+  OpeningTypes,
 } from "@psankar/vetchi-typespec";
-import { config } from "@/config";
 import Cookies from "js-cookie";
-import { useTranslation } from "@/hooks/useTranslation";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const formatEducationLevel = (
   level: EducationLevel,
@@ -400,125 +400,136 @@ export default function OpeningDetailsPage() {
 
           <Box sx={{ mt: 4 }}>
             {canApply ? (
-              <>
-                <input
-                  accept="application/pdf"
-                  style={{ display: "none" }}
-                  id="resume-file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                <label htmlFor="resume-file">
-                  <Button
-                    component="span"
-                    variant="outlined"
-                    color="primary"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    disabled={uploading}
-                  >
-                    {resumeFile
-                      ? t("openingDetails.resumeSelected", {
-                          name: resumeFile.name,
-                        })
-                      : t("openingDetails.selectResume")}
-                  </Button>
-                </label>
-
-                {/* Endorsers Section */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    {t("openingDetails.endorsers.title")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 2 }}
-                  >
-                    {t("openingDetails.endorsers.description")}
-                  </Typography>
-
-                  <Autocomplete
-                    multiple
-                    id="endorsers-autocomplete"
-                    options={colleagueOptions}
-                    value={selectedEndorsers}
-                    loading={loadingColleagues}
-                    disabled={uploading}
-                    inputValue={colleagueSearchInput}
-                    onInputChange={(event, newValue, reason) => {
-                      if (selectedEndorsers.length < 5) {
-                        setColleagueSearchInput(newValue);
-                      }
-                    }}
-                    getOptionLabel={(option) =>
-                      `${option.name} (@${option.handle})`
-                    }
-                    isOptionEqualToValue={(option, value) =>
-                      option.handle === value.handle
-                    }
-                    open={
-                      isPopupOpen &&
-                      selectedEndorsers.length < 5 &&
-                      colleagueOptions.length > 0
-                    }
-                    onOpen={() => {
-                      if (selectedEndorsers.length < 5) {
-                        setIsPopupOpen(true);
-                      }
-                    }}
-                    onClose={() => setIsPopupOpen(false)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={t("openingDetails.endorsers.search")}
-                        variant="outlined"
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {loadingColleagues ? (
-                                <CircularProgress color="inherit" size={20} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                        helperText={
-                          selectedEndorsers.length >= 5
-                            ? t("openingDetails.endorsers.maxReached")
-                            : t("openingDetails.endorsers.remaining", {
-                                count: 5 - selectedEndorsers.length,
-                              })
-                        }
-                      />
-                    )}
-                    onChange={(_, value) => {
-                      if (value.length <= 5) {
-                        setSelectedEndorsers(value);
-                        setColleagueSearchInput("");
-                        setIsPopupOpen(false);
-                      }
-                    }}
-                    sx={{ mb: 2 }}
+              opening.is_appliable ? (
+                <>
+                  <input
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    id="resume-file"
+                    type="file"
+                    onChange={handleFileChange}
                   />
-                </Box>
+                  <label htmlFor="resume-file">
+                    <Button
+                      component="span"
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                      disabled={uploading}
+                    >
+                      {resumeFile
+                        ? t("openingDetails.resumeSelected", {
+                            name: resumeFile.name,
+                          })
+                        : t("openingDetails.selectResume")}
+                    </Button>
+                  </label>
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={handleApply}
-                  fullWidth
-                  disabled={!resumeFile || uploading}
+                  {/* Endorsers Section */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {t("openingDetails.endorsers.title")}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2 }}
+                    >
+                      {t("openingDetails.endorsers.description")}
+                    </Typography>
+
+                    <Autocomplete
+                      multiple
+                      id="endorsers-autocomplete"
+                      options={colleagueOptions}
+                      value={selectedEndorsers}
+                      loading={loadingColleagues}
+                      disabled={uploading}
+                      inputValue={colleagueSearchInput}
+                      onInputChange={(event, newValue, reason) => {
+                        if (selectedEndorsers.length < 5) {
+                          setColleagueSearchInput(newValue);
+                        }
+                      }}
+                      getOptionLabel={(option) =>
+                        `${option.name} (@${option.handle})`
+                      }
+                      isOptionEqualToValue={(option, value) =>
+                        option.handle === value.handle
+                      }
+                      open={
+                        isPopupOpen &&
+                        selectedEndorsers.length < 5 &&
+                        colleagueOptions.length > 0
+                      }
+                      onOpen={() => {
+                        if (selectedEndorsers.length < 5) {
+                          setIsPopupOpen(true);
+                        }
+                      }}
+                      onClose={() => setIsPopupOpen(false)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={t("openingDetails.endorsers.search")}
+                          variant="outlined"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {loadingColleagues ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                          helperText={
+                            selectedEndorsers.length >= 5
+                              ? t("openingDetails.endorsers.maxReached")
+                              : t("openingDetails.endorsers.remaining", {
+                                  count: 5 - selectedEndorsers.length,
+                                })
+                          }
+                        />
+                      )}
+                      onChange={(_, value) => {
+                        if (value.length <= 5) {
+                          setSelectedEndorsers(value);
+                          setColleagueSearchInput("");
+                          setIsPopupOpen(false);
+                        }
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                  </Box>
+
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={handleApply}
+                    fullWidth
+                    disabled={!resumeFile || uploading}
+                  >
+                    {uploading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      t("openingDetails.apply")
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Typography
+                  variant="body1"
+                  color="error"
+                  align="center"
+                  sx={{ mb: 2 }}
                 >
-                  {uploading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    t("openingDetails.apply")
-                  )}
-                </Button>
-              </>
+                  {t("openingDetails.cannotApply")}
+                </Typography>
+              )
             ) : (
               <Typography
                 variant="body1"

@@ -46,7 +46,24 @@ func (p *PG) GetHubOpeningDetails(
 			AND d.domain_name = $2
 	)
 	SELECT
-		od.*,
+		od.opening_id_within_company,
+		od.company_domain,
+		od.company_name,
+		od.job_title,
+		od.jd,
+		od.opening_type,
+		od.yoe_min,
+		od.yoe_max,
+		od.min_education_level,
+		od.salary_min,
+		od.salary_max,
+		od.salary_currency,
+		od.created_at,
+		od.pagination_key,
+		od.state,
+		od.hiring_manager_name,
+		od.hiring_manager_vetchi_handle,
+		od.recruiter_name,
 		can_apply($3::uuid, od.employer_id, od.opening_id_within_company) as is_appliable
 	FROM opening_details od
 `
