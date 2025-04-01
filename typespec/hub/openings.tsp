@@ -87,10 +87,9 @@ model HubOpeningDetails {
     company_name: string;
     created_at: utcDateTime;
     education_level: EducationLevel;
-    yoe_min: integer;
-    yoe_max: integer;
     hiring_manager_name: string;
     hiring_manager_vetchi_handle?: string; // TODO: Not done yet
+    is_appliable: boolean;
     jd: string;
     job_title: string;
     opening_id_within_company: string;
@@ -99,6 +98,8 @@ model HubOpeningDetails {
     recruiter_name: string;
     salary?: Salary;
     state: OpeningState;
+    yoe_max: integer;
+    yoe_min: integer;
 }
 
 model ApplyForOpeningRequest {

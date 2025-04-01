@@ -50,10 +50,9 @@ export interface HubOpeningDetails {
   company_name: string;
   created_at: EpochTimeStamp;
   education_level: EducationLevel;
-  yoe_min: number;
-  yoe_max: number;
   hiring_manager_name: string;
   hiring_manager_vetchi_handle?: string;
+  is_appliable: boolean;
   jd: string;
   job_title: string;
   opening_id_within_company: string;
@@ -62,6 +61,8 @@ export interface HubOpeningDetails {
   recruiter_name: string;
   salary?: Salary;
   state: OpeningState;
+  yoe_max: number;
+  yoe_min: number;
 }
 
 export interface ApplyForOpeningRequest {
