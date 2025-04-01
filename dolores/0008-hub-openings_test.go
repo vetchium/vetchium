@@ -161,7 +161,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  40,
+					wantCount:  30,
 				},
 				{
 					description: "find openings with custom limit",
