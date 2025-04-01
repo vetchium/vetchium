@@ -15,7 +15,7 @@ import (
 	"github.com/psankar/vetchi/typespec/hub"
 )
 
-var _ = FDescribe("Achievements", Ordered, func() {
+var _ = Describe("Achievements", Ordered, func() {
 	var db *pgxpool.Pool
 	var addUserToken, listUserToken, deleteUserToken, flowUserToken, secondUserToken string
 	var adminOrgToken string
