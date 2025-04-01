@@ -300,10 +300,10 @@ var _ = FDescribe("Achievements", Ordered, func() {
 							achievement.Title,
 						).Should(Equal("Machine Learning Patent"))
 						Expect(
-							achievement.Description,
+							*achievement.Description,
 						).Should(Equal("A patent for innovative ML algorithms"))
 						Expect(
-							achievement.URL,
+							*achievement.URL,
 						).Should(Equal("https://patent.example.com/ml-innovation"))
 						Expect(achievement.At).ShouldNot(BeNil())
 					},
