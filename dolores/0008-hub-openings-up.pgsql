@@ -142,18 +142,12 @@ VALUES
 
 -- Create org users for each employer
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
-SELECT
-    gen_random_uuid(),
-    'admin@' || d.domain_name,
-    'Admin User',
-    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
-    ARRAY['ADMIN']::org_user_roles[],
-    'ACTIVE_ORG_USER',
-    e.id,
-    timezone('UTC'::text, now())
-FROM employers e
-JOIN employer_primary_domains epd ON e.id = epd.employer_id
-JOIN domains d ON epd.domain_id = d.id;
+VALUES
+    (gen_random_uuid(), 'admin@hubopening1.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'admin@hubopening2.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'admin@hubopening3.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'admin@hubopening4.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'admin@hubopening5.example', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now()));
 
 -- Create locations for each employer
 INSERT INTO locations (id, title, country_code, postal_address, postal_code, city_aka, location_state, employer_id, created_at)
@@ -179,14 +173,12 @@ VALUES
 
 -- Create cost centers for each employer
 INSERT INTO org_cost_centers (id, cost_center_name, cost_center_state, notes, employer_id, created_at)
-SELECT
-    gen_random_uuid(),
-    'Engineering',
-    'ACTIVE_CC',
-    'Engineering department',
-    id,
-    timezone('UTC'::text, now())
-FROM employers;
+VALUES
+    (gen_random_uuid(), 'Engineering', 'ACTIVE_CC', 'Engineering department', '12345678-0008-0008-0008-000000000201'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'Engineering', 'ACTIVE_CC', 'Engineering department', '12345678-0008-0008-0008-000000000202'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'Engineering', 'ACTIVE_CC', 'Engineering department', '12345678-0008-0008-0008-000000000203'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'Engineering', 'ACTIVE_CC', 'Engineering department', '12345678-0008-0008-0008-000000000204'::uuid, timezone('UTC'::text, now())),
+    (gen_random_uuid(), 'Engineering', 'ACTIVE_CC', 'Engineering department', '12345678-0008-0008-0008-000000000205'::uuid, timezone('UTC'::text, now()));
 
 -- Create openings for each employer
 -- Company 1: Focus on software engineering roles
@@ -228,8 +220,8 @@ SELECT
         WHEN 2 THEN 3
     END,
     'Looking for talented engineers...',
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000201'::uuid LIMIT 1),
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000201'::uuid LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening1.example' LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening1.example' LIMIT 1),
     (SELECT id FROM org_cost_centers WHERE employer_id = '12345678-0008-0008-0008-000000000201'::uuid LIMIT 1),
     'FULL_TIME_OPENING',
     CASE (generate_series % 3)
@@ -292,8 +284,8 @@ SELECT
         WHEN 2 THEN 3
     END,
     'Join our data science team...',
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000202'::uuid LIMIT 1),
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000202'::uuid LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening2.example' LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening2.example' LIMIT 1),
     (SELECT id FROM org_cost_centers WHERE employer_id = '12345678-0008-0008-0008-000000000202'::uuid LIMIT 1),
     'FULL_TIME_OPENING',
     CASE (generate_series % 3)
@@ -356,8 +348,8 @@ SELECT
         WHEN 2 THEN 3
     END,
     'Join our product team...',
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
-    (SELECT id FROM org_users WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening3.example' LIMIT 1),
+    (SELECT id FROM org_users WHERE email = 'admin@hubopening3.example' LIMIT 1),
     (SELECT id FROM org_cost_centers WHERE employer_id = '12345678-0008-0008-0008-000000000203'::uuid LIMIT 1),
     'FULL_TIME_OPENING',
     CASE (generate_series % 3)
@@ -388,7 +380,11 @@ SELECT
     o.id,
     l.id
 FROM openings o
-CROSS JOIN locations l
-WHERE o.employer_id = l.employer_id;
+JOIN locations l ON o.employer_id = l.employer_id
+WHERE o.employer_id IN (
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid
+);
 
 COMMIT;

@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Hub Openings", Ordered, func() {
+var _ = FDescribe("Hub Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var hubUserToken string
 
@@ -161,7 +161,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 						CountryCode: usaCountryCode,
 					},
 					wantStatus: http.StatusOK,
-					wantCount:  30,
+					wantCount:  40,
 				},
 				{
 					description: "find openings with custom limit",

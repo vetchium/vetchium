@@ -3,29 +3,41 @@ BEGIN;
 -- Delete opening locations
 DELETE FROM opening_locations
 WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000000205'::uuid
 );
 
 -- Delete openings
 DELETE FROM openings
 WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000000205'::uuid
 );
 
 -- Delete locations
 DELETE FROM locations
 WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000000205'::uuid
 );
 
 -- Delete org_cost_centers
 DELETE FROM org_cost_centers
 WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000000205'::uuid
 );
 
 -- Delete org_user_tokens
@@ -33,40 +45,52 @@ DELETE FROM org_user_tokens
 WHERE org_user_id IN (
     SELECT id FROM org_users
     WHERE employer_id IN (
-        SELECT id FROM employers
-        WHERE onboard_admin_email LIKE '%@hubopening%.example'
+        '12345678-0008-0008-0008-000000000201'::uuid,
+        '12345678-0008-0008-0008-000000000202'::uuid,
+        '12345678-0008-0008-0008-000000000203'::uuid,
+        '12345678-0008-0008-0008-000000000204'::uuid,
+        '12345678-0008-0008-0008-000000000205'::uuid
     )
 );
 
--- Delete org_users more precisely
+-- Delete org_users
 DELETE FROM org_users
 WHERE email IN (
-    SELECT 'admin@' || d.domain_name
-    FROM employers e
-    JOIN employer_primary_domains epd ON e.id = epd.employer_id
-    JOIN domains d ON epd.domain_id = d.id
-    WHERE e.onboard_admin_email LIKE '%@hubopening%.example'
-);
-
--- Delete org_users by employer_id as a fallback
-DELETE FROM org_users
-WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    'admin@hubopening1.example',
+    'admin@hubopening2.example',
+    'admin@hubopening3.example',
+    'admin@hubopening4.example',
+    'admin@hubopening5.example'
 );
 
 -- Delete employer_primary_domains
 DELETE FROM employer_primary_domains
 WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+    '12345678-0008-0008-0008-000000000201'::uuid,
+    '12345678-0008-0008-0008-000000000202'::uuid,
+    '12345678-0008-0008-0008-000000000203'::uuid,
+    '12345678-0008-0008-0008-000000000204'::uuid,
+    '12345678-0008-0008-0008-000000000205'::uuid
 );
 
 -- Delete domains
 DELETE FROM domains
-WHERE employer_id IN (
-    SELECT id FROM employers
-    WHERE onboard_admin_email LIKE '%@hubopening%.example'
+WHERE id IN (
+    '12345678-0008-0008-0008-000000003001'::uuid,
+    '12345678-0008-0008-0008-000000003002'::uuid,
+    '12345678-0008-0008-0008-000000003003'::uuid,
+    '12345678-0008-0008-0008-000000003004'::uuid,
+    '12345678-0008-0008-0008-000000003005'::uuid,
+    '12345678-0008-0008-0008-000000003006'::uuid,
+    '12345678-0008-0008-0008-000000003007'::uuid,
+    '12345678-0008-0008-0008-000000003008'::uuid,
+    '12345678-0008-0008-0008-000000003009'::uuid,
+    '12345678-0008-0008-0008-000000003010'::uuid,
+    '12345678-0008-0008-0008-000000003011'::uuid,
+    '12345678-0008-0008-0008-000000003012'::uuid,
+    '12345678-0008-0008-0008-000000003013'::uuid,
+    '12345678-0008-0008-0008-000000003014'::uuid,
+    '12345678-0008-0008-0008-000000003015'::uuid
 );
 
 -- Delete employers
@@ -92,8 +116,9 @@ WHERE email_key IN (
 -- Delete hub user tokens
 DELETE FROM hub_user_tokens
 WHERE hub_user_id IN (
-    SELECT id FROM hub_users
-    WHERE email = 'hubopening@hub.example'
+    '12345678-0008-0008-0008-000000050001'::uuid,
+    '12345678-0008-0008-0008-000000050002'::uuid,
+    '12345678-0008-0008-0008-000000050003'::uuid
 );
 
 -- Delete hub users
