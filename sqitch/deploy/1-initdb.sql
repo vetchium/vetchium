@@ -148,6 +148,11 @@ CREATE TABLE employers (
     --- This is the rowid in the 'emails' table for the welcome email sent.
     onboard_email_id UUID REFERENCES emails(email_key),
 
+    -- Number of days an applicant must wait before applying again after a candidacy
+    -- A value of 0 means no cool-off period
+    cool_off_period_days INTEGER NOT NULL DEFAULT 60,
+    CONSTRAINT positive_cool_off_period CHECK (cool_off_period_days >= 0),
+
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
@@ -925,5 +930,104 @@ INSERT INTO application_scoring_models (model_name, description, is_active)
 VALUES
     ('sentence-transformers-all-MiniLM-L6-v2', 'Sentence Transformer model (all-MiniLM-L6-v2)', TRUE),
     ('tfidf-1.0', 'TF-IDF vectorizer model', TRUE);
+
+-- Function: can_apply
+--
+-- Purpose:
+-- Determines whether a hub user can apply to a specific opening based on their application history
+-- with the employer and the employer's cool-off period policy.
+--
+-- Arguments:
+-- p_hub_user_id: The UUID of the hub user wanting to apply
+-- p_employer_id: The UUID of the employer offering the opening
+-- p_opening_id: The ID of the opening the user wants to apply to
+--
+-- Returns:
+-- BOOLEAN: TRUE if the user can apply, FALSE otherwise
+--
+-- Application Rules:
+-- 1. Active Applications:
+--    - A user cannot apply if they have any active (not rejected/shortlisted) applications
+--      for any opening at the same employer
+--
+-- 2. Previous Applications:
+--    - A user can NEVER reapply to an opening they have previously applied to
+--    - For different openings at the same employer:
+--      a) If previous applications were only rejected at APPLICATION stage, user can apply immediately
+--      b) If any application became a CANDIDACY, user must wait for cool-off period before applying
+--
+-- 3. Cool-off Period:
+--    - Applies when a user's application was shortlisted into a candidacy
+--    - The period starts from the application creation date
+--    - The duration is configurable per employer (cool_off_period_days)
+--    - Can be disabled by setting cool_off_period_days to 0
+--
+-- Usage Example:
+-- SELECT can_apply('hub-user-uuid', 'employer-uuid', 'opening-id');
+--
+CREATE OR REPLACE FUNCTION can_apply(
+    p_hub_user_id UUID,
+    p_employer_id UUID,
+    p_opening_id TEXT
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_cool_off_period INTEGER;
+    v_has_active_application BOOLEAN;
+    v_has_previous_application BOOLEAN;
+    v_last_candidacy_date TIMESTAMP WITH TIME ZONE;
+BEGIN
+    -- Get employer's cool-off period
+    SELECT cool_off_period_days INTO v_cool_off_period
+    FROM employers
+    WHERE id = p_employer_id;
+
+    -- Check for any active applications at this employer
+    SELECT EXISTS (
+        SELECT 1
+        FROM applications a
+        WHERE a.hub_user_id = p_hub_user_id
+        AND a.employer_id = p_employer_id
+        AND a.application_state NOT IN ('REJECTED', 'SHORTLISTED', 'WITHDRAWN', 'EXPIRED')
+    ) INTO v_has_active_application;
+
+    IF v_has_active_application THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if user has ever applied to this opening before
+    SELECT EXISTS (
+        SELECT 1
+        FROM applications a
+        WHERE a.hub_user_id = p_hub_user_id
+        AND a.employer_id = p_employer_id
+        AND a.opening_id = p_opening_id
+    ) INTO v_has_previous_application;
+
+    IF v_has_previous_application THEN
+        RETURN FALSE;
+    END IF;
+
+    -- If cool-off period is 0, remaining checks are not needed
+    IF v_cool_off_period = 0 THEN
+        RETURN TRUE;
+    END IF;
+
+    -- Check if user has any candidacy within the cool-off period
+    SELECT MAX(a.created_at)
+    INTO v_last_candidacy_date
+    FROM applications a
+    JOIN candidacies c ON a.id = c.application_id
+    WHERE a.hub_user_id = p_hub_user_id
+    AND a.employer_id = p_employer_id;
+
+    -- If no previous candidacy exists, user can apply
+    IF v_last_candidacy_date IS NULL THEN
+        RETURN TRUE;
+    END IF;
+
+    -- Check if cool-off period has expired
+    RETURN v_last_candidacy_date < (NOW() - (v_cool_off_period || ' days')::INTERVAL);
+END;
+$$ LANGUAGE plpgsql;
 
 COMMIT;
