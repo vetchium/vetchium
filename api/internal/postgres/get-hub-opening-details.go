@@ -14,46 +14,61 @@ func (p *PG) GetHubOpeningDetails(
 	req hub.GetHubOpeningDetailsRequest,
 ) (hub.HubOpeningDetails, error) {
 	query := `
+	WITH opening_details AS (
+		SELECT
+			o.id as opening_id_within_company,
+			o.employer_id,
+			d.domain_name as company_domain,
+			e.company_name as company_name,
+			o.title as job_title,
+			o.jd as jd,
+			o.opening_type,
+			o.yoe_min,
+			o.yoe_max,
+			o.min_education_level,
+			o.salary_min,
+			o.salary_max,
+			o.salary_currency,
+			o.created_at,
+			o.pagination_key,
+			o.state,
+			hm.name as hiring_manager_name,
+			hu_hm.handle as hiring_manager_vetchi_handle,
+			r.name as recruiter_name
+		FROM openings o
+			JOIN employers e ON o.employer_id = e.id
+			JOIN domains d ON d.employer_id = e.id
+			LEFT JOIN org_users hm ON o.hiring_manager = hm.id
+			LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
+			LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
+			LEFT JOIN org_users r ON o.recruiter = r.id
+		WHERE o.id = $1
+			AND d.domain_name = $2
+	)
 	SELECT
-		o.id as opening_id_within_company,
-		d.domain_name as company_domain,
-		e.company_name as company_name,
-		o.title as job_title,
-		o.jd as jd,
-		o.opening_type,
-		o.yoe_min,
-		o.yoe_max,
-		o.min_education_level,
-		o.salary_min,
-		o.salary_max,
-		o.salary_currency,
-		o.created_at,
-		o.pagination_key,
-		o.state,
-		hm.name as hiring_manager_name,
-		hu_hm.handle as hiring_manager_vetchi_handle,
-		r.name as recruiter_name
-	FROM openings o
-		JOIN employers e ON o.employer_id = e.id
-		JOIN domains d ON d.employer_id = e.id
-		LEFT JOIN org_users hm ON o.hiring_manager = hm.id
-		LEFT JOIN hub_users_official_emails hue_hm ON hm.email = hue_hm.official_email
-		LEFT JOIN hub_users hu_hm ON hue_hm.hub_user_id = hu_hm.id
-		LEFT JOIN org_users r ON o.recruiter = r.id
-	WHERE o.id = $1
-		AND d.domain_name = $2
+		od.*,
+		can_apply($3::uuid, od.employer_id, od.opening_id_within_company) as is_appliable
+	FROM opening_details od
 `
+
+	// Get hub user ID
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get hubUserID", "error", err)
+		return hub.HubOpeningDetails{}, err
+	}
 
 	var details hub.HubOpeningDetails
 	var salaryMin, salaryMax *float64
 	var salaryCurrency *string
 	var hiringManagerHandle *string
 
-	err := p.pool.QueryRow(
+	err = p.pool.QueryRow(
 		ctx,
 		query,
 		req.OpeningIDWithinCompany,
 		req.CompanyDomain,
+		hubUserID,
 	).Scan(
 		&details.OpeningIDWithinCompany,
 		&details.CompanyDomain,
@@ -73,6 +88,7 @@ func (p *PG) GetHubOpeningDetails(
 		&details.HiringManagerName,
 		&hiringManagerHandle,
 		&details.RecruiterName,
+		&details.IsAppliable,
 	)
 
 	if err != nil {

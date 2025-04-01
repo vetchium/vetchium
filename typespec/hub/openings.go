@@ -58,10 +58,9 @@ type HubOpeningDetails struct {
 	CompanyName               string                `json:"company_name"`
 	CreatedAt                 time.Time             `json:"created_at"`
 	EducationLevel            common.EducationLevel `json:"education_level"`
-	YoeMin                    int                   `json:"yoe_min"`
-	YoeMax                    int                   `json:"yoe_max"`
 	HiringManagerName         string                `json:"hiring_manager_name"`
 	HiringManagerVetchiHandle *string               `json:"hiring_manager_vetchi_handle"`
+	IsAppliable               bool                  `json:"is_appliable"`
 	JD                        string                `json:"jd"`
 	JobTitle                  string                `json:"job_title"`
 	OpeningIDWithinCompany    string                `json:"opening_id_within_company"`
@@ -70,6 +69,8 @@ type HubOpeningDetails struct {
 	RecruiterName             string                `json:"recruiter_name"`
 	Salary                    *common.Salary        `json:"salary"`
 	State                     common.OpeningState   `json:"state"`
+	YoeMax                    int                   `json:"yoe_max"`
+	YoeMin                    int                   `json:"yoe_min"`
 }
 
 type ApplyForOpeningRequest struct {
