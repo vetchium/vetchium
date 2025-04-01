@@ -195,6 +195,11 @@ WITH inserted_applications AS (
         'sha-sha-sha',
         timezone('UTC'::text, now())
     FROM openings o
+    WHERE o.employer_id IN (
+        '12345678-0013-0013-0013-000000000201'::uuid,
+        '12345678-0013-0013-0013-000000000202'::uuid,
+        '12345678-0013-0013-0013-000000000203'::uuid
+    )
     RETURNING id, employer_id, opening_id
 )
 INSERT INTO candidacies (
