@@ -117,6 +117,12 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 				return
 			}
 
+			if errors.Is(err, db.ErrCannotApply) {
+				h.Dbg("user cannot apply to this opening", "error", err)
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Err("failed to create application", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

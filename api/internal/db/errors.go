@@ -95,4 +95,6 @@ var (
 	ErrNoEducation = errors.New("education not found")
 
 	ErrNoAchievement = errors.New("achievement not found")
+
+	ErrCannotApply = errors.New("user cannot apply to this opening")
 )

@@ -29,6 +29,47 @@ func (p *PG) CreateApplication(
 	}
 	defer tx.Rollback(context.Background())
 
+	// First, check if the user can apply to this opening
+	// We do this inside the transaction and with FOR UPDATE to ensure thread safety
+	var canApply bool
+	err = tx.QueryRow(ctx, `
+		WITH employer AS (
+			SELECT employer_id
+			FROM domains
+			WHERE domain_name = $1
+		),
+		opening AS (
+			SELECT id, employer_id
+			FROM openings
+			WHERE id = $2
+				AND employer_id = (SELECT employer_id FROM employer)
+		),
+		-- Lock only this user's applications for this employer
+		user_applications AS (
+			SELECT 1
+			FROM applications
+			WHERE hub_user_id = $3
+				AND employer_id = (SELECT employer_id FROM employer)
+			FOR UPDATE
+		)
+		SELECT can_apply($3::uuid, (SELECT employer_id FROM employer), $2)
+		WHERE EXISTS (SELECT 1 FROM opening)
+	`, req.CompanyDomain, req.OpeningIDWithinCompany, hubUser.ID).Scan(&canApply)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("either domain or opening does not exist", "error", err)
+			return db.ErrNoOpening
+		}
+		p.log.Err("failed to check if user can apply", "error", err)
+		return db.ErrInternal
+	}
+
+	if !canApply {
+		p.log.Dbg("user cannot apply to this opening")
+		return db.ErrCannotApply
+	}
+
 	// Validate endorsers are colleagues (if any)
 	if len(req.EndorserHandles) > 0 {
 		// Check if all endorsers are colleagues
