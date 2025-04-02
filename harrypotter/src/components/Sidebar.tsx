@@ -1,5 +1,12 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import BusinessIcon from "@mui/icons-material/Business";
+import HomeIcon from "@mui/icons-material/Home";
+import PeopleIcon from "@mui/icons-material/People";
+import SettingsIcon from "@mui/icons-material/Settings";
+import WorkIcon from "@mui/icons-material/Work";
 import {
   Box,
   Drawer,
@@ -8,16 +15,10 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useTheme,
   styled,
+  useTheme,
 } from "@mui/material";
-import { useRouter, usePathname } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import HomeIcon from "@mui/icons-material/Home";
-import WorkIcon from "@mui/icons-material/Work";
-import BusinessIcon from "@mui/icons-material/Business";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import PeopleIcon from "@mui/icons-material/People";
+import { usePathname, useRouter } from "next/navigation";
 
 const drawerWidth = 240;
 
@@ -52,6 +53,11 @@ export default function Sidebar({ open }: SidebarProps) {
       text: t("orgUsers.title"),
       icon: <PeopleIcon />,
       path: "/org-users",
+    },
+    {
+      text: t("common.settings"),
+      icon: <SettingsIcon />,
+      path: "/settings",
     },
   ];
 

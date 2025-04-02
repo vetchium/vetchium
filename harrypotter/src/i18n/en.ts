@@ -9,6 +9,7 @@ export const en = {
     retry: "Retry",
     costCenters: "Cost Centers",
     locations: "Locations",
+    settings: "Settings",
     actions: "Actions",
     add: "Add",
     save: "Save",
@@ -488,6 +489,19 @@ export const en = {
       error: {
         fetchFailed: "Failed to fetch certifications",
       },
+    },
+  },
+  settings: {
+    title: "Settings",
+    coolOffPeriod: {
+      title: "Cool-off Period",
+      description:
+        "Set the cool-off period in days for candidates who have been rejected",
+      current: "Current cool-off period: {{days}} days",
+      update: "Update Cool-off Period",
+      success: "Cool-off period updated successfully",
+      error: "Failed to update cool-off period",
+      fetchError: "Failed to fetch cool-off period",
     },
   },
 };

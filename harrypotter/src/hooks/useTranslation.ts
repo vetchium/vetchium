@@ -1,16 +1,26 @@
 import { en } from "@/i18n/en";
 import { useCallback } from "react";
 
-type TranslationObject = {
+interface TranslationObject {
   [key: string]: string | TranslationObject;
-};
+}
+
+type TranslationParams = Record<string, string | number>;
 
 export function useTranslation() {
-  const t = useCallback((key: string): string => {
+  const t = useCallback((key: string, params?: TranslationParams): string => {
     // First try direct access with the full key
     if ((en as TranslationObject)[key] !== undefined) {
       const value = (en as TranslationObject)[key];
-      if (typeof value === "string") return value;
+      if (typeof value === "string") {
+        if (params) {
+          return Object.entries(params).reduce(
+            (str, [key, value]) => str.replace(`{${key}}`, String(value)),
+            value
+          );
+        }
+        return value;
+      }
       console.warn(`Translation key ${key} points to an object, not a string`);
       return key;
     }
@@ -30,6 +40,13 @@ export function useTranslation() {
     if (typeof value !== "string") {
       console.warn(`Translation key ${key} points to an object, not a string`);
       return key;
+    }
+
+    if (params) {
+      return Object.entries(params).reduce(
+        (str, [key, value]) => str.replace(`{${key}}`, String(value)),
+        value
+      );
     }
 
     return value;
