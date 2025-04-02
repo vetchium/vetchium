@@ -1,0 +1,23 @@
+import "@typespec/openapi3";
+
+import "../common/common.tsp";
+import "../common/achievements.tsp";
+
+using TypeSpec.Http;
+using TypeSpec.Rest;
+
+namespace Vetchi;
+
+model ChangeCoolOffPeriodRequest {
+    @doc("The new cool off period in days. Should be done by users with the role of an admin.")
+    @minValue(0)
+    @maxValue(365)
+    coolOffPeriod: int32;
+}
+
+@route("/employer/change-cool-off-period")
+interface ChangeCoolOffPeriod {
+    @post
+    @useAuth(EmployerAuth)
+    changeCoolOffPeriod(@body request: ChangeCoolOffPeriodRequest): void;
+}

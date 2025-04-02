@@ -31,3 +31,4 @@ export * from "./employer/locations";
 export * from "./employer/openings";
 export * from "./employer/orgusers";
 export * from "./employer/profilepage";
+export * from "./employer/settings";

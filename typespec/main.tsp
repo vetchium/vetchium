@@ -13,6 +13,7 @@ import "./employer/locations.tsp";
 import "./employer/openings.tsp";
 import "./employer/orgusers.tsp";
 import "./employer/profilepage.tsp";
+import "./employer/settings.tsp";
 
 import "./hub/achievements.tsp";
 import "./hub/applications.tsp";
