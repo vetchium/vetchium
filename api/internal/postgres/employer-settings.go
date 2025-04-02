@@ -19,14 +19,16 @@ func (pg *PG) ChangeCoolOffPeriod(
 
 	// TODO: Audit logs
 	_, err := pg.pool.Exec(ctx, `
-		UPDATE employer_settings
-		SET cool_off_period = $1
-		WHERE employer_id = $2
+		UPDATE employers
+		SET cool_off_period_days = $1
+		WHERE id = $2
 	`, coolOffPeriod, orgUser.EmployerID)
 	if err != nil {
 		pg.log.Err("failed to change cool off period", "error", err)
 		return err
 	}
+
+	pg.log.Dbg("cool off period changed", "cool off period", coolOffPeriod)
 
 	return nil
 }
@@ -40,8 +42,8 @@ func (pg *PG) GetCoolOffPeriod(ctx context.Context) (int32, error) {
 
 	var period int32
 	err := pg.pool.QueryRow(ctx, `
-		SELECT cool_off_period FROM employer_settings
-		WHERE employer_id = $1
+		SELECT cool_off_period_days FROM employers
+		WHERE id = $1
 	`, orgUser.EmployerID).Scan(&period)
 	return period, err
 }

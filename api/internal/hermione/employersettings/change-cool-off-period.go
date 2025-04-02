@@ -24,13 +24,14 @@ func ChangeCoolOffPeriod(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		err := h.DB().ChangeCoolOffPeriod(r.Context(), req.CoolOffPeriod)
+		err := h.DB().ChangeCoolOffPeriod(r.Context(), req.CoolOffPeriodDays)
 		if err != nil {
 			h.Dbg("failed to change cool off period", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
+		h.Dbg("cool off period changed", "days", req.CoolOffPeriodDays)
 		w.WriteHeader(http.StatusOK)
 	}
 }

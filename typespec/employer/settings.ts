@@ -1,3 +1,3 @@
 export interface ChangeCoolOffPeriodRequest {
-  coolOffPeriod: number;
+  cool_off_period_days: number;
 }

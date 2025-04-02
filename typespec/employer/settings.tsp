@@ -28,6 +28,6 @@ interface GetCoolOffPeriod {
     @useAuth(EmployerAuth)
     getCoolOffPeriod(): {
         @doc("The cool off period in days")
-        coolOffPeriod: int32;
+        coolOffPeriodDays: int32;
     };
 }
