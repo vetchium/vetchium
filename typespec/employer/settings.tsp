@@ -21,3 +21,13 @@ interface ChangeCoolOffPeriod {
     @useAuth(EmployerAuth)
     changeCoolOffPeriod(@body request: ChangeCoolOffPeriodRequest): void;
 }
+
+@route("/employer/get-cool-off-period")
+interface GetCoolOffPeriod {
+    @get
+    @useAuth(EmployerAuth)
+    getCoolOffPeriod(): {
+        @doc("The cool off period in days")
+        coolOffPeriod: int32;
+    };
+}

@@ -426,4 +426,8 @@ type DB interface {
 		limit int,
 	) (*UnscoredApplicationBatch, error)
 	SaveApplicationScores(ctx context.Context, scores []ApplicationScore) error
+
+	// Employer settings
+	ChangeCoolOffPeriod(ctx context.Context, coolOffPeriod int32) error
+	GetCoolOffPeriod(ctx context.Context) (int32, error)
 }

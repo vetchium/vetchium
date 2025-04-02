@@ -9,6 +9,7 @@ import (
 	"github.com/psankar/vetchi/api/internal/hermione/costcenter"
 	"github.com/psankar/vetchi/api/internal/hermione/education"
 	ea "github.com/psankar/vetchi/api/internal/hermione/employerauth"
+	"github.com/psankar/vetchi/api/internal/hermione/employersettings"
 	he "github.com/psankar/vetchi/api/internal/hermione/hubemp"
 	"github.com/psankar/vetchi/api/internal/hermione/interview"
 	"github.com/psankar/vetchi/api/internal/hermione/locations"
@@ -373,5 +374,18 @@ func RegisterEmployerRoutes(h *Hermione) {
 		"/employer/list-hub-user-achievements",
 		achievements.ListHubUserAchievements(h),
 		[]common.OrgUserRole{common.Admin, common.ApplicationsCRUD},
+	)
+
+	// settings related endpoints
+	h.mw.Protect(
+		"/employer/change-cool-off-period",
+		employersettings.ChangeCoolOffPeriod(h),
+		[]common.OrgUserRole{common.Admin},
+	)
+
+	h.mw.Protect(
+		"/employer/get-cool-off-period",
+		employersettings.GetCoolOffPeriod(h),
+		[]common.OrgUserRole{common.Admin},
 	)
 }

@@ -16,6 +16,7 @@
 - [x] Interviews - Scheduling, RSVPs
 - [x] Candidacy state changes after Interviews
 - [x] Rudimentary scoring of Applicants
+- [x] Achievements - Patents, Posts, Certifications
 
 # Features needed before launch
 
@@ -27,11 +28,11 @@
 - [] Scoring of match for Applicants that is beyond just text compare !?
 - [] Academia support to add educational institutions, degrees, etc.
 - [] Certifications
-- [] Patents, Publications
 - [] Posts, Timelines and Follows !?
 - [] VibeCheck for posts
 - [] Bulk load of employer (F500+ more) names & domains from a configmap !? Or should we seed in the db ?!
 - [] Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too.
+- [] Audit logs
 
 # Future Features
 
