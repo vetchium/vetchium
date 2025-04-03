@@ -120,6 +120,8 @@ type HubSeedUser struct {
 	// TODO: Find out how we can efficiently populate these
 	Endorsers             []common.Handle
 	ApplyToCompanyDomains []string
+
+	Achievements []hub.AddAchievementRequest
 }
 
 var firstNames = []string{

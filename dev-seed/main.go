@@ -53,6 +53,8 @@ func main() {
 	addOfficialEmails()
 	color.Cyan("Uploading profile pictures")
 	uploadHubUserProfilePictures()
+	color.Cyan("Create Achievements for Hub Users")
+	createAchievements()
 
 	// Initialize the PDF directory for resumes
 	color.Cyan("Initializing PDF directory for resumes")
