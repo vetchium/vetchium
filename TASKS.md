@@ -33,6 +33,7 @@
 - [] Bulk load of employer (F500+ more) names & domains from a configmap !? Or should we seed in the db ?!
 - [] Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too.
 - [] Audit logs
+- [] Introductory videos for Employer as well as the Product
 
 # Future Features
 
