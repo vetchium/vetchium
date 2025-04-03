@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { config } from "@/config";
+import MenuIcon from "@mui/icons-material/Menu";
 import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import MenuIcon from "@mui/icons-material/Menu";
-import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -20,6 +21,68 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [userHandle, setUserHandle] = useState<string | null>(null);
+  const [profilePicUrl, setProfilePicUrl] = useState<string | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    const fetchHandle = async () => {
+      try {
+        const sessionToken = Cookies.get("session_token");
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/get-my-handle`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setUserHandle(data.handle);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user handle:", error);
+      }
+    };
+    fetchHandle();
+  }, []);
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!userHandle) return;
+
+      try {
+        const sessionToken = Cookies.get("session_token");
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/profile-picture/${userHandle}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setProfilePicUrl(url);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile picture:", error);
+      }
+    };
+
+    fetchProfilePicture();
+
+    // Cleanup function to revoke the blob URL
+    return () => {
+      if (profilePicUrl) {
+        URL.revokeObjectURL(profilePicUrl);
+      }
+    };
+  }, [userHandle]);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -79,8 +142,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
             aria-haspopup="true"
             onClick={handleMenu}
             color="inherit"
+            sx={{ padding: 0.5 }}
           >
-            <Avatar />
+            <Avatar src={profilePicUrl} sx={{ width: 40, height: 40 }} />
           </IconButton>
           <Menu
             id="menu-appbar"
