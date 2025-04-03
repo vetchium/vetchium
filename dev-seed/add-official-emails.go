@@ -19,7 +19,8 @@ import (
 
 func addOfficialEmails() {
 	var wg sync.WaitGroup
-	for _, user := range hubUsers {
+	for i := 0; i < len(hubUsers); i++ {
+		user := hubUsers[i]
 		wg.Add(1)
 		go func(user HubSeedUser) {
 			defer wg.Done()
