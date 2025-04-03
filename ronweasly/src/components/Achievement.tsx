@@ -4,23 +4,19 @@ import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import LinkIcon from "@mui/icons-material/Link";
+import EditIcon from "@mui/icons-material/Edit";
+import LaunchIcon from "@mui/icons-material/Launch";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import Link from "@mui/material/Link";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import {
   Achievement,
@@ -374,6 +370,17 @@ export function AchievementSection({
     setSelectedUrl("");
   };
 
+  const handleEdit = (achievement: Achievement) => {
+    setTitle(achievement.title);
+    setDescription(achievement.description || "");
+    setUrl(achievement.url ? achievement.url.replace(/^https?:\/\//, "") : "");
+    setDate(
+      achievement.at ? new Date(achievement.at).toISOString().split("T")[0] : ""
+    );
+    setSelectedAchievement(achievement);
+    setOpenDialog(true);
+  };
+
   return (
     <Box>
       <Box
@@ -404,217 +411,176 @@ export function AchievementSection({
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
       {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <CircularProgress />
         </Box>
-      ) : achievements.length === 0 ? (
-        <Typography sx={{ mt: 2, mb: 4, fontStyle: "italic" }}>
-          {t(`${transSection}.noEntries`)}
-        </Typography>
+      ) : !achievements || achievements.length === 0 ? (
+        <Paper
+          elevation={1}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            textAlign: "center",
+            bgcolor: "background.paper",
+            borderRadius: 2,
+          }}
+        >
+          <Typography color="text.secondary">
+            {t(`${transSection}.noEntries`)}
+          </Typography>
+        </Paper>
       ) : (
-        <Stack spacing={2} sx={{ mt: 2 }}>
+        <Stack spacing={2}>
           {achievements.map((achievement) => (
-            <Card key={achievement.id} variant="outlined">
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="h6" component="div">
-                      {achievement.title}
+            <Paper
+              key={achievement.id}
+              elevation={1}
+              sx={{
+                p: { xs: 3, sm: 4 },
+                bgcolor: (theme) =>
+                  theme.palette.mode === "light" ? "grey.50" : "grey.900",
+                borderRadius: 2,
+                transition: "all 0.2s ease-in-out",
+                border: "1px solid",
+                borderColor: "divider",
+                "&:hover": {
+                  boxShadow: (theme) => theme.shadows[2],
+                  transform: canEdit ? "translateY(-2px)" : "none",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "light" ? "#ffffff" : "grey.800",
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      color: "primary.main",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {achievement.title}
+                  </Typography>
+                  {achievement.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.primary",
+                        whiteSpace: "pre-wrap",
+                        lineHeight: 1.6,
+                        mb: achievement.url ? 2 : 0,
+                      }}
+                    >
+                      {achievement.description}
                     </Typography>
-
-                    {achievement.description && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        {achievement.description}
-                      </Typography>
-                    )}
-
-                    {achievement.at && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        {t(`${transSection}.date`)}:{" "}
-                        {formatDate(achievement.at)}
-                      </Typography>
-                    )}
-
-                    {achievement.url && (
-                      <Link
-                        href={achievement.url}
-                        target="_blank"
-                        rel="noopener"
-                        onClick={(e) => handleUrlClick(achievement.url!, e)}
-                        sx={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          mt: 1,
-                        }}
-                      >
-                        <LinkIcon fontSize="small" sx={{ mr: 0.5 }} />
-                        {t(`${transSection}.url`)}
-                      </Link>
-                    )}
-                  </Box>
-
-                  {canEdit && (
-                    <Box>
-                      <IconButton
-                        aria-label={t("achievements.actions.delete")}
-                        onClick={() => handleOpenDeleteDialog(achievement)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
+                  )}
+                  {achievement.url && (
+                    <Button
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      onClick={() => {
+                        if (achievement.url) {
+                          setSelectedUrl(achievement.url);
+                          setOpenUrlWarningDialog(true);
+                        }
+                      }}
+                      startIcon={<LaunchIcon />}
+                      sx={{
+                        mt: 1,
+                        textTransform: "none",
+                        "&:hover": {
+                          bgcolor: "primary.lighter",
+                        },
+                      }}
+                    >
+                      {t(`${transSection}.url`)}
+                    </Button>
                   )}
                 </Box>
-              </CardContent>
-            </Card>
+                {canEdit && (
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton
+                      onClick={() => handleEdit(achievement)}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        "&:hover": {
+                          bgcolor: "primary.lighter",
+                        },
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleOpenDeleteDialog(achievement)}
+                      color="error"
+                      size="small"
+                      sx={{
+                        "&:hover": {
+                          bgcolor: "error.lighter",
+                        },
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
           ))}
         </Stack>
       )}
 
-      {/* Add Dialog */}
       <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
+        open={openUrlWarningDialog}
+        onClose={() => setOpenUrlWarningDialog(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
-          {t(
-            `${transSection}.add${
-              achievementType.charAt(0) + achievementType.slice(1).toLowerCase()
-            }`
-          )}
+        <DialogTitle sx={{ color: "warning.main" }}>
+          {t("common.externalLink.warning")}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            margin="dense"
-            label={t(`${transSection}.title_field`)}
-            type="text"
-            fullWidth
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            error={!!titleError}
-            helperText={titleError}
-            required
-            sx={{ mb: 2, mt: 1 }}
-          />
-          <TextField
-            margin="dense"
-            label={t(`${transSection}.description`)}
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            error={!!descriptionError}
-            helperText={descriptionError}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t(`${transSection}.url`)}
-            value={url}
-            onChange={handleUrlChange}
-            error={!!urlError}
-            helperText={urlError}
-            sx={{ mt: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">https://</InputAdornment>
-              ),
+          <Typography>{t("common.externalLink.message")}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 2,
+              color: "text.secondary",
+              wordBreak: "break-all",
             }}
-          />
-          <TextField
-            margin="dense"
-            label={t(`${transSection}.date`)}
-            type="date"
-            fullWidth
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            error={!!dateError}
-            helperText={dateError}
-            InputLabelProps={{ shrink: true }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={isSubmitting}>
-            {t("achievements.actions.cancel")}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={isSubmitting}
-            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
-            {t("achievements.actions.save")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* URL Warning Dialog */}
-      <Dialog open={openUrlWarningDialog} onClose={handleCloseUrlWarningDialog}>
-        <DialogTitle>{t("common.warning")}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {t("common.external_url_warning")}
-            <Typography component="div" sx={{ mt: 2, wordBreak: "break-all" }}>
-              {selectedUrl}
-            </Typography>
-          </DialogContentText>
+            {selectedUrl}
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseUrlWarningDialog}>
+          <Button onClick={() => setOpenUrlWarningDialog(false)}>
             {t("common.cancel")}
           </Button>
           <Button
-            onClick={handleExternalNavigation}
+            onClick={() => {
+              window.open(selectedUrl, "_blank", "noopener,noreferrer");
+              setOpenUrlWarningDialog(false);
+            }}
             variant="contained"
             color="primary"
+            startIcon={<LaunchIcon />}
           >
             {t("common.proceed")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>{t("achievements.actions.delete")}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {t(`${transSection}.deleteConfirm`)}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} disabled={isSubmitting}>
-            {t("achievements.actions.cancel")}
-          </Button>
-          <Button
-            onClick={handleDelete}
-            color="error"
-            disabled={isSubmitting}
-            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
-          >
-            {t("achievements.actions.delete")}
           </Button>
         </DialogActions>
       </Dialog>

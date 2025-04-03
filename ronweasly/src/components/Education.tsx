@@ -601,7 +601,15 @@ export function Education({ userHandle, canEdit }: EducationProps) {
       )}
 
       {!isAddingNew && (!education || education.length === 0) ? (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
+        <Paper
+          elevation={1}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            textAlign: "center",
+            bgcolor: "background.paper",
+            borderRadius: 2,
+          }}
+        >
           <Typography color="text.secondary">
             {t("education.noEntries")}
           </Typography>
@@ -610,20 +618,59 @@ export function Education({ userHandle, canEdit }: EducationProps) {
         !isAddingNew && (
           <Stack spacing={2}>
             {education.map((entry) => (
-              <Paper key={entry.id} sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography variant="h6" gutterBottom>
+              <Paper
+                key={entry.id}
+                elevation={1}
+                sx={{
+                  p: { xs: 3, sm: 4 },
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "light" ? "grey.50" : "grey.900",
+                  borderRadius: 2,
+                  transition: "all 0.2s ease-in-out",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": {
+                    boxShadow: (theme) => theme.shadows[2],
+                    transform: canEdit ? "translateY(-2px)" : "none",
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "light" ? "#ffffff" : "grey.800",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{
+                        color: "primary.main",
+                        fontWeight: 600,
+                      }}
+                    >
                       {entry.degree || t("education.degree")}
                     </Typography>
                     <Typography
                       variant="subtitle1"
-                      color="text.secondary"
-                      gutterBottom
+                      sx={{
+                        color: "text.primary",
+                        mb: 1,
+                      }}
                     >
                       {entry.institute_domain}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                        mb: entry.description ? 2 : 0,
+                      }}
+                    >
                       {entry.start_date ? formatDate(entry.start_date) : ""}
                       {entry.start_date && entry.end_date ? " - " : ""}
                       {entry.end_date
@@ -633,24 +680,31 @@ export function Education({ userHandle, canEdit }: EducationProps) {
                         : ""}
                     </Typography>
                     {entry.description && (
-                      <Typography variant="body2" sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.primary",
+                          whiteSpace: "pre-wrap",
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {entry.description}
                       </Typography>
                     )}
                   </Box>
-                  {canEdit && entry.id && (
-                    <Box>
+                  {canEdit && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
                       <IconButton
                         onClick={() => handleDelete(entry.id!)}
                         color="error"
                         size="small"
-                        disabled={isDeleting === entry.id}
+                        sx={{
+                          "&:hover": {
+                            bgcolor: "error.lighter",
+                          },
+                        }}
                       >
-                        {isDeleting === entry.id ? (
-                          <CircularProgress size={20} />
-                        ) : (
-                          <DeleteIcon />
-                        )}
+                        <DeleteIcon />
                       </IconButton>
                     </Box>
                   )}

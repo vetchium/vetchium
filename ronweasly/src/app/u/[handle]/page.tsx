@@ -386,30 +386,43 @@ export default function UserProfilePage() {
 
   return (
     <AuthenticatedLayout>
-      <Container maxWidth="md">
-        <Box sx={{ py: 4 }}>
+      <Container maxWidth="xl">
+        <Box sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: { xs: 2, sm: 3 } }}>
               {error.message}
             </Alert>
           )}
 
-          <Box sx={{ display: "flex", gap: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: { xs: 2, sm: 3 },
+            }}
+          >
             {/* Main content */}
             <Paper
               elevation={0}
               sx={{
-                p: 4,
+                p: { xs: 3, sm: 4 },
                 borderRadius: 2,
-                bgcolor: "background.default",
+                bgcolor: "#ffffff",
                 flex: 1,
+                width: "100%",
+                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
               }}
             >
               <Box
                 sx={{
                   display: "flex",
-                  gap: 4,
-                  mb: 6,
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 2, sm: 3, md: 4 },
+                  mb: { xs: 3, sm: 4, md: 6 },
+                  alignItems: { xs: "center", sm: "flex-start" },
+                  bgcolor: "background.paper",
+                  borderRadius: 1,
+                  p: 2,
                 }}
               >
                 {/* Left column - Profile Picture */}
@@ -418,7 +431,7 @@ export default function UserProfilePage() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    flexShrink: 0,
+                    gap: 2,
                   }}
                 >
                   <ProfilePicture
@@ -431,7 +444,7 @@ export default function UserProfilePage() {
                       variant="contained"
                       color="primary"
                       onClick={() => router.push("/my-profile")}
-                      sx={{ mt: 2 }}
+                      fullWidth
                     >
                       {t("profile.editMyProfile")}
                     </Button>
@@ -440,7 +453,7 @@ export default function UserProfilePage() {
 
                 {/* Right column - Bio */}
                 {bio && (
-                  <Box sx={{ flex: 1 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -455,35 +468,35 @@ export default function UserProfilePage() {
                 )}
               </Box>
 
-              <Divider sx={{ mb: 4 }} />
+              <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
               {/* Work History section */}
-              <Box>
+              <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
                 <WorkHistory userHandle={userHandle} canEdit={false} />
               </Box>
 
-              <Divider sx={{ my: 4 }} />
+              <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
               {/* Education section */}
-              <Box>
+              <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
                 <Education userHandle={userHandle} canEdit={false} />
               </Box>
 
-              <Divider sx={{ my: 4 }} />
+              <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
               {/* Patents section */}
-              <Box>
+              <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
                 <Patents userHandle={userHandle} canEdit={false} />
               </Box>
 
-              <Divider sx={{ my: 4 }} />
+              <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
               {/* Publications section */}
-              <Box>
+              <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
                 <Publications userHandle={userHandle} canEdit={false} />
               </Box>
 
-              <Divider sx={{ my: 4 }} />
+              <Divider sx={{ my: { xs: 2, sm: 3, md: 4 } }} />
 
               {/* Certifications section */}
               <Box>
@@ -493,7 +506,13 @@ export default function UserProfilePage() {
 
             {/* Actions sidebar */}
             {!isOwnProfile && (
-              <Box sx={{ width: 280, flexShrink: 0 }}>
+              <Box
+                sx={{
+                  width: { xs: "100%", md: 280 },
+                  flexShrink: 0,
+                  order: { xs: -1, md: 2 },
+                }}
+              >
                 <Card elevation={0}>
                   <CardContent>
                     <Typography variant="h6" sx={{ mb: 2 }}>

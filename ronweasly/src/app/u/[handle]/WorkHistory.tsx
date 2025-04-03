@@ -1,26 +1,26 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import {
-  WorkHistory as WorkHistoryType,
   AddWorkHistoryRequest,
-  UpdateWorkHistoryRequest,
   DeleteWorkHistoryRequest,
   ListWorkHistoryRequest,
+  UpdateWorkHistoryRequest,
+  WorkHistory as WorkHistoryType,
 } from "@psankar/vetchi-typespec";
-import { config } from "@/config";
 import Cookies from "js-cookie";
-import { useTranslation } from "@/hooks/useTranslation";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface WorkHistoryProps {
   userHandle: string;
@@ -326,7 +326,15 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
       )}
 
       {!workHistory || workHistory.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
+        <Paper
+          elevation={1}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            textAlign: "center",
+            bgcolor: "background.paper",
+            borderRadius: 2,
+          }}
+        >
           <Typography color="text.secondary">
             {t("workHistory.noEntries")}
           </Typography>
@@ -334,33 +342,79 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
       ) : (
         <Stack spacing={2}>
           {workHistory.map((entry) => (
-            <Paper key={entry.id} sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Box>
-                  <Typography variant="h6" gutterBottom>
+            <Paper
+              key={entry.id}
+              elevation={1}
+              sx={{
+                p: { xs: 3, sm: 4 },
+                bgcolor: (theme) =>
+                  theme.palette.mode === "light" ? "grey.50" : "grey.900",
+                borderRadius: 2,
+                transition: "all 0.2s ease-in-out",
+                border: "1px solid",
+                borderColor: "divider",
+                "&:hover": {
+                  boxShadow: (theme) => theme.shadows[2],
+                  transform: canEdit ? "translateY(-2px)" : "none",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "light" ? "#ffffff" : "grey.800",
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      color: "primary.main",
+                      fontWeight: 600,
+                    }}
+                  >
                     {entry.title}
                   </Typography>
                   <Typography
                     variant="subtitle1"
-                    color="text.secondary"
-                    gutterBottom
+                    sx={{
+                      color: "text.primary",
+                      mb: 1,
+                    }}
                   >
                     {entry.employer_name || entry.employer_domain}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      mb: entry.description ? 2 : 0,
+                    }}
+                  >
                     {formatDate(entry.start_date)} -{" "}
                     {entry.end_date
                       ? formatDate(entry.end_date)
                       : t("workHistory.present")}
                   </Typography>
                   {entry.description && (
-                    <Typography variant="body2" sx={{ mt: 2 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.primary",
+                        whiteSpace: "pre-wrap",
+                        lineHeight: 1.6,
+                      }}
+                    >
                       {entry.description}
                     </Typography>
                   )}
                 </Box>
                 {canEdit && !isEditing && !isAddingNew && (
-                  <Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
                     <IconButton
                       onClick={() => {
                         setIsEditing(entry.id);
@@ -374,6 +428,11 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
                       }}
                       color="primary"
                       size="small"
+                      sx={{
+                        "&:hover": {
+                          bgcolor: "primary.lighter",
+                        },
+                      }}
                     >
                       <EditIcon />
                     </IconButton>
@@ -381,6 +440,11 @@ export function WorkHistory({ userHandle, canEdit }: WorkHistoryProps) {
                       onClick={() => handleDelete(entry.id)}
                       color="error"
                       size="small"
+                      sx={{
+                        "&:hover": {
+                          bgcolor: "error.lighter",
+                        },
+                      }}
                     >
                       <DeleteIcon />
                     </IconButton>
