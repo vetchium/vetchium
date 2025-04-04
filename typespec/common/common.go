@@ -239,7 +239,7 @@ func (roles OrgUserRoles) StringArray() []string {
 
 func (r OrgUserRole) IsValid() bool {
 	switch r {
-	case Admin, Any,
+	case Admin, AnyOrgUser,
 		ApplicationsCRUD, ApplicationsViewer,
 		CostCentersCRUD, CostCentersViewer,
 		LocationsCRUD, LocationsViewer,
@@ -269,7 +269,7 @@ const (
 	// This ANY role is not saved in database. If this role is the value for
 	// the allowedRoles in the middleware, then any OrgUser in that Org can
 	// access that route.
-	Any OrgUserRole = "ANY"
+	AnyOrgUser OrgUserRole = "ANY_ORG_USER"
 
 	ApplicationsCRUD   OrgUserRole = "APPLICATIONS_CRUD"
 	ApplicationsViewer OrgUserRole = "APPLICATIONS_VIEWER"

@@ -260,27 +260,27 @@ func RegisterEmployerRoutes(h *Hermione) {
 	h.mw.Protect(
 		"/employer/add-candidacy-comment",
 		candidacy.EmployerAddComment(h),
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 
 	h.mw.Protect(
 		"/employer/get-candidacy-comments",
 		candidacy.EmployerGetComments(h),
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 
 	h.mw.Protect(
 		"/employer/filter-candidacy-infos",
 		candidacy.FilterCandidacyInfos(h),
 		// TODO: It is unclear what roles should be required here
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 
 	h.mw.Protect(
 		"/employer/get-candidacy-info",
 		candidacy.GetEmployerCandidacyInfo(h),
 		// TODO: It is unclear what roles should be required here
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/offer-to-candidate",
@@ -309,35 +309,35 @@ func RegisterEmployerRoutes(h *Hermione) {
 	h.mw.Protect(
 		"/employer/rsvp-interview",
 		interview.EmployerRSVPInterview(h),
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/get-interviews-by-opening",
 		interview.GetInterviewsByOpening(h),
 		// TODO: It is unclear what roles should be required here
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/get-interviews-by-candidacy",
 		interview.GetEmployerInterviewsByCandidacy(h),
 		// TODO: It is unclear what roles should be required here
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/get-assessment",
 		interview.EmployerGetAssessment(h),
 		// TODO: It is unclear what roles should be required here
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/get-interview-details",
 		interview.GetInterviewDetails(h),
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 	h.mw.Protect(
 		"/employer/put-assessment",
 		interview.EmployerPutAssessment(h),
-		[]common.OrgUserRole{common.Any},
+		[]common.OrgUserRole{common.AnyOrgUser},
 	)
 
 	// Hub user profile related endpoints for employer
