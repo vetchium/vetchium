@@ -27,7 +27,7 @@ spec:
       serviceAccountName: sortinghat-sa
       containers:
         - name: sortinghat
-          image: psankar/vetchi-sortinghat
+          image: vetchium/sortinghat
           ports:
             - containerPort: 8080
           resources:

@@ -30,7 +30,7 @@ spec:
               done
       containers:
         - name: dev-seed
-          image: psankar/vetchi-dev-seed:${GIT_SHA}
+          image: vetchium/dev-seed:${GIT_SHA}
           env:
             - name: POSTGRES_URI
               valueFrom:

@@ -53,7 +53,7 @@ spec:
               done
       containers:
         - name: hermione
-          image: psankar/vetchi-hermione
+          image: vetchium/hermione
           ports:
             - containerPort: 8080
           env:

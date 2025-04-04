@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ronweasly
-          image: psankar/vetchi-ronweasly:${GIT_SHA}
+          image: vetchium/ronweasly:${GIT_SHA}
           ports:
             - containerPort: 3000
           resources:

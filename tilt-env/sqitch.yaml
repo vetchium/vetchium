@@ -25,7 +25,7 @@ spec:
               done
       containers:
         - name: sqitch
-          image: psankar/vetchi-sqitch
+          image: vetchium/sqitch
           command: ["sh", "-c"]
           args:
             - |

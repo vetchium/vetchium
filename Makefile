@@ -36,21 +36,21 @@ lib: ## Build TypeSpec and install dependencies
 
 docker: ## Build local Docker images for a single platform where it is run
 	docker buildx build --load -f harrypotter/Dockerfile-optimized \
-		-t psankar/vetchi-harrypotter:$(GIT_SHA) \
+		-t vetchium/harrypotter:$(GIT_SHA) \
 		--build-arg API_ENDPOINT="http://hermione:8080" .
 	docker buildx build --load -f ronweasly/Dockerfile-optimized \
-		-t psankar/vetchi-ronweasly:$(GIT_SHA) \
+		-t vetchium/ronweasly:$(GIT_SHA) \
 		--build-arg API_ENDPOINT="http://hermione:8080" .
 	docker buildx build --load -f api/Dockerfile-hermione \
-		-t psankar/vetchi-hermione:$(GIT_SHA) .
+		-t vetchium/hermione:$(GIT_SHA) .
 	docker buildx build --load -f api/Dockerfile-granger \
-		-t psankar/vetchi-granger:$(GIT_SHA) .
+		-t vetchium/granger:$(GIT_SHA) .
 	docker buildx build --load -f sqitch/Dockerfile \
-		-t psankar/vetchi-sqitch:$(GIT_SHA) sqitch
+		-t vetchium/sqitch:$(GIT_SHA) sqitch
 	docker buildx build --load -f sortinghat/Dockerfile \
-		-t psankar/vetchi-sortinghat:$(GIT_SHA) .
+		-t vetchium/sortinghat:$(GIT_SHA) .
 	docker buildx build --load -f dev-seed/Dockerfile \
-		-t psankar/vetchi-dev-seed:$(GIT_SHA) .
+		-t vetchium/dev-seed:$(GIT_SHA) .
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -59,33 +59,33 @@ publish: ## Build multi-platform Docker images and publish them to the container
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
 	docker buildx build -f harrypotter/Dockerfile-optimized \
-		-t psankar/vetchi-harrypotter:$(GIT_SHA) \
+		-t vetchium/harrypotter:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--build-arg API_ENDPOINT="http://hermione:8080" \
 		--push .
 	docker buildx build -f ronweasly/Dockerfile-optimized \
-		-t psankar/vetchi-ronweasly:$(GIT_SHA) \
+		-t vetchium/ronweasly:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--build-arg API_ENDPOINT="http://hermione:8080" \
 		--push .
 	docker buildx build -f api/Dockerfile-hermione \
-		-t psankar/vetchi-hermione:$(GIT_SHA) \
+		-t vetchium/hermione:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f api/Dockerfile-granger \
-		-t psankar/vetchi-granger:$(GIT_SHA) \
+		-t vetchium/granger:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f sqitch/Dockerfile \
-		-t psankar/vetchi-sqitch:$(GIT_SHA) \
+		-t vetchium/sqitch:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push sqitch
 	docker buildx build -f sortinghat/Dockerfile \
-		-t psankar/vetchi-sortinghat:$(GIT_SHA) \
+		-t vetchium/sortinghat:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f dev-seed/Dockerfile \
-		-t psankar/vetchi-dev-seed:$(GIT_SHA) \
+		-t vetchium/dev-seed:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 

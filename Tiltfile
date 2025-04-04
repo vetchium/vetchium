@@ -16,21 +16,21 @@ k8s_yaml('tilt-env/ronweasly.yaml')
 k8s_yaml('tilt-env/sortinghat.yaml')
 
 # Define Docker builds with root context to include typespec
-docker_build('psankar/vetchi-granger', '.', dockerfile='api/Dockerfile-granger')
-docker_build('psankar/vetchi-hermione', '.', dockerfile='api/Dockerfile-hermione')
-docker_build('psankar/vetchi-sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
-docker_build('psankar/vetchi-sortinghat', '.', dockerfile='sortinghat/Dockerfile')
+docker_build('vetchium/granger', '.', dockerfile='api/Dockerfile-granger')
+docker_build('vetchium/hermione', '.', dockerfile='api/Dockerfile-hermione')
+docker_build('vetchium/sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
+docker_build('vetchium/sortinghat', '.', dockerfile='sortinghat/Dockerfile')
 
 # Development builds for Next.js apps with live reload
 docker_build(
-    'psankar/vetchi-harrypotter',
+    'vetchium/harrypotter',
     '.',
     dockerfile='harrypotter/Dockerfile-tilt',
     build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
 docker_build(
-    'psankar/vetchi-ronweasly',
+    'vetchium/ronweasly',
     '.',
     dockerfile='ronweasly/Dockerfile-tilt',
     build_args={'API_ENDPOINT': 'http://hermione:8080'}

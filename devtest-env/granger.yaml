@@ -40,7 +40,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: granger
-          image: psankar/vetchi-granger:${GIT_SHA}
+          image: vetchium/granger:${GIT_SHA}
           ports:
             - containerPort: 8080
           env:
