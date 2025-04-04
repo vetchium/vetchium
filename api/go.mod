@@ -3,18 +3,18 @@ module github.com/vetchium/vetchium/api
 go 1.23.2
 
 require (
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/fatih/color v1.18.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/vetchium/vetchium/typespec v0.0.0-20241209152937-76127bd6d17a
 	github.com/rs/xid v1.6.0
+	github.com/vetchium/vetchium/typespec v0.0.0-20241209152937-76127bd6d17a
 	github.com/wneessen/go-mail v0.5.0
 	golang.org/x/crypto v0.28.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.55.6 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
