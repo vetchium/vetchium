@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/middleware"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/employer"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func (pg *PG) AddAchievement(

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/middleware"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func (p *PG) GetOpening(

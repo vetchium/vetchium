@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 var _ = Describe("Work History", Ordered, func() {

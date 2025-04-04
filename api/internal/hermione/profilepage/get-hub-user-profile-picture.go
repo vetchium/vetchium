@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/wand"
 )
 
 // GetHubUserProfilePicture handles requests from employer to get a hub user's profile picture

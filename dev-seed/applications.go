@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // Variables to store opening information

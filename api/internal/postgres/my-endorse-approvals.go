@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func (p *PG) GetMyEndorsementApprovals(

@@ -3,7 +3,7 @@ package hubusers
 import (
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/vetchium/vetchium/api/internal/wand"
 )
 
 func SetHandle(h wand.Wand) http.HandlerFunc {

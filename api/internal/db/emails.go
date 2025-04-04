@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // Enums

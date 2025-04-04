@@ -1,4 +1,4 @@
-module github.com/psankar/vetchi/api
+module github.com/vetchium/vetchium/api
 
 go 1.23.2
 
@@ -7,7 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/psankar/vetchi/typespec v0.0.0-20241209152937-76127bd6d17a
+	github.com/vetchium/vetchium/typespec v0.0.0-20241209152937-76127bd6d17a
 	github.com/rs/xid v1.6.0
 	github.com/wneessen/go-mail v0.5.0
 	golang.org/x/crypto v0.28.0
@@ -31,4 +31,4 @@ require (
 	golang.org/x/text v0.19.0 // indirect
 )
 
-replace github.com/psankar/vetchi/typespec => ../typespec
+replace github.com/vetchium/vetchium/typespec => ../typespec

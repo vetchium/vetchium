@@ -7,9 +7,9 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func GetOnboardStatus(h wand.Wand) http.HandlerFunc {

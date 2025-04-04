@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/psankar/vetchi/api/internal/util"
+	"github.com/vetchium/vetchium/api/internal/util"
 )
 
 type PG struct {

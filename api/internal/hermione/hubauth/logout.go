@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/vetchium/vetchium/api/internal/wand"
 )
 
 func Logout(h wand.Wand) http.HandlerFunc {

@@ -1,10 +1,10 @@
 package wand
 
 import (
-	"github.com/psankar/vetchi/api/internal/config"
-	"github.com/psankar/vetchi/api/internal/hedwig"
-	"github.com/psankar/vetchi/api/internal/postgres"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/internal/config"
+	"github.com/vetchium/vetchium/api/internal/hedwig"
+	"github.com/vetchium/vetchium/api/internal/postgres"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 type Wand interface {

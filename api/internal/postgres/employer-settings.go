@@ -3,8 +3,8 @@ package postgres
 import (
 	"context"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/middleware"
 )
 
 func (pg *PG) ChangeCoolOffPeriod(

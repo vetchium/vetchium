@@ -3,18 +3,18 @@ package hermione
 import (
 	"net/http"
 
-	ach "github.com/psankar/vetchi/api/internal/hermione/achievements"
-	app "github.com/psankar/vetchi/api/internal/hermione/applications"
-	ca "github.com/psankar/vetchi/api/internal/hermione/candidacy"
-	co "github.com/psankar/vetchi/api/internal/hermione/colleagues"
-	ed "github.com/psankar/vetchi/api/internal/hermione/education"
-	ha "github.com/psankar/vetchi/api/internal/hermione/hubauth"
-	he "github.com/psankar/vetchi/api/internal/hermione/hubemp"
-	ho "github.com/psankar/vetchi/api/internal/hermione/hubopenings"
-	hu "github.com/psankar/vetchi/api/internal/hermione/hubusers"
-	in "github.com/psankar/vetchi/api/internal/hermione/interview"
-	pp "github.com/psankar/vetchi/api/internal/hermione/profilepage"
-	wh "github.com/psankar/vetchi/api/internal/hermione/workhistory"
+	ach "github.com/vetchium/vetchium/api/internal/hermione/achievements"
+	app "github.com/vetchium/vetchium/api/internal/hermione/applications"
+	ca "github.com/vetchium/vetchium/api/internal/hermione/candidacy"
+	co "github.com/vetchium/vetchium/api/internal/hermione/colleagues"
+	ed "github.com/vetchium/vetchium/api/internal/hermione/education"
+	ha "github.com/vetchium/vetchium/api/internal/hermione/hubauth"
+	he "github.com/vetchium/vetchium/api/internal/hermione/hubemp"
+	ho "github.com/vetchium/vetchium/api/internal/hermione/hubopenings"
+	hu "github.com/vetchium/vetchium/api/internal/hermione/hubusers"
+	in "github.com/vetchium/vetchium/api/internal/hermione/interview"
+	pp "github.com/vetchium/vetchium/api/internal/hermione/profilepage"
+	wh "github.com/vetchium/vetchium/api/internal/hermione/workhistory"
 )
 
 func RegisterHubRoutes(h *Hermione) {

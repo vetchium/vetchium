@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 // addCostCenter creates a new cost center for an employer

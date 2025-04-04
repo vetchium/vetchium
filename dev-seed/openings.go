@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/fatih/color"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 // Track openings per company using company domain as key, openingID as value

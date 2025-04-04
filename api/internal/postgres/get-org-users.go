@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/middleware"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/middleware"
 
 	"github.com/jackc/pgx/v5"
 )

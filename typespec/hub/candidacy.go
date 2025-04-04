@@ -1,6 +1,6 @@
 package hub
 
-import "github.com/psankar/vetchi/typespec/common"
+import "github.com/vetchium/vetchium/typespec/common"
 
 type AddHubCandidacyCommentRequest struct {
 	CandidacyID string `json:"candidacy_id" validate:"required"`

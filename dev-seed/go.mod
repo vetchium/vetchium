@@ -1,11 +1,11 @@
-module github.com/psankar/vetchi/dev-seed
+module github.com/vetchium/vetchium/dev-seed
 
 go 1.23.2
 
 require (
 	github.com/fatih/color v1.18.0
 	github.com/jackc/pgx/v5 v5.5.1
-	github.com/psankar/vetchi/typespec v0.0.0
+	github.com/vetchium/vetchium/typespec v0.0.0
 )
 
 require (
@@ -21,4 +21,4 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 )
 
-replace github.com/psankar/vetchi/typespec => ../typespec
+replace github.com/vetchium/vetchium/typespec => ../typespec

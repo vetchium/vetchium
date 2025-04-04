@@ -1,6 +1,6 @@
 package employer
 
-import "github.com/psankar/vetchi/typespec/common"
+import "github.com/vetchium/vetchium/typespec/common"
 
 type OrgUserState string
 

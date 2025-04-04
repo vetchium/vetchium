@@ -1,6 +1,6 @@
 package hub
 
-import "github.com/psankar/vetchi/typespec/common"
+import "github.com/vetchium/vetchium/typespec/common"
 
 type LoginRequest struct {
 	Email    common.EmailAddress `json:"email"    validate:"required,email"`

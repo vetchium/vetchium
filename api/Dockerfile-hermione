@@ -4,7 +4,7 @@ ARG TARGETOS
 WORKDIR /app
 COPY api/go.mod api/go.sum ./
 # For production builds, remove the replace directive
-RUN test -d typespec || go mod edit -dropreplace github.com/psankar/vetchi/typespec
+RUN test -d typespec || go mod edit -dropreplace github.com/vetchium/vetchium/typespec
 RUN go mod download
 COPY api/ .
 COPY typespec/ ../typespec/

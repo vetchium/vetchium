@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/psankar/vetchi/api/internal/granger"
+	"github.com/vetchium/vetchium/api/internal/granger"
 )
 
 func main() {

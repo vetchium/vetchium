@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/wand"
+	"github.com/vetchium/vetchium/api/internal/wand"
 )
 
 func GetCoolOffPeriod(h wand.Wand) http.HandlerFunc {

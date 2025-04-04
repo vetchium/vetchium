@@ -7,9 +7,9 @@ import (
 	ttmpl "text/template"
 	"time"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/util"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 const subject = "Welcome to Vetchi !"

@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/psankar/vetchi/api/internal/hermione"
+	"github.com/vetchium/vetchium/api/internal/hermione"
 )
 
 func main() {

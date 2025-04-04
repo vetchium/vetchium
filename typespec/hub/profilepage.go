@@ -3,7 +3,7 @@ package hub
 import (
 	"time"
 
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 type AddOfficialEmailRequest struct {

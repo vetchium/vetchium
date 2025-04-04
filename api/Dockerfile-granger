@@ -3,7 +3,7 @@ ARG TARGETARCH
 ARG TARGETOS
 WORKDIR /app
 COPY api/go.mod api/go.sum ./
-RUN test -d typespec || go mod edit -dropreplace github.com/psankar/vetchi/typespec
+RUN test -d typespec || go mod edit -dropreplace github.com/vetchium/vetchium/typespec
 RUN go mod download
 COPY api/ .
 COPY typespec/ ../typespec/

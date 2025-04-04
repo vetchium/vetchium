@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // HistoryItem represents a work history item with employer and time info

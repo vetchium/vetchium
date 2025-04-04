@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func (p *PG) ConnectColleague(ctx context.Context, handle string) error {

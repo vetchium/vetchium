@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	ttmpl "text/template"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/util"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/util"
 )
 
 const (

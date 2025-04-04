@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 // GetUnscoredApplication returns a random opening with unscored applications

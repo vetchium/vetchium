@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func UnlinkColleague(h wand.Wand) http.HandlerFunc {

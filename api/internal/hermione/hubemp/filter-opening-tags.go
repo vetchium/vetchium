@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 func FilterOpeningTags(h wand.Wand) http.HandlerFunc {

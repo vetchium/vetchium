@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func addLocation(token string, req employer.AddLocationRequest) {

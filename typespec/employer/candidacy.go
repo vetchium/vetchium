@@ -3,7 +3,7 @@ package employer
 import (
 	"time"
 
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 type FilterCandidacyInfosRequest struct {

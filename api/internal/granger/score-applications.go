@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 func (g *Granger) scoreApplications(quit <-chan struct{}) {

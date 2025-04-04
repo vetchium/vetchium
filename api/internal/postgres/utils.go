@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 func (p *PG) convertToOrgUserRoles(

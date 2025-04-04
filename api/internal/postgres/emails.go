@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/psankar/vetchi/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/db"
 )
 
 func (p *PG) GetOldestUnsentEmails(ctx context.Context) ([]db.Email, error) {

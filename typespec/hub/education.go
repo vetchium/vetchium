@@ -1,6 +1,6 @@
 package hub
 
-import "github.com/psankar/vetchi/typespec/common"
+import "github.com/vetchium/vetchium/typespec/common"
 
 type AddEducationRequest struct {
 	InstituteDomain common.Domain `json:"institute_domain" validate:"required,validate_domain"`

@@ -7,8 +7,8 @@ import (
 
 	"github.com/wneessen/go-mail"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 func (g *Granger) mailSender(quit <-chan struct{}) {

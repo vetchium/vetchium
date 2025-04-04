@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/postgres"
-	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/postgres"
+	"github.com/vetchium/vetchium/api/internal/util"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 type Config struct {

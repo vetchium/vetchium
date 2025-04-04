@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/hedwig"
-	"github.com/psankar/vetchi/api/internal/middleware"
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/hedwig"
+	"github.com/vetchium/vetchium/api/internal/middleware"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func RemoveInterviewer(h wand.Wand) http.HandlerFunc {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func FilterOrgUsers(h wand.Wand) http.HandlerFunc {

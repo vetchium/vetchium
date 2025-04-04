@@ -1,7 +1,7 @@
 package employer
 
 import (
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 type ListHubUserAchievementsRequest struct {

@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/psankar/vetchi/api/internal/db"
-	"github.com/psankar/vetchi/api/internal/hedwig"
-	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/api/internal/wand"
-	"github.com/psankar/vetchi/api/pkg/vetchi"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/hedwig"
+	"github.com/vetchium/vetchium/api/internal/util"
+	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 func ShortlistApplication(h wand.Wand) http.HandlerFunc {

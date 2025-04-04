@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // Message corresponds to the message object in mailpit

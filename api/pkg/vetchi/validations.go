@@ -10,9 +10,9 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
-	"github.com/psankar/vetchi/api/internal/util"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/employer"
+	"github.com/vetchium/vetchium/api/internal/util"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/employer"
 )
 
 type Vator struct {

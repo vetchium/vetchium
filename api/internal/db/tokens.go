@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 type EmployerTokenType string

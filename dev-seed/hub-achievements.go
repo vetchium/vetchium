@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"github.com/fatih/color"
-	"github.com/psankar/vetchi/typespec/common"
-	"github.com/psankar/vetchi/typespec/hub"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // AchievementTemplate represents a possible achievement for a career path

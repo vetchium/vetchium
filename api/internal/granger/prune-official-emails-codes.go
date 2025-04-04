@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/psankar/vetchi/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
 func (g *Granger) pruneOfficialEmailCodes(quit chan struct{}) {

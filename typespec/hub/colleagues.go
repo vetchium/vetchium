@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/psankar/vetchi/typespec/common"
+	"github.com/vetchium/vetchium/typespec/common"
 )
 
 type HubUserShort struct {
