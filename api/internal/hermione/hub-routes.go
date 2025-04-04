@@ -15,85 +15,277 @@ import (
 	in "github.com/vetchium/vetchium/api/internal/hermione/interview"
 	pp "github.com/vetchium/vetchium/api/internal/hermione/profilepage"
 	wh "github.com/vetchium/vetchium/api/internal/hermione/workhistory"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func RegisterHubRoutes(h *Hermione) {
-	wrap := func(fn http.Handler) http.Handler {
-		return h.mw.HubWrap(fn)
-	}
-
+	// Unprotected routes
 	http.HandleFunc("/hub/login", ha.Login(h))
 	http.HandleFunc("/hub/tfa", ha.HubTFA(h))
-	http.Handle("/hub/get-my-handle", wrap(ha.GetMyHandle(h)))
 	http.HandleFunc("/hub/logout", ha.Logout(h))
-
 	http.HandleFunc("/hub/forgot-password", ha.ForgotPassword(h))
 	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
-	http.Handle("/hub/change-password", wrap(ha.ChangePassword(h)))
 
-	http.Handle("/hub/invite-hub-user", wrap(hu.InviteHubUser(h)))
-	http.Handle("/hub/onboard-user", hu.OnboardHubUser(h))
-	http.Handle(
-		"/hub/check-handle-availability",
-		wrap(hu.CheckHandleAvailability(h)),
+	h.mw.Guard(
+		"/hub/get-my-handle",
+		ha.GetMyHandle(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
-	http.Handle("/hub/set-handle", wrap(hu.SetHandle(h)))
+	h.mw.Guard(
+		"/hub/change-password",
+		ha.ChangePassword(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/invite-hub-user",
+		hu.InviteHubUser(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/onboard-user",
+		hu.OnboardHubUser(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/check-handle-availability",
+		hu.CheckHandleAvailability(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/set-handle",
+		hu.SetHandle(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 
 	// Official Email related endpoints
-	http.Handle("/hub/add-official-email", wrap(pp.AddOfficialEmail(h)))
-	http.Handle("/hub/verify-official-email", wrap(pp.VerifyOfficialEmail(h)))
-	http.Handle("/hub/trigger-verification", wrap(pp.TriggerVerification(h)))
-	http.Handle("/hub/delete-official-email", wrap(pp.DeleteOfficialEmail(h)))
-	http.Handle("/hub/my-official-emails", wrap(pp.MyOfficialEmails(h)))
+	h.mw.Guard(
+		"/hub/add-official-email",
+		pp.AddOfficialEmail(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/verify-official-email",
+		pp.VerifyOfficialEmail(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/trigger-verification",
+		pp.TriggerVerification(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-official-email",
+		pp.DeleteOfficialEmail(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/my-official-emails",
+		pp.MyOfficialEmails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 
 	// ProfilePage related endpoints
-	http.Handle("/hub/get-bio", wrap(pp.GetBio(h)))
-	http.Handle("/hub/update-bio", wrap(pp.UpdateBio(h)))
-	http.Handle("/hub/upload-profile-picture", wrap(pp.UploadProfilePicture(h)))
-	http.Handle("/hub/profile-picture/", wrap(pp.GetProfilePicture(h)))
-	http.Handle("/hub/remove-profile-picture", wrap(pp.RemoveProfilePicture(h)))
-
-	http.Handle("/hub/add-education", wrap(ed.AddEducation(h)))
-	http.Handle("/hub/filter-institutes", wrap(ed.FilterInstitutes(h)))
-	http.Handle("/hub/delete-education", wrap(ed.DeleteEducation(h)))
-	http.Handle("/hub/list-education", wrap(ed.ListEducation(h)))
-
-	http.Handle("/hub/add-achievement", wrap(ach.AddAchievement(h)))
-	http.Handle("/hub/list-achievements", wrap(ach.ListAchievements(h)))
-	http.Handle("/hub/delete-achievement", wrap(ach.DeleteAchievement(h)))
-
-	http.Handle("/hub/find-openings", wrap(ho.FindHubOpenings(h)))
-	http.Handle("/hub/filter-opening-tags", wrap(he.FilterOpeningTags(h)))
-	http.Handle("/hub/get-opening-details", wrap(ho.GetOpeningDetails(h)))
-	http.Handle("/hub/apply-for-opening", wrap(ho.ApplyForOpening(h)))
-	http.Handle("/hub/my-applications", wrap(app.MyApplications(h)))
-	http.Handle("/hub/withdraw-application", wrap(app.WithdrawApplication(h)))
-	http.Handle("/hub/add-candidacy-comment", wrap(ca.HubAddComment(h)))
-	http.Handle("/hub/get-candidacy-comments", wrap(ca.HubGetComments(h)))
-	http.Handle("/hub/get-my-candidacies", wrap(ca.MyCandidacies(h)))
-	http.Handle("/hub/get-candidacy-info", wrap(ca.GetHubCandidacyInfo(h)))
-	http.Handle(
-		"/hub/get-interviews-by-candidacy",
-		wrap(in.GetHubInterviewsByCandidacy(h)),
+	h.mw.Guard(
+		"/hub/get-bio",
+		pp.GetBio(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
-	http.Handle("/hub/rsvp-interview", wrap(in.HubRSVPInterview(h)))
-	http.Handle("/hub/filter-employers", wrap(he.FilterEmployers(h)))
+	h.mw.Guard(
+		"/hub/update-bio",
+		pp.UpdateBio(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/upload-profile-picture",
+		pp.UploadProfilePicture(h),
+		[]hub.HubUserTier{hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/profile-picture/",
+		pp.GetProfilePicture(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/remove-profile-picture",
+		pp.RemoveProfilePicture(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/add-education",
+		ed.AddEducation(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/filter-institutes",
+		ed.FilterInstitutes(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-education",
+		ed.DeleteEducation(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/list-education",
+		ed.ListEducation(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/add-achievement",
+		ach.AddAchievement(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/list-achievements",
+		ach.ListAchievements(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-achievement",
+		ach.DeleteAchievement(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/find-openings",
+		ho.FindHubOpenings(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/filter-opening-tags",
+		he.FilterOpeningTags(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-opening-details",
+		ho.GetOpeningDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/apply-for-opening",
+		ho.ApplyForOpening(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/my-applications",
+		app.MyApplications(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/withdraw-application",
+		app.WithdrawApplication(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/add-candidacy-comment",
+		ca.HubAddComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-candidacy-comments",
+		ca.HubGetComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-my-candidacies",
+		ca.MyCandidacies(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-candidacy-info",
+		ca.GetHubCandidacyInfo(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-interviews-by-candidacy",
+		in.GetHubInterviewsByCandidacy(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/rsvp-interview",
+		in.HubRSVPInterview(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/filter-employers",
+		he.FilterEmployers(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 
 	// WorkHistory related endpoints
-	http.Handle("/hub/add-work-history", wrap(wh.AddWorkHistory(h)))
-	http.Handle("/hub/delete-work-history", wrap(wh.DeleteWorkHistory(h)))
-	http.Handle("/hub/list-work-history", wrap(wh.ListWorkHistory(h)))
-	http.Handle("/hub/update-work-history", wrap(wh.UpdateWorkHistory(h)))
+	h.mw.Guard(
+		"/hub/add-work-history",
+		wh.AddWorkHistory(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-work-history",
+		wh.DeleteWorkHistory(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/list-work-history",
+		wh.ListWorkHistory(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/update-work-history",
+		wh.UpdateWorkHistory(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 
 	// Colleague related endpoints
-	http.Handle("/hub/connect-colleague", wrap(co.ConnectColleague(h)))
-	http.Handle("/hub/unlink-colleague", wrap(co.UnlinkColleague(h)))
-	http.Handle("/hub/my-colleague-approvals", wrap(co.MyColleagueApprovals(h)))
-	http.Handle("/hub/my-endorse-approvals", wrap(co.MyEndorseApprovals(h)))
-	http.Handle("/hub/my-colleague-seeks", wrap(co.MyColleagueSeeks(h)))
-	http.Handle("/hub/endorse-application", wrap(co.EndorseApplication(h)))
-	http.Handle("/hub/reject-endorsement", wrap(co.RejectEndorsement(h)))
-	http.Handle("/hub/approve-colleague", wrap(co.ApproveColleague(h)))
-	http.Handle("/hub/reject-colleague", wrap(co.RejectColleague(h)))
-	http.Handle("/hub/filter-colleagues", wrap(co.FilterColleagues(h)))
+	h.mw.Guard(
+		"/hub/connect-colleague",
+		co.ConnectColleague(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/unlink-colleague",
+		co.UnlinkColleague(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/my-colleague-approvals",
+		co.MyColleagueApprovals(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/my-endorse-approvals",
+		co.MyEndorseApprovals(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/my-colleague-seeks",
+		co.MyColleagueSeeks(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/endorse-application",
+		co.EndorseApplication(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/reject-endorsement",
+		co.RejectEndorsement(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/approve-colleague",
+		co.ApproveColleague(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/reject-colleague",
+		co.RejectColleague(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/filter-colleagues",
+		co.FilterColleagues(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

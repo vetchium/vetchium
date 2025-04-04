@@ -229,6 +229,7 @@ func (p *PG) AuthHubUser(
 	query := `
 SELECT
 	hu.id,
+	hu.tier,
 	hu.full_name,
 	hu.handle,
 	hu.email,
@@ -248,6 +249,7 @@ WHERE
 	err := p.pool.QueryRow(ctx, query, token, db.HubUserSessionToken, db.HubUserLTSToken).
 		Scan(
 			&hubUser.ID,
+			&hubUser.Tier,
 			&hubUser.FullName,
 			&hubUser.Handle,
 			&hubUser.Email,

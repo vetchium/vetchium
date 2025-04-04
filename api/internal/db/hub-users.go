@@ -14,6 +14,7 @@ type HubUserTFA struct {
 	Email    Email
 }
 
+// This is a subset of the fields in the hub_users table
 type HubUserTO struct {
 	ID           uuid.UUID           `db:"id"`
 	FullName     string              `db:"full_name"`
@@ -23,6 +24,7 @@ type HubUserTO struct {
 	State        hub.HubUserState    `db:"state"`
 	CreatedAt    time.Time           `db:"created_at"`
 	UpdatedAt    time.Time           `db:"updated_at"`
+	Tier         hub.HubUserTier     `db:"tier"`
 }
 
 type HubUserInitPasswordReset struct {

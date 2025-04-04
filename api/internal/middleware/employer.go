@@ -11,13 +11,6 @@ import (
 	"github.com/vetchium/vetchium/typespec/common"
 )
 
-type userCtx int
-
-const (
-	OrgUserCtxKey userCtx = iota
-	HubUserCtxKey
-)
-
 type Middleware struct {
 	db  db.DB
 	log util.Logger
@@ -61,7 +54,7 @@ func (m *Middleware) employerAuth(next http.Handler) http.Handler {
 }
 
 // Protect provides Authentication and Authorization on the /employer/* routes.
-// For Hub related endpoints use the wrap function within hub-routes.go
+// For Hub related endpoints use the Guard function in middleware/hub.go
 // Protect middleware only checks with the roles of the OrgUser. Whether the
 // OrgUser belongs to the Org or not, should be verified via EmployerAuth. We
 // should not take the OrgID/EmployerID on any of the request bodies but should
@@ -112,34 +105,4 @@ func hasRoles(
 	}
 
 	return false
-}
-
-func (m *Middleware) HubWrap(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m.log.Dbg("Entered hubAuth middleware")
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			m.log.Dbg("No auth header")
-			http.Error(w, "", http.StatusUnauthorized)
-			return
-		}
-
-		authHeader = strings.TrimPrefix(authHeader, "Bearer ")
-
-		hubUser, err := m.db.AuthHubUser(r.Context(), authHeader)
-		if err != nil {
-			if errors.Is(err, db.ErrNoHubUser) {
-				m.log.Dbg("No hub user")
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-
-			m.log.Err("Failed to auth hub user", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), HubUserCtxKey, hubUser)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }
