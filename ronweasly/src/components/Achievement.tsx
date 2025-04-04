@@ -26,7 +26,7 @@ import {
   DeleteAchievementRequest,
   Handle,
   ListAchievementsRequest,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

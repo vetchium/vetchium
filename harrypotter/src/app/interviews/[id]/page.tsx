@@ -41,6 +41,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { alpha, styled } from "@mui/material/styles";
 import {
   EmployerInterview,
   InterviewersDecision,
@@ -49,11 +50,10 @@ import {
   RSVPInterviewRequest,
   RSVPStatus,
   RSVPStatuses,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { styled, alpha } from "@mui/material/styles";
 
 // Helper function for consistent date formatting
 const formatDateTime = (

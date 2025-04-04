@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { MyColleagueApprovals } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import type {
-  HubUserShort,
-  MyColleagueApprovals,
-} from "@psankar/vetchi-typespec";
+import { useState } from "react";
 
 interface UseColleagueApprovalsResult {
   approvals: MyColleagueApprovals | null;

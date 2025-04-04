@@ -1,17 +1,17 @@
-import { useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import { useTranslation } from "@/hooks/useTranslation";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import EditIcon from "@mui/icons-material/Edit";
 import InfoIcon from "@mui/icons-material/Info";
-import Tooltip from "@mui/material/Tooltip";
+import SaveIcon from "@mui/icons-material/Save";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import type { Bio as BioType } from "@psankar/vetchi-typespec";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import type { Bio as BioType } from "@vetchium/typespec";
+import { useState } from "react";
 
 interface BioProps {
   bio: BioType;

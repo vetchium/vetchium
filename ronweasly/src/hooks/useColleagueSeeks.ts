@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useRouter } from "next/navigation";
-import type { HubUserShort, MyColleagueSeeks } from "@psankar/vetchi-typespec";
 import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { MyColleagueSeeks } from "@vetchium/typespec";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface UseColleagueSeeksResult {
   seeks: MyColleagueSeeks | null;

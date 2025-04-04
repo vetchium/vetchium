@@ -1,38 +1,38 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
+  Alert,
+  Autocomplete,
   Box,
   Button,
   Container,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Switch,
   TextField,
   Typography,
-  Alert,
-  Paper,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  FormControlLabel,
-  Switch,
-  Autocomplete,
 } from "@mui/material";
-import { useTranslation } from "@/hooks/useTranslation";
-import {
-  InterviewType,
-  InterviewTypes,
-  TimeZone,
-  validTimezones,
-  AddInterviewRequest,
-  OrgUserShort,
-} from "@psankar/vetchi-typespec";
-import { config } from "@/config";
-import Cookies from "js-cookie";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import {
+  AddInterviewRequest,
+  InterviewType,
+  InterviewTypes,
+  OrgUserShort,
+  TimeZone,
+  validTimezones,
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function AddInterviewPage() {
   const params = useParams();

@@ -89,7 +89,7 @@ The service requires the following environment variables:
 Build the Docker image:
 
 ```bash
-docker build -t psankar/vetchi-sortinghat -f sortinghat/Dockerfile .
+docker build -t vetchium/sortinghat -f sortinghat/Dockerfile .
 ```
 
 ## Kubernetes

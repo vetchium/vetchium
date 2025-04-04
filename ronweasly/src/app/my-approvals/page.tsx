@@ -1,26 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import Link from "next/link";
-import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
-import Grid from "@mui/material/Grid";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useColleagueApprovals } from "@/hooks/useColleagueApprovals";
-import { useEndorseApprovals } from "@/hooks/useEndorseApprovals";
-import { useColleagues } from "@/hooks/useColleagues";
-import type { HubUserShort, MyEndorseApproval } from "@psankar/vetchi-typespec";
-import { config } from "@/config";
 import ProfilePicture from "@/components/ProfilePicture";
+import { config } from "@/config";
+import { useColleagueApprovals } from "@/hooks/useColleagueApprovals";
+import { useColleagues } from "@/hooks/useColleagues";
+import { useEndorseApprovals } from "@/hooks/useEndorseApprovals";
+import { useTranslation } from "@/hooks/useTranslation";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import type { HubUserShort, MyEndorseApproval } from "@vetchium/typespec";
 import { format } from "date-fns";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const PAGE_SIZE = 20;
 

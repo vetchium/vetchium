@@ -1,35 +1,35 @@
 "use client";
 
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
-  Box,
-  Button,
-  Container,
-  Alert,
-  Typography,
-  FormControlLabel,
-  Switch,
-  Grid,
-  Paper,
-  IconButton,
-  Chip,
-  Link,
-} from "@mui/material";
-import {
-  Edit as EditIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
   Map as MapIcon,
 } from "@mui/icons-material";
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
 import {
-  Location,
-  GetLocationsRequest,
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Container,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  Link,
+  Paper,
+  Switch,
+  Typography,
+} from "@mui/material";
+import {
   DefunctLocationRequest,
+  GetLocationsRequest,
+  Location,
   LocationStates,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);

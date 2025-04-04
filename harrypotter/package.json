@@ -18,7 +18,7 @@
     "@mui/material-nextjs": "^6.3.1",
     "@mui/styled-engine-sc": "^6.3.0",
     "@mui/x-date-pickers": "^7.24.0",
-    "@psankar/vetchi-typespec": "file:../typespec",
+    "@vetchium/typespec": "file:../typespec",
     "date-fns": "^2.30.0",
     "js-cookie": "^3.0.5",
     "next": "^15.2.4",

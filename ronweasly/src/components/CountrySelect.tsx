@@ -1,12 +1,12 @@
-import React from "react";
-import {
-  FormControl,
-  Autocomplete,
-  TextField,
-  FormHelperText,
-} from "@mui/material";
-import countries from "@psankar/vetchi-typespec/common/countries.json";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  Autocomplete,
+  FormControl,
+  FormHelperText,
+  TextField,
+} from "@mui/material";
+import countries from "@vetchium/typespec/common/countries.json";
+import React from "react";
 
 interface Country {
   country_code: string;

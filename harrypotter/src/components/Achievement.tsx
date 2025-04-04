@@ -15,7 +15,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { Achievement, AchievementType, Handle } from "@psankar/vetchi-typespec";
+import { Achievement, AchievementType, Handle } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

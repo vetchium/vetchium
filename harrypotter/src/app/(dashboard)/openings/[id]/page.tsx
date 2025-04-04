@@ -20,7 +20,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { OpeningState, OpeningStates } from "@psankar/vetchi-typespec";
+import { OpeningState, OpeningStates } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";

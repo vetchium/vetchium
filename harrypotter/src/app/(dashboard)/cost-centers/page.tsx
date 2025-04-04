@@ -1,29 +1,29 @@
 "use client";
 
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
-  Container,
-  Alert,
-  Typography,
-  FormControlLabel,
-  Switch,
-  Grid,
-  Paper,
-  IconButton,
   CircularProgress,
+  Container,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  Paper,
+  Switch,
+  Typography,
 } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
 import {
   CostCenter,
-  GetCostCentersRequest,
   DefunctCostCenterRequest,
-} from "@psankar/vetchi-typespec";
+  GetCostCentersRequest,
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function CostCentersPage() {
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);

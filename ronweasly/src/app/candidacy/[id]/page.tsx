@@ -1,58 +1,56 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-  Divider,
-  Link,
-  CircularProgress,
-  IconButton,
-  Avatar,
-  Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  ButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
-import {
-  OpenInNew as OpenInNewIcon,
-  ExpandMore as ExpandMoreIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  HelpOutline as HelpOutlineIcon,
-  Person as PersonIcon,
-} from "@mui/icons-material";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  GetCandidacyInfoRequest,
-  GetCandidacyCommentsRequest,
-  MyCandidacy,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  ExpandMore as ExpandMoreIcon,
+  OpenInNew as OpenInNewIcon,
+  Person as PersonIcon,
+} from "@mui/icons-material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Avatar,
+  Box,
+  Button,
+  ButtonGroup,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Link,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import {
+  AddHubCandidacyCommentRequest,
   CandidacyComment,
   CandidacyState,
-  AddHubCandidacyCommentRequest,
+  CommenterTypes,
+  GetCandidacyCommentsRequest,
+  GetCandidacyInfoRequest,
   GetHubInterviewsByCandidacyRequest,
   HubInterview,
   InterviewState,
-  InterviewType,
   InterviewStates,
+  InterviewType,
   InterviewTypes,
-  CommenterTypes,
-  RSVPStatus,
+  MyCandidacy,
   RSVPInterviewRequest,
+  RSVPStatus,
   RSVPStatuses,
-} from "@psankar/vetchi-typespec";
-import { config } from "@/config";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Helper function for consistent date formatting
 const formatDateTime = (

@@ -1,32 +1,32 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import SearchIcon from "@mui/icons-material/Search";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import IconButton from "@mui/material/IconButton";
+import { config } from "@/config";
+import AddIcon from "@mui/icons-material/Add";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SearchIcon from "@mui/icons-material/Search";
+import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import {
   FindHubOpeningsRequest,
   HubOpening,
   OpeningTag,
-} from "@psankar/vetchi-typespec";
-import countries from "@psankar/vetchi-typespec/common/countries.json";
+} from "@vetchium/typespec";
+import countries from "@vetchium/typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
-import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
-import AddIcon from "@mui/icons-material/Add";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import { config } from "@/config";
+import { Suspense, useEffect, useState } from "react";
 
 interface Country {
   country_code: string;

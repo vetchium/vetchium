@@ -1,13 +1,10 @@
-import { useState } from "react";
 import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { MyEndorseApprovalsResponse } from "@vetchium/typespec";
+import { EndorsementState } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import type {
-  MyEndorseApproval,
-  MyEndorseApprovalsResponse,
-} from "@psankar/vetchi-typespec";
-import { EndorsementState } from "@psankar/vetchi-typespec";
+import { useState } from "react";
 
 interface UseEndorseApprovalsResult {
   endorsements: MyEndorseApprovalsResponse | null;

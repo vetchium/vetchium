@@ -1,24 +1,21 @@
 "use client";
 
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
+  Alert,
   Box,
   Button,
   Container,
-  TextField,
-  Typography,
-  Alert,
   FormControlLabel,
   Switch,
+  TextField,
+  Typography,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
+import { EmployerTFARequest, EmployerTFAResponse } from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import {
-  EmployerTFARequest,
-  EmployerTFAResponse,
-} from "@psankar/vetchi-typespec";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function TFA() {
   const router = useRouter();

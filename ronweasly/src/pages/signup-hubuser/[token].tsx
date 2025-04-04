@@ -1,4 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -12,16 +13,15 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import type {
+  OnboardHubUserRequest,
+  OnboardHubUserResponse,
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { CountrySelect } from "../../components/CountrySelect";
 import { config } from "../../config";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import type {
-  OnboardHubUserRequest,
-  OnboardHubUserResponse,
-} from "@psankar/vetchi-typespec";
-import Cookies from "js-cookie";
 
 interface FormData extends Omit<OnboardHubUserRequest, "token"> {
   confirm_password: string;

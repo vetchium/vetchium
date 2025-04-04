@@ -1,26 +1,26 @@
 "use client";
 
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Container,
+  IconButton,
+  Paper,
   TextField,
   Typography,
-  Alert,
-  Paper,
-  IconButton,
 } from "@mui/material";
-import { Delete as DeleteIcon } from "@mui/icons-material";
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
 import {
-  GetLocationRequest,
   AddLocationRequest,
+  GetLocationRequest,
   UpdateLocationRequest,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function LocationActionPage() {
   const [title, setTitle] = useState("");

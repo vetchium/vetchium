@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import Link from "next/link";
-import IconButton from "@mui/material/IconButton";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import {
-  MyCandidacy,
   CandidacyState,
   MyCandidaciesRequest,
-} from "@psankar/vetchi-typespec";
-import { config } from "@/config";
+  MyCandidacy,
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import { useTranslation } from "@/hooks/useTranslation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const getCandidacyStateColor = (
   state: CandidacyState

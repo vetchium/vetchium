@@ -1,8 +1,13 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
+  ExpandMore as ExpandMoreIcon,
+  OpenInNew as OpenInNewIcon,
+} from "@mui/icons-material";
+import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -19,7 +24,6 @@ import {
   Link,
   Paper,
   Snackbar,
-  Alert,
   Table,
   TableBody,
   TableCell,
@@ -28,10 +32,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  ExpandMore as ExpandMoreIcon,
-  OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
-import {
+  AddEmployerCandidacyCommentRequest,
   Candidacy,
   CandidacyComment,
   CandidacyState,
@@ -42,13 +43,12 @@ import {
   EmployerInterview as Interview,
   InterviewState,
   InterviewStates,
-  OrgUserShort,
   OfferToCandidateRequest,
-} from "@psankar/vetchi-typespec";
-import { AddEmployerCandidacyCommentRequest } from "@psankar/vetchi-typespec";
+  OrgUserShort,
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import { config } from "@/config";
-import { useTranslation } from "@/hooks/useTranslation";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 interface Endorser {
   full_name: string;

@@ -15,7 +15,7 @@ import {
   AddEducationRequest,
   Education as EducationType,
   Institute,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

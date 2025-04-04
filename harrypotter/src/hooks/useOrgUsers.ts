@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
 import { config } from "@/config";
+import { AddOrgUserRequest, OrgUser } from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import { AddOrgUserRequest, OrgUser } from "@psankar/vetchi-typespec";
+import { useEffect, useRef, useState } from "react";
 
 export function useOrgUsers() {
   const [users, setUsers] = useState<OrgUser[]>([]);

@@ -23,7 +23,7 @@ import {
   OpeningStates,
   OpeningType,
   OpeningTypes,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

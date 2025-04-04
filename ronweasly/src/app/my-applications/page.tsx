@@ -1,27 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import Alert from "@mui/material/Alert";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import { HubApplication, ApplicationState } from "@psankar/vetchi-typespec";
-import { config } from "@/config";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { ApplicationState, HubApplication } from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import { useTranslation } from "@/hooks/useTranslation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const formatApplicationState = (
   state: ApplicationState,

@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react";
 import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { Bio, GetBioRequest, UpdateBioRequest } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import type {
-  Bio,
-  UpdateBioRequest,
-  GetBioRequest,
-} from "@psankar/vetchi-typespec";
+import { useEffect, useState } from "react";
 
 export function useProfile(handle: string) {
   const router = useRouter();

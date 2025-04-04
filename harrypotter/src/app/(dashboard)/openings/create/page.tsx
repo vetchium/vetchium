@@ -8,6 +8,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -31,12 +32,11 @@ import {
   OpeningTypes,
   OrgUserShort,
   validTimezones,
-} from "@psankar/vetchi-typespec";
-import countries from "@psankar/vetchi-typespec/common/countries.json";
+} from "@vetchium/typespec";
+import countries from "@vetchium/typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import CircularProgress from "@mui/material/CircularProgress";
+import { useCallback, useEffect, useState } from "react";
 
 export default function CreateOpeningPage() {
   const { t } = useTranslation();

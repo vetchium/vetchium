@@ -15,7 +15,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ChangeCoolOffPeriodRequest } from "@psankar/vetchi-typespec";
+import { ChangeCoolOffPeriodRequest } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

@@ -36,7 +36,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Application, ApplicationColorTag } from "@psankar/vetchi-typespec";
+import { Application, ApplicationColorTag } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";

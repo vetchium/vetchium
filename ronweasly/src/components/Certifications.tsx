@@ -1,6 +1,6 @@
 "use client";
 
-import { AchievementType, Handle } from "@psankar/vetchi-typespec";
+import { AchievementType, Handle } from "@vetchium/typespec";
 import { AchievementSection } from "./Achievement";
 
 interface CertificationsProps {

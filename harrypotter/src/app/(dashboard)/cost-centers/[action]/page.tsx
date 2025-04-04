@@ -15,10 +15,10 @@ import {
   AddCostCenterRequest,
   GetCostCenterRequest,
   UpdateCostCenterRequest,
-} from "@psankar/vetchi-typespec";
+} from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function CostCenterActionPage() {
   const [name, setName] = useState("");

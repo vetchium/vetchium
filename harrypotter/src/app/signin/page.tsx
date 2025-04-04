@@ -1,26 +1,26 @@
 "use client";
 
+import { config } from "@/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Container,
+  IconButton,
   TextField,
   Typography,
-  Alert,
-  IconButton,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "@/hooks/useTranslation";
-import { config } from "@/config";
-import Cookies from "js-cookie";
-import { useAuth } from "@/contexts/AuthContext";
 import {
-  GetOnboardStatusRequest,
   EmployerSignInRequest,
   EmployerSignInResponse,
-} from "@psankar/vetchi-typespec";
+  GetOnboardStatusRequest,
+} from "@vetchium/typespec";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function SignIn() {
   const [domain, setDomain] = useState("");

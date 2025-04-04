@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
-import Link from "next/link";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useColleagueSeeks } from "@/hooks/useColleagueSeeks";
-import type { HubUserShort } from "@psankar/vetchi-typespec";
-import { config } from "@/config";
 import ProfilePicture from "@/components/ProfilePicture";
+import { config } from "@/config";
+import { useColleagueSeeks } from "@/hooks/useColleagueSeeks";
+import { useTranslation } from "@/hooks/useTranslation";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import type { HubUserShort } from "@vetchium/typespec";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const PAGE_SIZE = 20;
 

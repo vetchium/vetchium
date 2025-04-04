@@ -18,7 +18,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { OpeningState, OpeningStates } from "@psankar/vetchi-typespec";
+import { OpeningState, OpeningStates } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

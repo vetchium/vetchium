@@ -15,8 +15,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { Education, EmployerViewBio } from "@psankar/vetchi-typespec";
-import { AchievementType } from "@psankar/vetchi-typespec";
+import type { Education, EmployerViewBio } from "@vetchium/typespec";
+import { AchievementType } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
