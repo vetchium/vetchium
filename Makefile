@@ -10,23 +10,23 @@ help: ## Display this help message
 
 dev: ## Start development environment with Tilt and live reload
 	tilt down
-	time kubectl delete pvc -n vetchidev --all --ignore-not-found
-	kubectl delete pv -n vetchidev --all --ignore-not-found
-	kubectl delete namespace vetchidev --ignore-not-found --force --grace-period=0
-	kubectl create namespace vetchidev
+	time kubectl delete pvc -n vetchium-dev --all --ignore-not-found
+	kubectl delete pv -n vetchium-dev --all --ignore-not-found
+	kubectl delete namespace vetchium-dev --ignore-not-found --force --grace-period=0
+	kubectl create namespace vetchium-dev
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
 	sleep 10 && kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 	tilt up
 
 test: ## Run tests using ginkgo. make dev should have been called ahead of this.
-	@ORIG_URI=$$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
-	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchidev/localhost/g'); \
+	@ORIG_URI=$$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
+	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchium-dev/localhost/g'); \
 	POSTGRES_URI=$$MOD_URI ginkgo -v ./dolores/...
 
 seed: ## Seed the development database
-	@ORIG_URI=$$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
-	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchidev/localhost/g'); \
+	@ORIG_URI=$$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
+	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchium-dev/localhost/g'); \
 	cd dev-seed && POSTGRES_URI=$$MOD_URI go run .
 
 lib: ## Build TypeSpec and install dependencies
@@ -90,52 +90,52 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--push .
 
 devtest: docker ## Brings up an environment with the local docker images. No live reload.
-	kubectl delete namespace vetchidevtest --ignore-not-found --force --grace-period=0
-	kubectl create namespace vetchidevtest
+	kubectl delete namespace vetchium-devtest --ignore-not-found --force --grace-period=0
+	kubectl create namespace vetchium-devtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
 	sleep 20 && kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 
 	# Then apply core infrastructure
-	kubectl apply -n vetchidevtest -f devtest-env/full-access-cluster-role.yaml
-	kubectl apply -n vetchidevtest -f devtest-env/postgres-cluster.yaml
-	kubectl apply -n vetchidevtest -f devtest-env/minio.yaml
-	kubectl apply -n vetchidevtest -f devtest-env/mailpit.yaml
-	kubectl apply -n vetchidevtest -f devtest-env/secrets.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/full-access-cluster-role.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/postgres-cluster.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/minio.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/mailpit.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/secrets.yaml
 
-	sleep 20 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
+	sleep 20 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=minio -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchium-devtest --timeout=5m
 
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sqitch.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sqitch.yaml | kubectl apply -n vetchium-devtest -f -
 	echo "Waiting for sqitch job to complete..."
-	kubectl wait --for=condition=complete job -l app=sqitch -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=complete job -l app=sqitch -n vetchium-devtest --timeout=5m
 
 	# Then apply backend services
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/granger.yaml | kubectl apply -n vetchidevtest -f -
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/hermione.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/granger.yaml | kubectl apply -n vetchium-devtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/hermione.yaml | kubectl apply -n vetchium-devtest -f -
 	# Finally apply frontend services
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/harrypotter.yaml | kubectl apply -n vetchidevtest -f -
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/ronweasly.yaml | kubectl apply -n vetchidevtest -f -
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchidevtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/harrypotter.yaml | kubectl apply -n vetchium-devtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/ronweasly.yaml | kubectl apply -n vetchium-devtest -f -
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sortinghat.yaml | kubectl apply -n vetchium-devtest -f -
 
 	# Apply seed job last, after all services are up
-	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=minio -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=harrypotter -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=ronweasly -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=granger -n vetchidevtest --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=sortinghat -n vetchidevtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=minio -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=harrypotter -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=ronweasly -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=granger -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=sortinghat -n vetchium-devtest --timeout=5m
 
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchidevtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchidevtest -f -
-	kubectl wait --for=condition=complete job -l app=dev-seed -n vetchidevtest --timeout=5m
-	kubectl port-forward svc/harrypotter -n vetchidevtest 3001:80 &
-	kubectl port-forward svc/ronweasly -n vetchidevtest 3002:80 &
-	kubectl port-forward svc/mailpit -n vetchidevtest 8025:8025 &
-	kubectl port-forward svc/postgres-1 -n vetchidevtest 5432:5432 &
-	kubectl port-forward svc/minio -n vetchidevtest 9000:9000 &
-	echo "Dev-seed job applied. Run 'kubectl logs -n vetchidevtest -l app=dev-seed' to follow dev-seed job logs."
+	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchium-devtest -f -
+	kubectl wait --for=condition=complete job -l app=dev-seed -n vetchium-devtest --timeout=5m
+	kubectl port-forward svc/harrypotter -n vetchium-devtest 3001:80 &
+	kubectl port-forward svc/ronweasly -n vetchium-devtest 3002:80 &
+	kubectl port-forward svc/mailpit -n vetchium-devtest 8025:8025 &
+	kubectl port-forward svc/postgres-1 -n vetchium-devtest 5432:5432 &
+	kubectl port-forward svc/minio -n vetchium-devtest 9000:9000 &
+	echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging

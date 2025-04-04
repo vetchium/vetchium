@@ -67,8 +67,8 @@ def wait_for_service(namespace, service):
 # Define a local resource to handle port-forwarding
 local_resource(
     "postgres-port-forward",
-    cmd="sh -c 'while ! kubectl -n vetchidev get service postgres-rw; do sleep 10; done && kubectl -n vetchidev port-forward service/postgres-rw 5432:5432'",
+    cmd="sh -c 'while ! kubectl -n vetchium-dev get service postgres-rw; do sleep 10; done && kubectl -n vetchium-dev port-forward service/postgres-rw 5432:5432'",
     deps=["devtest-env/postgres-cluster.yaml"],  # Ensures Postgres exists before starting port-forward
     allow_parallel=True,
-    serve_cmd="kubectl -n vetchidev port-forward service/postgres-rw 5432:5432"
+    serve_cmd="kubectl -n vetchium-dev port-forward service/postgres-rw 5432:5432"
 )

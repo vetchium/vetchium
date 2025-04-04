@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sortinghat-config
-  namespace: vetchidev
+  namespace: vetchium-dev
 data:
   config.json: |
     {
@@ -13,7 +13,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sortinghat
-  namespace: vetchidev
+  namespace: vetchium-dev
 spec:
   replicas: 1
   selector:
@@ -87,7 +87,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: sortinghat
-  namespace: vetchidev
+  namespace: vetchium-dev
 spec:
   selector:
     app: sortinghat
@@ -100,7 +100,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: sortinghat-sa
-  namespace: vetchidev
+  namespace: vetchium-dev
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -113,4 +113,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: sortinghat-sa
-    namespace: vetchidev
+    namespace: vetchium-dev

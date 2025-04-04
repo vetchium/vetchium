@@ -42,14 +42,14 @@ vetchi$ make seed
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 
 ```bash
-$ POSTGRES_URI=$(kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchidev/localhost/g')
+$ POSTGRES_URI=$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-dev/localhost/g')
 $ psql "$POSTGRES_URI"
 ```
 
 To connect to the port-forwarded Postgres using DBeaver or some such JDBC client, use:
 
 ```bash
-$ kubectl -n vetchidev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
+$ kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
 ```
 
 To run tests, use the following command:
@@ -77,7 +77,7 @@ To tear down the services, run the following command:
 
 ```bash
 vetchi $ tilt down
-vetchi $ kubectl delete namespace vetchidev
+vetchi $ kubectl delete namespace vetchium-dev
 ```
 
 ### Code Structure
