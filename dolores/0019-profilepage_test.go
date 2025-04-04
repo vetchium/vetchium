@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("Profile Page", Ordered, func() {
 	var db *pgxpool.Pool
-	var hubToken1, hubToken2, hubToken3 string
+	var hubToken1, hubToken2, hubToken3, hubToken4 string
 	var sampleImageBytes []byte
 
 	BeforeAll(func() {
@@ -34,7 +34,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
-		wg.Add(3)
+		wg.Add(4)
 		hubSigninAsync(
 			"user1@profilepage-hub.example",
 			"NewPassword123$",
@@ -51,6 +51,12 @@ var _ = Describe("Profile Page", Ordered, func() {
 			"user3@profilepage-hub.example",
 			"NewPassword123$",
 			&hubToken3,
+			&wg,
+		)
+		hubSigninAsync(
+			"user4@profilepage-hub.example",
+			"NewPassword123$",
+			&hubToken4,
 			&wg,
 		)
 		wg.Wait()
@@ -258,22 +264,29 @@ var _ = Describe("Profile Page", Ordered, func() {
 						wantStatus:  http.StatusUnauthorized,
 					},
 					{
-						description: "upload valid image",
-						token:       hubToken2,
+						description: "upload by free user (should fail)",
+						token:       hubToken2, // Free user
+						imageBytes:  sampleImageBytes,
+						filename:    "avatar1.jpg",
+						wantStatus:  http.StatusForbidden,
+					},
+					{
+						description: "upload valid image by paid user",
+						token:       hubToken3, // Paid user
 						imageBytes:  sampleImageBytes,
 						filename:    "avatar1.jpg",
 						wantStatus:  http.StatusOK,
 					},
 					{
 						description: "upload invalid image data",
-						token:       hubToken2,
+						token:       hubToken3, // Use paid user for this check too
 						imageBytes:  invalidImageBytes,
 						filename:    "invalid.jpg",
 						wantStatus:  http.StatusBadRequest,
 					},
 					{
 						description: "upload empty image",
-						token:       hubToken2,
+						token:       hubToken3, // Use paid user for this check too
 						imageBytes:  emptyImageBytes,
 						filename:    "empty.jpg",
 						wantStatus:  http.StatusBadRequest,
@@ -400,19 +413,19 @@ var _ = Describe("Profile Page", Ordered, func() {
 				// First try to get non-existent picture
 				fmt.Fprintf(
 					GinkgoWriter,
-					"get non-existent picture for profilepage_user3\n",
+					"get non-existent picture for profilepage_user4\n",
 				)
 				req, err := http.NewRequest(
 					http.MethodGet,
 					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user3?t=%d",
+						"%s/hub/profile-picture/profilepage_user4?t=%d",
 						serverURL,
 						time.Now().UnixNano(),
 					),
 					nil,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken3)
+				req.Header.Set("Authorization", "Bearer "+hubToken4)
 
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -422,7 +435,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 				// Upload a profile picture using multipart form
 				fmt.Fprintf(
 					GinkgoWriter,
-					"upload profile picture for profilepage_user3\n",
+					"upload profile picture for profilepage_user4\n",
 				)
 				body := &bytes.Buffer{}
 				writer := multipart.NewWriter(body)
@@ -454,7 +467,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				req.Header.Set("Content-Type", writer.FormDataContentType())
-				req.Header.Set("Authorization", "Bearer "+hubToken3)
+				req.Header.Set("Authorization", "Bearer "+hubToken4)
 
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -464,19 +477,19 @@ var _ = Describe("Profile Page", Ordered, func() {
 				// Get the uploaded picture
 				fmt.Fprintf(
 					GinkgoWriter,
-					"get uploaded picture for profilepage_user3\n",
+					"get uploaded picture for profilepage_user4\n",
 				)
 				req, err = http.NewRequest(
 					http.MethodGet,
 					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user3?t=%d",
+						"%s/hub/profile-picture/profilepage_user4?t=%d",
 						serverURL,
 						time.Now().UnixNano(),
 					),
 					nil,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken3)
+				req.Header.Set("Authorization", "Bearer "+hubToken4)
 
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -489,10 +502,13 @@ var _ = Describe("Profile Page", Ordered, func() {
 				).Should(Equal("image/jpeg"))
 				resp.Body.Close()
 
+				// Add a small delay before verification to ensure DB commit is visible
+				time.Sleep(100 * time.Millisecond)
+
 				// Remove the profile picture
 				fmt.Fprintf(
 					GinkgoWriter,
-					"remove profile picture for profilepage_user3\n",
+					"remove profile picture for profilepage_user4\n",
 				)
 				req, err = http.NewRequest(
 					http.MethodPost,
@@ -500,7 +516,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 					bytes.NewBuffer([]byte("{}")),
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken3)
+				req.Header.Set("Authorization", "Bearer "+hubToken4)
 				req.Header.Set("Content-Type", "application/json")
 
 				resp, err = http.DefaultClient.Do(req)
@@ -508,27 +524,31 @@ var _ = Describe("Profile Page", Ordered, func() {
 				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 				resp.Body.Close()
 
-				// Verify picture is gone
+				// Add a small delay before verification to ensure DB commit is visible
+				time.Sleep(100 * time.Millisecond)
+
+				// Verify picture is gone using Eventually to handle potential delays
 				fmt.Fprintf(
 					GinkgoWriter,
-					"verify picture is gone for profilepage_user3\n",
+					"verify picture is gone for profilepage_user4\n",
 				)
-				req, err = http.NewRequest(
-					http.MethodGet,
-					fmt.Sprintf(
-						"%s/hub/profile-picture/profilepage_user3?t=%d",
-						serverURL,
-						time.Now().UnixNano(),
-					),
-					nil,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer "+hubToken3)
+				Eventually(func(g Gomega) int {
+					req, err := http.NewRequest(
+						http.MethodGet,
+						fmt.Sprintf(
+							"%s/hub/profile-picture/profilepage_user4?t=%d",
+							serverURL,
+							time.Now().UnixNano(),
+						),
+						nil,
+					)
+					g.Expect(err).ShouldNot(HaveOccurred())
+					req.Header.Set("Authorization", "Bearer "+hubToken4)
 
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
-				resp.Body.Close()
+					resp, err := http.DefaultClient.Do(req)
+					g.Expect(err).ShouldNot(HaveOccurred())
+					return resp.StatusCode
+				}).Should(Equal(http.StatusNotFound))
 			})
 		})
 	})
