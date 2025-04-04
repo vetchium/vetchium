@@ -59,33 +59,33 @@ publish: ## Build multi-platform Docker images and publish them to the container
 	fi
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
 	docker buildx build -f harrypotter/Dockerfile-optimized \
-		-t vetchium/harrypotter:$(GIT_SHA) \
+		-t ghcr.io/vetchium/harrypotter:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--build-arg API_ENDPOINT="http://hermione:8080" \
 		--push .
 	docker buildx build -f ronweasly/Dockerfile-optimized \
-		-t vetchium/ronweasly:$(GIT_SHA) \
+		-t ghcr.io/vetchium/ronweasly:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--build-arg API_ENDPOINT="http://hermione:8080" \
 		--push .
 	docker buildx build -f api/Dockerfile-hermione \
-		-t vetchium/hermione:$(GIT_SHA) \
+		-t ghcr.io/vetchium/hermione:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f api/Dockerfile-granger \
-		-t vetchium/granger:$(GIT_SHA) \
+		-t ghcr.io/vetchium/granger:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f sqitch/Dockerfile \
-		-t vetchium/sqitch:$(GIT_SHA) \
+		-t ghcr.io/vetchium/sqitch:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push sqitch
 	docker buildx build -f sortinghat/Dockerfile \
-		-t vetchium/sortinghat:$(GIT_SHA) \
+		-t ghcr.io/vetchium/sortinghat:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f dev-seed/Dockerfile \
-		-t vetchium/dev-seed:$(GIT_SHA) \
+		-t ghcr.io/vetchium/dev-seed:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 
