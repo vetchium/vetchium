@@ -1,8 +1,8 @@
 Hi {{.Name}},
 
-This email address was added as one of the official email addresses for the vetchi account {{.Handle}}
+This email address was added as one of the official email addresses for the vetchium account {{.Handle}}
 
-To confirm ownership of this email address, please enter the below code on the profile page of your vetchi account:
+To confirm ownership of this email address, please enter the below code on the profile page of your vetchium account:
 
 {{.Code}}
 
@@ -11,4 +11,4 @@ This verification code will expire in about 24 hours.
 If you did not request this verification, please ignore this email and sorry for the inconvenience.
 
 Thanks,
-The Vetchi Team
+The Vetchium Team

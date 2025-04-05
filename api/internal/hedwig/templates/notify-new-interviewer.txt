@@ -6,4 +6,4 @@ Please RSVP your availability for the interview at the following link:
 {{.InterviewURL}}
 
 Thanks,
-Vetchi Team
+Vetchium Team

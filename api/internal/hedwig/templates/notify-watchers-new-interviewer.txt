@@ -3,4 +3,4 @@ Hi
 This is a notification to inform you that {{.InterviewerName}} has been added as an interviewer for the Interview {{.InterviewURL}}
 
 Thanks,
-The Vetchi Team
+The Vetchium Team

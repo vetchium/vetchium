@@ -17,12 +17,12 @@ export const en = {
     warning: "Warning",
     proceed: "Proceed",
     external_url_warning:
-      "You are about to leave Vetchi and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
+      "You are about to leave Vetchium and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
     loadMore: "Load More",
     serverError: "Please try again after some time.",
     none: "None",
     back: "Back",
-    headerTitle: "Vetchi for Employers",
+    headerTitle: "Vetchium for Employers",
     success: "Success",
   },
   auth: {

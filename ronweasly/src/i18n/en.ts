@@ -13,7 +13,7 @@ export const en = {
     warning: "Warning",
     proceed: "Proceed",
     external_url_warning:
-      "You are about to leave Vetchi and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
+      "You are about to leave Vetchium and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
     error: {
       notAuthenticated: "Not authenticated. Please log in again.",
       sessionExpired: "Session expired. Please log in again.",

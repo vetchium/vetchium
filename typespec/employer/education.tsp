@@ -16,6 +16,7 @@ model ListHubUserEducationRequest {
 
 @route("/employer/list-hub-user-education")
 interface EmployerEducation {
+    @tag("Education")
     @post
     @useAuth(EmployerAuth)
     listEducation(@body request: ListHubUserEducationRequest): {

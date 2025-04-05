@@ -15,4 +15,4 @@ Interview Details:
 You can view more details and manage your interview at: {{.InterviewURL}}
 
 Best regards,
-Vetchi Team 
+Vetchium Team 

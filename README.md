@@ -58,7 +58,7 @@ To run tests, use the following command:
 # Install ginkgo once
 $ go install github.com/onsi/ginkgo/v2/ginkgo
 
-vetchi $ make test ; # tilt should be running
+vetchium $ make test ; # tilt should be running
 ```
 
 To see the minio files (for resumes, profile pictures, etc.):
@@ -76,15 +76,15 @@ $ mc ls -r local
 To tear down the services, run the following command:
 
 ```bash
-vetchi $ tilt down
-vetchi $ kubectl delete namespace vetchium-dev
+vetchium $ tilt down
+vetchium $ kubectl delete namespace vetchium-dev
 ```
 
 ### Code Structure
 
 - [hermione](api/hermione) contains the stateless API server that can be scaled horizontally. Almost all HTTP handlers should be implemented here.
 - [granger](api/granger) contains the singleton API server with global variables, that should NOT be scaled horizontally. Almost no HTTP handler should be implemented here. This should be used for periodic tasks and other such bookkeeping on the backend.
-- [hermione](api/hermione) and [granger](api/granger) share the same go.mod and go.sum and together they implement the Vetchi API
+- [hermione](api/hermione) and [granger](api/granger) share the same go.mod and go.sum and together they implement the Vetchium API
 - [harrypotter](harrypotter) contains the React.js frontend for the Employer app
 - [ronweasly](ronweasly) contains the React.js frontend for the Hub app
 - [sqitch](sqitch) contains the database migration scripts

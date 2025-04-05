@@ -7,7 +7,7 @@ BEGIN;
 --- locations table primary key uuids should end in 7 digits, 60001, 60002, 60003, etc
 
 INSERT INTO public.emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
-    VALUES ('12345678-0005-0005-0005-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['admin@openings.example'], NULL, NULL, 'Welcome to Vetchi Subject', 'Welcome to Vetchi HTML Body', 'Welcome to Vetchi Text Body', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+    VALUES ('12345678-0005-0005-0005-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['admin@openings.example'], NULL, NULL, 'Welcome to Vetchium Subject', 'Welcome to Vetchium HTML Body', 'Welcome to Vetchium Text Body', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 INSERT INTO public.employers (id, client_id_type, employer_state, company_name, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)
     VALUES ('12345678-0005-0005-0005-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'openings.example', 'admin@openings.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0005-0005-0005-000000000011'::uuid, timezone('UTC'::text, now()));

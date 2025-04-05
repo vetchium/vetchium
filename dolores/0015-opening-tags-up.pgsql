@@ -2,7 +2,7 @@ BEGIN;
 
 -- Create welcome email first
 INSERT INTO emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
-VALUES ('12345678-0015-0015-0015-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['tags.test@openingtags.example'], NULL, NULL, 'Welcome to Vetchi Subject', 'Welcome to Vetchi HTML Body', 'Welcome to Vetchi Text Body', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+VALUES ('12345678-0015-0015-0015-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['tags.test@openingtags.example'], NULL, NULL, 'Welcome to Vetchium Subject', 'Welcome to Vetchium HTML Body', 'Welcome to Vetchium Text Body', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 -- Create employer with proper onboarding fields
 INSERT INTO employers (id, client_id_type, employer_state, company_name, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)

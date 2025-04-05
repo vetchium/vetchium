@@ -17,6 +17,7 @@ model ListHubUserAchievementsRequest {
 interface ListHubUserAchievements {
     @post
     @useAuth(EmployerAuth)
+    @tag("Achievements")
     listHubUserAchievements(@body request: ListHubUserAchievementsRequest): {
         @statusCode statusCode: 200;
         @body Achievements: Achievement[];

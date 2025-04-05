@@ -49,6 +49,7 @@ model DeleteAchievementRequest {
 interface HubAchievements {
     @post
     @useAuth(HubAuth)
+    @tag("Achievements")
     addAchievement(@body request: AddAchievementRequest): {
         @statusCode statusCode: 200;
         @body AddAchievementResponse: AddAchievementResponse;
@@ -59,6 +60,7 @@ interface HubAchievements {
 interface ListAchievements {
     @post
     @useAuth(HubAuth)
+    @tag("Achievements")
     listAchievements(@body request: ListAchievementsRequest): {
         @statusCode statusCode: 200;
         @body Achievements: Achievement[];
@@ -69,6 +71,7 @@ interface ListAchievements {
 interface DeleteAchievement {
     @post
     @useAuth(HubAuth)
+    @tag("Achievements")
     deleteAchievement(@body request: DeleteAchievementRequest): {
         @statusCode statusCode: 200;
     };

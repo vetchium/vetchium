@@ -4,4 +4,4 @@ You have been removed as an interviewer from the following interview:
 {{ .InterviewURL }}
 
 Thanks,
-Vetchi Team
+Vetchium Team

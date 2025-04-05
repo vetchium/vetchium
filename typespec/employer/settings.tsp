@@ -19,6 +19,7 @@ model ChangeCoolOffPeriodRequest {
 interface ChangeCoolOffPeriod {
     @post
     @useAuth(EmployerAuth)
+    @tag("Employer Settings")
     changeCoolOffPeriod(@body request: ChangeCoolOffPeriodRequest): void;
 }
 
@@ -26,6 +27,7 @@ interface ChangeCoolOffPeriod {
 interface GetCoolOffPeriod {
     @get
     @useAuth(EmployerAuth)
+    @tag("Employer Settings")
     getCoolOffPeriod(): {
         @doc("The cool off period in days")
         coolOffPeriodDays: int32;
