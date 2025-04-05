@@ -7,7 +7,7 @@ import "../common/common.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 union OpeningState {
     // Initial state of an Opening. Applicants are not allowed. Occasionally can be reverted to this state by the employer, to prevent new Applicants.
@@ -16,7 +16,7 @@ union OpeningState {
     // Applicants are allowed to apply.
     ActiveOpening: "ACTIVE_OPENING",
 
-    // Vetchi moves an Opening to this state when there are many pending unprocessed Applications for this Opening. New Applicants are not allowed.
+    // Vetchium moves an Opening to this state when there are many pending unprocessed Applications for this Opening. New Applicants are not allowed.
     SuspendedOpening: "SUSPENDED_OPENING",
 
     // Applicants are no longer allowed to apply. All the positions needed were either filled or can no longer be filled.

@@ -8,7 +8,7 @@ import "../common/openings.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model HubUserShort {
     handle: Handle;

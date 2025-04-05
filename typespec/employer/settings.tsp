@@ -6,7 +6,7 @@ import "../common/achievements.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model ChangeCoolOffPeriodRequest {
     @doc("The new cool off period in days. Should be done by users with the role of an admin.")

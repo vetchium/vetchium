@@ -10,7 +10,7 @@ import "../common/interviews.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model FilterCandidacyInfosRequest {
     @doc("If provided, will return only the Candidacies for the given opening. If not provided, all Candidacies of the Employer across all the Openings will be returned.")

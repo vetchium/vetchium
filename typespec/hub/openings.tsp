@@ -8,7 +8,7 @@ import "../common/openings.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model ExperienceRange {
     @minValue(0)
@@ -88,7 +88,7 @@ model HubOpeningDetails {
     created_at: utcDateTime;
     education_level: EducationLevel;
     hiring_manager_name: string;
-    hiring_manager_vetchi_handle?: string; // TODO: Not done yet
+    hiring_manager_Vetchium_handle?: string; // TODO: Not done yet
     is_appliable: boolean;
     jd: string;
     job_title: string;

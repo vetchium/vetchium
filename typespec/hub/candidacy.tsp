@@ -8,7 +8,7 @@ import "../common/applications.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model AddHubCandidacyCommentRequest {
     candidacy_id: string;

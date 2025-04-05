@@ -7,7 +7,7 @@ import "../common/interviews.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model AddInterviewerRequest {
     interview_id: string;

@@ -31,7 +31,7 @@ using TypeSpec.Http;
 using TypeSpec.Rest;
 
 @service({
-    title: "Vetchi API",
+    title: "Vetchium API",
 })
 @server("http://example.com", "blah")
-namespace Vetchi;
+namespace Vetchium;

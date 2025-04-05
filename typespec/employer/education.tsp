@@ -8,7 +8,7 @@ import "../common/education.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model ListHubUserEducationRequest {
     handle: Handle;

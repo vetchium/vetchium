@@ -2,7 +2,7 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
-namespace Vetchi;
+namespace Vetchium;
 
 model Institute {
     domain: Domain;

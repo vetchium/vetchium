@@ -7,7 +7,7 @@ import "./common.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model GetCandidacyInfoRequest {
     candidacy_id: string;

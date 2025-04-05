@@ -2,10 +2,7 @@ import "@typespec/http";
 
 using TypeSpec.Http;
 
-@service({
-    title: "Employer Profile APIs",
-})
-namespace Vetchi.Employer;
+namespace Vetchium;
 
 model GetHubUserBioRequest {
     @doc("The handle of the hub user whose bio is being requested")

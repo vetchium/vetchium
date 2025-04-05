@@ -7,7 +7,7 @@ import "../common/common.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model GetOnboardStatusRequest {
     client_id: string;

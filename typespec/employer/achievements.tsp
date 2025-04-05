@@ -6,7 +6,7 @@ import "../common/achievements.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model ListHubUserAchievementsRequest {
     handle: Handle;

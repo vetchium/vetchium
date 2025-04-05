@@ -7,7 +7,7 @@ import "../common/interviews.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model GetHubInterviewsByCandidacyRequest {
   @doc("The Candidacy ID to get Interviews for")

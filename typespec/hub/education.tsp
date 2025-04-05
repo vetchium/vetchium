@@ -9,7 +9,7 @@ import "../common/education.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model AddEducationRequest {
     @doc("The domain of the institute")
@@ -17,7 +17,7 @@ model AddEducationRequest {
 
     @minLength(3)
     @maxLength(64)
-    @doc("TODO: In future, we could make the institutes to add the unique list of degrees that they offer and allow users to only select from that list. But that can be done only after Vetchi becomes a big platform.")
+    @doc("TODO: In future, we could make the institutes to add the unique list of degrees that they offer and allow users to only select from that list. But that can be done only after Vetchium becomes a big platform.")
     degree: string;
 
     @doc("If specified, the start date should be earlier than the end date")

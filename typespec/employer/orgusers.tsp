@@ -7,7 +7,7 @@ import "../common/common.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 scalar OrgUserState extends string;
 
@@ -73,8 +73,8 @@ model OrgUserShort {
     name: string;
     email: EmailAddress;
 
-    @doc("In case the same email address of the org_user is added by a hub profile, its Vetchi handle is populated here")
-    vetchi_handle?: string;
+    @doc("In case the same email address of the org_user is added by a hub profile, its Vetchium handle is populated here")
+    Vetchium_handle?: string;
 }
 
 model UpdateOrgUserRequest {

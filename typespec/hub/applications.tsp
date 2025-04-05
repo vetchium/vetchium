@@ -8,7 +8,7 @@ import "../common/applications.tsp";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-namespace Vetchi;
+namespace Vetchium;
 
 model MyApplicationsRequest {
     @doc("Filter by Application state. If nothing is provided all Applications in the Hub are fetched")
