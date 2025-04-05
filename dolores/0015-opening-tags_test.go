@@ -3,6 +3,7 @@ package dolores
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vetchium/vetchium/typespec/common"
@@ -257,9 +258,11 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(opening.Tags).To(HaveLen(2))
-			// Sort tags by name for consistent comparison
-			Expect(opening.Tags[0].Name).To(Equal("Python"))
-			Expect(opening.Tags[1].Name).To(Equal("Swift"))
+
+			sortedTags := []string{opening.Tags[0].Name, opening.Tags[1].Name}
+			sort.Strings(sortedTags)
+			Expect(sortedTags[0]).To(Equal("Python"))
+			Expect(sortedTags[1]).To(Equal("Swift"))
 		})
 
 		It(
