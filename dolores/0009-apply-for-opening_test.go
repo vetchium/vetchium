@@ -52,7 +52,7 @@ var _ = Describe("Apply For Opening", Ordered, func() {
 		query := url.Values{}
 		query.Add(
 			"query",
-			"to:active@applyopening.example subject:Vetchi Two Factor Authentication",
+			"to:active@applyopening.example subject:Vetchium Two Factor Authentication",
 		)
 		baseURL.RawQuery = query.Encode()
 

@@ -647,7 +647,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				query.Add(
 					"query",
 					fmt.Sprintf(
-						"to:%s subject:Vetchi Employer Invitation",
+						"to:%s subject:Vetchium Employer Invitation",
 						user.Email,
 					),
 				)
@@ -840,7 +840,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				query.Add(
 					"query",
 					fmt.Sprintf(
-						"to:%s subject:Vetchi Employer Invitation",
+						"to:%s subject:Vetchium Employer Invitation",
 						email,
 					),
 				)
@@ -923,7 +923,7 @@ var _ = Describe("Org Users", Ordered, func() {
 			// be synced in both places.
 			query.Add(
 				"query",
-				"to:to-signup@orgusers.example subject:Vetchi Employer Invitation",
+				"to:to-signup@orgusers.example subject:Vetchium Employer Invitation",
 			)
 			baseURL.RawQuery = query.Encode()
 

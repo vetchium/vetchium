@@ -76,7 +76,7 @@ func ForgotPassword(h wand.Wand) http.HandlerFunc {
 			// TODO: The subject should be from Hedwig, based on the template
 			// This subject is used in 0007-hubauth_test.go too. Any change
 			// in either place should be synced.
-			Subject: "Vetchi Password Reset",
+			Subject: "Vetchium Password Reset",
 		})
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)

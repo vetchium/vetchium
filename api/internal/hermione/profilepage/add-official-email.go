@@ -52,7 +52,7 @@ func AddOfficialEmail(h wand.Wand) http.HandlerFunc {
 			// TODO: The subject should be from Hedwig, based on the template
 			// This subject is used in dolores/ too. Any change
 			// in either place should be synced.
-			Subject: "Vetchi - Confirm Email Ownership",
+			Subject: "Vetchium - Confirm Email Ownership",
 		})
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)

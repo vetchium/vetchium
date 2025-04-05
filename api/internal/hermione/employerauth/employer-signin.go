@@ -134,17 +134,17 @@ Please use the following token to signin to Vetchi.
 Token: {{.Token}}
 
 Thanks,
-Vetchi Team
+Vetchium Team
 `
 
 	const htmlMailTemplate = `Hi,
 <p>Please use the following token to signin to Vetchi.</p>
 <p>Token: <b>{{.Token}}</b></p>
 <p>Thanks,</p>
-<p>Vetchi Team</p>
+<p>Vetchium Team</p>
 `
 
-	const subject = "Vetchi Two Factor Authentication Token"
+	const subject = "Vetchium Two Factor Authentication Token"
 
 	var textBody bytes.Buffer
 	err := ttmpl.Must(

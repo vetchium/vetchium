@@ -59,7 +59,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 		query.Add(
 			"query",
 			fmt.Sprintf(
-				"to:%s subject:Vetchi Two Factor Authentication",
+				"to:%s subject:Vetchium Two Factor Authentication",
 				email,
 			),
 		)
@@ -299,7 +299,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			query.Add(
 				"query",
 				fmt.Sprintf(
-					"to:%s subject:Vetchi Two Factor Authentication",
+					"to:%s subject:Vetchium Two Factor Authentication",
 					email,
 				),
 			)
@@ -476,7 +476,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			query := url.Values{}
 			query.Add(
 				"query",
-				"to:rememberme@hub.example subject:Vetchi Two Factor Authentication",
+				"to:rememberme@hub.example subject:Vetchium Two Factor Authentication",
 			)
 			baseURL.RawQuery = query.Encode()
 			mailURL := baseURL.String()
@@ -797,7 +797,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 					query.Add(
 						"query",
 						fmt.Sprintf(
-							"to:%s subject:Vetchi Password Reset",
+							"to:%s subject:Vetchium Password Reset",
 							tc.request.Email,
 						),
 					)
@@ -861,7 +861,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 				query.Add(
 					"query",
 					fmt.Sprintf(
-						"to:%s subject:Vetchi Password Reset",
+						"to:%s subject:Vetchium Password Reset",
 						tc.request.Email,
 					),
 				)
@@ -1055,7 +1055,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			query.Add(
 				"query",
 				fmt.Sprintf(
-					"to:%s subject:Vetchi Password Reset",
+					"to:%s subject:Vetchium Password Reset",
 					email,
 				),
 			)
@@ -1147,7 +1147,7 @@ var _ = Describe("Hub Login", Ordered, func() {
 			query.Add(
 				"query",
 				fmt.Sprintf(
-					"to:%s subject:Vetchi Password Reset",
+					"to:%s subject:Vetchium Password Reset",
 					email,
 				),
 			)

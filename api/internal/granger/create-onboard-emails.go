@@ -12,7 +12,7 @@ import (
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
-const subject = "Welcome to Vetchi !"
+const subject = "Welcome to Vetchium !"
 
 const textMailTemplate = `Hi
 
@@ -22,7 +22,7 @@ Please click the link below to set up your password:
 {{ .Link }}
 
 Thanks,
-The Vetchi Team
+The Vetchium Team
 `
 
 const htmlMailTemplate = `Hi
@@ -43,7 +43,7 @@ In case the above link does not work, you can copy and paste the following URL i
 </p>
 <p>
 Thanks,
-The Vetchi Team
+The Vetchium Team
 </p>
 `
 

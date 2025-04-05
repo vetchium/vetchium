@@ -144,7 +144,7 @@ func employerSignin(clientID, email, password string) (string, error) {
 	query := url.Values{}
 	query.Add(
 		"query",
-		fmt.Sprintf("to:%s subject:Vetchi Two Factor Authentication", email),
+		fmt.Sprintf("to:%s subject:Vetchium Two Factor Authentication", email),
 	)
 	baseURL.RawQuery = query.Encode()
 
@@ -334,7 +334,7 @@ func getTFACode(email string) (string, string) {
 	query.Add(
 		"query",
 		fmt.Sprintf(
-			"to:%s subject:Vetchi Two Factor Authentication",
+			"to:%s subject:Vetchium Two Factor Authentication",
 			email,
 		),
 	)

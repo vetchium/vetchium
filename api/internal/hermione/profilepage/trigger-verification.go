@@ -78,7 +78,7 @@ func TriggerVerification(h wand.Wand) http.HandlerFunc {
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{string(req.Email)},
-			Subject:   "Vetchi - Confirm Email Ownership",
+			Subject:   "Vetchium - Confirm Email Ownership",
 		})
 		if err != nil {
 			h.Dbg("failed to generate email", "error", err)

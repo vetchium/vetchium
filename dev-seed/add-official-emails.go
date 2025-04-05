@@ -89,7 +89,7 @@ func addOfficialEmail(user HubSeedUser, authToken string, domain string) {
 	query := url.Values{}
 	query.Add(
 		"query",
-		fmt.Sprintf("to:%s subject:Vetchi - Confirm Email Ownership", email),
+		fmt.Sprintf("to:%s subject:Vetchium - Confirm Email Ownership", email),
 	)
 	baseURL.RawQuery = query.Encode()
 

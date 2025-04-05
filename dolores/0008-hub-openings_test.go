@@ -57,7 +57,7 @@ var _ = Describe("Hub Openings", Ordered, func() {
 		query := url.Values{}
 		query.Add(
 			"query",
-			"to:hubopening@hub.example subject:Vetchi Two Factor Authentication",
+			"to:hubopening@hub.example subject:Vetchium Two Factor Authentication",
 		)
 		baseURL.RawQuery = query.Encode()
 

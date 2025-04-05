@@ -88,7 +88,7 @@ func employerSignin(email, password, clientID string) string {
 	query := url.Values{}
 	query.Add(
 		"query",
-		fmt.Sprintf("to:%s subject:Vetchi Two Factor Authentication", email),
+		fmt.Sprintf("to:%s subject:Vetchium Two Factor Authentication", email),
 	)
 	baseURL.RawQuery = query.Encode()
 
@@ -270,7 +270,7 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 	query := url.Values{}
 	query.Add(
 		"query",
-		fmt.Sprintf("to:%s subject:Vetchi Two Factor Authentication", email),
+		fmt.Sprintf("to:%s subject:Vetchium Two Factor Authentication", email),
 	)
 	baseURL.RawQuery = query.Encode()
 
