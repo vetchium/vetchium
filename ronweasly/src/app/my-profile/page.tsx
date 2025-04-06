@@ -10,6 +10,7 @@ import ProfilePicture from "@/components/ProfilePicture";
 import { Publications } from "@/components/Publications";
 import { config } from "@/config";
 import { useMyHandle } from "@/hooks/useMyHandle";
+import { useMyTier } from "@/hooks/useMyTier";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
 import Alert from "@mui/material/Alert";
@@ -26,11 +27,12 @@ export default function MyProfilePage() {
   const {
     bio,
     isLoading: isLoadingBio,
-    error,
+    error: bioError,
     isSaving,
     updateBio,
     uploadProfilePicture,
   } = useProfile(myHandle ?? "");
+  const { tier, isLoading: isLoadingTier, error: tierError } = useMyTier();
 
   if (isLoadingHandle) {
     return (
@@ -46,7 +48,8 @@ export default function MyProfilePage() {
     return null; // or handle unauthorized state
   }
 
-  const isLoading = isLoadingBio || isLoadingHandle;
+  const isLoading = isLoadingBio || isLoadingHandle || isLoadingTier;
+  const error = bioError || tierError;
 
   return (
     <AuthenticatedLayout>
@@ -62,13 +65,19 @@ export default function MyProfilePage() {
           onImageSelect={uploadProfilePicture}
           onRemove={() => setTimestamp(Date.now())}
           isLoading={isSaving}
+          userTier={tier}
+          isTierLoading={isLoadingTier}
         />
 
-        {bio && (
+        {isLoadingBio ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : bio ? (
           <Box sx={{ mb: 4 }}>
             <Bio bio={bio} onSave={updateBio} isLoading={isSaving} />
           </Box>
-        )}
+        ) : null}
 
         <Divider sx={{ my: 6 }} />
 

@@ -57,6 +57,11 @@ export interface HubUserInviteRequest {
 
 export type HubUserTier = "FREE_HUB_USER" | "PAID_HUB_USER";
 
+export const HubUserTiers = {
+  FreeHubUserTier: "FREE_HUB_USER" as HubUserTier,
+  PaidHubUserTier: "PAID_HUB_USER" as HubUserTier,
+} as const;
+
 export interface OnboardHubUserRequest {
   token: string;
   full_name: string;

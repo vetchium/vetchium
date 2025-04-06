@@ -1,18 +1,22 @@
-import { useRef, useState, useEffect } from "react";
-import Box from "@mui/material/Box";
-import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import Button from "@mui/material/Button";
-import { useTranslation } from "@/hooks/useTranslation";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
+import { HubUserTier, HubUserTiers } from "@vetchium/typespec";
 import Cookies from "js-cookie";
-import { config } from "@/config";
+import { useEffect, useRef, useState } from "react";
 
 interface ProfilePictureProps {
   imageUrl?: string;
@@ -20,6 +24,8 @@ interface ProfilePictureProps {
   onImageSelect?: (file: File) => Promise<void>;
   onRemove?: () => void;
   isLoading?: boolean;
+  userTier?: HubUserTier | null;
+  isTierLoading?: boolean;
 }
 
 export default function ProfilePicture({
@@ -28,6 +34,8 @@ export default function ProfilePicture({
   onImageSelect,
   onRemove,
   isLoading = false,
+  userTier,
+  isTierLoading = false,
 }: ProfilePictureProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,12 +78,14 @@ export default function ProfilePicture({
       });
   }, [imageUrl, token, timestamp]);
 
+  const isPaidUser = userTier === HubUserTiers.PaidHubUserTier;
+
   const handleImageClick = () => {
-    if (isLoading) return;
+    if (isLoading || isTierLoading) return;
 
     if (imageData) {
       setZoomOpen(true);
-    } else if (onImageSelect) {
+    } else if (onImageSelect && isPaidUser) {
       fileInputRef.current?.click();
     }
   };
@@ -128,6 +138,8 @@ export default function ProfilePicture({
     setConfirmOpen(false);
   };
 
+  const showUpgradeMessage = onImageSelect && !isPaidUser && !isTierLoading;
+
   return (
     <>
       <Box
@@ -136,7 +148,7 @@ export default function ProfilePicture({
           width: size,
           height: size,
           mx: "auto",
-          mb: 4,
+          mb: 2,
         }}
       >
         <Avatar
@@ -144,13 +156,25 @@ export default function ProfilePicture({
           sx={{
             width: size,
             height: size,
-            cursor: isLoading ? "default" : "pointer",
-            opacity: isLoading ? 0.7 : 1,
+            cursor: isLoading || isTierLoading ? "default" : "pointer",
+            opacity: isLoading || isTierLoading ? 0.7 : 1,
             transition: "opacity 0.2s",
           }}
           onClick={handleImageClick}
         />
-        {imageData && onImageSelect && (
+        {isTierLoading && (
+          <CircularProgress
+            size={24}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              marginTop: "-12px",
+              marginLeft: "-12px",
+            }}
+          />
+        )}
+        {imageData && onImageSelect && isPaidUser && (
           <IconButton
             ref={deleteButtonRef}
             sx={{
@@ -165,7 +189,7 @@ export default function ProfilePicture({
               width: 32,
               height: 32,
             }}
-            disabled={isLoading}
+            disabled={isLoading || isTierLoading}
             onClick={() => setConfirmOpen(true)}
             aria-label={t("profile.picture.remove")}
             size="small"
@@ -173,7 +197,7 @@ export default function ProfilePicture({
             <DeleteIcon fontSize="small" />
           </IconButton>
         )}
-        {onImageSelect && (
+        {onImageSelect && isPaidUser && (
           <IconButton
             sx={{
               position: "absolute",
@@ -184,24 +208,36 @@ export default function ProfilePicture({
                 backgroundColor: "action.hover",
               },
             }}
-            disabled={isLoading}
-            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading || isTierLoading}
+            onClick={handleImageClick}
             aria-label={t("profile.picture.change")}
           >
             <CameraAltIcon />
           </IconButton>
         )}
-        {onImageSelect && (
+        {onImageSelect && isPaidUser && (
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
             accept="image/*"
             style={{ display: "none" }}
-            aria-label={t("profile.picture.upload")}
           />
         )}
       </Box>
+      {showUpgradeMessage && (
+        <Typography
+          variant="caption"
+          display="block"
+          textAlign="center"
+          sx={{ mb: 4 }}
+        >
+          {t("profile.picture.upgradePrompt")}{" "}
+          <Link href="/upgrade" underline="hover">
+            {t("profile.picture.upgradeLink")}
+          </Link>
+        </Typography>
+      )}
 
       <Dialog
         open={confirmOpen}
