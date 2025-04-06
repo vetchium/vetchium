@@ -14,6 +14,7 @@ import (
 	"net/textproto"
 
 	"github.com/fatih/color"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func uploadProfilePicture(avatarPath string, authToken string) error {
@@ -92,6 +93,11 @@ func uploadProfilePicture(avatarPath string, authToken string) error {
 func uploadHubUserProfilePictures() {
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
+		if user.Tier != hub.PaidHubUserTier {
+			color.Yellow("skipping %s as it's not a paid user", user.Name)
+			continue
+		}
+
 		// 90% chance of having a profile picture
 		if rand.Float32() < 0.9 {
 			// Get the auth token from the session map
