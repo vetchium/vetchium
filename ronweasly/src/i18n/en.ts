@@ -297,6 +297,8 @@ export const en = {
         "Are you sure you want to remove your profile picture? This action cannot be undone.",
       removeConfirm: "Yes, Remove Picture",
       fullSize: "View Full Size",
+      upgradePrompt: "Profile picture upload is available for paid users.",
+      upgradeLink: "Upgrade your account.",
     },
     unlinkConfirmTitle: "Unlink Colleague Connection",
     unlinkConfirmMessage:
