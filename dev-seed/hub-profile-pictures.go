@@ -94,7 +94,7 @@ func uploadHubUserProfilePictures() {
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
 		if user.Tier != hub.PaidHubUserTier {
-			color.Yellow("skipping %s as it's not a paid user", user.Name)
+			color.Yellow("skipping free tier %s <%s>", user.Name, user.Email)
 			continue
 		}
 
@@ -116,7 +116,7 @@ func uploadHubUserProfilePictures() {
 				)
 				return
 			}
-			color.Magenta("added profile picture for %s", user.Name)
+			color.Magenta("Profile pic added: %s <%s>", user.Name, user.Email)
 		}
 	}
 }
