@@ -242,3 +242,14 @@ interface RemoveProfilePicture {
         @statusCode statusCode: 200;
     };
 }
+
+@route("/hub/my-tier")
+interface MyTier {
+    @tag("HubProfile")
+    @get
+    @useAuth(HubAuth)
+    myTier(): {
+        @statusCode statusCode: 200;
+        @body tier: HubUserTier;
+    };
+}

@@ -111,6 +111,11 @@ func RegisterHubRoutes(h *Hermione) {
 		pp.RemoveProfilePicture(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+	h.mw.Guard(
+		"/hub/my-tier",
+		pp.MyTier(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 
 	h.mw.Guard(
 		"/hub/add-education",
