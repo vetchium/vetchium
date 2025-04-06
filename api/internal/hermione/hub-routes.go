@@ -50,12 +50,12 @@ func RegisterHubRoutes(h *Hermione) {
 	h.mw.Guard(
 		"/hub/check-handle-availability",
 		hu.CheckHandleAvailability(h),
-		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+		[]hub.HubUserTier{hub.PaidHubUserTier},
 	)
 	h.mw.Guard(
 		"/hub/set-handle",
 		hu.SetHandle(h),
-		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+		[]hub.HubUserTier{hub.PaidHubUserTier},
 	)
 
 	// Official Email related endpoints

@@ -411,6 +411,10 @@ type DB interface {
 		context.Context,
 		OnboardHubUserReq,
 	) (generatedHandle string, err error)
+	CheckHandleAvailability(
+		ctx context.Context,
+		handle common.Handle,
+	) (hub.CheckHandleAvailabilityResponse, error)
 
 	// Used by granger
 	PruneOfficialEmailCodes(ctx context.Context) error

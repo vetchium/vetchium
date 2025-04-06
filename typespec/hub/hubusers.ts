@@ -1,4 +1,4 @@
-import { CountryCode, EmailAddress, Password } from "../common/common";
+import { CountryCode, EmailAddress, Handle, Password } from "../common/common";
 
 export interface LoginRequest {
   email: EmailAddress;
@@ -78,11 +78,15 @@ export interface OnboardHubUserResponse {
   generated_handle: string;
 }
 
+export interface CheckHandleAvailabilityRequest {
+  handle: Handle;
+}
+
 export interface CheckHandleAvailabilityResponse {
   is_available: boolean;
   suggested_alternatives?: string[];
 }
 
 export interface SetHandleRequest {
-  handle: string;
+  handle: Handle;
 }

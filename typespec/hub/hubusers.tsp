@@ -100,6 +100,11 @@ model OnboardHubUserResponse {
     generated_handle: string;
 }
 
+model CheckHandleAvailabilityRequest {
+    @doc("The handle to check for availability")
+    handle: Handle;
+}
+
 model CheckHandleAvailabilityResponse {
     @doc("Whether the handle is available for use")
     is_available: boolean;
@@ -110,7 +115,7 @@ model CheckHandleAvailabilityResponse {
 
 model SetHandleRequest {
     @doc("The handle sought by the logged inuser")
-    handle: string;
+    handle: Handle;
 }
 
 @route("/hub/login")
@@ -206,11 +211,14 @@ interface OnboardHubUser {
     };
 }
 
-@route("/hub/check-handle-availability/{handle}")
+@route("/hub/check-handle-availability")
 interface CheckHandleAvailability {
     @tag("HubUsers")
-    @get
-    checkHandleAvailability(@path handle: string): {
+    @post
+    @useAuth(HubAuth)
+    checkHandleAvailability(
+        @body checkHandleAvailabilityRequest: CheckHandleAvailabilityRequest,
+    ): {
         @statusCode statusCode: 200;
         @body checkHandleAvailabilityResponse: CheckHandleAvailabilityResponse;
     };

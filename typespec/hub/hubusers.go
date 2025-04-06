@@ -79,11 +79,15 @@ type OnboardHubUserResponse struct {
 	GeneratedHandle string `json:"generated_handle" validate:"required"`
 }
 
+type CheckHandleAvailabilityRequest struct {
+	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
+}
+
 type CheckHandleAvailabilityResponse struct {
 	IsAvailable           bool     `json:"is_available"                     validate:"required"`
 	SuggestedAlternatives []string `json:"suggested_alternatives,omitempty"`
 }
 
 type SetHandleRequest struct {
-	Handle string `json:"handle" validate:"required"`
+	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
 }
