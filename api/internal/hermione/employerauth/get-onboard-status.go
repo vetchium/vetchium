@@ -33,7 +33,7 @@ func GetOnboardStatus(h wand.Wand) http.HandlerFunc {
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoEmployer) {
-				// Unregistered domain. Check if vetchiadmin TXT record is present
+				// Unregistered domain. Check if vetchiumadmin TXT record is present
 				newDomainProcess(
 					r.Context(),
 					w,
@@ -81,7 +81,7 @@ func newDomainProcess(
 	domain string,
 	h wand.Wand,
 ) {
-	url := "vetchiadmin." + domain
+	url := "vetchiumadmin." + domain
 	txtRecords, err := net.LookupTXT(url)
 	if err != nil {
 		h.Dbg("lookup TXT records", "domain", domain, "error", err)
