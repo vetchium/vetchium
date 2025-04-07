@@ -62,7 +62,15 @@ interface GetOnboardStatus {
 interface SetOnboardPassword {
     @tag("Employer Auth")
     @post
-    SetOnboardPassword(@body request: SetOnboardPasswordRequest): void;
+    SetOnboardPassword(@body request: SetOnboardPasswordRequest): {
+        @doc("Password set successfully for the admin user")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("The token is either already used or expired")
+        @statusCode
+        statusCode: 422;
+    };
 }
 
 @route("/employer/signin")
