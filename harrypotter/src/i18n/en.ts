@@ -35,13 +35,15 @@ export const en = {
     verify: "Verify",
     submit: "Submit",
     rememberMe: "Remember me",
-    domainNotVerified:
-      "Please add CNAME records to verify your domain with Vetchi.",
-    domainVerifyPending:
-      "Please ask your domain admin to check their email and complete the onboarding process.",
+    domainNotVerifiedDetail:
+      "TXT record `vetchiumadmin.<your_domain>` not found or is incorrect. Please verify your DNS settings. Propagation may take a few hours.",
+    domainVerifyPendingDetail:
+      "Domain verified! An onboarding email has been sent to the admin email specified in the TXT record. Please ask them to complete the process.",
     accountDisabled: "Your account has been disabled.",
     invalidCredentials: "Invalid credentials.",
     unauthorized: "Unauthorized access",
+    domainHelperText:
+      "Add a TXT record for `vetchiumadmin.<your_domain>` with your admin email as the value. DNS changes can take a few hours to propagate.",
   },
   dashboard: {
     welcome: "Welcome to your dashboard",

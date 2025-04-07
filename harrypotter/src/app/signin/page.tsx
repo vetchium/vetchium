@@ -17,6 +17,8 @@ import {
   EmployerSignInRequest,
   EmployerSignInResponse,
   GetOnboardStatusRequest,
+  GetOnboardStatusResponse,
+  OnboardStatuses,
 } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -52,13 +54,15 @@ export default function SignIn() {
         }
       );
 
-      const data = await response.json();
+      const data: GetOnboardStatusResponse = await response.json();
 
-      if (data.status === "DOMAIN_NOT_VERIFIED") {
-        setError(t("auth.domainNotVerified"));
-      } else if (data.status === "DOMAIN_VERIFIED_ONBOARD_PENDING") {
-        setError(t("auth.domainVerifyPending"));
-      } else if (data.status === "DOMAIN_ONBOARDED") {
+      if (data.status === OnboardStatuses.DOMAIN_NOT_VERIFIED) {
+        setError(t("auth.domainNotVerifiedDetail"));
+      } else if (
+        data.status === OnboardStatuses.DOMAIN_VERIFIED_ONBOARD_PENDING
+      ) {
+        setError(t("auth.domainVerifyPendingDetail"));
+      } else if (data.status === OnboardStatuses.DOMAIN_ONBOARDED) {
         setShowCredentials(true);
         setError("");
       }
@@ -134,6 +138,11 @@ export default function SignIn() {
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
           />
+          {!showCredentials && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              {t("auth.domainHelperText")}
+            </Alert>
+          )}
           {!showCredentials ? (
             <Button
               fullWidth
