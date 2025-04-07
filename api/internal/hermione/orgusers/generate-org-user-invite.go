@@ -3,9 +3,7 @@ package orgusers
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/hedwig"
@@ -42,12 +40,8 @@ func generateOrgUserInvite(
 	}
 	domainList := strings.Join(domains, ", ")
 
-	// Ensures secrecy
-	token := util.RandomString(vetchi.OrgUserInviteTokenLenBytes)
-	// Ensures uniqueness. This is not needed mostly, but good to have
-	token = token + strconv.FormatInt(time.Now().UnixNano(), 36)
-
-	link := vetchi.EmployerBaseURL + "/signup-orguser/" + token
+	token := util.RandomUniqueID(vetchi.OrgUserInviteTokenLenBytes)
+	link := vetchi.SignupOrgUserURL + token
 
 	inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 		TemplateName: hedwig.InviteEmployee,

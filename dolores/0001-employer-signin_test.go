@@ -17,7 +17,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = FDescribe("Employer Signin", Ordered, func() {
+var _ = Describe("Employer Signin", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -130,7 +130,7 @@ var _ = FDescribe("Employer Signin", Ordered, func() {
 
 				// Extracting the token from the URL
 				re := regexp.MustCompile(
-					`https://employer.vetchi.org/onboard/([^\\\s]+)`,
+					`http://localhost:3001/signup-orguser/([^\\\s]+)`,
 				)
 				tokens := re.FindAllStringSubmatch(string(body), -1)
 				Expect(len(tokens)).Should(BeNumerically(">=", 1))
@@ -318,7 +318,7 @@ var _ = FDescribe("Employer Signin", Ordered, func() {
 
 			// Extracting the token from the URL
 			re := regexp.MustCompile(
-				`https://employer.vetchi.org/onboard/([^\\\s]+)`,
+				`http://localhost:3001/signup-orguser/([^\\\s]+)`,
 			)
 			tokens := re.FindAllStringSubmatch(string(body), -1)
 			Expect(len(tokens)).Should(BeNumerically(">=", 1))

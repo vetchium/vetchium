@@ -1100,7 +1100,7 @@ var _ = Describe("Org Users", Ordered, func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					resp, err := http.Post(
-						fmt.Sprintf("%s/employer/signup-org-user", serverURL),
+						fmt.Sprintf("%s/employer/signup-orguser", serverURL),
 						"application/json",
 						bytes.NewBuffer(jsonBytes),
 					)
@@ -1236,7 +1236,7 @@ func testSignupOrgUserGetResp(
 	Expect(err).ShouldNot(HaveOccurred())
 
 	resp, err := http.Post(
-		fmt.Sprintf("%s/employer/signup-org-user", serverURL),
+		fmt.Sprintf("%s/employer/signup-orguser", serverURL),
 		"application/json",
 		bytes.NewBuffer(jsonBytes),
 	)

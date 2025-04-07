@@ -132,7 +132,7 @@ func RegisterEmployerRoutes(h *Hermione) {
 			common.OrgUsersViewer,
 		},
 	)
-	http.HandleFunc("/employer/signup-org-user", orgusers.SignupOrgUser(h))
+	http.HandleFunc("/employer/signup-orguser", orgusers.SignupOrgUser(h))
 
 	// Opening related endpoints
 	h.mw.Protect(

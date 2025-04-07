@@ -74,10 +74,8 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 
 			g.log.Inf("onboard invites", "onboardInfo", onboardInfo)
 
-			// TODO: Should we read the length from a config?
-			token := util.RandomString(vetchi.OrgUserInviteTokenLenBytes)
-
-			link := vetchi.EmployerBaseURL + "/onboard/" + token
+			token := util.RandomUniqueID(vetchi.OrgUserInviteTokenLenBytes)
+			link := vetchi.SignupOrgUserURL + token
 
 			// TODO: Should migrate this to hedwig
 			var textBody bytes.Buffer

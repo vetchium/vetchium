@@ -44,7 +44,7 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 			TemplateName: hedwig.InviteHubUser,
 			Args: map[string]string{
 				"inviter": hubUser.FullName,
-				"link":    vetchi.HubBaseURL + "/signup-hubuser/" + token,
+				"link":    vetchi.SignupHubUserURL + token,
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{string(hubUserInviteReq.Email)},

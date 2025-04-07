@@ -3,8 +3,12 @@ package vetchi
 import "time"
 
 const (
-	HubBaseURL      = "https://vetchi.org"
-	EmployerBaseURL = "https://employer.vetchi.org"
+	HubBaseURL       = "http://localhost:3002"
+	SignupHubUserURL = HubBaseURL + "/signup-hubuser/"
+
+	EmployerBaseURL    = "http://localhost:3001"
+	EmployerOnboardURL = EmployerBaseURL + "/onboard-employer/"
+	SignupOrgUserURL   = EmployerBaseURL + "/signup-orguser/"
 )
 
 const (
