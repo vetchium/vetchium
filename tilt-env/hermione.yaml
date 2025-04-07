@@ -7,13 +7,14 @@ data:
   config.json: |
     {
       "employer": {
+        "web_url": "http://localhost:3001",
         "tfa_tok_life": "5m",
         "session_tok_life": "15m",
         "lts_tok_life": "730h",
         "employee_invite_tok_life": "5m"
       },
       "hub": {
-        "web_url": "https://vetchi.org",
+        "web_url": "http://localhost:3002",
         "tfa_tok_life": "5m",
         "session_tok_life": "15m",
         "lts_tok_life": "730h",

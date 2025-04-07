@@ -69,7 +69,7 @@ func ApplyForOpening(h wand.Wand) http.HandlerFunc {
 
 		// TODO: Fetch the opening's title from the db
 		openingTitle := ""
-		openingURL := vetchi.HubBaseURL + "/org/" +
+		openingURL := h.Config().Hub.WebURL + "/org/" +
 			applyForOpeningReq.CompanyDomain + "/opening/" +
 			applyForOpeningReq.OpeningIDWithinCompany
 
@@ -269,7 +269,7 @@ func prepareEndorsementEmails(
 				"applicant_handle": hubUser.Handle,
 				"company_name":     companyName,
 				"job_title":        openingTitle,
-				"endorse_url":      vetchi.HubBaseURL + "/my-approvals",
+				"endorse_url":      h.Config().Hub.WebURL + "/my-approvals",
 				"opening_url":      openingURL,
 			},
 			EmailFrom: vetchi.EmailFrom,

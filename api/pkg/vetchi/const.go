@@ -3,15 +3,6 @@ package vetchi
 import "time"
 
 const (
-	HubBaseURL       = "http://localhost:3002"
-	SignupHubUserURL = HubBaseURL + "/signup-hubuser/"
-
-	EmployerBaseURL    = "http://localhost:3001"
-	EmployerOnboardURL = EmployerBaseURL + "/onboard-employer/"
-	SignupOrgUserURL   = EmployerBaseURL + "/signup-orguser/"
-)
-
-const (
 	DevEnv  = "dev"
 	ProdEnv = "prod"
 )

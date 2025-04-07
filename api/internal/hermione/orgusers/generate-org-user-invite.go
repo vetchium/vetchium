@@ -41,7 +41,7 @@ func generateOrgUserInvite(
 	domainList := strings.Join(domains, ", ")
 
 	token := util.RandomUniqueID(vetchi.OrgUserInviteTokenLenBytes)
-	link := vetchi.SignupOrgUserURL + token
+	link := h.Config().SignupOrgUserURL + token
 
 	inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 		TemplateName: hedwig.InviteEmployee,

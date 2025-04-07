@@ -63,7 +63,7 @@ func ShortlistApplication(h wand.Wand) http.HandlerFunc {
 				"hub_user_full_name":      mailInfo.HubUser.FullName,
 				"employer_company_name":   mailInfo.Employer.CompanyName,
 				"employer_primary_domain": mailInfo.Employer.PrimaryDomain,
-				"candidacy_link":          vetchi.HubBaseURL + "/candidacy/" + candidacyID,
+				"candidacy_link":          h.Config().Hub.WebURL + "/candidacy/" + candidacyID,
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{mailInfo.HubUser.Email},

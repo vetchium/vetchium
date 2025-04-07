@@ -12,6 +12,8 @@ import (
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
+// TODO: These emails should be moved to Hedwig templates
+
 const subject = "Welcome to Vetchium !"
 
 const textMailTemplate = `Hi
@@ -75,7 +77,7 @@ func (g *Granger) createOnboardEmails(quit chan struct{}) {
 			g.log.Inf("onboard invites", "onboardInfo", onboardInfo)
 
 			token := util.RandomUniqueID(vetchi.OrgUserInviteTokenLenBytes)
-			link := vetchi.SignupOrgUserURL + token
+			link := g.employerBaseURL + "/signup-orguser/" + token
 
 			// TODO: Should migrate this to hedwig
 			var textBody bytes.Buffer

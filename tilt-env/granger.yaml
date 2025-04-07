@@ -8,7 +8,9 @@ data:
     {
       "env": "dev",
       "onboard_token_life": "3m",
-      "port": "8080"
+      "port": "8080",
+      "employer_base_url": "http://localhost:3001"
+      "hub_base_url": "http://localhost:3002"
     }
 ---
 apiVersion: apps/v1

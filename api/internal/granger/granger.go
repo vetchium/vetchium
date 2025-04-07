@@ -20,11 +20,11 @@ import (
 )
 
 type Config struct {
-	Env string `json:"env" validate:"required,min=1"`
-
+	Env              string `json:"env"                validate:"required,min=1"`
 	OnboardTokenLife string `json:"onboard_token_life" validate:"required,min=1"`
-
-	Port string `json:"port" validate:"required,min=1,number"`
+	Port             string `json:"port"               validate:"required,min=1,number"`
+	EmployerBaseURL  string `json:"employer_base_url"  validate:"required"`
+	HubBaseURL       string `json:"hub_base_url"       validate:"required"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -70,6 +70,9 @@ type Granger struct {
 	onboardTokenLife time.Duration
 	port             string
 	smtp             smtpCredentials
+
+	employerBaseURL string
+	hubBaseURL      string
 
 	// These are initialized programatically in NewGranger()
 	db  db.DB
@@ -137,6 +140,9 @@ func NewGranger() (*Granger, error) {
 		smtp:             sc,
 		onboardTokenLife: tokenDuration,
 
+		employerBaseURL: config.EmployerBaseURL,
+		hubBaseURL:      config.HubBaseURL,
+
 		db:  db,
 		log: logger,
 	}
@@ -149,6 +155,7 @@ func (g *Granger) Run() error {
 	pruneTokensQuit := make(chan struct{})
 	go g.pruneTokens(pruneTokensQuit)
 
+	// TODO: This should be moved to Hedwig templates
 	g.wg.Add(1)
 	createOnboardEmailsQuit := make(chan struct{})
 	go g.createOnboardEmails(createOnboardEmailsQuit)

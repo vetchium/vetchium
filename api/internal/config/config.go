@@ -12,6 +12,7 @@ import (
 
 type HermioneConfigOnDisk struct {
 	Employer struct {
+		WebURL         string `json:"web_url" validate:"required"`
 		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
 		SessionTokLife string `json:"session_tok_life" validate:"required"`
 		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
@@ -34,6 +35,7 @@ type HermioneConfigOnDisk struct {
 
 type Hermione struct {
 	Employer struct {
+		WebURL         string
 		TFATokLife     time.Duration
 		SessionTokLife time.Duration
 		LTSTokLife     time.Duration
@@ -59,6 +61,10 @@ type Hermione struct {
 
 	Port              int
 	TimingAttackDelay time.Duration
+
+	SignupHubUserURL   string
+	EmployerOnboardURL string
+	SignupOrgUserURL   string
 }
 
 func LoadHermioneConfig() (*Hermione, error) {
@@ -81,7 +87,7 @@ func LoadHermioneConfig() (*Hermione, error) {
 
 	hc := &Hermione{}
 
-	// Load S3 credentails from environment
+	// Load S3 credentials from environment
 	hc.S3.AccessKey = os.Getenv("S3_ACCESS_KEY")
 	if hc.S3.AccessKey == "" {
 		return nil, fmt.Errorf("S3_ACCESS_KEY environment variable is required")
@@ -117,6 +123,7 @@ func LoadHermioneConfig() (*Hermione, error) {
 	}
 
 	emp := cmap.Employer
+	hc.Employer.WebURL = emp.WebURL
 	hc.Employer.TFATokLife, err = time.ParseDuration(emp.TFATokLife)
 	if err != nil {
 		return nil, fmt.Errorf("employer tfa token life: %w", err)
@@ -158,6 +165,10 @@ func LoadHermioneConfig() (*Hermione, error) {
 	if err != nil {
 		return nil, fmt.Errorf("hub password reset token life: %w", err)
 	}
+
+	hc.SignupHubUserURL = hc.Hub.WebURL + "/signup-hubuser/"
+	hc.EmployerOnboardURL = hc.Employer.WebURL + "/onboard-employer/"
+	hc.SignupOrgUserURL = hc.Employer.WebURL + "/signup-orguser/"
 
 	return hc, nil
 }
