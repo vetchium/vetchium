@@ -131,7 +131,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             }}
           />
           <Typography variant="h6" noWrap component="div">
-            Vetchi
+            Vetchium
           </Typography>
         </Box>
         <div>

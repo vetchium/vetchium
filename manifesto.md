@@ -52,7 +52,7 @@ Pivoting happens everywhere and is quite natural. AWS is bigger than Amazon book
 
 However, with all these profit focus by Job companies and transforming to a social network, there is a void for connecting Employers and Employees and focus primarily on Jobs. Vetchium aims to fulfill this void. 
 
-# Vetchi's Potential
+# Vetchium's Potential
 
 ## Open Source / FOSS / Libre Software
 

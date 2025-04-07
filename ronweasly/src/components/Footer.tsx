@@ -16,7 +16,7 @@ export default function Footer() {
       }}
     >
       <Typography variant="body2" color="text.secondary" align="center">
-        © {new Date().getFullYear()} Vetchi. All rights reserved.
+        © {new Date().getFullYear()} Vetchium. All rights reserved.
       </Typography>
     </Box>
   );
