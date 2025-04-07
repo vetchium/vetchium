@@ -85,7 +85,7 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 				email_state, created_at, processed_at
 			) VALUES (
 				$1, 'no-reply@vetchi.org', $2, NULL, NULL,
-				'Welcome to Vetchi', 'Welcome HTML', 'Welcome Text',
+				'Welcome to Vetchium', 'Welcome HTML', 'Welcome Text',
 				'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now())
 			)
 		`, emailID, []string{emp.email})
