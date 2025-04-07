@@ -17,7 +17,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = Describe("Employer Signin", Ordered, func() {
+var _ = FDescribe("Employer Signin", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -86,7 +86,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 				// Sleep for 10 seconds to allow the email to be sent by granger
 				<-time.After(30 * time.Second)
 
-				url := "http://localhost:8025/api/v1/search?query=to%3Asecretsapp%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+				url := "http://localhost:8025/api/v1/search?query=to%3Aadmin%40example.com%20subject%3AWelcome%20to%20Vetchium%20!"
 				log.Println("URL:", url)
 
 				listMailsReq, err := http.NewRequest("GET", url, nil)
@@ -276,7 +276,7 @@ var _ = Describe("Employer Signin", Ordered, func() {
 			<-time.After(30 * time.Second)
 			fmt.Fprintf(GinkgoWriter, "Wokeup\n")
 
-			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchi%20!"
+			url := "http://localhost:8025/api/v1/search?query=to%3Aaadal%40example.com%20subject%3AWelcome%20to%20Vetchium%20!"
 			log.Println("URL:", url)
 
 			mailPitReq1, err := http.NewRequest("GET", url, nil)

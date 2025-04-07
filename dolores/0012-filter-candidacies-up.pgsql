@@ -9,7 +9,7 @@ BEGIN;
 
 -- Create employer and related records
 INSERT INTO emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
-VALUES ('12345678-0011-0011-0011-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['admin@filter-candidacy-infos.example'], NULL, NULL, 'Welcome to Vetchi', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+VALUES ('12345678-0011-0011-0011-000000000011'::uuid, 'no-reply@vetchi.org', ARRAY['admin@filter-candidacy-infos.example'], NULL, NULL, 'Welcome to Vetchium', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 INSERT INTO employers (id, client_id_type, employer_state, company_name, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)
 VALUES ('12345678-0011-0011-0011-000000000201'::uuid, 'DOMAIN', 'ONBOARDED', 'filter-candidacy-infos.example', 'admin@filter-candidacy-infos.example', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0011-0011-0011-000000000011'::uuid, timezone('UTC'::text, now()));
