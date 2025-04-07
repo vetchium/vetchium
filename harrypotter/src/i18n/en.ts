@@ -24,6 +24,7 @@ export const en = {
     back: "Back",
     headerTitle: "Vetchium for Employers",
     success: "Success",
+    redirecting: "Redirecting to login page in {{seconds}} seconds...",
   },
   auth: {
     signin: "Sign In",
@@ -44,6 +45,13 @@ export const en = {
     unauthorized: "Unauthorized access",
     domainHelperText:
       "Add a TXT record for `vetchiumadmin.<your_domain>` with your admin email as the value. DNS changes can take a few hours to propagate.",
+    signupOrgUser: "Set Up Organization User",
+    confirmPassword: "Confirm Password",
+    passwordSetupSuccess: "Password set successfully. Please sign in.",
+    passwordsDontMatch: "Passwords don't match",
+    expiredOrInvalidToken: "The token is either expired or invalid.",
+    setPassword: "Set Password",
+    completeSignup: "Complete Signup",
   },
   dashboard: {
     welcome: "Welcome to your dashboard",

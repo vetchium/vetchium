@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/signin", "/tfa"];
+const PUBLIC_PATH_PREFIXES = ["/signup-orguser/"];
 
 export function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get("session_token")?.value;
@@ -9,7 +10,10 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Allow public paths
-  if (PUBLIC_PATHS.includes(pathname)) {
+  if (
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  ) {
     // If user is already authenticated, redirect to home
     if (sessionToken) {
       return NextResponse.redirect(new URL("/", request.url));
