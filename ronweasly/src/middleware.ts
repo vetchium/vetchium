@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const publicPaths = ["/login", "/tfa"];
 const signupPathRegex = /^\/signup-hubuser\/.+/;
@@ -40,5 +40,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Match all request paths except for the ones starting with:
+  // - api (API routes)
+  // - _next/static (static files)
+  // - _next/image (image optimization files)
+  // - any path containing a dot (likely static files: .png, .ico, .webp, etc.)
+  matcher: ["/((?!api|_next/static|_next/image|.*\\..*).*) "],
 };

@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
-import Paper from "@mui/material/Paper";
-import IconButton from "@mui/material/IconButton";
+import { config } from "@/config";
+import { useTranslation } from "@/hooks/useTranslation";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { config } from "@/config";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
-import { useTranslation } from "@/hooks/useTranslation";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -85,15 +85,13 @@ export default function LoginPage() {
             width: "100%",
           }}
         >
-          {/* Logo placeholder */}
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              bgcolor: "primary.main",
-              borderRadius: 2,
-              mb: 2,
-            }}
+          {/* Logo */}
+          <img
+            src="/logo.webp"
+            alt="Vetchium Logo"
+            width={60}
+            height={60}
+            style={{ marginBottom: "16px" }}
           />
           <Typography component="h1" variant="h5">
             {t("common.login")}

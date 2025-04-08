@@ -9,7 +9,6 @@ import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -120,19 +119,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <MenuIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-          {/* Placeholder for logo */}
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: "white",
-              borderRadius: 1,
-              mr: 2,
-            }}
+          {/* Logo */}
+          <img
+            src="/logo.webp"
+            alt="Vetchium Logo"
+            width={60}
+            height={60}
+            style={{ display: "block" }}
           />
-          <Typography variant="h6" noWrap component="div">
-            Vetchium
-          </Typography>
         </Box>
         <div>
           <IconButton
