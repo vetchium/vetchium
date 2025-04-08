@@ -6,6 +6,7 @@ export * from "./common/common";
 export * from "./common/education";
 export * from "./common/interviews";
 export * from "./common/openings";
+export * from "./common/posts";
 
 // Export hub types
 export * from "./hub/achievements";
@@ -17,6 +18,7 @@ export * from "./hub/employers";
 export * from "./hub/hubusers";
 export * from "./hub/interviews";
 export * from "./hub/openings";
+export * from "./hub/posts";
 export * from "./hub/profilepage";
 export * from "./hub/workhistory";
 

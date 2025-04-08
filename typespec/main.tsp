@@ -24,6 +24,7 @@ import "./hub/employers.tsp";
 import "./hub/hubusers.tsp";
 import "./hub/interviews.tsp";
 import "./hub/openings.tsp";
+import "./hub/posts.tsp";
 import "./hub/profilepage.tsp";
 import "./hub/workhistory.tsp";
 
