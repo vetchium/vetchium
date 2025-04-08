@@ -39,7 +39,7 @@ FROM openings o
 	LEFT JOIN opening_locations ol ON o.employer_id = ol.employer_id AND o.id = ol.opening_id
 	LEFT JOIN locations l ON ol.location_id = l.id
 	LEFT JOIN opening_tag_mappings otm ON o.employer_id = otm.employer_id AND o.id = otm.opening_id
-	LEFT JOIN opening_tags ot ON otm.tag_id = ot.id
+	LEFT JOIN tags ot ON otm.tag_id = ot.id
 	WHERE o.state = $2
 		AND ao.can_apply = true
 		AND (

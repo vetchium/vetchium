@@ -551,7 +551,7 @@ CREATE TABLE interview_interviewers (
     PRIMARY KEY (interview_id, interviewer_id)
 );
 
-CREATE TABLE opening_tags (
+CREATE TABLE tags (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
@@ -561,12 +561,12 @@ CREATE TABLE opening_tag_mappings (
     employer_id UUID NOT NULL,
     opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
-    tag_id UUID REFERENCES opening_tags(id) NOT NULL,
+    tag_id UUID REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (employer_id, opening_id, tag_id)
 );
 
 -- Seed data for common opening tags
-INSERT INTO opening_tags (name) VALUES
+INSERT INTO tags (name) VALUES
     ('DevOps'),
     ('Golang'),
     ('Database Administrator'),
@@ -1029,5 +1029,19 @@ BEGIN
     RETURN v_last_candidacy_date < (NOW() - (v_cool_off_period || ' days')::INTERVAL);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE posts (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    author_id UUID REFERENCES hub_users(id) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE post_tags (
+    post_id TEXT REFERENCES posts(id) NOT NULL,
+    tag_id UUID REFERENCES tags(id) NOT NULL,
+    PRIMARY KEY (post_id, tag_id)
+);
 
 COMMIT;

@@ -13,7 +13,7 @@ func (p *PG) FilterOpeningTags(
 ) ([]common.OpeningTag, error) {
 	query := `
 SELECT id, name
-FROM opening_tags
+FROM tags
 WHERE 1=1
 `
 	args := make([]interface{}, 0)

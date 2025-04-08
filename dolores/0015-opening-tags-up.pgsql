@@ -62,7 +62,7 @@ INSERT INTO hub_users (
 );
 
 -- Create pre-existing tags for testing
-INSERT INTO opening_tags (id, name, created_at)
+INSERT INTO tags (id, name, created_at)
 VALUES 
     ('12345678-0015-0015-0015-000000070001'::uuid, 'Go', timezone('UTC'::text, now())),
     ('12345678-0015-0015-0015-000000070002'::uuid, 'Java', timezone('UTC'::text, now())),

@@ -309,7 +309,7 @@ SELECT $1, $2, UNNEST($3::uuid[])
 	if len(createOpeningReq.NewTags) > 0 {
 		// First get IDs of any pre-existing tags from the names
 		getExistingTagsQuery := `
-SELECT id, name FROM opening_tags WHERE name = ANY($1)
+SELECT id, name FROM tags WHERE name = ANY($1)
 `
 		rows, err := tx.Query(
 			ctx,
@@ -347,7 +347,7 @@ SELECT id, name FROM opening_tags WHERE name = ANY($1)
 		// Create only the tags that don't exist
 		if len(newTagNames) > 0 {
 			insertNewTagsQuery := `
-INSERT INTO opening_tags (name)
+INSERT INTO tags (name)
 SELECT UNNEST($1::text[])
 RETURNING id
 `

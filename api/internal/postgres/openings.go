@@ -62,7 +62,7 @@ FROM
     LEFT JOIN hub_users_official_emails hue_ht ON ht.email = hue_ht.official_email
     LEFT JOIN hub_users hu_ht ON hue_ht.hub_user_id = hu_ht.id
     LEFT JOIN opening_tag_mappings otm ON o.id = otm.opening_id AND o.employer_id = otm.employer_id
-    LEFT JOIN opening_tags ot ON otm.tag_id = ot.id
+    LEFT JOIN tags ot ON otm.tag_id = ot.id
 WHERE
     o.id = $1
     AND o.employer_id = $2
