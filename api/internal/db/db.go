@@ -301,7 +301,7 @@ type DB interface {
 	FilterOpeningTags(
 		context.Context,
 		common.FilterOpeningTagsRequest,
-	) ([]common.OpeningTag, error)
+	) ([]common.VTag, error)
 
 	// Employers
 	FilterEmployers(

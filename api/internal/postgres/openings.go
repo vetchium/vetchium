@@ -100,7 +100,7 @@ GROUP BY
 	var salary common.Salary
 	var minAmount, maxAmount *float64
 	var currencyStr *string
-	var tags []common.OpeningTag
+	var tags []common.VTag
 
 	err := p.pool.QueryRow(ctx, query, getOpeningReq.ID, orgUser.EmployerID).
 		Scan(

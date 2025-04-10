@@ -2,7 +2,7 @@ import { Post } from "../common/posts";
 
 export interface AddPostRequest {
   content: string;
-  tags: string[];
+  tag_ids: string[];
 }
 
 export interface AddPostResponse {

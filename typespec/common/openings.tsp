@@ -56,11 +56,11 @@ model FilterOpeningTagsRequest {
     prefix?: string;
 }
 
-scalar OpeningTagID extends string;
+scalar VTagID extends string;
 
-model OpeningTag {
+model VTag {
     @doc("Client should not assume anything about the format of the string. Could be UUID or XID or something random.")
-    id: OpeningTagID;
+    id: VTagID;
 
     name: string;
 

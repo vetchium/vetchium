@@ -59,13 +59,13 @@ type FilterOpeningTagsRequest struct {
 	Prefix *string `json:"prefix,omitempty"`
 }
 
-type OpeningTagID string
+type VTagID string
 
-type OpeningTag struct {
-	ID   OpeningTagID `json:"id"`
-	Name string       `json:"name"`
+type VTag struct {
+	ID   VTagID `json:"id"`
+	Name string `json:"name"`
 }
 
-type OpeningTags struct {
-	Tags []OpeningTag `json:"tags" validate:"required"`
+type VTags struct {
+	Tags []VTag `json:"tags" validate:"required"`
 }

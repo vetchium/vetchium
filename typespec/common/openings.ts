@@ -65,9 +65,9 @@ export interface FilterOpeningTagsRequest {
   prefix?: string;
 }
 
-export type OpeningTagID = string;
+export type VTagID = string;
 
-export interface OpeningTag {
-  id: OpeningTagID;
+export interface VTag {
+  id: VTagID;
   name: string;
 }

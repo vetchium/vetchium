@@ -10,7 +10,7 @@ import (
 func (p *PG) FilterOpeningTags(
 	ctx context.Context,
 	req common.FilterOpeningTagsRequest,
-) ([]common.OpeningTag, error) {
+) ([]common.VTag, error) {
 	query := `
 SELECT id, name
 FROM tags
@@ -35,9 +35,9 @@ WHERE 1=1
 	}
 	defer rows.Close()
 
-	var tags []common.OpeningTag
+	var tags []common.VTag
 	for rows.Next() {
-		var tag common.OpeningTag
+		var tag common.VTag
 		err = rows.Scan(&tag.ID, &tag.Name)
 		if err != nil {
 			p.log.Err("failed to scan opening tag", "error", err)

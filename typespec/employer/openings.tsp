@@ -93,7 +93,7 @@ model Opening {
 
     @doc("List of tags associated with the opening")
     @maxItems(3)
-    tags?: OpeningTag[];
+    tags?: VTag[];
 
     created_at: utcDateTime;
     last_updated_at: utcDateTime;
@@ -155,7 +155,7 @@ model CreateOpeningRequest {
 
     @doc("List of tags to be used for the Opening. Atleast one tag should be specified either here or in new_tags.")
     @maxItems(3)
-    tags?: OpeningTagID[];
+    tags?: VTagID[];
 
     @doc("These are list of new tags that should be created and then the Opening should be associated with them. Atleast one tag should be specified either here or in tags.")
     @maxItems(3)
@@ -355,6 +355,6 @@ interface FilterOpeningTags {
         @body filterOpeningTagsRequest: FilterOpeningTagsRequest,
     ): {
         @statusCode statusCode: 200;
-        @body opening_tags: OpeningTag[];
+        @body opening_tags: VTag[];
     };
 }

@@ -2,9 +2,9 @@ import { CountryCode } from "../common/common";
 import {
   EducationLevel,
   OpeningState,
-  OpeningTagID,
   OpeningType,
   Salary,
+  VTagID,
 } from "../common/openings";
 
 export interface ExperienceRange {
@@ -25,7 +25,7 @@ export interface FindHubOpeningsRequest {
   experience_range?: ExperienceRange;
   salary_range?: Salary;
   min_education_level?: EducationLevel;
-  tags?: OpeningTagID[];
+  tags?: VTagID[];
   terms?: string[];
   pagination_key?: number;
   limit?: number;

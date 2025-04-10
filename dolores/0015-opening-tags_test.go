@@ -48,7 +48,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 				http.StatusOK,
 				true,
 			)
-			var result []common.OpeningTag
+			var result []common.VTag
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -75,7 +75,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 				http.StatusOK,
 				true,
 			)
-			var result []common.OpeningTag
+			var result []common.VTag
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(HaveLen(3))
@@ -94,7 +94,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 				http.StatusOK,
 				true,
 			)
-			var result []common.OpeningTag
+			var result []common.VTag
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(BeEmpty())
@@ -121,7 +121,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070003", // Python
 					"12345678-0015-0015-0015-000000070001", // Go
 				},
@@ -226,7 +226,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070003", // Python
 				},
 				NewTags: []string{"Swift"},
@@ -319,7 +319,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 				// Verify that the ID matches the existing Go tag ID
 				Expect(
 					opening.Tags[0].ID,
-				).To(Equal(common.OpeningTagID("12345678-0015-0015-0015-000000070001")))
+				).To(Equal(common.VTagID("12345678-0015-0015-0015-000000070001")))
 			},
 		)
 	})
@@ -342,7 +342,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070003", // Python
 					"12345678-0015-0015-0015-000000070001", // Go
 				},
@@ -391,7 +391,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070003", // Python
 				},
 				NewTags: []string{"Swift"},
@@ -444,7 +444,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070001", // Go
 					"12345678-0015-0015-0015-000000070002", // Java
 					"12345678-0015-0015-0015-000000070003", // Python
@@ -505,7 +505,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.OpeningTagID{
+				Tags: []common.VTagID{
 					"12345678-0015-0015-0015-000000070001", // Go
 					"12345678-0015-0015-0015-000000070002", // Java
 				},

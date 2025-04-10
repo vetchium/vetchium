@@ -39,10 +39,10 @@ VALUES ($1, $2, $3)
 
 	tagsInsertQuery := `
 INSERT INTO post_tags (post_id, tag_id)
-VALUES ($1, $2)
+VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
 
-	for _, tag := range req.Tags {
+	for _, tag := range req.TagIDs {
 		_, err = tx.Exec(
 			req.Context,
 			tagsInsertQuery,

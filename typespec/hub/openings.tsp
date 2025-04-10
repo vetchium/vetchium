@@ -49,7 +49,7 @@ model FindHubOpeningsRequest {
     min_education_level?: EducationLevel;
 
     @doc("If nothing is passed, all tags are considered")
-    tags?: OpeningTagID[];
+    tags?: VTagID[];
 
     @doc("The strings passed here will be used to filter on the Opening Titles")
     terms?: string[];

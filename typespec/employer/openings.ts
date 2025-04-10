@@ -2,10 +2,10 @@ import { CountryCode, EmailAddress, TimeZone } from "../common/common";
 import {
   EducationLevel,
   OpeningState,
-  OpeningTag,
-  OpeningTagID,
   OpeningType,
   Salary,
+  VTag,
+  VTagID,
 } from "../common/openings";
 import type { CostCenterName } from "../employer/costcenters";
 import type { OrgUserShort } from "../employer/orgusers";
@@ -48,7 +48,7 @@ export interface Opening {
   employer_notes?: string;
   min_education_level: EducationLevel;
   salary?: Salary;
-  tags?: OpeningTag[];
+  tags?: VTag[];
 }
 
 export interface CreateOpeningRequest {
@@ -70,7 +70,7 @@ export interface CreateOpeningRequest {
   salary?: Salary;
 
   // Should be minimum 1 and maximum 3
-  tags: OpeningTagID[];
+  tags: VTagID[];
 
   // Can be maximum 3
   new_tags?: string[];
