@@ -61,7 +61,7 @@ export interface Salary {
   max_amount: number;
 }
 
-export interface FilterOpeningTagsRequest {
+export interface FilterVTagsRequest {
   prefix?: string;
 }
 

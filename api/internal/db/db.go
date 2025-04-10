@@ -298,9 +298,9 @@ type DB interface {
 	GetCandidateInfo(context.Context, string) (CandidateInfo, error)
 
 	// Opening tags
-	FilterOpeningTags(
+	FilterVTags(
 		context.Context,
-		common.FilterOpeningTagsRequest,
+		common.FilterVTagsRequest,
 	) ([]common.VTag, error)
 
 	// Employers

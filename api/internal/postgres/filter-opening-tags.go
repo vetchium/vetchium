@@ -7,9 +7,9 @@ import (
 	"github.com/vetchium/vetchium/typespec/common"
 )
 
-func (p *PG) FilterOpeningTags(
+func (p *PG) FilterVTags(
 	ctx context.Context,
-	req common.FilterOpeningTagsRequest,
+	req common.FilterVTagsRequest,
 ) ([]common.VTag, error) {
 	query := `
 SELECT id, name

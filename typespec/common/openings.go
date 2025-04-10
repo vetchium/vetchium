@@ -55,7 +55,7 @@ type Salary struct {
 	Currency  Currency `json:"currency"   validate:"required"`
 }
 
-type FilterOpeningTagsRequest struct {
+type FilterVTagsRequest struct {
 	Prefix *string `json:"prefix,omitempty"`
 }
 

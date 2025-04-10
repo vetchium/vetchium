@@ -51,7 +51,7 @@ model Salary {
     currency: Currency;
 }
 
-model FilterOpeningTagsRequest {
+model FilterVTagsRequest {
     @doc("The prefix that should be used to filter the tags by name")
     prefix?: string;
 }

@@ -40,7 +40,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 
 	Describe("Filter Opening Tags", func() {
 		It("should return all tags when no prefix is provided", func() {
-			req := common.FilterOpeningTagsRequest{}
+			req := common.FilterVTagsRequest{}
 			resp := doPOST(
 				token,
 				req,
@@ -67,7 +67,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 
 		It("should filter tags by prefix", func() {
 			prefix := "P"
-			req := common.FilterOpeningTagsRequest{Prefix: &prefix}
+			req := common.FilterVTagsRequest{Prefix: &prefix}
 			resp := doPOST(
 				token,
 				req,
@@ -86,7 +86,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 
 		It("should return empty list for non-existent prefix", func() {
 			prefix := "NonExistent"
-			req := common.FilterOpeningTagsRequest{Prefix: &prefix}
+			req := common.FilterVTagsRequest{Prefix: &prefix}
 			resp := doPOST(
 				token,
 				req,

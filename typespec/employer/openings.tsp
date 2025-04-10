@@ -347,13 +347,11 @@ interface ChangeOpeningState {
 }
 
 @route("/employer/filter-opening-tags")
-interface FilterOpeningTags {
+interface FilterVTags {
     @tag("Openings")
     @post
     @useAuth(EmployerAuth)
-    filterOpeningTags(
-        @body filterOpeningTagsRequest: FilterOpeningTagsRequest,
-    ): {
+    filterVTags(@body filterVTagsRequest: FilterVTagsRequest): {
         @statusCode statusCode: 200;
         @body opening_tags: VTag[];
     };

@@ -160,12 +160,12 @@ interface ApplyForOpening {
 }
 
 @route("/hub/filter-opening-tags")
-interface FilterHubOpeningTags {
+interface FilterHubVTags {
     @tag("Openings")
     @post
     @useAuth(HubAuth)
-    filterHubOpeningTags(@body request: FilterOpeningTagsRequest): {
+    filterHubVTags(@body request: FilterVTagsRequest): {
         @statusCode statusCode: 200;
-        @body OpeningTag: [];
+        @body VTag: [];
     };
 }

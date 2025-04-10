@@ -191,7 +191,7 @@ func RegisterEmployerRoutes(h *Hermione) {
 	// Opening tags related endpoints
 	h.mw.Protect(
 		"/employer/filter-opening-tags",
-		he.FilterOpeningTags(h),
+		he.FilterVTags(h),
 		[]common.OrgUserRole{
 			common.Admin,
 			common.OpeningsCRUD,

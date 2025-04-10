@@ -18,11 +18,7 @@ import Paper from "@mui/material/Paper";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import {
-  FindHubOpeningsRequest,
-  HubOpening,
-  OpeningTag,
-} from "@vetchium/typespec";
+import { FindHubOpeningsRequest, HubOpening, VTag } from "@vetchium/typespec";
 import countries from "@vetchium/typespec/common/countries.json";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,7 +30,7 @@ interface Country {
 }
 
 // Interface for tags including free input
-interface TagOption extends OpeningTag {
+interface TagOption extends VTag {
   inputValue?: string;
 }
 
@@ -55,8 +51,8 @@ function FindOpeningsContent() {
   const [countryCode, setCountryCode] = useState("");
   const [searchResults, setSearchResults] = useState<HubOpening[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [tagSuggestions, setTagSuggestions] = useState<OpeningTag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<VTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<VTag[]>([]);
 
   // Fetch tag suggestions when user types
   useEffect(() => {

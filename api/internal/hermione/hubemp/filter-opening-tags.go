@@ -8,28 +8,28 @@ import (
 	"github.com/vetchium/vetchium/typespec/common"
 )
 
-func FilterOpeningTags(h wand.Wand) http.HandlerFunc {
+func FilterVTags(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered FilterOpeningTags")
+		h.Dbg("Entered FilterVTags")
 
-		var filterOpeningTagsReq common.FilterOpeningTagsRequest
-		err := json.NewDecoder(r.Body).Decode(&filterOpeningTagsReq)
+		var filterVTagsReq common.FilterVTagsRequest
+		err := json.NewDecoder(r.Body).Decode(&filterVTagsReq)
 		if err != nil {
 			h.Dbg("failed to decode filter opening tags request", "error", err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
-		if !h.Vator().Struct(w, &filterOpeningTagsReq) {
+		if !h.Vator().Struct(w, &filterVTagsReq) {
 			h.Dbg(
 				"validation failed",
-				"filterOpeningTagsReq",
-				filterOpeningTagsReq,
+				"filterVTagsReq",
+				filterVTagsReq,
 			)
 			return
 		}
 
-		tags, err := h.DB().FilterOpeningTags(r.Context(), filterOpeningTagsReq)
+		tags, err := h.DB().FilterVTags(r.Context(), filterVTagsReq)
 		if err != nil {
 			h.Err("failed to filter opening tags", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
