@@ -4,9 +4,8 @@ import {
   OpeningState,
   OpeningType,
   Salary,
-  VTag,
-  VTagID,
 } from "../common/openings";
+import { VTag, VTagID } from "../common/vtags";
 import type { CostCenterName } from "../employer/costcenters";
 import type { OrgUserShort } from "../employer/orgusers";
 

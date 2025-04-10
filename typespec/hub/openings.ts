@@ -4,9 +4,8 @@ import {
   OpeningState,
   OpeningType,
   Salary,
-  VTagID,
 } from "../common/openings";
-
+import { VTagID } from "../common/vtags";
 export interface ExperienceRange {
   yoe_min: number;
   yoe_max: number;

@@ -55,7 +55,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			// Check for existence of specific tags without enforcing positions
 			tagNames := make([]string, len(result))
 			for i, tag := range result {
-				tagNames[i] = tag.Name
+				tagNames[i] = string(tag.Name)
 			}
 			Expect(tagNames).To(ContainElement("Backend Developer"))
 			Expect(tagNames).To(ContainElement("Go"))
@@ -259,9 +259,9 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 
 			Expect(opening.Tags).To(HaveLen(2))
 
-			sortedTags := []common.VTagName{
-				opening.Tags[0].Name,
-				opening.Tags[1].Name,
+			sortedTags := []string{
+				string(opening.Tags[0].Name),
+				string(opening.Tags[1].Name),
 			}
 			sort.Strings(sortedTags)
 			Expect(sortedTags[0]).To(Equal("Python"))
