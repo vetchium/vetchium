@@ -45,6 +45,7 @@ model GetTimelineResponse {
 interface AddPost {
     @tag("Posts")
     @post
+    @useAuth(HubAuth)
     addPost(@body request: AddPostRequest): {
         @statusCode statusCode: 200;
         @body response: AddPostResponse;
