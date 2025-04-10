@@ -10,6 +10,7 @@ using TypeSpec.Rest;
 namespace Vetchium;
 
 model AddPostRequest {
+    @minLength(1)
     @maxLength(4096)
     content: string;
 

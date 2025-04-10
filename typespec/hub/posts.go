@@ -3,8 +3,8 @@ package hub
 import "github.com/vetchium/vetchium/typespec/common"
 
 type AddPostRequest struct {
-	Content string   `json:"content"`
-	Tags    []string `json:"tags"`
+	Content string   `json:"content" validate:"required,min=1,max=4096"`
+	Tags    []string `json:"tags"    validate:"max=3"`
 }
 
 type AddPostResponse struct {
