@@ -10,39 +10,29 @@ const (
 const (
 	// Sent in the email to the org users
 	OrgUserInviteTokenLenBytes = 16
-
 	// Sent in the invite email to new hub users
 	HubUerInviteTokenLenBytes = 16
-
 	// Remember to change the email templates too if the duration changes
 	HubUserInviteTokenValidity time.Duration = 3 * 24 * time.Hour // 3 days
-
 	// Triggered by the forgot password request and sent to the user's email
 	PasswordResetTokenLenBytes = 16
-
+	// Used for the session tokens, sent as response after /tfa
+	SessionTokenLenBytes = 8
 	// Sent as a response to the signin request
 	// Used for the /employer/tfa request body
 	TGTokenLenBytes = 32
 
 	// Used for the email code that is sent to the user's email for tfa
 	EmailTokenLenBytes = 2
-
-	// Used for the session tokens
-	SessionTokenLenBytes = 8
-
-	ApplicationIDLenBytes = 16
-
-	CandidacyIDLenBytes = 16
-
-	InterviewIDLenBytes = 16
-
-	ResumeIDLenBytes = 12
-
 	// Used for the code that is sent to the user's email for add official email
 	AddOfficialEmailCodeLenBytes = 2
 
-	// Used for the endorsement ID in application endorsements
-	EndorsementIDLenBytes = 32
+	ApplicationIDLenBytes = 16
+	CandidacyIDLenBytes   = 16
+	EndorsementIDLenBytes = 16
+	InterviewIDLenBytes   = 16
+	PostIDLenBytes        = 24
+	ResumeIDLenBytes      = 12
 )
 
 const (
