@@ -346,7 +346,7 @@ interface ChangeOpeningState {
     };
 }
 
-@route("/employer/filter-opening-tags")
+@route("/employer/filter-vtags")
 interface FilterVTags {
     @tag("Openings")
     @post

@@ -216,7 +216,7 @@ export default function CreateOpeningPage() {
         }
 
         const response = await fetch(
-          `${config.API_SERVER_PREFIX}/employer/filter-opening-tags`,
+          `${config.API_SERVER_PREFIX}/employer/filter-vtags`,
           {
             method: "POST",
             headers: {

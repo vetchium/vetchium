@@ -44,7 +44,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			resp := doPOST(
 				token,
 				req,
-				"/employer/filter-opening-tags",
+				"/employer/filter-vtags",
 				http.StatusOK,
 				true,
 			)
@@ -71,7 +71,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			resp := doPOST(
 				token,
 				req,
-				"/employer/filter-opening-tags",
+				"/employer/filter-vtags",
 				http.StatusOK,
 				true,
 			)
@@ -90,7 +90,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			resp := doPOST(
 				token,
 				req,
-				"/employer/filter-opening-tags",
+				"/employer/filter-vtags",
 				http.StatusOK,
 				true,
 			)

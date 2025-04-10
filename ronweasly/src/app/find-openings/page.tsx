@@ -63,7 +63,7 @@ function FindOpeningsContent() {
 
         try {
           const response = await fetch(
-            `${config.API_SERVER_PREFIX}/hub/filter-opening-tags`,
+            `${config.API_SERVER_PREFIX}/hub/filter-vtags`,
             {
               method: "POST",
               headers: {

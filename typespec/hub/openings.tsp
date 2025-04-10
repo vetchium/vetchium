@@ -159,7 +159,7 @@ interface ApplyForOpening {
     };
 }
 
-@route("/hub/filter-opening-tags")
+@route("/hub/filter-vtags")
 interface FilterHubVTags {
     @tag("Openings")
     @post

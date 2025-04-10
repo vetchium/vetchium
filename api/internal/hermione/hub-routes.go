@@ -161,7 +161,7 @@ func RegisterHubRoutes(h *Hermione) {
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
 	h.mw.Guard(
-		"/hub/filter-opening-tags",
+		"/hub/filter-vtags",
 		he.FilterVTags(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
