@@ -13,6 +13,7 @@ import (
 	ho "github.com/vetchium/vetchium/api/internal/hermione/hubopenings"
 	hu "github.com/vetchium/vetchium/api/internal/hermione/hubusers"
 	in "github.com/vetchium/vetchium/api/internal/hermione/interview"
+	po "github.com/vetchium/vetchium/api/internal/hermione/posts"
 	pp "github.com/vetchium/vetchium/api/internal/hermione/profilepage"
 	wh "github.com/vetchium/vetchium/api/internal/hermione/workhistory"
 	"github.com/vetchium/vetchium/typespec/hub"
@@ -291,6 +292,12 @@ func RegisterHubRoutes(h *Hermione) {
 	h.mw.Guard(
 		"/hub/filter-colleagues",
 		co.FilterColleagues(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/add-post",
+		po.AddPost(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
 }
