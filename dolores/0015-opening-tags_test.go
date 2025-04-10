@@ -79,9 +79,16 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(HaveLen(3))
-			Expect(result[0].Name).To(Equal("PostgreSQL"))
-			Expect(result[1].Name).To(Equal("Product Manager"))
-			Expect(result[2].Name).To(Equal("Python"))
+
+			got := make([]string, len(result))
+			for i, tag := range result {
+				got[i] = string(tag.Name)
+			}
+			sort.Strings(got)
+
+			Expect(got[0]).To(Equal("PostgreSQL"))
+			Expect(got[1]).To(Equal("Product Manager"))
+			Expect(got[2]).To(Equal("Python"))
 		})
 
 		It("should return empty list for non-existent prefix", func() {
@@ -153,9 +160,15 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(opening.Tags).To(HaveLen(2))
-			// Sort tags by name for consistent comparison
-			Expect(opening.Tags[0].Name).To(Equal("Go"))
-			Expect(opening.Tags[1].Name).To(Equal("Python"))
+
+			got := make([]string, len(opening.Tags))
+			for i, tag := range opening.Tags {
+				got[i] = string(tag.Name)
+			}
+			sort.Strings(got)
+
+			Expect(got[0]).To(Equal("Go"))
+			Expect(got[1]).To(Equal("Python"))
 		})
 
 		It("should create opening with new tags and verify them", func() {
@@ -204,9 +217,15 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			err = json.Unmarshal(resp.([]byte), &opening)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(opening.Tags).To(HaveLen(2))
-			for _, tag := range opening.Tags {
-				Expect(tag.Name).To(BeElementOf(newTags))
+
+			got := make([]string, len(opening.Tags))
+			for i, tag := range opening.Tags {
+				got[i] = string(tag.Name)
 			}
+			sort.Strings(got)
+
+			Expect(got[0]).To(BeElementOf(newTags))
+			Expect(got[1]).To(BeElementOf(newTags))
 		})
 
 		It("should create opening with mixed tags and verify them", func() {
@@ -318,7 +337,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(opening.Tags).To(HaveLen(1))
-				Expect(opening.Tags[0].Name).To(Equal("Go"))
+				Expect(string(opening.Tags[0].Name)).To(Equal("Go"))
 				// Verify that the ID matches the existing Go tag ID
 				Expect(
 					opening.Tags[0].ID,
