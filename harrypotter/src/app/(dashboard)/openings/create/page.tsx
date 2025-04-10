@@ -26,12 +26,12 @@ import {
   GlobalCountryCode,
   Location,
   LocationStates,
-  OpeningTag,
-  OpeningTagID,
   OpeningType,
   OpeningTypes,
   OrgUserShort,
   validTimezones,
+  VTag,
+  VTagID,
 } from "@vetchium/typespec";
 import countries from "@vetchium/typespec/common/countries.json";
 import Cookies from "js-cookie";
@@ -76,8 +76,8 @@ export default function CreateOpeningPage() {
   const [costCenters, setCostCenters] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<OpeningTag[]>([]);
-  const [availableTags, setAvailableTags] = useState<OpeningTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<VTag[]>([]);
+  const [availableTags, setAvailableTags] = useState<VTag[]>([]);
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   // Initialize from sessionStorage on mount
@@ -262,13 +262,13 @@ export default function CreateOpeningPage() {
 
   const handleTagChange = (
     event: React.SyntheticEvent,
-    newValue: (OpeningTag | string)[]
+    newValue: (VTag | string)[]
   ) => {
-    const processedTags = newValue.map((tag): OpeningTag => {
+    const processedTags = newValue.map((tag): VTag => {
       if (typeof tag === "string") {
         // This is a new tag
         return {
-          id: "" as OpeningTagID,
+          id: "" as VTagID,
           name: tag.trim(),
         };
       }
@@ -705,7 +705,7 @@ export default function CreateOpeningPage() {
           <Autocomplete
             multiple
             options={availableTags}
-            getOptionLabel={(option: OpeningTag | string) => {
+            getOptionLabel={(option: VTag | string) => {
               if (typeof option === "string") {
                 return option;
               }
