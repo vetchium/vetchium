@@ -3,9 +3,9 @@ package hub
 import "github.com/vetchium/vetchium/typespec/common"
 
 type AddPostRequest struct {
-	Content string        `json:"content"  validate:"required,min=1,max=4096"`
-	TagIDs  []string      `json:"tag_ids"  validate:"max=3,dive,uuid"`
-	NewTags []common.VTag `json:"new_tags" validate:"max=3"`
+	Content string            `json:"content"  validate:"required,min=1,max=4096"`
+	TagIDs  []common.VTagID   `json:"tag_ids"  validate:"max=3,dive,uuid"`
+	NewTags []common.VTagName `json:"new_tags" validate:"max=3"`
 }
 
 type AddPostResponse struct {

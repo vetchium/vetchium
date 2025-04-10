@@ -1,8 +1,10 @@
 import { Post } from "../common/posts";
+import { VTagID, VTagName } from "../common/vtags";
 
 export interface AddPostRequest {
   content: string;
-  tag_ids: string[];
+  tag_ids: VTagID[];
+  new_tags: VTagName[];
 }
 
 export interface AddPostResponse {

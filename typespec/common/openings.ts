@@ -60,14 +60,3 @@ export interface Salary {
   min_amount: number;
   max_amount: number;
 }
-
-export interface FilterVTagsRequest {
-  prefix?: string;
-}
-
-export type VTagID = string;
-
-export interface VTag {
-  id: VTagID;
-  name: string;
-}

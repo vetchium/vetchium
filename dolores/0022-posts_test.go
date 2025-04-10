@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -63,7 +64,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       "",
 					request: hub.AddPostRequest{
 						Content: "This post should not be added.",
-						Tags:    []string{"test"},
+						NewTags: []common.VTagName{"test"},
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -72,7 +73,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       "invalid-token",
 					request: hub.AddPostRequest{
 						Content: "Another post that should not be added.",
-						Tags:    []string{"fail"},
+						NewTags: []common.VTagName{"fail"},
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -81,7 +82,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "This is my first post!",
-						Tags:    []string{}, // Empty tags
+						NewTags: []common.VTagName{}, // Empty tags
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
@@ -100,7 +101,11 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Exploring the world of Go testing.",
-						Tags:    []string{"golang", "testing", "backend"},
+						NewTags: []common.VTagName{
+							"golang",
+							"testing",
+							"backend",
+						},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
@@ -115,7 +120,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "", // Missing content
-						Tags:    []string{"empty"},
+						NewTags: []common.VTagName{"empty"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -124,7 +129,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: strings.Repeat("x", 4097), // MaxLength is 4096
-						Tags:    []string{"long"},
+						NewTags: []common.VTagName{"long"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -133,7 +138,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: strings.Repeat("y", 4096), // Exactly MaxLength
-						Tags:    []string{"maxlength"},
+						NewTags: []common.VTagName{"maxlength"},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
@@ -148,7 +153,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Trying to add too many tags.",
-						Tags: []string{
+						NewTags: []common.VTagName{
 							"one",
 							"two",
 							"three",
@@ -162,7 +167,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Testing maximum number of tags.",
-						Tags: []string{
+						NewTags: []common.VTagName{
 							"tag1",
 							"tag2",
 							"tag3",
@@ -181,7 +186,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Testing with null tags.",
-						Tags:    nil,
+						NewTags: nil,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {

@@ -15,10 +15,11 @@ model AddPostRequest {
     content: string;
 
     @maxItems(3)
-    tag_ids: string[];
+    tag_ids: VTagID[];
 
+    // TODO: This should be VTag array
     @maxItems(3)
-    new_tags: string[];
+    new_tags: VTagName[];
 
     // TODO: Images
 }

@@ -259,7 +259,10 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 
 			Expect(opening.Tags).To(HaveLen(2))
 
-			sortedTags := []string{opening.Tags[0].Name, opening.Tags[1].Name}
+			sortedTags := []common.VTagName{
+				opening.Tags[0].Name,
+				opening.Tags[1].Name,
+			}
 			sort.Strings(sortedTags)
 			Expect(sortedTags[0]).To(Equal("Python"))
 			Expect(sortedTags[1]).To(Equal("Swift"))

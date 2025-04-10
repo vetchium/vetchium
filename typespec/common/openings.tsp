@@ -55,14 +55,3 @@ model FilterVTagsRequest {
     @doc("The prefix that should be used to filter the tags by name")
     prefix?: string;
 }
-
-scalar VTagID extends string;
-
-model VTag {
-    @doc("Client should not assume anything about the format of the string. Could be UUID or XID or something random.")
-    id: VTagID;
-
-    name: string;
-
-    // In future we can add more fields like Icons
-}

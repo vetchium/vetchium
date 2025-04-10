@@ -2,6 +2,16 @@ import "@typespec/http";
 import "@typespec/openapi3";
 import "@typespec/rest";
 
+import "./common/achievements.tsp";
+import "./common/applications.tsp";
+import "./common/candidacies.tsp";
+import "./common/common.tsp";
+import "./common/education.tsp";
+import "./common/interviews.tsp";
+import "./common/openings.tsp";
+import "./common/posts.tsp";
+import "./common/vtags.tsp";
+
 import "./employer/achievements.tsp";
 import "./employer/applications.tsp";
 import "./employer/auth.tsp";

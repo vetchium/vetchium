@@ -54,18 +54,3 @@ type Salary struct {
 	MaxAmount float64  `json:"max_amount" validate:"required,min=1"`
 	Currency  Currency `json:"currency"   validate:"required"`
 }
-
-type FilterVTagsRequest struct {
-	Prefix *string `json:"prefix,omitempty"`
-}
-
-type VTagID string
-
-type VTag struct {
-	ID   VTagID `json:"id"`
-	Name string `json:"name"`
-}
-
-type VTags struct {
-	Tags []VTag `json:"tags" validate:"required"`
-}
