@@ -1,25 +1,25 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import HomeIcon from "@mui/icons-material/Home";
+import MessageIcon from "@mui/icons-material/Message";
+import PersonIcon from "@mui/icons-material/Person";
+import SearchIcon from "@mui/icons-material/Search";
+import SendIcon from "@mui/icons-material/Send";
+import SettingsIcon from "@mui/icons-material/Settings";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import HomeIcon from "@mui/icons-material/Home";
-import SearchIcon from "@mui/icons-material/Search";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import PersonIcon from "@mui/icons-material/Person";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingIcon from "@mui/icons-material/Pending";
-import SendIcon from "@mui/icons-material/Send";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { styled } from "@mui/material/styles";
-import { useTranslation } from "@/hooks/useTranslation";
 import Cookies from "js-cookie";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 const drawerWidth = 240;
 
@@ -53,6 +53,7 @@ export default function Sidebar({ open }: SidebarProps) {
   const menuItems = [
     { text: "home", icon: <HomeIcon />, path: "/" },
     { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
+    { text: "posts", icon: <MessageIcon />, path: "/posts" },
     {
       text: "myApplications",
       icon: <AssignmentIcon />,

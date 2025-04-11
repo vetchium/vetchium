@@ -149,6 +149,7 @@ export const en = {
   navigation: {
     home: "Home",
     findOpenings: "Find Openings",
+    posts: "Posts",
     myApplications: "My Applications",
     myCandidacies: "My Candidacies",
     myProfile: "My Profile",
@@ -526,5 +527,25 @@ export const en = {
       save: "Save",
       cancel: "Cancel",
     },
+  },
+  posts: {
+    title: "Posts",
+    compose: "Compose",
+    placeholder: "What's on your mind?",
+    publish: "Publish",
+    addTag: "Add Tag",
+    removeTag: "Remove",
+    maxTags: "Maximum of 3 tags allowed",
+    newTag: "Create new tag: {name}",
+    searchTags: "Search for tags",
+    following: "Following",
+    trending: "Trending",
+    error: {
+      fetchFailed: "Failed to fetch posts",
+      createFailed: "Failed to create post",
+      tagsFailed: "Failed to fetch tags",
+      contentRequired: "Post content is required",
+    },
+    success: "Post published successfully",
   },
 };
