@@ -31,7 +31,7 @@ model GetUserPostsRequest {
     @doc("The handle of the user to get the posts from. If not provided, the posts of the logged in user are returned.")
     handle?: Handle;
 
-    @doc("The pagination key to get the next page of posts. The item corresponding to the passed key will not be included in the response. No guarantees are made about the order of the posts in the response. There may be duplicates in the response and the client is expected to handle it.")
+    @doc("The posts are returned ordered by the newest of update_at timestamp. If two posts are updated at the same time, the one with the higher id is returned first. The pagination key is the id of the last post in the previous response. The item corresponding to the passed pagination_key will not be included in the response.")
     pagination_key?: string;
 
     @doc("If nothing is passed, 10 Posts are returned")
