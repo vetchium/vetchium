@@ -17,7 +17,6 @@ model AddPostRequest {
     @maxItems(3)
     tag_ids: VTagID[];
 
-    // TODO: This should be VTag array
     @maxItems(3)
     new_tags: VTagName[];
 
@@ -28,20 +27,20 @@ model AddPostResponse {
     post_id: string;
 }
 
-model GetTimelineRequest {
-    @doc("The timeline id to get the timeline from. If not provided, the home timeline of the logged in user is returned.")
-    timeline_id?: string;
+model GetUserPostsRequest {
+    @doc("The handle of the user to get the posts from. If not provided, the posts of the logged in user are returned.")
+    handle?: Handle;
 
     @doc("The pagination key to get the next page of posts. The item corresponding to the passed key will not be included in the response. No guarantees are made about the order of the posts in the response. There may be duplicates in the response and the client is expected to handle it.")
     pagination_key?: string;
 
-    @doc("If nothing is passed, 40 Posts are returned")
+    @doc("If nothing is passed, 10 Posts are returned")
     @minValue(1)
-    @maxValue(100)
+    @maxValue(40)
     limit?: integer;
 }
 
-model GetTimelineResponse {
+model GetUserPostsResponse {
     posts: Post[];
     pagination_key: string;
 }
@@ -57,12 +56,13 @@ interface AddPost {
     };
 }
 
-@route("/hub/get-timeline")
-interface GetTimeline {
+@route("/hub/get-user-posts")
+interface GetUserPosts {
     @tag("Posts")
-    @get
-    getTimeline(@body request: GetTimelineRequest): {
+    @post
+    @useAuth(HubAuth)
+    getUserPosts(@body request: GetUserPostsRequest): {
         @statusCode statusCode: 200;
-        @body response: GetTimelineResponse;
+        @body response: GetUserPostsResponse;
     };
 }

@@ -12,13 +12,13 @@ type AddPostResponse struct {
 	PostID string `json:"post_id"`
 }
 
-type GetTimelineRequest struct {
-	TimelineID    *string `json:"timeline_id"`
-	PaginationKey *string `json:"pagination_key"`
-	Limit         int     `json:"limit"`
+type GetUserPostsRequest struct {
+	Handle        *common.Handle `json:"handle"         validate:"omitempty,validate_handle"`
+	PaginationKey *string        `json:"pagination_key" validate:"omitempty"`
+	Limit         int            `json:"limit"          validate:"min=1,max=40"`
 }
 
-type GetTimelineResponse struct {
+type GetUserPostsResponse struct {
 	Posts         []common.Post `json:"posts"`
 	PaginationKey string        `json:"pagination_key"`
 }
