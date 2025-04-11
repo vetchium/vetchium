@@ -1,42 +1,51 @@
 BEGIN;
 
--- Delete tags associated with the posts being deleted
+-- Delete tags associated with ALL test posts in this file
 DELETE FROM post_tags
 WHERE post_id IN (
     SELECT id FROM posts WHERE author_id IN (
         '12345678-0022-0022-0022-000000000001',
-        '12345678-0022-0022-0022-000000000002'
+        '12345678-0022-0022-0022-000000000002',
+        '12345678-0022-0022-0022-000000000003',
+        '12345678-0022-0022-0022-000000000004'
     )
 );
 
--- Delete the posts
+-- Delete ALL posts created in this test file
 DELETE FROM posts WHERE author_id IN (
     '12345678-0022-0022-0022-000000000001',
-    '12345678-0022-0022-0022-000000000002'
+    '12345678-0022-0022-0022-000000000002',
+    '12345678-0022-0022-0022-000000000003',
+    '12345678-0022-0022-0022-000000000004'
 );
 
--- Clean up hub user tokens and related tables first
+-- Clean up hub user tokens and related tables for ALL users in this test file
 DELETE FROM hub_user_tfa_codes
 WHERE tfa_token IN (
     SELECT token FROM hub_user_tokens
     WHERE hub_user_id IN (
         '12345678-0022-0022-0022-000000000001',
-        '12345678-0022-0022-0022-000000000002'
+        '12345678-0022-0022-0022-000000000002',
+        '12345678-0022-0022-0022-000000000003',
+        '12345678-0022-0022-0022-000000000004'
     )
 );
 
 DELETE FROM hub_user_tokens
 WHERE hub_user_id IN (
     '12345678-0022-0022-0022-000000000001',
-    '12345678-0022-0022-0022-000000000002'
+    '12345678-0022-0022-0022-000000000002',
+    '12345678-0022-0022-0022-000000000003',
+    '12345678-0022-0022-0022-000000000004'
 );
 
--- Clean up hub users
+-- Clean up ALL hub users created in this test file
 DELETE FROM hub_users
 WHERE id IN (
     '12345678-0022-0022-0022-000000000001',
-    '12345678-0022-0022-0022-000000000002'
+    '12345678-0022-0022-0022-000000000002',
+    '12345678-0022-0022-0022-000000000003',
+    '12345678-0022-0022-0022-000000000004'
 );
-
 
 COMMIT;

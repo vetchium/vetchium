@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
@@ -173,7 +174,7 @@ func (pg *PG) GetUserPosts(
 
 	if getUserPostsReq.PaginationKey != nil &&
 		*getUserPostsReq.PaginationKey != "" {
-		var paginationUpdatedAt string
+		var paginationUpdatedAt time.Time
 		var paginationID string
 		err := pg.pool.QueryRow(
 			ctx,

@@ -15,7 +15,7 @@ type AddPostResponse struct {
 type GetUserPostsRequest struct {
 	Handle        *common.Handle `json:"handle"         validate:"omitempty,validate_handle"`
 	PaginationKey *string        `json:"pagination_key" validate:"omitempty"`
-	Limit         int            `json:"limit"          validate:"min=1,max=40"`
+	Limit         int            `json:"limit"          validate:"min=0,max=40"`
 }
 
 type GetUserPostsResponse struct {

@@ -2,8 +2,10 @@ package posts
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
@@ -32,6 +34,12 @@ func GetUserPosts(h wand.Wand) http.HandlerFunc {
 
 		resp, err := h.DB().GetUserPosts(r.Context(), getUserPostsReq)
 		if err != nil {
+			if errors.Is(err, db.ErrNoHubUser) {
+				h.Dbg("invalid handle passed")
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("GetUserPosts failed", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

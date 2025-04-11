@@ -14,9 +14,9 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Posts", Ordered, func() {
+var _ = Describe("Posts", Ordered, func() {
 	var db *pgxpool.Pool
-	var addUserToken, authTestUserToken string
+	var addUserToken, authTestUserToken, getUser1Token, getUser2Token string
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -24,7 +24,7 @@ var _ = FDescribe("Posts", Ordered, func() {
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
-		wg.Add(2) // 2 hub users to sign in
+		wg.Add(4) // 4 hub users to sign in
 		hubSigninAsync(
 			"add-user@0022-posts.example.com",
 			"NewPassword123$",
@@ -37,13 +37,24 @@ var _ = FDescribe("Posts", Ordered, func() {
 			&authTestUserToken, // Using this token just to have another valid one if needed
 			&wg,
 		)
+		hubSigninAsync(
+			"get-user1@0022-posts.example.com",
+			"NewPassword123$",
+			&getUser1Token,
+			&wg,
+		)
+		hubSigninAsync(
+			"get-user2@0022-posts.example.com",
+			"NewPassword123$",
+			&getUser2Token,
+			&wg,
+		)
 		wg.Wait()
 	})
 
 	AfterAll(func() {
 		// Clean up the database using the down migration
-		// We might need to explicitly delete posts if the down migration doesn't cover it
-		// For now, assume the down migration handles users and cascades or manual cleanup exists.
+		// Assumes 0022-posts-down.pgsql handles cleanup of users, posts, and tags created here.
 		seedDatabase(db, "0022-posts-down.pgsql")
 		db.Close()
 	})
@@ -218,6 +229,267 @@ var _ = FDescribe("Posts", Ordered, func() {
 		})
 	})
 
-	// TODO: Add Describe blocks for GetTimeline tests later
+	Describe("Get User Posts", func() {
+		type getUserPostsTestCase struct {
+			description string
+			token       string                  // Auth token for the request
+			request     hub.GetUserPostsRequest // The request body
+			wantStatus  int
+			validate    func([]byte) // Function to validate the response body
+		}
 
+		// Helper function to create a string pointer
+		strPtr := func(s string) *string { return &s }
+		hdlPtr := func(s string) *common.Handle { h := common.Handle(s); return &h }
+
+		It("should handle various get user posts scenarios", func() {
+			testCases := []getUserPostsTestCase{
+				{
+					description: "without authentication",
+					token:       "",
+					request:     hub.GetUserPostsRequest{}, // Fetch own posts (default)
+					wantStatus:  http.StatusUnauthorized,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					request: hub.GetUserPostsRequest{
+						Handle: hdlPtr("get-user1"),
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "fetch own posts (user1) - default limit",
+					token:       getUser1Token,
+					request:     hub.GetUserPostsRequest{}, // No handle, no limit -> fetch self, default limit (10)
+					wantStatus:  http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							resp.Posts,
+						).Should(HaveLen(4))
+						// User1 has 4 posts, default limit is 10
+						Expect(
+							resp.PaginationKey,
+						).Should(BeEmpty())
+						// No more posts
+						// Check order (newest first based on updated_at)
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g1-04"))
+						// Compare with string
+						Expect(resp.Posts[1].ID).Should(Equal("post-g1-03"))
+						Expect(resp.Posts[2].ID).Should(Equal("post-g1-02"))
+						Expect(resp.Posts[3].ID).Should(Equal("post-g1-01"))
+						// Check author details
+						Expect(
+							resp.Posts[0].AuthorHandle,
+						).Should(Equal(common.Handle("get-user1")))
+						Expect(
+							resp.Posts[0].AuthorName,
+						).Should(Equal("Get Posts User One"))
+						// Check tags for post-g1-02
+						Expect(
+							resp.Posts[2].Tags,
+						).Should(ConsistOf("golang", "testing"))
+					},
+				},
+				{
+					description: "fetch user1 posts by handle (from user2)",
+					token:       getUser2Token, // Authenticated as user2
+					request: hub.GetUserPostsRequest{
+						Handle: hdlPtr("get-user1"),
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							resp.Posts,
+						).Should(HaveLen(4))
+						// User1 has 4 posts
+						Expect(resp.PaginationKey).Should(BeEmpty())
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g1-04"))
+						// Compare with string
+						Expect(
+							resp.Posts[0].AuthorHandle,
+						).Should(Equal(common.Handle("get-user1")))
+					},
+				},
+				{
+					description: "fetch user2 posts by handle (from user1)",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Handle: hdlPtr("get-user2"),
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							resp.Posts,
+						).Should(HaveLen(1))
+						// User2 has 1 post
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g2-01"))
+						// Compare with string
+						Expect(
+							resp.Posts[0].AuthorHandle,
+						).Should(Equal(common.Handle("get-user2")))
+						Expect(
+							resp.Posts[0].Tags,
+						).Should(ConsistOf("specific-test"))
+						Expect(resp.PaginationKey).Should(BeEmpty())
+					},
+				},
+				{
+					description: "fetch posts with invalid handle",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Handle: hdlPtr("non-existent-user"),
+					},
+					wantStatus: http.StatusNotFound, // Expecting 404 Not Found due to db.ErrNoHubUser
+				},
+				{
+					description: "fetch own posts (user1) - limit 2",
+					token:       getUser1Token,
+					request:     hub.GetUserPostsRequest{Limit: 2},
+					wantStatus:  http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.Posts).Should(HaveLen(2))
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g1-04"))
+						// Compare with string
+						Expect(resp.Posts[1].ID).Should(Equal("post-g1-03"))
+						Expect(
+							resp.PaginationKey,
+						).Should(Equal("post-g1-03"))
+						// The ID of the last post returned
+					},
+				},
+				{
+					description: "fetch own posts (user1) - limit 2, page 2",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Limit:         2,
+						PaginationKey: strPtr("post-g1-03"),
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.Posts).Should(HaveLen(2))
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g1-02"))
+						// Compare with string
+						Expect(resp.Posts[1].ID).Should(Equal("post-g1-01"))
+						Expect(
+							resp.PaginationKey,
+						).Should(Equal("post-g1-01"))
+						// Last post ID returned
+					},
+				},
+				{
+					description: "fetch own posts (user1) - limit 2, page 3 (empty)",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Limit:         2,
+						PaginationKey: strPtr("post-g1-01"),
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.Posts).Should(BeEmpty())
+						Expect(resp.PaginationKey).Should(BeEmpty())
+					},
+				},
+				{
+					description: "fetch posts with invalid pagination key",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Limit:         5,
+						PaginationKey: strPtr("invalid-post-id"),
+					},
+					wantStatus: http.StatusOK, // Should return the first page if pagination key is invalid
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							resp.Posts,
+						).Should(HaveLen(4))
+						// Should get all 4 posts (limit 5)
+						Expect(
+							resp.Posts[0].ID,
+						).Should(Equal("post-g1-04"))
+						// Compare with string
+						Expect(
+							resp.PaginationKey,
+						).Should(BeEmpty())
+						// No more posts
+					},
+				},
+				{
+					description: "fetch posts with zero limit (should use default)",
+					token:       getUser1Token,
+					request:     hub.GetUserPostsRequest{Limit: 0},
+					wantStatus:  http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.GetUserPostsResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.Posts).Should(HaveLen(4))
+						// Default limit is 10, gets all 4
+						Expect(resp.PaginationKey).Should(BeEmpty())
+					},
+				},
+				{
+					description: "fetch posts with negative limit (should fail validation)",
+					token:       getUser1Token,
+					request:     hub.GetUserPostsRequest{Limit: -1},
+					wantStatus:  http.StatusBadRequest,
+				},
+				{
+					description: "fetch posts with limit exceeding max (should fail validation)",
+					token:       getUser1Token,
+					request: hub.GetUserPostsRequest{
+						Limit: 41,
+					}, // Max is 40
+					wantStatus: http.StatusBadRequest,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing GetUserPosts: %s\n",
+					tc.description,
+				)
+				resp := testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/get-user-posts",
+					tc.wantStatus,
+				)
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
+			}
+		})
+	})
 })
