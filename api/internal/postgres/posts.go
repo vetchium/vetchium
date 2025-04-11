@@ -39,7 +39,27 @@ VALUES ($1, $2, $3)
 
 	tagIDs := make([]string, 0, len(req.NewTags))
 	newTagsInsertQuery := `
-INSERT INTO tags (name) VALUES ($1) RETURNING id ON CONFLICT DO NOTHING
+WITH inserted AS (
+    -- Attempt to insert the tag.
+    -- If it succeeds, return the new id and the name.
+    -- If it conflicts (name exists), DO NOTHING and return nothing from this CTE.
+    INSERT INTO tags (name)
+    VALUES ($1)  -- $1 is your tag name parameter
+    ON CONFLICT (name) DO NOTHING
+    RETURNING id, name
+)
+-- First, try to select the id from the 'inserted' CTE (if the insert succeeded).
+SELECT id
+FROM inserted
+UNION ALL
+-- If the 'inserted' CTE is empty (meaning ON CONFLICT DO NOTHING happened),
+-- select the id from the main 'tags' table where the name matches.
+-- The 'WHERE NOT EXISTS (SELECT 1 FROM inserted)' clause ensures this part
+-- only runs if the INSERT was skipped.
+SELECT t.id
+FROM tags t
+WHERE t.name = $1 AND NOT EXISTS (SELECT 1 FROM inserted)
+LIMIT 1; -- Ensures only one row is returned in any case
 `
 
 	for _, tag := range req.NewTags {

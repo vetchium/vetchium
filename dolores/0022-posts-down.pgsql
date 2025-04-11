@@ -1,5 +1,15 @@
 BEGIN;
 
+-- Delete tags associated with the posts being deleted
+DELETE FROM post_tags
+WHERE post_id IN (
+    SELECT id FROM posts WHERE author_id IN (
+        '12345678-0022-0022-0022-000000000001',
+        '12345678-0022-0022-0022-000000000002'
+    )
+);
+
+-- Delete the posts
 DELETE FROM posts WHERE author_id IN (
     '12345678-0022-0022-0022-000000000001',
     '12345678-0022-0022-0022-000000000002'

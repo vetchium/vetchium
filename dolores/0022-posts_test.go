@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = XDescribe("Posts", Ordered, func() {
+var _ = FDescribe("Posts", Ordered, func() {
 	var db *pgxpool.Pool
 	var addUserToken, authTestUserToken string
 
