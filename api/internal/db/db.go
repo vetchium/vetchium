@@ -81,6 +81,7 @@ type UnscoredApplicationBatch struct {
 	Applications []ApplicationForScoring // max 10 elements
 }
 
+// TODO: We should group this interface better
 type DB interface {
 	// Used by hermione and granger
 
@@ -434,4 +435,11 @@ type DB interface {
 	// Employer settings
 	ChangeCoolOffPeriod(ctx context.Context, coolOffPeriod int32) error
 	GetCoolOffPeriod(ctx context.Context) (int32, error)
+
+	// Used by hermione - Posts related methods
+	AddPost(req AddPostRequest) error
+	GetUserPosts(
+		ctx context.Context,
+		req hub.GetUserPostsRequest,
+	) (hub.GetUserPostsResponse, error)
 }

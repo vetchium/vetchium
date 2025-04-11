@@ -2,18 +2,23 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/typespec/common"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-func (pg *PG) AddPost(req db.AddPostRequest) error {
-	hubUserID, err := getHubUserID(req.Context)
+func (pg *PG) AddPost(addPostReq db.AddPostRequest) error {
+	hubUserID, err := getHubUserID(addPostReq.Context)
 	if err != nil {
 		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
-	tx, err := pg.pool.Begin(req.Context)
+	tx, err := pg.pool.Begin(addPostReq.Context)
 	if err != nil {
 		pg.log.Err("failed to begin transaction", "error", err)
 		return err
@@ -26,10 +31,10 @@ VALUES ($1, $2, $3)
 `
 
 	_, err = tx.Exec(
-		req.Context,
+		addPostReq.Context,
 		postsInsertQuery,
-		req.PostID,
-		req.Content,
+		addPostReq.PostID,
+		addPostReq.Content,
 		hubUserID,
 	)
 	if err != nil {
@@ -37,7 +42,7 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	tagIDs := make([]string, 0, len(req.NewTags))
+	tagIDs := make([]string, 0, len(addPostReq.NewTags))
 	newTagsInsertQuery := `
 WITH inserted AS (
     -- Attempt to insert the tag.
@@ -62,10 +67,10 @@ WHERE t.name = $1 AND NOT EXISTS (SELECT 1 FROM inserted)
 LIMIT 1; -- Ensures only one row is returned in any case
 `
 
-	for _, tag := range req.NewTags {
+	for _, tag := range addPostReq.NewTags {
 		var newTagID string
 		err = tx.QueryRow(
-			req.Context,
+			addPostReq.Context,
 			newTagsInsertQuery,
 			tag,
 		).Scan(&newTagID)
@@ -76,7 +81,7 @@ LIMIT 1; -- Ensures only one row is returned in any case
 		tagIDs = append(tagIDs, newTagID)
 	}
 
-	for _, tagID := range req.TagIDs {
+	for _, tagID := range addPostReq.TagIDs {
 		tagIDs = append(tagIDs, string(tagID))
 	}
 
@@ -86,9 +91,9 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
 	for _, tagID := range tagIDs {
 		_, err = tx.Exec(
-			req.Context,
+			addPostReq.Context,
 			tagsInsertQuery,
-			req.PostID,
+			addPostReq.PostID,
 			tagID,
 		)
 		if err != nil {
@@ -104,4 +109,155 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 	}
 
 	return nil
+}
+
+func (pg *PG) GetUserPosts(
+	ctx context.Context,
+	getUserPostsReq hub.GetUserPostsRequest,
+) (hub.GetUserPostsResponse, error) {
+	loggedInHubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get logged in hub user ID", "error", err)
+		return hub.GetUserPostsResponse{}, err
+	}
+
+	var targetUserID string
+	if getUserPostsReq.Handle != nil && *getUserPostsReq.Handle != "" {
+		// Handle provided: First, validate the handle and get the user ID.
+		handle := string(*getUserPostsReq.Handle)
+		err := pg.pool.QueryRow(ctx, "SELECT id FROM hub_users WHERE handle = $1", handle).
+			Scan(&targetUserID)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				pg.log.Dbg("non-existent handle", "handle", handle)
+				return hub.GetUserPostsResponse{}, db.ErrNoHubUser
+			}
+
+			pg.log.Err("db error", "handle", handle, "error", err)
+			return hub.GetUserPostsResponse{}, err
+		}
+	} else {
+		// No handle provided: Use the logged-in user's ID.
+		targetUserID = loggedInHubUserID
+	}
+
+	// Query to fetch posts for the determined targetUserID
+	query := `
+		SELECT
+			p.id,
+			p.content,
+			p.author_id,
+			p.created_at,
+			p.updated_at,
+			hu.handle AS author_handle,
+			hu.full_name AS author_full_name,
+			COALESCE(
+				(
+					SELECT json_agg(t.name)
+					FROM post_tags pt
+					JOIN tags t ON pt.tag_id = t.id
+					WHERE pt.post_id = p.id
+				),
+				'[]'::json
+			) AS tags_json
+		FROM
+			posts p
+		JOIN
+			hub_users hu ON p.author_id = hu.id
+		WHERE
+			p.author_id = $1 -- Filter by the target user ID
+	`
+	// Start with the target user ID
+	args := []interface{}{targetUserID}
+	argCounter := 2 // Start arg counter for pagination from $2
+
+	if getUserPostsReq.PaginationKey != nil &&
+		*getUserPostsReq.PaginationKey != "" {
+		var paginationUpdatedAt string
+		var paginationID string
+		err := pg.pool.QueryRow(
+			ctx,
+			"SELECT updated_at, id FROM posts WHERE id = $1",
+			*getUserPostsReq.PaginationKey,
+		).Scan(&paginationUpdatedAt, &paginationID)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				// Proceed without pagination clause (effectively first page)
+			} else {
+				pg.log.Err("failed to get pagination key", "error", err)
+				return hub.GetUserPostsResponse{}, err
+			}
+		} else {
+			query += ` AND (p.updated_at, p.id) < ($` + fmt.Sprintf("%d", argCounter) + `::timestamptz, $` + fmt.Sprintf("%d", argCounter+1) + `)`
+			args = append(args, paginationUpdatedAt, paginationID)
+			argCounter += 2
+		}
+	}
+
+	query += ` ORDER BY p.updated_at DESC, p.id DESC LIMIT $` + fmt.Sprintf(
+		"%d",
+		argCounter,
+	)
+	args = append(args, getUserPostsReq.Limit)
+
+	rows, err := pg.pool.Query(ctx, query, args...)
+	if err != nil {
+		pg.log.Err("failed", "error", err, "query", query, "args", args)
+		return hub.GetUserPostsResponse{}, err
+	}
+	defer rows.Close()
+
+	posts := make([]common.Post, 0, getUserPostsReq.Limit)
+	var lastPostID string
+
+	for rows.Next() {
+		var post common.Post
+		var authorID string
+		var authorHandle string
+		var authorFullName string
+		var tagsJSON []byte
+
+		err := rows.Scan(
+			&post.ID,
+			&post.Content,
+			&authorID,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+			&authorHandle,
+			&authorFullName,
+			&tagsJSON,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan post row", "error", err)
+			return hub.GetUserPostsResponse{}, err
+		}
+
+		var tags []string
+		if err := json.Unmarshal(tagsJSON, &tags); err != nil {
+			pg.log.Err("JSON DB error", "error", err, "json", string(tagsJSON))
+			return hub.GetUserPostsResponse{}, err
+		}
+		post.Tags = tags
+
+		post.AuthorHandle = common.Handle(authorHandle)
+		post.AuthorName = authorFullName
+
+		posts = append(posts, post)
+		lastPostID = string(post.ID)
+	}
+
+	if rows.Err() != nil {
+		pg.log.Err("error iterating post rows", "error", rows.Err())
+		return hub.GetUserPostsResponse{}, rows.Err()
+	}
+
+	var nextPaginationKey string
+	if len(posts) == getUserPostsReq.Limit {
+		nextPaginationKey = lastPostID
+	}
+
+	return hub.GetUserPostsResponse{
+		Posts:         posts,
+		PaginationKey: nextPaginationKey,
+	}, nil
 }
