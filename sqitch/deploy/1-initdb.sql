@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS hub_users (
     short_bio TEXT NOT NULL,
     long_bio TEXT NOT NULL,
     profile_picture_url TEXT,
+    timeline_last_refreshed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     CONSTRAINT unique_handle UNIQUE (handle)
 );
 
@@ -220,8 +220,7 @@ CREATE TABLE hub_users_official_emails (
     verification_code TEXT,
     verification_code_expires_at TIMESTAMP WITH TIME ZONE,
 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE employer_primary_domains(
@@ -536,8 +535,7 @@ CREATE TABLE interviews(
         (interview_state != 'COMPLETED_INTERVIEW' AND completed_at IS NULL)
     ),
 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE interview_interviewers (
@@ -647,8 +645,7 @@ CREATE TABLE work_history (
     start_date DATE NOT NULL,
     end_date DATE,
     description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 -- Colleague Connection Scenarios:
@@ -698,7 +695,6 @@ CREATE TABLE colleague_connections (
     unlinked_at TIMESTAMP WITH TIME ZONE,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
 
     CONSTRAINT check_self_reference CHECK (requester_id != requested_id),
     CONSTRAINT unique_connection UNIQUE (requester_id, requested_id),
@@ -843,15 +839,13 @@ CREATE TABLE institutes (
     institute_name TEXT,
     logo_url TEXT,
 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE institute_domains (
     domain TEXT PRIMARY KEY,
     institute_id UUID REFERENCES institutes(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE education (
@@ -862,8 +856,7 @@ CREATE TABLE education (
     start_date DATE,
     end_date DATE,
     description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 -- Achievement type enum
@@ -877,8 +870,7 @@ CREATE TABLE achievements (
     url TEXT,
     at TIMESTAMP WITH TIME ZONE,
     achievement_type achievement_types NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 -- Table to track old files that need cleanup
@@ -902,7 +894,7 @@ CREATE TABLE application_endorsements (
     endorser_id UUID REFERENCES hub_users(id) NOT NULL,
     state endorsement_states NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
     CONSTRAINT unique_application_endorser UNIQUE (application_id, endorser_id)
 );
 
@@ -1034,14 +1026,25 @@ CREATE TABLE posts (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE post_tags (
     post_id TEXT REFERENCES posts(id) NOT NULL,
     tag_id UUID REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (post_id, tag_id)
+);
+
+CREATE TABLE following_relationships (
+    consuming_hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    producing_hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    PRIMARY KEY (consuming_hub_user_id, producing_hub_user_id)
+);
+
+CREATE TABLE hub_user_timelines (
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    post_id TEXT REFERENCES posts(id) NOT NULL,
+    PRIMARY KEY (hub_user_id, post_id)
 );
 
 COMMIT;
