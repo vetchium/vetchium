@@ -19,6 +19,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { VTag } from "@vetchium/typespec";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 // Interface for tags including free input
@@ -53,6 +54,7 @@ function TabPanel(props: TabPanelProps) {
 
 function PostsContent() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [postContent, setPostContent] = useState("");
   const [selectedTags, setSelectedTags] = useState<VTag[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<VTag[]>([]);
@@ -62,12 +64,23 @@ function PostsContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = Cookies.get("session_token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
+
   // Fetch tag suggestions when user types
   useEffect(() => {
     const fetchTags = async () => {
       if (searchQuery.length >= 2) {
         const token = Cookies.get("session_token");
-        if (!token) return;
+        if (!token) {
+          router.push("/login");
+          return;
+        }
 
         try {
           const response = await fetch(
@@ -86,8 +99,8 @@ function PostsContent() {
 
           if (!response.ok) {
             if (response.status === 401) {
-              setError(t("common.error.sessionExpired"));
               Cookies.remove("session_token", { path: "/" });
+              router.push("/login");
               return;
             }
             throw new Error(`Failed to fetch tags: ${response.statusText}`);
@@ -107,7 +120,7 @@ function PostsContent() {
 
     const debounceTimer = setTimeout(fetchTags, 300);
     return () => clearTimeout(debounceTimer);
-  }, [searchQuery, t]);
+  }, [searchQuery, t, router]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -121,7 +134,7 @@ function PostsContent() {
 
     const token = Cookies.get("session_token");
     if (!token) {
-      setError(t("common.error.sessionExpired"));
+      router.push("/login");
       return;
     }
 
@@ -143,8 +156,8 @@ function PostsContent() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          setError(t("common.error.sessionExpired"));
           Cookies.remove("session_token", { path: "/" });
+          router.push("/login");
           return;
         }
         throw new Error(`Failed to create post: ${response.statusText}`);
@@ -214,45 +227,54 @@ function PostsContent() {
 
           {selectedTags.length < 3 && (
             <Autocomplete
+              key={`tag-input-${selectedTags.length}`}
               id="tags-search"
               options={tagSuggestions}
               freeSolo
               value={null}
+              inputValue={searchQuery}
+              onInputChange={(_, newInputValue) => {
+                setSearchQuery(newInputValue);
+              }}
               onChange={(_, newValue) => {
                 if (!newValue) return;
 
                 // Don't add if already at max
                 if (selectedTags.length >= 3) return;
 
-                // Don't add if already selected
-                if (
-                  typeof newValue === "string" &&
-                  selectedTags.some((tag) => tag.name === newValue)
-                )
-                  return;
-                if (
-                  typeof newValue !== "string" &&
-                  selectedTags.some(
-                    (tag) =>
-                      tag.id === newValue.id || tag.name === newValue.name
-                  )
-                )
-                  return;
+                // Create the new tag
+                let newTag: VTag;
 
-                const newTag =
-                  typeof newValue === "string"
-                    ? { name: newValue, id: "" }
-                    : newValue;
+                if (typeof newValue === "string") {
+                  // String input - create tag from the string
+                  newTag = { name: newValue, id: "" };
+                } else if (
+                  typeof (newValue as TagOption).inputValue === "string"
+                ) {
+                  // Create tag from inputValue
+                  newTag = {
+                    name: (newValue as TagOption).inputValue as string,
+                    id: "",
+                  };
+                } else {
+                  // Existing tag
+                  newTag = newValue as VTag;
+                }
+
+                // Don't add if already selected
+                if (selectedTags.some((tag) => tag.name === newTag.name)) {
+                  return;
+                }
 
                 setSelectedTags([...selectedTags, newTag]);
                 setSearchQuery("");
               }}
               filterOptions={(options, params) => {
-                const filtered = filter(options, params);
+                const filtered = filter(options as TagOption[], params);
                 const { inputValue } = params;
 
                 // Only suggest creating a new tag if it's not already in suggestions
-                // and not already selected
+                // and not already selected and not empty
                 const isExisting = options.some(
                   (option) => option.name === inputValue
                 );
@@ -262,9 +284,10 @@ function PostsContent() {
 
                 if (inputValue !== "" && !isExisting && !isSelected) {
                   filtered.push({
+                    inputValue,
                     name: inputValue,
-                    id: "", // Empty ID indicates it's a new tag
-                  });
+                    id: "",
+                  } as TagOption);
                 }
 
                 return filtered;
@@ -306,7 +329,6 @@ function PostsContent() {
                       ? t("posts.maxTags")
                       : t("posts.searchTags")
                   }
-                  onChange={(e) => setSearchQuery(e.target.value)}
                   disabled={selectedTags.length >= 3}
                   InputProps={{
                     ...params.InputProps,
