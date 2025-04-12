@@ -22,3 +22,26 @@ export interface GetUserPostsResponse {
   posts: Post[];
   pagination_key: string;
 }
+
+export interface FollowUserRequest {
+  handle: Handle;
+}
+
+export interface UnfollowUserRequest {
+  handle: Handle;
+}
+
+export interface GetFollowStatusRequest {
+  handle: Handle;
+}
+
+export interface FollowStatus {
+  is_following: boolean;
+  is_blocked: boolean;
+  can_follow: boolean;
+}
+
+export interface GetMyHomeTimelineRequest {
+  pagination_key?: string;
+  limit?: number;
+}
