@@ -133,7 +133,7 @@ var _ = FDescribe("Follow Operations", Ordered, func() {
 					request: hub.FollowUserRequest{
 						Handle: "deleted-user",
 					},
-					wantStatus: http.StatusNotFound, // Assuming we can't follow deleted users
+					wantStatus: http.StatusNotFound, // Updated spec: "If the target user is not active (e.g., deleted), a 404 status is returned."
 				},
 				{
 					description: "follow self (according to spec: returns 200 without creating records)",
@@ -287,8 +287,7 @@ var _ = FDescribe("Follow Operations", Ordered, func() {
 					request: hub.UnfollowUserRequest{
 						Handle: "deleted-user",
 					},
-					// Still 200 because we're just ensuring they're not followed, which they're not
-					wantStatus: http.StatusOK,
+					wantStatus: http.StatusNotFound, // Updated spec: "If the target user is not active (e.g., deleted), a 404 status is returned."
 				},
 				{
 					description: "unfollow self (according to spec: returns 404)",
@@ -423,16 +422,7 @@ var _ = FDescribe("Follow Operations", Ordered, func() {
 						request: hub.GetFollowStatusRequest{
 							Handle: "deleted-user",
 						},
-						wantStatus: http.StatusOK,
-						validate: func(respBody []byte) {
-							var status hub.FollowStatus
-							err := json.Unmarshal(respBody, &status)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(status.IsFollowing).Should(BeFalse())
-							Expect(status.IsBlocked).Should(BeFalse())
-							// Deleted users cannot be followed
-							Expect(status.CanFollow).Should(BeFalse())
-						},
+						wantStatus: http.StatusNotFound, // Updated spec: "If the target user is not active (e.g., deleted), a 404 status is returned."
 					},
 					{
 						description: "get status of self (according to spec: isFollowing=true, isBlocked=false, canFollow=false)",
