@@ -36,6 +36,16 @@ func (pg *PG) FollowUser(ctx context.Context, handle string) error {
 		return err
 	}
 
+	// If user is trying to follow themselves, just return success
+	if loggedInUserID == targetUserID {
+		pg.log.Dbg(
+			"user attempted to follow themselves",
+			"userId",
+			loggedInUserID,
+		)
+		return nil
+	}
+
 	// Insert into following_relationships (or ignore if already exists)
 	_, err = pg.pool.Exec(ctx,
 		`INSERT INTO following_relationships
@@ -76,6 +86,16 @@ func (pg *PG) UnfollowUser(ctx context.Context, handle string) error {
 
 		pg.log.Err("failed to get target user ID", "error", err)
 		return err
+	}
+
+	// If user is trying to unfollow themselves, return not found error
+	if loggedInUserID == targetUserID {
+		pg.log.Dbg(
+			"user attempted to unfollow themselves",
+			"userId",
+			loggedInUserID,
+		)
+		return db.ErrNoHubUser
 	}
 
 	// Delete the following relationship if it exists
@@ -122,6 +142,20 @@ func (pg *PG) GetFollowStatus(
 		return hub.FollowStatus{}, err
 	}
 
+	// Special case for checking own status
+	if loggedInUserID == targetUserID {
+		pg.log.Dbg(
+			"user checking their own follow status",
+			"userId",
+			loggedInUserID,
+		)
+		return hub.FollowStatus{
+			IsFollowing: true,
+			IsBlocked:   false,
+			CanFollow:   false,
+		}, nil
+	}
+
 	// Check if the logged-in user is following the target user
 	var isFollowing bool
 	err = pg.pool.QueryRow(ctx,
@@ -139,8 +173,10 @@ func (pg *PG) GetFollowStatus(
 	// So isBlocked is always false
 	isBlocked := false
 
-	// Check if user can be followed - only active users can be followed
-	canFollow := userState == string(hub.ActiveHubUserState)
+	// User can follow only if:
+	// 1. They are not already following the target
+	// 2. The target user is active
+	canFollow := !isFollowing && userState == string(hub.ActiveHubUserState)
 
 	return hub.FollowStatus{
 		IsFollowing: isFollowing,

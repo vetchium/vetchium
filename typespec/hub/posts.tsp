@@ -61,13 +61,13 @@ model GetFollowStatusRequest {
 }
 
 model FollowStatus {
-    @doc("True if the logged in user is following the target user")
+    @doc("True if the logged in user is following the target user. When checking one's own status, this will always be true.")
     is_following: boolean;
 
-    @doc("True if the logged in user is blocked by the target user")
+    @doc("True if the logged in user is blocked by the target user. When checking one's own status, this will always be false.")
     is_blocked: boolean;
 
-    @doc("True if the logged in user can follow the target user. Some user accounts may reach a state where they cannot be followed anymore (like tombstoned users)")
+    @doc("True if the logged in user can follow the target user. Some user accounts may reach a state where they cannot be followed anymore (like tombstoned users). When checking one's own status, this will always be false. When already following a user, this will also be false.")
     can_follow: boolean;
 }
 
@@ -114,7 +114,7 @@ interface FollowUser {
     @post
     @useAuth(HubAuth)
     followUser(@body request: FollowUserRequest): {
-        @doc("The user was followed successfully. If the user was already followed, the request is ignored.")
+        @doc("The user was followed successfully. If the user was already followed, the request is ignored. If a user attempts to follow themselves, a 200 status is returned without creating any database records.")
         @statusCode
         statusCode: 200;
     };
@@ -126,7 +126,7 @@ interface UnfollowUser {
     @post
     @useAuth(HubAuth)
     unfollowUser(@body request: UnfollowUserRequest): {
-        @doc("The user was unfollowed successfully. If the user was not followed already, the request is ignored.")
+        @doc("The user was unfollowed successfully. If the user was not followed already, the request is ignored. If a user attempts to unfollow themselves, a 404 status is returned.")
         @statusCode
         statusCode: 200;
     };
@@ -138,7 +138,10 @@ interface GetFollowStatus {
     @post
     @useAuth(HubAuth)
     getFollowStatus(@body request: GetFollowStatusRequest): {
-        @statusCode statusCode: 200;
+        @doc("Returns the follow status between the logged-in user and the requested handle. Special cases: 1) When checking one's own status: isFollowing=true, isBlocked=false, canFollow=false. 2) When already following a user: canFollow=false.")
+        @statusCode
+        statusCode: 200;
+
         @body response: FollowStatus;
     };
 }

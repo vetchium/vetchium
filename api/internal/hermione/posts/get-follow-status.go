@@ -39,6 +39,11 @@ func GetFollowStatus(h wand.Wand) http.HandlerFunc {
 		}
 
 		h.Dbg("Follow status", "status", status)
-		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(status); err != nil {
+			h.Err("Failed to encode response", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 	}
 }
