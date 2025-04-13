@@ -22,8 +22,7 @@ SELECT
 	hu.email,
 	hu.state,
 	hu.password_hash,
-	hu.created_at,
-	hu.updated_at
+	hu.created_at
 FROM hub_users hu WHERE email = $1`
 
 	var hubUser db.HubUserTO
@@ -35,7 +34,6 @@ FROM hub_users hu WHERE email = $1`
 		&hubUser.State,
 		&hubUser.PasswordHash,
 		&hubUser.CreatedAt,
-		&hubUser.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -138,8 +136,7 @@ SELECT
 	hu.handle,
 	hu.email,
 	hu.password_hash,
-	hu.created_at,
-	hu.updated_at
+	hu.created_at
 FROM
 	hub_users hu,
 	hub_user_tokens hut,
@@ -166,7 +163,6 @@ WHERE
 		&hubUser.Email,
 		&hubUser.PasswordHash,
 		&hubUser.CreatedAt,
-		&hubUser.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -234,8 +230,7 @@ SELECT
 	hu.handle,
 	hu.email,
 	hu.password_hash,
-	hu.created_at,
-	hu.updated_at
+	hu.created_at
 FROM 
 	hub_user_tokens hut,
 	hub_users hu
@@ -255,7 +250,6 @@ WHERE
 			&hubUser.Email,
 			&hubUser.PasswordHash,
 			&hubUser.CreatedAt,
-			&hubUser.UpdatedAt,
 		)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

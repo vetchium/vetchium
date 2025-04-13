@@ -23,7 +23,6 @@ type HubUserTO struct {
 	PasswordHash string              `db:"password_hash"`
 	State        hub.HubUserState    `db:"state"`
 	CreatedAt    time.Time           `db:"created_at"`
-	UpdatedAt    time.Time           `db:"updated_at"`
 	Tier         hub.HubUserTier     `db:"tier"`
 }
 

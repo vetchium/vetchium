@@ -29,7 +29,11 @@ func UnfollowUser(h wand.Wand) http.HandlerFunc {
 		err := h.DB().UnfollowUser(r.Context(), string(req.Handle))
 		if err != nil {
 			if errors.Is(err, db.ErrNoHubUser) {
-				h.Dbg("Handle not found", "handle", req.Handle)
+				h.Dbg(
+					"Handle not found or user not active",
+					"handle",
+					req.Handle,
+				)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}

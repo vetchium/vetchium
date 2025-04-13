@@ -21,11 +21,12 @@ func (pg *PG) FollowUser(ctx context.Context, handle string) error {
 
 	// Get target user ID from handle
 	var targetUserID string
+	var userState string
 	err = pg.pool.QueryRow(
 		ctx,
-		"SELECT id FROM hub_users WHERE handle = $1",
+		"SELECT id, state FROM hub_users WHERE handle = $1",
 		handle,
-	).Scan(&targetUserID)
+	).Scan(&targetUserID, &userState)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			pg.log.Dbg("target user not found", "handle", handle)
@@ -34,6 +35,12 @@ func (pg *PG) FollowUser(ctx context.Context, handle string) error {
 
 		pg.log.Err("failed to get target user ID", "error", err)
 		return err
+	}
+
+	// Check if user is active
+	if userState != string(hub.ActiveHubUserState) {
+		pg.log.Dbg("account not active", "handle", handle, "state", userState)
+		return db.ErrNoHubUser
 	}
 
 	// If user is trying to follow themselves, just return success
@@ -73,11 +80,12 @@ func (pg *PG) UnfollowUser(ctx context.Context, handle string) error {
 
 	// Get target user ID from handle
 	var targetUserID string
+	var userState string
 	err = pg.pool.QueryRow(
 		ctx,
-		"SELECT id FROM hub_users WHERE handle = $1",
+		"SELECT id, state FROM hub_users WHERE handle = $1",
 		handle,
-	).Scan(&targetUserID)
+	).Scan(&targetUserID, &userState)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			pg.log.Dbg("target user not found", "handle", handle)
@@ -88,13 +96,15 @@ func (pg *PG) UnfollowUser(ctx context.Context, handle string) error {
 		return err
 	}
 
+	// Check if user is active
+	if userState != string(hub.ActiveHubUserState) {
+		pg.log.Dbg(" account not active", "handle", handle, "state", userState)
+		return db.ErrNoHubUser
+	}
+
 	// If user is trying to unfollow themselves, return not found error
 	if loggedInUserID == targetUserID {
-		pg.log.Dbg(
-			"user attempted to unfollow themselves",
-			"userId",
-			loggedInUserID,
-		)
+		pg.log.Dbg("user attempted to unfollow themselves")
 		return db.ErrNoHubUser
 	}
 
@@ -140,6 +150,12 @@ func (pg *PG) GetFollowStatus(
 
 		pg.log.Err("failed to get target user ID", "error", err)
 		return hub.FollowStatus{}, err
+	}
+
+	// Check if user is active
+	if userState != string(hub.ActiveHubUserState) {
+		pg.log.Dbg("account not active", "handle", handle, "state", userState)
+		return hub.FollowStatus{}, db.ErrNoHubUser
 	}
 
 	// Special case for checking own status

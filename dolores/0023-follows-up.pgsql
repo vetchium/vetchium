@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 -- User that will follow others
 (
@@ -20,7 +20,6 @@ INSERT INTO hub_users (
     'en',
     'Test user who follows others',
     'This user is used to test the follow functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User to be followed
@@ -37,7 +36,6 @@ INSERT INTO hub_users (
     'en',
     'Test user to be followed',
     'This user will be followed by others in the tests.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User to test unauthorized access
@@ -54,7 +52,6 @@ INSERT INTO hub_users (
     'en',
     'Unauthorized test user',
     'This user tests unauthorized scenarios.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User that's already following another user at test start
@@ -71,7 +68,6 @@ INSERT INTO hub_users (
     'en',
     'User who already follows another user',
     'This user has existing follow relationships for testing.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User to be followed by preexisting-follow
@@ -88,7 +84,6 @@ INSERT INTO hub_users (
     'en',
     'User who is already followed',
     'This user is already followed by preexisting-follow user.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User with deleted account
@@ -105,7 +100,6 @@ INSERT INTO hub_users (
     'en',
     'User with deleted account',
     'This user has a deleted account for testing follow limitations.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- Non-existent handle user
@@ -122,7 +116,6 @@ INSERT INTO hub_users (
     'en',
     'User with handle to test non-existence',
     'This user is for testing handle that does not exist.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

@@ -114,7 +114,7 @@ interface FollowUser {
     @post
     @useAuth(HubAuth)
     followUser(@body request: FollowUserRequest): {
-        @doc("The user was followed successfully. If the user was already followed, the request is ignored. If a user attempts to follow themselves, a 200 status is returned without creating any database records.")
+        @doc("The user was followed successfully. If the user was already followed, the request is ignored. If a user attempts to follow themselves, a 200 status is returned without creating any database records. If the target user is not active (e.g., deleted), a 404 status is returned.")
         @statusCode
         statusCode: 200;
     };
@@ -126,7 +126,7 @@ interface UnfollowUser {
     @post
     @useAuth(HubAuth)
     unfollowUser(@body request: UnfollowUserRequest): {
-        @doc("The user was unfollowed successfully. If the user was not followed already, the request is ignored. If a user attempts to unfollow themselves, a 404 status is returned.")
+        @doc("The user was unfollowed successfully. If the user was not followed already, the request is ignored. If a user attempts to unfollow themselves, a 404 status is returned. If the target user is not active (e.g., deleted), a 404 status is returned.")
         @statusCode
         statusCode: 200;
     };
@@ -138,7 +138,7 @@ interface GetFollowStatus {
     @post
     @useAuth(HubAuth)
     getFollowStatus(@body request: GetFollowStatusRequest): {
-        @doc("Returns the follow status between the logged-in user and the requested handle. Special cases: 1) When checking one's own status: isFollowing=true, isBlocked=false, canFollow=false. 2) When already following a user: canFollow=false.")
+        @doc("Returns the follow status between the logged-in user and the requested handle. Special cases: 1) When checking one's own status: isFollowing=true, isBlocked=false, canFollow=false. 2) When already following a user: canFollow=false. If the target user is not active (e.g., deleted), a 404 status is returned.")
         @statusCode
         statusCode: 200;
 
