@@ -231,7 +231,7 @@ SELECT
 	hu.email,
 	hu.password_hash,
 	hu.created_at
-FROM 
+FROM
 	hub_user_tokens hut,
 	hub_users hu
 WHERE
@@ -270,8 +270,8 @@ func (p *PG) ChangeHubUserPassword(
 	newPasswordHash string,
 ) error {
 	query := `
-UPDATE hub_users 
-SET password_hash = $1, updated_at = NOW() AT TIME ZONE 'utc'
+UPDATE hub_users
+SET password_hash = $1
 WHERE id = $2`
 
 	_, err := p.pool.Exec(ctx, query, newPasswordHash, hubUserID)
@@ -294,7 +294,7 @@ func (p *PG) InitHubUserPasswordReset(
 	defer tx.Rollback(context.Background())
 
 	tokensQuery := `
-INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) 
+INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type)
 VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
 `
 	_, err = tx.Exec(
@@ -348,10 +348,8 @@ WITH token_info AS (
 ),
 password_update AS (
     UPDATE hub_users
-    SET
-        password_hash = $1,
-        updated_at = NOW() AT TIME ZONE 'utc'
-    WHERE id = (SELECT hub_user_id FROM token_info)
+    SET password_hash = $1
+	WHERE id = (SELECT hub_user_id FROM token_info)
     RETURNING id
 )
 DELETE FROM hub_user_tokens

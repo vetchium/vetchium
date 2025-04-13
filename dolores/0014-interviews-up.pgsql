@@ -103,6 +103,7 @@ INSERT INTO openings (
     ARRAY['IND'],
     ARRAY['IST Indian Standard Time GMT+0530'],
     'ACTIVE_OPENING_STATE',
+    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

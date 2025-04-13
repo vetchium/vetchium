@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 (
     '12345678-0019-0019-0019-000000000001',
@@ -19,7 +19,6 @@ INSERT INTO hub_users (
     'en',
     'Profile Test User 1 is experienced',
     'Profile Test User 1 was born in India and finished education at IIT Mumbai.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -35,7 +34,6 @@ INSERT INTO hub_users (
     'en',
     'Profile Test User 2 is skilled',
     'Profile Test User 2 was born in India and finished education at Delhi University.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -51,7 +49,6 @@ INSERT INTO hub_users (
     'en',
     'Profile Test User 3',
     'Profile Test User 3 is dedicated for profile picture end-to-end testing.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -67,7 +64,6 @@ INSERT INTO hub_users (
     'en',
     'E2E Test User Bio',
     'This user is solely for end-to-end profile picture testing.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

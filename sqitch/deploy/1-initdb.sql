@@ -1026,7 +1026,8 @@ CREATE TABLE posts (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
 CREATE TABLE post_tags (

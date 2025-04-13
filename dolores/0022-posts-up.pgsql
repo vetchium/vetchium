@@ -69,15 +69,15 @@ INSERT INTO hub_users (
 );
 
 -- Add posts for get-user1 (note varying timestamps)
-INSERT INTO posts (id, content, author_id, created_at, updated_at) VALUES
-('post-g1-01', 'First post by get-user1', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '5 days', timezone('UTC'::text, now()) - interval '5 days'),
-('post-g1-02', 'Second post by get-user1, with tags', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '4 days', timezone('UTC'::text, now()) - interval '4 days'),
-('post-g1-03', 'Third post, updated recently', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '3 days', timezone('UTC'::text, now()) - interval '1 day'),
-('post-g1-04', 'Fourth post, newest', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '2 days', timezone('UTC'::text, now()));
+INSERT INTO posts (id, content, author_id, created_at) VALUES
+('post-g1-01', 'First post by get-user1', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '5 days'),
+('post-g1-02', 'Second post by get-user1, with tags', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '4 days'),
+('post-g1-03', 'Third post, updated recently', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '3 days'),
+('post-g1-04', 'Fourth post, newest', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '2 days');
 
 -- Add posts for get-user2
-INSERT INTO posts (id, content, author_id, created_at, updated_at) VALUES
-('post-g2-01', 'First post by get-user2', '12345678-0022-0022-0022-000000000004', timezone('UTC'::text, now()) - interval '1 hour', timezone('UTC'::text, now()) - interval '1 hour');
+INSERT INTO posts (id, content, author_id, created_at) VALUES
+('post-g2-01', 'First post by get-user2', '12345678-0022-0022-0022-000000000004', timezone('UTC'::text, now()) - interval '1 hour');
 
 -- Add tags needed for GetUserPosts tests, ensuring they exist
 INSERT INTO tags (name) VALUES

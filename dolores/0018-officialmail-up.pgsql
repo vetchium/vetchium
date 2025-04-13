@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 -- User for add official email tests
 (
@@ -20,7 +20,6 @@ INSERT INTO hub_users (
     'en',
     'Add Email Test User is organized',
     'Add Email Test User was born in India and finished education at IIIT Hyderabad and has 4 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User for delete official email tests
@@ -37,7 +36,6 @@ INSERT INTO hub_users (
     'en',
     'Delete Email Test User is thorough',
     'Delete Email Test User was born in India and finished education at VIT Chennai and has 5 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User for trigger verification tests
@@ -54,7 +52,6 @@ INSERT INTO hub_users (
     'en',
     'Trigger Verification Test User is meticulous',
     'Trigger Verification Test User was born in India and finished education at Pune University and has 3 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User for verify email tests
@@ -71,7 +68,6 @@ INSERT INTO hub_users (
     'en',
     'Verify Email Test User is precise',
     'Verify Email Test User was born in India and finished education at BITS Hyderabad and has 6 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- User for list emails tests
@@ -88,7 +84,6 @@ INSERT INTO hub_users (
     'en',
     'List Emails Test User is systematic',
     'List Emails Test User was born in India and finished education at IIT Kharagpur and has 7 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -231,11 +230,9 @@ func (p *PG) UpdateWorkHistory(
 			title = $1,
 			start_date = $2::DATE,
 			end_date = $3::DATE,
-			description = $4,
-			updated_at = $5
-		WHERE id = $6 AND hub_user_id = $7
-	`, req.Title, req.StartDate, req.EndDate, req.Description, time.Now().UTC(), req.ID, hubUserID)
-
+			description = $4
+		WHERE id = $5 AND hub_user_id = $6
+	`, req.Title, req.StartDate, req.EndDate, req.Description, req.ID, hubUserID)
 	if err != nil {
 		p.log.Err(
 			"failed to update work history",

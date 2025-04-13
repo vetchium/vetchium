@@ -99,7 +99,7 @@ INSERT INTO hub_users (
 
 -- Create some initial achievements
 INSERT INTO achievements (
-    id, hub_user_id, title, description, url, at, achievement_type, created_at, updated_at
+    id, hub_user_id, title, description, url, at, achievement_type, created_at
 ) VALUES
 (
     '12345678-0021-0021-0021-000000000010',
@@ -109,7 +109,6 @@ INSERT INTO achievements (
     'https://patent.example.com/ml-innovation',
     '2022-06-15 12:00:00+00',
     'PATENT',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -120,7 +119,6 @@ INSERT INTO achievements (
     'https://journal.example.com/ai-ethics',
     '2023-03-10 12:00:00+00',
     'PUBLICATION',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -131,7 +129,6 @@ INSERT INTO achievements (
     'https://aws.example.com/certification',
     '2021-11-20 12:00:00+00',
     'CERTIFICATION',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -142,7 +139,6 @@ INSERT INTO achievements (
     'https://patent.example.com/blockchain-security',
     '2020-08-05 12:00:00+00',
     'PATENT',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -153,7 +149,6 @@ INSERT INTO achievements (
     'https://journal.example.com/quantum-computing',
     '2022-01-15 12:00:00+00',
     'PUBLICATION',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

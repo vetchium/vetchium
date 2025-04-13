@@ -46,20 +46,17 @@ func (p *PG) UpdateProfilePictureWithCleanup(
 		p.log.Dbg("updating profile picture to NULL", "user_id", hubUserID)
 		result, err = tx.Exec(ctx, `
 			UPDATE hub_users
-			SET profile_picture_url = NULL,
-				updated_at = NOW()
+			SET profile_picture_url = NULL
 			WHERE id = $1
 		`, hubUserID)
 	} else {
 		p.log.Dbg("updating path", "user_id", hubUserID, "path", newPicturePath)
 		result, err = tx.Exec(ctx, `
 			UPDATE hub_users
-			SET profile_picture_url = $1,
-				updated_at = NOW()
+			SET profile_picture_url = $1
 			WHERE id = $2
 		`, newPicturePath, hubUserID)
 	}
-
 	if err != nil {
 		p.log.Dbg("failed to update profile picture", "error", err)
 		return fmt.Errorf("failed to update profile picture: %w", err)

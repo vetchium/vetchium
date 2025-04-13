@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 (
     '12345678-0020-0020-0020-000000000001',
@@ -19,7 +19,6 @@ INSERT INTO hub_users (
     'en',
     'Education Test User 1 is a student',
     'Education Test User 1 was born in Tamil Nadu and is studying at Anna University.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -35,7 +34,6 @@ INSERT INTO hub_users (
     'en',
     'Education Test User 2 is a graduate',
     'Education Test User 2 was born in Tamil Nadu and graduated from PSG Tech College.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -51,7 +49,6 @@ INSERT INTO hub_users (
     'en',
     'Education Test User 3 is a professional',
     'Education Test User 3 studied in USA and works as a software engineer.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -67,7 +64,6 @@ INSERT INTO hub_users (
     'en',
     'User for testing list education features',
     'This user is dedicated to testing list education functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -83,7 +79,6 @@ INSERT INTO hub_users (
     'en',
     'User for testing delete education features',
     'This user is dedicated to testing delete education functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -99,7 +94,6 @@ INSERT INTO hub_users (
     'en',
     'User for testing complete education flow',
     'This user is dedicated to testing the complete education workflow.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -115,160 +109,137 @@ INSERT INTO hub_users (
     'en',
     'User for testing org view of education',
     'This user is dedicated to testing org user view of education.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 
 -- Create test institutes
 INSERT INTO institutes (
-    id, institute_name, logo_url, created_at, updated_at
+    id, institute_name, logo_url, created_at
 ) VALUES
 (
     '12345678-0020-0020-0020-000000000003',
     'Anna University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000004',
     'PSG College of Technology',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000005',
     'Stanford University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000014',
     'MIT',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000015',
     'Caltech',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000016',
     'Princeton University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000017',
     'Yale University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000018',
     'Columbia University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000019',
     'UC Berkeley',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000020',
     'Oxford University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     '12345678-0020-0020-0020-000000000031',
     'Harvard University',
     NULL,
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 
 -- Create institute domains
 INSERT INTO institute_domains (
-    domain, institute_id, created_at, updated_at
+    domain, institute_id, created_at
 ) VALUES
 (
     'annauniv.example',
     '12345678-0020-0020-0020-000000000003',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'psgtech.example',
     '12345678-0020-0020-0020-000000000004',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'stanford.example',
     '12345678-0020-0020-0020-000000000005',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'mit.example',
     '12345678-0020-0020-0020-000000000014',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'caltech.example',
     '12345678-0020-0020-0020-000000000015',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'princeton.example',
     '12345678-0020-0020-0020-000000000016',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'yale.example',
     '12345678-0020-0020-0020-000000000017',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'columbia.example',
     '12345678-0020-0020-0020-000000000018',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'berkeley.example',
     '12345678-0020-0020-0020-000000000019',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'oxford.example',
     '12345678-0020-0020-0020-000000000020',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
     'harvard.example',
     '12345678-0020-0020-0020-000000000031',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

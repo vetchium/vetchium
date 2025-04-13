@@ -164,8 +164,7 @@ update_result AS (
 			WHEN $11 = true THEN NOW() 
 			ELSE NULL 
 		END,
-		feedback_submitted_at = NOW(),
-		updated_at = NOW()
+		feedback_submitted_at = NOW()
 	FROM validation_result v
 	WHERE i.id = v.id
 	AND v.validation_status = '` + success + `'
