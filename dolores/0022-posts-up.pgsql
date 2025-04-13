@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 (
     '12345678-0022-0022-0022-000000000001',
@@ -19,7 +19,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for adding posts',
     'This user is specifically for testing the add post functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -35,7 +34,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for post authentication',
     'This user helps test authentication scenarios related to posts.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 -- Users for GetUserPosts tests
@@ -52,7 +50,6 @@ INSERT INTO hub_users (
     'en',
     'User with multiple posts for get tests',
     'This user will have several posts to test fetching and pagination.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -68,7 +65,6 @@ INSERT INTO hub_users (
     'fr',
     'Another user for get tests',
     'This user might have fewer posts or be used for handle lookup tests.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

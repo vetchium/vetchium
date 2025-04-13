@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES
 (
     '12345678-0021-0021-0021-000000000001',
@@ -19,7 +19,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for adding achievements',
     'This user is for testing the add achievement functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -35,7 +34,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for listing achievements',
     'This user is for testing the list achievement functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -51,7 +49,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for deleting achievements',
     'This user is for testing the delete achievement functionality.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -67,7 +64,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for achievement workflow',
     'This user is for testing the complete achievement workflow.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -83,7 +79,6 @@ INSERT INTO hub_users (
     'en',
     'Secondary test user for achievements',
     'This user is for viewing other users achievements.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 ),
 (
@@ -99,7 +94,6 @@ INSERT INTO hub_users (
     'en',
     'Test user for employer views',
     'This user is for testing employer viewing achievements.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

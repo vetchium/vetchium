@@ -4,7 +4,7 @@ BEGIN;
 INSERT INTO hub_users (
     id, full_name, handle, email, password_hash,
     state, tier, resident_country_code, resident_city, preferred_language,
-    short_bio, long_bio, created_at, updated_at
+    short_bio, long_bio, created_at
 ) VALUES (
     '12345678-0016-0016-0016-000000000001',
     'Filter Employers Test User',
@@ -18,7 +18,6 @@ INSERT INTO hub_users (
     'en',
     'Filter Employers Test User is detail-oriented',
     'Filter Employers Test User was born in India and finished education at IIIT Bangalore and has 3 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

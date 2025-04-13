@@ -13,8 +13,7 @@ INSERT INTO public.hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 )
 VALUES 
     (
@@ -30,7 +29,6 @@ VALUES
         'en',
         'Active User is enthusiastic',
         'Active User was born in USA and finished education at Stanford University and has 5 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -46,7 +44,6 @@ VALUES
         'en',
         'Disabled User is determined',
         'Disabled User was born in Canada and finished education at MIT and has 3 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -62,7 +59,6 @@ VALUES
         'en',
         'Deleted User is adaptable',
         'Deleted User was born in USA and finished education at UC Berkeley and has 4 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -78,7 +74,6 @@ VALUES
         'en',
         'Password Change User is reliable',
         'Password Change User was born in India and finished education at IISc Bangalore and has 5 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -94,7 +89,6 @@ VALUES
         'en',
         'Password Reset User is focused',
         'Password Reset User was born in India and finished education at IIT Madras and has 6 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -110,7 +104,6 @@ VALUES
         'en',
         'Token Expiry Test User is efficient',
         'Token Expiry Test User was born in Germany and finished education at TU Munich and has 7 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -126,7 +119,6 @@ VALUES
         'en',
         'Token Reuse Test User is methodical',
         'Token Reuse Test User was born in China and finished education at Tsinghua University and has 5 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),(
         '12345678-0007-0007-0007-000000050008'::uuid,
@@ -141,7 +133,6 @@ VALUES
         'en',
         'Remember Me Test User is organized',
         'Remember Me Test User was born in France and finished education at École Polytechnique and has 4 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -157,7 +148,6 @@ VALUES
         'en',
         'TFA Test User is diligent',
         'TFA Test User was born in Japan and finished education at University of Tokyo and has 6 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     );
 COMMIT;

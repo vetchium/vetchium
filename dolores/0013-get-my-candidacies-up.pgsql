@@ -14,8 +14,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES
     (
         '12345678-0013-0013-0013-000000050001'::uuid,
@@ -30,7 +29,6 @@ INSERT INTO hub_users (
         'en',
         'Hub User One is ambitious',
         'Hub User One was born in India and finished education at NIT Trichy and has 3 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -46,7 +44,6 @@ INSERT INTO hub_users (
         'en',
         'Hub User Two is creative',
         'Hub User Two was born in USA and finished education at Cornell University and has 5 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     ),
     (
@@ -62,7 +59,6 @@ INSERT INTO hub_users (
         'en',
         'Hub User Three is dedicated',
         'Hub User Three was born in UK and finished education at Oxford University and has 7 years as experience.',
-        timezone('UTC'::text, now()),
         timezone('UTC'::text, now())
     );
 

@@ -14,8 +14,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES (
     '12345678-0008-0008-0008-000000050001'::uuid,
     'Hub Opening Test User',
@@ -29,7 +28,6 @@ INSERT INTO hub_users (
     'en',
     'Hub Opening Test User is innovative',
     'Hub Opening Test User was born in India and finished education at IIT Madras and has 7 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 
@@ -47,8 +45,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES
 -- User with only resident country
 ('12345678-0008-0008-0008-000000050002'::uuid,
@@ -63,7 +60,6 @@ INSERT INTO hub_users (
  'en',
  'India Only User is resourceful',
  'India Only User was born in India and finished education at Delhi University and has 4 years as experience.',
- timezone('UTC'::text, now()),
  timezone('UTC'::text, now())),
 
 -- User with different country/city combination
@@ -79,7 +75,6 @@ INSERT INTO hub_users (
  'en',
  'US User is dynamic',
  'US User was born in USA and finished education at Harvard University and has 6 years as experience.',
- timezone('UTC'::text, now()),
  timezone('UTC'::text, now()));
 
 -- Create test employers (5 companies)

@@ -152,8 +152,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES (
     '12345678-0010-0010-0010-000000050001'::uuid,
     'Hub User 1',
@@ -167,8 +166,7 @@ INSERT INTO hub_users (
     'en',
     'Hub User 1 is diligent',
     'Hub User 1 was born in India and finished education at VIT University and has 3 years as experience.',
-    NOW(),
-    NOW()
+    timezone('UTC'::text, now())
 ), (
     '12345678-0010-0010-0010-000000050002'::uuid,
     'Hub User 2',
@@ -182,8 +180,7 @@ INSERT INTO hub_users (
     'en',
     'Hub User 2 is proactive',
     'Hub User 2 was born in India and finished education at SRM University and has 5 years as experience.',
-    NOW(),
-    NOW()
+    timezone('UTC'::text, now())
 );
 
 -- Create hub user tokens

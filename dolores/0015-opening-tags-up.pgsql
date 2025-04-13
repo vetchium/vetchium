@@ -42,8 +42,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES (
     '12345678-0015-0015-0015-000000050002'::uuid,
     'Tags Test Hub User',
@@ -57,7 +56,6 @@ INSERT INTO hub_users (
     'en',
     'Tags Test Hub User is methodical',
     'Tags Test Hub User was born in India and finished education at PSG Tech and has 5 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 

@@ -45,8 +45,7 @@ INSERT INTO hub_users (
     preferred_language,
     short_bio,
     long_bio,
-    created_at,
-    updated_at
+    created_at
 ) VALUES (
     '12345678-0014-0014-0014-000000050001'::uuid,
     'Interview Test User',
@@ -60,7 +59,6 @@ INSERT INTO hub_users (
     'en',
     'Interview Test User is enthusiastic',
     'Interview Test User was born in India and finished education at IIT Madras and has 4 years as experience.',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 
@@ -105,7 +103,6 @@ INSERT INTO openings (
     ARRAY['IND'],
     ARRAY['IST Indian Standard Time GMT+0530'],
     'ACTIVE_OPENING_STATE',
-    timezone('UTC'::text, now()),
     timezone('UTC'::text, now())
 );
 
