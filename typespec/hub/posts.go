@@ -45,3 +45,8 @@ type GetMyHomeTimelineRequest struct {
 	PaginationKey *string `json:"pagination_key" validate:"omitempty"`
 	Limit         int     `json:"limit"          validate:"min=0,max=40"`
 }
+
+type MyHomeTimeline struct {
+	Posts         []common.Post `json:"posts"`
+	PaginationKey string        `json:"pagination_key"`
+}

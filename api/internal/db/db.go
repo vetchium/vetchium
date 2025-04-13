@@ -442,4 +442,16 @@ type DB interface {
 		ctx context.Context,
 		req hub.GetUserPostsRequest,
 	) (hub.GetUserPostsResponse, error)
+	GetMyHomeTimeline(
+		ctx context.Context,
+		req hub.GetMyHomeTimelineRequest,
+	) (hub.MyHomeTimeline, error)
+
+	// Used by hermione - Follow related methods
+	FollowUser(ctx context.Context, handle string) error
+	UnfollowUser(ctx context.Context, handle string) error
+	GetFollowStatus(
+		ctx context.Context,
+		handle string,
+	) (hub.FollowStatus, error)
 }

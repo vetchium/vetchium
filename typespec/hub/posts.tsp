@@ -81,6 +81,11 @@ model GetMyHomeTimelineRequest {
     limit?: integer;
 }
 
+model MyHomeTimeline {
+    posts: Post[];
+    pagination_key: string;
+}
+
 @route("/hub/add-post")
 interface AddPost {
     @tag("Posts")

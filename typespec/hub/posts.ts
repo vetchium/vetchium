@@ -45,3 +45,8 @@ export interface GetMyHomeTimelineRequest {
   pagination_key?: string;
   limit?: number;
 }
+
+export interface MyHomeTimeline {
+  posts: Post[];
+  pagination_key: string;
+}
