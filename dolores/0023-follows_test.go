@@ -13,7 +13,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Follow Operations", Ordered, func() {
+var _ = Describe("Follow Operations", Ordered, func() {
 	var db *pgxpool.Pool
 	var followUser1Token, followUser2Token, preexistingFollowToken string
 
@@ -475,15 +475,7 @@ var _ = FDescribe("Follow Operations", Ordered, func() {
 						tc.validate(resp.([]byte))
 					}
 
-					// For debugging purposes
-					if tc.wantStatus != http.StatusOK &&
-						tc.wantStatus != http.StatusUnauthorized {
-						fmt.Fprintf(
-							GinkgoWriter,
-							"Response: %v\n",
-							resp,
-						)
-					}
+					// fmt.Fprintf(GinkgoWriter, "Response: %v\n", string(resp.([]byte)))
 				}
 			},
 		)
