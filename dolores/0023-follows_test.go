@@ -136,12 +136,26 @@ var _ = Describe("Follow Operations", Ordered, func() {
 					wantStatus: http.StatusNotFound, // Assuming we can't follow deleted users
 				},
 				{
-					description: "follow self",
+					description: "follow self (according to spec: returns 200 without creating records)",
 					token:       followUser1Token,
 					request: hub.FollowUserRequest{
 						Handle: "follow-user1", // Same as the token user
 					},
-					wantStatus: http.StatusBadRequest, // Shouldn't be able to follow yourself
+					wantStatus: http.StatusOK, // According to spec, following yourself returns 200 OK
+					verify: func() {
+						// Verify no self-follow relationship was created in the database
+						var count int
+						err := db.QueryRow(
+							context.Background(),
+							`SELECT COUNT(*) FROM following_relationships 
+							 WHERE consuming_hub_user_id = '12345678-0023-0023-0023-000000000001' 
+							 AND producing_hub_user_id = '12345678-0023-0023-0023-000000000001'`,
+						).Scan(&count)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							count,
+						).Should(Equal(0), "No self-follow relationship should be created")
+					},
 				},
 				{
 					description: "follow with empty handle",
@@ -277,12 +291,12 @@ var _ = Describe("Follow Operations", Ordered, func() {
 					wantStatus: http.StatusOK,
 				},
 				{
-					description: "unfollow self",
+					description: "unfollow self (according to spec: returns 404)",
 					token:       followUser2Token,
 					request: hub.UnfollowUserRequest{
 						Handle: "follow-user2", // Same as the token user
 					},
-					wantStatus: http.StatusBadRequest, // Shouldn't be able to unfollow yourself
+					wantStatus: http.StatusNotFound, // According to spec "If a user attempts to unfollow themselves, a 404 status is returned"
 				},
 				{
 					description: "unfollow with empty handle",
@@ -390,7 +404,9 @@ var _ = Describe("Follow Operations", Ordered, func() {
 							Expect(err).ShouldNot(HaveOccurred())
 							Expect(status.IsFollowing).Should(BeTrue())
 							Expect(status.IsBlocked).Should(BeFalse())
-							Expect(status.CanFollow).Should(BeTrue())
+							Expect(
+								status.CanFollow,
+							).Should(BeFalse(), "canFollow should be false when already following a user")
 						},
 					},
 					{
@@ -419,7 +435,7 @@ var _ = Describe("Follow Operations", Ordered, func() {
 						},
 					},
 					{
-						description: "get status of self",
+						description: "get status of self (according to spec: isFollowing=true, isBlocked=false, canFollow=false)",
 						token:       followUser1Token,
 						request: hub.GetFollowStatusRequest{
 							Handle: "follow-user1", // Same as the token user
@@ -429,10 +445,16 @@ var _ = Describe("Follow Operations", Ordered, func() {
 							var status hub.FollowStatus
 							err := json.Unmarshal(respBody, &status)
 							Expect(err).ShouldNot(HaveOccurred())
-							Expect(status.IsFollowing).Should(BeFalse())
-							Expect(status.IsBlocked).Should(BeFalse())
-							// Cannot follow self
-							Expect(status.CanFollow).Should(BeFalse())
+							// According to spec: "When checking one's own status: isFollowing=true, isBlocked=false, canFollow=false"
+							Expect(
+								status.IsFollowing,
+							).Should(BeTrue(), "isFollowing should be true when checking self status")
+							Expect(
+								status.IsBlocked,
+							).Should(BeFalse(), "isBlocked should be false when checking self status")
+							Expect(
+								status.CanFollow,
+							).Should(BeFalse(), "canFollow should be false when checking self status")
 						},
 					},
 					{
