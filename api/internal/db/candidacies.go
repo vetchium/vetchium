@@ -11,7 +11,7 @@ const (
 	OrgUserAuthorType = "ORG_USER"
 )
 
-type WatchersInfo struct {
+type Stakeholders struct {
 	OpeningID    string
 	OpeningTitle string
 	OpeningState common.OpeningState

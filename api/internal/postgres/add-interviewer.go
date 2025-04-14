@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/middleware"
 	"github.com/vetchium/vetchium/typespec/common"
@@ -41,14 +43,14 @@ WITH interview_check AS (
 	WHERE i.id = $1
 ),
 interviewer_check AS (
-	SELECT ou.id, ou.org_user_state 
+	SELECT ou.id, ou.org_user_state
 	FROM org_users ou, interview_check ic
-	WHERE ou.email = $2 
+	WHERE ou.email = $2
 	AND ou.employer_id = ic.employer_id
 ),
 state_validation AS (
-	SELECT 
-		CASE 
+	SELECT
+		CASE
 			WHEN ic.id IS NULL THEN $5
 			WHEN ic.interview_state != $3 THEN $6
 			WHEN iw.id IS NULL THEN $7
@@ -61,7 +63,7 @@ state_validation AS (
 ),
 insert_interviewer AS (
 	INSERT INTO interview_interviewers (interview_id, interviewer_id, employer_id, rsvp_status)
-	SELECT 
+	SELECT
 		$1,
 		iw.id,
 		ic.employer_id,
@@ -121,7 +123,7 @@ SELECT validation_result FROM state_validation`
 			created_at,
 			candidacy_id,
 			employer_id
-		) SELECT 
+		) SELECT
 			$3,
 			$4,
 			$1,
@@ -179,9 +181,107 @@ INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_
 	return nil
 }
 
-func (p *PG) GetWatchersInfoByInterviewID(
+func (p *PG) GetStakeholdersByInterview(
 	ctx context.Context,
 	interviewID string,
-) (db.WatchersInfo, error) {
-	return db.WatchersInfo{}, nil
+) (db.Stakeholders, error) {
+	orgUser, ok := ctx.Value(middleware.OrgUserCtxKey).(db.OrgUserTO)
+	if !ok {
+		p.log.Err("failed to get orgUser from context")
+		return db.Stakeholders{}, db.ErrInternal
+	}
+
+	query := `
+	WITH interview_data AS (
+		SELECT
+			c.employer_id,
+			c.opening_id
+		FROM interviews i
+		JOIN candidacies c ON i.candidacy_id = c.id
+		WHERE i.id = $1
+		AND c.employer_id = $2
+	)
+	SELECT
+		o.id as opening_id,
+		o.title as opening_title,
+		o.state as opening_state,
+		o.opening_type,
+		hm.name as hiring_manager_name,
+		hm.email as hiring_manager_email,
+		r.name as recruiter_name,
+		r.email as recruiter_email,
+		COALESCE(
+			jsonb_agg(
+				jsonb_build_object(
+					'name', w.name,
+					'email', w.email
+				)
+				ORDER BY w.name
+			) FILTER (WHERE w.id IS NOT NULL),
+			'[]'::jsonb
+		) as watchers
+	FROM interview_data id
+	JOIN openings o ON id.opening_id = o.id AND id.employer_id = o.employer_id
+	JOIN org_users hm ON o.hiring_manager = hm.id
+	JOIN org_users r ON o.recruiter = r.id
+	LEFT JOIN opening_watchers ow ON o.id = ow.opening_id AND o.employer_id = ow.employer_id
+	LEFT JOIN org_users w ON ow.watcher_id = w.id
+	GROUP BY
+		o.id,
+		o.title,
+		o.state,
+		o.opening_type,
+		hm.name,
+		hm.email,
+		r.name,
+		r.email
+	`
+
+	var stakeholders db.Stakeholders
+	var watchersData []byte
+
+	err := p.pool.QueryRow(ctx, query, interviewID, orgUser.EmployerID).Scan(
+		&stakeholders.OpeningID,
+		&stakeholders.OpeningTitle,
+		&stakeholders.OpeningState,
+		&stakeholders.OpeningType,
+		&stakeholders.HiringManager.Name,
+		&stakeholders.HiringManager.Email,
+		&stakeholders.Recruiter.Name,
+		&stakeholders.Recruiter.Email,
+		&watchersData,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			p.log.Dbg("not found or inaccessible", "interview_id", interviewID)
+			return db.Stakeholders{}, db.ErrNoInterview
+		}
+
+		p.log.Err("stakeholders", "error", err, "interview_id", interviewID)
+		return db.Stakeholders{}, db.ErrInternal
+	}
+
+	// Parse watchers from JSON
+	var watchers []struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+
+	err = json.Unmarshal(watchersData, &watchers)
+	if err != nil {
+		p.log.Err("failed to unmarshal watchers data", "error", err)
+		return db.Stakeholders{}, db.ErrInternal
+	}
+
+	// Convert to OrgUserShort slice
+	stakeholders.Watchers = make([]employer.OrgUserShort, len(watchers))
+	for i, watcher := range watchers {
+		stakeholders.Watchers[i] = employer.OrgUserShort{
+			Name:  watcher.Name,
+			Email: watcher.Email,
+		}
+	}
+
+	p.log.Dbg("got stakeholders", "stakeholders", stakeholders)
+	return stakeholders, nil
 }

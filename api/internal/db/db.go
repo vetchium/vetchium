@@ -242,10 +242,10 @@ type DB interface {
 	AddInterview(context.Context, AddInterviewRequest) error
 	AddInterviewer(context.Context, AddInterviewerRequest) error
 	RemoveInterviewer(context.Context, RemoveInterviewerRequest) error
-	GetWatchersInfoByInterviewID(
+	GetStakeholdersByInterview(
 		ctx context.Context,
 		interviewID string,
-	) (WatchersInfo, error)
+	) (Stakeholders, error)
 	EmployerRSVPInterview(context.Context, common.RSVPInterviewRequest) error
 	GetEmployerInterviewsByOpening(
 		context.Context,

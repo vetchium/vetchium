@@ -61,28 +61,40 @@ func AddInterviewer(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		watchersInfo, err := h.DB().
-			GetWatchersInfoByInterviewID(ctx, addInterviewerReq.InterviewID)
+		stakeholders, err := h.DB().
+			GetStakeholdersByInterview(ctx, addInterviewerReq.InterviewID)
 		if err != nil {
-			h.Err("failed to get watchers", "error", err)
+			if errors.Is(err, db.ErrNoInterview) {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			h.Dbg("failed to get stakeholders", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
+		h.Dbg("got stakeholders", "stakeholders", stakeholders)
 
 		watcherEmailMap := make(map[string]struct{})
 		watcherEmailMap[addInterviewerReq.OrgUserEmail] = struct{}{}
-		watcherEmailMap[watchersInfo.HiringManager.Email] = struct{}{}
-		watcherEmailMap[watchersInfo.Recruiter.Email] = struct{}{}
+		watcherEmailMap[stakeholders.HiringManager.Email] = struct{}{}
+		watcherEmailMap[stakeholders.Recruiter.Email] = struct{}{}
+		watcherEmailMap[stakeholders.Recruiter.Email] = struct{}{}
 
 		// Should we notify the Applicant also ? Perhaps not, let us not
 		// distract them with too many emails, when they should be preparing
 		// for the interview
-		for _, watcher := range watchersInfo.Watchers {
+		for _, watcher := range stakeholders.Watchers {
 			watcherEmailMap[watcher.Email] = struct{}{}
 		}
 
 		watcherEmailRecipients := make([]string, 0, len(watcherEmailMap))
 		for email := range watcherEmailMap {
+			if email == "" {
+				h.Err("skipping empty email", "email", email)
+				continue
+			}
+			h.Dbg("adding email", "email", email)
 			watcherEmailRecipients = append(watcherEmailRecipients, email)
 		}
 

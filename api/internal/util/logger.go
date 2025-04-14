@@ -49,7 +49,7 @@ func (l *Logger) Err(msg string, args ...any) {
 
 func (l *Logger) Dbg(msg string, args ...any) {
 	var pcs [1]uintptr
-	runtime.Callers(2, pcs[:])
+	runtime.Callers(3, pcs[:])
 	r := slog.NewRecord(
 		time.Now(),
 		slog.LevelDebug,
