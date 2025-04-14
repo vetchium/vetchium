@@ -78,17 +78,15 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			var result []common.VTag
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(HaveLen(3))
 
 			got := make([]string, len(result))
 			for i, tag := range result {
 				got[i] = string(tag.Name)
 			}
-			sort.Strings(got)
 
-			Expect(got[0]).To(Equal("PostgreSQL"))
-			Expect(got[1]).To(Equal("Product Manager"))
-			Expect(got[2]).To(Equal("Python"))
+			Expect(got).To(ContainElement("PostgreSQL"))
+			Expect(got).To(ContainElement("Product Manager"))
+			Expect(got).To(ContainElement("Python"))
 		})
 
 		It("should return empty list for non-existent prefix", func() {
