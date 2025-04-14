@@ -3,6 +3,7 @@ package dolores
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -30,6 +31,12 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 		MaxTimelinePollRetries = 20
 	)
 
+	// Declare token variables directly at test level
+	var user1Token, user2Token, user3Token, user4Token, user5Token string
+	var user8Token, user9Token, user10Token, user15Token string
+	var user11Token, user12Token string
+	var user6Token, user7Token string
+
 	// User token maps for different test groups
 	var timelineTokens map[string]string
 	var followUnfollowTokens map[string]string
@@ -48,12 +55,6 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 
 		// Login hub users and get tokens - using different users for different tests
 		var wg sync.WaitGroup
-
-		// Initialize token variables for each user before taking their address
-		var user1Token, user2Token, user3Token, user4Token, user5Token string
-		var user8Token, user9Token, user10Token, user15Token string
-		var user11Token, user12Token string
-		var user6Token, user7Token string
 
 		// Users for basic timeline tests (existing users from the seed)
 		wg.Add(5)
@@ -146,6 +147,12 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 		)
 
 		wg.Wait()
+
+		// Make sure all tokens were retrieved successfully
+		fmt.Fprintf(GinkgoWriter, "User1 token: %s\n", user1Token)
+		fmt.Fprintf(GinkgoWriter, "User2 token: %s\n", user2Token)
+		fmt.Fprintf(GinkgoWriter, "User3 token: %s\n", user3Token)
+		// Add more debug log statements as needed
 
 		// Add tokens to maps after they've been populated
 		timelineTokens["user1"] = user1Token

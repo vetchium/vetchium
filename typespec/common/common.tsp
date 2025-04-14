@@ -9,7 +9,7 @@ model ValidationErrors {
 
 // TODO: This should be used everywhere where a handle:string is used now
 @minLength(3)
-@maxLength(32)
+@maxLength(64)
 scalar Handle extends string;
 
 @minLength(3)
