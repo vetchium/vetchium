@@ -456,5 +456,6 @@ type DB interface {
 	) (hub.FollowStatus, error)
 
 	// Used by granger
-	RefreshOldestTimelines(ctx context.Context) error
+	GetTimelinesToRefresh(ctx context.Context, limit int) ([]uuid.UUID, error)
+	RefreshTimeline(ctx context.Context, timelineID uuid.UUID) error
 }

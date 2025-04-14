@@ -1056,3 +1056,86 @@ CREATE TABLE hu_active_home_timelines (
 );
 
 COMMIT;
+
+-- Function to get the oldest N timelines that need refreshing
+CREATE OR REPLACE FUNCTION GetOldestUnrefreshedActiveTimelines(
+    p_limit INTEGER DEFAULT 10
+) RETURNS TABLE (
+    hub_user_id UUID
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT t.hub_user_id
+    FROM hu_active_home_timelines t
+    WHERE t.last_refreshed_at < NOW() - INTERVAL '30 seconds'
+    ORDER BY t.last_refreshed_at ASC
+    LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to refresh a user's timeline
+CREATE OR REPLACE FUNCTION RefreshTimeline(
+    p_hub_user_id UUID
+) RETURNS VOID AS $$
+DECLARE
+    v_cutoff_date TIMESTAMP WITH TIME ZONE;
+    v_last_refresh TIMESTAMP WITH TIME ZONE;
+BEGIN
+    -- Start transaction
+    BEGIN
+        -- Get the last refresh time or default to NULL if not present
+        SELECT last_refreshed_at INTO v_last_refresh
+        FROM hu_active_home_timelines
+        WHERE hub_user_id = p_hub_user_id;
+        
+        -- Calculate cutoff date (100 days ago or last refresh, whichever is more recent)
+        v_cutoff_date := GREATEST(
+            NOW() - INTERVAL '100 days',
+            COALESCE(v_last_refresh, NOW() - INTERVAL '100 days')
+        );
+        
+        -- Delete existing timeline entries for posts that might have been updated
+        DELETE FROM hu_home_timelines
+        WHERE hub_user_id = p_hub_user_id
+        AND post_id IN (
+            SELECT id FROM posts
+            WHERE updated_at >= v_cutoff_date
+        );
+        
+        -- Insert new timeline entries from self and followed users
+        INSERT INTO hu_home_timelines (hub_user_id, post_id)
+        SELECT 
+            p_hub_user_id, 
+            p.id
+        FROM posts p
+        WHERE (
+            -- Posts from users that the current user follows
+            p.author_id IN (
+                SELECT producing_hub_user_id 
+                FROM following_relationships 
+                WHERE consuming_hub_user_id = p_hub_user_id
+            )
+            -- Include user's own posts
+            OR p.author_id = p_hub_user_id
+        )
+        AND (p.created_at >= v_cutoff_date OR p.updated_at >= v_cutoff_date)
+        -- Avoid duplicates
+        AND NOT EXISTS (
+            SELECT 1 FROM hu_home_timelines
+            WHERE hub_user_id = p_hub_user_id AND post_id = p.id
+        );
+        
+        -- Update the last_refreshed_at timestamp or insert if not present
+        INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
+        VALUES (p_hub_user_id, NOW(), NOW())
+        ON CONFLICT (hub_user_id) 
+        DO UPDATE SET 
+            last_refreshed_at = NOW();
+            
+    -- Commit transaction
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE;
+    END;
+END;
+$$ LANGUAGE plpgsql;
