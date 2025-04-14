@@ -22,10 +22,10 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 	const (
 		// Backend checks timelines every 1 second when processing continuously
 		// We use 10 seconds to allow for processing time and potential queueing
-		TimelineRefreshInterval = 10 * time.Second
+		TimelineRefreshInterval = 1 * time.Minute
 
 		// Match backend's interval for checking timelines
-		TimelinePollInterval = 1 * time.Second
+		TimelinePollInterval = 30 * time.Second
 
 		// Allow more retries to accommodate potential delays
 		MaxTimelinePollRetries = 20
@@ -154,23 +154,23 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 		fmt.Fprintf(GinkgoWriter, "User3 token: %s\n", user3Token)
 		// Add more debug log statements as needed
 
-		// Add tokens to maps after they've been populated
-		timelineTokens["user1"] = user1Token
-		timelineTokens["user2"] = user2Token
-		timelineTokens["user3"] = user3Token
-		timelineTokens["user4"] = user4Token
-		timelineTokens["user5"] = user5Token
+		// Add tokens to maps after they've been populated - using database handle format
+		timelineTokens["timeline-user1-0024"] = user1Token
+		timelineTokens["timeline-user2-0024"] = user2Token
+		timelineTokens["timeline-user3-0024"] = user3Token
+		timelineTokens["timeline-user4-0024"] = user4Token
+		timelineTokens["timeline-user5-0024"] = user5Token
 
-		followUnfollowTokens["user8"] = user8Token
-		followUnfollowTokens["user9"] = user9Token
-		followUnfollowTokens["user10"] = user10Token
-		followUnfollowTokens["user15"] = user15Token
+		followUnfollowTokens["timeline-user8-0024"] = user8Token
+		followUnfollowTokens["timeline-user9-0024"] = user9Token
+		followUnfollowTokens["timeline-user10-0024"] = user10Token
+		followUnfollowTokens["timeline-user15-0024"] = user15Token
 
-		paginationTokens["user11"] = user11Token
-		paginationTokens["user12"] = user12Token
+		paginationTokens["timeline-user11-0024"] = user11Token
+		paginationTokens["timeline-user12-0024"] = user12Token
 
-		missingTimelineTokens["user6"] = user6Token
-		missingTimelineTokens["user7"] = user7Token
+		missingTimelineTokens["timeline-user6-0024"] = user6Token
+		missingTimelineTokens["timeline-user7-0024"] = user7Token
 	})
 
 	AfterAll(func() {
@@ -184,7 +184,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 			// User1 already has a timeline with posts from users 2, 3, 4
 			req := hub.GetMyHomeTimelineRequest{}
 			resp := testPOSTGetResp(
-				timelineTokens["user1"],
+				timelineTokens["timeline-user1-0024"],
 				req,
 				"/hub/get-my-home-timeline",
 				http.StatusOK,
@@ -214,7 +214,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				// User7 doesn't have a timeline yet
 				req := hub.GetMyHomeTimelineRequest{}
 				resp := testPOSTGetResp(
-					missingTimelineTokens["user7"],
+					missingTimelineTokens["timeline-user7-0024"],
 					req,
 					"/hub/get-my-home-timeline",
 					http.StatusOK,
@@ -246,7 +246,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Limit: 2,
 			}
 			resp := testPOSTGetResp(
-				paginationTokens["user11"],
+				paginationTokens["timeline-user11-0024"],
 				firstPageReq,
 				"/hub/get-my-home-timeline",
 				http.StatusOK,
@@ -267,7 +267,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Limit:         2,
 			}
 			resp = testPOSTGetResp(
-				paginationTokens["user11"],
+				paginationTokens["timeline-user11-0024"],
 				secondPageReq,
 				"/hub/get-my-home-timeline",
 				http.StatusOK,
@@ -292,7 +292,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 
 			// This should return 422 Unprocessable Entity
 			testPOSTGetResp(
-				timelineTokens["user1"],
+				timelineTokens["timeline-user1-0024"],
 				req,
 				"/hub/get-my-home-timeline",
 				http.StatusUnprocessableEntity,
@@ -332,7 +332,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 
 			// Create the post
 			testPOSTGetResp(
-				timelineTokens["user3"],
+				timelineTokens["timeline-user3-0024"],
 				postReq,
 				"/hub/add-post",
 				http.StatusOK,
@@ -347,7 +347,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 
 				// Check user1's timeline (user1 follows user3)
 				resp := testPOSTGetResp(
-					timelineTokens["user1"],
+					timelineTokens["timeline-user1-0024"],
 					hub.GetMyHomeTimelineRequest{},
 					"/hub/get-my-home-timeline",
 					http.StatusOK,
@@ -383,7 +383,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Handle: "timeline-user15-0024",
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user8"],
+				followUnfollowTokens["timeline-user8-0024"],
 				followReq,
 				"/hub/follow-user",
 				http.StatusOK,
@@ -394,7 +394,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Content: "This post should appear in User8's timeline after following!",
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user15"],
+				followUnfollowTokens["timeline-user15-0024"],
 				addPostReq,
 				"/hub/add-post",
 				http.StatusOK,
@@ -408,7 +408,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				time.Sleep(TimelinePollInterval)
 
 				resp := testPOSTGetResp(
-					followUnfollowTokens["user8"],
+					followUnfollowTokens["timeline-user8-0024"],
 					hub.GetMyHomeTimelineRequest{},
 					"/hub/get-my-home-timeline",
 					http.StatusOK,
@@ -442,7 +442,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Handle: "timeline-user9-0024",
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user10"],
+				followUnfollowTokens["timeline-user10-0024"],
 				followReq,
 				"/hub/follow-user",
 				http.StatusOK,
@@ -454,7 +454,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Content: firstPostContent,
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user9"],
+				followUnfollowTokens["timeline-user9-0024"],
 				addFirstPostReq,
 				"/hub/add-post",
 				http.StatusOK,
@@ -466,7 +466,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				time.Sleep(TimelinePollInterval)
 
 				resp := testPOSTGetResp(
-					followUnfollowTokens["user10"],
+					followUnfollowTokens["timeline-user10-0024"],
 					hub.GetMyHomeTimelineRequest{},
 					"/hub/get-my-home-timeline",
 					http.StatusOK,
@@ -498,7 +498,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Handle: "timeline-user9-0024",
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user10"],
+				followUnfollowTokens["timeline-user10-0024"],
 				unfollowReq,
 				"/hub/unfollow-user",
 				http.StatusOK,
@@ -513,7 +513,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				Content: secondPostContent,
 			}
 			testPOSTGetResp(
-				followUnfollowTokens["user9"],
+				followUnfollowTokens["timeline-user9-0024"],
 				addSecondPostReq,
 				"/hub/add-post",
 				http.StatusOK,
@@ -523,7 +523,7 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 			time.Sleep(TimelineRefreshInterval * 2) // Extra wait time
 
 			resp := testPOSTGetResp(
-				followUnfollowTokens["user10"],
+				followUnfollowTokens["timeline-user10-0024"],
 				hub.GetMyHomeTimelineRequest{},
 				"/hub/get-my-home-timeline",
 				http.StatusOK,

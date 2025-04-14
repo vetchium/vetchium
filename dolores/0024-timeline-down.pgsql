@@ -1,6 +1,6 @@
 BEGIN;
 
--- Clean up timeline data
+-- First, clean up timeline data
 DELETE FROM hu_home_timelines
 WHERE hub_user_id IN (
     '12345678-0024-0024-0024-000000000001',
@@ -75,13 +75,36 @@ WHERE consuming_hub_user_id IN (
     '12345678-0024-0024-0024-000000000015'
 );
 
--- Clean up post_tags
+-- Very important: Clean up post_tags BEFORE attempting to clean up posts
+-- First, get all post IDs from test users
+DELETE FROM post_tags
+WHERE post_id IN (
+    SELECT id FROM posts 
+    WHERE author_id::text LIKE '12345678-0024-0024-0024-%'
+);
+
+-- Also clean up specifically named posts
 DELETE FROM post_tags
 WHERE post_id LIKE 'post-0024-%';
 
--- Clean up posts
+-- Now clean up any other post tags that might have been created during tests
+DELETE FROM post_tags
+WHERE post_id IN (
+    SELECT p.id FROM posts p
+    JOIN hub_users u ON p.author_id = u.id
+    WHERE u.handle LIKE '%timeline-user%-0024'
+);
+
+-- Now safe to clean up posts
 DELETE FROM posts
-WHERE id LIKE 'post-0024-%' OR author_id LIKE '12345678-0024-0024-0024-%';
+WHERE id LIKE 'post-0024-%' OR author_id::text LIKE '12345678-0024-0024-0024-%';
+
+-- Also clean up posts created by timeline users (based on handle)
+DELETE FROM posts
+WHERE author_id IN (
+    SELECT id FROM hub_users
+    WHERE handle LIKE '%timeline-user%-0024'
+);
 
 -- Clean up tags
 DELETE FROM tags
@@ -96,14 +119,14 @@ WHERE id IN (
 DELETE FROM hub_user_tfa_codes
 WHERE tfa_token IN (
     SELECT token FROM hub_user_tokens
-    WHERE hub_user_id LIKE '12345678-0024-0024-0024-%'
+    WHERE hub_user_id::text LIKE '12345678-0024-0024-0024-%'
 );
 
 DELETE FROM hub_user_tokens
-WHERE hub_user_id LIKE '12345678-0024-0024-0024-%';
+WHERE hub_user_id::text LIKE '12345678-0024-0024-0024-%';
 
 -- Clean up hub users
 DELETE FROM hub_users
-WHERE id LIKE '12345678-0024-0024-0024-%';
+WHERE id::text LIKE '12345678-0024-0024-0024-%';
 
 COMMIT;
