@@ -153,6 +153,10 @@ interface GetMyHomeTimeline {
     @useAuth(HubAuth)
     getMyHomeTimeline(@body request: GetMyHomeTimelineRequest): {
         @statusCode statusCode: 200;
-        @body response: Post[];
+        @body response: MyHomeTimeline;
+    } | {
+        @doc("The request cannot be processed. This will most likely happen if the user passed an invalid pagination key. A pagination key could become invalid if the post it refers to is deleted.")
+        @statusCode
+        statusCode: 422;
     };
 }

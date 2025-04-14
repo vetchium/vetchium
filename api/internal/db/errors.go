@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 )
 
 // Ideally should be a const, but go doesn't support const errors.
@@ -56,7 +57,7 @@ var (
 	ErrNotAnInterviewer      = errors.New(
 		"user is not an interviewer for this interview",
 	)
-	ErrInvalidPaginationKey    = errors.New("invalid pagination key")
+	ErrInvalidPaginationKey    = fmt.Errorf("invalid pagination key")
 	ErrNoWorkHistory           = errors.New("work history not found")
 	ErrDuplicateOfficialEmail  = errors.New("official email already exists")
 	ErrTooManyOfficialEmails   = errors.New("too many official emails")

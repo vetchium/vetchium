@@ -1048,6 +1048,8 @@ CREATE TABLE hu_home_timelines (
     PRIMARY KEY (hub_user_id, post_id)
 );
 
+-- TODO: Exclude this table from [active] backups. This can even be
+-- kept entirely in-memory in granger or a redis-like cache, if needed.
 CREATE TABLE hu_active_home_timelines (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     last_refreshed_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -1080,62 +1082,93 @@ CREATE OR REPLACE FUNCTION RefreshTimeline(
 DECLARE
     v_cutoff_date TIMESTAMP WITH TIME ZONE;
     v_last_refresh TIMESTAMP WITH TIME ZONE;
+    v_lock_acquired BOOLEAN;
 BEGIN
-    -- Start transaction
-    BEGIN
-        -- Get the last refresh time or default to NULL if not present
-        SELECT last_refreshed_at INTO v_last_refresh
-        FROM hu_active_home_timelines
-        WHERE hub_user_id = p_hub_user_id;
-        
-        -- Calculate cutoff date (100 days ago or last refresh, whichever is more recent)
-        v_cutoff_date := GREATEST(
-            NOW() - INTERVAL '100 days',
-            COALESCE(v_last_refresh, NOW() - INTERVAL '100 days')
-        );
-        
-        -- Delete existing timeline entries for posts that might have been updated
-        DELETE FROM hu_home_timelines
-        WHERE hub_user_id = p_hub_user_id
-        AND post_id IN (
-            SELECT id FROM posts
-            WHERE updated_at >= v_cutoff_date
-        );
-        
-        -- Insert new timeline entries from self and followed users
-        INSERT INTO hu_home_timelines (hub_user_id, post_id)
-        SELECT 
-            p_hub_user_id, 
-            p.id
-        FROM posts p
-        WHERE (
-            -- Posts from users that the current user follows
-            p.author_id IN (
-                SELECT producing_hub_user_id 
-                FROM following_relationships 
-                WHERE consuming_hub_user_id = p_hub_user_id
-            )
-            -- Include user's own posts
-            OR p.author_id = p_hub_user_id
+    -- Try to acquire an advisory lock specific to this user ID
+    -- This ensures only one process can refresh a specific user's timeline at a time
+    -- The lock is automatically released when the transaction ends
+    SELECT pg_try_advisory_xact_lock(hashtext('refresh_timeline_' || p_hub_user_id::text)) INTO v_lock_acquired;
+
+    -- If we couldn't acquire the lock, another process is already refreshing this timeline
+    IF NOT v_lock_acquired THEN
+        RETURN;
+    END IF;
+
+    -- Get the last refresh time or default to NULL if not present
+    SELECT last_refreshed_at INTO v_last_refresh
+    FROM hu_active_home_timelines
+    WHERE hub_user_id = p_hub_user_id;
+
+    -- Calculate cutoff date (100 days ago or last refresh, whichever is more recent)
+    v_cutoff_date := GREATEST(
+        NOW() - INTERVAL '100 days',
+        COALESCE(v_last_refresh, NOW() - INTERVAL '100 days')
+    );
+
+    -- Delete existing timeline entries for posts that might have been updated
+    DELETE FROM hu_home_timelines
+    WHERE hub_user_id = p_hub_user_id
+    AND post_id IN (
+        SELECT id FROM posts
+        WHERE updated_at >= v_cutoff_date
+    );
+
+    -- Insert new timeline entries from self and followed users
+    INSERT INTO hu_home_timelines (hub_user_id, post_id)
+    SELECT
+        p_hub_user_id,
+        p.id
+    FROM posts p
+    WHERE (
+        -- Posts from users that the current user follows
+        p.author_id IN (
+            SELECT producing_hub_user_id
+            FROM following_relationships
+            WHERE consuming_hub_user_id = p_hub_user_id
         )
-        AND (p.created_at >= v_cutoff_date OR p.updated_at >= v_cutoff_date)
-        -- Avoid duplicates
-        AND NOT EXISTS (
-            SELECT 1 FROM hu_home_timelines
-            WHERE hub_user_id = p_hub_user_id AND post_id = p.id
-        );
-        
-        -- Update the last_refreshed_at timestamp or insert if not present
-        INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
-        VALUES (p_hub_user_id, NOW(), NOW())
-        ON CONFLICT (hub_user_id) 
-        DO UPDATE SET 
-            last_refreshed_at = NOW();
-            
-    -- Commit transaction
-    EXCEPTION
-        WHEN OTHERS THEN
-            RAISE;
-    END;
+        -- Include user's own posts
+        OR p.author_id = p_hub_user_id
+    )
+    AND (p.created_at >= v_cutoff_date OR p.updated_at >= v_cutoff_date)
+    -- Avoid duplicates
+    AND NOT EXISTS (
+        SELECT 1 FROM hu_home_timelines
+        WHERE hub_user_id = p_hub_user_id AND post_id = p.id
+    );
+
+    -- Update the last_refreshed_at timestamp or insert if not present
+    INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
+    VALUES (p_hub_user_id, NOW(), COALESCE((SELECT last_accessed_at FROM hu_active_home_timelines WHERE hub_user_id = p_hub_user_id), NOW()))
+    ON CONFLICT (hub_user_id)
+    DO UPDATE SET
+        last_refreshed_at = NOW();
 END;
 $$ LANGUAGE plpgsql;
+
+-- Create a view for timeline posts with extended information
+CREATE OR REPLACE VIEW hu_timeline_extended AS
+SELECT
+    ht.hub_user_id,
+    p.id AS post_id,
+    p.content,
+    p.created_at,
+    p.updated_at,
+    GREATEST(p.created_at, p.updated_at) AS most_recent_activity,
+    hu.handle AS author_handle,
+    hu.full_name AS author_name,
+    hu.profile_picture_url AS author_profile_pic_url,
+    ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
+FROM hu_home_timelines ht
+JOIN posts p ON ht.post_id = p.id
+JOIN hub_users hu ON p.author_id = hu.id
+LEFT JOIN post_tags pt ON p.id = pt.post_id
+LEFT JOIN tags t ON pt.tag_id = t.id
+GROUP BY
+    ht.hub_user_id,
+    p.id,
+    p.content,
+    p.created_at,
+    p.updated_at,
+    hu.handle,
+    hu.full_name,
+    hu.profile_picture_url;

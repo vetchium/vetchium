@@ -2,8 +2,10 @@ package posts
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
@@ -26,6 +28,14 @@ func GetMyHomeTimeline(h wand.Wand) http.HandlerFunc {
 
 		getMyHomeTimelineResp, err := h.DB().GetMyHomeTimeline(r.Context(), req)
 		if err != nil {
+			// Check for invalid pagination key
+			if errors.Is(err, db.ErrInvalidPaginationKey) {
+				h.Err("Invalid pagination key", "error", err)
+				w.WriteHeader(http.StatusUnprocessableEntity) // 422
+				return
+			}
+
+			h.Err("Failed to get home timeline", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
