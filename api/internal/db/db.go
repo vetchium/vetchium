@@ -454,4 +454,7 @@ type DB interface {
 		ctx context.Context,
 		handle string,
 	) (hub.FollowStatus, error)
+
+	// Used by granger
+	RefreshOldestTimelines(ctx context.Context) error
 }

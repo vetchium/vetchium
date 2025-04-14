@@ -1042,10 +1042,17 @@ CREATE TABLE following_relationships (
     PRIMARY KEY (consuming_hub_user_id, producing_hub_user_id)
 );
 
-CREATE TABLE hub_user_timelines (
+CREATE TABLE hu_home_timelines (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     post_id TEXT REFERENCES posts(id) NOT NULL,
     PRIMARY KEY (hub_user_id, post_id)
+);
+
+CREATE TABLE hu_active_home_timelines (
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    last_refreshed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    last_accessed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (hub_user_id)
 );
 
 COMMIT;

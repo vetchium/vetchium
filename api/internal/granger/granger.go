@@ -172,6 +172,10 @@ func (g *Granger) Run() error {
 	scoreApplicationsQuit := make(chan struct{})
 	go g.scoreApplications(scoreApplicationsQuit)
 
+	g.wg.Add(1)
+	timelineRefresherQuit := make(chan struct{})
+	go g.TimelineRefresher(timelineRefresherQuit)
+
 	go func() {
 		// For now, we don't have any routes to serve
 		// but we will keep this around for future use
