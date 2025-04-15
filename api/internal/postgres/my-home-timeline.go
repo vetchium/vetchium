@@ -83,12 +83,13 @@ func (pg *PG) GetMyHomeTimeline(
 	if !exists {
 		pg.log.Dbg("Creating new timeline for user", "hub_user_id", hubUserID)
 
-		// Initialize the timeline entry
+		// Initialize the timeline entry with an old refresh timestamp
+		// so the initial RefreshTimeline call fetches recent history.
 		_, err = tx.Exec(ctx, `
 			INSERT INTO hu_active_home_timelines
 				(hub_user_id, last_refreshed_at, last_accessed_at)
 			VALUES
-				($1, NOW(), NOW())
+				($1, NOW() - INTERVAL '101 days', NOW())
 		`, hubUserID)
 
 		if err != nil {

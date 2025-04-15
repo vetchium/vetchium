@@ -417,6 +417,8 @@ var _ = FDescribe("Timeline Operations", Ordered, func() {
 				err := json.Unmarshal(resp.([]byte), &timeline)
 				Expect(err).ShouldNot(HaveOccurred())
 
+				fmt.Fprintf(GinkgoWriter, "Got Posts: %+v\n", timeline.Posts)
+
 				// Look for User15's post
 				for _, post := range timeline.Posts {
 					if post.Content == addPostReq.Content &&
