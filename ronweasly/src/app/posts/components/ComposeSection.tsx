@@ -31,6 +31,10 @@ interface ComposeProps {
   onSuccess: (successMessage: string) => void;
 }
 
+interface AddPostResponse {
+  post_id: string;
+}
+
 export default function ComposeSection({
   onPostCreated,
   onError,
@@ -136,6 +140,10 @@ export default function ComposeSection({
         throw new Error(`Failed to create post: ${response.statusText}`);
       }
 
+      // Get post ID from response
+      const data: AddPostResponse = await response.json();
+      const postId = data.post_id;
+
       // Reset form
       setPostContent("");
       setSelectedTags([]);
@@ -143,6 +151,9 @@ export default function ComposeSection({
 
       // Notify parent about successful post creation
       onPostCreated();
+
+      // Redirect to the post details page
+      router.push(`/posts/${postId}`);
     } catch (error) {
       console.error("Error creating post:", error);
       onError(t("posts.error.createFailed"));

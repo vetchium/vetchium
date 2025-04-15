@@ -550,5 +550,11 @@ export const en = {
     noTimelinePosts:
       "No posts from people you follow yet. Start following users to see their posts here!",
     trendingComingSoon: "Trending posts coming soon",
+    viewPost: "Post Details",
+    postId: "Post ID",
+    content: "Content",
+    contentPlaceholder: "This content will be loaded in a future update",
+    detailsComingSoon:
+      "Detailed post view with comments and interactions coming soon",
   },
 };
