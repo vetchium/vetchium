@@ -547,5 +547,8 @@ export const en = {
       contentRequired: "Post content is required",
     },
     success: "Post published successfully",
+    noTimelinePosts:
+      "No posts from people you follow yet. Start following users to see their posts here!",
+    trendingComingSoon: "Trending posts coming soon",
   },
 };
