@@ -23,7 +23,7 @@ func followUsers() {
 		authToken := tokenI.(string)
 
 		usersToFollow := make(map[int]bool)
-		for j := 0; j < 3; j++ {
+		for j := 0; j < 5; j++ {
 			for {
 				userToFollow := rand.Intn(len(hubUsers))
 				if userToFollow != i && !usersToFollow[userToFollow] {
@@ -36,8 +36,9 @@ func followUsers() {
 		for userIter := range usersToFollow {
 			handle := hubUsers[userIter].Handle
 			followUser(handle, authToken)
-			color.Green("%s followed %s", user.Handle, handle)
 		}
+
+		color.Green("%s followed %+v", user.Handle, usersToFollow)
 	}
 }
 
