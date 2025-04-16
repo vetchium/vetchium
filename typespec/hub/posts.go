@@ -50,3 +50,7 @@ type MyHomeTimeline struct {
 	Posts         []common.Post `json:"posts"`
 	PaginationKey string        `json:"pagination_key"`
 }
+
+type GetPostDetailsRequest struct {
+	PostID string `json:"post_id" validate:"required"`
+}

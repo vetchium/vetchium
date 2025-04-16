@@ -86,6 +86,11 @@ model MyHomeTimeline {
     pagination_key: string;
 }
 
+model GetPostDetailsRequest {
+    @doc("The id of the post to get the details of")
+    post_id: string;
+}
+
 @route("/hub/add-post")
 interface AddPost {
     @tag("Posts")
@@ -158,5 +163,16 @@ interface GetMyHomeTimeline {
         @doc("The request cannot be processed. This will most likely happen if the user passed an invalid pagination key. A pagination key could become invalid if the post it refers to is deleted.")
         @statusCode
         statusCode: 422;
+    };
+}
+
+@route("/hub/get-post-details")
+interface GetPostDetails {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    getPostDetails(@body request: GetPostDetailsRequest): {
+        @statusCode statusCode: 200;
+        @body response: Post;
     };
 }

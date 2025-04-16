@@ -50,3 +50,7 @@ export interface MyHomeTimeline {
   posts: Post[];
   pagination_key: string;
 }
+
+export interface GetPostDetailsRequest {
+  post_id: string;
+}
