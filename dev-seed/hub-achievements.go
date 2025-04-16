@@ -1043,7 +1043,7 @@ func createAchievements() {
 		for _, path := range careerPaths {
 			for _, job := range user.Jobs {
 				if contains(path.Steps, job.Title) {
-					careerPath = path.Tag
+					careerPath = path.BroadArea
 					break
 				}
 			}

@@ -81,8 +81,8 @@ func init() {
 }
 
 type CareerPath struct {
-	Tag   string
-	Steps []string
+	BroadArea string
+	Steps     []string
 }
 
 type Job struct {
@@ -824,7 +824,7 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 			}
 			for _, employer := range employers {
 				for _, tag := range employer.Tags {
-					if tag == career.Tag {
+					if tag == career.BroadArea {
 						possibleEmployers = append(possibleEmployers, struct {
 							Name    string
 							Website string

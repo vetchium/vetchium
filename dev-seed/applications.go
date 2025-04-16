@@ -258,7 +258,7 @@ func getRandomJobTitle(companyDomain string) string {
 			var matchingPaths []CareerPath
 			for _, careerPath := range careerPaths {
 				for _, tag := range employer.Tags {
-					if careerPath.Tag == tag {
+					if careerPath.BroadArea == tag {
 						matchingPaths = append(matchingPaths, careerPath)
 						break
 					}
