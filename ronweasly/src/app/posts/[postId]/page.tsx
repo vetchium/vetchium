@@ -178,7 +178,7 @@ export default function PostDetailPage() {
 
           {post ? (
             <Box sx={{ mt: 3 }}>
-              <PostCard post={post} />
+              <PostCard post={post} hideOpenInNewTab={true} />
             </Box>
           ) : (
             <Typography>{t("posts.notFound")}</Typography>

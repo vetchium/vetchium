@@ -14,6 +14,10 @@ export const en = {
     proceed: "Proceed",
     external_url_warning:
       "You are about to leave Vetchium and visit an external website. This link has not been verified by Vetchi. Please proceed with caution.",
+    externalLink: {
+      message: "This link will open in a new tab",
+      warning: "You are about to open this link in a new tab",
+    },
     error: {
       notAuthenticated: "Not authenticated. Please log in again.",
       sessionExpired: "Session expired. Please log in again.",

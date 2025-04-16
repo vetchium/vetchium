@@ -2,6 +2,7 @@
 
 import { useTranslation } from "@/hooks/useTranslation";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
   Avatar,
   Box,
@@ -9,16 +10,23 @@ import {
   CardContent,
   CardHeader,
   Chip,
+  IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { Post } from "@vetchium/typespec";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 interface PostCardProps {
   post: Post;
+  hideOpenInNewTab?: boolean;
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({
+  post,
+  hideOpenInNewTab = false,
+}: PostCardProps) {
   const { t } = useTranslation();
   const timeAgo = formatDistanceToNow(new Date(post.created_at), {
     addSuffix: true,
@@ -34,6 +42,21 @@ export default function PostCard({ post }: PostCardProps) {
         }
         title={post.author_name || post.author_handle}
         subheader={`@${post.author_handle} · ${timeAgo}`}
+        action={
+          !hideOpenInNewTab ? (
+            <Tooltip title={t("common.externalLink.message")}>
+              <IconButton
+                component={Link}
+                href={`/posts/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("common.externalLink.message")}
+              >
+                <OpenInNewIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null
+        }
       />
       <CardContent>
         <Typography variant="body1" component="p" whiteSpace="pre-wrap">
