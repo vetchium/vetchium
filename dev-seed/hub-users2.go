@@ -122,6 +122,8 @@ type HubSeedUser struct {
 	ApplyToCompanyDomains []string
 
 	Achievements []hub.AddAchievementRequest
+
+	BroadArea string
 }
 
 var firstNames = []string{
@@ -533,9 +535,9 @@ var careerPaths = []CareerPath{
 }
 
 var employers = []struct {
-	Name    string
-	Website string
-	Tags    []string
+	Name               string
+	Website            string
+	HiringInBroadAreas []string
 }{
 	{
 		"Google",
@@ -823,8 +825,8 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 				Website string
 			}
 			for _, employer := range employers {
-				for _, tag := range employer.Tags {
-					if tag == career.BroadArea {
+				for _, k := range employer.HiringInBroadAreas {
+					if k == career.BroadArea {
 						possibleEmployers = append(possibleEmployers, struct {
 							Name    string
 							Website string
@@ -863,6 +865,7 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 			LongBio:                longBio,
 			ProfilePictureFilename: pic,
 			Jobs:                   jobs,
+			BroadArea:              career.BroadArea,
 		}
 
 		// Generate work history details for this user

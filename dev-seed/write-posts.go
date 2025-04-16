@@ -14,7 +14,7 @@ func writePosts() {
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
 
-		postUniverse := jobTitlePostsMap[user.ShortBio]
+		postUniverse := broadAreaPostsMap[user.BroadArea]
 		numPosts := rand.Intn(len(postUniverse))
 
 		var posts []hub.AddPostRequest

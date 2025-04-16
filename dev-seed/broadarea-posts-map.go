@@ -5,12 +5,12 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var jobTitlePostsMap map[string][]hub.AddPostRequest
+var broadAreaPostsMap map[string][]hub.AddPostRequest
 
 func init() {
-	jobTitlePostsMap = map[string][]hub.AddPostRequest{}
+	broadAreaPostsMap = map[string][]hub.AddPostRequest{}
 
-	jobTitlePostsMap["Software Engineer"] = []hub.AddPostRequest{
+	broadAreaPostsMap["Software Engineer"] = []hub.AddPostRequest{
 		{
 			Content: "I'm a software engineer",
 			NewTags: []common.VTagName{
