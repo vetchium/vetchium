@@ -26,6 +26,5 @@ RUN npm install ../typespec
 
 # Copy source files
 COPY ronweasly/ .
-RUN npm run build
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "dev"]
