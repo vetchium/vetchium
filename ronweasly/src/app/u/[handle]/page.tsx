@@ -41,39 +41,22 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { WorkHistory } from "./WorkHistory";
 
 export default function UserProfilePage() {
+  // --- Hooks ---
   const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
-  const statusFetchedRef = useRef(false);
-
-  if (!params?.handle) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Typography color="error">{t("common.error.invalidParams")}</Typography>
-        <Button
-          variant="contained"
-          onClick={() => router.back()}
-          sx={{ mt: 2 }}
-        >
-          {t("common.back")}
-        </Button>
-      </Box>
-    );
-  }
-
-  const userHandle = params.handle as string;
+  const userHandle = (params?.handle as string) || null;
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
-  const isOwnProfile = myHandle === userHandle;
   const {
     bio,
     isLoading: isLoadingBio,
     error,
     refetch,
-  } = useProfile(userHandle);
+  } = useProfile(userHandle || ""); // Pass empty string if handle is null for initial render
   const {
     connectColleague,
     approveColleague,
@@ -100,6 +83,45 @@ export default function UserProfilePage() {
   const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
   const [unlinkConfirmHandle, setUnlinkConfirmHandle] = useState("");
 
+  // Calculate isOwnProfile after fetching myHandle
+  const isOwnProfile =
+    myHandle !== null && userHandle !== null && myHandle === userHandle;
+
+  // Effect to fetch follow status (runs after initial render and subsequent updates)
+  useEffect(() => {
+    // Fetch status only if needed: not own profile, user exists, handle is valid
+    if (!isOwnProfile && !error && userHandle) {
+      getFollowStatus(userHandle).catch((err) => {
+        // Log error, but state handling is inside the hook
+        console.error("Error fetching follow status from useEffect:", err);
+      });
+    }
+    // Reset follow status if user changes or error occurs
+    // NOTE: This might not be necessary if hook handles state reset internally
+    // else {
+    //   setFollowStatus(null); // Example reset, adjust as needed
+    // }
+  }, [isOwnProfile, userHandle, error, getFollowStatus]); // Dependencies
+
+  // --- Conditional Rendering Logic ---
+
+  // Handle invalid parameters first
+  if (!userHandle) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">{t("common.error.invalidParams")}</Typography>
+        <Button
+          variant="contained"
+          onClick={() => router.back()}
+          sx={{ mt: 2 }}
+        >
+          {t("common.back")}
+        </Button>
+      </Box>
+    );
+  }
+
+  // Show loading indicator while essential data is loading
   if (isLoadingHandle || isLoadingBio) {
     return (
       <AuthenticatedLayout>
@@ -110,31 +132,33 @@ export default function UserProfilePage() {
     );
   }
 
-  // Once we have the handle, fetch the follow status if it's not the user's own profile
-  useEffect(() => {
-    // Reset the ref when the handle changes
-    statusFetchedRef.current = false;
+  // Handle profile fetch error (e.g., user not found)
+  // Ensure error is treated as Error type for message access
+  const profileError = error as Error | null;
+  if (profileError) {
+    return (
+      <AuthenticatedLayout>
+        <Container maxWidth="sm" sx={{ py: 4 }}>
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {/* Display a user-friendly message, potentially checking error type */}
+            {/* Using the specific i18n string if message matches */}
+            {profileError.message === t("profile.error.userNotFound")
+              ? t("profile.error.userNotFound")
+              : profileError.message || t("common.error.serverError")}
+          </Alert>
+          <Button
+            variant="contained"
+            onClick={() => router.push("/")} // Navigate home or back
+            sx={{ mt: 2 }}
+          >
+            {t("navigation.home")}
+          </Button>
+        </Container>
+      </AuthenticatedLayout>
+    );
+  }
 
-    const fetchFollowStatus = async () => {
-      if (
-        !isOwnProfile &&
-        userHandle &&
-        myHandle &&
-        !statusFetchedRef.current
-      ) {
-        statusFetchedRef.current = true;
-        try {
-          await getFollowStatus(userHandle);
-        } catch (err) {
-          // Error handling is already done inside the hook
-          console.error("Error fetching follow status:", err);
-        }
-      }
-    };
-
-    fetchFollowStatus();
-  }, [isOwnProfile, userHandle, myHandle]);
-
+  // --- Event Handlers ---
   const handleAddColleague = async () => {
     if (!bio) return;
 
@@ -142,7 +166,6 @@ export default function UserProfilePage() {
 
     try {
       await connectColleague(bio.handle);
-      // Refetch the profile to get updated connection state
       await refetch();
     } catch (error) {
       setConnectionError(
@@ -160,7 +183,6 @@ export default function UserProfilePage() {
 
     try {
       await approveColleague(bio.handle);
-      // Refetch the profile to get updated connection state
       await refetch();
     } catch (error) {
       setConnectionError(
@@ -178,7 +200,6 @@ export default function UserProfilePage() {
 
     try {
       await rejectColleague(bio.handle);
-      // Refetch the profile to get updated connection state
       await refetch();
     } catch (error) {
       setConnectionError(
@@ -249,6 +270,7 @@ export default function UserProfilePage() {
     }
   };
 
+  // --- Render Helper Functions ---
   const renderConnectionActions = () => {
     if (isOwnProfile || !bio) return null;
 
@@ -498,15 +520,17 @@ export default function UserProfilePage() {
     return null;
   };
 
+  // --- Main Render ---
   return (
     <AuthenticatedLayout>
       <Container maxWidth="xl">
         <Box sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-          {error && (
+          {/* Remove profile error display here, handled earlier */}
+          {/* {error && (
             <Alert severity="error" sx={{ mb: { xs: 2, sm: 3 } }}>
               {error.message}
             </Alert>
-          )}
+          )} */}
 
           {followError && (
             <Alert

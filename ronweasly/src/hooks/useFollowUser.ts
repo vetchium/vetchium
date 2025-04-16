@@ -7,7 +7,7 @@ import {
 } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "./useTranslation";
 
 interface UseFollowUserResult {
@@ -31,156 +31,160 @@ export function useFollowUser(): UseFollowUserResult {
   const [isUnfollowing, setIsUnfollowing] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const getFollowStatus = async (handle: string) => {
-    try {
-      setIsLoadingStatus(true);
-      setError(null);
+  const getFollowStatus = useCallback(
+    async (handle: string) => {
+      try {
+        setIsLoadingStatus(true);
+        setError(null);
 
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const request: GetFollowStatusRequest = { handle };
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/hub/get-follow-status`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/login");
+          return;
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/login");
-        return;
-      }
+        const request: GetFollowStatusRequest = { handle };
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/get-follow-status`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+          }
+        );
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(t("profile.error.userNotFound"));
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/login");
+          return;
         }
-        throw new Error(t("profile.error.followStatusFailed"));
-      }
 
-      const data = await response.json();
-      setFollowStatus(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error(t("common.error.serverError"))
-      );
-      throw err;
-    } finally {
-      setIsLoadingStatus(false);
-    }
-  };
-
-  const followUser = async (handle: string) => {
-    try {
-      setIsFollowing(true);
-      setError(null);
-
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const request: FollowUserRequest = { handle };
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/hub/follow-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(t("profile.error.userNotFound"));
+          }
+          throw new Error(t("profile.error.followStatusFailed"));
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/login");
-        return;
+        const data = await response.json();
+        setFollowStatus(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error(t("common.error.serverError"))
+        );
+      } finally {
+        setIsLoadingStatus(false);
       }
+    },
+    [router, t]
+  );
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(t("profile.error.userNotFound"));
+  const followUser = useCallback(
+    async (handle: string) => {
+      try {
+        setIsFollowing(true);
+        setError(null);
+
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/login");
+          return;
         }
-        throw new Error(t("profile.error.followFailed"));
-      }
 
-      // After successful follow, update the status
-      await getFollowStatus(handle);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error(t("common.error.serverError"))
-      );
-      throw err;
-    } finally {
-      setIsFollowing(false);
-    }
-  };
+        const request: FollowUserRequest = { handle };
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/follow-user`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+          }
+        );
 
-  const unfollowUser = async (handle: string) => {
-    try {
-      setIsUnfollowing(true);
-      setError(null);
-
-      const token = Cookies.get("session_token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const request: UnfollowUserRequest = { handle };
-      const response = await fetch(
-        `${config.API_SERVER_PREFIX}/hub/unfollow-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/login");
+          return;
         }
-      );
 
-      if (response.status === 401) {
-        Cookies.remove("session_token");
-        router.push("/login");
-        return;
-      }
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(t("profile.error.userNotFound"));
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(t("profile.error.userNotFound"));
+          }
+          throw new Error(t("profile.error.followFailed"));
         }
-        throw new Error(t("profile.error.unfollowFailed"));
+
+        await getFollowStatus(handle);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error(t("common.error.serverError"))
+        );
+      } finally {
+        setIsFollowing(false);
       }
+    },
+    [router, t, getFollowStatus]
+  );
 
-      // After successful unfollow, update the status
-      await getFollowStatus(handle);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error(t("common.error.serverError"))
-      );
-      throw err;
-    } finally {
-      setIsUnfollowing(false);
-    }
-  };
+  const unfollowUser = useCallback(
+    async (handle: string) => {
+      try {
+        setIsUnfollowing(true);
+        setError(null);
 
-  const clearError = () => {
+        const token = Cookies.get("session_token");
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+
+        const request: UnfollowUserRequest = { handle };
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/unfollow-user`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+          }
+        );
+
+        if (response.status === 401) {
+          Cookies.remove("session_token");
+          router.push("/login");
+          return;
+        }
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(t("profile.error.userNotFound"));
+          }
+          throw new Error(t("profile.error.unfollowFailed"));
+        }
+
+        await getFollowStatus(handle);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error(t("common.error.serverError"))
+        );
+      } finally {
+        setIsUnfollowing(false);
+      }
+    },
+    [router, t, getFollowStatus]
+  );
+
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
   return {
     followStatus,

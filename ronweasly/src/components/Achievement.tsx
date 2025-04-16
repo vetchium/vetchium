@@ -113,8 +113,19 @@ export function AchievementSection({
         throw new Error(t(`${transSection}.error.fetchFailed`));
       }
 
-      const data = await response.json();
-      setAchievements(data || []);
+      const data = (await response.json()) || [];
+
+      // Filter out duplicates based on 'id'
+      const seenIds = new Set<string>();
+      const uniqueAchievements = data.filter((achievement: Achievement) => {
+        if (seenIds.has(achievement.id)) {
+          return false; // Skip this duplicate
+        }
+        seenIds.add(achievement.id);
+        return true; // Keep this unique entry
+      });
+
+      setAchievements(uniqueAchievements);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -436,112 +447,117 @@ export function AchievementSection({
         </Paper>
       ) : (
         <Stack spacing={2}>
-          {achievements.map((achievement) => (
-            <Paper
-              key={achievement.id}
-              elevation={1}
-              sx={{
-                p: { xs: 3, sm: 4 },
-                bgcolor: (theme) =>
-                  theme.palette.mode === "light" ? "grey.50" : "grey.900",
-                borderRadius: 2,
-                transition: "all 0.2s ease-in-out",
-                border: "1px solid",
-                borderColor: "divider",
-                "&:hover": {
-                  boxShadow: (theme) => theme.shadows[2],
-                  transform: canEdit ? "translateY(-2px)" : "none",
-                  bgcolor: (theme) =>
-                    theme.palette.mode === "light" ? "#ffffff" : "grey.800",
-                },
-              }}
-            >
-              <Box
+          {achievements.map((achievement, index) => {
+            const key = achievement.id
+              ? achievement.id
+              : `achievement-${index}`;
+            return (
+              <Paper
+                key={key}
+                elevation={1}
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 2,
+                  p: { xs: 3, sm: 4 },
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "light" ? "grey.50" : "grey.900",
+                  borderRadius: 2,
+                  transition: "all 0.2s ease-in-out",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": {
+                    boxShadow: (theme) => theme.shadows[2],
+                    transform: canEdit ? "translateY(-2px)" : "none",
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "light" ? "#ffffff" : "grey.800",
+                  },
                 }}
               >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      color: "primary.main",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {achievement.title}
-                  </Typography>
-                  {achievement.description && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
-                      variant="body2"
+                      variant="h6"
+                      gutterBottom
                       sx={{
-                        color: "text.primary",
-                        whiteSpace: "pre-wrap",
-                        lineHeight: 1.6,
-                        mb: achievement.url ? 2 : 0,
+                        color: "primary.main",
+                        fontWeight: 600,
                       }}
                     >
-                      {achievement.description}
+                      {achievement.title}
                     </Typography>
-                  )}
-                  {achievement.url && (
-                    <Button
-                      variant="text"
-                      color="primary"
-                      size="small"
-                      onClick={() => {
-                        if (achievement.url) {
-                          setSelectedUrl(achievement.url);
-                          setOpenUrlWarningDialog(true);
-                        }
-                      }}
-                      startIcon={<LaunchIcon />}
-                      sx={{
-                        mt: 1,
-                        textTransform: "none",
-                        "&:hover": {
-                          bgcolor: "primary.lighter",
-                        },
-                      }}
-                    >
-                      {t(`${transSection}.url`)}
-                    </Button>
+                    {achievement.description && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.primary",
+                          whiteSpace: "pre-wrap",
+                          lineHeight: 1.6,
+                          mb: achievement.url ? 2 : 0,
+                        }}
+                      >
+                        {achievement.description}
+                      </Typography>
+                    )}
+                    {achievement.url && (
+                      <Button
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        onClick={() => {
+                          if (achievement.url) {
+                            setSelectedUrl(achievement.url);
+                            setOpenUrlWarningDialog(true);
+                          }
+                        }}
+                        startIcon={<LaunchIcon />}
+                        sx={{
+                          mt: 1,
+                          textTransform: "none",
+                          "&:hover": {
+                            bgcolor: "primary.lighter",
+                          },
+                        }}
+                      >
+                        {t(`${transSection}.url`)}
+                      </Button>
+                    )}
+                  </Box>
+                  {canEdit && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleEdit(achievement)}
+                        color="primary"
+                        size="small"
+                        sx={{
+                          "&:hover": {
+                            bgcolor: "primary.lighter",
+                          },
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleOpenDeleteDialog(achievement)}
+                        color="error"
+                        size="small"
+                        sx={{
+                          "&:hover": {
+                            bgcolor: "error.lighter",
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   )}
                 </Box>
-                {canEdit && (
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton
-                      onClick={() => handleEdit(achievement)}
-                      color="primary"
-                      size="small"
-                      sx={{
-                        "&:hover": {
-                          bgcolor: "primary.lighter",
-                        },
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleOpenDeleteDialog(achievement)}
-                      color="error"
-                      size="small"
-                      sx={{
-                        "&:hover": {
-                          bgcolor: "error.lighter",
-                        },
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                )}
-              </Box>
-            </Paper>
-          ))}
+              </Paper>
+            );
+          })}
         </Stack>
       )}
 
