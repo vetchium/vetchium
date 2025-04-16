@@ -80,4 +80,5 @@ var (
 	ErrNoAchievement = errors.New("achievement not found")
 	ErrCannotApply   = errors.New("user cannot apply to this opening")
 	ErrUnpaidHubUser = errors.New("user is not a paid hub user")
+	ErrNoPost        = errors.New("post not found")
 )

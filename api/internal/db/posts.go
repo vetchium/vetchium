@@ -11,3 +11,8 @@ type AddPostRequest struct {
 	PostID  string `json:"post_id"`
 	hub.AddPostRequest
 }
+
+type GetPostRequest struct {
+	Context context.Context
+	PostID  string `json:"post_id"`
+}

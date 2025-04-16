@@ -325,4 +325,9 @@ func RegisterHubRoutes(h *Hermione) {
 		po.GetMyHomeTimeline(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+	h.mw.Guard(
+		"/hub/get-post-details",
+		po.GetPostDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

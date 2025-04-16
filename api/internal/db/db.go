@@ -446,6 +446,7 @@ type DB interface {
 		ctx context.Context,
 		req hub.GetMyHomeTimelineRequest,
 	) (hub.MyHomeTimeline, error)
+	GetPost(req GetPostRequest) (common.Post, error)
 
 	// Used by hermione - Follow related methods
 	FollowUser(ctx context.Context, handle string) error

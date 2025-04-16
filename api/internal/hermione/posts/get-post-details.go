@@ -10,40 +10,40 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-func GetFollowStatus(h wand.Wand) http.HandlerFunc {
+func GetPostDetails(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.Dbg("Entered GetFollowStatus")
-		var req hub.GetFollowStatusRequest
+		h.Dbg("Entered GetPostDetails")
+		var req hub.GetPostDetailsRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			h.Dbg("Failed to decode request body", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &req) {
-			http.Error(w, "validation failed", http.StatusBadRequest)
+			h.Dbg("Failed to validate request body")
 			return
 		}
-		h.Dbg("Validated", "req", req)
+		h.Dbg("Validated", "getPostDetailsReq", req)
 
-		status, err := h.DB().GetFollowStatus(r.Context(), string(req.Handle))
+		post, err := h.DB().GetPost(db.GetPostRequest{
+			Context: r.Context(),
+			PostID:  req.PostID,
+		})
 		if err != nil {
-			if errors.Is(err, db.ErrNoHubUser) {
-				h.Dbg(
-					"Handle not found or user not active",
-					"handle",
-					req.Handle,
-				)
+			if errors.Is(err, db.ErrNoPost) {
+				h.Dbg("Post not found", "error", err)
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
 
+			h.Dbg("Failed to get post", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		h.Dbg("Follow status", "status", status)
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(status); err != nil {
+		err = json.NewEncoder(w).Encode(post)
+		if err != nil {
 			h.Err("Failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

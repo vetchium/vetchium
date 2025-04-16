@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -110,6 +111,69 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 	}
 
 	return nil
+}
+
+func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
+	query := `
+		SELECT
+			p.id,
+			p.content,
+			p.created_at,
+			p.updated_at,
+			hu.handle AS author_handle,
+			hu.full_name AS author_full_name,
+			COALESCE(
+				(
+					SELECT json_agg(t.name ORDER BY t.name)
+					FROM post_tags pt
+					JOIN tags t ON pt.tag_id = t.id
+					WHERE pt.post_id = p.id
+				),
+				'[]'::json
+			) AS tags_json
+		FROM
+			posts p
+		JOIN
+			hub_users hu ON p.author_id = hu.id
+		WHERE
+			p.id = $1
+	`
+
+	var post common.Post
+	var authorHandle string
+	var authorFullName string
+	var tagsJSON []byte
+
+	err := pg.pool.QueryRow(req.Context, query, req.PostID).Scan(
+		&post.ID,
+		&post.Content,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+		&authorHandle,
+		&authorFullName,
+		&tagsJSON,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			pg.log.Dbg("post not found", "post_id", req.PostID)
+			return common.Post{}, db.ErrNoPost
+		}
+		pg.log.Err("failed to query post", "error", err, "post_id", req.PostID)
+		return common.Post{}, db.ErrInternal
+	}
+
+	var tags []string
+	if err := json.Unmarshal(tagsJSON, &tags); err != nil {
+		pg.log.Err("unmarshalling", "error", err, "json", string(tagsJSON))
+		return common.Post{}, db.ErrInternal
+	}
+	post.Tags = tags
+
+	post.AuthorHandle = common.Handle(authorHandle)
+	post.AuthorName = authorFullName
+
+	return post, nil
 }
 
 func (pg *PG) GetUserPosts(
