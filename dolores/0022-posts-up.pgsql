@@ -66,6 +66,21 @@ INSERT INTO hub_users (
     'Another user for get tests',
     'This user might have fewer posts or be used for handle lookup tests.',
     timezone('UTC'::text, now())
+),
+(
+    '12345678-0022-0022-0022-000000000005',
+    'Get Details User',
+    'get-details-user',
+    'get-details@0022-posts.example.com',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
+    'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
+    'DEU',
+    'Berlin',
+    'de',
+    'User for GetPostDetails tests',
+    'Dedicated user for testing the single post details endpoint.',
+    timezone('UTC'::text, now())
 );
 
 -- Add posts for get-user1 (note varying timestamps)
@@ -84,7 +99,9 @@ INSERT INTO tags (name) VALUES
 ('pagination'),
 ('specific-test'),
 ('golang'),
-('testing')
+('testing'),
+('details-tag1'),
+('details-tag2')
 ON CONFLICT (name) DO NOTHING;
 
 -- Map tags to posts using a JOIN for robustness

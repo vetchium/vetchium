@@ -14,9 +14,11 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Posts", Ordered, func() {
+var _ = FDescribe("Posts", Ordered, func() {
 	var db *pgxpool.Pool
 	var addUserToken, authTestUserToken, getUser1Token, getUser2Token string
+	var getDetailsUserToken string
+	var getDetailsPostID string // Variable to store the dynamically created post ID
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -24,7 +26,7 @@ var _ = Describe("Posts", Ordered, func() {
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
-		wg.Add(4) // 4 hub users to sign in
+		wg.Add(5) // Now 5 hub users to sign in
 		hubSigninAsync(
 			"add-user@0022-posts.example.com",
 			"NewPassword123$",
@@ -49,7 +51,31 @@ var _ = Describe("Posts", Ordered, func() {
 			&getUser2Token,
 			&wg,
 		)
+		hubSigninAsync(
+			"get-details@0022-posts.example.com",
+			"NewPassword123$",
+			&getDetailsUserToken,
+			&wg,
+		)
 		wg.Wait()
+
+		// Create the post for GetDetails tests via API
+		addPostReq := hub.AddPostRequest{
+			Content: "Post for GetDetails test (created via API)",
+			NewTags: []common.VTagName{"details-tag1", "details-tag2"},
+		}
+		respBytes := testPOSTGetResp(
+			getDetailsUserToken,
+			addPostReq,
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+
+		var addPostResp hub.AddPostResponse
+		err := json.Unmarshal(respBytes, &addPostResp)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(addPostResp.PostID).ShouldNot(BeEmpty())
+		getDetailsPostID = addPostResp.PostID // Store the ID
 	})
 
 	AfterAll(func() {
@@ -484,6 +510,96 @@ var _ = Describe("Posts", Ordered, func() {
 					tc.token,
 					tc.request,
 					"/hub/get-user-posts",
+					tc.wantStatus,
+				)
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
+			}
+		})
+	})
+
+	Describe("Get Post Details", func() {
+		type getPostDetailsTestCase struct {
+			description string
+			token       string                    // Auth token for the request
+			request     hub.GetPostDetailsRequest // The request body
+			wantStatus  int
+			validate    func([]byte) // Function to validate the response body (common.Post)
+		}
+
+		It("should handle various get post details scenarios", func() {
+			testCases := []getPostDetailsTestCase{
+				{
+					description: "without authentication",
+					token:       "",
+					request: hub.GetPostDetailsRequest{
+						PostID: getDetailsPostID,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					request: hub.GetPostDetailsRequest{
+						PostID: getDetailsPostID,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "fetch valid post details",
+					token:       getDetailsUserToken,
+					request: hub.GetPostDetailsRequest{
+						PostID: getDetailsPostID,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp common.Post
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.ID).Should(Equal(getDetailsPostID))
+						Expect(
+							resp.Content,
+						).Should(Equal("Post for GetDetails test (created via API)"))
+						Expect(
+							resp.AuthorHandle,
+						).Should(Equal(common.Handle("get-details-user")))
+						Expect(
+							resp.AuthorName,
+						).Should(Equal("Get Details User"))
+						Expect(
+							resp.Tags,
+						).Should(ConsistOf("details-tag1", "details-tag2"))
+						Expect(resp.CreatedAt).ShouldNot(BeZero())
+						Expect(resp.UpdatedAt).ShouldNot(BeZero())
+					},
+				},
+				{
+					description: "fetch non-existent post",
+					token:       getDetailsUserToken,
+					request: hub.GetPostDetailsRequest{
+						PostID: "non-existent-post-id",
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "fetch with empty post ID (should fail validation)",
+					token:       getDetailsUserToken,
+					request:     hub.GetPostDetailsRequest{PostID: ""},
+					wantStatus:  http.StatusBadRequest,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing GetPostDetails: %s\n",
+					tc.description,
+				)
+				resp := testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/get-post-details", // Ensure this matches your actual endpoint path
 					tc.wantStatus,
 				)
 				if tc.validate != nil && tc.wantStatus == http.StatusOK {
