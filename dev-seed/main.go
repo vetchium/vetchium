@@ -55,6 +55,8 @@ func main() {
 	addOfficialEmails()
 	color.Cyan("Uploading profile pictures")
 	uploadHubUserProfilePictures()
+	color.Cyan("Follow other users")
+	followUsers()
 	color.Cyan("Write posts")
 	writePosts()
 
