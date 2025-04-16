@@ -264,6 +264,10 @@ export const en = {
     theyRejectedYourRequest: "They previously rejected your connection request",
     youUnlinkedConnection: "You previously unlinked this connection",
     theyUnlinkedConnection: "They previously unlinked this connection",
+    followUser: "Follow",
+    unfollowUser: "Unfollow",
+    followedUser: "Following",
+    cannotFollow: "Cannot follow this user",
     error: {
       userNotFound: "User not found",
       cannotConnect: "Cannot connect with this user at this time",
@@ -274,6 +278,9 @@ export const en = {
       unlinkFailed: "Failed to unlink colleague connection",
       noConnectionFound: "No active connection found with this colleague",
       handleMismatch: "The handle you entered does not match",
+      followStatusFailed: "Failed to get follow status",
+      followFailed: "Failed to follow this user",
+      unfollowFailed: "Failed to unfollow this user",
     },
     bio: {
       error: {

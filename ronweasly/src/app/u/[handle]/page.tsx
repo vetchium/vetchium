@@ -9,6 +9,7 @@ import ProfilePicture from "@/components/ProfilePicture";
 import { Publications } from "@/components/Publications";
 import { config } from "@/config";
 import { useColleagues } from "@/hooks/useColleagues";
+import { useFollowUser } from "@/hooks/useFollowUser";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useProfile } from "@/hooks/useProfile";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -40,13 +41,14 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WorkHistory } from "./WorkHistory";
 
 export default function UserProfilePage() {
   const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
+  const statusFetchedRef = useRef(false);
 
   if (!params?.handle) {
     return (
@@ -82,6 +84,17 @@ export default function UserProfilePage() {
     isRejecting,
     isUnlinking,
   } = useColleagues();
+  const {
+    followStatus,
+    isLoadingStatus,
+    isFollowing,
+    isUnfollowing,
+    error: followError,
+    getFollowStatus,
+    followUser,
+    unfollowUser,
+    clearError: clearFollowError,
+  } = useFollowUser();
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
@@ -96,6 +109,31 @@ export default function UserProfilePage() {
       </AuthenticatedLayout>
     );
   }
+
+  // Once we have the handle, fetch the follow status if it's not the user's own profile
+  useEffect(() => {
+    // Reset the ref when the handle changes
+    statusFetchedRef.current = false;
+
+    const fetchFollowStatus = async () => {
+      if (
+        !isOwnProfile &&
+        userHandle &&
+        myHandle &&
+        !statusFetchedRef.current
+      ) {
+        statusFetchedRef.current = true;
+        try {
+          await getFollowStatus(userHandle);
+        } catch (err) {
+          // Error handling is already done inside the hook
+          console.error("Error fetching follow status:", err);
+        }
+      }
+    };
+
+    fetchFollowStatus();
+  }, [isOwnProfile, userHandle, myHandle]);
 
   const handleAddColleague = async () => {
     if (!bio) return;
@@ -188,6 +226,26 @@ export default function UserProfilePage() {
           ? t(error.message)
           : t("profile.error.unlinkFailed")
       );
+    }
+  };
+
+  const handleFollowUser = async () => {
+    if (!bio) return;
+
+    try {
+      await followUser(bio.handle);
+    } catch (error) {
+      // Error handling is already done inside the hook
+    }
+  };
+
+  const handleUnfollowUser = async () => {
+    if (!bio) return;
+
+    try {
+      await unfollowUser(bio.handle);
+    } catch (error) {
+      // Error handling is already done inside the hook
     }
   };
 
@@ -384,6 +442,62 @@ export default function UserProfilePage() {
     }
   };
 
+  const renderFollowActions = () => {
+    if (isOwnProfile || !bio) return null;
+
+    if (isLoadingStatus) {
+      return (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+
+    if (!followStatus) return null;
+
+    if (!followStatus.can_follow && !followStatus.is_following) {
+      return (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {t("profile.cannotFollow")}
+        </Alert>
+      );
+    }
+
+    if (followStatus.is_following) {
+      return (
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={isUnfollowing ? <CircularProgress size={20} /> : null}
+          onClick={handleUnfollowUser}
+          disabled={isUnfollowing}
+          fullWidth
+          sx={{ mb: 2 }}
+        >
+          {isUnfollowing ? t("common.loading") : t("profile.unfollowUser")}
+        </Button>
+      );
+    }
+
+    if (followStatus.can_follow) {
+      return (
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={isFollowing ? <CircularProgress size={20} /> : null}
+          onClick={handleFollowUser}
+          disabled={isFollowing}
+          fullWidth
+          sx={{ mb: 2 }}
+        >
+          {isFollowing ? t("common.loading") : t("profile.followUser")}
+        </Button>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <AuthenticatedLayout>
       <Container maxWidth="xl">
@@ -391,6 +505,16 @@ export default function UserProfilePage() {
           {error && (
             <Alert severity="error" sx={{ mb: { xs: 2, sm: 3 } }}>
               {error.message}
+            </Alert>
+          )}
+
+          {followError && (
+            <Alert
+              severity="error"
+              sx={{ mb: { xs: 2, sm: 3 } }}
+              onClose={clearFollowError}
+            >
+              {followError.message}
             </Alert>
           )}
 
@@ -519,6 +643,10 @@ export default function UserProfilePage() {
                       {t("profile.actions")}
                     </Typography>
                     {renderConnectionActions()}
+
+                    {/* Follow/Unfollow section */}
+                    <Divider sx={{ my: 2 }} />
+                    {renderFollowActions()}
                   </CardContent>
                 </Card>
               </Box>
