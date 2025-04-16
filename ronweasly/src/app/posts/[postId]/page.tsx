@@ -1,20 +1,23 @@
 "use client";
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
+  Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   CircularProgress,
   Paper,
   Typography,
 } from "@mui/material";
+import { GetPostDetailsRequest, Post } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import PostCard from "../components/PostCard";
 
 export default function PostDetailPage() {
   const { t } = useTranslation();
@@ -22,8 +25,11 @@ export default function PostDetailPage() {
   const params = useParams();
   const postId = (params?.postId as string) || "";
   const [loading, setLoading] = useState(true);
+  const [post, setPost] = useState<Post | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
 
-  // Check authentication on component mount
+  // Fetch post details on component mount
   useEffect(() => {
     const token = Cookies.get("session_token");
     if (!token) {
@@ -31,14 +37,63 @@ export default function PostDetailPage() {
       return;
     }
 
-    // In a real implementation, we would fetch the post data here
-    // For now, just simulate a loading state
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    const fetchPostDetails = async () => {
+      try {
+        // Using the GetPostDetailsRequest structure from typespec
+        const requestBody: GetPostDetailsRequest = {
+          post_id: postId,
+        };
 
-    return () => clearTimeout(timer);
-  }, [router]);
+        const response = await fetch(
+          `${config.API_SERVER_PREFIX}/hub/get-post-details`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(requestBody),
+          }
+        );
+
+        if (response.status === 404) {
+          setIsNotFound(true);
+          setError(t("posts.notFoundError") || "Post not found");
+          setLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch post: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Check if the response contains the post directly or as a nested object
+        const postData = data.post || data;
+
+        // Validate that we have a valid post object with required fields
+        if (!postData || !postData.id || !postData.content) {
+          throw new Error("Invalid post data received");
+        }
+
+        // Ensure post.tags is always an array
+        const safePost: Post = {
+          ...postData,
+          tags: Array.isArray(postData.tags) ? postData.tags : [],
+        };
+
+        setPost(safePost);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching post details:", err);
+        setError(err instanceof Error ? err.message : "Failed to load post");
+        setLoading(false);
+      }
+    };
+
+    fetchPostDetails();
+  }, [postId, router, t]);
 
   const handleBack = () => {
     router.back();
@@ -61,6 +116,50 @@ export default function PostDetailPage() {
     );
   }
 
+  if (isNotFound) {
+    return (
+      <AuthenticatedLayout>
+        <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+            sx={{ mb: 2 }}
+          >
+            {t("common.back")}
+          </Button>
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 2 }}>
+              {t("posts.notFoundError") || "Post not found"}
+            </Alert>
+            <Typography variant="body1">
+              {t("posts.notFoundDescription") ||
+                "The post you're looking for could not be found. It may have been deleted or you may not have permission to view it."}
+            </Typography>
+          </Paper>
+        </Box>
+      </AuthenticatedLayout>
+    );
+  }
+
+  if (error && !isNotFound) {
+    return (
+      <AuthenticatedLayout>
+        <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+            sx={{ mb: 2 }}
+          >
+            {t("common.back")}
+          </Button>
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography color="error">{error}</Typography>
+          </Paper>
+        </Box>
+      </AuthenticatedLayout>
+    );
+  }
+
   return (
     <AuthenticatedLayout>
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
@@ -77,29 +176,13 @@ export default function PostDetailPage() {
             {t("posts.viewPost")}
           </Typography>
 
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t("posts.postId")}:
-              </Typography>
-              <Typography variant="body1" component="div" sx={{ mb: 2 }}>
-                {postId}
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t("posts.content")}:
-              </Typography>
-              <Typography variant="body1">
-                {t("posts.contentPlaceholder")}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              {t("posts.detailsComingSoon")}
-            </Typography>
-          </Box>
+          {post ? (
+            <Box sx={{ mt: 3 }}>
+              <PostCard post={post} />
+            </Box>
+          ) : (
+            <Typography>{t("posts.notFound")}</Typography>
+          )}
         </Paper>
       </Box>
     </AuthenticatedLayout>

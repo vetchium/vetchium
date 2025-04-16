@@ -97,8 +97,14 @@ export default function TimelineTab({
 
         const data = await response.json();
 
+        // Ensure tags are always arrays in each post
+        const safePosts = (data.posts || []).map((post: Post) => ({
+          ...post,
+          tags: Array.isArray(post.tags) ? post.tags : [],
+        }));
+
         setPosts((prevPosts) =>
-          refresh ? data.posts : [...prevPosts, ...data.posts]
+          refresh ? safePosts : [...prevPosts, ...safePosts]
         );
 
         // Handle empty pagination key as end of data
@@ -109,7 +115,7 @@ export default function TimelineTab({
           setPaginationKey(data.pagination_key || null);
           // Only set hasMore to true if we have both posts and a non-empty pagination key
           setHasMore(
-            data.posts.length > 0 &&
+            safePosts.length > 0 &&
               !!data.pagination_key &&
               data.pagination_key !== ""
           );

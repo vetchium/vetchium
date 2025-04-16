@@ -39,7 +39,7 @@ export default function PostCard({ post }: PostCardProps) {
         <Typography variant="body1" component="p" whiteSpace="pre-wrap">
           {post.content}
         </Typography>
-        {post.tags && post.tags.length > 0 && (
+        {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
           <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
             {post.tags.map((tag) => (
               <Chip
