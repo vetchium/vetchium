@@ -67,9 +67,6 @@ export default function PostCard({
           }
         } else {
           // Handle errors like 401, 404, etc. - use fallback
-          console.error(
-            `Failed to fetch avatar for ${post.author_handle}: ${response.status}`
-          );
           setAvatarUrl(null);
         }
       } catch (error) {
