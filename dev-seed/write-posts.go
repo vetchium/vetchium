@@ -6,12 +6,14 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 func writePosts() {
+	var wg sync.WaitGroup
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
 
@@ -20,9 +22,11 @@ func writePosts() {
 			// so we do not run out of sockets
 			<-time.After(3 * time.Second)
 		}
+		wg.Add(1)
 
 		// Parallelism to have more messages from many authors at similar times
 		go func(user HubSeedUser, i int) {
+			defer wg.Done()
 			postUniverse := broadAreaPostsMap[user.BroadArea]
 			numPosts := rand.Intn(len(postUniverse))
 
@@ -71,4 +75,6 @@ func writePosts() {
 			}
 		}(user, i)
 	}
+
+	wg.Wait()
 }
