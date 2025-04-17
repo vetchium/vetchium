@@ -2,7 +2,13 @@
 
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { Post } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -170,39 +176,64 @@ export default function TimelineTab({
 
   if (error) {
     return (
-      <Box sx={{ p: 2, textAlign: "center" }}>
-        <Typography color="error">{error}</Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          textAlign: "center",
+          borderRadius: "8px",
+          backgroundColor: "#f8f8f8",
+          border: "1px solid #e0e0e0",
+        }}
+      >
+        <Typography color="error" variant="body1" sx={{ fontWeight: 500 }}>
+          {error}
+        </Typography>
         <Button
-          sx={{ mt: 1 }}
+          sx={{
+            mt: 2,
+            fontWeight: 600,
+            textTransform: "none",
+            padding: "6px 16px",
+          }}
           variant="outlined"
           onClick={() => fetchPosts(true)}
         >
           {t("common.retry")}
         </Button>
-      </Box>
+      </Paper>
     );
   }
 
   if (type === "trending") {
     return (
-      <Box
+      <Paper
+        elevation={0}
         sx={{
           minHeight: 200,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          borderRadius: "8px",
+          backgroundColor: "#f8f8f8",
+          border: "1px solid #e0e0e0",
         }}
       >
-        <Typography variant="body1" color="text.secondary">
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ fontWeight: 500 }}
+        >
           {t("posts.trendingComingSoon")}
         </Typography>
-      </Box>
+      </Paper>
     );
   }
 
   if (!error && posts.length === 0 && !loading) {
     return (
-      <Box
+      <Paper
+        elevation={0}
         sx={{
           minHeight: 200,
           display: "flex",
@@ -211,32 +242,70 @@ export default function TimelineTab({
           flexDirection: "column",
           gap: 2,
           p: 3,
+          borderRadius: "8px",
+          backgroundColor: "#f8f8f8",
+          border: "1px solid #e0e0e0",
         }}
       >
-        <Typography variant="body1" color="text.secondary">
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ fontWeight: 500 }}
+        >
           {t("posts.noTimelinePosts")}
         </Typography>
-      </Box>
+      </Paper>
     );
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      {posts.map((post, index) => (
-        <div key={`${post.id}-${index}`}>
-          <PostCard post={post} />
-        </div>
-      ))}
+    <Box
+      sx={{
+        p: { xs: 1, sm: 2 },
+        backgroundColor: "#f5f7f9",
+        borderRadius: "8px",
+      }}
+    >
+      <Box sx={{ maxWidth: "100%", mx: "auto" }}>
+        {posts.map((post, index) => (
+          <Box
+            key={`${post.id}-${index}`}
+            sx={{
+              mb: 2,
+              "&:last-child": {
+                mb: 0,
+              },
+            }}
+          >
+            <PostCard post={post} />
+          </Box>
+        ))}
+      </Box>
 
       {loading && (
         <Box sx={{ textAlign: "center", p: 3 }}>
-          <CircularProgress size={40} />
+          <CircularProgress size={40} sx={{ color: "#0a66c2" }} />
         </Box>
       )}
 
       {!loading && hasMore && paginationKey !== "" && (
         <Box sx={{ textAlign: "center", p: 2 }}>
-          <Button variant="outlined" onClick={loadMore}>
+          <Button
+            variant="outlined"
+            onClick={loadMore}
+            sx={{
+              fontWeight: 600,
+              backgroundColor: "white",
+              borderColor: "#0a66c2",
+              color: "#0a66c2",
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: "#f0f7ff",
+                borderColor: "#0a66c2",
+              },
+              padding: "6px 16px",
+            }}
+          >
             {t("posts.loadMore")}
           </Button>
         </Box>
@@ -244,7 +313,14 @@ export default function TimelineTab({
 
       {!loading && !hasMore && (
         <Box sx={{ textAlign: "center", p: 2 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              fontSize: "0.875rem",
+              fontWeight: 500,
+            }}
+          >
             {t("posts.noMorePosts")}
           </Typography>
         </Box>

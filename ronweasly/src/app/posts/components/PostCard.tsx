@@ -130,16 +130,55 @@ export default function PostCard({
   }, [post.author_handle]);
 
   return (
-    <Card sx={{ mb: 2, width: "100%" }}>
+    <Card
+      sx={{
+        mb: 2,
+        width: "100%",
+        border: "1px solid #e0e0e0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+        borderRadius: "8px",
+        backgroundColor: "#ffffff",
+      }}
+    >
       <CardHeader
         avatar={
-          <Avatar aria-label="user avatar" src={avatarUrl ?? undefined}>
+          <Avatar
+            aria-label="user avatar"
+            src={avatarUrl ?? undefined}
+            sx={{
+              width: 48,
+              height: 48,
+              border: "1px solid #e0e0e0",
+            }}
+          >
             {/* Fallback: Initials */}
             {post.author_name?.charAt(0) || post.author_handle.charAt(0)}
           </Avatar>
         }
-        title={post.author_name || post.author_handle}
-        subheader={`@${post.author_handle} · ${timeAgo}`}
+        title={
+          <Typography
+            variant="subtitle1"
+            component="span"
+            sx={{
+              fontWeight: 600,
+              color: "#000000de",
+            }}
+          >
+            {post.author_name || post.author_handle}
+          </Typography>
+        }
+        subheader={
+          <Typography
+            variant="body2"
+            component="span"
+            sx={{
+              color: "#00000099",
+              fontSize: "0.875rem",
+            }}
+          >
+            @{post.author_handle} · {timeAgo}
+          </Typography>
+        }
         action={
           !hideOpenInNewTab ? (
             <Tooltip title={t("common.externalLink.message")}>
@@ -149,15 +188,31 @@ export default function PostCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("common.externalLink.message")}
+                sx={{ color: "#0000008a" }}
               >
                 <OpenInNewIcon />
               </IconButton>
             </Tooltip>
           ) : null
         }
+        sx={{
+          p: 2,
+          pb: 1,
+          borderBottom: "1px solid #f5f5f5",
+        }}
       />
-      <CardContent>
-        <Typography variant="body1" component="p" whiteSpace="pre-wrap">
+      <CardContent sx={{ p: 2, pt: 1.5 }}>
+        <Typography
+          variant="body1"
+          component="p"
+          whiteSpace="pre-wrap"
+          sx={{
+            color: "#000000de",
+            lineHeight: 1.5,
+            fontSize: "0.9375rem",
+            mb: 1,
+          }}
+        >
           {post.content}
         </Typography>
         {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
@@ -167,8 +222,17 @@ export default function PostCard({
                 key={tag}
                 label={tag}
                 size="small"
-                icon={<LocalOfferIcon />}
+                icon={<LocalOfferIcon sx={{ fontSize: "0.875rem" }} />}
                 variant="outlined"
+                sx={{
+                  borderRadius: "16px",
+                  backgroundColor: "#f5f5f5",
+                  borderColor: "#e0e0e0",
+                  "& .MuiChip-label": {
+                    fontSize: "0.75rem",
+                    color: "#000000de",
+                  },
+                }}
               />
             ))}
           </Box>
