@@ -2,7 +2,6 @@
 
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
   Avatar,
@@ -14,6 +13,7 @@ import {
   IconButton,
   Tooltip,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { Post } from "@vetchium/typespec";
 import { formatDistanceToNow } from "date-fns";
@@ -40,6 +40,7 @@ export default function PostCard({
   hideOpenInNewTab = false,
 }: PostCardProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const timeAgo = formatDistanceToNow(new Date(post.created_at), {
     addSuffix: true,
   });
@@ -132,12 +133,12 @@ export default function PostCard({
   return (
     <Card
       sx={{
-        mb: 2,
+        mb: 2.5,
         width: "100%",
-        border: "1px solid #e0e0e0",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+        border: "none",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         borderRadius: "8px",
-        backgroundColor: "#ffffff",
+        backgroundColor: theme.palette.background.paper,
       }}
     >
       <CardHeader
@@ -148,7 +149,7 @@ export default function PostCard({
             sx={{
               width: 48,
               height: 48,
-              border: "1px solid #e0e0e0",
+              border: `1px solid ${theme.palette.divider}`,
             }}
           >
             {/* Fallback: Initials */}
@@ -156,28 +157,34 @@ export default function PostCard({
           </Avatar>
         }
         title={
-          <Typography
-            variant="subtitle1"
-            component="span"
-            sx={{
-              fontWeight: 600,
-              color: "#000000de",
-            }}
-          >
-            {post.author_name || post.author_handle}
-          </Typography>
+          <Box sx={{ mb: 0.25 }}>
+            <Typography
+              variant="subtitle1"
+              component="span"
+              sx={{
+                fontWeight: 500,
+                color: theme.palette.text.primary,
+                lineHeight: 1.3,
+              }}
+            >
+              {post.author_name || post.author_handle}
+            </Typography>
+          </Box>
         }
         subheader={
-          <Typography
-            variant="body2"
-            component="span"
-            sx={{
-              color: "#00000099",
-              fontSize: "0.875rem",
-            }}
-          >
-            @{post.author_handle} · {timeAgo}
-          </Typography>
+          <Box>
+            <Typography
+              variant="body2"
+              component="span"
+              sx={{
+                color: theme.palette.text.secondary,
+                fontSize: "0.8rem",
+                lineHeight: 1.2,
+              }}
+            >
+              @{post.author_handle} · {timeAgo}
+            </Typography>
+          </Box>
         }
         action={
           !hideOpenInNewTab ? (
@@ -188,49 +195,60 @@ export default function PostCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("common.externalLink.message")}
-                sx={{ color: "#0000008a" }}
+                sx={{
+                  color: theme.palette.text.secondary,
+                  mt: -0.5,
+                }}
               >
-                <OpenInNewIcon />
+                <OpenInNewIcon sx={{ fontSize: "1.125rem" }} />
               </IconButton>
             </Tooltip>
           ) : null
         }
         sx={{
+          alignItems: "flex-start",
           p: 2,
-          pb: 1,
-          borderBottom: "1px solid #f5f5f5",
+          "& .MuiCardHeader-content": {
+            overflow: "hidden",
+          },
         }}
       />
-      <CardContent sx={{ p: 2, pt: 1.5 }}>
+      <CardContent sx={{ pt: 0.5, pb: "16px !important" }}>
         <Typography
           variant="body1"
           component="p"
           whiteSpace="pre-wrap"
           sx={{
-            color: "#000000de",
+            color: theme.palette.text.primary,
             lineHeight: 1.5,
-            fontSize: "0.9375rem",
-            mb: 1,
+            fontSize: "0.9rem",
+            mb: 1.5,
           }}
         >
           {post.content}
         </Typography>
         {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
-          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
             {post.tags.map((tag) => (
               <Chip
                 key={tag}
-                label={tag}
+                label={`#${tag}`}
                 size="small"
-                icon={<LocalOfferIcon sx={{ fontSize: "0.875rem" }} />}
                 variant="outlined"
+                clickable
                 sx={{
-                  borderRadius: "16px",
-                  backgroundColor: "#f5f5f5",
-                  borderColor: "#e0e0e0",
+                  borderRadius: "4px",
+                  backgroundColor: "transparent",
+                  borderColor: "transparent",
+                  color: theme.palette.text.secondary,
+                  fontSize: "0.75rem",
+                  p: "0 4px",
+                  height: "auto",
                   "& .MuiChip-label": {
-                    fontSize: "0.75rem",
-                    color: "#000000de",
+                    padding: "0",
+                  },
+                  "&:hover": {
+                    backgroundColor: theme.palette.action.hover,
                   },
                 }}
               />

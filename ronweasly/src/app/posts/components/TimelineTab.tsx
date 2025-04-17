@@ -181,9 +181,9 @@ export default function TimelineTab({
         sx={{
           p: 3,
           textAlign: "center",
-          borderRadius: "8px",
-          backgroundColor: "#f8f8f8",
-          border: "1px solid #e0e0e0",
+          borderRadius: "12px",
+          backgroundColor: "#fff0f0",
+          border: "1px solid #fcc",
         }}
       >
         <Typography color="error" variant="body1" sx={{ fontWeight: 500 }}>
@@ -196,7 +196,8 @@ export default function TimelineTab({
             textTransform: "none",
             padding: "6px 16px",
           }}
-          variant="outlined"
+          variant="contained"
+          color="primary"
           onClick={() => fetchPosts(true)}
         >
           {t("common.retry")}
@@ -214,9 +215,9 @@ export default function TimelineTab({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          borderRadius: "8px",
-          backgroundColor: "#f8f8f8",
-          border: "1px solid #e0e0e0",
+          borderRadius: "12px",
+          backgroundColor: "#f8f9fa",
+          border: "1px solid #e9ecef",
         }}
       >
         <Typography
@@ -242,9 +243,9 @@ export default function TimelineTab({
           flexDirection: "column",
           gap: 2,
           p: 3,
-          borderRadius: "8px",
-          backgroundColor: "#f8f8f8",
-          border: "1px solid #e0e0e0",
+          borderRadius: "12px",
+          backgroundColor: "#f8f9fa",
+          border: "1px solid #e9ecef",
         }}
       >
         <Typography
@@ -271,7 +272,7 @@ export default function TimelineTab({
           <Box
             key={`${post.id}-${index}`}
             sx={{
-              mb: 2,
+              mb: 2.5,
               "&:last-child": {
                 mb: 0,
               },
@@ -283,8 +284,8 @@ export default function TimelineTab({
       </Box>
 
       {loading && (
-        <Box sx={{ textAlign: "center", p: 3 }}>
-          <CircularProgress size={40} sx={{ color: "#0a66c2" }} />
+        <Box sx={{ textAlign: "center", p: 4 }}>
+          <CircularProgress size={36} />
         </Box>
       )}
 
@@ -295,16 +296,13 @@ export default function TimelineTab({
             onClick={loadMore}
             sx={{
               fontWeight: 600,
-              backgroundColor: "white",
-              borderColor: "#0a66c2",
-              color: "#0a66c2",
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#f0f7ff",
-                borderColor: "#0a66c2",
+                backgroundColor: "primary.lighter",
               },
-              padding: "6px 16px",
+              padding: "8px 20px",
             }}
+            color="primary"
           >
             {t("posts.loadMore")}
           </Button>
