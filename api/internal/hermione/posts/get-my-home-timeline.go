@@ -24,6 +24,10 @@ func GetMyHomeTimeline(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		if req.Limit == 0 {
+			req.Limit = 25
+		}
+
 		h.Dbg("Validated", "req", req)
 
 		getMyHomeTimelineResp, err := h.DB().GetMyHomeTimeline(r.Context(), req)

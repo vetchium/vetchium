@@ -275,7 +275,7 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 	baseURL.RawQuery = query.Encode()
 
 	var messageID string
-	waitTime := 2 * time.Second
+	waitTime := 5 * time.Second
 	for i := 0; i < 8; i++ {
 		mailResp, err := http.Get(baseURL.String())
 		if err != nil {

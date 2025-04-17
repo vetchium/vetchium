@@ -567,5 +567,7 @@ export const en = {
     contentPlaceholder: "This content will be loaded in a future update",
     detailsComingSoon:
       "Detailed post view with comments and interactions coming soon",
+    loadMore: "Load More",
+    noMorePosts: "No more posts to show",
   },
 };

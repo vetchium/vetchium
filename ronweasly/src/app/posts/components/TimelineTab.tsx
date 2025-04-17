@@ -25,21 +25,21 @@ export default function TimelineTab({
   const [error, setError] = useState<string | null>(null);
   const [paginationKey, setPaginationKey] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastPostElementRef = useRef<HTMLDivElement | null>(null);
 
   // Keep track of active fetches to prevent duplicate calls
   const isFetchingRef = useRef(false);
   const tRef = useRef(t);
   const urlRef = useRef(`${config.API_SERVER_PREFIX}/hub/get-my-home-timeline`);
 
+  // Track if initial load has happened to prevent multiple calls
+  const initialLoadDoneRef = useRef(false);
+
   // Update refs when dependencies change
   useEffect(() => {
     tRef.current = t;
   }, [t]);
 
-  // Fetch the right timeline data based on type
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Simple fetch posts function
   const fetchPosts = useCallback(
     async (refresh = false) => {
       // Currently only supporting following timeline
@@ -53,12 +53,12 @@ export default function TimelineTab({
         return;
       }
 
-      // Check if we should proceed with the fetch
-      if (loading || isFetchingRef.current || (!hasMore && !refresh)) {
+      // Don't fetch if already loading
+      if (loading || isFetchingRef.current) {
         return;
       }
 
-      // If the pagination key is an empty string and not a refresh, don't fetch
+      // Don't fetch if we've reached the end and not refreshing
       if (!refresh && paginationKey === "") {
         return;
       }
@@ -68,16 +68,19 @@ export default function TimelineTab({
       setError(null);
 
       try {
+        // Create the request payload
+        const requestPayload = {
+          pagination_key: refresh ? undefined : paginationKey,
+          limit: 10,
+        };
+
         const response = await fetch(urlRef.current, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            pagination_key: refresh ? undefined : paginationKey,
-            limit: 10,
-          }),
+          body: JSON.stringify(requestPayload),
         });
 
         if (!response.ok) {
@@ -123,18 +126,13 @@ export default function TimelineTab({
           }
         });
 
-        // Handle empty pagination key as end of data
+        // Handle empty pagination key as end of data according to API spec
         if (data.pagination_key === "") {
           setPaginationKey("");
           setHasMore(false);
         } else {
-          setPaginationKey(data.pagination_key || null);
-          // Only set hasMore to true if we have both posts and a non-empty pagination key
-          setHasMore(
-            safePosts.length > 0 &&
-              !!data.pagination_key &&
-              data.pagination_key !== ""
-          );
+          setPaginationKey(data.pagination_key);
+          setHasMore(data.posts && data.posts.length > 0);
         }
       } catch (error) {
         console.error("Error fetching timeline:", error);
@@ -144,56 +142,31 @@ export default function TimelineTab({
         isFetchingRef.current = false;
       }
     },
-    // Remove all reactive dependencies that aren't necessary
-    [type, router]
+    // Remove loading from the dependency array to break the infinite loop
+    [type, router, paginationKey]
   );
 
-  // Refresh timeline when refreshTrigger changes or on initial load
+  // Initial load effect (runs only once)
   useEffect(() => {
-    fetchPosts(true);
+    if (!initialLoadDoneRef.current) {
+      initialLoadDoneRef.current = true;
+      fetchPosts(true);
+    }
+  }, []); // Empty dependency array ensures it only runs once on mount
+
+  // Handle refresh trigger separately
+  useEffect(() => {
+    if (refreshTrigger > 0 && initialLoadDoneRef.current) {
+      fetchPosts(true);
+    }
   }, [refreshTrigger, fetchPosts]);
 
-  // Setup intersection observer for infinite scrolling
-  useEffect(() => {
-    // Don't setup observer if already loading, no posts, or no more data
-    if (loading || posts.length === 0 || !hasMore || paginationKey === "") {
-      return;
+  // Handle load more button click
+  const loadMore = () => {
+    if (!loading && hasMore && paginationKey !== "") {
+      fetchPosts(false);
     }
-
-    // Cleanup previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    const callback = (entries: IntersectionObserverEntry[]) => {
-      // Only fetch if entry is intersecting, we have more data, and not currently loading
-      if (
-        entries[0]?.isIntersecting &&
-        hasMore &&
-        !loading &&
-        !isFetchingRef.current &&
-        paginationKey !== ""
-      ) {
-        fetchPosts(false);
-      }
-    };
-
-    observerRef.current = new IntersectionObserver(callback, {
-      rootMargin: "100px",
-      threshold: 0.1,
-    });
-
-    // Only observe if we have a last post element
-    if (lastPostElementRef.current) {
-      observerRef.current.observe(lastPostElementRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [loading, hasMore, posts.length, fetchPosts, paginationKey]);
+  };
 
   if (error) {
     return (
@@ -250,10 +223,7 @@ export default function TimelineTab({
   return (
     <Box sx={{ p: 2 }}>
       {posts.map((post, index) => (
-        <div
-          key={`${post.id}-${index}`}
-          ref={index === posts.length - 1 ? lastPostElementRef : null}
-        >
+        <div key={`${post.id}-${index}`}>
           <PostCard post={post} />
         </div>
       ))}
@@ -261,6 +231,22 @@ export default function TimelineTab({
       {loading && (
         <Box sx={{ textAlign: "center", p: 3 }}>
           <CircularProgress size={40} />
+        </Box>
+      )}
+
+      {!loading && hasMore && paginationKey !== "" && (
+        <Box sx={{ textAlign: "center", p: 2 }}>
+          <Button variant="outlined" onClick={loadMore}>
+            {t("posts.loadMore")}
+          </Button>
+        </Box>
+      )}
+
+      {!loading && !hasMore && (
+        <Box sx={{ textAlign: "center", p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            {t("posts.noMorePosts")}
+          </Typography>
         </Box>
       )}
     </Box>

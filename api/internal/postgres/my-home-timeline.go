@@ -40,12 +40,6 @@ func (pg *PG) GetMyHomeTimeline(
 	}
 	defer tx.Rollback(context.Background())
 
-	// Default limit if not provided
-	limit := 25
-	if req.Limit > 0 {
-		limit = req.Limit
-	}
-
 	// Check if the pagination key exists if provided
 	if req.PaginationKey != nil && *req.PaginationKey != "" {
 		var exists bool
@@ -132,7 +126,7 @@ func (pg *PG) GetMyHomeTimeline(
 			ORDER BY most_recent_activity DESC, post_id DESC
 			LIMIT $3
 		`
-		args = []interface{}{hubUserID, *req.PaginationKey, limit}
+		args = []interface{}{hubUserID, *req.PaginationKey, req.Limit}
 	} else {
 		// Query without pagination
 		query = `
@@ -144,7 +138,7 @@ func (pg *PG) GetMyHomeTimeline(
 			ORDER BY most_recent_activity DESC, post_id DESC
 			LIMIT $2
 		`
-		args = []interface{}{hubUserID, limit}
+		args = []interface{}{hubUserID, req.Limit}
 	}
 
 	rows, err := tx.Query(ctx, query, args...)
@@ -198,7 +192,7 @@ func (pg *PG) GetMyHomeTimeline(
 	}
 
 	// Only include paginationKey if we have the maximum number of posts
-	if len(posts) < limit {
+	if len(posts) < req.Limit {
 		paginationKey = ""
 	}
 
