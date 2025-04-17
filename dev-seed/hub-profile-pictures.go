@@ -98,25 +98,22 @@ func uploadHubUserProfilePictures() {
 			continue
 		}
 
-		// 90% chance of having a profile picture
-		if rand.Float32() < 0.9 {
-			// Get the auth token from the session map
-			tokenI, ok := hubSessionTokens.Load(user.Email)
-			if !ok {
-				log.Fatalf("no auth token found for %s", user.Email)
-			}
-			authToken := tokenI.(string)
-
-			avatarPath := fmt.Sprintf("avatar%d.jpg", rand.Intn(18)+1)
-			if err := uploadProfilePicture(avatarPath, authToken); err != nil {
-				log.Fatalf(
-					"upload profile picture fail %s: %v",
-					user.Name,
-					err,
-				)
-				return
-			}
-			color.Magenta("Profile pic added: %s <%s>", user.Name, user.Email)
+		// Get the auth token from the session map
+		tokenI, ok := hubSessionTokens.Load(user.Email)
+		if !ok {
+			log.Fatalf("no auth token found for %s", user.Email)
 		}
+		authToken := tokenI.(string)
+
+		avatarPath := fmt.Sprintf("avatar%d.jpg", rand.Intn(18)+1)
+		if err := uploadProfilePicture(avatarPath, authToken); err != nil {
+			log.Fatalf(
+				"upload profile picture fail %s: %v",
+				user.Name,
+				err,
+			)
+			return
+		}
+		color.Magenta("Profile pic added: %s <%s>", user.Name, user.Email)
 	}
 }

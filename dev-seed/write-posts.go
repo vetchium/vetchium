@@ -73,6 +73,8 @@ func writePosts() {
 				if resp.StatusCode != http.StatusOK {
 					log.Fatalf("failed to add post: %v", resp.Status)
 				}
+
+				resp.Body.Close()
 			}
 		}(user, i)
 	}
