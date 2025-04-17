@@ -7,8 +7,8 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
-	"time"
 
+	"github.com/fatih/color"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -17,10 +17,10 @@ func writePosts() {
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
 
-		if i%10 == 0 {
-			// Just to reduce the parallelism for a while
-			// so we do not run out of sockets
-			<-time.After(3 * time.Second)
+		if i%2 == 0 {
+			color.Yellow("thread %d waiting", i)
+			wg.Wait()
+			color.Yellow("thread %d resumes", i)
 		}
 		wg.Add(1)
 
@@ -45,7 +45,7 @@ func writePosts() {
 			}
 			authToken := tokenI.(string)
 
-			for _, post := range posts {
+			for k, post := range posts {
 				var body bytes.Buffer
 				err := json.NewEncoder(&body).Encode(post)
 				if err != nil {
@@ -64,6 +64,7 @@ func writePosts() {
 				req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Authorization", "Bearer "+authToken)
 
+				color.Yellow("thread %d in action for post %d", i, k)
 				resp, err := http.DefaultClient.Do(req)
 				if err != nil {
 					log.Fatalf("failed to send request: %v", err)

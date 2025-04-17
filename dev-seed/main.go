@@ -47,6 +47,11 @@ func main() {
 
 	color.Cyan("Signing in hub users")
 	loginHubUsers()
+	color.Cyan("Follow other users")
+	followUsers()
+	color.Cyan("Write posts")
+	writePosts()
+
 	color.Cyan("Create Achievements for Hub Users")
 	createAchievements()
 	color.Cyan("Creating work histories")
@@ -55,10 +60,6 @@ func main() {
 	addOfficialEmails()
 	color.Cyan("Uploading profile pictures")
 	uploadHubUserProfilePictures()
-	color.Cyan("Follow other users")
-	followUsers()
-	color.Cyan("Write posts")
-	writePosts()
 
 	// Initialize the PDF directory for resumes
 	color.Cyan("Initializing PDF directory for resumes")
