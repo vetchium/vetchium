@@ -21,6 +21,15 @@ import Cookies from "js-cookie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// Cache for profile pictures with timestamps to enable expiration
+interface ProfilePictureCacheEntry {
+  url: string | null;
+  timestamp: number;
+}
+
+const profilePictureCache: Record<string, ProfilePictureCacheEntry> = {};
+const CACHE_EXPIRATION_MS = 20 * 60 * 1000; // 20 minutes cache expiration
+
 interface PostCardProps {
   post: Post;
   hideOpenInNewTab?: boolean;
@@ -38,16 +47,25 @@ export default function PostCard({
 
   useEffect(() => {
     let objectUrl: string | null = null;
+    const authorHandle = post.author_handle;
 
     const fetchAvatar = async () => {
       const token = Cookies.get("session_token");
       // No need to fetch if token is missing, fallback will be used
-      if (!token || !post.author_handle) {
-        setAvatarUrl(null); // Ensure avatarUrl is null if no token or handle
+      if (!token || !authorHandle) {
+        setAvatarUrl(null);
         return;
       }
 
-      const imageUrl = `${config.API_SERVER_PREFIX}/hub/profile-picture/${post.author_handle}`;
+      // Check if this author's profile picture is already in cache and not expired
+      const now = Date.now();
+      const cachedEntry = profilePictureCache[authorHandle];
+      if (cachedEntry && now - cachedEntry.timestamp < CACHE_EXPIRATION_MS) {
+        setAvatarUrl(cachedEntry.url);
+        return;
+      }
+
+      const imageUrl = `${config.API_SERVER_PREFIX}/hub/profile-picture/${authorHandle}`;
 
       try {
         const response = await fetch(imageUrl, {
@@ -62,19 +80,33 @@ export default function PostCard({
           if (blob.size > 0) {
             objectUrl = URL.createObjectURL(blob);
             setAvatarUrl(objectUrl);
+            // Store in cache with timestamp
+            profilePictureCache[authorHandle] = {
+              url: objectUrl,
+              timestamp: now,
+            };
           } else {
-            setAvatarUrl(null); // No image available, use fallback
+            setAvatarUrl(null);
+            profilePictureCache[authorHandle] = {
+              url: null,
+              timestamp: now,
+            };
           }
         } else {
           // Handle errors like 401, 404, etc. - use fallback
           setAvatarUrl(null);
+          profilePictureCache[authorHandle] = {
+            url: null,
+            timestamp: now,
+          };
         }
       } catch (error) {
-        console.error(
-          `Error fetching avatar for ${post.author_handle}:`,
-          error
-        );
-        setAvatarUrl(null); // Network or other errors, use fallback
+        console.error(`Error fetching avatar for ${authorHandle}:`, error);
+        setAvatarUrl(null);
+        profilePictureCache[authorHandle] = {
+          url: null,
+          timestamp: now,
+        };
       }
     };
 
@@ -82,21 +114,26 @@ export default function PostCard({
 
     // Cleanup function
     return () => {
-      if (objectUrl) {
+      // Only revoke URLs that aren't used in the cache or if they're expired
+      const now = Date.now();
+      const cachedEntry = profilePictureCache[authorHandle];
+      const isExpired =
+        cachedEntry && now - cachedEntry.timestamp >= CACHE_EXPIRATION_MS;
+
+      if (
+        objectUrl &&
+        (!cachedEntry || isExpired || cachedEntry.url !== objectUrl)
+      ) {
         URL.revokeObjectURL(objectUrl);
-        setAvatarUrl(null); // Clear state on cleanup as well
       }
     };
-  }, [post.author_handle]); // Re-run effect if author handle changes
+  }, [post.author_handle]);
 
   return (
     <Card sx={{ mb: 2, width: "100%" }}>
       <CardHeader
         avatar={
-          <Avatar
-            aria-label="user avatar"
-            src={avatarUrl ?? undefined} // Use object URL if available, otherwise undefined lets fallback render
-          >
+          <Avatar aria-label="user avatar" src={avatarUrl ?? undefined}>
             {/* Fallback: Initials */}
             {post.author_name?.charAt(0) || post.author_handle.charAt(0)}
           </Avatar>
