@@ -103,9 +103,25 @@ export default function TimelineTab({
           tags: Array.isArray(post.tags) ? post.tags : [],
         }));
 
-        setPosts((prevPosts) =>
-          refresh ? safePosts : [...prevPosts, ...safePosts]
-        );
+        setPosts((prevPosts) => {
+          if (refresh) {
+            return safePosts;
+          } else {
+            // Filter out any posts that we already have to prevent duplicates
+            const existingIds = new Set(prevPosts.map((post: Post) => post.id));
+            const newPosts = safePosts.filter(
+              (post: Post) => !existingIds.has(post.id)
+            );
+
+            // If we received posts but all were duplicates, we've likely reached the end
+            if (safePosts.length > 0 && newPosts.length === 0) {
+              setHasMore(false);
+              return prevPosts;
+            }
+
+            return [...prevPosts, ...newPosts];
+          }
+        });
 
         // Handle empty pagination key as end of data
         if (data.pagination_key === "") {
@@ -235,7 +251,7 @@ export default function TimelineTab({
     <Box sx={{ p: 2 }}>
       {posts.map((post, index) => (
         <div
-          key={post.id}
+          key={`${post.id}-${index}`}
           ref={index === posts.length - 1 ? lastPostElementRef : null}
         >
           <PostCard post={post} />
