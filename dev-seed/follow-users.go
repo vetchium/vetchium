@@ -23,7 +23,7 @@ func followUsers() {
 		authToken := tokenI.(string)
 
 		usersToFollow := make(map[string]bool)
-		for j := 0; j < 5; j++ {
+		for j := 0; j < 10; j++ {
 			for {
 				userNumToFollow := rand.Intn(len(hubUsers))
 				userToFollow := hubUsers[userNumToFollow].Handle

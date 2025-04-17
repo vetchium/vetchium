@@ -276,7 +276,7 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 
 	var messageID string
 	waitTime := 2 * time.Second
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 8; i++ {
 		mailResp, err := http.Get(baseURL.String())
 		if err != nil {
 			log.Fatalf("failed to query mailpit: %v", err)
@@ -293,7 +293,7 @@ func hubLogin(email, password string, wg *sync.WaitGroup) {
 			break
 		}
 		time.Sleep(waitTime)
-		waitTime *= 3
+		waitTime *= 5
 	}
 
 	if messageID == "" {

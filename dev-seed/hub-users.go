@@ -19,7 +19,8 @@ func initHubUsers(db *pgxpool.Pool) {
 	}
 	defer tx.Rollback(context.Background())
 
-	hubUsers = generateHubSeedUsers(50)
+	// Should be at least 10 as each user follows 10 other users
+	hubUsers = generateHubSeedUsers(200)
 
 	for _, user := range hubUsers {
 		query := `
