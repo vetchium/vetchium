@@ -143,32 +143,46 @@ export default function PostCard({
     >
       <CardHeader
         avatar={
-          <Avatar
-            aria-label="user avatar"
-            src={avatarUrl ?? undefined}
-            sx={{
-              width: 48,
-              height: 48,
-              border: `1px solid ${theme.palette.divider}`,
-            }}
+          <Link
+            href={`/u/${post.author_handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none" }}
           >
-            {/* Fallback: Initials */}
-            {post.author_name?.charAt(0) || post.author_handle.charAt(0)}
-          </Avatar>
+            <Avatar
+              aria-label="user avatar"
+              src={avatarUrl ?? undefined}
+              sx={{
+                width: 48,
+                height: 48,
+                border: `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              {/* Fallback: Initials */}
+              {post.author_name?.charAt(0) || post.author_handle.charAt(0)}
+            </Avatar>
+          </Link>
         }
         title={
           <Box sx={{ mb: 0.25 }}>
-            <Typography
-              variant="subtitle1"
-              component="span"
-              sx={{
-                fontWeight: 500,
-                color: theme.palette.text.primary,
-                lineHeight: 1.3,
-              }}
+            <Link
+              href={`/u/${post.author_handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "none", color: "inherit" }}
             >
-              {post.author_name || post.author_handle}
-            </Typography>
+              <Typography
+                variant="subtitle1"
+                component="span"
+                sx={{
+                  fontWeight: 500,
+                  color: theme.palette.text.primary,
+                  lineHeight: 1.3,
+                }}
+              >
+                {post.author_name || post.author_handle}
+              </Typography>
+            </Link>
           </Box>
         }
         subheader={
@@ -182,7 +196,15 @@ export default function PostCard({
                 lineHeight: 1.2,
               }}
             >
-              @{post.author_handle} · {timeAgo}
+              <Link
+                href={`/u/${post.author_handle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                @{post.author_handle}
+              </Link>
+              {` · ${timeAgo}`}
             </Typography>
           </Box>
         }
