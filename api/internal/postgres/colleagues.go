@@ -220,8 +220,7 @@ func (p *PG) ApproveColleague(ctx context.Context, handle string) error {
 		),
 		connection_update AS (
 			UPDATE colleague_connections cc
-			SET state = $2,
-				updated_at = timezone('UTC', now())
+			SET state = $2
 			FROM requester r
 			WHERE cc.requester_id = r.id
 			AND cc.requested_id = $3
