@@ -305,6 +305,7 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		log.Printf("Failed to get approvals: %v", err)
 		return false
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Failed to get approvals: %s", resp.Status)

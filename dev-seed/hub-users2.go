@@ -805,7 +805,7 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 		)
 
 		tier := hub.FreeHubUserTier
-		if rand.Int()%2 == 0 {
+		if rand.Float32() < 0.999 {
 			tier = hub.PaidHubUserTier
 		}
 
