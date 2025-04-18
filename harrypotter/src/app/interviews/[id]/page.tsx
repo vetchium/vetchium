@@ -44,6 +44,7 @@ import {
 import { alpha, styled } from "@mui/material/styles";
 import {
   EmployerInterview,
+  GetInterviewDetailsRequest,
   InterviewersDecision,
   InterviewersDecisions,
   PutAssessmentRequest,
@@ -71,8 +72,19 @@ const formatDateTime = (
   const dateStr =
     isoString instanceof Date ? isoString.toISOString() : isoString;
 
+  // Check for invalid or empty date string
+  if (!dateStr) {
+    return "N/A"; // Or return empty string or a specific placeholder
+  }
+
+  const date = new Date(dateStr);
+  // Check if the date is valid after parsing
+  if (isNaN(date.getTime())) {
+    return "Invalid Date"; // Or return empty string or a specific placeholder
+  }
+
   return new Intl.DateTimeFormat(undefined, options || defaultOptions).format(
-    new Date(dateStr)
+    date
   );
 };
 
@@ -82,6 +94,17 @@ const formatUTCDateTime = (isoString: string | Date) => {
   const dateStr =
     isoString instanceof Date ? isoString.toISOString() : isoString;
 
+  // Check for invalid or empty date string
+  if (!dateStr) {
+    return "N/A"; // Or return empty string or a specific placeholder
+  }
+
+  const date = new Date(dateStr);
+  // Check if the date is valid after parsing
+  if (isNaN(date.getTime())) {
+    return "Invalid Date"; // Or return empty string or a specific placeholder
+  }
+
   return new Intl.DateTimeFormat(undefined, {
     weekday: "short",
     year: "numeric",
@@ -90,7 +113,7 @@ const formatUTCDateTime = (isoString: string | Date) => {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "UTC",
-  }).format(new Date(dateStr));
+  }).format(date);
 };
 
 // FeedbackWidget component for displaying feedback sections (read-only)
@@ -200,12 +223,19 @@ export default function InterviewDetailPage() {
         return;
       }
 
+      const requestBody: GetInterviewDetailsRequest = {
+        interview_id: interviewId,
+      };
+
       const response = await fetch(
-        `${config.API_SERVER_PREFIX}/employer/get-interview/${interviewId}`,
+        `${config.API_SERVER_PREFIX}/employer/get-interview-details`,
         {
+          method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify(requestBody),
         }
       );
 
