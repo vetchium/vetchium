@@ -288,7 +288,7 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		return false
 	}
 
-	req, err := http.NewRequest(
+	req1, err := http.NewRequest(
 		http.MethodPost,
 		serverURL+"/hub/my-colleague-approvals",
 		&reqBody,
@@ -298,27 +298,27 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		return false
 	}
 
-	req.Header.Set("Authorization", "Bearer "+authToken)
+	req1.Header.Set("Authorization", "Bearer "+authToken)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp1, err := http.DefaultClient.Do(req1)
 	if err != nil {
 		log.Printf("Failed to get approvals: %v", err)
 		return false
 	}
-	defer resp.Body.Close()
+	defer resp1.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to get approvals: %s", resp.Status)
+	if resp1.StatusCode != http.StatusOK {
+		log.Printf("Failed to get approvals: %s", resp1.Status)
 		return false
 	}
 
 	var approvals hub.MyColleagueApprovals
-	if err := json.NewDecoder(resp.Body).Decode(&approvals); err != nil {
-		resp.Body.Close()
+	if err := json.NewDecoder(resp1.Body).Decode(&approvals); err != nil {
+		resp1.Body.Close()
 		log.Printf("Failed to decode approvals: %v", err)
 		return false
 	}
-	resp.Body.Close()
+	resp1.Body.Close()
 
 	// Check if the requestor is in the pending approvals
 	found := false
@@ -349,7 +349,7 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		return false
 	}
 
-	req, err = http.NewRequest(
+	req2, err := http.NewRequest(
 		http.MethodPost,
 		serverURL+"/hub/approve-colleague",
 		bytes.NewBuffer(approveReqJSON),
@@ -359,18 +359,18 @@ func checkAndApproveRequest(approverEmail, requestorHandle string) bool {
 		return false
 	}
 
-	req.Header.Set("Authorization", "Bearer "+authToken)
-	req.Header.Set("Content-Type", "application/json")
+	req2.Header.Set("Authorization", "Bearer "+authToken)
+	req2.Header.Set("Content-Type", "application/json")
 
-	resp, err = http.DefaultClient.Do(req)
+	resp2, err := http.DefaultClient.Do(req2)
 	if err != nil {
 		log.Printf("Failed to send approve request: %v", err)
 		return false
 	}
-	defer resp.Body.Close()
+	defer resp2.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to approve connection request: %s", resp.Status)
+	if resp2.StatusCode != http.StatusOK {
+		log.Printf("Failed to approve connection request: %s", resp2.Status)
 		return false
 	}
 
