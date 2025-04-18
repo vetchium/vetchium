@@ -8,3 +8,4 @@ sentence-transformers==2.2.2
 transformers==4.24.0
 torch==1.13.1
 huggingface-hub==0.10.1
+numpy==1.25.2
