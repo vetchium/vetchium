@@ -26,6 +26,7 @@ func RegisterHubRoutes(h *Hermione) {
 	http.HandleFunc("/hub/logout", ha.Logout(h))
 	http.HandleFunc("/hub/forgot-password", ha.ForgotPassword(h))
 	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
+	http.HandleFunc("/hub/onboard-user", hu.OnboardHubUser(h))
 
 	h.mw.Guard(
 		"/hub/get-my-handle",
@@ -41,11 +42,6 @@ func RegisterHubRoutes(h *Hermione) {
 	h.mw.Guard(
 		"/hub/invite-hub-user",
 		hu.InviteHubUser(h),
-		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
-	)
-	h.mw.Guard(
-		"/hub/onboard-user",
-		hu.OnboardHubUser(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
 	h.mw.Guard(
