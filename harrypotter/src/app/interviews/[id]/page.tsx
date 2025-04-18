@@ -47,6 +47,7 @@ import {
   GetInterviewDetailsRequest,
   InterviewersDecision,
   InterviewersDecisions,
+  InterviewStates,
   PutAssessmentRequest,
   RSVPInterviewRequest,
   RSVPStatus,
@@ -394,9 +395,6 @@ export default function InterviewDetailPage() {
     }
   };
 
-  const isInterviewScheduled =
-    interview?.interview_state === "SCHEDULED_INTERVIEW";
-
   // Update edit form data when interview data changes
   useEffect(() => {
     if (interview) {
@@ -495,9 +493,11 @@ export default function InterviewDetailPage() {
                       )}
                       size="small"
                       color={
-                        interview?.interview_state === "SCHEDULED_INTERVIEW"
+                        interview?.interview_state ===
+                        InterviewStates.SCHEDULED_INTERVIEW
                           ? "primary"
-                          : interview?.interview_state === "COMPLETED_INTERVIEW"
+                          : interview?.interview_state ===
+                            InterviewStates.COMPLETED_INTERVIEW
                           ? "success"
                           : "error"
                       }
@@ -694,7 +694,7 @@ export default function InterviewDetailPage() {
                                   }}
                                 />
                                 {interview.interview_state ===
-                                  "SCHEDULED_INTERVIEW" && (
+                                  InterviewStates.SCHEDULED_INTERVIEW && (
                                   <Box
                                     sx={{
                                       display: "flex",
@@ -753,7 +753,8 @@ export default function InterviewDetailPage() {
                                           rsvpLoading ||
                                           interviewer.rsvp_status ===
                                             RSVPStatuses.YES ||
-                                          !isInterviewScheduled
+                                          interview?.interview_state !==
+                                            InterviewStates.SCHEDULED_INTERVIEW
                                         }
                                         sx={{
                                           "&.Mui-disabled": {
@@ -788,7 +789,8 @@ export default function InterviewDetailPage() {
                                           rsvpLoading ||
                                           interviewer.rsvp_status ===
                                             RSVPStatuses.NO ||
-                                          !isInterviewScheduled
+                                          interview?.interview_state !==
+                                            InterviewStates.SCHEDULED_INTERVIEW
                                         }
                                         sx={{
                                           "&.Mui-disabled": {
@@ -943,23 +945,25 @@ export default function InterviewDetailPage() {
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {isInterviewer && isInterviewScheduled && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        mb: 2,
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={() => setEditDialogOpen(true)}
+                  {isInterviewer &&
+                    interview?.interview_state ===
+                      InterviewStates.SCHEDULED_INTERVIEW && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          mb: 2,
+                        }}
                       >
-                        {t("interviews.assessment.editFeedback")}
-                      </Button>
-                    </Box>
-                  )}
+                        <Button
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          onClick={() => setEditDialogOpen(true)}
+                        >
+                          {t("interviews.assessment.editFeedback")}
+                        </Button>
+                      </Box>
+                    )}
 
                   <FeedbackWidget
                     title={t("interviews.assessment.rating")}
