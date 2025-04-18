@@ -31,7 +31,7 @@ vetchi$ make seed
 
 # Employer credentials
 # domain: gryffindor.example
-# username: hermione@gryffindor.example (or) admin@gryffindor.example
+# username: minerva@gryffindor.example (or) admin@gryffindor.example
 # password: NewPassword123$
 
 # Hub credentials

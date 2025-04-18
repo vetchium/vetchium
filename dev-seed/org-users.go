@@ -59,12 +59,18 @@ func initOrgUsers(db *pgxpool.Pool) {
 				name  string
 				email string
 			}{
-				{name: "Harry Potter", email: "harry@gryffindor.example"},
 				{
-					name:  "Hermione Granger",
-					email: "hermione@gryffindor.example",
+					name:  "Remus Lupin",
+					email: "remus@gryffindor.example",
 				},
-				{name: "Ron Weasley", email: "ron@gryffindor.example"},
+				{
+					name:  "Minerva McGonagall",
+					email: "minerva@gryffindor.example",
+				},
+				{
+					name:  "Rubeus Hagrid",
+					email: "hagrid@gryffindor.example",
+				},
 			},
 		},
 		{
@@ -75,12 +81,18 @@ func initOrgUsers(db *pgxpool.Pool) {
 				name  string
 				email string
 			}{
-				{name: "Cedric Diggory", email: "cedric@hufflepuff.example"},
 				{
-					name:  "Nymphadora Tonks",
-					email: "nymphadora@hufflepuff.example",
+					name:  "Pomona Sprout",
+					email: "pomona@hufflepuff.example",
 				},
-				{name: "Newt Scamander", email: "newt@hufflepuff.example"},
+				{
+					name:  "Silvanus Kettleburn",
+					email: "silvanus@hufflepuff.example",
+				},
+				{
+					name:  "Newt Scamander",
+					email: "newt@hufflepuff.example",
+				},
 			},
 		},
 		{
@@ -91,9 +103,14 @@ func initOrgUsers(db *pgxpool.Pool) {
 				name  string
 				email string
 			}{
-				{name: "Luna Lovegood", email: "luna@ravenclaw.example"},
-				{name: "Cho Chang", email: "cho@ravenclaw.example"},
-				{name: "Filius Flitwick", email: "filius@ravenclaw.example"},
+				{
+					name:  "Filius Flitwick",
+					email: "filius@ravenclaw.example",
+				},
+				{
+					name:  "Rowena Ravenclaw",
+					email: "rowena@ravenclaw.example",
+				},
 			},
 		},
 		{
@@ -104,7 +121,7 @@ func initOrgUsers(db *pgxpool.Pool) {
 				name  string
 				email string
 			}{
-				{name: "Draco Malfoy", email: "draco@slytherin.example"},
+				{name: "Salazar Slytherin", email: "salazar@slytherin.example"},
 				{name: "Severus Snape", email: "severus@slytherin.example"},
 				{name: "Horace Slughorn", email: "horace@slytherin.example"},
 			},
