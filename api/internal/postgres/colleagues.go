@@ -99,7 +99,7 @@ func (p *PG) GetMyColleagueApprovals(
 			hu.short_bio
 		FROM colleague_connections cc
 		JOIN hub_users hu ON cc.requester_id = hu.id
-		WHERE cc.requested_id = $1
+		WHERE cc.requested_id = $1::uuid
 		AND cc.state = $2`
 
 	args = append(args, loggedInUserID, db.ColleaguePending)
