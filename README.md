@@ -13,7 +13,7 @@
 To bring the services up, run the following commands:
 
 ```bash
-# Bring up the backend services
+# Bring up the services
 vetchi$ make dev
 
 # Visit http://localhost:10350/ to see the tilt UI which will show you the services, logs, port-forwards, etc.
@@ -37,19 +37,21 @@ vetchi$ make seed
 # Hub credentials
 # email: user0@example.com
 # password: NewPassword123$
+
+For the TFA email, visit http://localhost:8025
 ```
 
 To connect to the port-forwarded Postgres using psql, get the connection details from the Kubernetes secret:
 
 ```bash
-$ POSTGRES_URI=$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-dev/localhost/g')
-$ psql "$POSTGRES_URI"
+POSTGRES_URI=$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-dev/localhost/g')
+psql "$POSTGRES_URI"
 ```
 
 To connect to the port-forwarded Postgres using DBeaver or some such JDBC client, use:
 
 ```bash
-$ kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
+kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed -E 's|postgresql://([^:]+):([^@]+)@([^:/]+):([0-9]+)/([^?]+)|jdbc:postgresql://localhost:\4/\5?user=\1\&password=\2|'
 ```
 
 To run tests, use the following command:
@@ -127,7 +129,7 @@ Following are some rules that you should follow while working on the code. It is
 - Merge small changes frequently. Hide things behind feature flags until they are tested for functionality and scale. Do not drop big changes.
 - Maintain 80 column limits for all the code. The test files under dolores do not have a 80 column limit. Sometimes the SQL under the postgres package may also make things difficult to fit under 80 columns which we have to live with. But ensure that the code is readable.
 - Try to have a maximum of about 200 lines per file. Be miserly in creating new packages and be generous in creating new files under existing packages.
-- Use https://sqlformat.darold.net/ to format SQL within the postgres.go file and dolores/\*.pgsql files. This does not do a good job at breaking long line or aligning complex queries, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.
+- Use <https://sqlformat.darold.net/> to format SQL within the postgres.go file and dolores/\*.pgsql files. This does not do a good job at breaking long line or aligning complex queries, but it is better to be consistently formatted. If there is a better pgsqlfmt in future, use.
 - In the backend, log errors with the `Err` method. Log as Error only on the place where the error actually happens. This will help us get maximum debug information. In all the above layers of the call stack, if you want to log, use the `Dbg` method. The only exceptions to this are when the services are coming up. In that case, the errors are logged in the main function. Always, strive to log an error as Err only once. This will help us avoid generating too many tickets in SIEM/EventMgmt systems (such as Sentry).
 
 #### Frontend
