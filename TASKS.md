@@ -17,6 +17,8 @@
 - [x] Candidacy state changes after Interviews
 - [x] Rudimentary scoring of Applicants
 - [x] Achievements - Patents, Posts, Certifications
+- [x] Posts
+
 
 # Features needed before launch
 
@@ -24,10 +26,9 @@
 - [] Database Profiling and Indexes
 - [] Automated Scale testing
 - [] CandiateOffer RSVP and some signing (Docusign, Zohosign, etc.) integrations
-- [] Scoring of match for Openings
+- [] Find good matches for suitable Openings for HubUsers
 - [] Scoring of match for Applicants that is beyond just text compare !?
 - [] Academia support to add educational institutions, degrees, etc.
-- [] Posts
 - [] Articles
 - [] Timelines and Follows !?
 - [] VibeCheck for posts
