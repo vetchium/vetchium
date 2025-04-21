@@ -18,7 +18,7 @@
 - [x] Rudimentary scoring of Applicants
 - [x] Achievements - Patents, Posts, Certifications
 - [x] Posts
-
+- [x] Timelines and Follows !?
 
 # Features needed before launch
 
@@ -30,12 +30,16 @@
 - [] Scoring of match for Applicants that is beyond just text compare !?
 - [] Academia support to add educational institutions, degrees, etc.
 - [] Articles
-- [] Timelines and Follows !?
 - [] VibeCheck for posts
 - [] Bulk load of employer (F500+ more) names & domains from a configmap !? Or should we seed in the db ?!
 - [] Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too.
 - [] Audit logs
 - [] Introductory videos for Employer as well as the Product
+- [] Upvotes and Downvotes
+- [] Tag specific fetching of posts
+- [] Communities / Groups !?
+- [] Follow support for Orgs
+- [] Post message support for Orgs
 
 # Future Features
 
