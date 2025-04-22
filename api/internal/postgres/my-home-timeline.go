@@ -131,8 +131,7 @@ func (pg *PG) GetMyHomeTimeline(
 		// Query without pagination
 		query = `
 			SELECT
-				post_id, content, created_at, updated_at,
-				author_handle, author_name, author_profile_pic_url, tags
+				post_id, content, created_at, author_handle, author_name, author_profile_pic_url, tags
 			FROM hu_timeline_extended
 			WHERE hub_user_id = $1
 			ORDER BY most_recent_activity DESC, post_id DESC
@@ -160,7 +159,6 @@ func (pg *PG) GetMyHomeTimeline(
 			&post.ID,
 			&post.Content,
 			&post.CreatedAt,
-			&post.UpdatedAt,
 			&post.AuthorHandle,
 			&post.AuthorName,
 			&profilePicURL,
