@@ -1027,13 +1027,34 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+
+    upvotes_count INTEGER NOT NULL DEFAULT 0,
+    downvotes_count INTEGER NOT NULL DEFAULT 0,
+    score INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE post_tags (
     post_id TEXT REFERENCES posts(id) NOT NULL,
     tag_id UUID REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (post_id, tag_id)
+);
+
+CREATE TABLE post_votes (
+    -- TODO: Any INSERT or UPDATE or DELETE to this table should also
+    -- do a recalculation of the counts and score on the posts table also
+    -- within the same transaction. This may become a performance bottleneck
+    -- and may have to be redesigned in future, if there are full db/table locks
+    -- needed for every score calculation. Profile the performance with multiple
+    -- parallel up and down votes across same and different posts and redesign
+    -- if needed. Get this referred with some Postgres locking expert. Read:
+    -- https://medium.com/@hnasr/postgres-locks-a-deep-dive-9fc158a5641c
+    post_id TEXT REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES hub_users(id) ON DELETE CASCADE NOT NULL,
+    -- Use 1 for an upvote, -1 for a downvote. This simplifies score calculation.
+    vote_value SMALLINT NOT NULL CHECK (vote_value IN (1, -1)),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    -- Ensures a user can only vote once per post (either up or down)
+    PRIMARY KEY (post_id, user_id)
 );
 
 CREATE TABLE following_relationships (

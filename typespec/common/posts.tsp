@@ -16,5 +16,7 @@ model Post {
     author_name: string;
     author_handle: Handle;
     created_at: string;
-    updated_at: string;
+    upvotes_count: int32;
+    downvotes_count: int32;
+    score: int32;
 }

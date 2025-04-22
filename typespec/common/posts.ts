@@ -7,5 +7,7 @@ export interface Post {
   author_name: string;
   author_handle: Handle;
   created_at: string;
-  updated_at: string;
+  upvotes_count: number;
+  downvotes_count: number;
+  score: number;
 }
