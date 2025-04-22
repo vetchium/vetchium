@@ -119,7 +119,6 @@ func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
 			p.id,
 			p.content,
 			p.created_at,
-			p.updated_at,
 			hu.handle AS author_handle,
 			hu.full_name AS author_full_name,
 			COALESCE(
@@ -148,7 +147,6 @@ func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
 		&post.ID,
 		&post.Content,
 		&post.CreatedAt,
-		&post.UpdatedAt,
 		&authorHandle,
 		&authorFullName,
 		&tagsJSON,
@@ -213,7 +211,6 @@ func (pg *PG) GetUserPosts(
 			p.content,
 			p.author_id,
 			p.created_at,
-			p.updated_at,
 			hu.handle AS author_handle,
 			hu.full_name AS author_full_name,
 			COALESCE(
@@ -287,7 +284,6 @@ func (pg *PG) GetUserPosts(
 			&post.Content,
 			&authorID,
 			&post.CreatedAt,
-			&post.UpdatedAt,
 			&authorHandle,
 			&authorFullName,
 			&tagsJSON,

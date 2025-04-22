@@ -54,3 +54,15 @@ type MyHomeTimeline struct {
 type GetPostDetailsRequest struct {
 	PostID string `json:"post_id" validate:"required"`
 }
+
+type UpvoteUserPostRequest struct {
+	PostID string `json:"post_id" validate:"required"`
+}
+
+type DownvoteUserPostRequest struct {
+	PostID string `json:"post_id" validate:"required"`
+}
+
+type UnvoteUserPostRequest struct {
+	PostID string `json:"post_id" validate:"required"`
+}

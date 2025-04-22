@@ -54,3 +54,15 @@ export interface MyHomeTimeline {
 export interface GetPostDetailsRequest {
   post_id: string;
 }
+
+export interface UpvoteUserPostRequest {
+  post_id: string;
+}
+
+export interface DownvoteUserPostRequest {
+  post_id: string;
+}
+
+export interface UnvoteUserPostRequest {
+  post_id: string;
+}

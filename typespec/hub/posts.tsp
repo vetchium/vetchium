@@ -91,6 +91,18 @@ model GetPostDetailsRequest {
     post_id: string;
 }
 
+model UpvoteUserPostRequest {
+    post_id: string;
+}
+
+model DownvoteUserPostRequest {
+    post_id: string;
+}
+
+model UnvoteUserPostRequest {
+    post_id: string;
+}
+
 @route("/hub/add-post")
 interface AddPost {
     @tag("Posts")
@@ -174,5 +186,53 @@ interface GetPostDetails {
     getPostDetails(@body request: GetPostDetailsRequest): {
         @statusCode statusCode: 200;
         @body response: Post;
+    };
+}
+
+@route("/hub/upvote-user-post")
+interface UpvoteUserPost {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    upvoteUserPost(@body request: UpvoteUserPostRequest): {
+        @doc("User upvote registered. 200 will be returned even if the user has already upvoted.")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("This code will be returned in any of the following scenarios. 1) User has already downvoted the post 2) User is blocked from upvoting this post 3) The Post ID is invalid")
+        @statusCode
+        statuscode: 422;
+    };
+}
+
+@route("/hub/downvote-user-post")
+interface DownvoteUserPost {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    downvoteUserPost(@body request: DownvoteUserPostRequest): {
+        @doc("User downvote registered. 200 will be returned even if the user has already downvoted.")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("This code will be returned in any of the following scenarios. 1) User has already upvoted the post 2) User is blocked from downvoting this post 3) The Post ID is invalid")
+        @statusCode
+        statuscode: 422;
+    };
+}
+
+@route("/hub/unvote-user-post")
+interface UnvoteUserPost {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    unvoteUserPost(@body request: UnvoteUserPostRequest): {
+        @doc("Whatever Upvote or Downvote registered by the logged in user for the Post is removed. No error is returned even if the user has already unvoted or has never voted for the post")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("Post ID is invalid")
+        @statusCode
+        statuscode: 422;
     };
 }
