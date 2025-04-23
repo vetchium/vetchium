@@ -118,25 +118,28 @@ func (pg *PG) GetMyHomeTimeline(
 	if req.PaginationKey != nil && *req.PaginationKey != "" {
 		// Query with pagination
 		query = `
-			SELECT
-				post_id, content, created_at, updated_at,
-				author_handle, author_name, author_profile_pic_url, tags
-			FROM hu_timeline_extended
-			WHERE hub_user_id = $1 AND post_id < $2
-			ORDER BY most_recent_activity DESC, post_id DESC
-			LIMIT $3
-		`
+SELECT
+    post_id, content, created_at,
+    author_handle, author_name, author_profile_pic_url, tags,
+    upvotes_count, downvotes_count, score
+FROM hu_timeline_extended
+WHERE hub_user_id = $1 AND post_id < $2
+ORDER BY created_at DESC, post_id DESC
+LIMIT $3
+`
 		args = []interface{}{hubUserID, *req.PaginationKey, req.Limit}
 	} else {
 		// Query without pagination
 		query = `
-			SELECT
-				post_id, content, created_at, author_handle, author_name, author_profile_pic_url, tags
-			FROM hu_timeline_extended
-			WHERE hub_user_id = $1
-			ORDER BY most_recent_activity DESC, post_id DESC
-			LIMIT $2
-		`
+SELECT
+    post_id, content, created_at, author_handle, author_name,
+    author_profile_pic_url, tags,
+    upvotes_count, downvotes_count, score
+FROM hu_timeline_extended
+WHERE hub_user_id = $1
+ORDER BY created_at DESC, post_id DESC
+LIMIT $2
+`
 		args = []interface{}{hubUserID, req.Limit}
 	}
 
@@ -163,6 +166,9 @@ func (pg *PG) GetMyHomeTimeline(
 			&post.AuthorName,
 			&profilePicURL,
 			&tags,
+			&post.UpvotesCount,
+			&post.DownvotesCount,
+			&post.Score,
 		)
 		if err != nil {
 			pg.log.Err("Failed to scan post row", "error", err)

@@ -1046,7 +1046,7 @@ CREATE TABLE post_votes (
     -- and may have to be redesigned in future, if there are full db/table locks
     -- needed for every score calculation. Profile the performance with multiple
     -- parallel up and down votes across same and different posts and redesign
-    -- if needed. Get this referred with some Postgres locking expert. Read:
+    -- if needed. Get this reviewed with some Postgres locking expert. Read:
     -- https://medium.com/@hnasr/postgres-locks-a-deep-dive-9fc158a5641c
     post_id TEXT REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES hub_users(id) ON DELETE CASCADE NOT NULL,
@@ -1056,6 +1056,60 @@ CREATE TABLE post_votes (
     -- Ensures a user can only vote once per post (either up or down)
     PRIMARY KEY (post_id, user_id)
 );
+
+-- Function to recalculate post vote counts and score
+CREATE OR REPLACE FUNCTION update_post_vote_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        -- Update counts for the affected post
+        UPDATE posts
+        SET 
+            upvotes_count = (
+                SELECT COUNT(*) 
+                FROM post_votes 
+                WHERE post_id = OLD.post_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*) 
+                FROM post_votes 
+                WHERE post_id = OLD.post_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0) 
+                FROM post_votes 
+                WHERE post_id = OLD.post_id
+            )
+        WHERE id = OLD.post_id;
+    ELSE
+        -- Update counts for the affected post
+        UPDATE posts
+        SET 
+            upvotes_count = (
+                SELECT COUNT(*) 
+                FROM post_votes 
+                WHERE post_id = NEW.post_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*) 
+                FROM post_votes 
+                WHERE post_id = NEW.post_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0) 
+                FROM post_votes 
+                WHERE post_id = NEW.post_id
+            )
+        WHERE id = NEW.post_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to update vote counts on vote changes
+CREATE TRIGGER update_post_vote_counts_trigger
+AFTER INSERT OR UPDATE OR DELETE ON post_votes
+FOR EACH ROW EXECUTE FUNCTION update_post_vote_counts();
 
 CREATE TABLE following_relationships (
     consuming_hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
@@ -1173,8 +1227,9 @@ SELECT
     p.id AS post_id,
     p.content,
     p.created_at,
-    p.updated_at,
-    GREATEST(p.created_at, p.updated_at) AS most_recent_activity,
+    p.upvotes_count,
+    p.downvotes_count,
+    p.score,
     hu.handle AS author_handle,
     hu.full_name AS author_name,
     hu.profile_picture_url AS author_profile_pic_url,
@@ -1189,7 +1244,9 @@ GROUP BY
     p.id,
     p.content,
     p.created_at,
-    p.updated_at,
+    p.upvotes_count,
+    p.downvotes_count,
+    p.score,
     hu.handle,
     hu.full_name,
     hu.profile_picture_url;
