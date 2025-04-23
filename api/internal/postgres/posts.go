@@ -235,13 +235,13 @@ func (pg *PG) GetUserPosts(
 
 	if getUserPostsReq.PaginationKey != nil &&
 		*getUserPostsReq.PaginationKey != "" {
-		var paginationUpdatedAt time.Time
+		var paginationCreatedAt time.Time
 		var paginationID string
 		err := pg.pool.QueryRow(
 			ctx,
-			"SELECT updated_at, id FROM posts WHERE id = $1",
+			"SELECT created_at, id FROM posts WHERE id = $1",
 			*getUserPostsReq.PaginationKey,
-		).Scan(&paginationUpdatedAt, &paginationID)
+		).Scan(&paginationCreatedAt, &paginationID)
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				// Proceed without pagination clause (effectively first page)
@@ -250,13 +250,13 @@ func (pg *PG) GetUserPosts(
 				return hub.GetUserPostsResponse{}, err
 			}
 		} else {
-			query += ` AND (p.updated_at, p.id) < ($` + fmt.Sprintf("%d", argCounter) + `::timestamptz, $` + fmt.Sprintf("%d", argCounter+1) + `)`
-			args = append(args, paginationUpdatedAt, paginationID)
+			query += ` AND (p.created_at, p.id) < ($` + fmt.Sprintf("%d", argCounter) + `::timestamptz, $` + fmt.Sprintf("%d", argCounter+1) + `)`
+			args = append(args, paginationCreatedAt, paginationID)
 			argCounter += 2
 		}
 	}
 
-	query += ` ORDER BY p.updated_at DESC, p.id DESC LIMIT $` + fmt.Sprintf(
+	query += ` ORDER BY p.created_at DESC, p.id DESC LIMIT $` + fmt.Sprintf(
 		"%d",
 		argCounter,
 	)

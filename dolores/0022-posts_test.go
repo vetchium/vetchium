@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Posts", Ordered, func() {
+var _ = Describe("Posts", Ordered, func() {
 	var db *pgxpool.Pool
 	var addUserToken, authTestUserToken, getUser1Token, getUser2Token string
 	var getDetailsUserToken string
@@ -571,7 +571,6 @@ var _ = FDescribe("Posts", Ordered, func() {
 							resp.Tags,
 						).Should(ConsistOf("details-tag1", "details-tag2"))
 						Expect(resp.CreatedAt).ShouldNot(BeZero())
-						Expect(resp.UpdatedAt).ShouldNot(BeZero())
 					},
 				},
 				{

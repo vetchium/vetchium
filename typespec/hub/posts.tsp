@@ -31,7 +31,7 @@ model GetUserPostsRequest {
     @doc("The handle of the user to get the posts from. If not provided, the posts of the logged in user are returned.")
     handle?: Handle;
 
-    @doc("The posts are returned ordered by the newest of update_at timestamp. If two posts are updated at the same time, the one with the higher id is returned first. The pagination key is the id of the last post in the previous response. The item corresponding to the passed pagination_key will not be included in the response.")
+    @doc("The posts are returned ordered by the newest of created_at timestamp. If two posts are created at the same time, the one with the higher id is returned first. The pagination key is the id of the last post in the previous response. The item corresponding to the passed pagination_key will not be included in the response. In future, once we support updating of existing posts, the pagination will be based on the updated_at timestamp.")
     pagination_key?: string;
 
     @doc("If nothing is passed, 10 Posts are returned")

@@ -1064,40 +1064,40 @@ BEGIN
     IF TG_OP = 'DELETE' THEN
         -- Update counts for the affected post
         UPDATE posts
-        SET 
+        SET
             upvotes_count = (
-                SELECT COUNT(*) 
-                FROM post_votes 
+                SELECT COUNT(*)
+                FROM post_votes
                 WHERE post_id = OLD.post_id AND vote_value = 1
             ),
             downvotes_count = (
-                SELECT COUNT(*) 
-                FROM post_votes 
+                SELECT COUNT(*)
+                FROM post_votes
                 WHERE post_id = OLD.post_id AND vote_value = -1
             ),
             score = (
-                SELECT COALESCE(SUM(vote_value), 0) 
-                FROM post_votes 
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM post_votes
                 WHERE post_id = OLD.post_id
             )
         WHERE id = OLD.post_id;
     ELSE
         -- Update counts for the affected post
         UPDATE posts
-        SET 
+        SET
             upvotes_count = (
-                SELECT COUNT(*) 
-                FROM post_votes 
+                SELECT COUNT(*)
+                FROM post_votes
                 WHERE post_id = NEW.post_id AND vote_value = 1
             ),
             downvotes_count = (
-                SELECT COUNT(*) 
-                FROM post_votes 
+                SELECT COUNT(*)
+                FROM post_votes
                 WHERE post_id = NEW.post_id AND vote_value = -1
             ),
             score = (
-                SELECT COALESCE(SUM(vote_value), 0) 
-                FROM post_votes 
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM post_votes
                 WHERE post_id = NEW.post_id
             )
         WHERE id = NEW.post_id;
@@ -1180,13 +1180,8 @@ BEGIN
         COALESCE(v_last_refresh, NOW() - INTERVAL '100 days')
     );
 
-    -- Delete existing timeline entries for posts that might have been updated
-    DELETE FROM hu_home_timelines
-    WHERE hub_user_id = p_hub_user_id
-    AND post_id IN (
-        SELECT id FROM posts
-        WHERE updated_at >= v_cutoff_date
-    );
+    -- TODO: In future, when we support Updating of existing posts, we need to,
+    -- Delete existing timeline entries for posts that are updated
 
     -- Insert new timeline entries from self and followed users
     INSERT INTO hu_home_timelines (hub_user_id, post_id)
@@ -1204,7 +1199,7 @@ BEGIN
         -- Include user's own posts
         OR p.author_id = p_hub_user_id
     )
-    AND (p.created_at >= v_cutoff_date OR p.updated_at >= v_cutoff_date)
+    AND p.created_at >= v_cutoff_date
     -- Avoid duplicates
     AND NOT EXISTS (
         SELECT 1 FROM hu_home_timelines
