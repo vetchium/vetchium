@@ -50,10 +50,10 @@ VALUES
 -- Create some test tags
 INSERT INTO tags (id, name) 
 VALUES 
-    ('12345678-0024-0024-0024-000000000001', 'timeline-test'),
-    ('12345678-0024-0024-0024-000000000002', 'testing'),
-    ('12345678-0024-0024-0024-000000000003', 'examples'),
-    ('12345678-0024-0024-0024-000000000004', 'automation');
+    ('12345678-0024-0024-0024-000000000001', '0024-timeline-test'),
+    ('12345678-0024-0024-0024-000000000002', '0024-testing'),
+    ('12345678-0024-0024-0024-000000000003', '0024-examples'),
+    ('12345678-0024-0024-0024-000000000004', '0024-automation');
 
 -- Create some initial posts for testing with pre-populated timelines
 INSERT INTO posts (id, content, author_id, created_at)
