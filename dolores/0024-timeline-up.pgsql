@@ -56,28 +56,28 @@ VALUES
     ('12345678-0024-0024-0024-000000000004', 'automation');
 
 -- Create some initial posts for testing with pre-populated timelines
-INSERT INTO posts (id, content, author_id, created_at, updated_at)
+INSERT INTO posts (id, content, author_id, created_at)
 VALUES
     -- Posts by user2 (followed by user1)
-    ('post-0024-000000000001', 'This is post 1 from timeline-user2-0024', '12345678-0024-0024-0024-000000000002', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
-    ('post-0024-000000000002', 'This is post 2 from timeline-user2-0024', '12345678-0024-0024-0024-000000000002', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
+    ('post-0024-000000000001', 'This is post 1 from timeline-user2-0024', '12345678-0024-0024-0024-000000000002', NOW() - INTERVAL '3 days'),
+    ('post-0024-000000000002', 'This is post 2 from timeline-user2-0024', '12345678-0024-0024-0024-000000000002', NOW() - INTERVAL '2 days'),
     
     -- Posts by user3 (followed by user1)
-    ('post-0024-000000000003', 'This is post 1 from timeline-user3-0024', '12345678-0024-0024-0024-000000000003', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
-    ('post-0024-000000000004', 'This is post 2 from timeline-user3-0024', '12345678-0024-0024-0024-000000000003', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
+    ('post-0024-000000000003', 'This is post 1 from timeline-user3-0024', '12345678-0024-0024-0024-000000000003', NOW() - INTERVAL '3 days'),
+    ('post-0024-000000000004', 'This is post 2 from timeline-user3-0024', '12345678-0024-0024-0024-000000000003', NOW() - INTERVAL '1 day'),
 
     -- Posts by user6 (followed by user5)
-    ('post-0024-000000000005', 'This is post 1 from timeline-user6-0024', '12345678-0024-0024-0024-000000000006', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-    ('post-0024-000000000006', 'This is post 2 from timeline-user6-0024', '12345678-0024-0024-0024-000000000006', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
+    ('post-0024-000000000005', 'This is post 1 from timeline-user6-0024', '12345678-0024-0024-0024-000000000006', NOW() - INTERVAL '2 days'),
+    ('post-0024-000000000006', 'This is post 2 from timeline-user6-0024', '12345678-0024-0024-0024-000000000006', NOW() - INTERVAL '1 day'),
     
     -- Posts by user12 (followed by user11)
-    ('post-0024-000000000007', 'This is post 1 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
-    ('post-0024-000000000008', 'This is post 2 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-    ('post-0024-000000000009', 'This is post 3 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'),
+    ('post-0024-000000000007', 'This is post 1 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '3 days'),
+    ('post-0024-000000000008', 'This is post 2 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '2 days'),
+    ('post-0024-000000000009', 'This is post 3 from timeline-user12-0024', '12345678-0024-0024-0024-000000000012', NOW() - INTERVAL '1 day'),
     
     -- Posts by user13 (followed by user11)
-    ('post-0024-000000000010', 'This is post 1 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-    ('post-0024-000000000011', 'This is post 2 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day');
+    ('post-0024-000000000010', 'This is post 1 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '2 days'),
+    ('post-0024-000000000011', 'This is post 2 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '1 day');
 
 -- Add tags to some posts
 INSERT INTO post_tags (post_id, tag_id)
