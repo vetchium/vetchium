@@ -76,9 +76,10 @@ var (
 	// TODO: Implement support for users to block invites !?
 	ErrInviteNotNeeded = errors.New("invite not needed")
 
-	ErrNoEducation   = errors.New("education not found")
-	ErrNoAchievement = errors.New("achievement not found")
-	ErrCannotApply   = errors.New("user cannot apply to this opening")
-	ErrUnpaidHubUser = errors.New("user is not a paid hub user")
-	ErrNoPost        = errors.New("post not found")
+	ErrNoEducation         = errors.New("education not found")
+	ErrNoAchievement       = errors.New("achievement not found")
+	ErrCannotApply         = errors.New("user cannot apply to this opening")
+	ErrUnpaidHubUser       = errors.New("user is not a paid hub user")
+	ErrNoPost              = errors.New("post not found")
+	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
 )

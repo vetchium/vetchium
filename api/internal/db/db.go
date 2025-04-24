@@ -447,6 +447,12 @@ type DB interface {
 		req hub.GetMyHomeTimelineRequest,
 	) (hub.MyHomeTimeline, error)
 	GetPost(req GetPostRequest) (common.Post, error)
+	UpvoteUserPost(ctx context.Context, req hub.UpvoteUserPostRequest) error
+	DownvoteUserPost(
+		ctx context.Context,
+		req hub.DownvoteUserPostRequest,
+	) error
+	UnvoteUserPost(ctx context.Context, req hub.UnvoteUserPostRequest) error
 
 	// Used by hermione - Follow related methods
 	FollowUser(ctx context.Context, handle string) error
