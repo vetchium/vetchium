@@ -326,4 +326,19 @@ func RegisterHubRoutes(h *Hermione) {
 		po.GetPostDetails(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+	h.mw.Guard(
+		"/hub/upvote-user-post",
+		po.UpvoteUserPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/downvote-user-post",
+		po.DownvoteUserPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/unvote-user-post",
+		po.UnvoteUserPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }
