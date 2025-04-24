@@ -17,12 +17,15 @@ func (pg *PG) UpvoteUserPost(
 		return db.ErrInternal
 	}
 
-	// Check if post exists and if user has already downvoted in a single query
+	// Check if post exists, if it's user's own post, and if user has already downvoted in a single query
 	var exists bool
 	var hasDownvoted bool
+	var isOwnPost bool
 	err = pg.pool.QueryRow(ctx, `
 		WITH post_check AS (
-			SELECT EXISTS (SELECT 1 FROM posts WHERE id = $1) AS exists
+			SELECT
+				EXISTS (SELECT 1 FROM posts WHERE id = $1) AS exists,
+				EXISTS (SELECT 1 FROM posts WHERE id = $1 AND author_id = $2) AS is_own_post
 		),
 		downvote_check AS (
 			SELECT EXISTS (
@@ -30,9 +33,9 @@ func (pg *PG) UpvoteUserPost(
 				WHERE post_id = $1 AND user_id = $2 AND vote_value = -1
 			) AS has_downvoted
 		)
-		SELECT post_check.exists, downvote_check.has_downvoted
+		SELECT post_check.exists, post_check.is_own_post, downvote_check.has_downvoted
 		FROM post_check, downvote_check
-	`, upvoteReq.PostID, userID).Scan(&exists, &hasDownvoted)
+	`, upvoteReq.PostID, userID).Scan(&exists, &isOwnPost, &hasDownvoted)
 	if err != nil {
 		pg.log.Err("failed", "error", err, "post_id", upvoteReq.PostID)
 		return db.ErrInternal
@@ -40,6 +43,11 @@ func (pg *PG) UpvoteUserPost(
 
 	if !exists {
 		pg.log.Dbg("post does not exist", "post_id", upvoteReq.PostID)
+		return db.ErrNonVoteableUserPost
+	}
+
+	if isOwnPost {
+		pg.log.Dbg("cannot vote on own post", "post_id", upvoteReq.PostID)
 		return db.ErrNonVoteableUserPost
 	}
 
@@ -79,12 +87,15 @@ func (pg *PG) DownvoteUserPost(
 		return db.ErrInternal
 	}
 
-	// Check if post exists and if user has already upvoted in a single query
+	// Check if post exists, if it's user's own post, and if user has already upvoted in a single query
 	var exists bool
 	var hasUpvoted bool
+	var isOwnPost bool
 	err = pg.pool.QueryRow(ctx, `
 		WITH post_check AS (
-			SELECT EXISTS (SELECT 1 FROM posts WHERE id = $1) AS exists
+			SELECT
+				EXISTS (SELECT 1 FROM posts WHERE id = $1) AS exists,
+				EXISTS (SELECT 1 FROM posts WHERE id = $1 AND author_id = $2) AS is_own_post
 		),
 		upvote_check AS (
 			SELECT EXISTS (
@@ -92,9 +103,9 @@ func (pg *PG) DownvoteUserPost(
 				WHERE post_id = $1 AND user_id = $2 AND vote_value = 1
 			) AS has_upvoted
 		)
-		SELECT post_check.exists, upvote_check.has_upvoted
+		SELECT post_check.exists, post_check.is_own_post, upvote_check.has_upvoted
 		FROM post_check, upvote_check
-	`, downvoteReq.PostID, userID).Scan(&exists, &hasUpvoted)
+	`, downvoteReq.PostID, userID).Scan(&exists, &isOwnPost, &hasUpvoted)
 	if err != nil {
 		pg.log.Err("failed to downvote",
 			"error", err,
@@ -105,6 +116,11 @@ func (pg *PG) DownvoteUserPost(
 
 	if !exists {
 		pg.log.Dbg("post does not exist", "post_id", downvoteReq.PostID)
+		return db.ErrNonVoteableUserPost
+	}
+
+	if isOwnPost {
+		pg.log.Dbg("cannot vote on own post", "post_id", downvoteReq.PostID)
 		return db.ErrNonVoteableUserPost
 	}
 
@@ -144,11 +160,14 @@ func (pg *PG) UnvoteUserPost(
 		return db.ErrInternal
 	}
 
-	// Check if post exists
+	// Check if post exists and if it's user's own post
 	var exists bool
+	var isOwnPost bool
 	err = pg.pool.QueryRow(ctx, `
-		SELECT EXISTS (SELECT 1 FROM posts WHERE id = $1)
-	`, unvoteReq.PostID).Scan(&exists)
+		SELECT
+			EXISTS (SELECT 1 FROM posts WHERE id = $1) AS exists,
+			EXISTS (SELECT 1 FROM posts WHERE id = $1 AND author_id = $2) AS is_own_post
+	`, unvoteReq.PostID, userID).Scan(&exists, &isOwnPost)
 	if err != nil {
 		pg.log.Err("failed to check post exists",
 			"error", err,
@@ -158,6 +177,11 @@ func (pg *PG) UnvoteUserPost(
 
 	if !exists {
 		pg.log.Dbg("post does not exist", "post_id", unvoteReq.PostID)
+		return db.ErrNonVoteableUserPost
+	}
+
+	if isOwnPost {
+		pg.log.Dbg("cannot vote on own post", "post_id", unvoteReq.PostID)
 		return db.ErrNonVoteableUserPost
 	}
 

@@ -199,7 +199,7 @@ interface UpvoteUserPost {
         @statusCode
         statusCode: 200;
     } | {
-        @doc("This code will be returned in any of the following scenarios. 1) User has already downvoted the post 2) User is blocked from upvoting this post 3) The Post ID is invalid")
+        @doc("This code will be returned in any of the following scenarios. 1) User has already downvoted the post 2) User is blocked from upvoting this post 3) The Post ID is invalid 4) User is attempting to upvote their own post")
         @statusCode
         statuscode: 422;
     };
@@ -215,7 +215,7 @@ interface DownvoteUserPost {
         @statusCode
         statusCode: 200;
     } | {
-        @doc("This code will be returned in any of the following scenarios. 1) User has already upvoted the post 2) User is blocked from downvoting this post 3) The Post ID is invalid")
+        @doc("This code will be returned in any of the following scenarios. 1) User has already upvoted the post 2) User is blocked from downvoting this post 3) The Post ID is invalid 4) User is attempting to downvote their own post")
         @statusCode
         statuscode: 422;
     };
@@ -231,7 +231,7 @@ interface UnvoteUserPost {
         @statusCode
         statusCode: 200;
     } | {
-        @doc("Post ID is invalid")
+        @doc("This code will be returned in any of the following scenarios. 1) The Post ID is invalid 2) User is attempting to unvote their own post")
         @statusCode
         statuscode: 422;
     };

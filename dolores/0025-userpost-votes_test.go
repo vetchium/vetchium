@@ -111,6 +111,14 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 		It("should handle various upvote scenarios", func() {
 			testCases := []upvoteTestCase{
 				{
+					description: "attempt to upvote own post",
+					token:       authorToken,
+					request: hub.UpvoteUserPostRequest{
+						PostID: post1ID,
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
+				{
 					description: "without authentication",
 					token:       "",
 					request: hub.UpvoteUserPostRequest{
@@ -183,6 +191,14 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 		It("should handle various downvote scenarios", func() {
 			testCases := []downvoteTestCase{
 				{
+					description: "attempt to downvote own post",
+					token:       authorToken,
+					request: hub.DownvoteUserPostRequest{
+						PostID: post1ID,
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
+				{
 					description: "without authentication",
 					token:       "",
 					request: hub.DownvoteUserPostRequest{
@@ -254,6 +270,14 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 
 		It("should handle various unvote scenarios", func() {
 			testCases := []unvoteTestCase{
+				{
+					description: "attempt to unvote own post",
+					token:       authorToken,
+					request: hub.UnvoteUserPostRequest{
+						PostID: post1ID,
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
 				{
 					description: "without authentication",
 					token:       "",
