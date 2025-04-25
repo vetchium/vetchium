@@ -205,6 +205,23 @@ var _ = Describe("Timeline Operations", Ordered, func() {
 					Equal("timeline-user3-0024"),
 					Equal("timeline-user4-0024"),
 				))
+
+				// Validate voting and authorship fields
+				Expect(
+					post.AmIAuthor,
+				).Should(BeFalse(), "Timeline posts should not be authored by viewer")
+				Expect(
+					post.CanUpvote,
+				).Should(BeTrue(), "Should be able to upvote timeline posts")
+				Expect(
+					post.CanDownvote,
+				).Should(BeTrue(), "Should be able to downvote timeline posts")
+				Expect(
+					post.MeUpvoted,
+				).Should(BeFalse(), "Should not have upvoted timeline posts yet")
+				Expect(
+					post.MeDownvoted,
+				).Should(BeFalse(), "Should not have downvoted timeline posts yet")
 			}
 		})
 
@@ -321,6 +338,76 @@ var _ = Describe("Timeline Operations", Ordered, func() {
 	})
 
 	Describe("Timeline Post Creation and Updates", func() {
+		It(
+			"should show correct voting status in timeline after voting",
+			func() {
+				// User3 creates a new post
+				postReq := hub.AddPostRequest{
+					Content: "Post for testing voting in timeline",
+				}
+				addResp := testPOSTGetResp(
+					timelineTokens["timeline-user3-0024"],
+					postReq,
+					"/hub/add-post",
+					http.StatusOK,
+				).([]byte)
+
+				var postResp hub.AddPostResponse
+				err := json.Unmarshal(addResp, &postResp)
+				Expect(err).ShouldNot(HaveOccurred())
+				postID := postResp.PostID
+
+				// User1 upvotes the post (user1 follows user3)
+				testPOSTGetResp(
+					timelineTokens["timeline-user1-0024"],
+					hub.UpvoteUserPostRequest{PostID: postID},
+					"/hub/upvote-user-post",
+					http.StatusOK,
+				)
+
+				<-time.After(TimelineRefreshInterval)
+
+				// Get user1's timeline and verify the voting status
+				resp := testPOSTGetResp(
+					timelineTokens["timeline-user1-0024"],
+					hub.GetMyHomeTimelineRequest{},
+					"/hub/get-my-home-timeline",
+					http.StatusOK,
+				).([]byte)
+
+				var timeline hub.MyHomeTimeline
+				err = json.Unmarshal(resp, &timeline)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Find the post we just created and voted on
+				var found bool
+				for _, post := range timeline.Posts {
+					if post.ID == postID {
+						found = true
+						Expect(
+							post.AmIAuthor,
+						).Should(BeFalse(), "Should not be author of the post")
+						Expect(
+							post.MeUpvoted,
+						).Should(BeTrue(), "Post should show as upvoted")
+						Expect(
+							post.MeDownvoted,
+						).Should(BeFalse(), "Post should not show as downvoted")
+						Expect(
+							post.CanUpvote,
+						).Should(BeFalse(), "Should not be able to upvote again")
+						Expect(
+							post.CanDownvote,
+						).Should(BeFalse(), "Should not be able to downvote after upvoting")
+						break
+					}
+				}
+				Expect(
+					found,
+				).Should(BeTrue(), "Should find the voted post in timeline")
+			},
+		)
+
 		It("should add new posts to followers' timelines", func() {
 			// User3 posts something new (user1 follows user3)
 			postReq := hub.AddPostRequest{

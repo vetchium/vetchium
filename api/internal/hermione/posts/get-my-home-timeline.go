@@ -34,12 +34,12 @@ func GetMyHomeTimeline(h wand.Wand) http.HandlerFunc {
 		if err != nil {
 			// Check for invalid pagination key
 			if errors.Is(err, db.ErrInvalidPaginationKey) {
-				h.Err("Invalid pagination key", "error", err)
+				h.Dbg("Invalid pagination key", "error", err)
 				w.WriteHeader(http.StatusUnprocessableEntity) // 422
 				return
 			}
 
-			h.Err("Failed to get home timeline", "error", err)
+			h.Dbg("Failed to get home timeline", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

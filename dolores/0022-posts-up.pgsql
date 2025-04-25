@@ -83,17 +83,6 @@ INSERT INTO hub_users (
     timezone('UTC'::text, now())
 );
 
--- Add posts for get-user1 (note varying timestamps)
-INSERT INTO posts (id, content, author_id, created_at) VALUES
-('post-g1-01', 'First post by get-user1', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '5 days'),
-('post-g1-02', 'Second post by get-user1, with tags', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '4 days'),
-('post-g1-03', 'Third post, updated recently', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '3 days'),
-('post-g1-04', 'Fourth post, newest', '12345678-0022-0022-0022-000000000003', timezone('UTC'::text, now()) - interval '2 days');
-
--- Add posts for get-user2
-INSERT INTO posts (id, content, author_id, created_at) VALUES
-('post-g2-01', 'First post by get-user2', '12345678-0022-0022-0022-000000000004', timezone('UTC'::text, now()) - interval '1 hour');
-
 -- Add tags needed for GetUserPosts tests, ensuring they exist
 INSERT INTO tags (name) VALUES
 ('pagination'),
@@ -103,18 +92,5 @@ INSERT INTO tags (name) VALUES
 ('details-tag1'),
 ('details-tag2')
 ON CONFLICT (name) DO NOTHING;
-
--- Map tags to posts using a JOIN for robustness
-INSERT INTO post_tags (post_id, tag_id)
-SELECT
-    p.post_id,
-    t.id
-FROM (VALUES
-    ('post-g1-02', 'golang'),
-    ('post-g1-02', 'testing'),
-    ('post-g1-03', 'pagination'),
-    ('post-g2-01', 'specific-test')
-) AS p(post_id, tag_name)
-JOIN tags t ON p.tag_name = t.name;
 
 COMMIT;

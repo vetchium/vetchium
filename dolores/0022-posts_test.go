@@ -15,14 +15,27 @@ import (
 )
 
 var _ = Describe("Posts", Ordered, func() {
-	var db *pgxpool.Pool
-	var addUserToken, authTestUserToken, getUser1Token, getUser2Token string
-	var getDetailsUserToken string
-	var getDetailsPostID string // Variable to store the dynamically created post ID
+	var (
+		// Database connection
+		pool *pgxpool.Pool
+
+		// User tokens
+		addUserToken        string
+		authTestUserToken   string
+		getUser1Token       string
+		getUser2Token       string
+		getDetailsUserToken string
+
+		// Post IDs
+		getDetailsPostID string
+		user1PostIDs     []string
+		user2PostID      string
+	)
 
 	BeforeAll(func() {
-		db = setupTestDB()
-		seedDatabase(db, "0022-posts-up.pgsql")
+		pool = setupTestDB()
+		Expect(pool).NotTo(BeNil())
+		seedDatabase(pool, "0022-posts-up.pgsql")
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
@@ -59,30 +72,104 @@ var _ = Describe("Posts", Ordered, func() {
 		)
 		wg.Wait()
 
-		// Create the post for GetDetails tests via API
+		// Create posts for get-user1
+		// Post 1 with no tags
+		post1Resp := testPOSTGetResp(
+			getUser1Token,
+			hub.AddPostRequest{
+				Content: "First post by get-user1",
+				NewTags: nil,
+			},
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+		var post1AddResp hub.AddPostResponse
+		Expect(json.Unmarshal(post1Resp, &post1AddResp)).To(Succeed())
+		user1PostIDs = append(user1PostIDs, post1AddResp.PostID)
+
+		// Post 2 with tags
+		post2Resp := testPOSTGetResp(
+			getUser1Token,
+			hub.AddPostRequest{
+				Content: "Second post by get-user1, with tags",
+				NewTags: []common.VTagName{"golang", "testing"},
+			},
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+		var post2AddResp hub.AddPostResponse
+		Expect(json.Unmarshal(post2Resp, &post2AddResp)).To(Succeed())
+		user1PostIDs = append(user1PostIDs, post2AddResp.PostID)
+
+		// Post 3 with tag
+		post3Resp := testPOSTGetResp(
+			getUser1Token,
+			hub.AddPostRequest{
+				Content: "Third post, updated recently",
+				NewTags: []common.VTagName{"pagination"},
+			},
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+		var post3AddResp hub.AddPostResponse
+		Expect(json.Unmarshal(post3Resp, &post3AddResp)).To(Succeed())
+		user1PostIDs = append(user1PostIDs, post3AddResp.PostID)
+
+		// Post 4 with no tags
+		post4Resp := testPOSTGetResp(
+			getUser1Token,
+			hub.AddPostRequest{
+				Content: "Fourth post, newest",
+				NewTags: nil,
+			},
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+		var post4AddResp hub.AddPostResponse
+		Expect(json.Unmarshal(post4Resp, &post4AddResp)).To(Succeed())
+		user1PostIDs = append(user1PostIDs, post4AddResp.PostID)
+
+		// Create post for get-user2
 		addPostReq := hub.AddPostRequest{
+			Content: "First post by get-user2",
+			NewTags: []common.VTagName{"specific-test"},
+		}
+		respBytes := testPOSTGetResp(
+			getUser2Token,
+			addPostReq,
+			"/hub/add-post",
+			http.StatusOK,
+		).([]byte)
+		var addPostResp hub.AddPostResponse
+		err := json.Unmarshal(respBytes, &addPostResp)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(addPostResp.PostID).ShouldNot(BeEmpty())
+		user2PostID = addPostResp.PostID
+
+		// Create the post for GetDetails tests
+		addPostReq = hub.AddPostRequest{
 			Content: "Post for GetDetails test (created via API)",
 			NewTags: []common.VTagName{"details-tag1", "details-tag2"},
 		}
-		respBytes := testPOSTGetResp(
+		respBytes = testPOSTGetResp(
 			getDetailsUserToken,
 			addPostReq,
 			"/hub/add-post",
 			http.StatusOK,
 		).([]byte)
-
-		var addPostResp hub.AddPostResponse
-		err := json.Unmarshal(respBytes, &addPostResp)
+		err = json.Unmarshal(respBytes, &addPostResp)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(addPostResp.PostID).ShouldNot(BeEmpty())
 		getDetailsPostID = addPostResp.PostID // Store the ID
+
+		fmt.Fprintf(GinkgoWriter, "### User1PostIDs: %v\n", user1PostIDs)
 	})
 
 	AfterAll(func() {
 		// Clean up the database using the down migration
 		// Assumes 0022-posts-down.pgsql handles cleanup of users, posts, and tags created here.
-		seedDatabase(db, "0022-posts-down.pgsql")
-		db.Close()
+		seedDatabase(pool, "0022-posts-down.pgsql")
+		pool.Close()
 	})
 
 	Describe("Add Post", func() {
@@ -301,14 +388,23 @@ var _ = Describe("Posts", Ordered, func() {
 							resp.PaginationKey,
 						).Should(BeEmpty())
 						// No more posts
-						// Check order (newest first based on updated_at)
+						// Check order (newest first based on created_at)
+						// Since we created posts in order, the last one should be first
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g1-04"))
-						// Compare with string
-						Expect(resp.Posts[1].ID).Should(Equal("post-g1-03"))
-						Expect(resp.Posts[2].ID).Should(Equal("post-g1-02"))
-						Expect(resp.Posts[3].ID).Should(Equal("post-g1-01"))
+						).Should(Equal(user1PostIDs[3])) // post4ID
+						Expect(
+							resp.Posts[1].ID,
+						).Should(Equal(user1PostIDs[2]))
+						// post3ID
+						Expect(
+							resp.Posts[2].ID,
+						).Should(Equal(user1PostIDs[1]))
+						// post2ID
+						Expect(
+							resp.Posts[3].ID,
+						).Should(Equal(user1PostIDs[0]))
+						// post1ID
 						// Check author details
 						Expect(
 							resp.Posts[0].AuthorHandle,
@@ -316,10 +412,29 @@ var _ = Describe("Posts", Ordered, func() {
 						Expect(
 							resp.Posts[0].AuthorName,
 						).Should(Equal("Get Posts User One"))
-						// Check tags for post-g1-02
+						// Check tags for the second post (should have golang and testing tags)
 						Expect(
 							resp.Posts[2].Tags,
 						).Should(ConsistOf("golang", "testing"))
+
+						// Validate voting and authorship fields for own posts
+						for _, post := range resp.Posts {
+							Expect(
+								post.AmIAuthor,
+							).Should(BeTrue(), "Should be marked as author for own posts")
+							Expect(
+								post.CanUpvote,
+							).Should(BeFalse(), "Should not be able to upvote own posts")
+							Expect(
+								post.CanDownvote,
+							).Should(BeFalse(), "Should not be able to downvote own posts")
+							Expect(
+								post.MeUpvoted,
+							).Should(BeFalse(), "Should not have upvoted own posts")
+							Expect(
+								post.MeDownvoted,
+							).Should(BeFalse(), "Should not have downvoted own posts")
+						}
 					},
 				},
 				{
@@ -340,11 +455,30 @@ var _ = Describe("Posts", Ordered, func() {
 						Expect(resp.PaginationKey).Should(BeEmpty())
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g1-04"))
+						).Should(Equal(user1PostIDs[3])) // Newest post
 						// Compare with string
 						Expect(
 							resp.Posts[0].AuthorHandle,
 						).Should(Equal(common.Handle("get-user1")))
+
+						// Validate voting and authorship fields when viewing other user's posts
+						for _, post := range resp.Posts {
+							Expect(
+								post.AmIAuthor,
+							).Should(BeFalse(), "Should not be marked as author for other's posts")
+							Expect(
+								post.CanUpvote,
+							).Should(BeTrue(), "Should be able to upvote other's posts")
+							Expect(
+								post.CanDownvote,
+							).Should(BeTrue(), "Should be able to downvote other's posts")
+							Expect(
+								post.MeUpvoted,
+							).Should(BeFalse(), "Should not have upvoted other's posts yet")
+							Expect(
+								post.MeDownvoted,
+							).Should(BeFalse(), "Should not have downvoted other's posts yet")
+						}
 					},
 				},
 				{
@@ -364,7 +498,7 @@ var _ = Describe("Posts", Ordered, func() {
 						// User2 has 1 post
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g2-01"))
+						).Should(Equal(user2PostID))
 						// Compare with string
 						Expect(
 							resp.Posts[0].AuthorHandle,
@@ -393,14 +527,18 @@ var _ = Describe("Posts", Ordered, func() {
 						err := json.Unmarshal(respBody, &resp)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(resp.Posts).Should(HaveLen(2))
+						// Should get the two newest posts (last two in user1PostIDs)
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g1-04"))
-						// Compare with string
-						Expect(resp.Posts[1].ID).Should(Equal("post-g1-03"))
+						).Should(Equal(user1PostIDs[3])) // Newest post
+						Expect(
+							resp.Posts[1].ID,
+						).Should(Equal(user1PostIDs[2]))
+						// Second newest
+						// Pagination key should be the ID of the last post returned
 						Expect(
 							resp.PaginationKey,
-						).Should(Equal("post-g1-03"))
+						).Should(Equal(user1PostIDs[2]))
 						// The ID of the last post returned
 					},
 				},
@@ -409,7 +547,7 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       getUser1Token,
 					request: hub.GetUserPostsRequest{
 						Limit:         2,
-						PaginationKey: strPtr("post-g1-03"),
+						PaginationKey: strPtr(user1PostIDs[2]),
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -419,12 +557,11 @@ var _ = Describe("Posts", Ordered, func() {
 						Expect(resp.Posts).Should(HaveLen(2))
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g1-02"))
-						// Compare with string
-						Expect(resp.Posts[1].ID).Should(Equal("post-g1-01"))
+						).Should(Equal(user1PostIDs[1]))
+						Expect(resp.Posts[1].ID).Should(Equal(user1PostIDs[0]))
 						Expect(
 							resp.PaginationKey,
-						).Should(Equal("post-g1-01"))
+						).Should(Equal(user1PostIDs[0]))
 						// Last post ID returned
 					},
 				},
@@ -433,7 +570,7 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       getUser1Token,
 					request: hub.GetUserPostsRequest{
 						Limit:         2,
-						PaginationKey: strPtr("post-g1-01"),
+						PaginationKey: strPtr(user1PostIDs[0]),
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -462,7 +599,7 @@ var _ = Describe("Posts", Ordered, func() {
 						// Should get all 4 posts (limit 5)
 						Expect(
 							resp.Posts[0].ID,
-						).Should(Equal("post-g1-04"))
+						).Should(Equal(user1PostIDs[3])) // Newest post
 						// Compare with string
 						Expect(
 							resp.PaginationKey,
@@ -571,6 +708,23 @@ var _ = Describe("Posts", Ordered, func() {
 							resp.Tags,
 						).Should(ConsistOf("details-tag1", "details-tag2"))
 						Expect(resp.CreatedAt).ShouldNot(BeZero())
+
+						// Validate voting and authorship fields for post author
+						Expect(
+							resp.AmIAuthor,
+						).Should(BeTrue(), "Author should see AmIAuthor as true")
+						Expect(
+							resp.CanUpvote,
+						).Should(BeFalse(), "Author should not be able to upvote own post")
+						Expect(
+							resp.CanDownvote,
+						).Should(BeFalse(), "Author should not be able to downvote own post")
+						Expect(
+							resp.MeUpvoted,
+						).Should(BeFalse(), "Author should not have upvoted their own post")
+						Expect(
+							resp.MeDownvoted,
+						).Should(BeFalse(), "Author should not have downvoted their own post")
 					},
 				},
 				{
@@ -580,6 +734,42 @@ var _ = Describe("Posts", Ordered, func() {
 						PostID: "non-existent-post-id",
 					},
 					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "fetch post details as non-author",
+					token:       getUser1Token, // Using a different user's token
+					request: hub.GetPostDetailsRequest{
+						PostID: getDetailsPostID,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp hub.Post
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						// Basic post details should match
+						Expect(resp.ID).Should(Equal(getDetailsPostID))
+						Expect(
+							resp.AuthorHandle,
+						).Should(Equal(common.Handle("get-details-user")))
+
+						// Validate voting and authorship fields for non-author
+						Expect(
+							resp.AmIAuthor,
+						).Should(BeFalse(), "Non-author should see AmIAuthor as false")
+						Expect(
+							resp.CanUpvote,
+						).Should(BeTrue(), "Non-author should be able to upvote post")
+						Expect(
+							resp.CanDownvote,
+						).Should(BeTrue(), "Non-author should be able to downvote post")
+						Expect(
+							resp.MeUpvoted,
+						).Should(BeFalse(), "Non-author should not have upvoted post yet")
+						Expect(
+							resp.MeDownvoted,
+						).Should(BeFalse(), "Non-author should not have downvoted post yet")
+					},
 				},
 				{
 					description: "fetch with empty post ID (should fail validation)",

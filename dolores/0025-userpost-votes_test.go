@@ -2,6 +2,7 @@ package dolores
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("User Post Votes", Ordered, func() {
+var _ = Describe("User Post Votes", Ordered, func() {
 	var db *pgxpool.Pool
 	var voter1Token, voter2Token, authorToken string
 	var post1ID, post2ID, post3ID string
@@ -55,6 +56,7 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 		var post1AddResp hub.AddPostResponse
 		Expect(json.Unmarshal(post1Resp, &post1AddResp)).To(Succeed())
 		post1ID = post1AddResp.PostID
+		fmt.Fprintf(GinkgoWriter, "Post 1 ID: %s\n", post1ID)
 
 		post2Resp := testPOSTGetResp(
 			authorToken,
@@ -106,6 +108,7 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 			token       string
 			request     hub.UpvoteUserPostRequest
 			wantStatus  int
+			validate    func([]byte)
 		}
 
 		It("should handle various upvote scenarios", func() {
@@ -149,6 +152,33 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 						PostID: post1ID,
 					},
 					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						// Get post details to verify voting fields
+						detailsResp := testPOSTGetResp(
+							voter1Token,
+							hub.GetPostDetailsRequest{PostID: post1ID},
+							"/hub/get-post-details",
+							http.StatusOK,
+						).([]byte)
+
+						var post hub.Post
+						err := json.Unmarshal(detailsResp, &post)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						// Verify voting fields after upvote
+						Expect(
+							post.MeUpvoted,
+						).Should(BeTrue(), "Post should show as upvoted")
+						Expect(
+							post.MeDownvoted,
+						).Should(BeFalse(), "Post should not show as downvoted")
+						Expect(
+							post.CanUpvote,
+						).Should(BeFalse(), "Should not be able to upvote again")
+						Expect(
+							post.CanDownvote,
+						).Should(BeFalse(), "Should not be able to downvote after upvoting")
+					},
 				},
 				{
 					description: "upvote already downvoted post (should fail)",
@@ -176,6 +206,9 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 					tc.wantStatus,
 				)
 				Expect(resp).ToNot(BeNil())
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
 			}
 		})
 	})
@@ -186,6 +219,7 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 			token       string
 			request     hub.DownvoteUserPostRequest
 			wantStatus  int
+			validate    func([]byte)
 		}
 
 		It("should handle various downvote scenarios", func() {
@@ -229,6 +263,33 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 						PostID: post2ID,
 					},
 					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						// Get post details to verify voting fields
+						detailsResp := testPOSTGetResp(
+							voter1Token,
+							hub.GetPostDetailsRequest{PostID: post2ID},
+							"/hub/get-post-details",
+							http.StatusOK,
+						).([]byte)
+
+						var post hub.Post
+						err := json.Unmarshal(detailsResp, &post)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						// Verify voting fields after downvote
+						Expect(
+							post.MeUpvoted,
+						).Should(BeFalse(), "Post should not show as upvoted")
+						Expect(
+							post.MeDownvoted,
+						).Should(BeTrue(), "Post should show as downvoted")
+						Expect(
+							post.CanUpvote,
+						).Should(BeFalse(), "Should not be able to upvote after downvoting")
+						Expect(
+							post.CanDownvote,
+						).Should(BeFalse(), "Should not be able to downvote again")
+					},
 				},
 				{
 					description: "downvote already upvoted post (should fail)",
@@ -256,6 +317,9 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 					tc.wantStatus,
 				)
 				Expect(resp).ToNot(BeNil())
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
 			}
 		})
 	})
@@ -266,6 +330,7 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 			token       string
 			request     hub.UnvoteUserPostRequest
 			wantStatus  int
+			validate    func([]byte)
 		}
 
 		It("should handle various unvote scenarios", func() {
@@ -309,6 +374,33 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 						PostID: post1ID,
 					},
 					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						// Get post details to verify voting fields
+						detailsResp := testPOSTGetResp(
+							voter1Token,
+							hub.GetPostDetailsRequest{PostID: post1ID},
+							"/hub/get-post-details",
+							http.StatusOK,
+						).([]byte)
+
+						var post hub.Post
+						err := json.Unmarshal(detailsResp, &post)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						// Verify voting fields after unvote
+						Expect(
+							post.MeUpvoted,
+						).Should(BeFalse(), "Post should not show as upvoted after unvote")
+						Expect(
+							post.MeDownvoted,
+						).Should(BeFalse(), "Post should not show as downvoted")
+						Expect(
+							post.CanUpvote,
+						).Should(BeTrue(), "Should be able to upvote after unvote")
+						Expect(
+							post.CanDownvote,
+						).Should(BeTrue(), "Should be able to downvote after unvote")
+					},
 				},
 				{
 					description: "unvote downvoted post",
@@ -336,6 +428,9 @@ var _ = FDescribe("User Post Votes", Ordered, func() {
 					tc.wantStatus,
 				)
 				Expect(resp).ToNot(BeNil())
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
 			}
 		})
 	})

@@ -47,14 +47,13 @@ func (pg *PG) GetMyHomeTimeline(
 				SELECT 1 FROM posts WHERE id = $1
 			)
 		`, *req.PaginationKey).Scan(&exists)
-
 		if err != nil {
 			pg.log.Err("Failed to check pagination key", "error", err)
 			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 		}
 
 		if !exists {
-			pg.log.Err("Invalid pagination key", "key", *req.PaginationKey)
+			pg.log.Dbg("Invalid pagination key", "key", *req.PaginationKey)
 			return hub.MyHomeTimeline{}, db.ErrInvalidPaginationKey
 		}
 	}

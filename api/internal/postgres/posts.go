@@ -114,6 +114,13 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 }
 
 func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
+	// Get the logged-in user's ID for voting status
+	loggedInHubUserID, err := getHubUserID(req.Context)
+	if err != nil {
+		pg.log.Err("failed to get logged in hub user ID", "error", err)
+		return hub.Post{}, err
+	}
+
 	query := `
 		SELECT
 			p.id,
@@ -129,13 +136,36 @@ func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 					WHERE pt.post_id = p.id
 				),
 				'[]'::json
-			) AS tags_json
+			) AS tags_json,
+			p.author_id = $1 AS am_i_author,
+			NOT EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+			) AND p.author_id != $1 AS can_upvote,
+			NOT EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+			) AND p.author_id != $1 AS can_downvote,
+			EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+				AND vote_value = 1
+			) AS me_upvoted,
+			EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+				AND vote_value = -1
+			) AS me_downvoted
 		FROM
 			posts p
 		JOIN
 			hub_users hu ON p.author_id = hu.id
 		WHERE
-			p.id = $1
+			p.id = $2
 	`
 
 	var post hub.Post
@@ -143,14 +173,20 @@ func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 	var authorFullName string
 	var tagsJSON []byte
 
-	err := pg.pool.QueryRow(req.Context, query, req.PostID).Scan(
-		&post.ID,
-		&post.Content,
-		&post.CreatedAt,
-		&authorHandle,
-		&authorFullName,
-		&tagsJSON,
-	)
+	err = pg.pool.QueryRow(req.Context, query, loggedInHubUserID, req.PostID).
+		Scan(
+			&post.ID,
+			&post.Content,
+			&post.CreatedAt,
+			&authorHandle,
+			&authorFullName,
+			&tagsJSON,
+			&post.AmIAuthor,
+			&post.CanUpvote,
+			&post.CanDownvote,
+			&post.MeUpvoted,
+			&post.MeDownvoted,
+		)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -204,34 +240,68 @@ func (pg *PG) GetUserPosts(
 		targetUserID = loggedInHubUserID
 	}
 
-	// Query to fetch posts for the determined targetUserID
+	// Query to fetch posts with voting status and tags
 	query := `
 		SELECT
 			p.id,
 			p.content,
-			p.author_id,
-			p.created_at,
+			p.created_at as created_at,
 			hu.handle AS author_handle,
 			hu.full_name AS author_full_name,
 			COALESCE(
 				(
-					SELECT json_agg(t.name)
+					SELECT json_agg(t.name ORDER BY t.name)
 					FROM post_tags pt
 					JOIN tags t ON pt.tag_id = t.id
 					WHERE pt.post_id = p.id
 				),
 				'[]'::json
-			) AS tags_json
+			) AS tags_json,
+			p.author_id = $1 AS am_i_author,
+			NOT EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+			) AND p.author_id != $1 AS can_upvote,
+			NOT EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+			) AND p.author_id != $1 AS can_downvote,
+			EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+				AND vote_value = 1
+			) AS me_upvoted,
+			EXISTS (
+				SELECT 1 FROM post_votes
+				WHERE post_id = p.id
+				AND user_id = $1
+				AND vote_value = -1
+			) AS me_downvoted
 		FROM
 			posts p
 		JOIN
 			hub_users hu ON p.author_id = hu.id
-		WHERE
-			p.author_id = $1 -- Filter by the target user ID
 	`
-	// Start with the target user ID
-	args := []interface{}{targetUserID}
-	argCounter := 2 // Start arg counter for pagination from $2
+
+	// Start with the logged in user ID
+	args := []interface{}{loggedInHubUserID}
+	argCounter := 2 // Start arg counter from $2
+
+	// Build the WHERE clause based on conditions
+	query += ` WHERE`
+
+	// If a handle is provided, filter by that user's posts
+	if getUserPostsReq.Handle != nil && *getUserPostsReq.Handle != "" {
+		query += ` hu.handle = $` + fmt.Sprintf("%d", argCounter)
+		args = append(args, string(*getUserPostsReq.Handle))
+		argCounter++
+	} else {
+		// No handle provided - get logged in user's posts
+		query += ` p.author_id = $1`
+	}
 
 	if getUserPostsReq.PaginationKey != nil &&
 		*getUserPostsReq.PaginationKey != "" {
@@ -239,7 +309,7 @@ func (pg *PG) GetUserPosts(
 		var paginationID string
 		err := pg.pool.QueryRow(
 			ctx,
-			"SELECT created_at, id FROM posts WHERE id = $1",
+			"SELECT created_at, id FROM posts WHERE id = $1 LIMIT 1",
 			*getUserPostsReq.PaginationKey,
 		).Scan(&paginationCreatedAt, &paginationID)
 		if err != nil {
@@ -274,19 +344,22 @@ func (pg *PG) GetUserPosts(
 
 	for rows.Next() {
 		var post hub.Post
-		var authorID string
+		var tagsJSON []byte
 		var authorHandle string
 		var authorFullName string
-		var tagsJSON []byte
 
 		err := rows.Scan(
 			&post.ID,
 			&post.Content,
-			&authorID,
 			&post.CreatedAt,
 			&authorHandle,
 			&authorFullName,
 			&tagsJSON,
+			&post.AmIAuthor,
+			&post.CanUpvote,
+			&post.CanDownvote,
+			&post.MeUpvoted,
+			&post.MeDownvoted,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan post row", "error", err)
