@@ -9,7 +9,6 @@ import "./common/common.tsp";
 import "./common/education.tsp";
 import "./common/interviews.tsp";
 import "./common/openings.tsp";
-import "./common/posts.tsp";
 import "./common/vtags.tsp";
 
 import "./employer/achievements.tsp";

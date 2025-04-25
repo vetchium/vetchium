@@ -6,7 +6,6 @@ export * from "./common/common";
 export * from "./common/education";
 export * from "./common/interviews";
 export * from "./common/openings";
-export * from "./common/posts";
 export * from "./common/vtags";
 
 // Export hub types

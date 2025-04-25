@@ -1,5 +1,4 @@
 import { Handle } from "../common/common";
-import { Post } from "../common/posts";
 import { VTagID, VTagName } from "../common/vtags";
 
 export interface AddPostRequest {
@@ -10,6 +9,18 @@ export interface AddPostRequest {
 
 export interface AddPostResponse {
   post_id: string;
+}
+
+export interface Post {
+  id: string;
+  content: string;
+  tags: string[];
+  author_name: string;
+  author_handle: Handle;
+  created_at: string;
+  upvotes_count: number;
+  downvotes_count: number;
+  score: number;
 }
 
 export interface GetUserPostsRequest {
