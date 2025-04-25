@@ -446,7 +446,7 @@ type DB interface {
 		ctx context.Context,
 		req hub.GetMyHomeTimelineRequest,
 	) (hub.MyHomeTimeline, error)
-	GetPost(req GetPostRequest) (common.Post, error)
+	GetPost(req GetPostRequest) (hub.Post, error)
 	UpvoteUserPost(ctx context.Context, req hub.UpvoteUserPostRequest) error
 	DownvoteUserPost(
 		ctx context.Context,

@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/vetchium/vetchium/api/internal/db"
-	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -150,11 +149,11 @@ LIMIT $2
 	}
 	defer rows.Close()
 
-	var posts []common.Post
+	var posts []hub.Post
 	var paginationKey string
 
 	for rows.Next() {
-		var post common.Post
+		var post hub.Post
 		var profilePicURL *string
 		var tags []string
 

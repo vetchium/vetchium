@@ -113,7 +113,7 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 	return nil
 }
 
-func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
+func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 	query := `
 		SELECT
 			p.id,
@@ -138,7 +138,7 @@ func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
 			p.id = $1
 	`
 
-	var post common.Post
+	var post hub.Post
 	var authorHandle string
 	var authorFullName string
 	var tagsJSON []byte
@@ -155,16 +155,16 @@ func (pg *PG) GetPost(req db.GetPostRequest) (common.Post, error) {
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			pg.log.Dbg("post not found", "post_id", req.PostID)
-			return common.Post{}, db.ErrNoPost
+			return hub.Post{}, db.ErrNoPost
 		}
 		pg.log.Err("failed to query post", "error", err, "post_id", req.PostID)
-		return common.Post{}, db.ErrInternal
+		return hub.Post{}, db.ErrInternal
 	}
 
 	var tags []string
 	if err := json.Unmarshal(tagsJSON, &tags); err != nil {
 		pg.log.Err("unmarshalling", "error", err, "json", string(tagsJSON))
-		return common.Post{}, db.ErrInternal
+		return hub.Post{}, db.ErrInternal
 	}
 	post.Tags = tags
 
@@ -269,11 +269,11 @@ func (pg *PG) GetUserPosts(
 	}
 	defer rows.Close()
 
-	posts := make([]common.Post, 0, getUserPostsReq.Limit)
+	posts := make([]hub.Post, 0, getUserPostsReq.Limit)
 	var lastPostID string
 
 	for rows.Next() {
-		var post common.Post
+		var post hub.Post
 		var authorID string
 		var authorHandle string
 		var authorFullName string

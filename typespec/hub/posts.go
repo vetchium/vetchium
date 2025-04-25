@@ -35,8 +35,8 @@ type GetUserPostsRequest struct {
 }
 
 type GetUserPostsResponse struct {
-	Posts         []common.Post `json:"posts"`
-	PaginationKey string        `json:"pagination_key"`
+	Posts         []Post `json:"posts"`
+	PaginationKey string `json:"pagination_key"`
 }
 
 type FollowUserRequest struct {
@@ -63,8 +63,8 @@ type GetMyHomeTimelineRequest struct {
 }
 
 type MyHomeTimeline struct {
-	Posts         []common.Post `json:"posts"`
-	PaginationKey string        `json:"pagination_key"`
+	Posts         []Post `json:"posts"`
+	PaginationKey string `json:"pagination_key"`
 }
 
 type GetPostDetailsRequest struct {
