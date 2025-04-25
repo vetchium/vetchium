@@ -554,7 +554,7 @@ var _ = Describe("Posts", Ordered, func() {
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
-						var resp common.Post
+						var resp hub.Post
 						err := json.Unmarshal(respBody, &resp)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(resp.ID).Should(Equal(getDetailsPostID))

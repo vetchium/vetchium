@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/vetchium/vetchium/api/internal/db"
 )
 
 // GetTimelinesToRefresh calls the GetOldestUnrefreshedActiveTimelines PostgreSQL function
@@ -51,22 +52,10 @@ func (p *PG) RefreshTimeline(
 ) error {
 	p.log.Dbg("refreshing timeline", "hub_user_id", hubUserID)
 
-	_, err := p.pool.Exec(ctx, `
-		SELECT RefreshTimeline($1)
-	`, hubUserID)
+	_, err := p.pool.Exec(ctx, `SELECT RefreshTimeline($1)`, hubUserID)
 	if err != nil {
-		p.log.Err(
-			"failed to refresh timeline",
-			"hub_user_id",
-			hubUserID,
-			"error",
-			err,
-		)
-		return fmt.Errorf(
-			"failed to refresh timeline for user %s: %w",
-			hubUserID,
-			err,
-		)
+		p.log.Err("refresh timeline", "hub_user_id", hubUserID, "error", err)
+		return db.ErrInternal
 	}
 
 	p.log.Dbg("timeline refreshed successfully", "hub_user_id", hubUserID)
