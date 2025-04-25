@@ -26,6 +26,11 @@ type Post struct {
 	UpvotesCount   int32         `json:"upvotes_count"`
 	DownvotesCount int32         `json:"downvotes_count"`
 	Score          int32         `json:"score"`
+	MeUpvoted      bool          `json:"me_upvoted"`
+	MeDownvoted    bool          `json:"me_downvoted"`
+	CanUpvote      bool          `json:"can_upvote"`
+	CanDownvote    bool          `json:"can_downvote"`
+	AmIAuthor      bool          `json:"am_i_author"`
 }
 
 type GetUserPostsRequest struct {

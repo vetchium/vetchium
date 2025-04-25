@@ -35,6 +35,21 @@ model Post {
     upvotes_count: int32;
     downvotes_count: int32;
     score: int32;
+
+    @doc("Whether the logged in user has upvoted this post")
+    me_upvoted: boolean;
+
+    @doc("Whether the logged in user has downvoted this post")
+    me_downvoted: boolean;
+
+    @doc("Whether the logged in user can upvote this post. Will be false if the user is blocked from upvoting this post or if the user has already voted for this post. TODO: Blocking not done yet")
+    can_upvote: boolean;
+
+    @doc("Whether the logged in user can downvote this post. Will be false if the user is blocked from downvoting this post or if the user has already voted for this post. TODO: Blocking not done yet")
+    can_downvote: boolean;
+
+    @doc("Whether the logged in user is the author of this post")
+    am_i_author: boolean;
 }
 
 model GetUserPostsRequest {

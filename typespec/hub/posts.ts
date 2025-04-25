@@ -21,6 +21,11 @@ export interface Post {
   upvotes_count: number;
   downvotes_count: number;
   score: number;
+  me_upvoted: boolean;
+  me_downvoted: boolean;
+  can_upvote: boolean;
+  can_downvote: boolean;
+  am_i_author: boolean;
 }
 
 export interface GetUserPostsRequest {
