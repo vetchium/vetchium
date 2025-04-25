@@ -13,7 +13,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Follow Operations", Ordered, func() {
+var _ = Describe("Follow Operations", Ordered, func() {
 	var db *pgxpool.Pool
 	var followUser1Token, followUser2Token, preexistingFollowToken string
 
