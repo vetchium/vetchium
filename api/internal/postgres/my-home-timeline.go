@@ -120,7 +120,8 @@ func (pg *PG) GetMyHomeTimeline(
 SELECT
     post_id, content, created_at,
     author_handle, author_name, author_profile_pic_url, tags,
-    upvotes_count, downvotes_count, score
+    upvotes_count, downvotes_count, score,
+    me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author
 FROM hu_timeline_extended
 WHERE hub_user_id = $1 AND post_id < $2
 ORDER BY created_at DESC, post_id DESC
@@ -133,7 +134,8 @@ LIMIT $3
 SELECT
     post_id, content, created_at, author_handle, author_name,
     author_profile_pic_url, tags,
-    upvotes_count, downvotes_count, score
+    upvotes_count, downvotes_count, score,
+    me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author
 FROM hu_timeline_extended
 WHERE hub_user_id = $1
 ORDER BY created_at DESC, post_id DESC
@@ -168,6 +170,11 @@ LIMIT $2
 			&post.UpvotesCount,
 			&post.DownvotesCount,
 			&post.Score,
+			&post.MeUpvoted,
+			&post.MeDownvoted,
+			&post.CanUpvote,
+			&post.CanDownvote,
+			&post.AmIAuthor,
 		)
 		if err != nil {
 			pg.log.Err("Failed to scan post row", "error", err)

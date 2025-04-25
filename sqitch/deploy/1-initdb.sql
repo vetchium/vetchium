@@ -1228,7 +1228,18 @@ SELECT
     hu.handle AS author_handle,
     hu.full_name AS author_name,
     hu.profile_picture_url AS author_profile_pic_url,
-    ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
+    ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+    EXISTS (SELECT 1 FROM post_upvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) AS me_upvoted,
+    EXISTS (SELECT 1 FROM post_downvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) AS me_downvoted,
+    -- can_upvote is false if: user has already voted (up or down) or is the author
+    NOT (EXISTS (SELECT 1 FROM post_upvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) OR
+         EXISTS (SELECT 1 FROM post_downvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) OR
+         p.author_id = ht.hub_user_id) AS can_upvote,
+    -- can_downvote is false if: user has already voted (up or down) or is the author
+    NOT (EXISTS (SELECT 1 FROM post_upvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) OR
+         EXISTS (SELECT 1 FROM post_downvotes WHERE post_id = p.id AND hub_user_id = ht.hub_user_id) OR
+         p.author_id = ht.hub_user_id) AS can_downvote,
+    p.author_id = ht.hub_user_id AS am_i_author
 FROM hu_home_timelines ht
 JOIN posts p ON ht.post_id = p.id
 JOIN hub_users hu ON p.author_id = hu.id
