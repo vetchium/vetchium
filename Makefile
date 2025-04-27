@@ -137,6 +137,40 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl port-forward svc/minio -n vetchium-devtest 9000:9000 &
 	echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
+k6:
+	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
+    @{ \
+        EFFECTIVE_POSTGRES_URI=$$(kubectl -n vetchium-devtest get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-dev/localhost/g'); \
+        if [ -z "$$EFFECTIVE_POSTGRES_URI" ]; then \
+            echo "Error: Failed to retrieve Postgres URI from Kubernetes secret."; \
+            exit 1; \
+        fi; \
+        echo "Using Postgres URI: $$EFFECTIVE_POSTGRES_URI"; \
+        export NUM_USERS=$${NUM_USERS:-100}; \
+        export PASSWORD="NewPassword123$"; \
+        echo "--- Seeding $$NUM_USERS test users using psql ---"; \
+        # Use hardcoded hash for 'NewPassword123$'
+        HASHED_PW='$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK'; \
+        # SQL INSERT template based on 0022-posts-up.pgsql. Assumes gen_random_uuid() is available.
+        # Using handle as the conflict target.
+        INSERT_SQL_TPL="INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, tier, created_at) VALUES (gen_random_uuid(), '%s', '%s', '%s', '%s', 'ACTIVE_HUB_USER', 'FREE_HUB_USER', NOW()) ON CONFLICT (handle) DO NOTHING;"; \
+        echo "Using Hardcoded Hashed Password Prefix (verify!): $$(echo $$HASHED_PW | cut -c 1-10)..."; \
+        for i in $$(seq 1 $$NUM_USERS); do \
+            handle="hubuser$$i"; \
+            email="hubuser$$i@example.com"; \
+            full_name="Hub User $$i"; \
+            # Construct SQL using: full_name, handle, email, HASHED_PW
+            sql=$$(printf "${INSERT_SQL_TPL}" "$$full_name" "$$handle" "$$email" "$$HASHED_PW"); \
+            echo "$$sql" | psql "$$EFFECTIVE_POSTGRES_URI" -qt; \
+        done; \
+        echo "--- User seeding attempt complete ---"; \
+    }
+    @echo "--- Running k6 load test ---"
+    API_BASE_URL=${API_BASE_URL:- "http://localhost:8080"} \
+    MAILPIT_URL=${MAILPIT_URL:- "http://localhost:8025"} \
+    NUM_USERS=${NUM_USERS:-100} \
+    k6 run neville/hub_scenario.js
+
 staging-init: ## Initialize staging environment infrastructure
 	kubectl create namespace vetchistaging
 	kubectl apply --server-side --force-conflicts -f staging-env/cnpg-1.25.1.yaml
