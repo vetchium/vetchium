@@ -140,7 +140,7 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 k6:
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
     @{ \
-        EFFECTIVE_POSTGRES_URI=$$(kubectl -n vetchium-devtest get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-dev/localhost/g'); \
+        EFFECTIVE_POSTGRES_URI=$$(kubectl -n vetchium-devtest get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest/localhost/g'); \
         if [ -z "$$EFFECTIVE_POSTGRES_URI" ]; then \
             echo "Error: Failed to retrieve Postgres URI from Kubernetes secret."; \
             exit 1; \
@@ -151,8 +151,6 @@ k6:
         echo "--- Seeding $$NUM_USERS test users using psql ---"; \
         # Use hardcoded hash for 'NewPassword123$'
         HASHED_PW='$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK'; \
-        # SQL INSERT template based on 0022-posts-up.pgsql. Assumes gen_random_uuid() is available.
-        # Using handle as the conflict target.
         INSERT_SQL_TPL="INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, tier, created_at) VALUES (gen_random_uuid(), '%s', '%s', '%s', '%s', 'ACTIVE_HUB_USER', 'FREE_HUB_USER', NOW()) ON CONFLICT (handle) DO NOTHING;"; \
         echo "Using Hardcoded Hashed Password Prefix (verify!): $$(echo $$HASHED_PW | cut -c 1-10)..."; \
         for i in $$(seq 1 $$NUM_USERS); do \
