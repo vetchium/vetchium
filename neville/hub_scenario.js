@@ -115,32 +115,81 @@ function fetchTFACodeFromMailpit(username) {
   let mailId = null;
   let tfaCode = null;
   let attempts = 0;
-  const maxAttempts = 6; // Reduced attempts for k6 script compared to Go test
+  const maxAttempts = 6;
+
+  // Construct the search query using the full email address
+  const fullEmail = `${username}@example.com`;
   const searchQuery = encodeURIComponent(
-    `to:${username} subject:"Vetchium Two Factor Authentication"`
+    `to:${fullEmail} subject:"Vetchium Two Factor Authentication"` // Use full email here
   );
   const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${searchQuery}`;
+  console.info(`VU ${__VU}: Using Mailpit search URL: ${searchUrl}`); // Log the search URL using INFO level
 
   // Poll Mailpit for the email
   while (attempts < maxAttempts && !mailId) {
     const searchRes = http.get(searchUrl, { tags: { name: "MailpitSearch" } });
-    if (
-      searchRes.status === 200 &&
-      searchRes.json("messages") &&
-      searchRes.json("messages").length > 0
-    ) {
-      // Assuming the latest email is the correct one
-      mailId = searchRes.json("messages[0].ID");
-      console.debug(`VU ${__VU}: Found mail ID ${mailId} for ${username}`);
-    } else {
+
+    // Check status and try to parse the full JSON body
+    if (searchRes.status === 200) {
+      try {
+        const responseBody = searchRes.json(); // Get the whole JSON object
+
+        // Check if messages array exists and is not empty
+        if (
+          responseBody &&
+          Array.isArray(responseBody.messages) &&
+          responseBody.messages.length > 0
+        ) {
+          const firstMessage = responseBody.messages[0];
+          console.debug(
+            `VU ${__VU}: First message object: ${JSON.stringify(firstMessage)}`
+          );
+
+          if (firstMessage && firstMessage.ID) {
+            mailId = firstMessage.ID;
+            console.debug(
+              `VU ${__VU}: Found mail ID ${mailId} for ${username}`
+            );
+            // Break the loop once found
+            break;
+          } else {
+            console.warn(
+              `VU ${__VU}: First message found but missing ID: ${JSON.stringify(
+                firstMessage
+              )}`
+            );
+          }
+        } else {
+          // Response might be ok but no messages array or empty
+          console.debug(
+            `VU ${__VU}: Mailpit search OK, but no messages found yet. Body: ${searchRes.body.substring(
+              0,
+              100
+            )}...`
+          );
+        }
+      } catch (e) {
+        console.error(
+          `VU ${__VU}: Failed to parse Mailpit search JSON response. Error: ${e}. Body: ${searchRes.body.substring(
+            0,
+            500
+          )}...`
+        );
+        // Don't retry immediately on parse error, wait
+      }
+    }
+
+    // If mailId wasn't found in this attempt, increment and wait
+    if (!mailId) {
       attempts++;
       console.debug(
         `VU ${__VU}: Mail for ${username} not found yet (attempt ${attempts}). Waiting...`
       );
-      sleep(5); // Wait 5 seconds before retrying (adjust as needed)
+      sleep(10); // Keep increased wait time
     }
   }
 
+  // --- Fetch the specific email content using the found mailId ---
   if (!mailId) {
     console.error(
       `VU ${__VU}: Failed to find Mailpit email for ${username} after ${maxAttempts} attempts.`
@@ -208,11 +257,12 @@ export function setup() {
 function loginAndAuthenticate(username) {
   let success = false;
   let loginTfaToken = null; // Store the intermediate token from login response
+  const email = `${username}@example.com`;
 
   group("Hub Login", function () {
     const loginPayload = JSON.stringify({
       // Use 'Email' field and construct value by appending domain to username
-      Email: `${username}@example.com`, // Construct email address here
+      Email: email, // Construct email address here
       password: PASSWORD,
     });
     const loginParams = {
@@ -232,18 +282,17 @@ function loginAndAuthenticate(username) {
         r.status === 200 || r.status === 202,
     });
 
-    // Dolores test expects 200 OK from /hub/login
     if (loginRes.status === 200 || loginRes.status === 202) {
       // Extract the intermediate TFA token from the response
       if (loginRes.json("token")) {
         loginTfaToken = loginRes.json("token");
         console.debug(
-          `VU ${__VU} (${username}): Login successful (Status: ${loginRes.status}). Got TFA token.`
+          `VU ${__VU} (${email}): Login successful (Status: ${loginRes.status}). Got TFA token.`
         );
         success = true;
       } else {
         console.error(
-          `VU ${__VU} (${username}): Login response OK/Accepted but missing 'token'. Body: ${loginRes.body}`
+          `VU ${__VU} (${email}): Login response OK/Accepted but missing 'token'. Body: ${loginRes.body}`
         );
         success = false;
       }
@@ -267,10 +316,9 @@ function loginAndAuthenticate(username) {
     if (tfaCode) {
       // 2. Verify TFA Code
       const tfaPayload = JSON.stringify({
-        // Use fields from Go test: TFAToken, TFACode, RememberMe
-        tfaToken: loginTfaToken,
-        token: tfaCode,
-        rememberMe: false,
+        tfa_token: loginTfaToken,
+        tfa_code: tfaCode,
+        remember_me: true,
       });
       const tfaParams = {
         headers: { "Content-Type": "application/json" },
@@ -293,9 +341,9 @@ function loginAndAuthenticate(username) {
           r.json("sessionToken") !== undefined,
       });
 
-      if (tfaRes.status === 200 && tfaRes.json("sessionToken")) {
+      if (tfaRes.status === 200 && tfaRes.json("session_token")) {
         // Store the final session token
-        vuState.authToken = tfaRes.json("sessionToken");
+        vuState.authToken = tfaRes.json("session_token");
         // *** PLACEHOLDER: Extract logged-in user ID/handle if available ***
         // vuState.userHandle = tfaRes.json('handle'); // Or 'userId', 'username' etc.
         vuState.userHandle = username; // Assume handle is the username for now
@@ -312,9 +360,7 @@ function loginAndAuthenticate(username) {
         success = false;
       }
     } else {
-      console.error(
-        `VU ${__VU} (${username}): Could not retrieve TFA code. Skipping TFA verification.`
-      );
+      console.error(`VU ${__VU} (${username}): Could not retrieve TFA code.`);
       success = false;
     }
   });
