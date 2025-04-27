@@ -103,9 +103,10 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl apply -n vetchium-devtest -f devtest-env/mailpit.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/secrets.yaml
 
-	sleep 20 && kubectl wait --for=condition=Ready pod/postgres-1 -n vetchium-devtest --timeout=5m
+	sleep 20
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchium-devtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod/postgres-1 -n vetchium-devtest --timeout=5m
 
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sqitch.yaml | kubectl apply -n vetchium-devtest -f -
 	echo "Waiting for sqitch job to complete..."
@@ -142,7 +143,7 @@ k6:
 	@echo "--- Waiting for hermione pod ---"
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
 	@echo "--- Running user seeding script ---"
-	# @NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh # Pass NUM_USERS via environment
+	@NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
 	@echo "--- Running k6 load test ---"
 	@API_BASE_URL=$${API_BASE_URL:-"http://localhost:8080"} \
 	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \
