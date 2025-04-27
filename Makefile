@@ -128,36 +128,21 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl wait --for=condition=Ready pod -l app=granger -n vetchium-devtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=sortinghat -n vetchium-devtest --timeout=5m
 
-	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchium-devtest -f -
-	kubectl wait --for=condition=complete job -l app=dev-seed -n vetchium-devtest --timeout=5m
+	# GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/dev-seed.yaml | kubectl apply -n vetchium-devtest -f -
+	# kubectl wait --for=condition=complete job -l app=dev-seed -n vetchium-devtest --timeout=5m
 	kubectl port-forward svc/harrypotter -n vetchium-devtest 3001:80 &
 	kubectl port-forward svc/ronweasly -n vetchium-devtest 3002:80 &
 	kubectl port-forward svc/mailpit -n vetchium-devtest 8025:8025 &
-	kubectl port-forward svc/postgres-1 -n vetchium-devtest 5432:5432 &
+	kubectl port-forward svc/postgres-rw -n vetchium-devtest 5432:5432 &
 	kubectl port-forward svc/minio -n vetchium-devtest 9000:9000 &
-	echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
+	kubectl port-forward svc/hermione -n vetchium-devtest 8080:8080 &
+	# echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
 k6:
 	@echo "--- Waiting for hermione pod ---"
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
-	@echo "--- Seeding users ---"
-	@bash -c ' \
-	    EFFECTIVE_POSTGRES_URI=$$(kubectl -n vetchium-devtest get secret postgres-app -o jsonpath=''{.data.uri}'' | base64 -d | sed ''s/postgres-rw.vetchium-devtest/localhost/g''); \
-	    if [ -z "$$EFFECTIVE_POSTGRES_URI" ]; then echo "Error: Failed to retrieve Postgres URI."; exit 1; fi; \
-	    echo "Using Postgres URI: $$EFFECTIVE_POSTGRES_URI"; \
-	    NUM_USERS=$${NUM_USERS:-100}; \
-	    HASHED_PW=''$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK''; \
-	    INSERT_SQL_TPL="INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, tier, created_at) VALUES (gen_random_uuid(), ''%s'', ''%s'', ''%s'', ''%s'', ''ACTIVE_HUB_USER'', ''FREE_HUB_USER'', NOW()) ON CONFLICT (handle) DO NOTHING;"; \
-	    echo "Seeding $$NUM_USERS users..."; \
-	    for i in $$(seq 1 $$NUM_USERS); do \
-	        handle="hubuser$$i"; \
-	        email="hubuser$$i@example.com"; \
-	        full_name="Hub User $$i"; \
-	        sql=$$(printf "$${INSERT_SQL_TPL}" "$$full_name" "$$handle" "$$email" "$$HASHED_PW"); \
-	        echo "$$sql" | psql "$$EFFECTIVE_POSTGRES_URI" -qt || { echo "psql command failed for user $$i"; exit 1; }; \
-	    done; \
-	    echo "--- User seeding attempt complete ---"; \
-	'
+	@echo "--- Running user seeding script ---"
+	# @NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh # Pass NUM_USERS via environment
 	@echo "--- Running k6 load test ---"
 	@API_BASE_URL=$${API_BASE_URL:-"http://localhost:8080"} \
 	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \

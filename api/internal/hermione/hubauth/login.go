@@ -36,7 +36,7 @@ func Login(h wand.Wand) http.HandlerFunc {
 		}
 
 		if !h.Vator().Struct(w, &loginRequest) {
-			h.Dbg("failed to validate request", "error", err)
+			h.Dbg("failed to validate request")
 			return
 		}
 		h.Dbg("validated request")

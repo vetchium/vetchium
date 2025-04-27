@@ -58,34 +58,29 @@ export const options = {
   scenarios: {
     hub_load_test: {
       executor: "ramping-arrival-rate",
+      // Define maxVUs at the scenario level, not per stage
+      maxVUs: NUM_USERS + 50, // Keep buffer
+      // Define preAllocatedVUs at the scenario level
+      preAllocatedVUs: NUM_USERS, // Pre-allocate based on expected user count
+      // Define timeUnit at the scenario level
+      timeUnit: "30s", // Revert to 30s to allow integer targets
       stages: [
         // Stage 1: Login users in batches (gradual ramp-up)
-        // Approximate 10 users logging in per 30s
         {
-          duration: "5m",     // Ramp up over 5 minutes
-          target: 10,         // Target 10 iterations starting per 30 seconds
-          timeUnit: "30s",    // Time unit for the target rate
-          preAllocatedVUs: 10, // Keep some VUs ready
-          maxVUs: NUM_USERS + 50, // Keep buffer
-        }, // Ramp up to 10 iterations / 30s over 5 mins
+          duration: "5m", // Ramp up over 5 minutes
+          target: 10, // Target 10 iterations per 30s
+        }, // Ramp up to 10 iterations/30s over 5 mins
 
         // Stage 2: Full Load Social Activity (e.g., for 10 minutes)
-        // Adjust target rate if needed based on Stage 1 behavior
         {
           duration: "10m",
-          target: 100,
-          timeUnit: "1s",
-          preAllocatedVUs: 100,
-          maxVUs: NUM_USERS + 50,
-        }, // Sustain 100 iterations/sec
+          target: 3000, // Target 3000 iterations per 30s (equivalent to 100/sec)
+        }, // Sustain 3000 iterations/30s
 
         // Stage 3: Ramp-down (optional)
         {
           duration: "2m",
           target: 0,
-          timeUnit: "1s",
-          preAllocatedVUs: 50,
-          maxVUs: NUM_USERS + 50,
         },
       ],
       exec: "socialActivity", // Function executed by VUs
@@ -121,7 +116,9 @@ function fetchTFACodeFromMailpit(username) {
   let tfaCode = null;
   let attempts = 0;
   const maxAttempts = 6; // Reduced attempts for k6 script compared to Go test
-  const searchQuery = encodeURIComponent(`to:${username} subject:"Vetchium Two Factor Authentication"`);
+  const searchQuery = encodeURIComponent(
+    `to:${username} subject:"Vetchium Two Factor Authentication"`
+  );
   const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${searchQuery}`;
 
   // Poll Mailpit for the email
@@ -156,7 +153,9 @@ function fetchTFACodeFromMailpit(username) {
   const msgRes = http.get(messageUrl, { tags: { name: "MailpitGetMessage" } });
   if (msgRes.status === 200 && msgRes.body) {
     // Use regex found in Go test helper
-    const match = msgRes.body.match(/Your Two Factor authentication code is:\s*(\d+)/);
+    const match = msgRes.body.match(
+      /Your Two Factor authentication code is:\s*(\d+)/
+    );
     if (match && match[1]) {
       tfaCode = match[1];
       console.debug(
@@ -212,8 +211,8 @@ function loginAndAuthenticate(username) {
 
   group("Hub Login", function () {
     const loginPayload = JSON.stringify({
-      // Use 'email' field as per Go test
-      email: username,
+      // Use 'Email' field and construct value by appending domain to username
+      Email: `${username}@example.com`, // Construct email address here
       password: PASSWORD,
     });
     const loginParams = {
@@ -236,12 +235,16 @@ function loginAndAuthenticate(username) {
     // Dolores test expects 200 OK from /hub/login
     if (loginRes.status === 200 || loginRes.status === 202) {
       // Extract the intermediate TFA token from the response
-      if (loginRes.json('token')) {
-        loginTfaToken = loginRes.json('token');
-        console.debug(`VU ${__VU} (${username}): Login successful (Status: ${loginRes.status}). Got TFA token.`);
+      if (loginRes.json("token")) {
+        loginTfaToken = loginRes.json("token");
+        console.debug(
+          `VU ${__VU} (${username}): Login successful (Status: ${loginRes.status}). Got TFA token.`
+        );
         success = true;
       } else {
-        console.error(`VU ${__VU} (${username}): Login response OK/Accepted but missing 'token'. Body: ${loginRes.body}`);
+        console.error(
+          `VU ${__VU} (${username}): Login response OK/Accepted but missing 'token'. Body: ${loginRes.body}`
+        );
         success = false;
       }
     } else {
@@ -325,12 +328,28 @@ export function socialActivity() {
   const userIndex = (__VU - 1) % usernames.length;
   const username = usernames[userIndex];
 
-  // Ensure the VU is authenticated before proceeding with social actions
+  // --- Authentication Check ---
+  // Attempt login ONLY if the VU doesn't have a token yet for this session
   if (!vuState.authToken) {
-    console.error(`VU ${__VU}: Not authenticated, cannot perform social actions.`);
-    sleep(5); // Wait before potentially retrying login
-    return; // Skip social interaction if not logged in
+    console.debug(
+      `VU ${__VU} (${username}): Not authenticated. Attempting login and TFA...`
+    );
+    const loginSuccess = loginAndAuthenticate(username);
+
+    if (!loginSuccess) {
+      console.error(
+        `VU ${__VU} (${username}): Authentication failed. Skipping social actions for this iteration.`
+      );
+      // Wait a bit longer after a failed login attempt before the VU retries
+      sleep(randomIntBetween(5, 10));
+      return; // Exit this iteration
+    }
+    // If login succeeded, vuState.authToken is now set by loginAndAuthenticate
+    console.debug(`VU ${__VU} (${username}): Authentication successful.`);
   }
+
+  // If we reach here, the VU is authenticated (either previously or just now)
+  // Proceed with social actions...
 
   // Define possible actions and their weights (adjust as needed)
   // Example: More reading/voting than posting/following
@@ -428,7 +447,9 @@ export function socialActivity() {
           `VU ${__VU} (${vuState.userHandle}): Attempting to create post`
         );
         const postPayload = JSON.stringify({
-          content: `This is a test post from ${vuState.userHandle} VU ${__VU} at ${new Date().toISOString()}`,
+          content: `This is a test post from ${
+            vuState.userHandle
+          } VU ${__VU} at ${new Date().toISOString()}`,
           // Add other fields like visibility if required by CreateUserPostRequest
         });
         const postRes = http.post(
@@ -440,7 +461,9 @@ export function socialActivity() {
         check(postRes, {
           "Create post successful (status 201)": (r) => r.status === 201,
           "Create post response has postId": (r) =>
-            r.body && r.json("postId") !== null && r.json("postId") !== undefined,
+            r.body &&
+            r.json("postId") !== null &&
+            r.json("postId") !== undefined,
         });
         if (postRes.status === 201 && postRes.json("postId")) {
           const newPostId = postRes.json("postId");
@@ -481,9 +504,9 @@ export function socialActivity() {
           const timelineData = timelineRes.json();
           if (timelineData.posts && timelineData.posts.length > 0) {
             // Extract post IDs from the response for potential voting
-            const postIds = timelineData.posts.map((post) => post.postId).filter(
-              (id) => id
-            );
+            const postIds = timelineData.posts
+              .map((post) => post.postId)
+              .filter((id) => id);
             if (postIds.length > 0) {
               // Add new, unique post IDs to the VU's state
               const uniqueNewIds = postIds.filter(
