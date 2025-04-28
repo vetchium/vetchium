@@ -46,68 +46,104 @@ const MAX_TFA_FETCH_ATTEMPTS = 5;
 // --- TFA Code Fetch (Uses Email) ---
 function fetchTFACodeForUser(email) {
   let attempts = 0;
+  let messageId = null;
+
+  // Step 1: Search for the TFA email using the search API
   while (attempts < MAX_TFA_FETCH_ATTEMPTS) {
     attempts++;
-    console.debug(
-      `Attempt ${attempts}/${MAX_TFA_FETCH_ATTEMPTS}: Fetching emails for ${email} from Mailpit...`
-    );
-    const mailpitRes = http.get(`${MAILPIT_URL}/api/v1/messages?limit=10`);
 
-    if (mailpitRes.status !== 200) {
+    // Build the search URL with query parameters exactly as in the Go code
+    const searchQuery = `to:${email} subject:Vetchium Two Factor Authentication`;
+    const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(
+      searchQuery
+    )}`;
+
+    console.debug(
+      `Attempt ${attempts}/${MAX_TFA_FETCH_ATTEMPTS}: Searching Mailpit at ${searchUrl}`
+    );
+
+    const searchRes = http.get(searchUrl);
+
+    if (searchRes.status !== 200) {
       console.warn(
-        `Mailpit API returned status ${mailpitRes.status}. Waiting before retrying...`
+        `Mailpit search API returned status ${searchRes.status}. Waiting before retrying...`
       );
-      sleep(5);
+      sleep(10);
       continue;
     }
 
     try {
-      const messages = mailpitRes.json("messages");
-      if (!messages || messages.length === 0) {
-        console.debug(
-          `No messages found in Mailpit yet for ${email}. Waiting...`
-        );
-        sleep(10);
-        continue;
-      }
-
-      // Find the most recent email for the target user
-      const targetEmail = messages.find(
-        (msg) => msg.To && msg.To.length > 0 && msg.To[0].Address === email
-      );
-
-      if (targetEmail) {
-        // Extract TFA code from the email body (assumes simple text format)
-        const codeMatch = targetEmail.Text.match(
-          /Your verification code is: (\d{6})/
-        );
-        if (codeMatch && codeMatch[1]) {
-          console.debug(`TFA code found for ${email}: ${codeMatch[1]}`);
-          return codeMatch[1];
-        }
-      }
-
-      // If email found but no code, or email not found yet
+      const searchData = JSON.parse(searchRes.body);
       console.debug(
-        `Mail for ${email} not found or code extraction failed (attempt ${attempts}). Waiting...`
+        `Search response: ${JSON.stringify(searchData).substring(0, 100)}...`
       );
+
+      if (searchData.messages && searchData.messages.length > 0) {
+        messageId = searchData.messages[0].ID;
+        console.debug(`Found message ID: ${messageId}`);
+        break;
+      }
+
+      console.debug(`No matching messages found yet. Waiting...`);
       sleep(10);
     } catch (e) {
-      console.error(`Error processing Mailpit response: ${e}. Waiting...`);
+      console.error(
+        `Error parsing search response: ${e}. Body: ${searchRes.body}`
+      );
       sleep(10);
     }
   }
 
-  console.error(
-    `Failed to fetch TFA code for ${email} after ${MAX_TFA_FETCH_ATTEMPTS} attempts.`
-  );
-  return null;
+  if (!messageId) {
+    console.error(
+      `Failed to find TFA email for ${email} after ${MAX_TFA_FETCH_ATTEMPTS} attempts.`
+    );
+    return null;
+  }
+
+  // Step 2: Get the specific message content using the message ID
+  const messageUrl = `${MAILPIT_URL}/api/v1/message/${messageId}`;
+  console.debug(`Fetching message content from: ${messageUrl}`);
+
+  const messageRes = http.get(messageUrl);
+
+  if (messageRes.status !== 200) {
+    console.error(
+      `Failed to fetch message content. Status: ${messageRes.status}`
+    );
+    return null;
+  }
+
+  try {
+    const messageData = JSON.parse(messageRes.body);
+    console.debug(`Message data retrieved successfully`);
+
+    // Extract the TFA code using the same regex pattern as in the Go code
+    const body = messageData.HTML || messageData.Text || "";
+    const codeMatch = body.match(
+      /Your Two Factor authentication code is:\s*([0-9]+)/
+    );
+
+    if (codeMatch && codeMatch[1]) {
+      const tfaCode = codeMatch[1];
+      console.debug(`TFA code found: ${tfaCode}`);
+      return tfaCode;
+    } else {
+      console.error(`TFA code pattern not found in email body`);
+      console.debug(`Email body snippet: ${body.substring(0, 200)}...`);
+      return null;
+    }
+  } catch (e) {
+    console.error(
+      `Error parsing message response: ${e}. Body: ${messageRes.body}`
+    );
+    return null;
+  }
 }
 
 // --- Authentication Function (Accepts user object with email/handle) ---
 function loginAndAuthenticateUser(user) {
   let loginAttempts = 0;
-  let tfaToken = null;
   let handle = user.handle; // Store handle from the input user object
 
   while (loginAttempts < MAX_LOGIN_ATTEMPTS) {
@@ -116,7 +152,7 @@ function loginAndAuthenticateUser(user) {
       `Attempt ${loginAttempts}/${MAX_LOGIN_ATTEMPTS}: Logging in ${user.email} (handle: ${user.handle})...`
     );
 
-    // Use Email for login request payload according to LoginRequest model
+    // Step 1: Login - According to LoginRequest model in hubusers.tsp
     const loginPayload = JSON.stringify({
       email: user.email,
       password: PASSWORD,
@@ -129,135 +165,111 @@ function loginAndAuthenticateUser(user) {
 
     // Check if login was successful (status 200)
     if (loginRes.status === 200) {
-      // Parse response body to check for TFA requirement or direct token
       try {
-        const responseBody = JSON.parse(loginRes.body);
+        // Parse response according to LoginResponse model in hubusers.tsp
+        const loginResponseBody = JSON.parse(loginRes.body);
+        console.debug(`Login response body: ${loginRes.body}`);
 
-        // Check if TFA is required
-        if (responseBody.requires_tfa === true && responseBody.tfa_token) {
-          tfaToken = responseBody.tfa_token;
-          // Store handle if provided in response
-          if (responseBody.handle) {
-            handle = responseBody.handle;
-          }
-          console.debug(
-            `Login step 1 successful for ${user.email}. TFA required. Handle: ${handle}`
-          );
-          break; // Proceed to TFA verification
+        // According to LoginResponse model, we should get a token field
+        if (!loginResponseBody.token) {
+          console.error(`Login response missing token field: ${loginRes.body}`);
+          sleep(randomIntBetween(1, 3));
+          continue;
         }
-        // Check if direct login (token provided)
-        else if (responseBody.token) {
-          const authToken = responseBody.token;
-          // Update handle if provided in response
-          if (responseBody.handle) {
-            handle = responseBody.handle;
+
+        const tfaToken = loginResponseBody.token;
+        console.debug(
+          `Login successful, got TFA token: ${tfaToken.substring(0, 10)}...`
+        );
+
+        // Step 2: Get TFA code from email
+        const tfaCode = fetchTFACodeForUser(user.email);
+        if (!tfaCode) {
+          console.error(`TFA code retrieval failed for ${user.email}`);
+          sleep(randomIntBetween(1, 3));
+          continue;
+        }
+
+        // Step 3: Submit TFA code - According to HubTFARequest model in hubusers.tsp
+        const tfaPayload = JSON.stringify({
+          tfa_token: tfaToken,
+          tfa_code: tfaCode,
+          remember_me: true,
+        });
+
+        console.debug(`Submitting TFA code for ${user.email}`);
+
+        const tfaVerifyRes = http.post(`${API_BASE_URL}/hub/tfa`, tfaPayload, {
+          headers: { "Content-Type": "application/json" },
+          tags: { name: "HubVerifyTFA_API" },
+        });
+
+        // Process TFA verification response
+        if (tfaVerifyRes.status === 200) {
+          try {
+            // Log the raw response for debugging
+            console.debug(`Raw TFA response body: ${tfaVerifyRes.body}`);
+
+            const tfaResponseBody = JSON.parse(tfaVerifyRes.body);
+            console.debug(
+              `TFA response body keys: ${Object.keys(tfaResponseBody).join(
+                ", "
+              )}`
+            );
+
+            // According to HubTFAResponse model, we should get a session_token field
+            if (!tfaResponseBody.session_token) {
+              console.error(
+                `TFA response missing session_token field: ${tfaVerifyRes.body}`
+              );
+              sleep(randomIntBetween(1, 3));
+              continue;
+            }
+
+            const sessionToken = tfaResponseBody.session_token;
+            console.debug(
+              `TFA verification successful, got session token: ${sessionToken.substring(
+                0,
+                10
+              )}...`
+            );
+
+            // Return the session token and handle for authenticated requests
+            return { authToken: sessionToken, userHandle: handle };
+          } catch (e) {
+            console.error(
+              `Error parsing TFA response: ${e}. Body: ${tfaVerifyRes.body}`
+            );
+            sleep(randomIntBetween(1, 3));
+            continue;
           }
-          console.debug(
-            `Direct login successful for ${
-              user.email
-            }. Handle: ${handle}, Token: ${authToken.substring(0, 10)}...`
-          );
-          return { authToken, userHandle: handle }; // Return token and handle
         } else {
-          console.warn(
-            `Login response for ${user.email} has status 200 but missing expected fields. Body: ${loginRes.body}`
+          console.error(
+            `TFA verification failed. Status: ${tfaVerifyRes.status}, Body: ${tfaVerifyRes.body}`
           );
           sleep(randomIntBetween(1, 3));
+          continue;
         }
       } catch (e) {
         console.error(
-          `Error parsing login response for ${user.email}: ${e}. Body: ${loginRes.body}`
+          `Error parsing login response: ${e}. Body: ${loginRes.body}`
         );
         sleep(randomIntBetween(1, 3));
+        continue;
       }
-    } else if (loginRes.status === 422) {
-      console.warn(
-        `Login attempt ${loginAttempts} failed for ${user.email} - account not in valid state (422). Body: ${loginRes.body}`
-      );
-      sleep(randomIntBetween(1, 3));
     } else {
       console.warn(
-        `Login attempt ${loginAttempts} failed for ${user.email}. Status: ${loginRes.status}, Body: ${loginRes.body}. Retrying...`
+        `Login failed. Status: ${loginRes.status}, Body: ${loginRes.body}`
       );
       sleep(randomIntBetween(1, 3));
+      continue;
     }
   }
 
-  if (!tfaToken) {
-    console.error(
-      `Login failed for ${user.email} after ${MAX_LOGIN_ATTEMPTS} attempts.`
-    );
-    return null; // Login failure
-  }
-
-  // --- TFA Verification Step ---
-  const tfaCode = fetchTFACodeForUser(user.email); // Use email to fetch code
-  if (!tfaCode) {
-    console.error(
-      `TFA code retrieval failed for ${user.email}. Cannot complete login.`
-    );
-    return null; // TFA failure
-  }
-
-  // Payload according to HubTFARequest model from hubusers.tsp
-  const tfaPayload = JSON.stringify({
-    tfa_token: tfaToken,
-    tfa_code: tfaCode,
-    remember_me: true,
-  });
-
-  // Endpoint according to hubusers.tsp
-  const tfaVerifyRes = http.post(`${API_BASE_URL}/hub/tfa`, tfaPayload, {
-    headers: { "Content-Type": "application/json" },
-    tags: { name: "HubVerifyTFA_API" },
-  });
-
-  // Process TFA verification response
-  if (tfaVerifyRes.status === 200) {
-    try {
-      // Log the raw response for debugging
-      console.debug(`Raw TFA response body: ${tfaVerifyRes.body}`);
-
-      const tfaResponseBody = JSON.parse(tfaVerifyRes.body);
-      console.debug(
-        `TFA response body keys: ${Object.keys(tfaResponseBody).join(", ")}`
-      );
-
-      // Log the exact value of session_token
-      console.debug(
-        `session_token value: ${JSON.stringify(tfaResponseBody.session_token)}`
-      );
-
-      // Extract session_token according to HubTFAResponse model
-      const sessionToken = tfaResponseBody.session_token;
-
-      if (sessionToken) {
-        // Log the full token for debugging (in production, you would never do this)
-        console.debug(`FULL TOKEN FOR DEBUGGING: ${sessionToken}`);
-        console.debug(
-          `TFA verification successful for ${
-            user.email
-          }. Token: ${sessionToken.substring(0, 10)}...`
-        );
-        return { authToken: sessionToken, userHandle: handle }; // Return token and the confirmed handle
-      } else {
-        console.error(
-          `TFA verification response missing session_token for ${user.email}. Body: ${tfaVerifyRes.body}`
-        );
-        return null;
-      }
-    } catch (e) {
-      console.error(
-        `Error parsing TFA verification response for ${user.email}: ${e}. Body: ${tfaVerifyRes.body}`
-      );
-      return null;
-    }
-  } else {
-    console.error(
-      `TFA verification failed for ${user.email}. Status: ${tfaVerifyRes.status}, Body: ${tfaVerifyRes.body}`
-    );
-    return null; // TFA verification failure
-  }
+  console.error(
+    `Authentication failed for ${user.email} after ${MAX_LOGIN_ATTEMPTS} attempts`
+  );
+  return null;
 }
 
 // --- k6 Setup Function ---
@@ -925,6 +937,9 @@ export function socialActivity(authToken, userHandle, allUserHandles, vuState) {
 }
 // --- k6 Test Configuration ---
 export const options = {
+  // Calculate setup timeout based on number of users (10 seconds per user)
+  setupTimeout: `${NUM_USERS * 2 * 20}s`,
+
   scenarios: {
     social_interactions: {
       executor: "shared-iterations",
