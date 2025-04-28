@@ -15,16 +15,18 @@ func GetMyHomeTimeline(h wand.Wand) http.HandlerFunc {
 		h.Dbg("Entered GetMyHomeTimeline")
 		var req hub.GetMyHomeTimelineRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			h.Dbg("Failed to decode request body", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &req) {
-			http.Error(w, "validation failed", http.StatusBadRequest)
+			h.Dbg("Validation failed", "req", req)
 			return
 		}
 
 		if req.Limit == 0 {
+			h.Dbg("Limit is 0, setting to default of 25")
 			req.Limit = 25
 		}
 
