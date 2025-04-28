@@ -295,6 +295,17 @@ async function loginAndAuthenticateUser(user) {
 // --- k6 Setup Function ---
 export async function setup() {
   console.log("=== Running Setup Phase ===");
+
+  // Clean up all existing emails from Mailpit
+  const cleanupRes = http.del(`${MAILPIT_URL}/api/v1/messages`);
+  if (cleanupRes.status !== 200) {
+    console.warn(
+      `Failed to cleanup Mailpit messages. Status: ${cleanupRes.status}, Body: ${cleanupRes.body}`
+    );
+  } else {
+    console.log("Successfully cleaned up all existing Mailpit messages");
+  }
+
   console.log(
     `Generating and authenticating ${NUM_USERS} users with parallelism of ${SETUP_PARALLELISM}...`
   );
