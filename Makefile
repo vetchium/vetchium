@@ -100,6 +100,7 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl apply -n vetchium-devtest -f devtest-env/secrets.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/prometheus-rbac.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/prometheus.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/cnpg-dashboard-fixed.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/grafana.yaml
 
 	sleep 20

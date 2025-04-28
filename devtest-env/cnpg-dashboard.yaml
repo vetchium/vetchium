@@ -1,54 +1,50 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-datasources
+  name: grafana-cnpg-dashboard
   labels:
     app: grafana
 data:
-  datasources.yaml: |
-    apiVersion: 1
-    datasources:
-    - name: Prometheus
-      type: prometheus
-      url: http://prometheus:9090
-      access: proxy
-      isDefault: true
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-dashboards-provider
-  labels:
-    app: grafana
-data:
-  dashboards.yaml: |
-    apiVersion: 1
-    providers:
-    - name: 'default'
-      orgId: 1
-      folder: ''
-      type: file
-      disableDeletion: false
-      editable: true
-      options:
-        path: /var/lib/grafana/dashboards
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-postgresql-dashboard
-  labels:
-    app: grafana
-data:
-  postgresql-dashboard.json: |
+  cnpg-dashboard.json: |
     {
+      "__inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "label": "Prometheus",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }
+      ],
+      "__elements": {},
+      "__requires": [
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "9.3.6"
+        },
+        {
+          "type": "datasource",
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "timeseries",
+          "name": "Time series",
+          "version": ""
+        }
+      ],
       "annotations": {
         "list": [
           {
             "builtIn": 1,
             "datasource": {
-              "type": "grafana",
-              "uid": "-- Grafana --"
+              "type": "datasource",
+              "uid": "grafana"
             },
             "enable": true,
             "hide": true,
@@ -64,17 +60,31 @@ data:
           }
         ]
       },
+      "description": "CloudNativePG dashboard",
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 1,
+      "id": null,
       "links": [],
       "liveNow": false,
       "panels": [
         {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 28,
+          "panels": [],
+          "title": "PostgreSQL",
+          "type": "row"
+        },
+        {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -132,7 +142,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 0
+            "y": 1
           },
           "id": 2,
           "options": {
@@ -147,26 +157,26 @@ data:
               "sort": "none"
             }
           },
-          "title": "Active Connections",
-          "type": "timeseries",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "pg_stat_activity_count{datname=~\".*\", instance=~\".*\"}",
-              "legendFormat": "{{instance}} - {{datname}}",
+              "editorMode": "builder",
+              "expr": "cnpg_backends_total{datname=~\".*\", instance=~\".*\"}",
+              "legendFormat": "{{instance}} - {{datname}} - {{state}}",
               "range": true,
               "refId": "A"
             }
-          ]
+          ],
+          "title": "Backends",
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -224,7 +234,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 0
+            "y": 1
           },
           "id": 3,
           "options": {
@@ -239,16 +249,14 @@ data:
               "sort": "none"
             }
           },
-          "title": "Transactions",
-          "type": "timeseries",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_xact_commit{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_xact_commit_total{datname=~\".*\"}[5m])",
               "legendFormat": "{{instance}} - {{datname}} - commits",
               "range": true,
               "refId": "A"
@@ -256,21 +264,23 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_xact_rollback{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_xact_rollback_total{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - rollbacks",
               "range": true,
               "refId": "B"
             }
-          ]
+          ],
+          "title": "Transactions",
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -328,7 +338,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 8
+            "y": 9
           },
           "id": 4,
           "options": {
@@ -343,16 +353,14 @@ data:
               "sort": "none"
             }
           },
-          "title": "Tuples",
-          "type": "timeseries",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_tup_returned{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_tup_returned_total{datname=~\".*\"}[5m])",
               "legendFormat": "{{instance}} - {{datname}} - returned",
               "range": true,
               "refId": "A"
@@ -360,10 +368,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_tup_fetched{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_tup_fetched_total{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - fetched",
               "range": true,
@@ -372,10 +380,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_tup_inserted{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_tup_inserted_total{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - inserted",
               "range": true,
@@ -384,10 +392,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_tup_updated{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_tup_updated_total{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - updated",
               "range": true,
@@ -396,21 +404,23 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "rate(pg_stat_database_tup_deleted{datname=~\".*\"}[5m])",
+              "editorMode": "builder",
+              "expr": "rate(cnpg_database_tup_deleted_total{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - deleted",
               "range": true,
               "refId": "E"
             }
-          ]
+          ],
+          "title": "Tuples",
+          "type": "timeseries"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -468,7 +478,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 8
+            "y": 9
           },
           "id": 5,
           "options": {
@@ -483,21 +493,218 @@ data:
               "sort": "none"
             }
           },
-          "title": "Database Size",
-          "type": "timeseries",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
+                "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "code",
-              "expr": "pg_database_size_bytes{datname=~\".*\"}",
+              "editorMode": "builder",
+              "expr": "cnpg_database_size_bytes{datname=~\".*\"}",
               "legendFormat": "{{instance}} - {{datname}}",
               "range": true,
               "refId": "A"
             }
-          ]
+          ],
+          "title": "Database Size",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "id": 30,
+          "panels": [],
+          "title": "CloudNativePG",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 32,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "expr": "cnpg_collector_wal_count{instance=~\".*\"}",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "WAL Count",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "id": 34,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "expr": "cnpg_collector_wal_size{instance=~\".*\"}",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "WAL Size",
+          "type": "timeseries"
         }
       ],
       "refresh": "5s",
@@ -513,65 +720,8 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "PostgreSQL Dashboard",
-      "uid": "postgresql",
+      "title": "CloudNativePG",
+      "uid": "cloudnativepg",
       "version": 1,
       "weekStart": ""
     }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: grafana
-  labels:
-    app: grafana
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: grafana
-  template:
-    metadata:
-      labels:
-        app: grafana
-    spec:
-      containers:
-      - name: grafana
-        image: grafana/grafana:9.3.6
-        ports:
-        - containerPort: 3000
-        volumeMounts:
-        - name: grafana-storage
-          mountPath: /var/lib/grafana
-        - name: grafana-datasources
-          mountPath: /etc/grafana/provisioning/datasources
-        - name: grafana-dashboards-provider
-          mountPath: /etc/grafana/provisioning/dashboards
-        - name: grafana-dashboards
-          mountPath: /var/lib/grafana/dashboards
-      volumes:
-      - name: grafana-storage
-        emptyDir: {}
-      - name: grafana-datasources
-        configMap:
-          name: grafana-datasources
-      - name: grafana-dashboards-provider
-        configMap:
-          name: grafana-dashboards-provider
-      - name: grafana-dashboards
-        configMap:
-          name: grafana-cnpg-dashboard
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana
-  labels:
-    app: grafana
-spec:
-  selector:
-    app: grafana
-  ports:
-  - port: 3000
-    targetPort: 3000
-  type: ClusterIP
