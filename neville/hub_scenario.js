@@ -22,6 +22,7 @@ function randomString(length) {
 const API_BASE_URL = __ENV.API_BASE_URL || "http://localhost:8080"; // Your API gateway/service URL
 const MAILPIT_URL = __ENV.MAILPIT_URL || "http://localhost:8025"; // Mailpit API URL
 const NUM_USERS = parseInt(__ENV.NUM_USERS || "100");
+const SETUP_PARALLELISM = parseInt(__ENV.SETUP_PARALLELISM || "10"); // Number of users to authenticate in parallel
 const PASSWORD = "NewPassword123$";
 const TEST_DURATION_SECONDS = parseInt(__ENV.TEST_DURATION || "600"); // 10 minutes default
 
@@ -43,108 +44,142 @@ const DEFAULT_NUM_USERS = 100;
 const MAX_LOGIN_ATTEMPTS = 3;
 const MAX_TFA_FETCH_ATTEMPTS = 5;
 
+// --- TFA Synchronization ---
+let tfaLock = false;
+const tfaQueue = [];
+
+// Helper function to acquire TFA lock
+function acquireTfaLock() {
+  return new Promise((resolve) => {
+    if (!tfaLock) {
+      tfaLock = true;
+      resolve();
+    } else {
+      tfaQueue.push(resolve);
+    }
+  });
+}
+
+// Helper function to release TFA lock
+function releaseTfaLock() {
+  if (tfaQueue.length > 0) {
+    const nextResolve = tfaQueue.shift();
+    nextResolve();
+  } else {
+    tfaLock = false;
+  }
+}
+
 // --- TFA Code Fetch (Uses Email) ---
-function fetchTFACodeForUser(email) {
-  let attempts = 0;
-  let messageId = null;
+async function fetchTFACodeForUser(email) {
+  try {
+    // Acquire lock before fetching TFA code
+    await acquireTfaLock();
 
-  // Step 1: Search for the TFA email using the search API
-  while (attempts < MAX_TFA_FETCH_ATTEMPTS) {
-    attempts++;
+    let attempts = 0;
+    let messageId = null;
 
-    // Build the search URL with query parameters exactly as in the Go code
-    const searchQuery = `to:${email} subject:Vetchium Two Factor Authentication`;
-    const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(
-      searchQuery
-    )}`;
+    // Step 1: Search for the TFA email using the search API
+    while (attempts < MAX_TFA_FETCH_ATTEMPTS) {
+      attempts++;
 
-    console.debug(
-      `Attempt ${attempts}/${MAX_TFA_FETCH_ATTEMPTS}: Searching Mailpit at ${searchUrl}`
-    );
+      // Build the search URL with query parameters exactly as in the Go code
+      const searchQuery = `to:${email} subject:Vetchium Two Factor Authentication`;
+      const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(
+        searchQuery
+      )}`;
 
-    const searchRes = http.get(searchUrl);
-
-    if (searchRes.status !== 200) {
-      console.warn(
-        `Mailpit search API returned status ${searchRes.status}. Waiting before retrying...`
+      console.debug(
+        `Attempt ${attempts}/${MAX_TFA_FETCH_ATTEMPTS}: Searching Mailpit at ${searchUrl}`
       );
-      sleep(10);
-      continue;
+
+      const searchRes = http.get(searchUrl);
+
+      if (searchRes.status !== 200) {
+        console.warn(
+          `Mailpit search API returned status ${searchRes.status}. Waiting before retrying...`
+        );
+        sleep(2); // Reduced sleep time for faster retries
+        continue;
+      }
+
+      try {
+        const searchData = JSON.parse(searchRes.body);
+        console.debug(
+          `Search response: ${JSON.stringify(searchData).substring(0, 100)}...`
+        );
+
+        if (searchData.messages && searchData.messages.length > 0) {
+          messageId = searchData.messages[0].ID;
+          console.debug(`Found message ID: ${messageId}`);
+          break;
+        }
+
+        console.debug(`No matching messages found yet. Waiting...`);
+        sleep(2);
+      } catch (e) {
+        console.error(
+          `Error parsing search response: ${e}. Body: ${searchRes.body}`
+        );
+        sleep(2);
+      }
+    }
+
+    if (!messageId) {
+      console.error(
+        `Failed to find TFA email for ${email} after ${MAX_TFA_FETCH_ATTEMPTS} attempts.`
+      );
+      return null;
+    }
+
+    // Step 2: Get the specific message content using the message ID
+    const messageUrl = `${MAILPIT_URL}/api/v1/message/${messageId}`;
+    console.debug(`Fetching message content from: ${messageUrl}`);
+
+    const messageRes = http.get(messageUrl);
+
+    if (messageRes.status !== 200) {
+      console.error(
+        `Failed to fetch message content. Status: ${messageRes.status}`
+      );
+      return null;
     }
 
     try {
-      const searchData = JSON.parse(searchRes.body);
-      console.debug(
-        `Search response: ${JSON.stringify(searchData).substring(0, 100)}...`
+      const messageData = JSON.parse(messageRes.body);
+      console.debug(`Message data retrieved successfully`);
+
+      // Extract the TFA code using the same regex pattern as in the Go code
+      const body = messageData.HTML || messageData.Text || "";
+      const codeMatch = body.match(
+        /Your Two Factor authentication code is:\s*([0-9]+)/
       );
 
-      if (searchData.messages && searchData.messages.length > 0) {
-        messageId = searchData.messages[0].ID;
-        console.debug(`Found message ID: ${messageId}`);
-        break;
+      if (codeMatch && codeMatch[1]) {
+        const tfaCode = codeMatch[1];
+        console.debug(`TFA code found: ${tfaCode}`);
+        return tfaCode;
+      } else {
+        console.error(`TFA code pattern not found in email body`);
+        console.debug(`Email body snippet: ${body.substring(0, 200)}...`);
+        return null;
       }
-
-      console.debug(`No matching messages found yet. Waiting...`);
-      sleep(10);
     } catch (e) {
       console.error(
-        `Error parsing search response: ${e}. Body: ${searchRes.body}`
+        `Error parsing message response: ${e}. Body: ${messageRes.body}`
       );
-      sleep(10);
-    }
-  }
-
-  if (!messageId) {
-    console.error(
-      `Failed to find TFA email for ${email} after ${MAX_TFA_FETCH_ATTEMPTS} attempts.`
-    );
-    return null;
-  }
-
-  // Step 2: Get the specific message content using the message ID
-  const messageUrl = `${MAILPIT_URL}/api/v1/message/${messageId}`;
-  console.debug(`Fetching message content from: ${messageUrl}`);
-
-  const messageRes = http.get(messageUrl);
-
-  if (messageRes.status !== 200) {
-    console.error(
-      `Failed to fetch message content. Status: ${messageRes.status}`
-    );
-    return null;
-  }
-
-  try {
-    const messageData = JSON.parse(messageRes.body);
-    console.debug(`Message data retrieved successfully`);
-
-    // Extract the TFA code using the same regex pattern as in the Go code
-    const body = messageData.HTML || messageData.Text || "";
-    const codeMatch = body.match(
-      /Your Two Factor authentication code is:\s*([0-9]+)/
-    );
-
-    if (codeMatch && codeMatch[1]) {
-      const tfaCode = codeMatch[1];
-      console.debug(`TFA code found: ${tfaCode}`);
-      return tfaCode;
-    } else {
-      console.error(`TFA code pattern not found in email body`);
-      console.debug(`Email body snippet: ${body.substring(0, 200)}...`);
       return null;
     }
-  } catch (e) {
-    console.error(
-      `Error parsing message response: ${e}. Body: ${messageRes.body}`
-    );
-    return null;
+  } finally {
+    // Always release the lock when done
+    releaseTfaLock();
   }
 }
 
 // --- Authentication Function (Accepts user object with email/handle) ---
-function loginAndAuthenticateUser(user) {
+async function loginAndAuthenticateUser(user) {
   let loginAttempts = 0;
-  let handle = user.handle; // Store handle from the input user object
+  let handle = user.handle;
 
   while (loginAttempts < MAX_LOGIN_ATTEMPTS) {
     loginAttempts++;
@@ -152,7 +187,7 @@ function loginAndAuthenticateUser(user) {
       `Attempt ${loginAttempts}/${MAX_LOGIN_ATTEMPTS}: Logging in ${user.email} (handle: ${user.handle})...`
     );
 
-    // Step 1: Login - According to LoginRequest model in hubusers.tsp
+    // Step 1: Login
     const loginPayload = JSON.stringify({
       email: user.email,
       password: PASSWORD,
@@ -163,17 +198,14 @@ function loginAndAuthenticateUser(user) {
       tags: { name: "HubLoginAPI" },
     });
 
-    // Check if login was successful (status 200)
     if (loginRes.status === 200) {
       try {
-        // Parse response according to LoginResponse model in hubusers.tsp
         const loginResponseBody = JSON.parse(loginRes.body);
         console.debug(`Login response body: ${loginRes.body}`);
 
-        // According to LoginResponse model, we should get a token field
         if (!loginResponseBody.token) {
           console.error(`Login response missing token field: ${loginRes.body}`);
-          sleep(randomIntBetween(1, 3));
+          sleep(2);
           continue;
         }
 
@@ -182,15 +214,15 @@ function loginAndAuthenticateUser(user) {
           `Login successful, got TFA token: ${tfaToken.substring(0, 10)}...`
         );
 
-        // Step 2: Get TFA code from email
-        const tfaCode = fetchTFACodeForUser(user.email);
+        // Step 2: Get TFA code from email (now with synchronization)
+        const tfaCode = await fetchTFACodeForUser(user.email);
         if (!tfaCode) {
           console.error(`TFA code retrieval failed for ${user.email}`);
-          sleep(randomIntBetween(1, 3));
+          sleep(2);
           continue;
         }
 
-        // Step 3: Submit TFA code - According to HubTFARequest model in hubusers.tsp
+        // Step 3: Submit TFA code
         const tfaPayload = JSON.stringify({
           tfa_token: tfaToken,
           tfa_code: tfaCode,
@@ -204,25 +236,15 @@ function loginAndAuthenticateUser(user) {
           tags: { name: "HubVerifyTFA_API" },
         });
 
-        // Process TFA verification response
         if (tfaVerifyRes.status === 200) {
           try {
-            // Log the raw response for debugging
-            console.debug(`Raw TFA response body: ${tfaVerifyRes.body}`);
-
             const tfaResponseBody = JSON.parse(tfaVerifyRes.body);
-            console.debug(
-              `TFA response body keys: ${Object.keys(tfaResponseBody).join(
-                ", "
-              )}`
-            );
 
-            // According to HubTFAResponse model, we should get a session_token field
             if (!tfaResponseBody.session_token) {
               console.error(
                 `TFA response missing session_token field: ${tfaVerifyRes.body}`
               );
-              sleep(randomIntBetween(1, 3));
+              sleep(2);
               continue;
             }
 
@@ -234,55 +256,54 @@ function loginAndAuthenticateUser(user) {
               )}...`
             );
 
-            // Return the session token and handle for authenticated requests
             return { authToken: sessionToken, userHandle: handle };
           } catch (e) {
             console.error(
               `Error parsing TFA response: ${e}. Body: ${tfaVerifyRes.body}`
             );
-            sleep(randomIntBetween(1, 3));
+            sleep(2);
             continue;
           }
         } else {
           console.error(
             `TFA verification failed. Status: ${tfaVerifyRes.status}, Body: ${tfaVerifyRes.body}`
           );
-          sleep(randomIntBetween(1, 3));
+          sleep(2);
           continue;
         }
       } catch (e) {
         console.error(
           `Error parsing login response: ${e}. Body: ${loginRes.body}`
         );
-        sleep(randomIntBetween(1, 3));
+        sleep(2);
         continue;
       }
     } else {
       console.warn(
         `Login failed. Status: ${loginRes.status}, Body: ${loginRes.body}`
       );
-      sleep(randomIntBetween(1, 3));
+      sleep(2);
       continue;
     }
   }
 
-  console.error(
+  throw new Error(
     `Authentication failed for ${user.email} after ${MAX_LOGIN_ATTEMPTS} attempts`
   );
-  return null;
 }
 
 // --- k6 Setup Function ---
-export function setup() {
+export async function setup() {
   console.log("=== Running Setup Phase ===");
-  console.log(`Generating and authenticating ${NUM_USERS} users...`);
+  console.log(
+    `Generating and authenticating ${NUM_USERS} users with parallelism of ${SETUP_PARALLELISM}...`
+  );
 
   const allUsers = [];
   for (let i = 1; i <= NUM_USERS; i++) {
-    // Generate user details based on seed_users.sh pattern
     allUsers.push({
       handle: `hubuser${i}`,
-      email: `hubuser${i}@example.com`, // Use @example.com as in script
+      email: `hubuser${i}@example.com`,
     });
   }
 
@@ -293,40 +314,62 @@ export function setup() {
   }
 
   const authenticatedUsers = [];
-  const handles = []; // Collect handles separately for socialActivity
+  const handles = [];
 
-  console.debug(`Attempting to authenticate ${allUsers.length} users...`);
-
-  for (let i = 0; i < allUsers.length; i++) {
-    const user = allUsers[i];
-    console.debug(
-      `Authenticating user ${i + 1}/${allUsers.length}: ${user.email}`
+  // Process users in parallel batches
+  for (let i = 0; i < allUsers.length; i += SETUP_PARALLELISM) {
+    const batch = allUsers.slice(
+      i,
+      Math.min(i + SETUP_PARALLELISM, allUsers.length)
     );
-    const authResult = loginAndAuthenticateUser(user); // Pass the whole user object
-    if (authResult && authResult.authToken && authResult.userHandle) {
-      authenticatedUsers.push({
-        // Store only necessary info for VUs
-        authToken: authResult.authToken,
-        userHandle: authResult.userHandle,
+    console.log(
+      `Processing batch ${Math.floor(i / SETUP_PARALLELISM) + 1}/${Math.ceil(
+        allUsers.length / SETUP_PARALLELISM
+      )} (${batch.length} users)...`
+    );
+
+    // Create an array of promises for parallel authentication
+    const batchPromises = batch.map((user) => {
+      return new Promise(async (resolve, reject) => {
+        try {
+          console.debug(`Starting authentication for: ${user.email}`);
+          const authResult = await loginAndAuthenticateUser(user);
+          if (authResult && authResult.authToken && authResult.userHandle) {
+            console.debug(
+              `Authentication successful for: ${user.email} (Handle: ${authResult.userHandle})`
+            );
+            resolve({
+              authToken: authResult.authToken,
+              userHandle: authResult.userHandle,
+              handle: user.handle,
+            });
+          } else {
+            reject(new Error(`Authentication failed for user ${user.email}`));
+          }
+        } catch (error) {
+          reject(error);
+        }
       });
-      handles.push(authResult.userHandle); // Store the handle
-      console.debug(
-        `Authentication successful for: ${user.email} (Handle: ${authResult.userHandle})`
-      );
-    } else {
-      // Fail fast if any user cannot be authenticated
-      throw new Error(
-        `Setup failed: Could not authenticate user ${user.email}. Halting test.`
-      );
+    });
+
+    // Wait for all authentications in this batch to complete
+    try {
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach((result) => {
+        authenticatedUsers.push({
+          authToken: result.authToken,
+          userHandle: result.userHandle,
+        });
+        handles.push(result.userHandle);
+      });
+    } catch (error) {
+      throw new Error(`Batch authentication failed: ${error.message}`);
     }
-    // Optional: Add a small delay between authentications if needed
-    // sleep(0.5);
   }
 
   console.log(
     `=== Setup Phase Complete: ${authenticatedUsers.length} users authenticated ===`
   );
-  // Pass authenticated user data and the list of all handles
   return { authenticatedUsers: authenticatedUsers, allUserHandles: handles };
 }
 
