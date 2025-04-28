@@ -85,7 +85,7 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--push .
 
 devtest: docker ## Brings up an environment with the local docker images. No live reload.
-	pkill -9 "kubectl port-forward" || true
+	pkill -9 -f "kubectl port-forward" || true
 	kubectl delete namespace vetchium-devtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchium-devtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
