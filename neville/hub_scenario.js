@@ -153,7 +153,9 @@ function loginAndAuthenticateUser(user) {
             handle = responseBody.handle;
           }
           console.debug(
-            `Direct login successful for ${user.email}. Handle: ${handle}`
+            `Direct login successful for ${
+              user.email
+            }. Handle: ${handle}, Token: ${authToken.substring(0, 10)}...`
           );
           return { authToken, userHandle: handle }; // Return token and handle
         } else {
@@ -201,7 +203,7 @@ function loginAndAuthenticateUser(user) {
   const tfaPayload = JSON.stringify({
     tfa_token: tfaToken,
     tfa_code: tfaCode,
-    remember_me: false,
+    remember_me: true,
   });
 
   // Endpoint according to hubusers.tsp
@@ -213,13 +215,31 @@ function loginAndAuthenticateUser(user) {
   // Process TFA verification response
   if (tfaVerifyRes.status === 200) {
     try {
+      // Log the raw response for debugging
+      console.debug(`Raw TFA response body: ${tfaVerifyRes.body}`);
+
       const tfaResponseBody = JSON.parse(tfaVerifyRes.body);
+      console.debug(
+        `TFA response body keys: ${Object.keys(tfaResponseBody).join(", ")}`
+      );
+
+      // Log the exact value of session_token
+      console.debug(
+        `session_token value: ${JSON.stringify(tfaResponseBody.session_token)}`
+      );
 
       // Extract session_token according to HubTFAResponse model
-      if (tfaResponseBody.session_token) {
-        const authToken = tfaResponseBody.session_token;
-        console.debug(`TFA verification successful for ${user.email}.`);
-        return { authToken, userHandle: handle }; // Return token and the confirmed handle
+      const sessionToken = tfaResponseBody.session_token;
+
+      if (sessionToken) {
+        // Log the full token for debugging (in production, you would never do this)
+        console.debug(`FULL TOKEN FOR DEBUGGING: ${sessionToken}`);
+        console.debug(
+          `TFA verification successful for ${
+            user.email
+          }. Token: ${sessionToken.substring(0, 10)}...`
+        );
+        return { authToken: sessionToken, userHandle: handle }; // Return token and the confirmed handle
       } else {
         console.error(
           `TFA verification response missing session_token for ${user.email}. Body: ${tfaVerifyRes.body}`
@@ -352,12 +372,31 @@ export function socialActivity(authToken, userHandle, allUserHandles, vuState) {
   }
 
   // Prepare auth params using the passed token
+  // The API expects the Authorization header to be in the format 'Bearer <token>'
+  // Make sure there's a space between 'Bearer' and the token
+  // Also ensure the token is trimmed to remove any whitespace
+  const cleanToken = authToken.trim();
+
+  // Log the full token for debugging (in production, you would never do this)
+  console.debug(`FULL TOKEN BEING USED: ${cleanToken}`);
+
   const authParams = {
     headers: {
-      Authorization: `Bearer ${authToken}`,
+      Authorization: "Bearer " + cleanToken, // Ensure exact format with space after 'Bearer '
       "Content-Type": "application/json",
     },
   };
+
+  // Debug log the exact header being sent
+  console.debug(
+    `Authorization header: 'Bearer ${cleanToken.substring(0, 10)}...'`
+  );
+  console.debug(`Full Authorization header: 'Bearer ${cleanToken}'`);
+
+  // Log the token being used (first 10 chars only for security)
+  console.debug(
+    `VU ${__VU} (${userHandle}): Using token: ${authToken.substring(0, 10)}...`
+  );
 
   // Select a random user handle to interact with (exclude self)
   let handlesToInteractWith = allUserHandles.filter((h) => h !== userHandle);

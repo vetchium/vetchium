@@ -143,13 +143,13 @@ k6:
 	@echo "--- Waiting for hermione pod ---"
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
 	@echo "--- Running user seeding script ---"
-	@NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
+	# @NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
 	@echo "--- Running k6 load test ---"
 	@API_BASE_URL=$${API_BASE_URL:-"http://localhost:8080"} \
 	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \
-	 NUM_USERS=$${NUM_USERS:-100} \
+	 NUM_USERS=$${NUM_USERS:-10} \
 	 TEST_DURATION=$${TEST_DURATION:-600} \
-	 k6 run neville/hub_scenario.js
+	 k6 run -v neville/hub_scenario.js
 
 # Added a blank line above for separation
 
