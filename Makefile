@@ -41,16 +41,11 @@ docker: ## Build local Docker images for a single platform where it is run
 	docker buildx build --load -f ronweasly/Dockerfile-optimized \
 		-t vetchium/ronweasly:$(GIT_SHA) \
 		--build-arg API_ENDPOINT="http://hermione:8080" .
-	docker buildx build --load -f api/Dockerfile-hermione \
-		-t vetchium/hermione:$(GIT_SHA) .
-	docker buildx build --load -f api/Dockerfile-granger \
-		-t vetchium/granger:$(GIT_SHA) .
-	docker buildx build --load -f sqitch/Dockerfile \
-		-t vetchium/sqitch:$(GIT_SHA) sqitch
-	docker buildx build --load -f sortinghat/Dockerfile \
-		-t vetchium/sortinghat:$(GIT_SHA) .
-	docker buildx build --load -f dev-seed/Dockerfile \
-		-t vetchium/dev-seed:$(GIT_SHA) .
+	docker buildx build --load -f api/Dockerfile-hermione -t vetchium/hermione:$(GIT_SHA) .
+	docker buildx build --load -f api/Dockerfile-granger -t vetchium/granger:$(GIT_SHA) .
+	docker buildx build --load -f sqitch/Dockerfile -t vetchium/sqitch:$(GIT_SHA) sqitch
+	docker buildx build --load -f sortinghat/Dockerfile -t vetchium/sortinghat:$(GIT_SHA) .
+	# docker buildx build --load -f dev-seed/Dockerfile -t vetchium/dev-seed:$(GIT_SHA) .
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -90,7 +85,7 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--push .
 
 devtest: docker ## Brings up an environment with the local docker images. No live reload.
-	pkill -9 "kubectl port-forward"
+	pkill -9 "kubectl port-forward" || true
 	kubectl delete namespace vetchium-devtest --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchium-devtest
 	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
@@ -103,6 +98,7 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl apply -n vetchium-devtest -f devtest-env/minio.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/mailpit.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/secrets.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/prometheus-rbac.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/prometheus.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/grafana.yaml
 

@@ -17,7 +17,7 @@ data:
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_postgresql]
+          - source_labels: [__meta_kubernetes_pod_label_app]
             action: keep
             regex: postgres
           - source_labels: [__meta_kubernetes_pod_container_port_name]
@@ -26,6 +26,8 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: instance
+        metrics_path: /metrics
+        scheme: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -43,6 +45,7 @@ spec:
       labels:
         app: prometheus
     spec:
+      serviceAccountName: prometheus
       containers:
       - name: prometheus
         image: prom/prometheus:v2.42.0
