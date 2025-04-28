@@ -149,7 +149,7 @@ k6:
 	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \
 	 NUM_USERS=$${NUM_USERS:-100} \
 	 TEST_DURATION=$${TEST_DURATION:-600} \
-	 k6 run -v neville/hub_scenario.js
+	 k6 run neville/hub_scenario.js
 
 # Added a blank line above for separation
 
