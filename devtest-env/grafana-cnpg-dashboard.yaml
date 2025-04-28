@@ -7,37 +7,6 @@ metadata:
 data:
   cnpg-dashboard.json: |
     {
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "Prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__elements": {},
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "9.3.6"
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "timeseries",
-          "name": "Time series",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": [
           {
@@ -84,7 +53,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -161,7 +130,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
               "expr": "cnpg_backends_total{datname=~\".*\", instance=~\".*\"}",
@@ -176,7 +145,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -253,10 +222,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_xact_commit_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_xact_commit{datname=~\".*\"}[5m])",
               "legendFormat": "{{instance}} - {{datname}} - commits",
               "range": true,
               "refId": "A"
@@ -264,10 +233,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_xact_rollback_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_xact_rollback{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - rollbacks",
               "range": true,
@@ -280,7 +249,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -357,10 +326,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_tup_returned_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_tup_returned{datname=~\".*\"}[5m])",
               "legendFormat": "{{instance}} - {{datname}} - returned",
               "range": true,
               "refId": "A"
@@ -368,10 +337,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_tup_fetched_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_tup_fetched{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - fetched",
               "range": true,
@@ -380,10 +349,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_tup_inserted_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_tup_inserted{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - inserted",
               "range": true,
@@ -392,10 +361,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_tup_updated_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_tup_updated{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - updated",
               "range": true,
@@ -404,10 +373,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "rate(cnpg_database_tup_deleted_total{datname=~\".*\"}[5m])",
+              "expr": "rate(cnpg_pg_stat_database_tup_deleted{datname=~\".*\"}[5m])",
               "hide": false,
               "legendFormat": "{{instance}} - {{datname}} - deleted",
               "range": true,
@@ -420,7 +389,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -497,10 +466,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "cnpg_database_size_bytes{datname=~\".*\"}",
+              "expr": "cnpg_pg_database_size_bytes{datname=~\".*\"}",
               "legendFormat": "{{instance}} - {{datname}}",
               "range": true,
               "refId": "A"
@@ -525,7 +494,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -602,10 +571,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "cnpg_collector_wal_count{instance=~\".*\"}",
+              "expr": "cnpg_collector_pg_wal{value=\"count\"}",
               "legendFormat": "{{instance}}",
               "range": true,
               "refId": "A"
@@ -617,7 +586,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "Prometheus"
           },
           "fieldConfig": {
             "defaults": {
@@ -694,10 +663,10 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
+                "uid": "Prometheus"
               },
               "editorMode": "builder",
-              "expr": "cnpg_collector_wal_size{instance=~\".*\"}",
+              "expr": "cnpg_collector_pg_wal{value=\"size\"}",
               "legendFormat": "{{instance}}",
               "range": true,
               "refId": "A"
