@@ -91,12 +91,18 @@ export const options = {
     http_req_failed: ["rate<0.01"], // http errors should be less than 1%
     http_req_duration: ["p(95)<1000"], // 95% of requests should be below 1000ms
     "group_duration{group:::Hub Login}": ["p(95)<1500"],
-    "group_duration{group:::Hub TFA Fetch and Verify}": ["p(95)<3000"], // Allow more time for Mailpit interaction
+
+    // This is disabled because we do not need to profile TFA as mailpit is known to be slow
+    // "group_duration{group:::Hub TFA Fetch and Verify}": ["p(95)<3000"],
+
     "group_duration{group:::Hub Social Interaction}": ["p(95)<800"],
     // Add specific thresholds for trends if needed
     [loginTrend.name]: ["p(95)<1500"],
-    [tfaFetchTrend.name]: ["p(95)<2000"],
-    [tfaVerifyTrend.name]: ["p(95)<1000"],
+
+    // The two below are disabled because we do not need to profile TFA as mailpit is known to be slow
+    // [tfaFetchTrend.name]: ["p(95)<2000"],
+    // [tfaVerifyTrend.name]: ["p(95)<1000"],
+
     [createPostTrend.name]: ["p(95)<500"],
     [timelineReadTrend.name]: ["p(95)<700"],
     [followTrend.name]: ["p(95)<400"],
@@ -123,7 +129,7 @@ function fetchTFACodeFromMailpit(username) {
     `to:${fullEmail} subject:"Vetchium Two Factor Authentication"` // Use full email here
   );
   const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${searchQuery}`;
-  console.info(`VU ${__VU}: Using Mailpit search URL: ${searchUrl}`); // Log the search URL using INFO level
+  console.debug(`VU ${__VU}: Using Mailpit search URL: ${searchUrl}`); // Log the search URL using INFO level
 
   // Poll Mailpit for the email
   while (attempts < maxAttempts && !mailId) {
@@ -185,7 +191,7 @@ function fetchTFACodeFromMailpit(username) {
       console.debug(
         `VU ${__VU}: Mail for ${username} not found yet (attempt ${attempts}). Waiting...`
       );
-      sleep(10); // Keep increased wait time
+      sleep(2); // Reduced wait time from 10s
     }
   }
 
@@ -335,10 +341,10 @@ function loginAndAuthenticate(username) {
       check(tfaRes, {
         "TFA verification successful (status 200)": (r) => r.status === 200,
         // Expect 'sessionToken' based on Go test
-        "TFA response contains sessionToken": (r) =>
+        "TFA response contains session_token": (r) =>
           r.body &&
-          r.json("sessionToken") !== null &&
-          r.json("sessionToken") !== undefined,
+          r.json("session_token") !== null &&
+          r.json("session_token") !== undefined,
       });
 
       if (tfaRes.status === 200 && tfaRes.json("session_token")) {
@@ -498,21 +504,20 @@ export function socialActivity() {
           } VU ${__VU} at ${new Date().toISOString()}`,
           // Add other fields like visibility if required by CreateUserPostRequest
         });
-        const postRes = http.post(
-          `${API_BASE_URL}/hub/create-user-post`,
-          postPayload,
-          { ...authParams, tags: { name: "HubCreatePostAPI" } }
-        );
+        const postRes = http.post(`${API_BASE_URL}/hub/add-post`, postPayload, {
+          ...authParams,
+          tags: { name: "HubCreatePostAPI" },
+        });
         createPostTrend.add(postRes.timings.duration);
         check(postRes, {
-          "Create post successful (status 201)": (r) => r.status === 201,
-          "Create post response has postId": (r) =>
+          "Create post successful (status 200)": (r) => r.status === 200,
+          "Create post response has post_id": (r) =>
             r.body &&
-            r.json("postId") !== null &&
-            r.json("postId") !== undefined,
+            r.json("post_id") !== null &&
+            r.json("post_id") !== undefined,
         });
-        if (postRes.status === 201 && postRes.json("postId")) {
-          const newPostId = postRes.json("postId");
+        if (postRes.status === 200 && postRes.json("post_id")) {
+          const newPostId = postRes.json("post_id");
           // Optionally add to VU's list of posts for potential voting later
           if (vuState.fetchedPostIds.length < 50) {
             vuState.fetchedPostIds.push(newPostId);
@@ -523,6 +528,10 @@ export function socialActivity() {
           }
           console.debug(
             `VU ${__VU} (${vuState.userHandle}): Created post ${newPostId}`
+          );
+        } else {
+          console.error(
+            `VU ${__VU} (${vuState.userHandle}): Failed to create post. Status: ${postRes.status}, Body: ${postRes.body}`
           );
         }
         sleep(randomIntBetween(2, 5)); // Pause after action
@@ -589,8 +598,7 @@ export function socialActivity() {
           );
 
           const votePayload = JSON.stringify({
-            // Use 'postId' field name based on typespec examples
-            postId: postIdToVote,
+            post_id: postIdToVote,
           });
           let voteUrl;
           let voteTrend;
