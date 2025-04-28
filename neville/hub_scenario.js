@@ -295,11 +295,11 @@ export function setup() {
   const authenticatedUsers = [];
   const handles = []; // Collect handles separately for socialActivity
 
-  console.log(`Attempting to authenticate ${allUsers.length} users...`);
+  console.debug(`Attempting to authenticate ${allUsers.length} users...`);
 
   for (let i = 0; i < allUsers.length; i++) {
     const user = allUsers[i];
-    console.log(
+    console.debug(
       `Authenticating user ${i + 1}/${allUsers.length}: ${user.email}`
     );
     const authResult = loginAndAuthenticateUser(user); // Pass the whole user object
@@ -310,7 +310,7 @@ export function setup() {
         userHandle: authResult.userHandle,
       });
       handles.push(authResult.userHandle); // Store the handle
-      console.log(
+      console.debug(
         `Authentication successful for: ${user.email} (Handle: ${authResult.userHandle})`
       );
     } else {
