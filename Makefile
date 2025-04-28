@@ -102,11 +102,15 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl apply -n vetchium-devtest -f devtest-env/minio.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/mailpit.yaml
 	kubectl apply -n vetchium-devtest -f devtest-env/secrets.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/prometheus.yaml
+	kubectl apply -n vetchium-devtest -f devtest-env/grafana.yaml
 
 	sleep 20
 	kubectl wait --for=condition=Ready pod -l app=minio -n vetchium-devtest --timeout=5m
 	kubectl wait --for=condition=Ready pod -l app=mailpit -n vetchium-devtest --timeout=5m
 	kubectl wait --for=condition=Ready pod/postgres-1 -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=prometheus -n vetchium-devtest --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=grafana -n vetchium-devtest --timeout=5m
 
 	GIT_SHA=$(GIT_SHA) NAMESPACE=vetchium-devtest envsubst '$$GIT_SHA $$NAMESPACE' < devtest-env/sqitch.yaml | kubectl apply -n vetchium-devtest -f -
 	echo "Waiting for sqitch job to complete..."
@@ -137,17 +141,19 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl port-forward svc/postgres-rw -n vetchium-devtest 5432:5432 &
 	kubectl port-forward svc/minio -n vetchium-devtest 9000:9000 &
 	kubectl port-forward svc/hermione -n vetchium-devtest 8080:8080 &
+	# Grafana default credentials: admin/admin
+	kubectl port-forward svc/grafana -n vetchium-devtest 3000:3000 &
 	# echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
 k6:
 	@echo "--- Waiting for hermione pod ---"
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
 	@echo "--- Running user seeding script ---"
-	@NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
+	@NUM_USERS=$${NUM_USERS:-1000} ./neville/seed_users.sh
 	@echo "--- Running k6 load test ---"
 	@API_BASE_URL=$${API_BASE_URL:-"http://localhost:8080"} \
 	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \
-	 NUM_USERS=$${NUM_USERS:-100} \
+	 NUM_USERS=$${NUM_USERS:-1000} \
 	 TEST_DURATION=$${TEST_DURATION:-600} \
 	 k6 run neville/hub_scenario.js
 
