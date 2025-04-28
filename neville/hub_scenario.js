@@ -943,7 +943,7 @@ export const options = {
   scenarios: {
     social_interactions: {
       executor: "shared-iterations",
-      vus: 10, // Adjust based on your needs
+      vus: `${NUM_USERS}`, // Adjust based on your needs
       iterations: 100, // This is per VU
       maxDuration: `${TEST_DURATION_SECONDS}s`,
     },
