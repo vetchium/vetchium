@@ -197,6 +197,13 @@ INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type) VA
 		return err
 	}
 
+	p.log.Dbg("created hub user token",
+		"token", tokenReq.Token,
+		"hub_user_id", tokenReq.HubUserID,
+		"token_type", tokenReq.TokenType,
+		"validity_duration", tokenReq.ValidityDuration.Minutes(),
+	)
+
 	return nil
 }
 
