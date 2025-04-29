@@ -105,3 +105,14 @@ Create the name of the dev-seed service account to use
     {{- default "default" .Values.devSeed.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create the name of the sqitch service account to use
+*/}}
+{{- define "vetchium-apps-helm.sqitchServiceAccountName" -}}
+{{- if .Values.sqitch.serviceAccount.create -}}
+    {{- default (printf "%s-sqitch-sa" (include "vetchium-apps-helm.fullname" .)) .Values.sqitch.serviceAccount.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+    {{- default "default" .Values.sqitch.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}

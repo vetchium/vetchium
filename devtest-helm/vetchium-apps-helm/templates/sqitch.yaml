@@ -1,62 +1,97 @@
+{{- if .Values.sqitch.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sqitch-${GIT_SHA}
+  # Add git sha to name to ensure job runs on every deploy if chart/values change
+  # Helm doesn't automatically replace jobs unless the template changes.
+  name: {{ include "vetchium-apps-helm.fullname" . }}-sqitch-{{ .Values.sqitch.image.tag | default .Chart.AppVersion | sha256sum | trunc 8 }}
   labels:
-    app: sqitch
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sqitch
+  annotations:
+    # Add checksum of values to trigger job update on values change
+    "checksum/config": {{ include (print $.Template.BasePath "/values.yaml") . | sha256sum }}
 spec:
-  backoffLimit: 5
+  backoffLimit: {{ .Values.sqitch.backoffLimit }}
   template:
     metadata:
       labels:
-        app: sqitch
-        version: ${GIT_SHA}
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: sqitch
+        version: {{ default .Chart.AppVersion .Values.sqitch.image.tag }}
     spec:
-      serviceAccountName: sqitch-sa
+      {{- if .Values.sqitch.serviceAccount.create }}
+      serviceAccountName: {{ include "vetchium-apps-helm.sqitchServiceAccountName" . }}
+      {{- else if .Values.sqitch.serviceAccount.name }}
+      serviceAccountName: {{ .Values.sqitch.serviceAccount.name }}
+      {{- end }}
       initContainers:
         - name: wait-for-postgres
-          image: bitnami/kubectl:latest
+          image: {{ .Values.sqitch.initContainer.kubectlImage }}
           command: ["sh", "-c"]
           args:
             - |
-              until kubectl get pods -l app=postgres -n ${NAMESPACE} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
-                echo "Waiting for PostgreSQL to be ready..."
+              until kubectl get pods -l {{ .Values.sqitch.initContainer.postgresLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+                echo "Waiting for PostgreSQL pods ({{ .Values.sqitch.initContainer.postgresLabelSelector }}) to be ready..."
                 sleep 5
               done
       containers:
         - name: sqitch
-          image: vetchium/sqitch:${GIT_SHA}
+          image: "{{ .Values.sqitch.image.repository }}:{{ default .Chart.AppVersion .Values.sqitch.image.tag }}"
+          imagePullPolicy: {{ .Values.sqitch.image.pullPolicy }}
           command: ["sh", "-c"]
           args:
             - |
               set -e
+              # Transform postgresql:// to db:pg:// format expected by sqitch
               URI=$(cat /mnt/secrets/uri | sed 's|postgresql://|db:pg://|')
+              echo "Deploying Sqitch changes..."
               sqitch deploy --verbose "${URI}"
+              echo "Verifying Sqitch changes..."
               sqitch verify --verbose "${URI}"
+              echo "Sqitch deployment complete."
           volumeMounts:
             - name: postgres-creds
               mountPath: /mnt/secrets
               readOnly: true
+          # Add resource limits/requests if needed
+          # resources:
+          #   {{- toYaml .Values.sqitch.resources | nindent 12 }}
       volumes:
         - name: postgres-creds
           secret:
-            secretName: postgres-app
+            secretName: {{ .Values.sqitch.secrets.postgres }} # Assumes secret is in the same namespace
       restartPolicy: Never
 ---
+{{- if .Values.sqitch.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sqitch-sa
+  name: {{ include "vetchium-apps-helm.sqitchServiceAccountName" . }}
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sqitch
+  {{- with .Values.sqitch.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 ---
+{{- end }}
+{{- if .Values.sqitch.clusterRoleBinding.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sqitch-full-access-binding-devtest
+  name: {{ include "vetchium-apps-helm.fullname" . }}-sqitch-crb
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sqitch
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: full-access
+  name: {{ .Values.sqitch.clusterRoleBinding.clusterRoleName }}
 subjects:
   - kind: ServiceAccount
-    name: sqitch-sa
-    namespace: ${NAMESPACE}
+    name: {{ include "vetchium-apps-helm.sqitchServiceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }} # End if .Values.sqitch.enabled

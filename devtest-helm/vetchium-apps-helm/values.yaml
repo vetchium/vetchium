@@ -265,6 +265,28 @@ sortinghat:
     clusterRoleName: full-access # The ClusterRole to bind to
 
 # Add sections for sqitch, etc. here
+sqitch:
+  enabled: true # Control whether to run the sqitch migration job
+  backoffLimit: 5
+  image:
+    repository: vetchium/sqitch
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  serviceAccount:
+    create: true
+    # name: "" # Defaults to '<fullname>-sqitch-sa' if create is true
+    annotations: {}
+  secrets:
+    postgres: postgres-app # Name of the K8s secret containing Postgres URI
+  initContainer:
+    kubectlImage: bitnami/kubectl:latest
+    # Label selector for postgres pods to wait for
+    postgresLabelSelector: "app.kubernetes.io/name=postgres,cnpg.io/cluster=vetchium-env-postgres" # Adjust if postgres label differs (e.g., from env chart)
+  # ClusterRoleBinding for sqitch-sa
+  clusterRoleBinding:
+    create: true
+    clusterRoleName: full-access # The ClusterRole to bind to
+
 devSeed:
   enabled: true # Control whether to run the dev seed job
   backoffLimit: 3

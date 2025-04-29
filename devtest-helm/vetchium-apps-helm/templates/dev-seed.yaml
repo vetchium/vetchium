@@ -1,62 +1,89 @@
+{{- if .Values.devSeed.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dev-seed
+  name: {{ include "vetchium-apps-helm.fullname" . }}-dev-seed
   labels:
-    app: dev-seed
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dev-seed
 spec:
-  backoffLimit: 3
+  backoffLimit: {{ .Values.devSeed.backoffLimit }}
   template:
     metadata:
       labels:
-        app: dev-seed
-        version: ${GIT_SHA}
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: dev-seed
+        # Use explicit tag if provided, otherwise chart version
+        version: {{ default .Chart.AppVersion .Values.devSeed.image.tag }}
     spec:
-      serviceAccountName: dev-seed-sa
+      {{- if .Values.devSeed.serviceAccount.create }}
+      serviceAccountName: {{ include "vetchium-apps-helm.devSeedServiceAccountName" . }}
+      {{- else if .Values.devSeed.serviceAccount.name }}
+      serviceAccountName: {{ .Values.devSeed.serviceAccount.name }}
+      {{- end }}
       initContainers:
         - name: wait-for-dependencies
-          image: bitnami/kubectl:latest
+          image: {{ .Values.devSeed.initContainer.kubectlImage }}
           command:
             - /bin/sh
             - -c
             - |
-              until kubectl get pods -l app=hermione -n ${NAMESPACE} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for hermione pods to be running..."
+              until kubectl get pods -l {{ .Values.devSeed.initContainer.hermioneLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for hermione pods ({{ .Values.devSeed.initContainer.hermioneLabelSelector }}) to be running..."
                 sleep 5
               done
-              until kubectl get pods -l app=mailpit -n ${NAMESPACE} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for mailpit pods to be running..."
+              until kubectl get pods -l {{ .Values.devSeed.initContainer.mailpitLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for mailpit pods ({{ .Values.devSeed.initContainer.mailpitLabelSelector }}) to be running..."
                 sleep 5
               done
       containers:
         - name: dev-seed
-          image: vetchium/dev-seed:${GIT_SHA}
+          image: "{{ .Values.devSeed.image.repository }}:{{ default .Chart.AppVersion .Values.devSeed.image.tag }}"
+          imagePullPolicy: {{ .Values.devSeed.image.pullPolicy }}
           env:
             - name: POSTGRES_URI
               valueFrom:
                 secretKeyRef:
-                  name: postgres-app
+                  name: {{ .Values.devSeed.secrets.postgres }} # Assumes secret is in the same namespace
                   key: uri
             - name: SERVER_URL
-              value: "http://hermione:8080"
+              value: {{ .Values.devSeed.hermioneServiceUrl | quote }}
             - name: MAIL_PIT_URL
-              value: "http://mailpit:8025"
+              value: {{ .Values.devSeed.mailpitServiceUrl | quote }}
+          # Add resource limits/requests if needed
+          # resources:
+          #   {{- toYaml .Values.devSeed.resources | nindent 12 }}
       restartPolicy: Never
 ---
+{{- if .Values.devSeed.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: dev-seed-sa
+  name: {{ include "vetchium-apps-helm.devSeedServiceAccountName" . }}
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dev-seed
+  {{- with .Values.devSeed.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 ---
+{{- end }}
+{{- if .Values.devSeed.clusterRoleBinding.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: dev-seed-full-access-binding-devtest
+  name: {{ include "vetchium-apps-helm.fullname" . }}-dev-seed-crb
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dev-seed
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: full-access
+  name: {{ .Values.devSeed.clusterRoleBinding.clusterRoleName }}
 subjects:
   - kind: ServiceAccount
-    name: dev-seed-sa
-    namespace: ${NAMESPACE}
+    name: {{ include "vetchium-apps-helm.devSeedServiceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }} # End if .Values.devSeed.enabled

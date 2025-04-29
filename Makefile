@@ -143,6 +143,48 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	kubectl port-forward svc/grafana -n vetchium-devtest 3000:3000 &
 	# echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
+devtest-helm: docker ## Brings up the devtest environment using Helm charts with local images.
+	@echo "--- Deploying devtest environment using Helm ---"
+	@echo "Using GIT_SHA: $(GIT_SHA)"
+	-helm uninstall vetchium-env -n vetchium-devtest || true # Optional: Uninstall previous env release first
+	-helm uninstall vetchium-apps -n vetchium-devtest || true # Optional: Uninstall previous app release first
+	kubectl delete namespace vetchium-devtest --ignore-not-found --force --grace-period=0
+	kubectl create namespace vetchium-devtest
+
+	@echo "--- Installing/Upgrading vetchium-env-helm ---"
+	helm upgrade --install vetchium-env ./devtest-helm/vetchium-env-helm \
+		--namespace vetchium-devtest \
+		--create-namespace \
+		--wait --timeout 10m
+
+	@echo "--- Installing/Upgrading vetchium-apps-helm ---"
+	helm upgrade --install vetchium-apps ./devtest-helm/vetchium-apps-helm \
+		--namespace vetchium-devtest \
+		--create-namespace \
+		--set-string harrypotter.image.tag=$(GIT_SHA) \
+		--set-string granger.image.tag=$(GIT_SHA) \
+		--set-string hermione.image.tag=$(GIT_SHA) \
+		--set-string ronweasly.image.tag=$(GIT_SHA) \
+		--set-string sortinghat.image.tag=$(GIT_SHA) \
+		--set-string devSeed.image.tag=$(GIT_SHA) \
+		--set-string sqitch.image.tag=$(GIT_SHA) \
+		--wait --timeout 10m
+
+	@echo "--- Helm deployment complete ---"
+	@echo "Run 'make port-forward-helm' to forward ports."
+
+port-forward-helm: ## Forward ports for Helm-deployed devtest services
+	@echo "Forwarding ports for Helm deployment..."
+	-pkill -9 -f "kubectl port-forward -n vetchium-devtest" || true
+	kubectl port-forward svc/vetchium-apps-harrypotter -n vetchium-devtest 3001:80 &
+	kubectl port-forward svc/vetchium-apps-ronweasly -n vetchium-devtest 3002:80 &
+	kubectl port-forward svc/vetchium-env-mailpit -n vetchium-devtest 8025:8025 &
+	kubectl port-forward svc/vetchium-env-postgres-rw -n vetchium-devtest 5432:5432 &
+	kubectl port-forward svc/vetchium-env-minio -n vetchium-devtest 9000:9000 &
+	kubectl port-forward svc/vetchium-apps-hermione -n vetchium-devtest 8080:8080 &
+	kubectl port-forward svc/vetchium-env-grafana -n vetchium-devtest 3000:3000 &
+	@echo "Ports forwarded. Access services via localhost:<port>."
+
 k6:
 	@echo "--- Waiting for hermione pod ---"
 	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest --timeout=5m
