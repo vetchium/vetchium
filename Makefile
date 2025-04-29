@@ -45,7 +45,7 @@ docker: ## Build local Docker images for a single platform where it is run
 	docker buildx build --load -f api/Dockerfile-granger -t vetchium/granger:$(GIT_SHA) .
 	docker buildx build --load -f sqitch/Dockerfile -t vetchium/sqitch:$(GIT_SHA) sqitch
 	docker buildx build --load -f sortinghat/Dockerfile -t vetchium/sortinghat:$(GIT_SHA) .
-	# docker buildx build --load -f dev-seed/Dockerfile -t vetchium/dev-seed:$(GIT_SHA) .
+	docker buildx build --load -f dev-seed/Dockerfile -t vetchium/dev-seed:$(GIT_SHA) .
 
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
