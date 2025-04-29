@@ -1,0 +1,38 @@
+cloudnative-pg:
+  monitoring:
+    serviceMonitor:
+      enabled: true
+    grafanaDashboard:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+
+minio:
+  mode: standalone
+  accessKey:
+    password: "minioadmin"
+  secretKey:
+    password: "minioadmin"
+
+kube-prometheus-stack:
+  prometheusOperator:
+    enabled: true
+  prometheus:
+    enabled: true
+    prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+  grafana:
+    enabled: true
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+        searchNamespace: ALL
+  alertmanager:
+    enabled: false
+  nodeExporter:
+    enabled: true
+  kubeStateMetrics:
+    enabled: true

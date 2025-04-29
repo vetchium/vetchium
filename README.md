@@ -146,10 +146,10 @@ Sometimes we are forced to use longer names in the libraries. For example, we us
 
 ## Devtest - WIP
 ```bash
-helm install cnpg-monitoring-stack ./cnpg-monitoring-stack \
+helm install vetchium-env-helm ./vetchium-env-helm \
   --namespace vetchium-devtest \
   --create-namespace \
   --wait
 
-kubectl port-forward svc/cnpg-monitoring-stack-grafana 3000:80 -n vetchium-devtest
+kubectl port-forward svc/vetchium-env-helm-grafana 3000:80 -n vetchium-devtest
 ```
