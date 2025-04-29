@@ -142,3 +142,14 @@ Following are some rules that you should follow while working on the code. It is
 #### Others
 
 Sometimes we are forced to use longer names in the libraries. For example, we use employer.EmployerInterview instead of just employer.Interview as any Go programmer would do. The reason for this is, typespec does not allow creating duplicate structures as we compile into one large openapi.yaml in the end. So we have to live with the longer names. But try to minimize the length of variables as much as you can.
+
+
+## Devtest - WIP
+```bash
+helm install cnpg-monitoring-stack ./cnpg-monitoring-stack \
+  --namespace vetchium-devtest \
+  --create-namespace \
+  --wait
+
+kubectl port-forward svc/cnpg-monitoring-stack-grafana 3000:80 -n vetchium-devtest
+```
