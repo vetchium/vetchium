@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: sqitch
   annotations:
     # Add checksum of values to trigger job update on values change
-    "checksum/config": {{ include (print $.Template.BasePath "/values.yaml") . | sha256sum }}
+    "checksum/config": {{ .Values | toYaml | sha256sum }}
 spec:
   backoffLimit: {{ .Values.sqitch.backoffLimit }}
   template:
