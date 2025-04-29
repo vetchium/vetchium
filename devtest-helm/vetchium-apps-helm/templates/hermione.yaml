@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-hermione-config
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+data:
+  config.json: |
+    {
+      "employer": {
+        "web_url": {{ .Values.hermione.config.employerWebUrl | quote }},
+        "tfa_tok_life": {{ .Values.hermione.config.employerTfaTokLife | quote }},
+        "session_tok_life": {{ .Values.hermione.config.employerSessionTokLife | quote }},
+        "lts_tok_life": {{ .Values.hermione.config.employerLtsTokLife | quote }},
+        "employee_invite_tok_life": {{ .Values.hermione.config.employerEmployeeInviteTokLife | quote }}
+      },
+      "hub": {
+        "web_url": {{ .Values.hermione.config.hubWebUrl | quote }},
+        "tfa_tok_life": {{ .Values.hermione.config.hubTfaTokLife | quote }},
+        "session_tok_life": {{ .Values.hermione.config.hubSessionTokLife | quote }},
+        "lts_tok_life": {{ .Values.hermione.config.hubLtsTokLife | quote }},
+        "hub_user_invite_tok_life": {{ .Values.hermione.config.hubUserInviteTokLife | quote }},
+        "password_reset_tok_life": {{ .Values.hermione.config.hubPasswordResetTokLife | quote }}
+      },
+      "port": {{ .Values.hermione.config.port | quote }},
+      "timing_attack_delay": {{ .Values.hermione.config.timingAttackDelay | quote }}
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-hermione
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+spec:
+  replicas: {{ .Values.hermione.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: hermione
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: hermione
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "vetchium-apps-helm.hermioneServiceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.hermione.initContainer.enabled }}
+      initContainers:
+        - name: wait-for-sqitch
+          image: {{ .Values.hermione.initContainer.kubectlImage }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until kubectl get jobs -l {{ .Values.hermione.initContainer.sqitchJobLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[-1:].status.succeeded}' | grep -q '1'; do
+                echo "Waiting for latest sqitch job ({{ .Values.hermione.initContainer.sqitchJobLabelSelector }}) in namespace {{ .Release.Namespace }} to complete..."
+                sleep 5
+              done
+              echo "Sqitch job completed."
+      {{- end }}
+      containers:
+        - name: hermione
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.hermione.image.repository }}:{{ .Values.hermione.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.hermione.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.hermione.config.port | int }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.postgres }}
+                  key: uri
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.s3 }}
+                  key: access_key
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.s3 }}
+                  key: bucket
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.s3 }}
+                  key: endpoint
+            - name: S3_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.s3 }}
+                  key: region
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hermione.secrets.s3 }}
+                  key: secret_key
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/hermione-config
+          resources:
+            {{- toYaml .Values.hermione.resources | nindent 12 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "vetchium-apps-helm.fullname" . }}-hermione-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-hermione
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+spec:
+  type: {{ .Values.hermione.service.type }}
+  ports:
+    - port: {{ .Values.hermione.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+---
+{{- if .Values.hermione.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "vetchium-apps-helm.hermioneServiceAccountName" . }}
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.hermioneClusterRoleBinding.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-hermione-access-binding
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: hermione
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.hermioneClusterRoleBinding.clusterRoleName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "vetchium-apps-helm.hermioneServiceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

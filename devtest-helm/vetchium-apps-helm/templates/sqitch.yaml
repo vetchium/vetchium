@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqitch-${GIT_SHA}
+  labels:
+    app: sqitch
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app: sqitch
+        version: ${GIT_SHA}
+    spec:
+      serviceAccountName: sqitch-sa
+      initContainers:
+        - name: wait-for-postgres
+          image: bitnami/kubectl:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              until kubectl get pods -l app=postgres -n ${NAMESPACE} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+                echo "Waiting for PostgreSQL to be ready..."
+                sleep 5
+              done
+      containers:
+        - name: sqitch
+          image: vetchium/sqitch:${GIT_SHA}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              URI=$(cat /mnt/secrets/uri | sed 's|postgresql://|db:pg://|')
+              sqitch deploy --verbose "${URI}"
+              sqitch verify --verbose "${URI}"
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: postgres-app
+      restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sqitch-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sqitch-full-access-binding-devtest
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: full-access
+subjects:
+  - kind: ServiceAccount
+    name: sqitch-sa
+    namespace: ${NAMESPACE}

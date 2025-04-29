@@ -1,0 +1,294 @@
+# Default values for vetchium-apps-helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Specific application configurations
+harrypotter:
+  replicaCount: 1
+  image:
+    repository: vetchium/harrypotter
+    pullPolicy: IfNotPresent
+    # tag defaults to .Chart.AppVersion if not specified
+    tag: ""
+  service:
+    type: LoadBalancer # Or ClusterIP, NodePort depending on needs
+    port: 80 # External port for the service
+    targetPort: 3000 # Container port
+
+granger:
+  replicaCount: 1
+  strategy: Recreate # Or RollingUpdate
+  image:
+    repository: vetchium/granger
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template + -granger-sa
+    name: ""
+  config:
+    env: "dev"
+    onboardTokenLife: "3m"
+    port: "8080" # This is the internal container port
+    employerBaseUrl: "http://localhost:3001" # Needs update for cluster DNS
+    hubBaseUrl: "http://localhost:3002" # Needs update for cluster DNS
+  # Names of existing secrets
+  secrets:
+    postgres: postgres-app
+    smtp: smtp-credentials
+    s3: s3-credentials
+  service:
+    type: ClusterIP # Usually internal services are ClusterIP
+    port: 8080 # Service port
+  # Define resource requests/limits if needed
+  # resources: {}
+  # Node selector, affinity, tolerations can be added here if needed from the global values or specific overrides
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/component # Use the helm label key
+            operator: In
+            values:
+            - granger
+        topologyKey: "kubernetes.io/hostname"
+
+# ClusterRoleBinding specific values
+grangerClusterRoleBinding:
+  # Whether to create the binding. Set to false if the binding is managed elsewhere.
+  create: true
+  # The name of the ClusterRole to bind to. Assumes 'full-access' exists.
+  clusterRoleName: full-access
+
+# Add sections for other apps like ronweasly, sortinghat, etc. here
+hermione:
+  replicaCount: 3
+  image:
+    repository: vetchium/hermione
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  serviceAccount:
+    create: true
+    name: "" # Defaults to fullname-hermione-sa
+  # Wait for sqitch job completion before starting hermione pod
+  initContainer:
+    enabled: true
+    kubectlImage: bitnami/kubectl:latest
+    # Assuming sqitch template uses this standard component label
+    sqitchJobLabelSelector: "app.kubernetes.io/component=sqitch"
+  config:
+    employerWebUrl: "http://localhost:3001" # TODO: Update with K8s service name/port for Granger/Frontend?
+    employerTfaTokLife: "5m"
+    employerSessionTokLife: "15m"
+    employerLtsTokLife: "730h"
+    employerEmployeeInviteTokLife: "5m"
+    hubWebUrl: "http://localhost:3002" # TODO: Update with K8s service name/port for SortingHat/Frontend?
+    hubTfaTokLife: "5m"
+    hubSessionTokLife: "15m"
+    hubLtsTokLife: "730h"
+    hubUserInviteTokLife: "5m"
+    hubPasswordResetTokLife: "5m"
+    port: "8080" # Container port
+    timingAttackDelay: "1s"
+  secrets:
+    postgres: postgres-app # Name of the K8s Secret for PostgreSQL connection
+    s3: s3-credentials   # Name of the K8s Secret for S3 credentials
+  service:
+    type: ClusterIP      # Service type (ClusterIP is common for internal services)
+    port: 8080           # Service port
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1000Mi
+    # requests: {} # Define requests if needed
+
+# ClusterRoleBinding specific values
+hermioneClusterRoleBinding:
+  create: true
+  clusterRoleName: full-access
+
+ronweasly:
+  replicaCount: 1 # Default replica count
+  image:
+    repository: vetchium/ronweasly
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  service:
+    type: ClusterIP # Or LoadBalancer if it needs external access directly
+    port: 80
+    targetPort: 3000 # Container port
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  # Probes configuration
+  readinessProbe:
+    httpGet:
+      path: /
+      # Port name 'http' will be used here by the template
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    # Add timeoutSeconds, failureThreshold, successThreshold if needed
+  livenessProbe:
+    httpGet:
+      path: /
+      # Port name 'http' will be used here by the template
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    # Add timeoutSeconds, failureThreshold, successThreshold if needed
+
+# Add sections for sortinghat, sqitch, etc. here
+sortinghat:
+  replicaCount: 1
+  image:
+    repository: vetchium/sortinghat
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  config:
+    port: "8080"
+  serviceAccount:
+    create: true
+    # name: "" # Defaults to '<fullname>-sortinghat-sa' if create is true
+    annotations: {}
+  secrets:
+    s3: s3-credentials # Name of the K8s secret containing S3 creds
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080 # Explicitly set targetPort
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "3Gi"
+      cpu: "3"
+  livenessProbe:
+    httpGet:
+      path: /health
+      # Port name 'http' will be used by the template
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /health
+      # Port name 'http' will be used by the template
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  # ClusterRoleBinding for sortinghat-sa
+  clusterRoleBinding:
+    create: true
+    clusterRoleName: full-access # The ClusterRole to bind to
+
+# Add sections for sqitch, etc. here
+devSeed:
+  enabled: true # Control whether to run the dev seed job
+  backoffLimit: 3
+  image:
+    repository: vetchium/dev-seed
+    pullPolicy: IfNotPresent
+    tag: "" # Defaults to .Chart.AppVersion
+  serviceAccount:
+    create: true
+    # name: "" # Defaults to '<fullname>-dev-seed-sa' if create is true
+    annotations: {}
+  secrets:
+    postgres: postgres-app # Name of the K8s secret containing Postgres URI
+  # URLs for dependent services
+  hermioneServiceUrl: "http://{{ include \"vetchium-apps-helm.fullname\" . }}-hermione:{{ .Values.hermione.service.port }}" # Construct URL dynamically
+  mailpitServiceUrl: "http://mailpit:8025" # Assuming mailpit is external or fixed name/port
+  initContainer:
+    kubectlImage: bitnami/kubectl:latest
+    # Labels to wait for - these should match the deployed apps
+    hermioneLabelSelector: "app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=hermione"
+    mailpitLabelSelector: "app.kubernetes.io/name=mailpit" # Adjust if mailpit label differs
+  # ClusterRoleBinding for dev-seed-sa
+  clusterRoleBinding:
+    create: true
+    clusterRoleName: full-access # The ClusterRole to bind to
+
+# Add sections for sqitch, etc. here

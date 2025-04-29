@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-ronweasly
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ronweasly
+spec:
+  replicas: {{ .Values.ronweasly.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ronweasly
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ronweasly
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "vetchium-apps-helm.serviceAccountName" . }} # Assuming a default SA or one defined globally
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: ronweasly
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.ronweasly.image.repository }}:{{ .Values.ronweasly.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ronweasly.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ronweasly.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.ronweasly.livenessProbe }}
+          livenessProbe:
+            httpGet:
+              path: {{ .httpGet.path }}
+              port: http # references the containerPort name 'http'
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            {{- if .timeoutSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            {{- end }}
+            {{- if .failureThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- end }}
+            {{- if .successThreshold }}
+            successThreshold: {{ .successThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.ronweasly.readinessProbe }}
+          readinessProbe:
+            httpGet:
+              path: {{ .httpGet.path }}
+              port: http # references the containerPort name 'http'
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            {{- if .timeoutSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            {{- end }}
+            {{- if .failureThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- end }}
+            {{- if .successThreshold }}
+            successThreshold: {{ .successThreshold }}
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.ronweasly.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-ronweasly
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ronweasly
+spec:
+  type: {{ .Values.ronweasly.service.type }}
+  ports:
+    - port: {{ .Values.ronweasly.service.port }}
+      targetPort: http # references the containerPort name 'http'
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ronweasly

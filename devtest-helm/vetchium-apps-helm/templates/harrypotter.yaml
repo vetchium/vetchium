@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-harrypotter
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: harrypotter
+spec:
+  replicas: {{ .Values.harrypotter.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: harrypotter
+  template:
+    metadata:
+      labels:
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: harrypotter
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "vetchium-apps-helm.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: harrypotter
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.harrypotter.image.repository }}:{{ .Values.harrypotter.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.harrypotter.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.harrypotter.service.targetPort }}
+              protocol: TCP
+          # Add livenessProbe, readinessProbe, resources if needed
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-harrypotter
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: harrypotter
+spec:
+  type: {{ .Values.harrypotter.service.type }}
+  ports:
+    - port: {{ .Values.harrypotter.service.port }}
+      targetPort: http # Reference the container port name
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: harrypotter

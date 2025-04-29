@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-granger-config
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+data:
+  config.json: |
+    {
+      "env": {{ .Values.granger.config.env | quote }},
+      "onboard_token_life": {{ .Values.granger.config.onboardTokenLife | quote }},
+      "port": {{ .Values.granger.config.port | quote }},
+      "employer_base_url": {{ .Values.granger.config.employerBaseUrl | quote }},
+      "hub_base_url": {{ .Values.granger.config.hubBaseUrl | quote }}
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-granger
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+spec:
+  replicas: {{ .Values.granger.replicaCount }}
+  strategy:
+    type: {{ .Values.granger.strategy }}
+  selector:
+    matchLabels:
+      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: granger
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: granger
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.granger.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: granger
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.granger.image.repository }}:{{ .Values.granger.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.granger.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.granger.config.port | int }} # Use the port from config
+              protocol: TCP
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.postgres }}
+                  key: uri
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.smtp }}
+                  key: host
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.smtp }}
+                  key: port
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.smtp }}
+                  key: user
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.smtp }}
+                  key: password
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.granger.secrets.s3 }}
+                  key: bucket
+          # Add livenessProbe, readinessProbe if needed
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }} # Use global resources, override in values.granger if needed
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/granger-config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "vetchium-apps-helm.fullname" . }}-granger-config # Reference the templated ConfigMap name
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-granger
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+spec:
+  type: {{ .Values.granger.service.type }}
+  ports:
+    - port: {{ .Values.granger.service.port }}
+      targetPort: http # Reference container port name
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+---
+{{- if .Values.granger.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.grangerClusterRoleBinding.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "vetchium-apps-helm.fullname" . }}-granger-access-binding
+  labels:
+    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: granger
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.grangerClusterRoleBinding.clusterRoleName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

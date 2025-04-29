@@ -1,0 +1,32 @@
+apiVersion: v2
+name: vetchium-apps-helm
+description: A Helm chart for deploying Vetchium applications
+# A chart can be either an 'application' or a 'library' chart.
+# Application charts are deployable objects. Library charts provide useful utilities
+# or functions for the chart developer. They're included as a dependency of application charts.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the application version.
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application.
+appVersion: "1.0.0" # You might want to adjust this based on your app versions
+
+# Optional: Add maintainers if desired
+# maintainers:
+#   - name: Your Name
+#     email: your.email@example.com
+
+# Optional: Add keywords for discoverability
+# keywords:
+#  - vetchium
+#  - application
+
+# Optional: Specify dependencies if this chart depends on others
+# dependencies:
+#  - name: postgresql
+#    version: "10.3.11"
+#    repository: "https://charts.bitnami.com/bitnami"
+#    condition: postgresql.enabled # Example condition
