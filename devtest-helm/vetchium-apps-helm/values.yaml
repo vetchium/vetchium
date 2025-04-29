@@ -281,7 +281,7 @@ sqitch:
   initContainer:
     kubectlImage: bitnami/kubectl:latest
     # Label selector for postgres pods to wait for
-    postgresLabelSelector: "app.kubernetes.io/name=postgres,cnpg.io/cluster=vetchium-env-postgres" # Adjust if postgres label differs (e.g., from env chart)
+    postgresLabelSelector: "cnpg.io/cluster=postgres" # Adjust if postgres label differs (e.g., from env chart)
   # ClusterRoleBinding for sqitch-sa
   clusterRoleBinding:
     create: true
@@ -306,7 +306,8 @@ devSeed:
   initContainer:
     kubectlImage: bitnami/kubectl:latest
     # Labels to wait for - these should match the deployed apps
-    hermioneLabelSelector: "app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=hermione"
+    postgresLabelSelector: "cnpg.io/cluster=postgres"
+    hermioneComponentLabel: "app.kubernetes.io/component=hermione"
     mailpitLabelSelector: "app.kubernetes.io/name=mailpit" # Adjust if mailpit label differs
   # ClusterRoleBinding for dev-seed-sa
   clusterRoleBinding:

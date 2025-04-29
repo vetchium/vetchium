@@ -29,12 +29,22 @@ spec:
             - /bin/sh
             - -c
             - |
-              until kubectl get pods -l {{ .Values.devSeed.initContainer.hermioneLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for hermione pods ({{ .Values.devSeed.initContainer.hermioneLabelSelector }}) to be running..."
+              HERMIONE_SELECTOR="app.kubernetes.io/instance={{ .Release.Name }},{{ .Values.devSeed.initContainer.hermioneComponentLabel }}"
+              MAILPIT_SELECTOR="{{ .Values.devSeed.initContainer.mailpitLabelSelector }}"
+              POSTGRES_SELECTOR="{{ .Values.devSeed.initContainer.postgresLabelSelector }}"
+
+              until kubectl get pods -l "${POSTGRES_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+                echo "Waiting for PostgreSQL pods (${POSTGRES_SELECTOR}) to be ready..."
                 sleep 5
               done
-              until kubectl get pods -l {{ .Values.devSeed.initContainer.mailpitLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for mailpit pods ({{ .Values.devSeed.initContainer.mailpitLabelSelector }}) to be running..."
+
+              until kubectl get pods -l "${HERMIONE_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for hermione pods (${HERMIONE_SELECTOR}) to be running..."
+                sleep 5
+              done
+
+              until kubectl get pods -l "${MAILPIT_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for mailpit pods (${MAILPIT_SELECTOR}) to be running..."
                 sleep 5
               done
       containers:
