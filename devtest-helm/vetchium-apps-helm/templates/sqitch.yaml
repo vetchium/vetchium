@@ -56,7 +56,6 @@ spec:
               readOnly: true
           # Add resource limits/requests if needed
           # resources:
-          #   {{- toYaml .Values.sqitch.resources | nindent 12 }}
       volumes:
         - name: postgres-creds
           secret:
