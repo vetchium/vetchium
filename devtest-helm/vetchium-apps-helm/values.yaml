@@ -305,8 +305,8 @@ devSeed:
   secrets:
     postgres: postgres-app # Name of the K8s secret containing Postgres URI
   # URLs for dependent services
-  hermioneServiceUrl: "http://hermione:{{ .Values.hermione.service.port }}" # Construct URL dynamically
-  mailpitServiceUrl: "http://mailpit-http:8025" # Use non-prefixed name
+  hermioneServiceUrl: "http://hermione:{{ .Values.hermione.service.port }}"
+  mailpitServiceUrl: "http://mailpit-http"
   initContainer:
     kubectlImage: bitnami/kubectl:latest
     # Labels to wait for - these should match the deployed apps
