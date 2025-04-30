@@ -14,7 +14,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-sortinghat
+  name: sortinghat
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: sortinghat
@@ -38,7 +38,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "vetchium-apps-helm.sortinghatServiceAccountName" . }}
+      serviceAccountName: sortinghat-sa
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -136,7 +136,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-sortinghat
+  name: sortinghat
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: sortinghat
@@ -155,7 +155,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "vetchium-apps-helm.sortinghatServiceAccountName" . }}
+  name: sortinghat-sa
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: sortinghat
@@ -169,7 +169,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-sortinghat-access-binding
+  name: sortinghat-access-binding
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: sortinghat
@@ -179,6 +179,6 @@ roleRef:
   name: {{ .Values.sortinghat.clusterRoleBinding.clusterRoleName }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "vetchium-apps-helm.sortinghatServiceAccountName" . }}
+    name: sortinghat-sa
     namespace: {{ .Release.Namespace }}
 {{- end }}

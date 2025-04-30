@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-ronweasly
+  name: ronweasly
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: ronweasly
@@ -90,7 +90,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-ronweasly
+  name: ronweasly
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: ronweasly

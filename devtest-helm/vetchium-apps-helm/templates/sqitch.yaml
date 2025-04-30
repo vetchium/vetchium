@@ -2,9 +2,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  # Add git sha to name to ensure job runs on every deploy if chart/values change
-  # Helm doesn't automatically replace jobs unless the template changes.
-  name: {{ include "vetchium-apps-helm.fullname" . }}-sqitch-{{ .Values.sqitch.image.tag | default .Chart.AppVersion | sha256sum | trunc 8 }}
+  # Simplify Job name for sqitch to avoid long helm prefixes in pod names
+  name: sqitch-migrate
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: sqitch

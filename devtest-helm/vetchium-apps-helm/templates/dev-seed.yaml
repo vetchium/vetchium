@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "vetchium-apps-helm.fullname" . }}-dev-seed
+  name: dev-seed
   labels:
     {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
     app.kubernetes.io/component: dev-seed
@@ -58,7 +58,7 @@ spec:
                   name: {{ .Values.devSeed.secrets.postgres }} # Assumes secret is in the same namespace
                   key: uri
             - name: SERVER_URL
-              value: {{ .Values.devSeed.hermioneServiceUrl | quote }}
+              value: {{ tpl .Values.devSeed.hermioneServiceUrl . | quote }}
             - name: MAIL_PIT_URL
               value: {{ .Values.devSeed.mailpitServiceUrl | quote }}
           # Add resource limits/requests if needed
