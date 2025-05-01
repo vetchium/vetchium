@@ -37,7 +37,7 @@ spec:
     metadata:
       labels:
         app: hermione
-        version: {{ .Chart.AppVersion }}
+        version: {{ .Values.hermione.image.tag }}
     spec:
       serviceAccountName: {{ .Release.Name }}-hermione-sa
       initContainers:
@@ -53,7 +53,7 @@ spec:
               done
       containers:
         - name: hermione
-          image: "{{ .Values.hermione.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.hermione.image.repository }}:{{ .Values.hermione.image.tag }}"
           ports:
             - containerPort: {{ .Values.hermione.config.port | int }}
           env:

@@ -10,11 +10,11 @@ spec:
     metadata:
       labels:
         app: ronweasly
-        version: {{ .Chart.AppVersion }}
+        version: {{ .Values.ronweasly.image.tag }}
     spec:
       containers:
         - name: ronweasly
-          image: "{{ .Values.ronweasly.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.ronweasly.image.repository }}:{{ .Values.ronweasly.image.tag }}"
           ports:
             - containerPort: {{ .Values.ronweasly.service.targetPort }}
           resources:

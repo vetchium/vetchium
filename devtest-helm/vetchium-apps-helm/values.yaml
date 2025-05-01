@@ -16,6 +16,7 @@ harrypotter:
   image:
     repository: vetchium/harrypotter
     pullPolicy: IfNotPresent
+    tag: "latest"
   service:
     type: LoadBalancer
     port: 80
@@ -27,6 +28,7 @@ granger:
   image:
     repository: vetchium/granger
     pullPolicy: IfNotPresent
+    tag: "latest"
   serviceAccount:
     create: true
   config:
@@ -48,6 +50,7 @@ hermione:
   image:
     repository: vetchium/hermione
     pullPolicy: IfNotPresent
+    tag: "latest"
   serviceAccount:
     create: true
   initContainer:
@@ -84,6 +87,7 @@ ronweasly:
   image:
     repository: vetchium/ronweasly
     pullPolicy: IfNotPresent
+    tag: "latest"
   serviceAccount:
     create: false
     name: "default"
@@ -114,6 +118,7 @@ sortinghat:
   image:
     repository: vetchium/sortinghat
     pullPolicy: IfNotPresent
+    tag: "latest"
   config:
     port: "8080"
   serviceAccount:
@@ -151,6 +156,7 @@ sqitch:
   image:
     repository: vetchium/sqitch
     pullPolicy: IfNotPresent
+    tag: "latest"
   serviceAccount:
     create: true
   secrets:
@@ -168,6 +174,7 @@ devSeed:
   image:
     repository: vetchium/dev-seed
     pullPolicy: IfNotPresent
+    tag: "latest"
   serviceAccount:
     create: true
   secrets:

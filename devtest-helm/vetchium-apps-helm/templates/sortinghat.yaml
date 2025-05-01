@@ -21,12 +21,12 @@ spec:
     metadata:
       labels:
         app: sortinghat
-        version: {{ .Chart.AppVersion }}
+        version: {{ .Values.sortinghat.image.tag }}
     spec:
       serviceAccountName: sortinghat-sa
       containers:
         - name: sortinghat
-          image: "{{ .Values.sortinghat.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag }}"
           ports:
             - containerPort: {{ .Values.sortinghat.config.port | int }}
           env:

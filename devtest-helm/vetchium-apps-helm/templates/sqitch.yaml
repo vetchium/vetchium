@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sqitch-{{ .Chart.AppVersion }}
+  name: sqitch-{{ .Values.sqitch.image.tag }}
   labels:
     app: sqitch
 spec:
@@ -10,7 +10,7 @@ spec:
     metadata:
       labels:
         app: sqitch
-        version: {{ .Chart.AppVersion }}
+        version: {{ .Values.sqitch.image.tag }}
     spec:
       serviceAccountName: sqitch-sa
       initContainers:
@@ -25,7 +25,7 @@ spec:
               done
       containers:
         - name: sqitch
-          image: "{{ .Values.sqitch.image.repository }}:{{ default .Chart.AppVersion .Values.sqitch.image.tag }}"
+          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag }}"
           imagePullPolicy: {{ .Values.sqitch.image.pullPolicy }}
           command: ["sh", "-c"]
           args:

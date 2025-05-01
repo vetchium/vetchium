@@ -27,7 +27,7 @@ spec:
     metadata:
       labels:
         app: granger
-        version: {{ .Chart.AppVersion }}
+        version: {{ .Values.granger.image.tag }}
     spec:
       serviceAccountName: {{ .Release.Name }}-granger-sa
       affinity:
@@ -42,7 +42,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: granger
-          image: "{{ .Values.granger.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.granger.image.repository }}:{{ .Values.granger.image.tag }}"
           ports:
             - containerPort: {{ .Values.granger.config.port | int }}
           env:
