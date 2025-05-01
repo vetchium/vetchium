@@ -164,13 +164,14 @@ devtest-helm:
 
 port-forward-helm: ## Forward ports for Helm-deployed devtest services
 	pkill -9 -f "kubectl port-forward -n vetchium-devtest-$(USER)" || true
-	kubectl port-forward svc/vetchium-apps-harrypotter -n vetchium-devtest-$(USER) 3001:80 &
-	kubectl port-forward svc/vetchium-apps-ronweasly -n vetchium-devtest-$(USER) 3002:80 &
-	kubectl port-forward svc/vetchium-env-mailpit -n vetchium-devtest-$(USER) 8025:8025 &
-	kubectl port-forward svc/vetchium-env-postgres-rw -n vetchium-devtest-$(USER) 5432:5432 &
-	kubectl port-forward svc/vetchium-env-minio -n vetchium-devtest-$(USER) 9000:9000 &
-	kubectl port-forward svc/vetchium-apps-hermione -n vetchium-devtest-$(USER) 8080:8080 &
-	kubectl port-forward svc/vetchium-env-grafana -n vetchium-devtest-env 3000:3000 &
+	kubectl port-forward svc/harrypotter -n vetchium-devtest-$(USER) 3001:80 &
+	kubectl port-forward svc/ronweasly -n vetchium-devtest-$(USER) 3002:80 &
+	kubectl port-forward svc/mailpit-http -n vetchium-devtest-$(USER) 8025:80 &
+	kubectl port-forward svc/postgres-rw -n vetchium-devtest-$(USER) 5432:5432 &
+	kubectl port-forward svc/minio -n vetchium-devtest-$(USER) 9000:9000 &
+	kubectl port-forward svc/hermione -n vetchium-devtest-$(USER) 8080:8080 &
+	# Grafana is likely in a different namespace, adjust if needed
+	# kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
 
 k6:
 	@echo "--- Waiting for hermione pod ---"
