@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := help
+.PHONY: devtest-helm
 
 $(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 

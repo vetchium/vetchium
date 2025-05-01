@@ -93,4 +93,3 @@ subjects:
     name: {{ .Release.Name }}-sqitch-sa
     namespace: {{ .Release.Namespace }}
 {{- end }}
-{{- end }} # End if .Values.sqitch.enabled
