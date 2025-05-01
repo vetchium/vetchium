@@ -3,13 +3,20 @@ kind: Deployment
 metadata:
   name: ronweasly
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: ronweasly
 spec:
   replicas: {{ .Values.ronweasly.replicaCount }}
   selector:
     matchLabels:
-      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: ronweasly
   template:
     metadata:
@@ -18,14 +25,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: ronweasly
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "vetchium-apps-helm.serviceAccountName" . }} # Assuming a default SA or one defined globally
+      serviceAccountName: {{ default "default" .Values.serviceAccount.name }} # Assuming a default SA or one defined globally
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -92,7 +100,13 @@ kind: Service
 metadata:
   name: ronweasly
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: ronweasly
 spec:
   type: {{ .Values.ronweasly.service.type }}
@@ -102,5 +116,6 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: ronweasly

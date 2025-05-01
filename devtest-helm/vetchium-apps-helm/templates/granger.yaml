@@ -3,7 +3,13 @@ kind: ConfigMap
 metadata:
   name: granger-config
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
 data:
   config.json: |
@@ -20,7 +26,13 @@ kind: Deployment
 metadata:
   name: granger
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
 spec:
   replicas: {{ .Values.granger.replicaCount }}
@@ -28,25 +40,29 @@ spec:
     type: {{ .Values.granger.strategy }}
   selector:
     matchLabels:
-      {{- include "vetchium-apps-helm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: granger
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.granger.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "vetchium-apps-helm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: granger
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.granger.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+      serviceAccountName: {{ if .Values.granger.serviceAccount.create }}{{ printf "%s-granger-sa" .Release.Name }}{{ else }}{{ default "default" .Values.granger.serviceAccount.name }}{{ end }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- with .Values.granger.podSecurityContext }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- with .Values.granger.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -54,7 +70,9 @@ spec:
       containers:
         - name: granger
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- with .Values.granger.securityContext }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           image: "{{ .Values.granger.image.repository }}:{{ .Values.granger.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.granger.image.pullPolicy }}
           ports:
@@ -94,7 +112,9 @@ spec:
                   key: bucket
           # Add livenessProbe, readinessProbe if needed
           resources:
-            {{- toYaml .Values.resources | nindent 12 }} # Use global resources, override in values.granger if needed
+            {{- with .Values.granger.resources }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: config-volume
               mountPath: /etc/granger-config
@@ -102,11 +122,11 @@ spec:
         - name: config-volume
           configMap:
             name: granger-config # Reference the templated ConfigMap name
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.granger.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.granger.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -116,7 +136,13 @@ kind: Service
 metadata:
   name: granger
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
 spec:
   type: {{ .Values.granger.service.type }}
@@ -126,16 +152,23 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "vetchium-apps-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: granger
 ---
 {{- if .Values.granger.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+  name: {{ default (printf "%s-granger-sa" (default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-")) .Values.granger.serviceAccount.name | trunc 63 | trimSuffix "-" }}
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
   {{- with .Values.serviceAccount.annotations }}
   annotations:
@@ -149,7 +182,13 @@ kind: ClusterRoleBinding
 metadata:
   name: granger-access-binding
   labels:
-    {{- include "vetchium-apps-helm.labels" . | nindent 4 }}
+    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -157,6 +196,6 @@ roleRef:
   name: {{ .Values.grangerClusterRoleBinding.clusterRoleName }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "vetchium-apps-helm.grangerServiceAccountName" . }}
+    name: {{ default (printf "%s-granger-sa" (default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-")) .Values.granger.serviceAccount.name | trunc 63 | trimSuffix "-" }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

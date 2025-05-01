@@ -7,14 +7,6 @@ cloudnative-pg:
       label: grafana_dashboard
       labelValue: "1"
 
-minio:
-  fullnameOverride: minio
-  mode: standalone
-  accessKey:
-    password: "minioadmin"
-  secretKey:
-    password: "minioadmin"
-
 kube-prometheus-stack:
   fullnameOverride: prometheus-stack
   prometheusOperator:
@@ -39,6 +31,3 @@ kube-prometheus-stack:
     enabled: true
   kubeStateMetrics:
     enabled: true
-
-mailpit:
-  fullnameOverride: mailpit
