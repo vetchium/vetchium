@@ -14,7 +14,7 @@ mailpit:
 harrypotter:
   replicaCount: 1
   image:
-    repository: vetchium/harrypotter
+    repository: ghcr.io/vetchium/harrypotter
     pullPolicy: IfNotPresent
     tag: "latest"
   service:
@@ -26,7 +26,7 @@ granger:
   replicaCount: 1
   strategy: Recreate
   image:
-    repository: vetchium/granger
+    repository: ghcr.io/vetchium/granger
     pullPolicy: IfNotPresent
     tag: "latest"
   serviceAccount:
@@ -48,7 +48,7 @@ granger:
 hermione:
   replicaCount: 3
   image:
-    repository: vetchium/hermione
+    repository: ghcr.io/vetchium/hermione
     pullPolicy: IfNotPresent
     tag: "latest"
   serviceAccount:
@@ -85,7 +85,7 @@ hermione:
 ronweasly:
   replicaCount: 1
   image:
-    repository: vetchium/ronweasly
+    repository: ghcr.io/vetchium/ronweasly
     pullPolicy: IfNotPresent
     tag: "latest"
   serviceAccount:
@@ -116,7 +116,7 @@ ronweasly:
 sortinghat:
   replicaCount: 1
   image:
-    repository: vetchium/sortinghat
+    repository: ghcr.io/vetchium/sortinghat
     pullPolicy: IfNotPresent
     tag: "latest"
   config:
@@ -154,7 +154,7 @@ sqitch:
   enabled: true
   backoffLimit: 5
   image:
-    repository: vetchium/sqitch
+    repository: ghcr.io/vetchium/sqitch
     pullPolicy: IfNotPresent
     tag: "latest"
   serviceAccount:
@@ -172,7 +172,7 @@ devSeed:
   enabled: true
   backoffLimit: 3
   image:
-    repository: vetchium/dev-seed
+    repository: ghcr.io/vetchium/dev-seed
     pullPolicy: IfNotPresent
     tag: "latest"
   serviceAccount:
