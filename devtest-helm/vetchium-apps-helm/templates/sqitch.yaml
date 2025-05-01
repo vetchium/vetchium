@@ -54,7 +54,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Release.Name }}-sqitch-sa
+  name: sqitch-sa
   labels:
     helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
     app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
@@ -90,6 +90,6 @@ roleRef:
   name: {{ .Values.sqitch.clusterRoleBinding.clusterRoleName }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-sqitch-sa
+    name: sqitch-sa
     namespace: {{ .Release.Namespace }}
 {{- end }}
