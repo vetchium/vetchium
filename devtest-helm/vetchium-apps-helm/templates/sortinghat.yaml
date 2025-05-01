@@ -39,7 +39,7 @@ spec:
       app.kubernetes.io/component: sortinghat
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.sortinghat.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -48,17 +48,17 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: sortinghat
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.sortinghat.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: sortinghat-sa
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.sortinghat.podSecurityContext | nindent 8 }}
       containers:
         - name: sortinghat
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.sortinghat.securityContext | nindent 12 }}
           image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.sortinghat.image.pullPolicy }}
           ports:
@@ -134,15 +134,15 @@ spec:
         - name: config-volume
           configMap:
             name: {{ .Release.Name }}-sortinghat-config
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.sortinghat.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.sortinghat.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.sortinghat.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

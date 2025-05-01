@@ -27,7 +27,7 @@ harrypotter:
 
 granger:
   replicaCount: 1
-  strategy: Recreate # Or RollingUpdate
+  strategy: Recreate
   image:
     repository: vetchium/granger
     pullPolicy: IfNotPresent
@@ -45,8 +45,8 @@ granger:
     smtp: smtp-credentials
     s3: s3-credentials
   service:
-    type: ClusterIP # Usually internal services are ClusterIP
-    port: 8080 # Service port
+    type: ClusterIP
+    port: 8080
   # Define resource requests/limits if needed
   # resources: {}
   # Node selector, affinity, tolerations can be added here if needed from the global values or specific overrides
@@ -100,8 +100,8 @@ hermione:
     postgres: postgres-app # Name of the K8s Secret for PostgreSQL connection
     s3: s3-credentials # Name of the K8s Secret for S3 credentials
   service:
-    type: ClusterIP # Service type (ClusterIP is common for internal services)
-    port: 8080 # Service port
+    type: ClusterIP
+    port: 8080
   resources:
     limits:
       cpu: 1000m
@@ -118,6 +118,9 @@ ronweasly:
   image:
     repository: vetchium/ronweasly
     pullPolicy: IfNotPresent
+  serviceAccount:
+    create: false
+    name: "default"
   service:
     type: ClusterIP
     port: 80

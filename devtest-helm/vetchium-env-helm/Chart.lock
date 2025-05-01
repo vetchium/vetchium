@@ -5,11 +5,5 @@ dependencies:
 - name: kube-prometheus-stack
   repository: https://prometheus-community.github.io/helm-charts
   version: 71.0.0
-- name: minio
-  repository: https://charts.min.io/
-  version: 5.0.11
-- name: mailpit
-  repository: https://jouve.github.io/charts
-  version: 0.24.0
-digest: sha256:9e9eb97a0b5e2993b3a2ec968832c3e98a91f1985a0c7bc2fcc25dd81b3cfcc1
-generated: "2025-04-29T22:45:35.885684+05:30"
+digest: sha256:f14d1f8eb58ed819157dd29c5886f64f4efb3324a7104f67065b606b95b59ea1
+generated: "2025-05-01T14:04:57.518152+05:30"

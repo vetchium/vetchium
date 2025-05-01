@@ -170,7 +170,7 @@ metadata:
     {{- end }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: granger
-  {{- with .Values.serviceAccount.annotations }}
+  {{- with .Values.granger.serviceAccount.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}

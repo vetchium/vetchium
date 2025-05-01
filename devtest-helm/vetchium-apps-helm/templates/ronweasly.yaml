@@ -4,42 +4,40 @@ metadata:
   name: ronweasly
   labels:
     helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: ronweasly
 spec:
   replicas: {{ .Values.ronweasly.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+      app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: ronweasly
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.ronweasly.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+        app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: ronweasly
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.ronweasly.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ default "default" .Values.serviceAccount.name }} # Assuming a default SA or one defined globally
+      serviceAccountName: {{ default "default" .Values.ronweasly.serviceAccount.name }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.ronweasly.podSecurityContext | nindent 8 }}
       containers:
         - name: ronweasly
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.ronweasly.securityContext | nindent 12 }}
           image: "{{ .Values.ronweasly.image.repository }}:{{ .Values.ronweasly.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.ronweasly.image.pullPolicy }}
           ports:
@@ -82,15 +80,15 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.ronweasly.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.ronweasly.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.ronweasly.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.ronweasly.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -116,6 +114,6 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+    app.kubernetes.io/name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: ronweasly
