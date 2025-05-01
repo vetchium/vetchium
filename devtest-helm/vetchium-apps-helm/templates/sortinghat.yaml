@@ -1,16 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-sortinghat-config
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sortinghat
+  name: sortinghat-config
 data:
   config.json: |
     {
@@ -21,50 +12,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sortinghat
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sortinghat
 spec:
   replicas: {{ .Values.sortinghat.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: sortinghat
+      app: sortinghat
   template:
     metadata:
-      {{- with .Values.sortinghat.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: sortinghat
+        app: sortinghat
+        version: {{ .Chart.AppVersion }}
     spec:
-      {{- with .Values.sortinghat.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       serviceAccountName: sortinghat-sa
-      securityContext:
-        {{- toYaml .Values.sortinghat.podSecurityContext | nindent 8 }}
       containers:
         - name: sortinghat
-          securityContext:
-            {{- toYaml .Values.sortinghat.securityContext | nindent 12 }}
-          image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.sortinghat.image.pullPolicy }}
+          image: "{{ .Values.sortinghat.image.repository }}:{{ .Chart.AppVersion }}"
           ports:
-            - name: http # Name the port for probe referencing
-              containerPort: {{ .Values.sortinghat.config.port | int }}
-              protocol: TCP
+            - containerPort: {{ .Values.sortinghat.config.port | int }}
           env:
             - name: S3_ENDPOINT
               valueFrom:
@@ -91,127 +55,59 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.sortinghat.secrets.s3 }}
                   key: bucket
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "3Gi"
+              cpu: "3"
           volumeMounts:
             - name: config-volume
               mountPath: /etc/sortinghat-config
-          {{- with .Values.sortinghat.livenessProbe }}
           livenessProbe:
             httpGet:
-              path: {{ .httpGet.path }}
-              port: http # Reference container port name
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .successThreshold }}
-            successThreshold: {{ .successThreshold }}
-            {{- end }}
-          {{- end }}
-          {{- with .Values.sortinghat.readinessProbe }}
+              path: /health
+              port: {{ .Values.sortinghat.config.port | int }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: {{ .httpGet.path }}
-              port: http # Reference container port name
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .successThreshold }}
-            successThreshold: {{ .successThreshold }}
-            {{- end }}
-          {{- end }}
-          resources:
-            {{- toYaml .Values.sortinghat.resources | nindent 12 }}
+              path: /health
+              port: {{ .Values.sortinghat.config.port | int }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
         - name: config-volume
           configMap:
-            name: {{ .Release.Name }}-sortinghat-config
-      {{- with .Values.sortinghat.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.sortinghat.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.sortinghat.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+            name: sortinghat-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: sortinghat
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sortinghat
 spec:
-  type: {{ .Values.sortinghat.service.type }}
-  ports:
-    - port: {{ .Values.sortinghat.service.port }}
-      targetPort: {{ .Values.sortinghat.service.targetPort }} # Use explicit targetPort from values
-      protocol: TCP
-      name: http
   selector:
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: sortinghat
+    app: sortinghat
+  ports:
+    - protocol: TCP
+      port: {{ .Values.sortinghat.service.port }}
+      targetPort: {{ .Values.sortinghat.config.port | int }}
 ---
-{{- if .Values.sortinghat.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: sortinghat-sa
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sortinghat
-  {{- with .Values.sortinghat.serviceAccount.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-{{- end }}
 ---
-{{- if .Values.sortinghat.clusterRoleBinding.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sortinghat-access-binding
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sortinghat
+  name: {{ .Release.Name }}-sortinghat-full-access-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.sortinghat.clusterRoleBinding.clusterRoleName }}
+  name: full-access
 subjects:
   - kind: ServiceAccount
     name: sortinghat-sa
     namespace: {{ .Release.Namespace }}
-{{- end }}

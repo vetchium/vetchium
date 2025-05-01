@@ -1,7 +1,3 @@
-# Default values for vetchium-apps-helm.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 # Dependencies
 minio:
   fullnameOverride: minio
@@ -21,9 +17,9 @@ harrypotter:
     repository: vetchium/harrypotter
     pullPolicy: IfNotPresent
   service:
-    type: LoadBalancer # Or ClusterIP, NodePort depending on needs
-    port: 80 # External port for the service
-    targetPort: 3000 # Container port
+    type: LoadBalancer
+    port: 80
+    targetPort: 3000
 
 granger:
   replicaCount: 1
@@ -36,10 +32,9 @@ granger:
   config:
     env: "dev"
     onboardTokenLife: "3m"
-    port: "8080" # This is the internal container port
-    employerBaseUrl: "http://localhost:3001" # Needs update for cluster DNS
-    hubBaseUrl: "http://localhost:3002" # Needs update for cluster DNS
-  # Names of existing secrets
+    port: "8080"
+    employerBaseUrl: "http://localhost:3001"
+    hubBaseUrl: "http://localhost:3002"
   secrets:
     postgres: postgres-app
     smtp: smtp-credentials
@@ -47,28 +42,7 @@ granger:
   service:
     type: ClusterIP
     port: 8080
-  # Define resource requests/limits if needed
-  # resources: {}
-  # Node selector, affinity, tolerations can be added here if needed from the global values or specific overrides
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchExpressions:
-              - key: app.kubernetes.io/component # Use the helm label key
-                operator: In
-                values:
-                  - granger
-          topologyKey: "kubernetes.io/hostname"
 
-# ClusterRoleBinding specific values
-grangerClusterRoleBinding:
-  # Whether to create the binding. Set to false if the binding is managed elsewhere.
-  create: true
-  # The name of the ClusterRole to bind to. Assumes 'full-access' exists.
-  clusterRoleName: full-access
-
-# Add sections for other apps like ronweasly, sortinghat, etc. here
 hermione:
   replicaCount: 3
   image:
@@ -76,29 +50,27 @@ hermione:
     pullPolicy: IfNotPresent
   serviceAccount:
     create: true
-  # Wait for sqitch job completion before starting hermione pod
   initContainer:
     enabled: true
     kubectlImage: bitnami/kubectl:latest
-    # Assuming sqitch template uses this standard component label
     sqitchJobLabelSelector: "app.kubernetes.io/component=sqitch"
   config:
-    employerWebUrl: "http://localhost:3001" # TODO: Update with K8s service name/port for Granger/Frontend?
+    employerWebUrl: "http://localhost:3001"
     employerTfaTokLife: "5m"
     employerSessionTokLife: "15m"
     employerLtsTokLife: "730h"
     employerEmployeeInviteTokLife: "5m"
-    hubWebUrl: "http://localhost:3002" # TODO: Update with K8s service name/port for SortingHat/Frontend?
+    hubWebUrl: "http://localhost:3002"
     hubTfaTokLife: "5m"
     hubSessionTokLife: "15m"
     hubLtsTokLife: "730h"
     hubUserInviteTokLife: "5m"
     hubPasswordResetTokLife: "5m"
-    port: "8080" # Container port
+    port: "8080"
     timingAttackDelay: "1s"
   secrets:
-    postgres: postgres-app # Name of the K8s Secret for PostgreSQL connection
-    s3: s3-credentials # Name of the K8s Secret for S3 credentials
+    postgres: postgres-app
+    s3: s3-credentials
   service:
     type: ClusterIP
     port: 8080
@@ -106,12 +78,6 @@ hermione:
     limits:
       cpu: 1000m
       memory: 1000Mi
-    # requests: {} # Define requests if needed
-
-# ClusterRoleBinding specific values
-hermioneClusterRoleBinding:
-  create: true
-  clusterRoleName: full-access
 
 ronweasly:
   replicaCount: 1
@@ -143,7 +109,6 @@ ronweasly:
     initialDelaySeconds: 15
     periodSeconds: 10
 
-# Add sections for sortinghat, sqitch, etc. here
 sortinghat:
   replicaCount: 1
   image:
@@ -154,7 +119,7 @@ sortinghat:
   serviceAccount:
     create: true
   secrets:
-    s3: s3-credentials # Name of the K8s secret containing S3 creds
+    s3: s3-credentials
   service:
     type: ClusterIP
     port: 8080

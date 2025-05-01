@@ -1,44 +1,26 @@
-{{- if .Values.sqitch.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  # Simplify Job name for sqitch to avoid long helm prefixes in pod names
-  name: sqitch-migrate
+  name: sqitch-{{ .Chart.AppVersion }}
   labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: sqitch
-  annotations:
-    # Add checksum of values to trigger job update on values change
-    "checksum/config": {{ .Values | toYaml | sha256sum }}
+    app: sqitch
 spec:
-  backoffLimit: {{ .Values.sqitch.backoffLimit }}
+  backoffLimit: 5
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: sqitch
-        version: {{ default .Chart.AppVersion .Values.sqitch.image.tag }}
+        app: sqitch
+        version: {{ .Chart.AppVersion }}
     spec:
-      {{- if .Values.sqitch.serviceAccount.create }}
-      serviceAccountName: {{ .Release.Name }}-sqitch-sa
-      {{- else if .Values.sqitch.serviceAccount.name }}
-      serviceAccountName: {{ .Values.sqitch.serviceAccount.name }}
-      {{- end }}
+      serviceAccountName: sqitch-sa
       initContainers:
         - name: wait-for-postgres
-          image: {{ .Values.sqitch.initContainer.kubectlImage }}
+          image: bitnami/kubectl:latest
           command: ["sh", "-c"]
           args:
             - |
-              until kubectl get pods -l {{ .Values.sqitch.initContainer.postgresLabelSelector }} -n {{ .Release.Namespace }} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
-                echo "Waiting for PostgreSQL pods ({{ .Values.sqitch.initContainer.postgresLabelSelector }}) to be ready..."
+              until kubectl get pods -l app=postgres -n {{ .Release.Namespace }} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
+                echo "Waiting for PostgreSQL to be ready..."
                 sleep 5
               done
       containers:

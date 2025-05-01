@@ -1,123 +1,63 @@
-{{- if .Values.devSeed.enabled }}
-
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: dev-seed
   labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: dev-seed
+    app: dev-seed
 spec:
-  backoffLimit: {{ .Values.devSeed.backoffLimit }}
+  backoffLimit: 3
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: dev-seed
-        # Use explicit tag if provided, otherwise chart version
-        version: {{ default .Chart.AppVersion .Values.devSeed.image.tag }}
+        app: dev-seed
+        version: {{ .Chart.AppVersion }}
     spec:
-      {{- if .Values.devSeed.serviceAccount.create }}
-      serviceAccountName: {{ .Release.Name }}-dev-seed-sa
-      {{- else if .Values.devSeed.serviceAccount.name }}
-      serviceAccountName: {{ .Values.devSeed.serviceAccount.name }}
-      {{- end }}
+      serviceAccountName: dev-seed-sa
       initContainers:
         - name: wait-for-dependencies
-          image: {{ .Values.devSeed.initContainer.kubectlImage }}
+          image: bitnami/kubectl:latest
           command:
             - /bin/sh
             - -c
             - |
-              HERMIONE_SELECTOR="app.kubernetes.io/instance={{ .Release.Name }},{{ .Values.devSeed.initContainer.hermioneComponentLabel }}"
-              MAILPIT_SELECTOR="{{ .Values.devSeed.initContainer.mailpitLabelSelector }}"
-              POSTGRES_SELECTOR="{{ .Values.devSeed.initContainer.postgresLabelSelector }}"
-
-              until kubectl get pods -l "${POSTGRES_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; do
-                echo "Waiting for PostgreSQL pods (${POSTGRES_SELECTOR}) to be ready..."
+              until kubectl get pods -l app=hermione -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for hermione pods to be running..."
                 sleep 5
               done
-
-              until kubectl get pods -l "${HERMIONE_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for hermione pods (${HERMIONE_SELECTOR}) to be running..."
-                sleep 5
-              done
-
-              until kubectl get pods -l "${MAILPIT_SELECTOR}" -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
-                echo "Waiting for mailpit pods (${MAILPIT_SELECTOR}) to be running..."
+              until kubectl get pods -l app=mailpit -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+                echo "Waiting for mailpit pods to be running..."
                 sleep 5
               done
       containers:
         - name: dev-seed
-          image: "{{ .Values.devSeed.image.repository }}:{{ default .Chart.AppVersion .Values.devSeed.image.tag }}"
-          imagePullPolicy: {{ .Values.devSeed.image.pullPolicy }}
+          image: "{{ .Values.devSeed.image.repository }}:{{ .Chart.AppVersion }}"
           env:
             - name: POSTGRES_URI
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.devSeed.secrets.postgres }} # Assumes secret is in the same namespace
+                  name: postgres-app
                   key: uri
             - name: SERVER_URL
-              value: {{ tpl .Values.devSeed.hermioneServiceUrl . | quote }}
+              value: "http://hermione:8080"
             - name: MAIL_PIT_URL
-              value: {{ .Values.devSeed.mailpitServiceUrl | quote }}
-          # Add resource limits/requests if needed
-          # resources:
+              value: "http://mailpit:8025"
       restartPolicy: Never
 
 ---
-
-{{- if .Values.devSeed.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Release.Name }}-dev-seed-sa
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: dev-seed
-  {{- with .Values.devSeed.serviceAccount.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-{{- end }}
-
+  name: dev-seed-sa
 ---
-
-{{- if .Values.devSeed.clusterRoleBinding.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Release.Name }}-dev-seed-crb
-  labels:
-    helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: dev-seed
+  name: {{ .Release.Name }}-dev-seed-full-access-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.devSeed.clusterRoleBinding.clusterRoleName }}
+  name: full-access
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-dev-seed-sa
+    name: dev-seed-sa
     namespace: {{ .Release.Namespace }}
-{{- end }}
-
-{{- end }}
