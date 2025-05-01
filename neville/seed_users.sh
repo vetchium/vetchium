@@ -4,8 +4,8 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "--- [Script] Fetching Postgres URI and Seeding Users ---"
 
-# Fetch Postgres URI
-EFFECTIVE_POSTGRES_URI=$(kubectl -n vetchium-devtest get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest/localhost/g')
+# Fetch Postgres URI from user-specific namespace
+EFFECTIVE_POSTGRES_URI=$(kubectl -n vetchium-devtest-$USER get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$USER'/localhost/g')
 
 if [ -z "$EFFECTIVE_POSTGRES_URI" ]; then
     echo "Error: [Script] Failed to retrieve Postgres URI from Kubernetes secret."
