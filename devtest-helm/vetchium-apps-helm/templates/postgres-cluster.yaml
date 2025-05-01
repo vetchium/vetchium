@@ -2,6 +2,9 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: postgres
+  annotations:
+    # This annotation tells the webhook to use the service in the vetchium-devtest-env namespace
+    postgresql.cnpg.io/webhook-url: "https://cnpg-webhook-service.vetchium-devtest-env.svc:443/validate"
 spec:
   instances: 3
   storage:

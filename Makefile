@@ -148,10 +148,15 @@ devtest-helm:
 	helm uninstall vetchium-apps -n vetchium-devtest-$(USER) || true # Optional: Uninstall previous app release first
 	kubectl delete namespace vetchium-devtest-$(USER) --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchium-devtest-$(USER)
+	# Install/upgrade the environment chart first
 	helm upgrade --install vetchium-env ./devtest-helm/vetchium-env-helm \
 		--namespace vetchium-devtest-env \
 		--create-namespace \
 		--wait --timeout 10m
+	# Wait for the CloudNativePG webhook service to be ready
+	echo "Waiting for CloudNativePG webhook service to be ready..."
+	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=cloudnative-pg -n vetchium-devtest-env --timeout=5m
+	# Now install/upgrade the applications chart
 	helm upgrade --install vetchium-apps ./devtest-helm/vetchium-apps-helm \
 		--namespace vetchium-devtest-$(USER) \
 		--create-namespace \
