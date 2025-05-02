@@ -1,6 +1,7 @@
 To setup devtest on a fresh ubuntu VM, do:
 
 ```bash
+su - <whatever-user-you-want>
 snap install docker
 snap install helm --classic
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--tls-san <public-ip-of-the-vm>" sh -
@@ -21,8 +22,8 @@ $ export KUBECONFIG=$PWD/k3s.yaml
 $ kubectl get pods -n vetchium-devtest-$USER
 
 $ # Run k6 for load testing
-vetchium $ VMUSER=$USER VMADDR=<public-ip-of-the-vm> make k6
+vetchium $ VMUSER=<whatever-user-you-loggedin-the-vm> VMADDR=<public-ip-of-the-vm> make k6
 
 $ # Port forward the services - Optionally if needed. This is not needed mostly, if the VMADDR services are reachable directly via VMADDR
-vetchium $ VMUSER=$USER make port-forward-helm
+vetchium $ VMUSER=<whatever-user-you-loggedin-the-vm> make port-forward-helm
 ```
