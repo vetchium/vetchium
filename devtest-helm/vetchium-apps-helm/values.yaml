@@ -19,7 +19,7 @@ harrypotter:
     tag: "8bbaccff77dad34d0b"
   service:
     type: LoadBalancer
-    port: 80
+    port: 3002
     targetPort: 3000
 
 granger:
@@ -75,8 +75,9 @@ hermione:
     postgres: postgres-app
     s3: s3-credentials
   service:
-    type: ClusterIP
+    type: LoadBalancer
     port: 8080
+    targetPort: 8080
   resources:
     limits:
       cpu: 1000m
@@ -92,8 +93,8 @@ ronweasly:
     create: false
     name: "default"
   service:
-    type: ClusterIP
-    port: 80
+    type: LoadBalancer
+    port: 3001
     targetPort: 3000
   resources:
     requests:

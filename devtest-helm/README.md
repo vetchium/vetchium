@@ -15,9 +15,14 @@ make devtest-helm
 
 To get the kubectl access and port forward the services, on your developer laptop for the above service, do:
 ```bash
-scp root@<public-ip-of-the-vm>:/etc/rancher/k3s/k3s.yaml k3s.yaml
-export KUBECONFIG=$PWD/k3s.yaml
-vetchium $ kubectl get pods -n vetchium-devtest-$USER
-vetchium $ make port-forward-helm
-vetchium $ make k6
+$ # Setup context for kubectl
+$ scp root@<public-ip-of-the-vm>:/etc/rancher/k3s/k3s.yaml k3s.yaml
+$ export KUBECONFIG=$PWD/k3s.yaml
+$ kubectl get pods -n vetchium-devtest-$USER
+
+$ # Run k6 for load testing
+vetchium $ VMUSER=$USER VMADDR=<public-ip-of-the-vm> make k6
+
+$ # Port forward the services - Optionally if needed. This is not needed mostly, if the VMADDR services are reachable directly via VMADDR
+vetchium $ VMUSER=$USER make port-forward-helm
 ```
