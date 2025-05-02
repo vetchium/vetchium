@@ -6,9 +6,9 @@ metadata:
     # This annotation tells the webhook to use the service in the vetchium-devtest-env namespace
     postgresql.cnpg.io/webhook-url: "https://cnpg-webhook-service.vetchium-devtest-env.svc:443/validate"
 spec:
-  instances: 3
+  instances: 1
   storage:
-    size: 1Gi
+    size: 10Gi
   monitoring:
     enablePodMonitor: true
   inheritedMetadata:
