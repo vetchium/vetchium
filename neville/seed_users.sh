@@ -4,8 +4,20 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "--- [Script] Fetching Postgres URI and Seeding Users ---"
 
+# Check if VMUSER is set
+if [ -z "$VMUSER" ]; then
+    echo "Error: [Script] VMUSER environment variable is not set."
+    exit 1
+fi
+
+# Check if VMADDR is set
+if [ -z "$VMADDR" ]; then
+    echo "Error: [Script] VMADDR environment variable is not set."
+    exit 1
+fi
+
 # Fetch Postgres URI from user-specific namespace
-EFFECTIVE_POSTGRES_URI=$(kubectl -n vetchium-devtest-$USER get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$USER'/localhost/g')
+EFFECTIVE_POSTGRES_URI=$(kubectl -n vetchium-devtest-$VMUSER get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$VMUSER'/'$VMADDR'/g')
 
 if [ -z "$EFFECTIVE_POSTGRES_URI" ]; then
     echo "Error: [Script] Failed to retrieve Postgres URI from Kubernetes secret."

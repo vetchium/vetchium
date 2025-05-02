@@ -145,9 +145,13 @@ devtest: docker ## Brings up an environment with the local docker images. No liv
 	# echo "Dev-seed job applied. Run 'kubectl logs -n vetchium-devtest -l app=dev-seed' to follow dev-seed job logs."
 
 devtest-helm:
-	helm uninstall vetchium-apps -n vetchium-devtest-$(USER) || true # Optional: Uninstall previous app release first
-	kubectl delete namespace vetchium-devtest-$(USER) --ignore-not-found --force --grace-period=0
-	kubectl create namespace vetchium-devtest-$(USER)
+	@if [ -z "$(VMUSER)" ]; then \
+		echo "Error: VMUSER environment variable is not set."; \
+		exit 1; \
+	fi
+	helm uninstall vetchium-apps -n vetchium-devtest-$(VMUSER) || true # Optional: Uninstall previous app release first
+	kubectl delete namespace vetchium-devtest-$(VMUSER) --ignore-not-found --force --grace-period=0
+	kubectl create namespace vetchium-devtest-$(VMUSER)
 	# Install/upgrade the environment chart first
 	helm upgrade --install vetchium-env ./devtest-helm/vetchium-env-helm \
 		--namespace vetchium-devtest-env \
@@ -158,42 +162,42 @@ devtest-helm:
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=cloudnative-pg -n vetchium-devtest-env --timeout=5m
 	# Now install/upgrade the applications chart
 	helm upgrade --install vetchium-apps ./devtest-helm/vetchium-apps-helm \
-		--namespace vetchium-devtest-$(USER) \
+		--namespace vetchium-devtest-$(VMUSER) \
 		--create-namespace \
 		--wait --timeout 10m
 
-port-forward-helm2: ## Forward ports for Helm-deployed devtest services
-	pkill -9 -f "kubectl port-forward -n vetchium-devtest-$(USER)" || true
-	kubectl port-forward svc/harrypotter -n vetchium-devtest-$(USER) 3001:80 &
-	kubectl port-forward svc/ronweasly -n vetchium-devtest-$(USER) 3002:80 &
-	kubectl port-forward svc/mailpit-http -n vetchium-devtest-$(USER) 8025:80 &
-	kubectl port-forward svc/postgres-rw -n vetchium-devtest-$(USER) 5432:5432 &
-	kubectl port-forward svc/minio -n vetchium-devtest-$(USER) 9000:9000 &
-	kubectl port-forward svc/hermione -n vetchium-devtest-$(USER) 8080:8080 &
-	# Grafana is likely in a different namespace, adjust if needed
-	# kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
-
-# TODO: Clean this up
-port-forward-helm: ## Forward ports for Helm-deployed devtest services
-	pkill -9 -f "kubectl port-forward -n vetchium-devtest-root" || true
-	kubectl port-forward svc/harrypotter -n vetchium-devtest-root 3001:80 &
-	kubectl port-forward svc/ronweasly -n vetchium-devtest-root 3002:80 &
-	kubectl port-forward svc/mailpit-http -n vetchium-devtest-root 8025:80 &
-	kubectl port-forward svc/postgres-rw -n vetchium-devtest-root 5432:5432 &
-	kubectl port-forward svc/minio -n vetchium-devtest-root 9000:9000 &
-	kubectl port-forward svc/hermione -n vetchium-devtest-root 8080:8080 &
-	# Grafana is likely in a different namespace, adjust if needed
-	# kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
+port-forward-helm:
+	# These are not needed mostly, if the VMADDR services are reachable directly via VMADDR
+	# But added just for convenience
+	@if [ -z "$(VMUSER)" ]; then \
+		echo "Error: VMUSER environment variable is not set."; \
+		exit 1; \
+	fi
+	pkill -9 -f "kubectl port-forward -n vetchium-devtest-$(VMUSER)" || true
+	kubectl port-forward svc/harrypotter -n vetchium-devtest-$(VMUSER) 3001:80 &
+	kubectl port-forward svc/ronweasly -n vetchium-devtest-$(VMUSER) 3002:80 &
+	kubectl port-forward svc/mailpit-http -n vetchium-devtest-$(VMUSER) 8025:80 &
+	kubectl port-forward svc/postgres-rw -n vetchium-devtest-$(VMUSER) 5432:5432 &
+	kubectl port-forward svc/minio -n vetchium-devtest-$(VMUSER) 9000:9000 &
+	kubectl port-forward svc/hermione -n vetchium-devtest-$(VMUSER) 8080:8080 &
+	kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
 
 k6:
+	@if [ -z "$(VMUSER)" ]; then \
+		echo "Error: VMUSER environment variable is not set."; \
+		exit 1; \
+	fi
+	@if [ -z "$(VMADDR)" ]; then \
+		echo "Error: VMADDR environment variable is not set."; \
+		exit 1; \
+	fi
 	@echo "--- Waiting for hermione pod ---"
-	# TODO: Clenaup below line. kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-$(USER) --timeout=5m
-	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-root --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-$(VMUSER) --timeout=5m
 	@echo "--- Running user seeding script ---"
-	@NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
+	@VMUSER=$(VMUSER) VMADDR=$(VMADDR) NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
 	@echo "--- Running k6 load test ---"
-	@API_BASE_URL=$${API_BASE_URL:-"http://localhost:8080"} \
-	 MAILPIT_URL=$${MAILPIT_URL:-"http://localhost:8025"} \
+	@API_BASE_URL=$${API_BASE_URL:-"http://$(VMADDR):8080"} \
+	 MAILPIT_URL=$${MAILPIT_URL:-"http://$(VMADDR):8025"} \
 	 NUM_USERS=$${NUM_USERS:-100} \
 	 TEST_DURATION=$${TEST_DURATION:-600} \
 	 k6 run neville/hub_scenario.js

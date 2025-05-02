@@ -19,8 +19,8 @@ function randomString(length) {
 }
 
 // --- Configuration ---
-const API_BASE_URL = __ENV.API_BASE_URL || "http://localhost:8080"; // Your API gateway/service URL
-const MAILPIT_URL = __ENV.MAILPIT_URL || "http://localhost:8025"; // Mailpit API URL
+const API_BASE_URL = __ENV.API_BASE_URL;
+const MAILPIT_URL = __ENV.MAILPIT_URL;
 const NUM_USERS = parseInt(__ENV.NUM_USERS || "100");
 const SETUP_PARALLELISM = parseInt(__ENV.SETUP_PARALLELISM || "10"); // Number of users to authenticate in parallel
 const PASSWORD = "NewPassword123$";
