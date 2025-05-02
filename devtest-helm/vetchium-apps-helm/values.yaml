@@ -9,6 +9,10 @@ minio:
 
 mailpit:
   fullnameOverride: mailpit
+  service:
+    http:
+      type: LoadBalancer
+      port: 8025
 
 # Specific application configurations
 harrypotter:
