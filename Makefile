@@ -162,7 +162,7 @@ devtest-helm:
 		--create-namespace \
 		--wait --timeout 10m
 
-port-forward-helm: ## Forward ports for Helm-deployed devtest services
+port-forward-helm2: ## Forward ports for Helm-deployed devtest services
 	pkill -9 -f "kubectl port-forward -n vetchium-devtest-$(USER)" || true
 	kubectl port-forward svc/harrypotter -n vetchium-devtest-$(USER) 3001:80 &
 	kubectl port-forward svc/ronweasly -n vetchium-devtest-$(USER) 3002:80 &
@@ -173,9 +173,22 @@ port-forward-helm: ## Forward ports for Helm-deployed devtest services
 	# Grafana is likely in a different namespace, adjust if needed
 	# kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
 
+# TODO: Clean this up
+port-forward-helm: ## Forward ports for Helm-deployed devtest services
+	pkill -9 -f "kubectl port-forward -n vetchium-devtest-root" || true
+	kubectl port-forward svc/harrypotter -n vetchium-devtest-root 3001:80 &
+	kubectl port-forward svc/ronweasly -n vetchium-devtest-root 3002:80 &
+	kubectl port-forward svc/mailpit-http -n vetchium-devtest-root 8025:80 &
+	kubectl port-forward svc/postgres-rw -n vetchium-devtest-root 5432:5432 &
+	kubectl port-forward svc/minio -n vetchium-devtest-root 9000:9000 &
+	kubectl port-forward svc/hermione -n vetchium-devtest-root 8080:8080 &
+	# Grafana is likely in a different namespace, adjust if needed
+	# kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
+
 k6:
 	@echo "--- Waiting for hermione pod ---"
-	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-$(USER) --timeout=5m
+	# TODO: Clenaup below line. kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-$(USER) --timeout=5m
+	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-root --timeout=5m
 	@echo "--- Running user seeding script ---"
 	@NUM_USERS=$${NUM_USERS:-100} ./neville/seed_users.sh
 	@echo "--- Running k6 load test ---"
