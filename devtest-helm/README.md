@@ -14,7 +14,7 @@ cd ~/vetchium/devtest-helm/vetchium-env-helm
 helm dependency update .
 cd ~/vetchium
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml; # This is needed for helm. kubectl will work even otherwise via k3s init script
-VMUSER=<whatever-user-you-want> make devtest-helm
+VMUSER=<whatever-user-you-want> VMADDR=<public-ip-of-the-vm> make devtest-helm
 kubectl get pods -n vetchium-devtest-<whatever-user-you-want>
 
 # Make sure postgres-rw is LoadBalancer
@@ -62,10 +62,10 @@ make devtest-helm VMUSER=yourname VMADDR=<public-ip-of-the-vm>
 
 3. Run the distributed test:
 ```bash
-make k6-distributed \
-  VETCHIUM_API_SERVER_URL="<api-server-url-from-step-1>" \
-  MAILPIT_URL="<mailpit-url-from-step-1>" \
-  PGURI="<postgres-uri-from-step-1>"
+VETCHIUM_API_SERVER_URL="<api-server-url-from-step-1>" \
+MAILPIT_URL="<mailpit-url-from-step-1>" \
+PGURI="<postgres-uri-from-step-1>" \
+make k6-distributed
 ```
 
 **For testing from a separate Kubernetes cluster:**
@@ -85,11 +85,11 @@ make devtest-helm VMUSER=yourname VMADDR=<public-ip-of-backend-vm>
 4. Run the distributed test targeting the remote backend:
 ```bash
 # On test cluster
-make k6-distributed \
-  VETCHIUM_API_SERVER_URL="<api-server-url-from-step-1>" \
-  MAILPIT_URL="<mailpit-url-from-step-1>" \
-  PGURI="<postgres-uri-from-step-1>" \
-  MAX_VUS=10000 INSTANCE_COUNT=20
+VETCHIUM_API_SERVER_URL="<api-server-url-from-step-1>" \
+MAILPIT_URL="<mailpit-url-from-step-1>" \
+PGURI="<postgres-uri-from-step-1>" \
+MAX_VUS=10000 INSTANCE_COUNT=20 \
+make k6-distributed
 ```
 
 Note: When running tests from a separate cluster, make sure network connectivity and firewall rules allow access from your test cluster to the backend services (API server, Mailpit, and PostgreSQL database) on the target VM.

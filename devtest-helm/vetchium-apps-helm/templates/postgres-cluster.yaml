@@ -26,5 +26,3 @@ spec:
         secretAccessKey:
           name: s3-credentials
           key: secret_key
-  service:
-    type: LoadBalancer

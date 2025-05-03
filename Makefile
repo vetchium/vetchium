@@ -100,13 +100,13 @@ devtest-helm:
 
 	@echo "=========================================================="
 	@echo "Deployment complete! Use the following for distributed load testing:"
-	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g')
+	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' 2>/dev/null | base64 -d 2>/dev/null | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g' 2>/dev/null || echo 'Error: Could not extract PostgreSQL URI')
 	@echo "PostgreSQL URI: $$PGURI"
 	@echo "VETCHIUM_API_SERVER_URL: http://$(VMADDR):8080"
 	@echo "Mailpit URL: http://$(VMADDR):8025"
 	@echo "
 To run distributed load tests from a separate cluster:"
-	@echo "make k6-distributed VETCHIUM_API_SERVER_URL=\"http://$(VMADDR):8080\" MAILPIT_URL=\"http://$(VMADDR):8025\" PGURI=\"$$PGURI\""
+	@echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=\"\$${PGURI}\" make k6-distributed"
 	@echo "=========================================================="
 
 port-forward-helm:
