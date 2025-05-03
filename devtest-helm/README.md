@@ -1,11 +1,11 @@
 To setup devtest on a fresh ubuntu VM, do:
 ```bash
 apt update && apt install make
+snap install docker
+snap install helm --classic
 useradd -m -g users -G sudo -s /bin/bash <whatever-user-you-want>
 passwd <whatever-user-you-want> # Set the password
 su - <whatever-user-you-want>
-snap install docker
-snap install helm --classic
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--tls-san <public-ip-of-the-vm> --write-kubeconfig-mode 644" sh -
 git clone https://github.com/vetchium/vetchium.git
 cd ~/vetchium/devtest-helm/vetchium-apps-helm
@@ -13,7 +13,7 @@ helm dependency update .
 cd ~/vetchium/devtest-helm/vetchium-env-helm
 helm dependency update .
 cd ~/vetchium
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml ; # Do this in case kgp is not working;
 VMUSER=<whatever-user-you-want> make devtest-helm
 kubectl get pods -n vetchium-devtest-<whatever-user-you-want>
 ```

@@ -94,8 +94,7 @@ devtest-helm:
 		--create-namespace \
 		--wait --timeout 10m
 
-	@echo "
-=========================================================="
+	@echo "=========================================================="
 	@echo "Deployment complete! Use the following for distributed load testing:"
 	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g')
 	@echo "PostgreSQL URI: $$PGURI"
