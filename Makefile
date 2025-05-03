@@ -120,17 +120,16 @@ port-forward-helm:
 	kubectl port-forward svc/hermione -n vetchium-devtest-$(VMUSER) 8080:8080 &
 	kubectl port-forward svc/grafana -n vetchium-devtest-env 3000:3000 &
 
-# k6-distributed: Run distributed load tests with k6 using Kubernetes
+# k6: Run distributed load tests with k6 using Kubernetes
 # Parameter variables:
-#   NUM_USERS/TOTAL_USERS - Total number of user accounts to create in the database (default: 1,000,000)
-#   MAX_VUS - Maximum number of concurrent Virtual Users across all instances (default: 5,000)
-#   INSTANCE_COUNT - Number of k6 instances to distribute the test across (default: 10)
-#   TEST_DURATION - Duration of the test in seconds (default: 1800)
-#   SETUP_PARALLELISM - Number of users to pre-authenticate during setup (default: 100)
-#   VETCHIUM_API_SERVER_URL - (Required) Complete URL of the API server to test
-#   MAILPIT_URL - (Required) Complete URL of the mailpit service
-#   PGURI - (Required) PostgreSQL connection URI for the database
-k6-distributed:
+#   TOTAL_USERS - Total number of user accounts to create in the database (required)
+#   INSTANCE_COUNT - Number of k6 instances to distribute the test across (required)
+#   TEST_DURATION - Duration of the test in seconds (required)
+#   SETUP_PARALLELISM - Number of users to pre-authenticate during setup (required)
+#   VETCHIUM_API_SERVER_URL - Complete URL of the API server to test (required)
+#   MAILPIT_URL - Complete URL of the mailpit service (required)
+#   PG_URI - PostgreSQL connection URI for the database (required)
+k6:
 	@if [ -z "$(VETCHIUM_API_SERVER_URL)" ]; then \
 		echo "Error: VETCHIUM_API_SERVER_URL environment variable is not set. This should be the complete URL of the API server."; \
 		exit 1; \
@@ -139,46 +138,55 @@ k6-distributed:
 		echo "Error: MAILPIT_URL environment variable is not set. This should be the complete URL of the mailpit service."; \
 		exit 1; \
 	fi
-	@if [ -z "$(PGURI)" ]; then \
-		echo "Error: PGURI environment variable is not set. This should be the complete PostgreSQL connection URI."; \
+	@if [ -z "$(PG_URI)" ]; then \
+		echo "Error: PG_URI environment variable is not set. This should be the complete PostgreSQL connection URI."; \
 		exit 1; \
 	fi
+	# Set intelligent defaults for optional parameters
+	$(eval TOTAL_USERS := $(or $(TOTAL_USERS),1000000))
+	$(eval INSTANCE_COUNT := $(or $(INSTANCE_COUNT),20))
+	$(eval TEST_DURATION := $(or $(TEST_DURATION),3600))
+	$(eval SETUP_PARALLELISM := $(or $(SETUP_PARALLELISM),200))
+
+	@echo "Using configuration values:"
+	@echo "  - TOTAL_USERS: $(TOTAL_USERS)"
+	@echo "  - INSTANCE_COUNT: $(INSTANCE_COUNT)"
+	@echo "  - TEST_DURATION: $(TEST_DURATION) seconds"
+	@echo "  - SETUP_PARALLELISM: $(SETUP_PARALLELISM)"
+	@echo ""
 
 	@echo "--- Creating k6 test namespace ---"
 	# Generate a unique namespace for this test run
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
 	kubectl create namespace $(K6_NAMESPACE)
 
-	@echo "--- Creating database access configuration ---"
-	# Store the provided PGURI in a secret for the test to use
-	kubectl create secret generic postgres-credentials --from-literal=pguri="$(PGURI)" -n $(K6_NAMESPACE)
-
 	@echo "--- Creating k6 distributed test resources ---"
-	# Set variables for the test
-	$(eval TEST_DURATION := $(or $(TEST_DURATION),1800))
-	$(eval MAX_VUS := $(or $(MAX_VUS),5000))
-	$(eval TOTAL_USERS := $(or $(NUM_USERS),1000000))
-	$(eval INSTANCE_COUNT := $(or $(INSTANCE_COUNT),10))
-	$(eval SETUP_PARALLELISM := $(or $(SETUP_PARALLELISM),100))
 
-	# Apply variables to yaml template
-	sed \
-	    -e "s|\${VETCHIUM_API_SERVER_URL}|$(VETCHIUM_API_SERVER_URL)|g" \
-	    -e "s|\${MAILPIT_URL}|$(MAILPIT_URL)|g" \
-	    -e "s|\${TEST_DURATION}|$(TEST_DURATION)|g" \
-	    -e "s|\${MAX_VUS}|$(MAX_VUS)|g" \
-	    -e "s|\${TOTAL_USERS}|$(TOTAL_USERS)|g" \
-	    -e "s|\${INSTANCE_COUNT}|$(INSTANCE_COUNT)|g" \
-	    -e "s|\${SETUP_PARALLELISM}|$(SETUP_PARALLELISM)|g" \
-	    ./neville/k6-distributed-updated.yaml | kubectl apply -f - -n $(K6_NAMESPACE)
+	# Check if envsubst is installed
+	which envsubst > /dev/null || { echo "Error: envsubst not found. Please install gettext package (brew install gettext on macOS or apt-get/yum install gettext on Linux)."; exit 1; }
+
+	# Apply variables to yaml template using envsubst
+	cat ./neville/k6-distributed.yaml | VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
+		MAILPIT_URL="$(MAILPIT_URL)" \
+		PG_URI="$(PG_URI)" \
+		TEST_DURATION="$(TEST_DURATION)" \
+		TOTAL_USERS="$(TOTAL_USERS)" \
+		INSTANCE_COUNT="$(INSTANCE_COUNT)" \
+		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
+		envsubst | kubectl apply -f - -n $(K6_NAMESPACE)
 
 	@echo "--- Copying test script to ConfigMap ---"
 	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
 
 	@echo "--- Test started! ---"
 	@echo "K6 test deployed in namespace: $(K6_NAMESPACE)"
-	@echo "Monitor the test with: kubectl logs -f job/k6-distributed-test -n $(K6_NAMESPACE)"
-	@echo "Individual worker logs: kubectl logs -f job/k6-worker -n $(K6_NAMESPACE) --selector=job-name=k6-worker"
+	@echo "Monitor the coordinator: kubectl logs -f job/k6-coordinator -n $(K6_NAMESPACE)"
+	@echo "Monitor user seeding: kubectl logs -f job/k6-user-seeder -n $(K6_NAMESPACE)"
+	@echo "Individual worker logs: kubectl logs -f job/k6-worker-0 -n $(K6_NAMESPACE)"
+	@echo "View metrics: kubectl port-forward svc/statsd-exporter 9102:9102 -n $(K6_NAMESPACE) and visit http://localhost:9102/metrics"
 	@echo "Target API server: $(VETCHIUM_API_SERVER_URL)"
 	@echo "Target Mailpit server: $(MAILPIT_URL)"
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"
+
+# Keep the old target for backward compatibility
+k6-distributed: k6
