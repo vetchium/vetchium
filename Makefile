@@ -100,7 +100,9 @@ devtest-helm:
 
 	@echo "=========================================================="
 	@echo "Deployment complete! Use the following for distributed load testing:"
-	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' 2>/dev/null | base64 -d 2>/dev/null | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g' 2>/dev/null || echo 'Error: Could not extract PostgreSQL URI')
+	@echo "Extracting PostgreSQL URI from secret..."
+	@kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' 2>/dev/null || echo "Secret not found or missing uri field"
+	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' 2>/dev/null | base64 -d 2>/dev/null | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g' 2>/dev/null || echo 'postgresql://app:password@'$(VMADDR)':5432/app')
 	@echo "PostgreSQL URI: $$PGURI"
 	@echo "VETCHIUM_API_SERVER_URL: http://$(VMADDR):8080"
 	@echo "Mailpit URL: http://$(VMADDR):8025"
