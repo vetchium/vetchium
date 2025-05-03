@@ -1,0 +1,261 @@
+# Kubernetes deployment for distributed k6 load testing
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-distributed-config
+data:
+  # Central configuration for k6 tests
+  API_BASE_URL: "${API_SERVER_URL}"
+  MAILPIT_URL: "${MAILPIT_URL}"
+  TEST_DURATION: "${TEST_DURATION}"
+  MAX_VUS: "${MAX_VUS}"
+  TOTAL_USERS: "${TOTAL_USERS}"
+  INSTANCE_COUNT: "${INSTANCE_COUNT}"
+  SETUP_PARALLELISM: "${SETUP_PARALLELISM}"
+  TARGET_NAMESPACE: "${TARGET_NAMESPACE}"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-distributed-test
+  labels:
+    app: k6-distributed-test
+spec:
+  completions: 1  # Master job to coordinate
+  parallelism: 1
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: k6-distributed-test
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: seed-users
+        image: postgres:14-alpine
+        env:
+        - name: TARGET_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: k6-distributed-config
+              key: TARGET_NAMESPACE
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Creating server-side bulk user creation function..."
+          PGHOST=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.host}' | base64 -d)
+          PGUSER=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.user}' | base64 -d)
+          PGDATABASE=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.dbname}' | base64 -d)
+          USERS=$(cat /config/TOTAL_USERS)
+          
+          # Create the bulk user generation SQL
+          cat > /tmp/create_users.sql << EOF
+          -- Create a function to generate users in bulk
+          CREATE OR REPLACE FUNCTION generate_test_users(start_idx INT, num_users INT, password_hash TEXT)
+          RETURNS VOID AS $$
+          DECLARE
+              batch_size INT := 10000; -- Process in batches for better performance
+              current_batch INT;
+              remaining_users INT := num_users;
+              current_start INT := start_idx;
+          BEGIN
+              -- Notify start
+              RAISE NOTICE 'Starting bulk user generation: % users from index %', num_users, start_idx;
+              
+              -- Process in batches
+              WHILE remaining_users > 0 LOOP
+                  -- Calculate current batch size
+                  current_batch := LEAST(batch_size, remaining_users);
+                  
+                  RAISE NOTICE 'Processing batch of % users starting at index %', current_batch, current_start;
+                  
+                  -- Insert current batch using generate_series
+                  INSERT INTO hub_users (
+                      id, full_name, handle, email, password_hash, 
+                      state, tier, resident_country_code, resident_city, 
+                      preferred_language, short_bio, long_bio, created_at
+                  )
+                  SELECT 
+                      gen_random_uuid(),
+                      'Hub User ' || i,
+                      'hubuser' || i,
+                      'hubuser' || i || '@example.com',
+                      password_hash,
+                      'ACTIVE_HUB_USER',
+                      'FREE_HUB_USER',
+                      'USA',
+                      'Test City',
+                      'en',
+                      'Default short bio for test user.',
+                      'Default long bio for test user.',
+                      NOW()
+                  FROM generate_series(current_start, current_start + current_batch - 1) AS i
+                  ON CONFLICT (handle) DO NOTHING;
+                  
+                  -- Update counters
+                  remaining_users := remaining_users - current_batch;
+                  current_start := current_start + current_batch;
+                  
+                  -- Commit the current batch to avoid transaction size issues
+                  COMMIT;
+                  -- Start a new transaction
+                  BEGIN;
+              END LOOP;
+              
+              RAISE NOTICE 'Bulk user generation completed successfully';
+          END;
+          $$ LANGUAGE plpgsql;
+
+          -- Execute the function with the specified number of users
+          SELECT generate_test_users(1, $USERS, '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK');
+          EOF
+          
+          # Execute the SQL
+          echo "Running bulk user creation..."
+          psql -h $PGHOST -U $PGUSER -d $PGDATABASE -f /tmp/create_users.sql
+          
+          echo "User seeding completed"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+      containers:
+      - name: k6-controller
+        image: loadimpact/k6:latest
+        env:
+        - name: K6_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: TARGET_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: k6-distributed-config
+              key: TARGET_NAMESPACE
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Starting distributed k6 test controller"
+          
+          # Get configuration values
+          API_BASE_URL=$(cat /config/API_BASE_URL | envsubst)
+          MAILPIT_URL=$(cat /config/MAILPIT_URL)
+          TEST_DURATION=$(cat /config/TEST_DURATION)
+          MAX_VUS=$(cat /config/MAX_VUS)
+          TOTAL_USERS=$(cat /config/TOTAL_USERS)
+          INSTANCE_COUNT=$(cat /config/INSTANCE_COUNT)
+          SETUP_PARALLELISM=$(cat /config/SETUP_PARALLELISM)
+          
+          # Calculate users per instance
+          USERS_PER_INSTANCE=$(( (TOTAL_USERS + INSTANCE_COUNT - 1) / INSTANCE_COUNT ))
+          VUS_PER_INSTANCE=$(( (MAX_VUS + INSTANCE_COUNT - 1) / INSTANCE_COUNT ))
+          
+          echo "Starting k6 distributed test with $INSTANCE_COUNT instances"
+          echo "Each instance will handle approximately $USERS_PER_INSTANCE users"
+          echo "Each instance will use $VUS_PER_INSTANCE virtual users"
+          
+          # Create test script directory
+          mkdir -p /scripts
+          
+          # Create the worker job manifest
+          cat > /scripts/k6-workers.yaml << EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: k6-worker
+            labels:
+              app: k6-worker
+          spec:
+            completions: $INSTANCE_COUNT
+            parallelism: $INSTANCE_COUNT
+            backoffLimit: 0
+            template:
+              metadata:
+                labels:
+                  app: k6-worker
+              spec:
+                restartPolicy: Never
+                containers:
+                - name: k6
+                  image: loadimpact/k6:latest
+                  env:
+                  - name: INSTANCE_INDEX
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+                  - name: API_BASE_URL
+                    value: "$API_BASE_URL"
+                  - name: MAILPIT_URL
+                    value: "$MAILPIT_URL"
+                  - name: TEST_DURATION
+                    value: "$TEST_DURATION"
+                  - name: MAX_VUS
+                    value: "$VUS_PER_INSTANCE"
+                  - name: NUM_USERS
+                    value: "$TOTAL_USERS"
+                  - name: USERS_PER_INSTANCE
+                    value: "$USERS_PER_INSTANCE"
+                  - name: SETUP_PARALLELISM
+                    value: "$SETUP_PARALLELISM"
+                  resources:
+                    requests:
+                      memory: "1Gi"
+                      cpu: "500m"
+                    limits:
+                      memory: "2Gi"
+                      cpu: "2"
+                  volumeMounts:
+                  - name: scripts-volume
+                    mountPath: /scripts
+                  command: ["/bin/sh", "-c"]
+                  args:
+                  - |
+                    # Copy the test script
+                    cp /scripts/distributed_hub_scenario.js /tmp/
+                    
+                    # Run the test with this instance's parameters
+                    echo "Starting k6 worker instance \$INSTANCE_INDEX"
+                    k6 run /tmp/distributed_hub_scenario.js --out json=results_\$INSTANCE_INDEX.json
+                    
+                    echo "Worker instance \$INSTANCE_INDEX completed"
+                volumes:
+                - name: scripts-volume
+                  configMap:
+                    name: k6-test-script
+          EOF
+          
+          # Copy the test script to mounted volume
+          cp /scripts/distributed_hub_scenario.js /shared/
+          
+          # Create ConfigMap with the test script
+          kubectl create configmap k6-test-script --from-file=/shared/distributed_hub_scenario.js -n $K6_NAMESPACE
+          
+          # Start the worker jobs
+          kubectl apply -f /scripts/k6-workers.yaml -n $K6_NAMESPACE
+          
+          # Wait for test completion
+          echo "Waiting for all worker jobs to complete..."
+          kubectl wait --for=condition=complete job/k6-worker --timeout=3h -n $K6_NAMESPACE
+          
+          echo "Distributed k6 test completed!"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        - name: scripts-volume
+          mountPath: /scripts
+        - name: shared-volume
+          mountPath: /shared
+      volumes:
+      - name: config-volume
+        configMap:
+          name: k6-distributed-config
+      - name: scripts-volume
+        configMap:
+          name: k6-test-script
+          optional: true
+      - name: shared-volume
+        emptyDir: {}
