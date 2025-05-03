@@ -146,9 +146,6 @@ k6-distributed:
 		echo "Error: PGURI environment variable is not set. This should be the complete PostgreSQL connection URI."; \
 		exit 1; \
 	fi
-	@echo "--- Checking connectivity to the backend services ---"
-	@echo "Pinging API server at $(VETCHIUM_API_SERVER_URL)..."
-	timeout 5 curl -s $(VETCHIUM_API_SERVER_URL)/healthz > /dev/null || echo "Warning: Could not reach API server. Make sure it's accessible."
 
 	@echo "--- Creating k6 test namespace ---"
 	# Generate a unique namespace for this test run
