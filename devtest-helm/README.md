@@ -13,7 +13,7 @@ helm dependency update .
 cd ~/vetchium/devtest-helm/vetchium-env-helm
 helm dependency update .
 cd ~/vetchium
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml ; # Do this in case kgp is not working;
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml; # This is needed for helm. kubectl will work even otherwise via k3s init script
 VMUSER=<whatever-user-you-want> make devtest-helm
 kubectl get pods -n vetchium-devtest-<whatever-user-you-want>
 ```

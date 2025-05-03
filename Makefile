@@ -77,6 +77,10 @@ devtest-helm:
 		echo "Error: VMUSER environment variable is not set."; \
 		exit 1; \
 	fi
+	@if [ -z "$(VMADDR)" ]; then \
+		echo "Error: VMADDR environment variable is not set. This should be the IP address where services will be accessible."; \
+		exit 1; \
+	fi
 	helm uninstall vetchium-apps -n vetchium-devtest-$(VMUSER) || true # Optional: Uninstall previous app release first
 	kubectl delete namespace vetchium-devtest-$(VMUSER) --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchium-devtest-$(VMUSER)
@@ -102,7 +106,7 @@ devtest-helm:
 	@echo "Mailpit URL: http://$(VMADDR):8025"
 	@echo "
 To run distributed load tests from a separate cluster:"
-	@echo "make k6-distributed VMUSER=$(VMUSER) VETCHIUM_API_SERVER_URL=\"http://$(VMADDR):8080\" MAILPIT_URL=\"http://$(VMADDR):8025\" PGURI=\"$$PGURI\""
+	@echo "make k6-distributed VETCHIUM_API_SERVER_URL=\"http://$(VMADDR):8080\" MAILPIT_URL=\"http://$(VMADDR):8025\" PGURI=\"$$PGURI\""
 	@echo "=========================================================="
 
 port-forward-helm:
