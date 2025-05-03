@@ -105,7 +105,7 @@ devtest-helm:
 	@echo "VETCHIUM_API_SERVER_URL: http://$(VMADDR):8080"
 	@echo "Mailpit URL: http://$(VMADDR):8025"
 	@echo "To run distributed load tests from a separate cluster:"
-	@echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=\"\$${PGURI}\" make k6-distributed"
+	@echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=\"$$PGURI\" make k6-distributed"
 	@echo "=========================================================="
 
 port-forward-helm:
