@@ -23,7 +23,7 @@ harrypotter:
     tag: "8bbaccff77dad34d0b"
   service:
     type: LoadBalancer
-    port: 3002
+    port: 3001
     targetPort: 3000
 
 granger:
@@ -98,7 +98,7 @@ ronweasly:
     name: "default"
   service:
     type: LoadBalancer
-    port: 3001
+    port: 3002
     targetPort: 3000
   resources:
     requests:

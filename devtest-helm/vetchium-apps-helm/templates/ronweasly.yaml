@@ -43,6 +43,7 @@ kind: Service
 metadata:
   name: ronweasly
 spec:
+  type: {{ .Values.harrypotter.service.type }}
   selector:
     app: ronweasly
   ports:
