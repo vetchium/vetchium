@@ -33,7 +33,7 @@ To do distributed load testing, do:
 * NUM_USERS/TOTAL_USERS (1,000,000): The total number of user accounts to create in the database
 * MAX_VUS (5,000): The maximum number of concurrent virtual users (connections) across all instances
 * INSTANCE_COUNT (10): How many k6 instances to distribute the load across
-With 5,000 default VUs spread across 10 instances, each instance will handle approximately 500 concurrent sessions
+* With 5,000 default VUs spread across 10 instances, each instance will handle approximately 500 concurrent sessions
 
 ```bash
 make k6-distributed VMUSER=yourname
