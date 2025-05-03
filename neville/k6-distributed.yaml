@@ -13,276 +13,75 @@ data:
   TEST_DURATION: "${TEST_DURATION}"
   SETUP_PARALLELISM: "${SETUP_PARALLELISM}"
 ---
-# Job for bulk user creation
+# Individual worker jobs for distributed k6 testing
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: k6-user-seeder
-spec:
-  backoffLimit: 1
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-      - name: user-seeder
-        image: postgres:14-alpine
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "512Mi"
-          limits:
-            cpu: "2"
-            memory: "2Gi"
-        env:
-        - name: PG_URI
-          value: "${PG_URI}"
-        - name: NUM_USERS
-          value: "${TOTAL_USERS}"
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          echo "Starting user seeding process..."
-          mkdir -p /app
-          cat > /app/bulk_create_users.sql << 'EOF'
-          -- Function to bulk create users for load testing
-          CREATE OR REPLACE FUNCTION bulk_create_users(
-              p_num_users INTEGER,
-              p_password_hash TEXT DEFAULT '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK'
-          ) RETURNS INTEGER AS $$
-          DECLARE
-              v_batch_size INTEGER := 1000; -- Process in batches for better performance
-              v_batches INTEGER;
-              v_remaining INTEGER;
-              v_start INTEGER;
-              v_end INTEGER;
-              v_inserted INTEGER := 0;
-              v_batch INTEGER := 0;
-          BEGIN
-              -- Calculate number of batches
-              v_batches := p_num_users / v_batch_size;
-              v_remaining := p_num_users % v_batch_size;
-              
-              -- Process full batches
-              FOR v_batch IN 0..v_batches-1 LOOP
-                  v_start := v_batch * v_batch_size + 1;
-                  v_end := (v_batch + 1) * v_batch_size;
-                  
-                  RAISE NOTICE 'Processing batch % of % (users % to %)', v_batch+1, v_batches, v_start, v_end;
-                  
-                  -- Insert batch of users
-                  WITH numbers AS (
-                      SELECT generate_series(v_start, v_end) AS i
-                  )
-                  INSERT INTO hub_users (
-                      id, 
-                      full_name, 
-                      handle, 
-                      email, 
-                      password_hash, 
-                      state, 
-                      tier, 
-                      resident_country_code, 
-                      resident_city, 
-                      preferred_language, 
-                      short_bio, 
-                      long_bio, 
-                      created_at
-                  )
-                  SELECT 
-                      gen_random_uuid(), 
-                      'User ' || i, 
-                      'user' || i, 
-                      'user' || i || '@example.com', 
-                      p_password_hash, 
-                      'ACTIVE_HUB_USER', 
-                      'FREE_HUB_USER', 
-                      'USA', 
-                      'Test City', 
-                      'en', 
-                      'Default short bio for test user ' || i, 
-                      'Default long bio for test user ' || i, 
-                      NOW()
-                  FROM numbers
-                  ON CONFLICT (handle) DO NOTHING;
-                  
-                  GET DIAGNOSTICS v_inserted = v_inserted + ROW_COUNT;
-              END LOOP;
-              
-              -- Process remaining users (if any)
-              IF v_remaining > 0 THEN
-                  v_start := v_batches * v_batch_size + 1;
-                  v_end := v_start + v_remaining - 1;
-                  
-                  RAISE NOTICE 'Processing final batch (users % to %)', v_start, v_end;
-                  
-                  -- Insert remaining users
-                  WITH numbers AS (
-                      SELECT generate_series(v_start, v_end) AS i
-                  )
-                  INSERT INTO hub_users (
-                      id, 
-                      full_name, 
-                      handle, 
-                      email, 
-                      password_hash, 
-                      state, 
-                      tier, 
-                      resident_country_code, 
-                      resident_city, 
-                      preferred_language, 
-                      short_bio, 
-                      long_bio, 
-                      created_at
-                  )
-                  SELECT 
-                      gen_random_uuid(), 
-                      'User ' || i, 
-                      'user' || i, 
-                      'user' || i || '@example.com', 
-                      p_password_hash, 
-                      'ACTIVE_HUB_USER', 
-                      'FREE_HUB_USER', 
-                      'USA', 
-                      'Test City', 
-                      'en', 
-                      'Default short bio for test user ' || i, 
-                      'Default long bio for test user ' || i, 
-                      NOW()
-                  FROM numbers
-                  ON CONFLICT (handle) DO NOTHING;
-                  
-                  GET DIAGNOSTICS v_inserted = v_inserted + ROW_COUNT;
-              END IF;
-              
-              RETURN v_inserted;
-          END;
-          $$ LANGUAGE plpgsql;
-          EOF
-
-          # Execute the bulk_create_users function
-          psql "$PG_URI" -c "\i /app/bulk_create_users.sql" && \
-          psql "$PG_URI" -c "SELECT bulk_create_users($NUM_USERS);"
-          
-          echo "User seeding complete"
----
-# Job for coordinating distributed k6 test
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: k6-coordinator
+  name: k6-worker-0
 spec:
   backoffLimit: 0
   template:
     spec:
       restartPolicy: Never
-      initContainers:
-      - name: wait-for-seeding
-        image: bitnami/kubectl:latest
-        command: ['sh', '-c', 'kubectl wait --for=condition=complete job/k6-user-seeder --timeout=3600s']
       containers:
-      - name: coordinator
-        image: loadimpact/k6:latest
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "256Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-        command: ["sh", "-c"]
-        args:
-        - |
-          echo "Starting k6 coordinator..."
-          echo "Creating k6 worker jobs..."
-          
-          # Create worker jobs
-          for i in $(seq 0 $((${INSTANCE_COUNT}-1))); do
-            cat <<EOF | kubectl create -f -
-            apiVersion: batch/v1
-            kind: Job
-            metadata:
-              name: k6-worker-$i
-            spec:
-              backoffLimit: 0
-              template:
-                spec:
-                  restartPolicy: Never
-                  containers:
-                  - name: k6
-                    image: loadimpact/k6:latest
-                    env:
-                    - name: API_BASE_URL
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: API_BASE_URL
-                    - name: MAILPIT_URL
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: MAILPIT_URL
-                    - name: TOTAL_USERS
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: TOTAL_USERS
-                    - name: INSTANCE_COUNT
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: INSTANCE_COUNT
-                    - name: INSTANCE_INDEX
-                      value: "$i"
-                    - name: USERS_PER_INSTANCE
-                      value: "$(( ${TOTAL_USERS} / ${INSTANCE_COUNT} + (${TOTAL_USERS} % ${INSTANCE_COUNT} > $i ? 1 : 0) ))"
-                    - name: TEST_DURATION
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: TEST_DURATION
-                    - name: SETUP_PARALLELISM
-                      valueFrom:
-                        configMapKeyRef:
-                          name: k6-config
-                          key: SETUP_PARALLELISM
-                    - name: K6_OUT
-                      value: "statsd"
-                    - name: K6_STATSD_ADDR
-                      value: "statsd-exporter:8125"
-                    - name: K6_STATSD_NAMESPACE
-                      value: "k6.worker-$i."
-                    volumeMounts:
-                    - name: k6-test-script
-                      mountPath: /scripts
-                    command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
-                  volumes:
-                  - name: k6-test-script
-                    configMap:
-                      name: k6-test-script
-            EOF
-            echo "Created worker job $i"
-          done
-          
-          echo "Waiting for all worker jobs to complete..."
-          kubectl wait --for=condition=complete job/k6-worker-0 --timeout=${TEST_DURATION}s || true
-          
-          echo "Test execution completed"
-        env:
-        - name: INSTANCE_COUNT
-          valueFrom:
-            configMapKeyRef:
-              name: k6-config
-              key: INSTANCE_COUNT
-        - name: TOTAL_USERS
-          valueFrom:
-            configMapKeyRef:
-              name: k6-config
-              key: TOTAL_USERS
-        - name: TEST_DURATION
-          valueFrom:
-            configMapKeyRef:
-              name: k6-config
-              key: TEST_DURATION
+        - name: k6
+          image: grafana/k6:latest
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
+          env:
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: API_BASE_URL
+            - name: MAILPIT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: MAILPIT_URL
+            - name: TOTAL_USERS
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: TOTAL_USERS
+            - name: INSTANCE_COUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: INSTANCE_COUNT
+            - name: INSTANCE_INDEX
+              value: "0"
+            - name: USERS_PER_INSTANCE
+              value: "${TOTAL_USERS}"
+            - name: TEST_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: TEST_DURATION
+            - name: SETUP_PARALLELISM
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: SETUP_PARALLELISM
+            - name: K6_OUT
+              value: "statsd"
+            - name: K6_STATSD_ADDR
+              value: "statsd-exporter:8125"
+            - name: K6_STATSD_NAMESPACE
+              value: "k6.worker-0."
+          volumeMounts:
+            - name: k6-test-script
+              mountPath: /scripts
+      volumes:
+        - name: k6-test-script
+          configMap:
+            name: k6-test-script
 ---
 # Service for StatsD metrics
 apiVersion: v1
@@ -291,14 +90,14 @@ metadata:
   name: statsd-exporter
 spec:
   ports:
-  - name: statsd
-    port: 8125
-    protocol: UDP
-    targetPort: 8125
-  - name: http
-    port: 9102
-    protocol: TCP
-    targetPort: 9102
+    - name: statsd
+      port: 8125
+      protocol: UDP
+      targetPort: 8125
+    - name: http
+      port: 9102
+      protocol: TCP
+      targetPort: 9102
   selector:
     app: statsd-exporter
 ---
@@ -318,19 +117,19 @@ spec:
         app: statsd-exporter
     spec:
       containers:
-      - name: statsd-exporter
-        image: prom/statsd-exporter:latest
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "300m"
-            memory: "256Mi"
-        ports:
-        - containerPort: 8125
-          protocol: UDP
-          name: statsd
-        - containerPort: 9102
-          protocol: TCP
-          name: http
+        - name: statsd-exporter
+          image: prom/statsd-exporter:latest
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 8125
+              protocol: UDP
+              name: statsd
+            - containerPort: 9102
+              protocol: TCP
+              name: http

@@ -155,6 +155,19 @@ k6:
 	@echo "  - SETUP_PARALLELISM: $(SETUP_PARALLELISM)"
 	@echo ""
 
+	@echo "--- Creating test users in the database ---"
+	@echo "This may take some time for large user counts..."
+	# Check if psql is installed
+	which psql > /dev/null || { echo "Error: psql not found. Please install PostgreSQL client tools."; exit 1; }
+
+	@echo "Executing SQL to create test users..."
+	# Execute the SQL file with variable substitution using envsubst in a single network call
+	@TOTAL_USERS="$(TOTAL_USERS)" envsubst < ./neville/create_users.sql | \
+	psql "$(PG_URI)" || { \
+		echo "Error: Failed to create test users in the database. Aborting."; \
+		exit 1; \
+	}
+
 	@echo "--- Creating k6 test namespace ---"
 	# Generate a unique namespace for this test run
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
@@ -164,6 +177,9 @@ k6:
 
 	# Check if envsubst is installed
 	which envsubst > /dev/null || { echo "Error: envsubst not found. Please install gettext package (brew install gettext on macOS or apt-get/yum install gettext on Linux)."; exit 1; }
+
+	# Copy the new simplified yaml file
+	cp ./neville/k6-distributed.yaml.new ./neville/k6-distributed.yaml
 
 	# Apply variables to yaml template using envsubst
 	cat ./neville/k6-distributed.yaml | VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \

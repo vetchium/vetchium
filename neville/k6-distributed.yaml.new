@@ -1,0 +1,135 @@
+# Distributed k6 load testing setup for Vetchium API
+---
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-config
+data:
+  API_BASE_URL: "${VETCHIUM_API_SERVER_URL}"
+  MAILPIT_URL: "${MAILPIT_URL}"
+  TOTAL_USERS: "${TOTAL_USERS}"
+  INSTANCE_COUNT: "${INSTANCE_COUNT}"
+  TEST_DURATION: "${TEST_DURATION}"
+  SETUP_PARALLELISM: "${SETUP_PARALLELISM}"
+---
+# Individual worker jobs for distributed k6 testing
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-worker-0
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: k6
+        image: grafana/k6:latest
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
+        env:
+        - name: API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: API_BASE_URL
+        - name: MAILPIT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: MAILPIT_URL
+        - name: TOTAL_USERS
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: TOTAL_USERS
+        - name: INSTANCE_COUNT
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: INSTANCE_COUNT
+        - name: INSTANCE_INDEX
+          value: "0"
+        - name: USERS_PER_INSTANCE
+          value: "${TOTAL_USERS}"
+        - name: TEST_DURATION
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: TEST_DURATION
+        - name: SETUP_PARALLELISM
+          valueFrom:
+            configMapKeyRef:
+              name: k6-config
+              key: SETUP_PARALLELISM
+        - name: K6_OUT
+          value: "statsd"
+        - name: K6_STATSD_ADDR
+          value: "statsd-exporter:8125"
+        - name: K6_STATSD_NAMESPACE
+          value: "k6.worker-0."
+        volumeMounts:
+        - name: k6-test-script
+          mountPath: /scripts
+      volumes:
+      - name: k6-test-script
+        configMap:
+          name: k6-test-script
+---
+# Service for StatsD metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: statsd-exporter
+spec:
+  ports:
+    - name: statsd
+      port: 8125
+      protocol: UDP
+      targetPort: 8125
+    - name: http
+      port: 9102
+      protocol: TCP
+      targetPort: 9102
+  selector:
+    app: statsd-exporter
+---
+# Deployment for StatsD metrics exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statsd-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statsd-exporter
+  template:
+    metadata:
+      labels:
+        app: statsd-exporter
+    spec:
+      containers:
+        - name: statsd-exporter
+          image: prom/statsd-exporter:latest
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 8125
+              protocol: UDP
+              name: statsd
+            - containerPort: 9102
+              protocol: TCP
+              name: http
