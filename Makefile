@@ -178,9 +178,6 @@ k6:
 	# Check if envsubst is installed
 	which envsubst > /dev/null || { echo "Error: envsubst not found. Please install gettext package (brew install gettext on macOS or apt-get/yum install gettext on Linux)."; exit 1; }
 
-	# Copy the new simplified yaml file
-	cp ./neville/k6-distributed.yaml.new ./neville/k6-distributed.yaml
-
 	# Apply variables to yaml template using envsubst
 	cat ./neville/k6-distributed.yaml | VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
 		MAILPIT_URL="$(MAILPIT_URL)" \
@@ -196,10 +193,7 @@ k6:
 
 	@echo "--- Test started! ---"
 	@echo "K6 test deployed in namespace: $(K6_NAMESPACE)"
-	@echo "Monitor the coordinator: kubectl logs -f job/k6-coordinator -n $(K6_NAMESPACE)"
-	@echo "Monitor user seeding: kubectl logs -f job/k6-user-seeder -n $(K6_NAMESPACE)"
-	@echo "Individual worker logs: kubectl logs -f job/k6-worker-0 -n $(K6_NAMESPACE)"
-	@echo "View metrics: kubectl port-forward svc/statsd-exporter 9102:9102 -n $(K6_NAMESPACE) and visit http://localhost:9102/metrics"
+	@echo "View test logs: kubectl logs -f job/k6-worker-0 -n $(K6_NAMESPACE)"
 	@echo "Target API server: $(VETCHIUM_API_SERVER_URL)"
 	@echo "Target Mailpit server: $(MAILPIT_URL)"
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"
