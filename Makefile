@@ -104,9 +104,9 @@ devtest-helm:
 	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' | base64 --decode | sed 's/postgres-rw.vetchium-devtest-$(VMUSER)/$(VMADDR)/g'); \
 	echo "PGURI: $$PGURI";
 	@echo "VETCHIUM_API_SERVER_URL: http://$(VMADDR):8080"
-	@echo "Mailpit URL: http://$(VMADDR):8025"
+	@echo "MAILPIT_URL: http://$(VMADDR):8025"
 	@echo "To run distributed load tests from a separate cluster:"
-	@echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=\"$$PGURI\" make k6-distributed"
+	@echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=\"$(PGURI)\" make k6-distributed"
 	@echo "=========================================================="
 
 port-forward-helm:
