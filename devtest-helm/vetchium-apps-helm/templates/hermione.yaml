@@ -104,6 +104,7 @@ kind: Service
 metadata:
   name: hermione
 spec:
+  type: {{ .Values.hermione.service.type }}
   selector:
     app: hermione
   ports:
