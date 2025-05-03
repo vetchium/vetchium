@@ -166,6 +166,18 @@ devtest-helm:
 		--create-namespace \
 		--wait --timeout 10m
 
+	@echo "
+=========================================================="
+	@echo "Deployment complete! Use the following for distributed load testing:"
+	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d | sed 's/postgres-rw.vetchium-devtest-'$(VMUSER)'/'$(VMADDR)'/g')
+	@echo "PostgreSQL URI: $$PGURI"
+	@echo "VETCHIUM_API_SERVER_URL: http://$(VMADDR):8080"
+	@echo "Mailpit URL: http://$(VMADDR):8025"
+	@echo "
+To run distributed load tests from a separate cluster:"
+	@echo "make k6-distributed VMUSER=$(VMUSER) VETCHIUM_API_SERVER_URL=\"http://$(VMADDR):8080\" MAILPIT_URL=\"http://$(VMADDR):8025\" PGURI=\"$$PGURI\""
+	@echo "=========================================================="
+
 port-forward-helm:
 	# These are not needed mostly, if the VMADDR services are reachable directly via VMADDR
 	# But added just for convenience
@@ -204,64 +216,66 @@ k6:
 
 # k6-distributed: Run distributed load tests with k6 using Kubernetes
 # Parameter variables:
-#   VMUSER - (Required) The namespace suffix where the API server is running (vetchium-devtest-$(VMUSER))
 #   NUM_USERS/TOTAL_USERS - Total number of user accounts to create in the database (default: 1,000,000)
 #   MAX_VUS - Maximum number of concurrent Virtual Users across all instances (default: 5,000)
 #   INSTANCE_COUNT - Number of k6 instances to distribute the test across (default: 10)
 #   TEST_DURATION - Duration of the test in seconds (default: 1800)
 #   SETUP_PARALLELISM - Number of users to pre-authenticate during setup (default: 100)
-#   API_SERVER_URL - URL of the API server to test (default: http://hermione.vetchium-devtest-$(VMUSER).svc.cluster.local:8080)
-#   MAILPIT_URL - URL of the mailpit service (default: http://mailpit.vetchium-devtest-env.svc.cluster.local:8025)
+#   VETCHIUM_API_SERVER_URL - (Required) Complete URL of the API server to test
+#   MAILPIT_URL - (Required) Complete URL of the mailpit service
+#   PGURI - (Required) PostgreSQL connection URI for the database
 k6-distributed:
-	@if [ -z "$(VMUSER)" ]; then \
-		echo "Error: VMUSER environment variable is not set."; \
+	@if [ -z "$(VETCHIUM_API_SERVER_URL)" ]; then \
+		echo "Error: VETCHIUM_API_SERVER_URL environment variable is not set. This should be the complete URL of the API server."; \
 		exit 1; \
 	fi
-	@echo "--- Checking if hermione pod is ready in target namespace ---"
-	kubectl wait --for=condition=Ready pod -l app=hermione -n vetchium-devtest-$(VMUSER) --timeout=5m
+	@if [ -z "$(MAILPIT_URL)" ]; then \
+		echo "Error: MAILPIT_URL environment variable is not set. This should be the complete URL of the mailpit service."; \
+		exit 1; \
+	fi
+	@if [ -z "$(PGURI)" ]; then \
+		echo "Error: PGURI environment variable is not set. This should be the complete PostgreSQL connection URI."; \
+		exit 1; \
+	fi
+	@echo "--- Checking connectivity to the backend services ---"
+	@echo "Pinging API server at $(VETCHIUM_API_SERVER_URL)..."
+	timeout 5 curl -s $(VETCHIUM_API_SERVER_URL)/healthz > /dev/null || echo "Warning: Could not reach API server. Make sure it's accessible."
 
 	@echo "--- Creating k6 test namespace ---"
 	# Generate a unique namespace for this test run
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
 	kubectl create namespace $(K6_NAMESPACE)
 
-	@echo "--- Creating secret for database access ---"
-	# Copy postgres credentials from target namespace to k6 namespace
-	$(eval PG_PASSWORD := $(shell kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.password}'))
-	kubectl create secret generic postgres-credentials --from-literal=password=$(shell echo $(PG_PASSWORD) | base64 -d) -n $(K6_NAMESPACE)
+	@echo "--- Creating database access configuration ---"
+	# Store the provided PGURI in a secret for the test to use
+	kubectl create secret generic postgres-credentials --from-literal=pguri="$(PGURI)" -n $(K6_NAMESPACE)
 
 	@echo "--- Creating k6 distributed test resources ---"
 	# Set variables for the test
-	$(eval API_SERVER_URL := $(or $(API_SERVER_URL),http://hermione.vetchium-devtest-$(VMUSER).svc.cluster.local:8080))
-	$(eval MAILPIT_URL := $(or $(MAILPIT_URL),http://mailpit.vetchium-devtest-env.svc.cluster.local:8025))
 	$(eval TEST_DURATION := $(or $(TEST_DURATION),1800))
 	$(eval MAX_VUS := $(or $(MAX_VUS),5000))
 	$(eval TOTAL_USERS := $(or $(NUM_USERS),1000000))
 	$(eval INSTANCE_COUNT := $(or $(INSTANCE_COUNT),10))
 	$(eval SETUP_PARALLELISM := $(or $(SETUP_PARALLELISM),100))
-	$(eval TARGET_NAMESPACE := vetchium-devtest-$(VMUSER))
 
 	# Apply variables to yaml template
 	sed \
-	    -e "s|\$${API_SERVER_URL}|$(API_SERVER_URL)|g" \
-	    -e "s|\$${MAILPIT_URL}|$(MAILPIT_URL)|g" \
-	    -e "s|\$${TEST_DURATION}|$(TEST_DURATION)|g" \
-	    -e "s|\$${MAX_VUS}|$(MAX_VUS)|g" \
-	    -e "s|\$${TOTAL_USERS}|$(TOTAL_USERS)|g" \
-	    -e "s|\$${INSTANCE_COUNT}|$(INSTANCE_COUNT)|g" \
-	    -e "s|\$${SETUP_PARALLELISM}|$(SETUP_PARALLELISM)|g" \
-	    -e "s|\$${TARGET_NAMESPACE}|$(TARGET_NAMESPACE)|g" \
-	    neville/k6-distributed-updated.yaml > /tmp/k6-distributed-$(K6_NAMESPACE).yaml
+	    -e "s|\${VETCHIUM_API_SERVER_URL}|$(VETCHIUM_API_SERVER_URL)|g" \
+	    -e "s|\${MAILPIT_URL}|$(MAILPIT_URL)|g" \
+	    -e "s|\${TEST_DURATION}|$(TEST_DURATION)|g" \
+	    -e "s|\${MAX_VUS}|$(MAX_VUS)|g" \
+	    -e "s|\${TOTAL_USERS}|$(TOTAL_USERS)|g" \
+	    -e "s|\${INSTANCE_COUNT}|$(INSTANCE_COUNT)|g" \
+	    -e "s|\${SETUP_PARALLELISM}|$(SETUP_PARALLELISM)|g" \
+	    ./neville/k6-distributed-updated.yaml | kubectl apply -f - -n $(K6_NAMESPACE)
 
 	@echo "--- Copying test script to ConfigMap ---"
 	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
-
-	@echo "--- Starting distributed k6 test ---"
-	kubectl apply -f /tmp/k6-distributed-$(K6_NAMESPACE).yaml -n $(K6_NAMESPACE)
 
 	@echo "--- Test started! ---"
 	@echo "K6 test deployed in namespace: $(K6_NAMESPACE)"
 	@echo "Monitor the test with: kubectl logs -f job/k6-distributed-test -n $(K6_NAMESPACE)"
 	@echo "Individual worker logs: kubectl logs -f job/k6-worker -n $(K6_NAMESPACE) --selector=job-name=k6-worker"
-	@echo "Target API server: $(API_SERVER_URL) in namespace $(TARGET_NAMESPACE)"
+	@echo "Target API server: $(VETCHIUM_API_SERVER_URL)"
+	@echo "Target Mailpit server: $(MAILPIT_URL)"
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"

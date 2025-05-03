@@ -5,14 +5,13 @@ metadata:
   name: k6-distributed-config
 data:
   # Central configuration for k6 tests
-  API_BASE_URL: "${API_SERVER_URL}"
+  API_BASE_URL: "${VETCHIUM_API_SERVER_URL}"
   MAILPIT_URL: "${MAILPIT_URL}"
   TEST_DURATION: "${TEST_DURATION}"
   MAX_VUS: "${MAX_VUS}"
   TOTAL_USERS: "${TOTAL_USERS}"
   INSTANCE_COUNT: "${INSTANCE_COUNT}"
   SETUP_PARALLELISM: "${SETUP_PARALLELISM}"
-  TARGET_NAMESPACE: "${TARGET_NAMESPACE}"
 ---
 apiVersion: batch/v1
 kind: Job
@@ -34,23 +33,18 @@ spec:
       - name: seed-users
         image: postgres:14-alpine
         env:
-        - name: TARGET_NAMESPACE
-          valueFrom:
-            configMapKeyRef:
-              name: k6-distributed-config
-              key: TARGET_NAMESPACE
-        - name: PGPASSWORD
+        - name: PGURI
           valueFrom:
             secretKeyRef:
               name: postgres-credentials
-              key: password
+              key: pguri
         command: ["/bin/sh", "-c"]
         args:
         - |
           echo "Creating server-side bulk user creation function..."
-          PGHOST=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.host}' | base64 -d)
-          PGUSER=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.user}' | base64 -d)
-          PGDATABASE=$(kubectl -n $TARGET_NAMESPACE get secret postgres-app -o jsonpath='{.data.dbname}' | base64 -d)
+          # Use the complete PostgreSQL URI provided directly
+          echo "Using provided PGURI: $PGURI"
+          # No need to extract individual components - we use the URI directly
           USERS=$(cat /config/TOTAL_USERS)
           
           # Create the bulk user generation SQL
@@ -117,7 +111,8 @@ spec:
           
           # Execute the SQL
           echo "Running bulk user creation..."
-          psql -h $PGHOST -U $PGUSER -d $PGDATABASE -f /tmp/create_users.sql
+          # Use PGURI directly without decomposing it into individual parts
+          psql "$PGURI" -f /tmp/create_users.sql
           
           echo "User seeding completed"
         volumeMounts:
@@ -131,11 +126,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: TARGET_NAMESPACE
-          valueFrom:
-            configMapKeyRef:
-              name: k6-distributed-config
-              key: TARGET_NAMESPACE
         command: ["/bin/sh", "-c"]
         args:
         - |
