@@ -162,7 +162,7 @@ k6:
 
 	@echo "Executing SQL to create test users..."
 	# Execute the SQL file with variable substitution using envsubst in a single network call
-	@TOTAL_USERS="$(TOTAL_USERS)" envsubst < ./neville/create_users.sql | \
+	@TOTAL_USERS="$(TOTAL_USERS)" envsubst '$$TOTAL_USERS' < ./neville/create_users.sql | \
 	psql "$(PG_URI)" || { \
 		echo "Error: Failed to create test users in the database. Aborting."; \
 		exit 1; \
