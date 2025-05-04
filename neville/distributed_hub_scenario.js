@@ -1126,6 +1126,40 @@ export default function (data) {
 }
 
 // --- k6 Test Configuration ---
+// Function to generate load test stages based on user count
+function generateLoadStages(userCount) {
+  console.log(`Generating load stages for ${userCount} users`);
+
+  // Calculate appropriate targets based on user count
+  const initialTarget = Math.min(Math.ceil(userCount * 0.1), 100);
+  const midTarget = Math.min(
+    Math.ceil(userCount * 0.5),
+    Math.floor(userCount * 0.5)
+  );
+  const fullTarget = userCount; // Full load
+
+  // Create stages with appropriate ramp-up periods
+  const stages = [
+    // Initial ramp-up (10% of users or 100, whichever is smaller)
+    { duration: "1m", target: initialTarget },
+
+    // Mid-level ramp-up (50% of users)
+    { duration: "2m", target: midTarget },
+
+    // Full load ramp-up (100% of users)
+    { duration: "2m", target: fullTarget },
+
+    // Maintain full load for 5 minutes
+    { duration: "5m", target: fullTarget },
+
+    // Ramp down
+    { duration: "1m", target: 0 },
+  ];
+
+  console.log(`Load stages: ${JSON.stringify(stages)}`);
+  return stages;
+}
+
 export const options = {
   // Calculate setup timeout based on number of users and parallelism - increase timeout significantly
   setupTimeout: `${Math.max(
@@ -1143,13 +1177,8 @@ export const options = {
   scenarios: {
     social_interactions: {
       executor: "ramping-vus",
-      startVUs: 5,
-      stages: [
-        { duration: "30s", target: 10 }, // Ramp up to 10 VUs over 30s
-        { duration: "5m", target: 20 }, // Ramp up to 20 VUs over 5m
-        { duration: "10m", target: 20 }, // Stay at 20 VUs for 10m
-        { duration: "1m", target: 0 }, // Ramp down to 0 VUs
-      ],
+      startVUs: Math.min(5, Math.ceil(MAX_USERS_PER_INSTANCE * 0.05)),
+      stages: generateLoadStages(MAX_USERS_PER_INSTANCE),
       gracefulRampDown: "30s",
     },
   },
