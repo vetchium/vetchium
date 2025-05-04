@@ -910,7 +910,7 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
 
           if (votablePosts.length === 0) {
             console.debug(
-              `VU ${__VU} (${userHandle}): No posts available to ${selectedAction}.`
+              `VU ${__VU} (${userHandle}): No posts available to ${action}.`
             );
             break;
           }
@@ -918,16 +918,16 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
           const postIdToVote = randomItem(votablePosts);
           const votePayload = JSON.stringify({ post_id: postIdToVote });
           const voteUrl = `${API_BASE_URL}/hub/${
-            selectedAction === "upvote" ? "upvote" : "downvote"
+            action === "upvote" ? "upvote" : "downvote"
           }-user-post`;
 
           console.debug(
-            `VU ${__VU} (${userHandle}): Attempting to ${selectedAction} post ${postIdToVote}`
+            `VU ${__VU} (${userHandle}): Attempting to ${action} post ${postIdToVote}`
           );
 
           // Set appropriate trend and tag based on vote type
           let voteTrend, voteTag;
-          if (selectedAction === "upvote") {
+          if (action === "upvote") {
             voteTrend = upvoteTrend;
             voteTag = "HubUpvoteAPI";
           } else {
@@ -944,13 +944,13 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
 
           // Check for success or expected error
           check(voteRes, {
-            [`${selectedAction} request successful or expected error`]: (r) =>
+            [`${action} request successful or expected error`]: (r) =>
               r.status === 200 || r.status === 422,
           });
 
           // If successful, track the voted post
           if (voteRes.status === 200) {
-            if (selectedAction === "upvote") {
+            if (action === "upvote") {
               vuState.upvotedPostIds.push(postIdToVote);
             } else {
               vuState.downvotedPostIds.push(postIdToVote);
@@ -960,7 +960,7 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
           // Log unexpected errors
           if (voteRes.status !== 200 && voteRes.status !== 422) {
             console.error(
-              `VU ${__VU} (${userHandle}): ${selectedAction} API Error! PostID: ${postIdToVote}, Status: ${voteRes.status}, Body: ${voteRes.body}`
+              `VU ${__VU} (${userHandle}): ${action} API Error! PostID: ${postIdToVote}, Status: ${voteRes.status}, Body: ${voteRes.body}`
             );
           }
 
