@@ -116,6 +116,8 @@ func Login(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("login successful", "email", hubUser.Email)
+
 		loginResponse := hub.LoginResponse{
 			Token: tfaTokenString,
 		}
