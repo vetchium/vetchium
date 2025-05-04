@@ -114,8 +114,8 @@ function releaseTfaLock() {
 }
 
 // --- Calculate user range for this instance ---
-// Limit the number of users to prevent memory issues
-const MAX_USERS_PER_INSTANCE = 100; // Cap at 100 users per instance to prevent OOM
+// Use a more reasonable limit for users per instance based on available memory
+const MAX_USERS_PER_INSTANCE = Math.min(5000, USERS_PER_INSTANCE); // Higher limit, but still prevent extreme OOM
 
 const startUserIndex = INSTANCE_INDEX * USERS_PER_INSTANCE + 1;
 const endUserIndex = Math.min(
@@ -298,7 +298,8 @@ async function fetchTFACodeForUser(email) {
 
       // The pattern looks for a 6-digit code that appears after certain text patterns
       // Using the same pattern as in the Go test helpers for consistency
-      const tfaCodePattern = /verification code is[^\d]*(\d{6})|code:[^\d]*(\d{6})|code is[^\d]*(\d{6})|code.*?(\d{6})|\b(\d{6})\b/i;
+      const tfaCodePattern =
+        /verification code is[^\d]*(\d{6})|code:[^\d]*(\d{6})|code is[^\d]*(\d{6})|code.*?(\d{6})|\b(\d{6})\b/i;
       console.log(`DEBUG: Using TFA code regex pattern: ${tfaCodePattern}`);
       const tfaMatch = htmlContent.match(tfaCodePattern);
       console.log(
@@ -383,8 +384,7 @@ async function loginAndAuthenticateUser(user) {
         console.error(
           `TFA token not found in login response for ${user.email}. Response: ${loginRes.body}`
         );
-        sleep(2);
-        continue;
+        return;
       }
 
       console.debug(`Got TFA token for ${user.email}: ${tfaToken}`);
@@ -414,8 +414,7 @@ async function loginAndAuthenticateUser(user) {
         console.error(
           `TFA verification failed for ${user.email}. Status: ${tfaRes.status}, Body: ${tfaRes.body}`
         );
-        sleep(2);
-        continue;
+        return;
       }
 
       try {
@@ -427,8 +426,7 @@ async function loginAndAuthenticateUser(user) {
           console.error(
             `Auth token (session_token) not found in TFA response for ${user.email}. Response: ${tfaRes.body}`
           );
-          sleep(2);
-          continue;
+          return;
         }
 
         console.debug(`Successfully authenticated ${user.email}`);
@@ -437,13 +435,13 @@ async function loginAndAuthenticateUser(user) {
         console.error(
           `Error parsing TFA response for ${user.email}: ${e}. Body: ${tfaRes.body}`
         );
-        sleep(2);
+        return;
       }
     } catch (e) {
       console.error(
         `Error parsing login response for ${user.email}: ${e}. Body: ${loginRes.body}`
       );
-      sleep(2);
+      return;
     }
   }
 
@@ -475,6 +473,21 @@ export async function setup() {
     console.log(`Mailpit connectivity test status: ${mailpitRes.status}`);
   } catch (error) {
     console.error(`Mailpit connectivity test failed: ${error}`);
+    return;
+  }
+
+  console.log("Delete all existing mails in mailpit");
+  try {
+    // Use http.del() instead of http.delete() - k6 uses del() for DELETE requests
+    const deleteRes = http.del(`${MAILPIT_URL}/api/v1/messages`);
+    console.log(`Mailpit delete test status: ${deleteRes.status}`);
+    if (deleteRes.status !== 200) {
+      console.error(`Mailpit delete failed with status: ${deleteRes.status}`);
+      return;
+    }
+  } catch (error) {
+    console.error(`Mailpit delete test failed: ${error}`);
+    return;
   }
 
   // Prepare user data structure
@@ -491,10 +504,10 @@ export async function setup() {
 
   console.log(`Created ${users.length} user objects for authentication`);
 
-  // Authenticate users in parallel batches - reduce batch size to prevent OOM
+  // Authenticate users in parallel batches
   const authenticatedUsers = [];
-  // Use a much smaller batch size than SETUP_PARALLELISM to prevent memory issues
-  const batchSize = Math.min(SETUP_PARALLELISM, 5); // Cap at 5 parallel authentications to reduce load
+  // Use a reasonable batch size based on available resources
+  const batchSize = Math.min(SETUP_PARALLELISM, 20); // Increased to 20 parallel authentications
   const batches = Math.ceil(users.length / batchSize);
 
   for (let batchIndex = 0; batchIndex < batches; batchIndex++) {
@@ -1090,8 +1103,8 @@ export default function (data) {
 export const options = {
   // Calculate setup timeout based on number of users and parallelism - increase timeout significantly
   setupTimeout: `${Math.max(
-    100,
-    Math.ceil((endUserIndex - startUserIndex + 1) / SETUP_PARALLELISM) * 120
+    300,
+    Math.ceil((endUserIndex - startUserIndex + 1) / SETUP_PARALLELISM) * 300
   )}s`,
   // Always run setup - this is critical
   noVUConnectionReuse: true,

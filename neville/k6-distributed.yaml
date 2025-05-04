@@ -33,7 +33,7 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-          command: ["k6", "-v", "run", "/scripts/distributed_hub_scenario.js"]
+          command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
           env:
             - name: API_BASE_URL
               valueFrom:
