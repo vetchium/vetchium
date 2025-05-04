@@ -173,6 +173,18 @@ k6:
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
 	kubectl create namespace $(K6_NAMESPACE)
 
+	@echo "--- Creating ConfigMap with current script version FIRST ---"
+	# Print the first few lines of the script to verify it's the correct version
+	@echo "Verifying script version:"
+	@head -n 20 ./neville/distributed_hub_scenario.js
+	# Create the ConfigMap with the current script version
+	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
+	# Verify the ConfigMap was created successfully
+	@echo "Verifying ConfigMap creation:"
+	kubectl get configmap k6-test-script -n $(K6_NAMESPACE)
+	@echo "Verifying ConfigMap content (should show script version):"
+	kubectl get configmap k6-test-script -n $(K6_NAMESPACE) -o yaml | grep -A 3 "SCRIPT VERSION" || echo "Version marker not found in ConfigMap"
+
 	@echo "--- Creating k6 distributed test resources ---"
 
 	# Check if envsubst is installed
@@ -188,8 +200,10 @@ k6:
 		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
 		envsubst | kubectl apply -f - -n $(K6_NAMESPACE)
 
-	@echo "--- Copying test script to ConfigMap ---"
-	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
+	# Verify that the pod can access the ConfigMap
+	@echo "Waiting for k6 pod to start..."
+	sleep 5
+	kubectl get pods -n $(K6_NAMESPACE) -l job-name=k6-worker-0
 
 	@echo "--- Test started! ---"
 	@echo "K6 test deployed in namespace: $(K6_NAMESPACE)"

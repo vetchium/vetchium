@@ -1,12 +1,13 @@
 // distributed_hub_scenario.js - Distributed k6 load test for Vetchium API
+// SCRIPT VERSION: 2025-05-04-v1 - Fixed ConfigMap loading and TFA extraction
 import {
   randomIntBetween,
   randomItem,
 } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 import { check, group, sleep } from "k6";
+import exec from "k6/execution";
 import http from "k6/http";
 import { Trend } from "k6/metrics";
-import exec from "k6/execution";
 
 // Helper function to generate a random string
 function randomString(length) {
@@ -83,8 +84,8 @@ const unvoteTrend = new Trend("hub_unvote_duration", true);
 const followStatusTrend = new Trend("hub_follow_status_duration", true);
 
 // --- Constants for authentication ---
-const MAX_LOGIN_ATTEMPTS = 3;
-const MAX_TFA_FETCH_ATTEMPTS = 5;
+const MAX_LOGIN_ATTEMPTS = 5;
+const MAX_TFA_FETCH_ATTEMPTS = 10;
 
 // --- TFA Synchronization ---
 let tfaLock = false;
@@ -113,8 +114,12 @@ function releaseTfaLock() {
 }
 
 // --- Calculate user range for this instance ---
+// Limit the number of users to prevent memory issues
+const MAX_USERS_PER_INSTANCE = 100; // Cap at 100 users per instance to prevent OOM
+
 const startUserIndex = INSTANCE_INDEX * USERS_PER_INSTANCE + 1;
 const endUserIndex = Math.min(
+  startUserIndex + MAX_USERS_PER_INSTANCE - 1,
   (INSTANCE_INDEX + 1) * USERS_PER_INSTANCE,
   TOTAL_USERS
 );
@@ -125,9 +130,12 @@ console.log(
 
 // --- TFA Code Fetch (Uses Email) ---
 async function fetchTFACodeForUser(email) {
+  console.log(`Starting TFA code fetch for ${email}`);
   try {
     // Acquire lock before fetching TFA code
+    console.log(`Acquiring TFA lock for ${email}`);
     await acquireTfaLock();
+    console.log(`TFA lock acquired for ${email}`);
 
     let attempts = 0;
     let messageId = null;
@@ -137,39 +145,78 @@ async function fetchTFACodeForUser(email) {
       attempts++;
 
       // Build the search URL with query parameters exactly as in the Go code
-      const searchQuery = `to:${email} subject:Vetchium Two Factor Authentication`;
+      // Use a more relaxed search query to find TFA emails
+      const searchQuery = `to:${email}`;
       const searchUrl = `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(
         searchQuery
       )}`;
 
-      console.debug(
+      console.log(
         `Attempt ${attempts}/${MAX_TFA_FETCH_ATTEMPTS}: Searching Mailpit at ${searchUrl}`
       );
 
-      const searchRes = http.get(searchUrl);
+      // Debug the actual Mailpit URL being used
+      console.log(`DEBUG: Full Mailpit URL being accessed: ${MAILPIT_URL}`);
+      console.log(`DEBUG: Full search URL: ${searchUrl}`);
+
+      // Add detailed logging for the HTTP request
+      console.log(`DEBUG: Making HTTP GET request to Mailpit search API`);
+      let searchRes;
+      try {
+        searchRes = http.get(searchUrl);
+        console.log(
+          `DEBUG: Mailpit search API response status: ${searchRes.status}`
+        );
+        console.log(
+          `DEBUG: Mailpit search API response size: ${
+            searchRes.body ? searchRes.body.length : 0
+          } bytes`
+        );
+      } catch (error) {
+        console.error(
+          `DEBUG: Exception during Mailpit search API request: ${error}`
+        );
+        sleep(2);
+        continue;
+      }
 
       if (searchRes.status !== 200) {
         console.warn(
-          `Mailpit search API returned status ${searchRes.status}. Waiting before retrying...`
+          `DEBUG: Mailpit search API returned status ${searchRes.status}. Response body: ${searchRes.body}`
         );
         sleep(2); // Reduced sleep time for faster retries
         continue;
       }
 
       try {
+        console.log(`DEBUG: Attempting to parse JSON response from Mailpit`);
+        console.log(
+          `DEBUG: First 200 chars of response body: ${searchRes.body.substring(
+            0,
+            200
+          )}...`
+        );
+
         const searchData = JSON.parse(searchRes.body);
-        console.debug(
-          `Search response: ${JSON.stringify(searchData).substring(0, 100)}...`
+        console.log(`DEBUG: JSON parsed successfully`);
+        console.log(
+          `DEBUG: Search response for ${email}: Found ${
+            searchData.messages ? searchData.messages.length : 0
+          } messages`
         );
 
         if (searchData.messages && searchData.messages.length > 0) {
+          // Sort messages by date (newest first) to get the most recent TFA email
+          searchData.messages.sort(
+            (a, b) => new Date(b.Date) - new Date(a.Date)
+          );
           messageId = searchData.messages[0].ID;
-          console.debug(`Found message ID: ${messageId}`);
+          console.log(`Found message ID for ${email}: ${messageId}`);
           break;
         }
 
-        console.debug(`No matching messages found yet. Waiting...`);
-        sleep(2);
+        console.log(`No matching messages found yet for ${email}. Waiting...`);
+        sleep(3); // Increased wait time
       } catch (e) {
         console.error(
           `Error parsing search response: ${e}. Body: ${searchRes.body}`
@@ -188,9 +235,23 @@ async function fetchTFACodeForUser(email) {
 
     // Step 2: Get the message content using the message ID
     const messageUrl = `${MAILPIT_URL}/api/v1/message/${messageId}`;
-    console.debug(`Fetching message content from ${messageUrl}`);
+    console.log(`DEBUG: Fetching message content from ${messageUrl}`);
 
-    const messageRes = http.get(messageUrl);
+    let messageRes;
+    try {
+      console.log(`DEBUG: Making HTTP GET request to fetch message content`);
+      messageRes = http.get(messageUrl);
+      console.log(`DEBUG: Message API response status: ${messageRes.status}`);
+      console.log(
+        `DEBUG: Message API response size: ${
+          messageRes.body ? messageRes.body.length : 0
+        } bytes`
+      );
+    } catch (error) {
+      console.error(`DEBUG: Exception during message fetch: ${error}`);
+      releaseTfaLock();
+      return null;
+    }
 
     if (messageRes.status !== 200) {
       console.error(
@@ -201,18 +262,61 @@ async function fetchTFACodeForUser(email) {
     }
 
     try {
+      console.log(`DEBUG: Attempting to parse message JSON response`);
+      console.log(
+        `DEBUG: First 200 chars of message response: ${messageRes.body.substring(
+          0,
+          200
+        )}...`
+      );
+
       const messageData = JSON.parse(messageRes.body);
+      console.log(`DEBUG: Message JSON parsed successfully`);
+
+      // Check if we have HTML content
+      if (!messageData.HTML) {
+        console.log(
+          `DEBUG: No HTML content found in message. Available fields: ${Object.keys(
+            messageData
+          ).join(", ")}`
+        );
+      }
+
       const htmlContent = messageData.HTML || "";
+      console.log(
+        `DEBUG: HTML content length: ${htmlContent.length} characters`
+      );
 
       // Step 3: Extract TFA code using regex pattern
+      // Log a portion of the HTML content for debugging
+      console.log(
+        `DEBUG: Email HTML content for ${email} (first 200 chars): ${htmlContent.substring(
+          0,
+          200
+        )}...`
+      );
+
       // The pattern looks for a 6-digit code that appears after certain text patterns
-      const tfaCodePattern = /verification code is[^\d]*(\d{6})|code:[^\d]*(\d{6})|code is[^\d]*(\d{6})/i;
+      // Using the same pattern as in the Go test helpers for consistency
+      const tfaCodePattern = /verification code is[^\d]*(\d{6})|code:[^\d]*(\d{6})|code is[^\d]*(\d{6})|code.*?(\d{6})|\b(\d{6})\b/i;
+      console.log(`DEBUG: Using TFA code regex pattern: ${tfaCodePattern}`);
       const tfaMatch = htmlContent.match(tfaCodePattern);
+      console.log(
+        `DEBUG: Regex match result: ${tfaMatch ? "Match found" : "No match"}`
+      );
+      if (tfaMatch) {
+        console.log(`DEBUG: Raw TFA match groups: ${JSON.stringify(tfaMatch)}`);
+      }
 
       if (tfaMatch) {
         // The code could be in any of the capture groups, find the non-null one
-        const tfaCode = tfaMatch[1] || tfaMatch[2] || tfaMatch[3];
-        console.debug(`Successfully extracted TFA code: ${tfaCode}`);
+        const tfaCode =
+          tfaMatch[1] ||
+          tfaMatch[2] ||
+          tfaMatch[3] ||
+          tfaMatch[4] ||
+          tfaMatch[5];
+        console.log(`Successfully extracted TFA code for ${email}: ${tfaCode}`);
         releaseTfaLock();
         return tfaCode;
       } else {
@@ -255,29 +359,26 @@ async function loginAndAuthenticateUser(user) {
     });
 
     // Make login request
-    const loginRes = http.post(
-      `${API_BASE_URL}/hub/login`,
-      loginPayload,
-      {
-        headers: { "Content-Type": "application/json" },
-        tags: { name: "HubLoginAPI" },
-      }
-    );
+    const loginRes = http.post(`${API_BASE_URL}/hub/login`, loginPayload, {
+      headers: { "Content-Type": "application/json" },
+      tags: { name: "HubLoginAPI" },
+    });
 
     // Check login response
     if (loginRes.status !== 200) {
       console.error(
         `Login failed for ${user.email}. Status: ${loginRes.status}, Body: ${loginRes.body}`
       );
-      sleep(2);
       continue;
     }
+
+    console.debug(`Login pass for ${user.email} Now for TFA`);
 
     try {
       const loginData = JSON.parse(loginRes.body);
 
-      // Extract TFA token from response
-      const tfaToken = loginData.tfa_token;
+      // Extract TFA token from response - using 'token' field name as in the Go code
+      const tfaToken = loginData.token;
       if (!tfaToken) {
         console.error(
           `TFA token not found in login response for ${user.email}. Response: ${loginRes.body}`
@@ -297,19 +398,16 @@ async function loginAndAuthenticateUser(user) {
       }
 
       // Step 3: Submit TFA code to complete authentication
+      // Using the field names from the JSON tags in the Go struct
       const tfaPayload = JSON.stringify({
         tfa_token: tfaToken,
         tfa_code: tfaCode,
       });
 
-      const tfaRes = http.post(
-        `${API_BASE_URL}/hub/tfa`,
-        tfaPayload,
-        {
-          headers: { "Content-Type": "application/json" },
-          tags: { name: "HubTFAAPI" },
-        }
-      );
+      const tfaRes = http.post(`${API_BASE_URL}/hub/tfa`, tfaPayload, {
+        headers: { "Content-Type": "application/json" },
+        tags: { name: "HubTFAAPI" },
+      });
 
       // Check TFA response
       if (tfaRes.status !== 200) {
@@ -322,11 +420,12 @@ async function loginAndAuthenticateUser(user) {
 
       try {
         const tfaData = JSON.parse(tfaRes.body);
-        authToken = tfaData.auth_token;
+        // Using session_token as per the JSON tag in the Go struct
+        authToken = tfaData.session_token;
 
         if (!authToken) {
           console.error(
-            `Auth token not found in TFA response for ${user.email}. Response: ${tfaRes.body}`
+            `Auth token (session_token) not found in TFA response for ${user.email}. Response: ${tfaRes.body}`
           );
           sleep(2);
           continue;
@@ -352,13 +451,36 @@ async function loginAndAuthenticateUser(user) {
 }
 
 // --- k6 Setup Function ---
-async function setup() {
-  console.log(`Starting setup for instance ${INSTANCE_INDEX} with users ${startUserIndex} to ${endUserIndex}`);
-  
+export async function setup() {
+  console.error("!!!!!!!!!! MARKER: VERSION 2025-05-04-12:55 !!!!!!!!!!");
+  console.log("!!!!!!!!!! MARKER: VERSION 2025-05-04-12:55 !!!!!!!!!!");
+  console.log("SETUP FUNCTION CALLED - THIS SHOULD BE VISIBLE");
+  console.log(`API_BASE_URL: ${API_BASE_URL}`);
+  console.log(`MAILPIT_URL: ${MAILPIT_URL}`);
+  console.log(`TOTAL_USERS: ${TOTAL_USERS}`);
+  console.log(`INSTANCE_INDEX: ${INSTANCE_INDEX}`);
+  console.log(`INSTANCE_COUNT: ${INSTANCE_COUNT}`);
+  console.log(`USERS_PER_INSTANCE: ${USERS_PER_INSTANCE}`);
+  console.log(`SETUP_PARALLELISM: ${SETUP_PARALLELISM}`);
+  console.log(`TEST_DURATION_SECONDS: ${TEST_DURATION_SECONDS}`);
+
+  console.log(
+    `Starting setup for instance ${INSTANCE_INDEX} with users ${startUserIndex} to ${endUserIndex}`
+  );
+
+  // Test direct Mailpit connectivity
+  console.log(`Testing connectivity to Mailpit: ${MAILPIT_URL}`);
+  try {
+    const mailpitRes = http.get(`${MAILPIT_URL}/api/v1/messages`);
+    console.log(`Mailpit connectivity test status: ${mailpitRes.status}`);
+  } catch (error) {
+    console.error(`Mailpit connectivity test failed: ${error}`);
+  }
+
   // Prepare user data structure
   const users = [];
   const allUserHandles = [];
-  
+
   // Create user objects for this instance's range
   for (let i = startUserIndex; i <= endUserIndex; i++) {
     const email = `user${i}@example.com`;
@@ -366,21 +488,26 @@ async function setup() {
     users.push({ email, handle });
     allUserHandles.push(handle);
   }
-  
+
   console.log(`Created ${users.length} user objects for authentication`);
-  
-  // Authenticate users in parallel batches
+
+  // Authenticate users in parallel batches - reduce batch size to prevent OOM
   const authenticatedUsers = [];
-  const batchSize = SETUP_PARALLELISM;
+  // Use a much smaller batch size than SETUP_PARALLELISM to prevent memory issues
+  const batchSize = Math.min(SETUP_PARALLELISM, 5); // Cap at 5 parallel authentications to reduce load
   const batches = Math.ceil(users.length / batchSize);
-  
+
   for (let batchIndex = 0; batchIndex < batches; batchIndex++) {
     const batchStart = batchIndex * batchSize;
     const batchEnd = Math.min((batchIndex + 1) * batchSize, users.length);
     const batchUsers = users.slice(batchStart, batchEnd);
-    
-    console.log(`Processing authentication batch ${batchIndex + 1}/${batches} (users ${batchStart + 1} to ${batchEnd})`);
-    
+
+    console.log(
+      `Processing authentication batch ${batchIndex + 1}/${batches} (users ${
+        batchStart + 1
+      } to ${batchEnd})`
+    );
+
     // Process batch in parallel
     const authPromises = batchUsers.map(async (user) => {
       const authToken = await loginAndAuthenticateUser(user);
@@ -389,23 +516,29 @@ async function setup() {
       }
       return null;
     });
-    
+
     // Wait for all authentications in this batch to complete
     const batchResults = await Promise.all(authPromises);
-    
+
     // Filter out failed authentications
-    const successfulAuths = batchResults.filter(result => result !== null);
+    const successfulAuths = batchResults.filter((result) => result !== null);
     authenticatedUsers.push(...successfulAuths);
-    
-    console.log(`Batch ${batchIndex + 1} complete: ${successfulAuths.length}/${batchUsers.length} users authenticated`);
+
+    console.log(
+      `Batch ${batchIndex + 1} complete: ${successfulAuths.length}/${
+        batchUsers.length
+      } users authenticated`
+    );
   }
-  
-  console.log(`Setup complete: ${authenticatedUsers.length}/${users.length} users authenticated`);
-  
+
+  console.log(
+    `Setup complete: ${authenticatedUsers.length}/${users.length} users authenticated`
+  );
+
   // Return the authenticated users and all handles for the test
   return {
     authenticatedUsers,
-    allUserHandles
+    allUserHandles,
   };
 }
 
@@ -414,27 +547,27 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
   // Common auth parameters for all requests
   const authParams = {
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`
-    }
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
   };
 
   // Randomly select a social action to perform
   const socialActions = [
-    'follow_user',
-    'unfollow_user',
-    'create_post',
-    'read_timeline',
-    'view_post_details',
-    'upvote',
-    'downvote',
-    'unvote'
+    "follow_user",
+    "unfollow_user",
+    "create_post",
+    "read_timeline",
+    "view_post_details",
+    "upvote",
+    "downvote",
+    "unvote",
   ];
 
   // Weight the actions to create a realistic distribution
   // Reading timeline and viewing posts should be more common than posting
   const actionWeights = [15, 5, 10, 30, 20, 10, 5, 5]; // Percentages
-  
+
   // Calculate cumulative weights
   const cumulativeWeights = [];
   let sum = 0;
@@ -442,384 +575,436 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
     sum += weight;
     cumulativeWeights.push(sum);
   }
-  
+
   // Select action based on weights
   const randomValue = Math.random() * 100;
   let selectedActionIndex = 0;
-  
+
   for (let i = 0; i < cumulativeWeights.length; i++) {
     if (randomValue <= cumulativeWeights[i]) {
       selectedActionIndex = i;
       break;
     }
   }
-  
+
   const selectedAction = socialActions[selectedActionIndex];
-  
+
   // Execute the selected social action
   group(`Social Action: ${selectedAction}`, () => {
     switch (selectedAction) {
-      case 'follow_user': {
+      case "follow_user": {
         // Select a random user to follow (not self)
-        const otherHandles = allUserHandles.filter(h => h !== userHandle);
+        const otherHandles = allUserHandles.filter((h) => h !== userHandle);
         if (otherHandles.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): No other users to follow.`);
+          console.debug(
+            `VU ${__VU} (${userHandle}): No other users to follow.`
+          );
           break;
         }
-        
+
         // Don't follow users we already follow
         const potentialHandlesToFollow = otherHandles.filter(
-          h => !vuState.followedUsers.includes(h)
+          (h) => !vuState.followedUsers.includes(h)
         );
-        
+
         if (potentialHandlesToFollow.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): Already following all available users.`);
+          console.debug(
+            `VU ${__VU} (${userHandle}): Already following all available users.`
+          );
           break;
         }
-        
+
         const handleToFollow = randomItem(potentialHandlesToFollow);
         const followPayload = JSON.stringify({ handle: handleToFollow });
-        
-        console.debug(`VU ${__VU} (${userHandle}): Attempting to follow user ${handleToFollow}`);
-        
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Attempting to follow user ${handleToFollow}`
+        );
+
         const followRes = http.post(
           `${API_BASE_URL}/hub/follow-user`,
           followPayload,
           {
             ...authParams,
-            tags: { name: 'HubFollowUserAPI' }
+            tags: { name: "HubFollowUserAPI" },
           }
         );
-        
+
         followTrend.add(followRes.timings.duration);
-        
+
         // Check for success
         check(followRes, {
-          'Follow request successful': (r) => r.status === 200
+          "Follow request successful": (r) => r.status === 200,
         });
-        
+
         // If successful, add to followed users list
         if (followRes.status === 200) {
           vuState.followedUsers.push(handleToFollow);
         }
-        
+
         // Log unexpected errors
         if (followRes.status !== 200) {
           console.error(
             `VU ${__VU} (${userHandle}): Follow API Error! Handle: ${handleToFollow}, Status: ${followRes.status}, Body: ${followRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(1, 3));
         break;
       }
-      
-      case 'unfollow_user': {
+
+      case "unfollow_user": {
         // Check if we have any users to unfollow
         if (vuState.followedUsers.length === 0) {
           console.debug(`VU ${__VU} (${userHandle}): No users to unfollow.`);
           break;
         }
-        
+
         const handleToUnfollow = randomItem(vuState.followedUsers);
         const unfollowPayload = JSON.stringify({ handle: handleToUnfollow });
-        
-        console.debug(`VU ${__VU} (${userHandle}): Attempting to unfollow user ${handleToUnfollow}`);
-        
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Attempting to unfollow user ${handleToUnfollow}`
+        );
+
         const unfollowRes = http.post(
           `${API_BASE_URL}/hub/unfollow-user`,
           unfollowPayload,
           {
             ...authParams,
-            tags: { name: 'HubUnfollowUserAPI' }
+            tags: { name: "HubUnfollowUserAPI" },
           }
         );
-        
+
         unfollowTrend.add(unfollowRes.timings.duration);
-        
+
         // Check for success
         check(unfollowRes, {
-          'Unfollow request successful': (r) => r.status === 200
+          "Unfollow request successful": (r) => r.status === 200,
         });
-        
+
         // If successful, remove from followed users list
         if (unfollowRes.status === 200) {
           vuState.followedUsers = vuState.followedUsers.filter(
-            h => h !== handleToUnfollow
+            (h) => h !== handleToUnfollow
           );
         }
-        
+
         // Log unexpected errors
         if (unfollowRes.status !== 200) {
           console.error(
             `VU ${__VU} (${userHandle}): Unfollow API Error! Handle: ${handleToUnfollow}, Status: ${unfollowRes.status}, Body: ${unfollowRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(1, 3));
         break;
       }
-      
-      case 'create_post': {
+
+      case "create_post": {
         // Generate random post content
-        const postContent = `Test post from ${userHandle} at ${new Date().toISOString()} - ${randomString(20)}`;
+        const postContent = `Test post from ${userHandle} at ${new Date().toISOString()} - ${randomString(
+          20
+        )}`;
         const postPayload = JSON.stringify({ content: postContent });
-        
+
         console.debug(`VU ${__VU} (${userHandle}): Creating new post`);
-        
+
         const createPostRes = http.post(
           `${API_BASE_URL}/hub/create-post`,
           postPayload,
           {
             ...authParams,
-            tags: { name: 'HubCreatePostAPI' }
+            tags: { name: "HubCreatePostAPI" },
           }
         );
-        
+
         createPostTrend.add(createPostRes.timings.duration);
-        
+
         // Check for success
         check(createPostRes, {
-          'Create post request successful': (r) => r.status === 200
+          "Create post request successful": (r) => r.status === 200,
         });
-        
+
         // If successful, extract post ID and add to created posts
         if (createPostRes.status === 200) {
           try {
             const postData = JSON.parse(createPostRes.body);
             if (postData.post_id) {
               vuState.createdPostIds.push(postData.post_id);
-              console.debug(`VU ${__VU} (${userHandle}): Created post with ID ${postData.post_id}`);
+              console.debug(
+                `VU ${__VU} (${userHandle}): Created post with ID ${postData.post_id}`
+              );
             }
           } catch (e) {
-            console.error(`VU ${__VU} (${userHandle}): Error parsing create post response: ${e}`);
+            console.error(
+              `VU ${__VU} (${userHandle}): Error parsing create post response: ${e}`
+            );
           }
         }
-        
+
         // Log unexpected errors
         if (createPostRes.status !== 200) {
           console.error(
             `VU ${__VU} (${userHandle}): Create Post API Error! Status: ${createPostRes.status}, Body: ${createPostRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(2, 5));
         break;
       }
-      
-      case 'read_timeline': {
+
+      case "read_timeline": {
         // Prepare query parameters
         const limit = 20; // Number of posts to fetch
         let timelineUrl = `${API_BASE_URL}/hub/timeline?limit=${limit}`;
-        
+
         // Add cursor for pagination if we have one
         if (vuState.timelineCursor) {
           timelineUrl += `&cursor=${vuState.timelineCursor}`;
         }
-        
-        console.debug(`VU ${__VU} (${userHandle}): Reading timeline${vuState.timelineCursor ? ' with cursor' : ''}`);
-        
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Reading timeline${
+            vuState.timelineCursor ? " with cursor" : ""
+          }`
+        );
+
         const timelineRes = http.get(timelineUrl, {
           ...authParams,
-          tags: { name: 'HubTimelineAPI' }
+          tags: { name: "HubTimelineAPI" },
         });
-        
+
         timelineReadTrend.add(timelineRes.timings.duration);
-        
+
         // Check for success
         check(timelineRes, {
-          'Timeline read successful': (r) => r.status === 200
+          "Timeline read successful": (r) => r.status === 200,
         });
-        
+
         // Process timeline response
         if (timelineRes.status === 200) {
           try {
             const timelineData = JSON.parse(timelineRes.body);
-            
+
             // Update cursor for next pagination
             if (timelineData.next_cursor) {
               vuState.timelineCursor = timelineData.next_cursor;
             }
-            
+
             // Store post IDs for potential interactions
             if (timelineData.posts && timelineData.posts.length > 0) {
               // Add new post IDs to the timeline posts collection
-              timelineData.posts.forEach(post => {
+              timelineData.posts.forEach((post) => {
                 if (!vuState.timelinePostIds.includes(post.post_id)) {
                   vuState.timelinePostIds.push(post.post_id);
                 }
               });
-              
-              console.debug(`VU ${__VU} (${userHandle}): Retrieved ${timelineData.posts.length} posts, total in memory: ${vuState.timelinePostIds.length}`);
+
+              console.debug(
+                `VU ${__VU} (${userHandle}): Retrieved ${timelineData.posts.length} posts, total in memory: ${vuState.timelinePostIds.length}`
+              );
             } else {
-              console.debug(`VU ${__VU} (${userHandle}): No posts in timeline response`);
+              console.debug(
+                `VU ${__VU} (${userHandle}): No posts in timeline response`
+              );
             }
           } catch (e) {
-            console.error(`VU ${__VU} (${userHandle}): Error parsing timeline response: ${e}`);
+            console.error(
+              `VU ${__VU} (${userHandle}): Error parsing timeline response: ${e}`
+            );
           }
         }
-        
+
         // Log unexpected errors
         if (timelineRes.status !== 200) {
           console.error(
             `VU ${__VU} (${userHandle}): Timeline API Error! Status: ${timelineRes.status}, Body: ${timelineRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(2, 5));
         break;
       }
-      
-      case 'view_post_details': {
+
+      case "view_post_details": {
         // Combine timeline posts and created posts for selection
-        const availablePosts = [...vuState.timelinePostIds, ...vuState.createdPostIds];
-        
+        const availablePosts = [
+          ...vuState.timelinePostIds,
+          ...vuState.createdPostIds,
+        ];
+
         if (availablePosts.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): No posts available to view details.`);
+          console.debug(
+            `VU ${__VU} (${userHandle}): No posts available to view details.`
+          );
           break;
         }
-        
+
         const postIdToView = randomItem(availablePosts);
         const postDetailsUrl = `${API_BASE_URL}/hub/post/${postIdToView}`;
-        
-        console.debug(`VU ${__VU} (${userHandle}): Viewing details for post ${postIdToView}`);
-        
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Viewing details for post ${postIdToView}`
+        );
+
         const postDetailsRes = http.get(postDetailsUrl, {
           ...authParams,
-          tags: { name: 'HubPostDetailsAPI' }
+          tags: { name: "HubPostDetailsAPI" },
         });
-        
+
         postDetailsTrend.add(postDetailsRes.timings.duration);
-        
+
         // Check for success
         check(postDetailsRes, {
-          'Post details request successful': (r) => r.status === 200
+          "Post details request successful": (r) => r.status === 200,
         });
-        
+
         // Log unexpected errors
         if (postDetailsRes.status !== 200) {
           console.error(
             `VU ${__VU} (${userHandle}): Post Details API Error! PostID: ${postIdToView}, Status: ${postDetailsRes.status}, Body: ${postDetailsRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(1, 4));
         break;
       }
-      
-      case 'upvote':
-      case 'downvote': {
+
+      case "upvote":
+      case "downvote": {
         // Combine timeline posts for voting (exclude own posts)
         const availablePosts = vuState.timelinePostIds.filter(
-          id => !vuState.createdPostIds.includes(id)
+          (id) => !vuState.createdPostIds.includes(id)
         );
-        
+
         // Also exclude posts we've already voted on
         const votablePosts = availablePosts.filter(
-          id => !vuState.upvotedPostIds.includes(id) && !vuState.downvotedPostIds.includes(id)
+          (id) =>
+            !vuState.upvotedPostIds.includes(id) &&
+            !vuState.downvotedPostIds.includes(id)
         );
-        
+
         if (votablePosts.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): No posts available to ${selectedAction}.`);
+          console.debug(
+            `VU ${__VU} (${userHandle}): No posts available to ${selectedAction}.`
+          );
           break;
         }
-        
+
         const postIdToVote = randomItem(votablePosts);
         const votePayload = JSON.stringify({ post_id: postIdToVote });
-        const voteUrl = `${API_BASE_URL}/hub/${selectedAction === 'upvote' ? 'upvote' : 'downvote'}-user-post`;
-        
-        console.debug(`VU ${__VU} (${userHandle}): Attempting to ${selectedAction} post ${postIdToVote}`);
-        
+        const voteUrl = `${API_BASE_URL}/hub/${
+          selectedAction === "upvote" ? "upvote" : "downvote"
+        }-user-post`;
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Attempting to ${selectedAction} post ${postIdToVote}`
+        );
+
         // Set appropriate trend and tag based on vote type
         let voteTrend, voteTag;
-        if (selectedAction === 'upvote') {
+        if (selectedAction === "upvote") {
           voteTrend = upvoteTrend;
-          voteTag = 'HubUpvoteAPI';
+          voteTag = "HubUpvoteAPI";
         } else {
           voteTrend = downvoteTrend;
-          voteTag = 'HubDownvoteAPI';
+          voteTag = "HubDownvoteAPI";
         }
-        
+
         const voteRes = http.post(voteUrl, votePayload, {
           ...authParams,
-          tags: { name: voteTag }
+          tags: { name: voteTag },
         });
-        
+
         voteTrend.add(voteRes.timings.duration);
-        
+
         // Check for success or expected error
         check(voteRes, {
-          [`${selectedAction} request successful or expected error`]: (r) => r.status === 200 || r.status === 422
+          [`${selectedAction} request successful or expected error`]: (r) =>
+            r.status === 200 || r.status === 422,
         });
-        
+
         // If successful, track the voted post
         if (voteRes.status === 200) {
-          if (selectedAction === 'upvote') {
+          if (selectedAction === "upvote") {
             vuState.upvotedPostIds.push(postIdToVote);
           } else {
             vuState.downvotedPostIds.push(postIdToVote);
           }
         }
-        
+
         // Log unexpected errors
         if (voteRes.status !== 200 && voteRes.status !== 422) {
           console.error(
             `VU ${__VU} (${userHandle}): ${selectedAction} API Error! PostID: ${postIdToVote}, Status: ${voteRes.status}, Body: ${voteRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(1, 4));
         break;
       }
-      
-      case 'unvote': {
+
+      case "unvote": {
         // Combine upvoted and downvoted posts to pick from
-        const votedPosts = [...vuState.upvotedPostIds, ...vuState.downvotedPostIds];
-        
+        const votedPosts = [
+          ...vuState.upvotedPostIds,
+          ...vuState.downvotedPostIds,
+        ];
+
         if (votedPosts.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): No voted posts available to unvote.`);
+          console.debug(
+            `VU ${__VU} (${userHandle}): No voted posts available to unvote.`
+          );
           break;
         }
-        
+
         const postIdToUnvote = randomItem(votedPosts);
         const unvotePayload = JSON.stringify({ post_id: postIdToUnvote });
-        
-        console.debug(`VU ${__VU} (${userHandle}): Attempting to unvote post ${postIdToUnvote}`);
-        
+
+        console.debug(
+          `VU ${__VU} (${userHandle}): Attempting to unvote post ${postIdToUnvote}`
+        );
+
         const unvoteRes = http.post(
           `${API_BASE_URL}/hub/unvote-user-post`,
           unvotePayload,
           {
             ...authParams,
-            tags: { name: 'HubUnvoteAPI' }
+            tags: { name: "HubUnvoteAPI" },
           }
         );
-        
+
         unvoteTrend.add(unvoteRes.timings.duration);
-        
+
         // Check for success or expected error
         check(unvoteRes, {
-          'Unvote request successful or expected error': (r) => r.status === 200 || r.status === 422
+          "Unvote request successful or expected error": (r) =>
+            r.status === 200 || r.status === 422,
         });
-        
+
         // If successful, remove from voted lists
         if (unvoteRes.status === 200) {
-          vuState.upvotedPostIds = vuState.upvotedPostIds.filter(id => id !== postIdToUnvote);
-          vuState.downvotedPostIds = vuState.downvotedPostIds.filter(id => id !== postIdToUnvote);
+          vuState.upvotedPostIds = vuState.upvotedPostIds.filter(
+            (id) => id !== postIdToUnvote
+          );
+          vuState.downvotedPostIds = vuState.downvotedPostIds.filter(
+            (id) => id !== postIdToUnvote
+          );
         }
-        
+
         // Log unexpected errors
         if (unvoteRes.status !== 200 && unvoteRes.status !== 422) {
           console.error(
             `VU ${__VU} (${userHandle}): Unvote API Error! PostID: ${postIdToUnvote}, Status: ${unvoteRes.status}, Body: ${unvoteRes.body}`
           );
         }
-        
+
         sleep(randomIntBetween(1, 4));
         break;
       }
     }
-    
+
     // Think time between actions
     sleep(randomIntBetween(2, 6));
   });
@@ -827,24 +1012,57 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
 
 // --- Main Test Logic (Accepts setup data) ---
 export default function (data) {
-  // Initialize VU state for tracking social interactions
+  // Initialize VU state for tracking social interactions - with smaller arrays to reduce memory usage
   const vuState = {
     // Timeline pagination
     timelineCursor: null,
 
-    // Posts tracking
+    // Posts tracking - limit array sizes to reduce memory usage
     timelinePostIds: [],
     createdPostIds: [],
     upvotedPostIds: [],
     downvotedPostIds: [],
 
-    // Social graph tracking
-    followedUsers: []
+    // Social graph tracking - limit array size
+    followedUsers: [],
   };
 
+  // Limit array sizes to prevent memory growth
+  const MAX_ARRAY_SIZE = 20;
+
+  // Function to trim arrays to prevent memory growth
+  function trimArrays() {
+    if (vuState.timelinePostIds.length > MAX_ARRAY_SIZE) {
+      vuState.timelinePostIds = vuState.timelinePostIds.slice(-MAX_ARRAY_SIZE);
+    }
+    if (vuState.createdPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.createdPostIds = vuState.createdPostIds.slice(-MAX_ARRAY_SIZE);
+    }
+    if (vuState.upvotedPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.upvotedPostIds = vuState.upvotedPostIds.slice(-MAX_ARRAY_SIZE);
+    }
+    if (vuState.downvotedPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.downvotedPostIds = vuState.downvotedPostIds.slice(
+        -MAX_ARRAY_SIZE
+      );
+    }
+    if (vuState.followedUsers.length > MAX_ARRAY_SIZE) {
+      vuState.followedUsers = vuState.followedUsers.slice(-MAX_ARRAY_SIZE);
+    }
+  }
+
+  // Call trimArrays periodically
+  setInterval(trimArrays, 5000);
+
   // Check if we have authenticated users from setup
-  if (!data || !data.authenticatedUsers || data.authenticatedUsers.length === 0) {
-    console.error(`No authenticated users available for testing. Setup may have failed.`);
+  if (
+    !data ||
+    !data.authenticatedUsers ||
+    data.authenticatedUsers.length === 0
+  ) {
+    console.error(
+      `No authenticated users available for testing. Setup may have failed.`
+    );
     return;
   }
 
@@ -853,7 +1071,9 @@ export default function (data) {
   const currentUser = data.authenticatedUsers[vuIndex];
 
   if (!currentUser || !currentUser.authToken) {
-    console.error(`No valid user found for VU ${__VU}. Using index ${vuIndex} in a pool of ${data.authenticatedUsers.length} users.`);
+    console.error(
+      `No valid user found for VU ${__VU}. Using index ${vuIndex} in a pool of ${data.authenticatedUsers.length} users.`
+    );
     return;
   }
 
@@ -868,15 +1088,25 @@ export default function (data) {
 
 // --- k6 Test Configuration ---
 export const options = {
-  // Calculate setup timeout based on number of users and parallelism
-  setupTimeout: `${Math.max(300, Math.ceil((endUserIndex - startUserIndex + 1) / SETUP_PARALLELISM) * 60)}s`,
+  // Calculate setup timeout based on number of users and parallelism - increase timeout significantly
+  setupTimeout: `${Math.max(
+    100,
+    Math.ceil((endUserIndex - startUserIndex + 1) / SETUP_PARALLELISM) * 120
+  )}s`,
+  // Always run setup - this is critical
+  noVUConnectionReuse: true,
+  noConnectionReuse: true,
+  insecureSkipTLSVerify: true,
+  // Debug settings
+  discardResponseBodies: false,
+  verbose: true,
 
   scenarios: {
     social_interactions: {
       executor: "shared-iterations",
-      vus: Math.min(endUserIndex - startUserIndex + 1, 100), // Cap at 100 VUs per instance for stability
-      iterations: 1000, // This is per VU
-      maxDuration: `${TEST_DURATION_SECONDS}s`,
+      vus: 1, // Reduce to 1 VU for debugging
+      iterations: 1, // Reduce to 1 iteration for debugging
+      maxDuration: "60s", // Reduce duration for faster debugging
     },
   },
   thresholds: {
