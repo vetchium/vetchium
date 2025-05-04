@@ -565,7 +565,7 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
     },
   };
 
-  // Randomly select a social action to perform
+  // Define all possible social actions
   const socialActions = [
     "follow_user",
     "unfollow_user",
@@ -589,438 +589,464 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
     cumulativeWeights.push(sum);
   }
 
-  // Select action based on weights
-  const randomValue = Math.random() * 100;
-  let selectedActionIndex = 0;
+  // Function to select a weighted random action
+  function selectRandomAction() {
+    const randomValue = Math.random() * 100;
+    let selectedActionIndex = 0;
 
-  for (let i = 0; i < cumulativeWeights.length; i++) {
-    if (randomValue <= cumulativeWeights[i]) {
-      selectedActionIndex = i;
-      break;
+    for (let i = 0; i < cumulativeWeights.length; i++) {
+      if (randomValue <= cumulativeWeights[i]) {
+        selectedActionIndex = i;
+        break;
+      }
     }
+    return socialActions[selectedActionIndex];
   }
 
-  const selectedAction = socialActions[selectedActionIndex];
+  // Function to perform a specific action
+  function performAction(action) {
+    // Execute the selected social action
+    group(`Social Action: ${action}`, () => {
+      switch (action) {
+        case "follow_user": {
+          // Select a random user to follow (not self)
+          const otherHandles = allUserHandles.filter((h) => h !== userHandle);
+          if (otherHandles.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No other users to follow.`
+            );
+            break;
+          }
 
-  // Execute the selected social action
-  group(`Social Action: ${selectedAction}`, () => {
-    switch (selectedAction) {
-      case "follow_user": {
-        // Select a random user to follow (not self)
-        const otherHandles = allUserHandles.filter((h) => h !== userHandle);
-        if (otherHandles.length === 0) {
+          // Don't follow users we already follow
+          const potentialHandlesToFollow = otherHandles.filter(
+            (h) => !vuState.followedUsers.includes(h)
+          );
+
+          if (potentialHandlesToFollow.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): Already following all available users.`
+            );
+            break;
+          }
+
+          const handleToFollow = randomItem(potentialHandlesToFollow);
+          const followPayload = JSON.stringify({ handle: handleToFollow });
+
           console.debug(
-            `VU ${__VU} (${userHandle}): No other users to follow.`
+            `VU ${__VU} (${userHandle}): Attempting to follow user ${handleToFollow}`
           );
-          break;
-        }
 
-        // Don't follow users we already follow
-        const potentialHandlesToFollow = otherHandles.filter(
-          (h) => !vuState.followedUsers.includes(h)
-        );
-
-        if (potentialHandlesToFollow.length === 0) {
-          console.debug(
-            `VU ${__VU} (${userHandle}): Already following all available users.`
-          );
-          break;
-        }
-
-        const handleToFollow = randomItem(potentialHandlesToFollow);
-        const followPayload = JSON.stringify({ handle: handleToFollow });
-
-        console.debug(
-          `VU ${__VU} (${userHandle}): Attempting to follow user ${handleToFollow}`
-        );
-
-        const followRes = http.post(
-          `${API_BASE_URL}/hub/follow-user`,
-          followPayload,
-          {
-            ...authParams,
-            tags: { name: "HubFollowUserAPI" },
-          }
-        );
-
-        followTrend.add(followRes.timings.duration);
-
-        // Check for success
-        check(followRes, {
-          "Follow request successful": (r) => r.status === 200,
-        });
-
-        // If successful, add to followed users list
-        if (followRes.status === 200) {
-          vuState.followedUsers.push(handleToFollow);
-        }
-
-        // Log unexpected errors
-        if (followRes.status !== 200) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Follow API Error! Handle: ${handleToFollow}, Status: ${followRes.status}, Body: ${followRes.body}`
-          );
-        }
-
-        sleep(randomIntBetween(1, 3));
-        break;
-      }
-
-      case "unfollow_user": {
-        // Check if we have any users to unfollow
-        if (vuState.followedUsers.length === 0) {
-          console.debug(`VU ${__VU} (${userHandle}): No users to unfollow.`);
-          break;
-        }
-
-        const handleToUnfollow = randomItem(vuState.followedUsers);
-        const unfollowPayload = JSON.stringify({ handle: handleToUnfollow });
-
-        console.debug(
-          `VU ${__VU} (${userHandle}): Attempting to unfollow user ${handleToUnfollow}`
-        );
-
-        const unfollowRes = http.post(
-          `${API_BASE_URL}/hub/unfollow-user`,
-          unfollowPayload,
-          {
-            ...authParams,
-            tags: { name: "HubUnfollowUserAPI" },
-          }
-        );
-
-        unfollowTrend.add(unfollowRes.timings.duration);
-
-        // Check for success
-        check(unfollowRes, {
-          "Unfollow request successful": (r) => r.status === 200,
-        });
-
-        // If successful, remove from followed users list
-        if (unfollowRes.status === 200) {
-          vuState.followedUsers = vuState.followedUsers.filter(
-            (h) => h !== handleToUnfollow
-          );
-        }
-
-        // Log unexpected errors
-        if (unfollowRes.status !== 200) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Unfollow API Error! Handle: ${handleToUnfollow}, Status: ${unfollowRes.status}, Body: ${unfollowRes.body}`
-          );
-        }
-
-        sleep(randomIntBetween(1, 3));
-        break;
-      }
-
-      case "create_post": {
-        // Generate random post content
-        const postContent = `Test post from ${userHandle} at ${new Date().toISOString()} - ${randomString(
-          20
-        )}`;
-        const postPayload = JSON.stringify({ content: postContent });
-
-        console.debug(`VU ${__VU} (${userHandle}): Creating new post`);
-
-        const createPostRes = http.post(
-          `${API_BASE_URL}/hub/create-post`,
-          postPayload,
-          {
-            ...authParams,
-            tags: { name: "HubCreatePostAPI" },
-          }
-        );
-
-        createPostTrend.add(createPostRes.timings.duration);
-
-        // Check for success
-        check(createPostRes, {
-          "Create post request successful": (r) => r.status === 200,
-        });
-
-        // If successful, extract post ID and add to created posts
-        if (createPostRes.status === 200) {
-          try {
-            const postData = JSON.parse(createPostRes.body);
-            if (postData.post_id) {
-              vuState.createdPostIds.push(postData.post_id);
-              console.debug(
-                `VU ${__VU} (${userHandle}): Created post with ID ${postData.post_id}`
-              );
+          const followRes = http.post(
+            `${API_BASE_URL}/hub/follow-user`,
+            followPayload,
+            {
+              ...authParams,
+              tags: { name: "HubFollowUserAPI" },
             }
-          } catch (e) {
+          );
+
+          followTrend.add(followRes.timings.duration);
+
+          // Check for success
+          check(followRes, {
+            "Follow request successful": (r) => r.status === 200,
+          });
+
+          // If successful, add to followed users list
+          if (followRes.status === 200) {
+            vuState.followedUsers.push(handleToFollow);
+          }
+
+          // Log unexpected errors
+          if (followRes.status !== 200) {
             console.error(
-              `VU ${__VU} (${userHandle}): Error parsing create post response: ${e}`
+              `VU ${__VU} (${userHandle}): Follow API Error! Handle: ${handleToFollow}, Status: ${followRes.status}, Body: ${followRes.body}`
             );
           }
+
+          sleep(randomIntBetween(1, 3));
+          break;
         }
 
-        // Log unexpected errors
-        if (createPostRes.status !== 200) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Create Post API Error! Status: ${createPostRes.status}, Body: ${createPostRes.body}`
+        case "unfollow_user": {
+          // Check if we have any users to unfollow
+          if (vuState.followedUsers.length === 0) {
+            console.debug(`VU ${__VU} (${userHandle}): No users to unfollow.`);
+            break;
+          }
+
+          const handleToUnfollow = randomItem(vuState.followedUsers);
+          const unfollowPayload = JSON.stringify({ handle: handleToUnfollow });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to unfollow user ${handleToUnfollow}`
           );
-        }
 
-        sleep(randomIntBetween(2, 5));
-        break;
-      }
-
-      case "read_timeline": {
-        // Prepare query parameters
-        const limit = 20; // Number of posts to fetch
-        let timelineUrl = `${API_BASE_URL}/hub/timeline?limit=${limit}`;
-
-        // Add cursor for pagination if we have one
-        if (vuState.timelineCursor) {
-          timelineUrl += `&cursor=${vuState.timelineCursor}`;
-        }
-
-        console.debug(
-          `VU ${__VU} (${userHandle}): Reading timeline${
-            vuState.timelineCursor ? " with cursor" : ""
-          }`
-        );
-
-        const timelineRes = http.get(timelineUrl, {
-          ...authParams,
-          tags: { name: "HubTimelineAPI" },
-        });
-
-        timelineReadTrend.add(timelineRes.timings.duration);
-
-        // Check for success
-        check(timelineRes, {
-          "Timeline read successful": (r) => r.status === 200,
-        });
-
-        // Process timeline response
-        if (timelineRes.status === 200) {
-          try {
-            const timelineData = JSON.parse(timelineRes.body);
-
-            // Update cursor for next pagination
-            if (timelineData.next_cursor) {
-              vuState.timelineCursor = timelineData.next_cursor;
+          const unfollowRes = http.post(
+            `${API_BASE_URL}/hub/unfollow-user`,
+            unfollowPayload,
+            {
+              ...authParams,
+              tags: { name: "HubUnfollowUserAPI" },
             }
+          );
 
-            // Store post IDs for potential interactions
-            if (timelineData.posts && timelineData.posts.length > 0) {
-              // Add new post IDs to the timeline posts collection
-              timelineData.posts.forEach((post) => {
-                if (!vuState.timelinePostIds.includes(post.post_id)) {
-                  vuState.timelinePostIds.push(post.post_id);
-                }
-              });
+          unfollowTrend.add(unfollowRes.timings.duration);
 
-              console.debug(
-                `VU ${__VU} (${userHandle}): Retrieved ${timelineData.posts.length} posts, total in memory: ${vuState.timelinePostIds.length}`
-              );
-            } else {
-              console.debug(
-                `VU ${__VU} (${userHandle}): No posts in timeline response`
-              );
-            }
-          } catch (e) {
-            console.error(
-              `VU ${__VU} (${userHandle}): Error parsing timeline response: ${e}`
+          // Check for success
+          check(unfollowRes, {
+            "Unfollow request successful": (r) => r.status === 200,
+          });
+
+          // If successful, remove from followed users list
+          if (unfollowRes.status === 200) {
+            vuState.followedUsers = vuState.followedUsers.filter(
+              (h) => h !== handleToUnfollow
             );
           }
-        }
 
-        // Log unexpected errors
-        if (timelineRes.status !== 200) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Timeline API Error! Status: ${timelineRes.status}, Body: ${timelineRes.body}`
-          );
-        }
+          // Log unexpected errors
+          if (unfollowRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Unfollow API Error! Handle: ${handleToUnfollow}, Status: ${unfollowRes.status}, Body: ${unfollowRes.body}`
+            );
+          }
 
-        sleep(randomIntBetween(2, 5));
-        break;
-      }
-
-      case "view_post_details": {
-        // Combine timeline posts and created posts for selection
-        const availablePosts = [
-          ...vuState.timelinePostIds,
-          ...vuState.createdPostIds,
-        ];
-
-        if (availablePosts.length === 0) {
-          console.debug(
-            `VU ${__VU} (${userHandle}): No posts available to view details.`
-          );
+          sleep(randomIntBetween(1, 3));
           break;
         }
 
-        const postIdToView = randomItem(availablePosts);
-        const postDetailsUrl = `${API_BASE_URL}/hub/post/${postIdToView}`;
+        case "create_post": {
+          // Generate random post content
+          const postContent = `Test post from ${userHandle} at ${new Date().toISOString()} - ${randomString(
+            20
+          )}`;
+          const postPayload = JSON.stringify({ content: postContent });
 
-        console.debug(
-          `VU ${__VU} (${userHandle}): Viewing details for post ${postIdToView}`
-        );
+          console.debug(`VU ${__VU} (${userHandle}): Creating new post`);
 
-        const postDetailsRes = http.get(postDetailsUrl, {
-          ...authParams,
-          tags: { name: "HubPostDetailsAPI" },
-        });
-
-        postDetailsTrend.add(postDetailsRes.timings.duration);
-
-        // Check for success
-        check(postDetailsRes, {
-          "Post details request successful": (r) => r.status === 200,
-        });
-
-        // Log unexpected errors
-        if (postDetailsRes.status !== 200) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Post Details API Error! PostID: ${postIdToView}, Status: ${postDetailsRes.status}, Body: ${postDetailsRes.body}`
+          const createPostRes = http.post(
+            `${API_BASE_URL}/hub/add-post`,
+            postPayload,
+            {
+              ...authParams,
+              tags: { name: "HubCreatePostAPI" },
+            }
           );
-        }
 
-        sleep(randomIntBetween(1, 4));
-        break;
-      }
+          createPostTrend.add(createPostRes.timings.duration);
 
-      case "upvote":
-      case "downvote": {
-        // Combine timeline posts for voting (exclude own posts)
-        const availablePosts = vuState.timelinePostIds.filter(
-          (id) => !vuState.createdPostIds.includes(id)
-        );
+          // Check for success
+          check(createPostRes, {
+            "Create post request successful": (r) => r.status === 200,
+          });
 
-        // Also exclude posts we've already voted on
-        const votablePosts = availablePosts.filter(
-          (id) =>
-            !vuState.upvotedPostIds.includes(id) &&
-            !vuState.downvotedPostIds.includes(id)
-        );
+          // If successful, extract post ID and add to created posts
+          if (createPostRes.status === 200) {
+            try {
+              const postData = JSON.parse(createPostRes.body);
+              if (postData.post_id) {
+                vuState.createdPostIds.push(postData.post_id);
+                console.debug(
+                  `VU ${__VU} (${userHandle}): Created post with ID ${postData.post_id}`
+                );
+              }
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing create post response: ${e}`
+              );
+            }
+          }
 
-        if (votablePosts.length === 0) {
-          console.debug(
-            `VU ${__VU} (${userHandle}): No posts available to ${selectedAction}.`
-          );
+          // Log unexpected errors
+          if (createPostRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Create Post API Error! Status: ${createPostRes.status}, Body: ${createPostRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
           break;
         }
 
-        const postIdToVote = randomItem(votablePosts);
-        const votePayload = JSON.stringify({ post_id: postIdToVote });
-        const voteUrl = `${API_BASE_URL}/hub/${
-          selectedAction === "upvote" ? "upvote" : "downvote"
-        }-user-post`;
+        case "read_timeline": {
+          // Prepare request payload for timeline
+          const timelinePayload = JSON.stringify({
+            limit: 20,
+            pagination_key: vuState.timelineCursor || undefined,
+          });
 
-        console.debug(
-          `VU ${__VU} (${userHandle}): Attempting to ${selectedAction} post ${postIdToVote}`
-        );
+          console.debug(
+            `VU ${__VU} (${userHandle}): Reading timeline${
+              vuState.timelineCursor ? " with cursor" : ""
+            }`
+          );
 
-        // Set appropriate trend and tag based on vote type
-        let voteTrend, voteTag;
-        if (selectedAction === "upvote") {
-          voteTrend = upvoteTrend;
-          voteTag = "HubUpvoteAPI";
-        } else {
-          voteTrend = downvoteTrend;
-          voteTag = "HubDownvoteAPI";
+          const timelineRes = http.post(
+            `${API_BASE_URL}/hub/get-my-home-timeline`,
+            timelinePayload,
+            {
+              ...authParams,
+              tags: { name: "HubTimelineAPI" },
+            }
+          );
+
+          timelineReadTrend.add(timelineRes.timings.duration);
+
+          // Check for success
+          check(timelineRes, {
+            "Timeline read successful": (r) => r.status === 200,
+          });
+
+          // Process timeline response
+          if (timelineRes.status === 200) {
+            try {
+              const timelineData = JSON.parse(timelineRes.body);
+
+              // Update cursor for next pagination
+              if (timelineData.pagination_key) {
+                vuState.timelineCursor = timelineData.pagination_key;
+              }
+
+              // Store post IDs for potential interactions
+              if (timelineData.posts && timelineData.posts.length > 0) {
+                // Add new post IDs to the timeline posts collection
+                timelineData.posts.forEach((post) => {
+                  if (!vuState.timelinePostIds.includes(post.id)) {
+                    vuState.timelinePostIds.push(post.id);
+                  }
+                });
+
+                console.debug(
+                  `VU ${__VU} (${userHandle}): Retrieved ${timelineData.posts.length} posts, total in memory: ${vuState.timelinePostIds.length}`
+                );
+              } else {
+                console.debug(
+                  `VU ${__VU} (${userHandle}): No posts in timeline response`
+                );
+              }
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing timeline response: ${e}`
+              );
+            }
+          }
+
+          // Log unexpected errors
+          if (timelineRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Timeline API Error! Status: ${timelineRes.status}, Body: ${timelineRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
+          break;
         }
 
-        const voteRes = http.post(voteUrl, votePayload, {
-          ...authParams,
-          tags: { name: voteTag },
-        });
+        case "view_post_details": {
+          // Combine timeline posts and created posts for selection
+          const availablePosts = [
+            ...vuState.timelinePostIds,
+            ...vuState.createdPostIds,
+          ];
 
-        voteTrend.add(voteRes.timings.duration);
+          if (availablePosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No posts available to view details.`
+            );
+            break;
+          }
 
-        // Check for success or expected error
-        check(voteRes, {
-          [`${selectedAction} request successful or expected error`]: (r) =>
-            r.status === 200 || r.status === 422,
-        });
+          const postIdToView = randomItem(availablePosts);
+          const postDetailsPayload = JSON.stringify({
+            post_id: postIdToView,
+          });
 
-        // If successful, track the voted post
-        if (voteRes.status === 200) {
+          console.debug(
+            `VU ${__VU} (${userHandle}): Viewing details for post ${postIdToView}`
+          );
+
+          const postDetailsRes = http.post(
+            `${API_BASE_URL}/hub/get-post-details`,
+            postDetailsPayload,
+            {
+              ...authParams,
+              tags: { name: "HubPostDetailsAPI" },
+            }
+          );
+
+          postDetailsTrend.add(postDetailsRes.timings.duration);
+
+          // Check for success
+          check(postDetailsRes, {
+            "Post details request successful": (r) => r.status === 200,
+          });
+
+          // Log unexpected errors
+          if (postDetailsRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Post Details API Error! PostID: ${postIdToView}, Status: ${postDetailsRes.status}, Body: ${postDetailsRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "upvote":
+        case "downvote": {
+          // Combine timeline posts for voting (exclude own posts)
+          const availablePosts = vuState.timelinePostIds.filter(
+            (id) => !vuState.createdPostIds.includes(id)
+          );
+
+          // Also exclude posts we've already voted on
+          const votablePosts = availablePosts.filter(
+            (id) =>
+              !vuState.upvotedPostIds.includes(id) &&
+              !vuState.downvotedPostIds.includes(id)
+          );
+
+          if (votablePosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No posts available to ${selectedAction}.`
+            );
+            break;
+          }
+
+          const postIdToVote = randomItem(votablePosts);
+          const votePayload = JSON.stringify({ post_id: postIdToVote });
+          const voteUrl = `${API_BASE_URL}/hub/${
+            selectedAction === "upvote" ? "upvote" : "downvote"
+          }-user-post`;
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to ${selectedAction} post ${postIdToVote}`
+          );
+
+          // Set appropriate trend and tag based on vote type
+          let voteTrend, voteTag;
           if (selectedAction === "upvote") {
-            vuState.upvotedPostIds.push(postIdToVote);
+            voteTrend = upvoteTrend;
+            voteTag = "HubUpvoteAPI";
           } else {
-            vuState.downvotedPostIds.push(postIdToVote);
+            voteTrend = downvoteTrend;
+            voteTag = "HubDownvoteAPI";
           }
-        }
 
-        // Log unexpected errors
-        if (voteRes.status !== 200 && voteRes.status !== 422) {
-          console.error(
-            `VU ${__VU} (${userHandle}): ${selectedAction} API Error! PostID: ${postIdToVote}, Status: ${voteRes.status}, Body: ${voteRes.body}`
-          );
-        }
+          const voteRes = http.post(voteUrl, votePayload, {
+            ...authParams,
+            tags: { name: voteTag },
+          });
 
-        sleep(randomIntBetween(1, 4));
-        break;
-      }
+          voteTrend.add(voteRes.timings.duration);
 
-      case "unvote": {
-        // Combine upvoted and downvoted posts to pick from
-        const votedPosts = [
-          ...vuState.upvotedPostIds,
-          ...vuState.downvotedPostIds,
-        ];
+          // Check for success or expected error
+          check(voteRes, {
+            [`${selectedAction} request successful or expected error`]: (r) =>
+              r.status === 200 || r.status === 422,
+          });
 
-        if (votedPosts.length === 0) {
-          console.debug(
-            `VU ${__VU} (${userHandle}): No voted posts available to unvote.`
-          );
+          // If successful, track the voted post
+          if (voteRes.status === 200) {
+            if (selectedAction === "upvote") {
+              vuState.upvotedPostIds.push(postIdToVote);
+            } else {
+              vuState.downvotedPostIds.push(postIdToVote);
+            }
+          }
+
+          // Log unexpected errors
+          if (voteRes.status !== 200 && voteRes.status !== 422) {
+            console.error(
+              `VU ${__VU} (${userHandle}): ${selectedAction} API Error! PostID: ${postIdToVote}, Status: ${voteRes.status}, Body: ${voteRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
           break;
         }
 
-        const postIdToUnvote = randomItem(votedPosts);
-        const unvotePayload = JSON.stringify({ post_id: postIdToUnvote });
+        case "unvote": {
+          // Combine upvoted and downvoted posts to pick from
+          const votedPosts = [
+            ...vuState.upvotedPostIds,
+            ...vuState.downvotedPostIds,
+          ];
 
-        console.debug(
-          `VU ${__VU} (${userHandle}): Attempting to unvote post ${postIdToUnvote}`
-        );
-
-        const unvoteRes = http.post(
-          `${API_BASE_URL}/hub/unvote-user-post`,
-          unvotePayload,
-          {
-            ...authParams,
-            tags: { name: "HubUnvoteAPI" },
+          if (votedPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No voted posts available to unvote.`
+            );
+            break;
           }
-        );
 
-        unvoteTrend.add(unvoteRes.timings.duration);
+          const postIdToUnvote = randomItem(votedPosts);
+          const unvotePayload = JSON.stringify({ post_id: postIdToUnvote });
 
-        // Check for success or expected error
-        check(unvoteRes, {
-          "Unvote request successful or expected error": (r) =>
-            r.status === 200 || r.status === 422,
-        });
-
-        // If successful, remove from voted lists
-        if (unvoteRes.status === 200) {
-          vuState.upvotedPostIds = vuState.upvotedPostIds.filter(
-            (id) => id !== postIdToUnvote
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to unvote post ${postIdToUnvote}`
           );
-          vuState.downvotedPostIds = vuState.downvotedPostIds.filter(
-            (id) => id !== postIdToUnvote
+
+          const unvoteRes = http.post(
+            `${API_BASE_URL}/hub/unvote-user-post`,
+            unvotePayload,
+            {
+              ...authParams,
+              tags: { name: "HubUnvoteAPI" },
+            }
           );
+
+          unvoteTrend.add(unvoteRes.timings.duration);
+
+          // Check for success or expected error
+          check(unvoteRes, {
+            "Unvote request successful or expected error": (r) =>
+              r.status === 200 || r.status === 422,
+          });
+
+          // If successful, remove from voted lists
+          if (unvoteRes.status === 200) {
+            vuState.upvotedPostIds = vuState.upvotedPostIds.filter(
+              (id) => id !== postIdToUnvote
+            );
+            vuState.downvotedPostIds = vuState.downvotedPostIds.filter(
+              (id) => id !== postIdToUnvote
+            );
+          }
+
+          // Log unexpected errors
+          if (unvoteRes.status !== 200 && unvoteRes.status !== 422) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Unvote API Error! PostID: ${postIdToUnvote}, Status: ${unvoteRes.status}, Body: ${unvoteRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
         }
-
-        // Log unexpected errors
-        if (unvoteRes.status !== 200 && unvoteRes.status !== 422) {
-          console.error(
-            `VU ${__VU} (${userHandle}): Unvote API Error! PostID: ${postIdToUnvote}, Status: ${unvoteRes.status}, Body: ${unvoteRes.body}`
-          );
-        }
-
-        sleep(randomIntBetween(1, 4));
-        break;
       }
-    }
 
-    // Think time between actions
-    sleep(randomIntBetween(2, 6));
-  });
+      // Think time between actions
+      sleep(randomIntBetween(2, 6));
+    });
+  }
+
+  // Perform a realistic user session with multiple actions
+  // First, always read the timeline as the initial action
+  performAction("read_timeline");
+
+  // Then perform 5-10 random actions to simulate a realistic session
+  const numberOfActions = Math.floor(Math.random() * 6) + 5; // 5-10 actions
+  console.log(
+    `VU ${__VU} (${userHandle}): Starting session with ${numberOfActions} actions`
+  );
+
+  for (let i = 0; i < numberOfActions; i++) {
+    const action = selectRandomAction();
+    performAction(action);
+  }
 }
 
 // --- Main Test Logic (Accepts setup data) ---
@@ -1116,10 +1142,15 @@ export const options = {
 
   scenarios: {
     social_interactions: {
-      executor: "shared-iterations",
-      vus: 1, // Reduce to 1 VU for debugging
-      iterations: 1, // Reduce to 1 iteration for debugging
-      maxDuration: "60s", // Reduce duration for faster debugging
+      executor: "ramping-vus",
+      startVUs: 5,
+      stages: [
+        { duration: "30s", target: 10 }, // Ramp up to 10 VUs over 30s
+        { duration: "5m", target: 20 }, // Ramp up to 20 VUs over 5m
+        { duration: "10m", target: 20 }, // Stay at 20 VUs for 10m
+        { duration: "1m", target: 0 }, // Ramp down to 0 VUs
+      ],
+      gracefulRampDown: "30s",
     },
   },
   thresholds: {
