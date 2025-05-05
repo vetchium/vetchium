@@ -142,17 +142,38 @@ k6:
 		echo "Error: PG_URI environment variable is not set. This should be the complete PostgreSQL connection URI."; \
 		exit 1; \
 	fi
-	# Set intelligent defaults for optional parameters
-	$(eval TOTAL_USERS := $(or $(TOTAL_USERS),1000000))
-	$(eval INSTANCE_COUNT := $(or $(INSTANCE_COUNT),20))
-	$(eval TEST_DURATION := $(or $(TEST_DURATION),3600))
-	$(eval SETUP_PARALLELISM := $(or $(SETUP_PARALLELISM),200))
+	# Set intelligent defaults and validate parameters
+	$(eval TOTAL_USERS := $(or $(TOTAL_USERS),1000))
+	$(eval TOTAL_PODS := $(or $(TOTAL_PODS),1))
+	$(eval TEST_DURATION := $(or $(TEST_DURATION),660))  # 11 minutes (5 min peak + ramp up/down)
+	$(eval PROMETHEUS_URL := $(or $(PROMETHEUS_URL),""))  # Optional Prometheus URL for metrics
+
+	# Validate parameters
+	@if [ $(TOTAL_USERS) -lt 100 ]; then \
+		echo "Error: TOTAL_USERS must be at least 100."; \
+		exit 1; \
+	fi
+
+	@if [ $(TOTAL_PODS) -lt 1 ]; then \
+		echo "Error: TOTAL_PODS must be at least 1."; \
+		exit 1; \
+	fi
+
+	# Calculate users per pod and setup parallelism
+	$(eval USERS_PER_POD := $(shell expr $(TOTAL_USERS) / $(TOTAL_PODS)))
+	$(eval SETUP_PARALLELISM := $(or $(SETUP_PARALLELISM),$(shell expr $(USERS_PER_POD) / 10)))
+	# Ensure minimum setup parallelism
+	$(eval SETUP_PARALLELISM := $(shell if [ $(SETUP_PARALLELISM) -lt 10 ]; then echo 10; else echo $(SETUP_PARALLELISM); fi))
 
 	@echo "Using configuration values:"
 	@echo "  - TOTAL_USERS: $(TOTAL_USERS)"
-	@echo "  - INSTANCE_COUNT: $(INSTANCE_COUNT)"
-	@echo "  - TEST_DURATION: $(TEST_DURATION) seconds"
+	@echo "  - TOTAL_PODS: $(TOTAL_PODS)"
+	@echo "  - USERS_PER_POD: $(USERS_PER_POD)"
+	@echo "  - TEST_DURATION: $(TEST_DURATION) seconds (includes 5 min at peak load)"
 	@echo "  - SETUP_PARALLELISM: $(SETUP_PARALLELISM)"
+	@if [ ! -z "$(PROMETHEUS_URL)" ]; then \
+		echo "  - PROMETHEUS_URL: $(PROMETHEUS_URL)"; \
+	fi
 	@echo ""
 
 	@echo "--- Creating test users in the database ---"
@@ -173,44 +194,62 @@ k6:
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
 	kubectl create namespace $(K6_NAMESPACE)
 
-	@echo "--- Creating ConfigMap with current script version FIRST ---"
-	# Print the first few lines of the script to verify it's the correct version
-	@echo "Verifying script version:"
-	@head -n 20 ./neville/distributed_hub_scenario.js
 	# Create the ConfigMap with the current script version
 	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
-	# Verify the ConfigMap was created successfully
-	@echo "Verifying ConfigMap creation:"
-	kubectl get configmap k6-test-script -n $(K6_NAMESPACE)
-	@echo "Verifying ConfigMap content (should show script version):"
-	kubectl get configmap k6-test-script -n $(K6_NAMESPACE) -o yaml | grep -A 3 "SCRIPT VERSION" || echo "Version marker not found in ConfigMap"
 
 	@echo "--- Creating k6 distributed test resources ---"
 
 	# Check if envsubst is installed
 	which envsubst > /dev/null || { echo "Error: envsubst not found. Please install gettext package (brew install gettext on macOS or apt-get/yum install gettext on Linux)."; exit 1; }
 
-	# Apply variables to yaml template using envsubst
-	cat ./neville/k6-distributed.yaml | VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
+	# Create ConfigMap for environment variables
+	@echo "Creating k6 ConfigMap..."
+	VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
 		MAILPIT_URL="$(MAILPIT_URL)" \
-		PG_URI="$(PG_URI)" \
 		TEST_DURATION="$(TEST_DURATION)" \
 		TOTAL_USERS="$(TOTAL_USERS)" \
-		INSTANCE_COUNT="$(INSTANCE_COUNT)" \
+		TOTAL_PODS="$(TOTAL_PODS)" \
+		USERS_PER_POD="$(USERS_PER_POD)" \
 		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
-		envsubst | kubectl apply -f - -n $(K6_NAMESPACE)
+		envsubst < ./neville/k6-config-template.yaml | kubectl apply -f - -n $(K6_NAMESPACE)
 
-	# Verify that the pod can access the ConfigMap
-	@echo "Waiting for k6 pod to start..."
+	# Create k6 worker jobs for each pod
+	@echo "Creating $(TOTAL_PODS) k6 worker pods..."
+	@for i in $$(seq 0 $$(($(TOTAL_PODS) - 1))); do \
+		echo "Creating k6 worker pod $$i of $(TOTAL_PODS)..."; \
+		POD_INDEX="$$i" \
+		VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
+		MAILPIT_URL="$(MAILPIT_URL)" \
+		TEST_DURATION="$(TEST_DURATION)" \
+		TOTAL_USERS="$(TOTAL_USERS)" \
+		TOTAL_PODS="$(TOTAL_PODS)" \
+		USERS_PER_POD="$(USERS_PER_POD)" \
+		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
+		PROMETHEUS_URL="$(PROMETHEUS_URL)" \
+		envsubst < ./neville/k6-job-template.yaml | kubectl apply -f - -n $(K6_NAMESPACE); \
+	done
+
+	# Verify that the pods are starting
+	@echo "Waiting for k6 pods to start..."
 	sleep 5
-	kubectl get pods -n $(K6_NAMESPACE) -l job-name=k6-worker-0
+	kubectl get pods -n $(K6_NAMESPACE)
 
 	@echo "--- Test started! ---"
 	@echo "K6 test deployed in namespace: $(K6_NAMESPACE)"
-	@echo "View test logs: kubectl logs -f job/k6-worker-0 -n $(K6_NAMESPACE)"
+	@echo ""
+	@echo "To monitor test progress:"
+	@echo "  kubectl get pods -n $(K6_NAMESPACE)"
+	@echo ""
+	@echo "To view logs from a specific pod:"
+	@echo "  kubectl logs -f job/k6-worker-<POD_INDEX> -n $(K6_NAMESPACE)"
+	@if [ ! -z "$(PROMETHEUS_URL)" ]; then \
+		echo ""; \
+		echo "Metrics are being sent to Prometheus at:"; \
+		echo "  $(PROMETHEUS_URL)"; \
+		echo "Check your Prometheus/Grafana dashboard for real-time metrics"; \
+	fi
+	@echo ""
 	@echo "Target API server: $(VETCHIUM_API_SERVER_URL)"
 	@echo "Target Mailpit server: $(MAILPIT_URL)"
+	@echo ""
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"
-
-# Keep the old target for backward compatibility
-k6-distributed: k6
