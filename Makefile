@@ -1,5 +1,4 @@
 .DEFAULT_GOAL := help
-.PHONY: devtest-helm
 
 $(eval GIT_SHA=$(shell git rev-parse --short=18 HEAD))
 
@@ -72,7 +71,7 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 
-devtest-helm:
+devtest:
 	@if [ -z "$(VMUSER)" ]; then \
 		echo "Error: VMUSER environment variable is not set."; \
 		exit 1; \
