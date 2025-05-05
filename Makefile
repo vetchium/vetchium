@@ -128,13 +128,13 @@ port-forward-helm:
 #   VETCHIUM_API_SERVER_URL - Complete URL of the API server to test (required)
 #   MAILPIT_URL - Complete URL of the mailpit service (required)
 #   PG_URI - PostgreSQL connection URI for the database (required)
-k6:
+k6: check-pg-uri
 	@if [ -z "$(VETCHIUM_API_SERVER_URL)" ]; then \
-		echo "Error: VETCHIUM_API_SERVER_URL environment variable is not set. This should be the complete URL of the API server."; \
+		echo "Error: VETCHIUM_API_SERVER_URL environment variable is not set. This should be the URL of the Vetchium API server."; \
 		exit 1; \
 	fi
 	@if [ -z "$(MAILPIT_URL)" ]; then \
-		echo "Error: MAILPIT_URL environment variable is not set. This should be the complete URL of the mailpit service."; \
+		echo "Error: MAILPIT_URL environment variable is not set. This should be the URL of the Mailpit server."; \
 		exit 1; \
 	fi
 	@if [ -z "$(PG_URI)" ]; then \
@@ -145,7 +145,47 @@ k6:
 	$(eval TOTAL_USERS := $(or $(TOTAL_USERS),1000))
 	$(eval TOTAL_PODS := $(or $(TOTAL_PODS),1))
 	$(eval TEST_DURATION := $(or $(TEST_DURATION),660))  # 11 minutes (5 min peak + ramp up/down)
-	$(eval PROMETHEUS_URL := $(or $(PROMETHEUS_URL),""))  # Optional Prometheus URL for metrics
+
+	# Always install Prometheus and Grafana for monitoring k6 tests
+	@echo "Installing monitoring infrastructure (Prometheus and Grafana)..."
+	# Create monitoring namespace if it doesn't exist
+	kubectl create namespace monitoring 2>/dev/null || true
+
+	# Install Prometheus using Helm
+	@echo "Installing Prometheus..."
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+	helm repo update
+	helm upgrade --install prometheus prometheus-community/prometheus \
+		--namespace monitoring \
+		--values ./neville/k6-prometheus-values.yaml \
+		--wait
+
+	# Prepare k6 dashboards for Grafana
+	@echo "Preparing k6 dashboards..."
+	chmod +x ./neville/prepare-k6-dashboards.sh
+	./neville/prepare-k6-dashboards.sh
+
+	# Install Grafana using Helm
+	@echo "Installing Grafana..."
+	helm repo add grafana https://grafana.github.io/helm-charts || true
+	helm repo update
+	helm upgrade --install grafana grafana/grafana \
+		--namespace monitoring \
+		--values ./neville/k6-grafana-values.yaml \
+		--wait
+
+	# Install k6 operator
+	@echo "Installing k6 operator..."
+	kubectl apply -f https://raw.githubusercontent.com/grafana/k6-operator/main/bundle.yaml
+	kubectl wait --for=condition=available --timeout=60s deployment/k6-operator-controller-manager -n k6-operator-system || \
+		echo "Warning: k6 operator installation timed out, but may still be installing"
+
+	# Get Prometheus URL for k6 to send metrics to
+	$(eval PROMETHEUS_URL := http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/write)
+	@echo "Prometheus service URL (internal): $(PROMETHEUS_URL)"
+	@echo "Prometheus external URL: http://$(shell kubectl get svc prometheus-server -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):9090"
+	@echo "Grafana external URL: http://$(shell kubectl get svc grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+	@echo "Grafana credentials: admin / admin"
 
 	# Validate parameters
 	@if [ $(TOTAL_USERS) -lt 100 ]; then \
@@ -241,14 +281,16 @@ k6:
 	@echo ""
 	@echo "To view logs from a specific pod:"
 	@echo "  kubectl logs -f job/k6-worker-<POD_INDEX> -n $(K6_NAMESPACE)"
-	@if [ ! -z "$(PROMETHEUS_URL)" ]; then \
-		echo ""; \
-		echo "Metrics are being sent to Prometheus at:"; \
-		echo "  $(PROMETHEUS_URL)"; \
-		echo "Check your Prometheus/Grafana dashboard for real-time metrics"; \
-	fi
+	@echo ""
+	@echo "Monitoring dashboard URLs:"
+	@echo "  Prometheus: http://$(shell kubectl get svc prometheus-server -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):9090"
+	@echo "  Grafana: http://$(shell kubectl get svc grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+	@echo "  Grafana credentials: admin / admin"
+	@echo "  k6 dashboards are pre-installed in Grafana"
 	@echo ""
 	@echo "Target API server: $(VETCHIUM_API_SERVER_URL)"
 	@echo "Target Mailpit server: $(MAILPIT_URL)"
 	@echo ""
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"
+
+

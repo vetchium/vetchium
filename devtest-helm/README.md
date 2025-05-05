@@ -39,7 +39,8 @@ To port forward the services - Optionally if needed. This is not needed mostly.
 vetchium $ VMUSER=<whatever-user-you-loggedin-the-vm> make port-forward-helm
 ```
 
-To run k6 for load testing, do, from your laptop, with a different k8s context:
+To run k6 load testing with Prometheus monitoring:
+
 ```bash
 vetchium $ TOTAL_USERS=100 \
   TOTAL_PODS=5 \
@@ -48,5 +49,13 @@ vetchium $ TOTAL_USERS=100 \
   PG_URI=postgresql://app:<password>@<public-ip-of-the-vm>:5432/app \
   make k6
 ```
+
+The k6 target will automatically:
+1. Install Prometheus and Grafana with pre-configured k6 dashboards
+2. Install the k6 operator for Kubernetes
+3. Run the k6 load test with the specified parameters
+4. Send metrics to the installed Prometheus server
+
+After the test starts, you can view real-time results in the Grafana dashboard using the URL provided in the output. The Grafana dashboard comes pre-configured with k6 dashboards specifically designed for monitoring k6 test results.
 
 Note: When running tests from a separate cluster, make sure network connectivity and firewall rules allow access from your test cluster to the backend services (API server, Mailpit, and PostgreSQL database)
