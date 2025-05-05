@@ -9,6 +9,9 @@
 - [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
 - [Go](https://golang.org/doc/install)
 - [Python](https://www.python.org/downloads/) If you want to work on the AI stuff
+- [k6](https://k6.io/) If you want to work on the scale testing
+- [Helm](https://helm.sh/docs/intro/install/) If you want to work on the scale testing
+- [psql](https://www.postgresql.org/docs/current/app-psql.html) If you want to work on the database or do scale testing
 
 To bring the services up, run the following commands:
 
@@ -98,6 +101,7 @@ vetchium $ kubectl delete namespace vetchium-dev
 - Use [prettier](https://prettier.io/) to format the typescript code. Do not manually format the code or split the parameters to multiple lines.
 - [dev-seed](dev-seed) contains a sample set of employers, hub users, openings, etc. Feel free to extend this to cover more scenarios. The initial employer data is hard-coded directly to the database. The rest are all created via APIs. So you need `tilt` to be running before this. This will also serve as some basic sanity testing.
 - [sortinghat](sortinghat) is a way to score resumes against a JD. It is quite rudimentary and uses opensource models for the scoring. In future, we could develop a model specifically for our needs. Unlike the rest of the modules, this is done in Python, to make it easy for using various AI libraries.
+- [neville](neville) is a [k6](https://k6.io/) based scale testing code. It is used to test the performance of the backend under high load.
 
 ## Engineering Notes
 
