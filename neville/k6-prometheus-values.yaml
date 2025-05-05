@@ -8,7 +8,11 @@ server:
   
   # Enable remote write API for k6 to push metrics
   remoteWrite:
-    enabled: true
+    - url: "http://localhost:9090/api/v1/write"
+      writeRelabelConfigs:
+        - sourceLabels: [__name__]
+          regex: "k6_.*"
+          action: keep
   
   # Configure retention settings
   retention: 15d
