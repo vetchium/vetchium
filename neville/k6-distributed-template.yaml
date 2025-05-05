@@ -1,0 +1,82 @@
+---
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-config
+data:
+  API_BASE_URL: "${VETCHIUM_API_SERVER_URL}"
+  MAILPIT_URL: "${MAILPIT_URL}"
+  TOTAL_USERS: "${TOTAL_USERS}"
+  INSTANCE_COUNT: "${TOTAL_PODS}"
+  TEST_DURATION: "${TEST_DURATION}"
+  SETUP_PARALLELISM: "${SETUP_PARALLELISM}"
+  USERS_PER_INSTANCE: "${USERS_PER_POD}"
+---
+# Individual worker job template - will be instantiated for each pod
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-worker-${POD_INDEX}
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: k6
+          image: grafana/k6:latest
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
+          env:
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: API_BASE_URL
+            - name: MAILPIT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: MAILPIT_URL
+            - name: TOTAL_USERS
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: TOTAL_USERS
+            - name: INSTANCE_COUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: INSTANCE_COUNT
+            - name: INSTANCE_INDEX
+              value: "${POD_INDEX}"
+            - name: USERS_PER_INSTANCE
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: USERS_PER_INSTANCE
+            - name: TEST_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: TEST_DURATION
+            - name: SETUP_PARALLELISM
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-config
+                  key: SETUP_PARALLELISM
+          volumeMounts:
+            - name: k6-test-script
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: k6-test-script
+          configMap:
+            name: k6-test-script

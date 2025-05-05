@@ -1,0 +1,35 @@
+apiVersion: k6.io/v1alpha1
+kind: K6
+metadata:
+  name: vetchium-load-test
+spec:
+  parallelism: ${TOTAL_PODS}  # Will be replaced with actual pod count
+  script:
+    configMap:
+      name: k6-test-script
+      file: distributed_hub_scenario.js
+  arguments: >-
+    -e API_BASE_URL=${VETCHIUM_API_SERVER_URL}
+    -e MAILPIT_URL=${MAILPIT_URL}
+    -e TOTAL_USERS=${TOTAL_USERS}
+    -e INSTANCE_COUNT=${TOTAL_PODS}
+    -e USERS_PER_INSTANCE=${USERS_PER_POD}
+    -e SETUP_PARALLELISM=${SETUP_PARALLELISM}
+    -e TEST_DURATION=${TEST_DURATION}
+  runner:
+    env:
+      - name: K6_PROMETHEUS_RW_SERVER_URL
+        value: http://prometheus-server:9090/api/v1/write
+      - name: K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM
+        value: "true"
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 1Gi
+  # Aggregation settings for test results
+  collector:
+    type: prometheus
+    prometheusServer: http://prometheus-server:9090
