@@ -100,7 +100,7 @@ devtest:
 	@echo "=========================================================="
 	@echo "To run distributed load tests on a different cluster:"
 	@PGURI=$$(kubectl -n vetchium-devtest-$(VMUSER) get secret postgres-app -o jsonpath='{.data.uri}' | base64 --decode | sed 's/postgres-rw.vetchium-devtest-$(VMUSER)/$(VMADDR)/g'); \
-	 echo "VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=$$PGURI make k6-distributed"
+	 echo "TOTAL_USERS=1000 TOTAL_PODS=5 VETCHIUM_API_SERVER_URL=http://$(VMADDR):8080 MAILPIT_URL=http://$(VMADDR):8025 PGURI=$$PGURI make k6"
 	@echo "=========================================================="
 
 port-forward-helm:

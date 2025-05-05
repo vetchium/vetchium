@@ -23,7 +23,12 @@ cd ~/vetchium/devtest-helm/vetchium-env-helm
 helm dependency update .
 cd ~/vetchium
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml; # This is needed for helm. kubectl will work even otherwise via k3s init script
+
+# The next steps does the actual installation. By the end of the installation,
+# you should see a k6 command for scale testing. Copy and save it.
 VMUSER=<whatever-user-you-want> VMADDR=<public-ip-of-the-vm> make devtest
+
+# Ensure all pods are running
 kubectl get pods -n vetchium-devtest-<whatever-user-you-want>
 
 # Make sure postgres-rw is LoadBalancer
@@ -39,7 +44,7 @@ To port forward the services - Optionally if needed. This is not needed mostly.
 vetchium $ VMUSER=<whatever-user-you-loggedin-the-vm> make port-forward-helm
 ```
 
-To run k6 load testing with Prometheus monitoring:
+To run k6 load testing with Prometheus monitoring, in your laptop (not the VM):
 
 ```bash
 vetchium $ TOTAL_USERS=100 \
