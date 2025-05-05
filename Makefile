@@ -128,7 +128,7 @@ port-forward-helm:
 #   VETCHIUM_API_SERVER_URL - Complete URL of the API server to test (required)
 #   MAILPIT_URL - Complete URL of the mailpit service (required)
 #   PG_URI - PostgreSQL connection URI for the database (required)
-k6: check-pg-uri
+k6:
 	@if [ -z "$(VETCHIUM_API_SERVER_URL)" ]; then \
 		echo "Error: VETCHIUM_API_SERVER_URL environment variable is not set. This should be the URL of the Vetchium API server."; \
 		exit 1; \
