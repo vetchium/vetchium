@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: k6-worker-"${POD_INDEX}"
+  name: k6-worker-${POD_INDEX}
 spec:
   template:
     spec:
@@ -14,7 +14,7 @@ spec:
               mountPath: /scripts
           env:
             - name: K6_PROMETHEUS_RW_SERVER_URL
-              value: "http://neville-kube-prometheus-st-prometheus:9090/api/v1/write"
+              value: "http://neville-kube-prometheus-st-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
             - name: K6_OUT
               value: "experimental-prometheus-rw"
             - name: API_BASE_URL
