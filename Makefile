@@ -199,15 +199,20 @@ k6:
 	@echo "Creating $(TOTAL_PODS) k6 worker pods..."
 	@for i in $$(seq 0 $$(($(TOTAL_PODS) - 1))); do \
 		echo "Creating k6 worker pod $$i of $(TOTAL_PODS)..."; \
-		POD_INDEX="$$i" \
-		VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
-		MAILPIT_URL="$(MAILPIT_URL)" \
-		TEST_DURATION="$(TEST_DURATION)" \
-		TOTAL_USERS="$(TOTAL_USERS)" \
-		TOTAL_PODS="$(TOTAL_PODS)" \
-		USERS_PER_POD="$(USERS_PER_POD)" \
-		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
-		PROMETHEUS_URL="$(PROMETHEUS_URL)" \
+		if [ $$i -gt 0 ]; then \
+			DELAY=$$(( 5 + $$i * 3 + ($$RANDOM % 5) )); \
+			echo "Waiting $$DELAY seconds before creating next pod..."; \
+			sleep $$DELAY; \
+		fi; \
+		POD_INDEX=$$i \
+		VETCHIUM_API_SERVER_URL=$(VETCHIUM_API_SERVER_URL) \
+		MAILPIT_URL=$(MAILPIT_URL) \
+		TEST_DURATION=$(TEST_DURATION) \
+		TOTAL_USERS=$(TOTAL_USERS) \
+		TOTAL_PODS=$(TOTAL_PODS) \
+		USERS_PER_POD=$(USERS_PER_POD) \
+		SETUP_PARALLELISM=$(SETUP_PARALLELISM) \
+		PROMETHEUS_URL=$(PROMETHEUS_URL) \
 		envsubst < ./neville/k6-job-template.yaml | kubectl apply -f - -n $(K6_NAMESPACE); \
 	done
 
