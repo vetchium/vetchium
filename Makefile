@@ -146,47 +146,6 @@ k6:
 	$(eval TOTAL_PODS := $(or $(TOTAL_PODS),1))
 	$(eval TEST_DURATION := $(or $(TEST_DURATION),660))  # 11 minutes (5 min peak + ramp up/down)
 
-	# Always install Prometheus and Grafana for monitoring k6 tests
-	@echo "Installing monitoring infrastructure (Prometheus and Grafana)..."
-	# Create monitoring namespace if it doesn't exist
-	kubectl create namespace monitoring 2>/dev/null || true
-
-	# Install Prometheus using Helm
-	@echo "Installing Prometheus..."
-	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
-	helm repo update
-	helm upgrade --install prometheus prometheus-community/prometheus \
-		--namespace monitoring \
-		--values ./neville/k6-prometheus-values.yaml \
-		--wait
-
-	# Prepare k6 dashboards for Grafana
-	@echo "Preparing k6 dashboards..."
-	chmod +x ./neville/prepare-k6-dashboards.sh
-	./neville/prepare-k6-dashboards.sh
-
-	# Install Grafana using Helm
-	@echo "Installing Grafana..."
-	helm repo add grafana https://grafana.github.io/helm-charts || true
-	helm repo update
-	helm upgrade --install grafana grafana/grafana \
-		--namespace monitoring \
-		--values ./neville/k6-grafana-values.yaml \
-		--wait
-
-	# Install k6 operator
-	@echo "Installing k6 operator..."
-	kubectl apply -f https://raw.githubusercontent.com/grafana/k6-operator/main/bundle.yaml
-	kubectl wait --for=condition=available --timeout=60s deployment/k6-operator-controller-manager -n k6-operator-system || \
-		echo "Warning: k6 operator installation timed out, but may still be installing"
-
-	# Get Prometheus URL for k6 to send metrics to
-	$(eval PROMETHEUS_URL := http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/write)
-	@echo "Prometheus service URL (internal): $(PROMETHEUS_URL)"
-	@echo "Prometheus external URL: http://$(shell kubectl get svc prometheus-server -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):9090"
-	@echo "Grafana external URL: http://$(shell kubectl get svc grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
-	@echo "Grafana credentials: admin / admin"
-
 	# Validate parameters
 	@if [ $(TOTAL_USERS) -lt 100 ]; then \
 		echo "Error: TOTAL_USERS must be at least 100."; \
@@ -204,17 +163,6 @@ k6:
 	# Ensure minimum setup parallelism
 	$(eval SETUP_PARALLELISM := $(shell if [ $(SETUP_PARALLELISM) -lt 10 ]; then echo 10; else echo $(SETUP_PARALLELISM); fi))
 
-	@echo "Using configuration values:"
-	@echo "  - TOTAL_USERS: $(TOTAL_USERS)"
-	@echo "  - TOTAL_PODS: $(TOTAL_PODS)"
-	@echo "  - USERS_PER_POD: $(USERS_PER_POD)"
-	@echo "  - TEST_DURATION: $(TEST_DURATION) seconds (includes 5 min at peak load)"
-	@echo "  - SETUP_PARALLELISM: $(SETUP_PARALLELISM)"
-	@if [ ! -z "$(PROMETHEUS_URL)" ]; then \
-		echo "  - PROMETHEUS_URL: $(PROMETHEUS_URL)"; \
-	fi
-	@echo ""
-
 	@echo "--- Creating test users in the database ---"
 	@echo "This may take some time for large user counts..."
 	# Check if psql is installed
@@ -228,29 +176,24 @@ k6:
 		exit 1; \
 	}
 
+	@echo "--- Helm Installing Prometheus+Grafana stack --- "
+	helm upgrade --install kube-prometheus-stack \
+		-f neville/kube-prometheus-stack-values.yaml \
+		-n monitoring \
+		prometheus-community/kube-prometheus-stack
+
 	@echo "--- Creating k6 test namespace ---"
 	# Generate a unique namespace for this test run
 	$(eval K6_NAMESPACE := k6-loadtest-$(shell date +%Y%m%d-%H%M%S))
 	kubectl create namespace $(K6_NAMESPACE)
 
 	# Create the ConfigMap with the current script version
-	kubectl create configmap k6-test-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
+	kubectl create configmap k6-script --from-file=distributed_hub_scenario.js=neville/distributed_hub_scenario.js -n $(K6_NAMESPACE)
 
 	@echo "--- Creating k6 distributed test resources ---"
 
 	# Check if envsubst is installed
 	which envsubst > /dev/null || { echo "Error: envsubst not found. Please install gettext package (brew install gettext on macOS or apt-get/yum install gettext on Linux)."; exit 1; }
-
-	# Create ConfigMap for environment variables
-	@echo "Creating k6 ConfigMap..."
-	VETCHIUM_API_SERVER_URL="$(VETCHIUM_API_SERVER_URL)" \
-		MAILPIT_URL="$(MAILPIT_URL)" \
-		TEST_DURATION="$(TEST_DURATION)" \
-		TOTAL_USERS="$(TOTAL_USERS)" \
-		TOTAL_PODS="$(TOTAL_PODS)" \
-		USERS_PER_POD="$(USERS_PER_POD)" \
-		SETUP_PARALLELISM="$(SETUP_PARALLELISM)" \
-		envsubst < ./neville/k6-config-template.yaml | kubectl apply -f - -n $(K6_NAMESPACE)
 
 	# Create k6 worker jobs for each pod
 	@echo "Creating $(TOTAL_PODS) k6 worker pods..."
@@ -282,9 +225,6 @@ k6:
 	@echo "To view logs from a specific pod:"
 	@echo "  kubectl logs -f job/k6-worker-<POD_INDEX> -n $(K6_NAMESPACE)"
 	@echo ""
-	@echo "Monitoring dashboard URLs:"
-	@echo "  Prometheus: http://$(shell kubectl get svc prometheus-server -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):9090"
-	@echo "  Grafana: http://$(shell kubectl get svc grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
 	@echo "  Grafana credentials: admin / admin"
 	@echo "  k6 dashboards are pre-installed in Grafana"
 	@echo ""

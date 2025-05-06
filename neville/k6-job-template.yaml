@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-load-test
+spec:
+  template:
+    spec:
+      containers:
+        - name: k6
+          image: grafana/k6:latest
+          command: ["k6", "run", "/scripts/distributed_hub_scenario.js"]
+          volumeMounts:
+            - name: k6-script
+              mountPath: /scripts
+          env:
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              value: "http://neville-kube-prometheus-st-prometheus:9090/api/v1/write"
+            - name: K6_OUT
+              value: "experimental-prometheus-rw"
+            - name: API_BASE_URL
+              value: "${VETCHIUM_API_SERVER_URL}"
+            - name: MAILPIT_URL
+              value: "${MAILPIT_URL}"
+            - name: TOTAL_USERS
+              value: "${TOTAL_USERS}"
+            - name: INSTANCE_INDEX
+              value: "${POD_INDEX}"
+            - name: INSTANCE_COUNT
+              value: "${TOTAL_PODS}"
+            - name: USERS_PER_INSTANCE
+              value: "${USERS_PER_POD}"
+            - name: SETUP_PARALLELISM
+              value: "${SETUP_PARALLELISM}"
+            - name: TEST_DURATION
+              value: "${TEST_DURATION}"
+      volumes:
+        - name: k6-script
+          configMap:
+            name: k6-script
+      restartPolicy: Never
+  backoffLimit: 4

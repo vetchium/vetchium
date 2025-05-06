@@ -1,0 +1,18 @@
+kube-prometheus-stack:
+  enabled: true
+  grafana:
+    enabled: true
+    adminUser: admin
+    adminPassword: admin
+    service:
+      type: LoadBalancer
+      port: 3000
+    persistence:
+      enabled: false
+  prometheus:
+    enabled: true
+    prometheusSpec:
+      enableRemoteWriteReceiver: true
+    service:
+      type: LoadBalancer
+      port: 9090
