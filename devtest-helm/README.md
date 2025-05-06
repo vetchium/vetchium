@@ -56,11 +56,11 @@ vetchium $ TOTAL_USERS=100 \
 ```
 
 The k6 target will automatically:
-1. Install Prometheus and Grafana with pre-configured k6 dashboards
-2. Install the k6 operator for Kubernetes
-3. Run the k6 load test with the specified parameters
-4. Send metrics to the installed Prometheus server
+1. Install Prometheus and Grafana
+2. Run the k6 load test with the specified parameters
+3. Send metrics to the installed Prometheus server
 
-After the test starts, you can view real-time results in the Grafana dashboard using the URL provided in the output. The Grafana dashboard comes pre-configured with k6 dashboards specifically designed for monitoring k6 test results.
+* You can view the grafana dashboard of the k6 at: http://k6-cluster:80 You can use dashboards like https://grafana.com/grafana/dashboards/19665-k6-prometheus/ to get stats about the k6 test run
+* You can view the grafana dashboard of the cnpg at: http://public-ip-of-the-vm:3000 (This service may not be exposed as LoadBalancer by default)
 
 Note: When running tests from a separate cluster, make sure network connectivity and firewall rules allow access from your test cluster to the backend services (API server, Mailpit, and PostgreSQL database)
