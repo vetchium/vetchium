@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: k6-load-test
+  name: k6-worker-"${POD_INDEX}"
 spec:
   template:
     spec:
