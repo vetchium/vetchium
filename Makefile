@@ -14,7 +14,7 @@ dev: ## Start development environment with Tilt and live reload
 	kubectl delete pv -n vetchium-dev --all --ignore-not-found
 	kubectl delete namespace vetchium-dev --ignore-not-found --force --grace-period=0
 	kubectl create namespace vetchium-dev
-	kubectl apply --server-side --force-conflicts -f devtest-env/cnpg-1.25.1.yaml
+	kubectl apply --server-side --force-conflicts -f tilt-env/cnpg-1.25.1.yaml
 	echo "Waiting for CNPG operator to be ready..."
 	sleep 10 && kubectl wait --for=condition=Available deployment/cnpg-controller-manager -n cnpg-system --timeout=5m
 	tilt up
