@@ -19,12 +19,13 @@
 - [x] Achievements - Patents, Posts, Certifications
 - [x] Posts
 - [x] Timelines and Follows !?
+- [x] Automated Scale testing
+- [x] Upvotes and Downvotes
 
 # Features needed before launch
 
 - [] Better Email Templates
 - [] Database Profiling and Indexes
-- [] Automated Scale testing
 - [] CandiateOffer RSVP and some signing (Docusign, Zohosign, etc.) integrations
 - [] Find good matches for suitable Openings for HubUsers
 - [] Scoring of match for Applicants that is beyond just text compare !?
@@ -35,7 +36,6 @@
 - [] Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too.
 - [] Audit logs
 - [] Introductory videos for Employer as well as the Product
-- [] Upvotes and Downvotes
 - [] Tag specific fetching of posts
 - [] Communities / Groups !?
 - [] Follow support for Orgs
