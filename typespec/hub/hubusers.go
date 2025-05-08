@@ -62,7 +62,7 @@ const (
 type OnboardHubUserRequest struct {
 	Token               string             `json:"token"                 validate:"required"`
 	FullName            string             `json:"full_name"             validate:"required"`
-	ResidentCountryCode common.CountryCode `json:"resident_country_code" validate:"required"`
+	ResidentCountryCode common.CountryCode `json:"resident_country_code" validate:"required,validate_country_code"`
 	Password            common.Password    `json:"password"              validate:"required,password"`
 	SelectedTier        HubUserTier        `json:"selected_tier"         validate:"required"`
 

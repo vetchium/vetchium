@@ -71,7 +71,11 @@ CREATE TABLE IF NOT EXISTS hub_users (
     password_hash TEXT NOT NULL,
     state hub_user_states NOT NULL,
     tier hub_user_tiers NOT NULL,
+
+    -- In future, we could shard based on this key, to support
+    -- Data Sovereignity across countries
     resident_country_code TEXT NOT NULL,
+
     resident_city TEXT,
     preferred_language TEXT NOT NULL,
     short_bio TEXT NOT NULL,

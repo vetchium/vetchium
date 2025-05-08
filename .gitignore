@@ -1,0 +1,3 @@
+# Generated Go files
+typespec/common/generated_country_codes.go
+typespec/common/generated_timezone_codes.go

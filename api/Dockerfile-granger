@@ -7,6 +7,10 @@ RUN test -d typespec || go mod edit -dropreplace github.com/vetchium/vetchium/ty
 RUN go mod download
 COPY api/ .
 COPY typespec/ ../typespec/
+
+# Generate code for typespec/common
+RUN cd ../typespec/common && go generate ./...
+
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o granger ./cmd/granger
 
 # build a minimal container
