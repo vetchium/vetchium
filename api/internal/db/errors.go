@@ -74,7 +74,10 @@ var (
 	// because the user is already a hub user or the invite is already
 	// sent recently or the user does not want to receive invites.
 	// TODO: Implement support for users to block invites !?
-	ErrInviteNotNeeded = errors.New("invite not needed")
+	ErrInviteNotNeeded            = errors.New("invite not needed")
+	ErrUserNotFound               = errors.New("user not found")
+	ErrInviteNotFound             = errors.New("invite not found")
+	ErrDomainNotApprovedForSignup = errors.New("domain not approved for signup")
 
 	ErrNoEducation         = errors.New("education not found")
 	ErrNoAchievement       = errors.New("achievement not found")
@@ -82,5 +85,4 @@ var (
 	ErrUnpaidHubUser       = errors.New("user is not a paid hub user")
 	ErrNoPost              = errors.New("post not found")
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
-	ErrUnsupportedDomain   = errors.New("unsupported email domain for signup")
 )

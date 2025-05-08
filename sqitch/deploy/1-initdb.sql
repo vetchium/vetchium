@@ -10,6 +10,13 @@ CREATE TABLE hub_user_invites (
     CONSTRAINT unique_token UNIQUE (token)
 );
 
+-- Add the new table for approved signup domains
+CREATE TABLE hub_user_signup_approved_domains (
+    domain_name TEXT PRIMARY KEY,
+    added_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    notes TEXT
+);
+
 CREATE TYPE hub_user_states AS ENUM ('ACTIVE_HUB_USER', 'DISABLED_HUB_USER', 'DELETED_HUB_USER');
 
 -- Should correspond to the tiers in typespec/hub/hubusers.tsp
@@ -1256,5 +1263,44 @@ GROUP BY
     hu.handle,
     hu.full_name,
     hu.profile_picture_url;
+
+-- Function to check hub user signup eligibility
+CREATE OR REPLACE FUNCTION check_hub_user_signup_eligibility(p_email TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    v_domain_name TEXT;
+    v_user_exists BOOLEAN;
+    v_invite_exists BOOLEAN;
+    v_domain_in_approved_list BOOLEAN;
+    v_domain_in_employer_domains BOOLEAN;
+BEGIN
+    -- Extract domain from email
+    v_domain_name := substring(p_email from '@(.*)');
+
+    -- Check if user already exists
+    SELECT EXISTS(SELECT 1 FROM hub_users WHERE email = p_email) INTO v_user_exists;
+    IF v_user_exists THEN
+        RETURN 'USER_EXISTS';
+    END IF;
+
+    -- Check if invite already exists
+    SELECT EXISTS(SELECT 1 FROM hub_user_invites WHERE email = p_email) INTO v_invite_exists;
+    IF v_invite_exists THEN
+        RETURN 'INVITE_EXISTS';
+    END IF;
+
+    -- Check if domain is in the hub_user_signup_approved_domains table
+    SELECT EXISTS(SELECT 1 FROM hub_user_signup_approved_domains WHERE domain_name = v_domain_name) INTO v_domain_in_approved_list;
+
+    -- Check if domain is in the domains table (linked to employers)
+    SELECT EXISTS(SELECT 1 FROM domains WHERE domain_name = v_domain_name) INTO v_domain_in_employer_domains;
+
+    IF NOT v_domain_in_approved_list AND NOT v_domain_in_employer_domains THEN
+        RETURN 'DOMAIN_NOT_APPROVED';
+    END IF;
+
+    RETURN 'CAN_SIGNUP';
+END;
+$$ LANGUAGE plpgsql;
 
 COMMIT;

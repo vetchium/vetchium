@@ -49,14 +49,21 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 			TokenValidTill: tokenValidTill,
 		})
 		if err != nil {
-			if errors.Is(err, db.ErrUnsupportedDomain) {
-				h.Dbg("email domain is not supported for signup")
-				http.Error(w, "", http.StatusUnprocessableEntity)
+			// Log the actual error for debugging purposes before specific checks
+			h.Dbg("Database call to SignupHubUser failed", "email", req.Email, "error", err)
+
+			if errors.Is(err, db.ErrDomainNotApprovedForSignup) {
+				http.Error(w, "The domain of the provided email address is not approved for signup.", http.StatusUnprocessableEntity) // 422
+				return
+			}
+			if errors.Is(err, db.ErrInviteNotNeeded) {
+				http.Error(w, "An account with this email may already exist, or an invite has already been sent.", http.StatusConflict) // 409
 				return
 			}
 
-			h.Dbg("failed to set handle", "error", err)
-			http.Error(w, "", http.StatusInternalServerError)
+			// Generic internal server error for other unhandled DB errors
+			h.Err("Unhandled database error during hub user signup", "email", req.Email, "original_error", err.Error())
+			http.Error(w, "An unexpected error occurred while processing your signup request.", http.StatusInternalServerError)
 			return
 		}
 
