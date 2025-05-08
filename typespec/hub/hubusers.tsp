@@ -118,6 +118,14 @@ model SetHandleRequest {
     handle: Handle;
 }
 
+model SignupHubUserRequest {
+    email: EmailAddress;
+}
+
+model ChangeEmailAddressRequest {
+    email: EmailAddress;
+}
+
 @route("/hub/login")
 interface Login {
     @tag("HubUsers")
@@ -239,5 +247,28 @@ interface SetHandle {
         @doc("The requested handle is not available")
         @statusCode
         statusCode: 409;
+    };
+}
+
+@route("/hub/signup")
+interface SignupHubUser {
+    @tag("HubUsers")
+    @post
+    signupHubUser(@body signupHubUserRequest: SignupHubUserRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("The domain of the email address is not supported")
+        @statusCode
+        statusCode: 422;
+    };
+}
+
+@route("/hub/change-email-address")
+interface ChangeEmailAddress {
+    @tag("HubUsers")
+    @post
+    @useAuth(HubAuth)
+    changeEmailAddress(@body changeEmailAddressRequest: ChangeEmailAddressRequest): {
+        @statusCode statusCode: 200;
     };
 }

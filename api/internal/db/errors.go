@@ -82,4 +82,5 @@ var (
 	ErrUnpaidHubUser       = errors.New("user is not a paid hub user")
 	ErrNoPost              = errors.New("post not found")
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
+	ErrUnsupportedDomain   = errors.New("unsupported email domain for signup")
 )

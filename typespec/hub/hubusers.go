@@ -91,3 +91,11 @@ type CheckHandleAvailabilityResponse struct {
 type SetHandleRequest struct {
 	Handle common.Handle `json:"handle" validate:"required,validate_handle"`
 }
+
+type SignupHubUserRequest struct {
+	Email common.EmailAddress `json:"email" validate:"required,email"`
+}
+
+type ChangeEmailAddressRequest struct {
+	Email common.EmailAddress `json:"email" validate:"required,email"`
+}

@@ -27,6 +27,8 @@ func RegisterHubRoutes(h *Hermione) {
 	http.HandleFunc("/hub/forgot-password", ha.ForgotPassword(h))
 	http.HandleFunc("/hub/reset-password", ha.ResetPassword(h))
 	http.HandleFunc("/hub/onboard-user", hu.OnboardHubUser(h))
+	http.HandleFunc("/hub/signup", hu.SignupHubUser(h))
+	http.HandleFunc("/hub/change-email-address", hu.ChangeEmailAddress(h))
 
 	h.mw.Guard(
 		"/hub/get-my-handle",

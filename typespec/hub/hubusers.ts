@@ -90,3 +90,11 @@ export interface CheckHandleAvailabilityResponse {
 export interface SetHandleRequest {
   handle: Handle;
 }
+
+export interface SignupHubUserRequest {
+  email: EmailAddress;
+}
+
+export interface ChangeEmailAddressRequest {
+  email: EmailAddress;
+}
