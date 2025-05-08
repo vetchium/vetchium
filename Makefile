@@ -237,5 +237,3 @@ k6: ## Run distributed load tests with k6 using Kubernetes
 	@echo "Target Mailpit server: $(MAILPIT_URL)"
 	@echo ""
 	@echo "Clean up after test: kubectl delete namespace $(K6_NAMESPACE)"
-
-

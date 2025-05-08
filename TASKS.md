@@ -132,9 +132,7 @@ Keycloak, Ory Kratos etc. used to do these, may not be worth building it from sc
 
 Depends on incorporation to choose a payment vendor.
 
-### 13. Automated load and scale tests
-
-k6s, jmeter ?
+### 13. DB Sharding based on regions, to support Data Sovereignity across countries
 
 ### 14. DB monitoring
 
