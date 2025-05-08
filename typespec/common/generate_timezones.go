@@ -8,10 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/format"
-	"os" // Ensure 'os' is imported
+	"os"
 	"text/template"
 	"time"
-	// "io/ioutil" // Ensure 'io/ioutil' is NOT imported
 )
 
 const timezonesJSONPath = "timezones.json"
@@ -32,8 +31,7 @@ type TimezoneEntry struct {
 }
 
 func main() {
-	// Read timezones.json
-	jsonData, err := os.ReadFile(timezonesJSONPath) // Uses os.ReadFile
+	jsonData, err := os.ReadFile(timezonesJSONPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading timezones.json: %v\n", err)
 		os.Exit(1)
@@ -74,26 +72,13 @@ func main() {
 
 	formattedCode, err := format.Source(generatedCode.Bytes())
 	if err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"Error formatting generated timezone code: %v\n",
-			err,
-		)
+		fmt.Fprintf(os.Stderr, "Error formatting generated tz code: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Write the formatted code to generated_timezone_codes.go
-	err = os.WriteFile(
-		"generated_timezone_codes.go",
-		formattedCode,
-		0644,
-	) // Uses os.WriteFile
+	err = os.WriteFile("generated_timezone_codes.go", formattedCode, 0644)
 	if err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"Error writing generated_timezone_codes.go: %v\n",
-			err,
-		)
+		fmt.Fprintf(os.Stderr, "Error writing generated tz codes: %v\n", err)
 		os.Exit(1)
 	}
 

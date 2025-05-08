@@ -8,11 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/format"
-	"os" // <-- Ensure 'os' is imported
+	"os"
 	"strings"
 	"text/template"
 	"time"
-	// "io/ioutil" // <-- Ensure 'io/ioutil' is NOT imported
 )
 
 const countriesJSONPath = "countries.json"
@@ -92,8 +91,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Write the formatted code to the output file
-	if err := os.WriteFile("generated_country_codes.go", formattedCode, 0644); err != nil { // Uses os.WriteFile
+	err = os.WriteFile("generated_country_codes.go", formattedCode, 0644)
+	if err != nil {
 		fmt.Printf("Error writing to generated_country_codes.go: %v\n", err)
 		os.Exit(1)
 	}
