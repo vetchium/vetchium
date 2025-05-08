@@ -43,10 +43,8 @@ func (cc CountryCode) IsValid() bool {
 		return true
 	}
 
-	if _, ok := validCountryCodes[string(cc)]; !ok {
-		return false
-	}
-	return true
+	_, ok := validCountryCodes[string(cc)]
+	return ok
 }
 
 const GlobalCountryCode CountryCode = "ZZG"
