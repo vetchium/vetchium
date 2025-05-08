@@ -425,7 +425,7 @@ type DB interface {
 		fileID uuid.UUID,
 		cleanedAt time.Time,
 	) error
-	SignupHubUser(ctx context.Context, email string) error
+	SignupHubUser(context.Context, SignupHubUserReq) error
 	ChangeEmailAddress(ctx context.Context, email string) error
 
 	GetUnscoredApplication(

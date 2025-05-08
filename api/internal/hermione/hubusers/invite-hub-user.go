@@ -38,7 +38,7 @@ func InviteHubUser(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		token := util.RandomUniqueID(vetchi.HubUerInviteTokenLenBytes)
+		token := util.RandomUniqueID(vetchi.HubUserInviteTokenLenBytes)
 
 		inviteMail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.InviteHubUser,

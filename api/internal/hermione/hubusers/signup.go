@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/internal/hedwig"
+	"github.com/vetchium/vetchium/api/internal/util"
 	"github.com/vetchium/vetchium/api/internal/wand"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -24,10 +28,26 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 			h.Dbg("invalid request", "request", req)
 			return
 		}
+		h.Dbg("validated", "signupHubUserRequest", req)
 
-		h.Dbg("signupHubUserRequest validated", "request", req)
+		inviteEmail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
+			// TODO: Fill the fields
+		})
+		if err != nil {
+			h.Dbg("failed to generate invite email", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
-		err := h.DB().SignupHubUser(r.Context(), string(req.Email))
+		token := util.RandomUniqueID(vetchi.HubUserInviteTokenLenBytes)
+		tokenValidTill := time.Now().Add(vetchi.HubUserInviteTokenValidity)
+
+		err = h.DB().SignupHubUser(r.Context(), db.SignupHubUserReq{
+			EmailAddress:   string(req.Email),
+			InviteMail:     inviteEmail,
+			Token:          token,
+			TokenValidTill: tokenValidTill,
+		})
 		if err != nil {
 			if errors.Is(err, db.ErrUnsupportedDomain) {
 				h.Dbg("email domain is not supported for signup")

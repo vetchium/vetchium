@@ -11,7 +11,7 @@ const (
 	// Sent in the email to the org users
 	OrgUserInviteTokenLenBytes = 16
 	// Sent in the invite email to new hub users
-	HubUerInviteTokenLenBytes = 16
+	HubUserInviteTokenLenBytes = 16
 	// Remember to change the email templates too if the duration changes
 	HubUserInviteTokenValidity time.Duration = 3 * 24 * time.Hour // 3 days
 	// Triggered by the forgot password request and sent to the user's email

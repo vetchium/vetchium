@@ -62,3 +62,10 @@ type OnboardHubUserReq struct {
 	SessionTokenValidityDuration time.Duration
 	SessionTokenType             HubTokenType
 }
+
+type SignupHubUserReq struct {
+	EmailAddress   string
+	Token          string
+	TokenValidTill time.Time
+	InviteMail     Email
+}
