@@ -2,10 +2,10 @@ BEGIN;
 
 -- Create domains for testing
 INSERT INTO domains (id, domain_name, domain_state, employer_id) VALUES
--- Approved domain
+-- Approved domain - this will be approved through both methods (domains table and approved domains list)
 ('12345678-0027-0027-0027-000000000001', '0027-example.com', 'VERIFIED', NULL),
--- Unapproved domain
-('12345678-0027-0027-0027-000000000002', 'unapproved-0027-example.com', 'UNVERIFIED', NULL);
+-- Another approved domain - this will be approved through domains table only
+('12345678-0027-0027-0027-000000000002', 'another-approved-domain.com', 'VERIFIED', NULL);
 
 -- Create hub users for testing existing users
 INSERT INTO hub_users (

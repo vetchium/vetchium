@@ -182,7 +182,7 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 					description: "unapproved domain",
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress(
-							"invalid@unapproved-0027-example.com",
+							"invalid@truly-unapproved-0027-example.com",
 						),
 					},
 					wantStatus: http.StatusUnprocessableEntity, // 422 - Domain not approved
