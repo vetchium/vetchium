@@ -1,7 +1,6 @@
 package common
 
-//go:generate go run generate_countries.go
-//go:generate go run generate_timezones.go
+//go:generate sh -c "go run generate_countries.go && go run generate_timezones.go"
 
 import (
 	"regexp"
