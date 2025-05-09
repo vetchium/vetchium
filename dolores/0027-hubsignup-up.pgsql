@@ -36,8 +36,8 @@ INSERT INTO hub_user_invites (email, token, token_valid_till) VALUES
 ('invited@0027-example.com', 'existing-invite-token', timezone('UTC', now()) + interval '24 hours');
 
 -- Create approved domains list for testing domain validation
-INSERT INTO approved_domains (domain) VALUES
-('0027-example.com'),
-('another-0027-example.com');
+INSERT INTO hub_user_signup_approved_domains (domain_name, notes) VALUES
+('0027-example.com', 'Test domain for 0027 test'),
+('another-0027-example.com', 'Another test domain for 0027 test');
 
 COMMIT;

@@ -35,8 +35,8 @@ DELETE FROM hub_users
 WHERE id = '12345678-0027-0027-0027-000000000003';
 
 -- Clean up approved domains
-DELETE FROM approved_domains
-WHERE domain IN ('0027-example.com', 'another-0027-example.com');
+DELETE FROM hub_user_signup_approved_domains
+WHERE domain_name IN ('0027-example.com', 'another-0027-example.com');
 
 -- Clean up domains
 DELETE FROM domains
