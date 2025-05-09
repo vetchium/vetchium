@@ -15,6 +15,7 @@ const (
 	// List of templates. All of these must be parsed, validated in NewHedwig()
 	InviteEmployee               = "invite-employee"
 	InviteHubUser                = "invite-hub-user"
+	InviteHubUserSignup          = "invite-hub-user-signup"
 	HubUserTFA                   = "hub-user-tfa"
 	HubPasswordReset             = "hub-password-reset"
 	ShortlistApplication         = "shortlist-application"

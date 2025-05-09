@@ -1,6 +1,6 @@
 Hi
 
-You are invited by {{ .inviter }} to join Vetchium. To join, please click on the below link:
+You are invited to join Vetchium. To join, please click on the below link:
 
 {{ .link }}
 

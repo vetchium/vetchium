@@ -30,17 +30,25 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "signupHubUserRequest", req)
 
+		token := util.RandomUniqueID(vetchi.HubUserInviteTokenLenBytes)
+		tokenValidTill := time.Now().Add(vetchi.HubUserInviteTokenValidity)
+
 		inviteEmail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
-			// TODO: Fill the fields
+			TemplateName: hedwig.InviteHubUserSignup,
+			Args: map[string]string{
+				"link": "https://vetchium.com/hub/signup?token=" + token,
+			},
+			EmailFrom: vetchi.EmailFrom,
+			EmailTo:   []string{string(req.Email)},
+			// TODO: The subject should move to hedwig. Changing this should
+			// also change the subject in 0027-hubsignup_test.go
+			Subject: "Vetchium user signup invite",
 		})
 		if err != nil {
 			h.Dbg("failed to generate invite email", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
-
-		token := util.RandomUniqueID(vetchi.HubUserInviteTokenLenBytes)
-		tokenValidTill := time.Now().Add(vetchi.HubUserInviteTokenValidity)
 
 		err = h.DB().SignupHubUser(r.Context(), db.SignupHubUserReq{
 			EmailAddress:   string(req.Email),
@@ -50,20 +58,44 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 		})
 		if err != nil {
 			// Log the actual error for debugging purposes before specific checks
-			h.Dbg("Database call to SignupHubUser failed", "email", req.Email, "error", err)
+			h.Dbg(
+				"Database call to SignupHubUser failed",
+				"email",
+				req.Email,
+				"error",
+				err,
+			)
 
 			if errors.Is(err, db.ErrDomainNotApprovedForSignup) {
-				http.Error(w, "The domain of the provided email address is not approved for signup.", http.StatusUnprocessableEntity) // 422
+				http.Error(
+					w,
+					"The domain of the provided email address is not approved for signup.",
+					http.StatusUnprocessableEntity,
+				) // 422
 				return
 			}
 			if errors.Is(err, db.ErrInviteNotNeeded) {
-				http.Error(w, "An account with this email may already exist, or an invite has already been sent.", http.StatusConflict) // 409
+				http.Error(
+					w,
+					"An account with this email may already exist, or an invite has already been sent.",
+					http.StatusConflict,
+				) // 409
 				return
 			}
 
 			// Generic internal server error for other unhandled DB errors
-			h.Err("Unhandled database error during hub user signup", "email", req.Email, "original_error", err.Error())
-			http.Error(w, "An unexpected error occurred while processing your signup request.", http.StatusInternalServerError)
+			h.Err(
+				"Unhandled database error during hub user signup",
+				"email",
+				req.Email,
+				"original_error",
+				err.Error(),
+			)
+			http.Error(
+				w,
+				"An unexpected error occurred while processing your signup request.",
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
