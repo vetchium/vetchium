@@ -169,14 +169,14 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress("existing@0027-example.com"),
 					},
-					wantStatus: http.StatusConflict, // 409 - User already exists
+					wantStatus: http.StatusUnprocessableEntity,
 				},
 				{
 					description: "already invited user",
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress("invited@0027-example.com"),
 					},
-					wantStatus: http.StatusConflict, // 409 - Invite already exists
+					wantStatus: http.StatusUnprocessableEntity,
 				},
 				{
 					description: "unapproved domain",

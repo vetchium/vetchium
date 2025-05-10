@@ -65,7 +65,7 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 
 			if errors.Is(err, db.ErrInviteNotNeeded) {
 				h.Dbg("invite not needed")
-				http.Error(w, "", http.StatusConflict)
+				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
