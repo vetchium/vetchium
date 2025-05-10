@@ -36,7 +36,7 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 		inviteEmail, err := h.Hedwig().GenerateEmail(hedwig.GenerateEmailReq{
 			TemplateName: hedwig.InviteHubUserSignup,
 			Args: map[string]string{
-				"link": "https://vetchium.com/hub/signup?token=" + token,
+				"link": h.Config().SignupHubUserURL + token,
 			},
 			EmailFrom: vetchi.EmailFrom,
 			EmailTo:   []string{string(req.Email)},
@@ -59,13 +59,13 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, db.ErrDomainNotApprovedForSignup) {
 				h.Dbg("domain not approved for signup")
-				http.Error(w, "", 460) // Custom status code for unsupported domain
+				http.Error(w, "", 460)
 				return
 			}
 
 			if errors.Is(err, db.ErrInviteNotNeeded) {
 				h.Dbg("invite not needed")
-				http.Error(w, "", 461) // Custom status code for already invited/member
+				http.Error(w, "", 461)
 				return
 			}
 
