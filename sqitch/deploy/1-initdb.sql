@@ -1274,8 +1274,11 @@ DECLARE
     v_domain_in_approved_list BOOLEAN;
     v_domain_in_employer_domains BOOLEAN;
 BEGIN
-    -- Extract domain from email
-    v_domain_name := substring(p_email from '@(.*)');
+    -- Extract domain from email (correctly)
+    v_domain_name := split_part(p_email, '@', 2);
+
+    -- Log the extracted domain for debugging
+    RAISE NOTICE 'Checking domain eligibility: %', v_domain_name;
 
     -- Check if user already exists
     SELECT EXISTS(SELECT 1 FROM hub_users WHERE email = p_email) INTO v_user_exists;
@@ -1291,9 +1294,11 @@ BEGIN
 
     -- Check if domain is in the hub_user_signup_approved_domains table
     SELECT EXISTS(SELECT 1 FROM hub_user_signup_approved_domains WHERE domain_name = v_domain_name) INTO v_domain_in_approved_list;
+    RAISE NOTICE 'Domain % in approved list: %', v_domain_name, v_domain_in_approved_list;
 
     -- Check if domain is in the domains table (linked to employers)
     SELECT EXISTS(SELECT 1 FROM domains WHERE domain_name = v_domain_name) INTO v_domain_in_employer_domains;
+    RAISE NOTICE 'Domain % in employer domains: %', v_domain_name, v_domain_in_employer_domains;
 
     IF NOT v_domain_in_approved_list AND NOT v_domain_in_employer_domains THEN
         RETURN 'DOMAIN_NOT_APPROVED';
