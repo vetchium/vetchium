@@ -51,44 +51,68 @@ export default function SignupHubUser() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
     {}
   );
+  const [touched, setTouched] = useState<
+    Partial<Record<keyof FormData, boolean>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState<OnboardHubUserResponse | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const validateForm = (): boolean => {
+  const validateForm = (fieldsToValidate?: Array<keyof FormData>): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
 
-    if (!formData.full_name.trim()) {
+    // If specific fields are provided, only validate those
+    // Otherwise, validate only touched fields
+    const fields =
+      fieldsToValidate ||
+      (Object.keys(touched).filter(
+        (key) => touched[key as keyof FormData]
+      ) as Array<keyof FormData>);
+
+    // If no fields to validate, return true
+    if (fields.length === 0) {
+      return true;
+    }
+
+    // Only validate fields that should be validated
+    if (fields.includes("full_name") && !formData.full_name.trim()) {
       newErrors.full_name = t("hubUserOnboarding.error.requiredField");
     }
 
-    if (!formData.resident_country_code) {
+    if (
+      fields.includes("resident_country_code") &&
+      !formData.resident_country_code
+    ) {
       newErrors.resident_country_code = t(
         "hubUserOnboarding.error.requiredField"
       );
     }
 
     if (
-      !formData.password ||
-      formData.password.length < 12 ||
-      formData.password.length > 64
+      fields.includes("password") &&
+      (!formData.password ||
+        formData.password.length < 12 ||
+        formData.password.length > 64)
     ) {
       newErrors.password = t("hubUserOnboarding.error.passwordLength");
     }
 
-    if (formData.password !== formData.confirm_password) {
+    if (
+      fields.includes("confirm_password") &&
+      formData.password !== formData.confirm_password
+    ) {
       newErrors.confirm_password = t(
         "hubUserOnboarding.error.passwordMismatch"
       );
     }
 
-    if (!formData.short_bio?.trim()) {
+    if (fields.includes("short_bio") && !formData.short_bio?.trim()) {
       newErrors.short_bio = t("hubUserOnboarding.error.requiredField");
     }
 
-    if (!formData.long_bio?.trim()) {
+    if (fields.includes("long_bio") && !formData.long_bio?.trim()) {
       newErrors.long_bio = t("hubUserOnboarding.error.requiredField");
     }
 
@@ -123,6 +147,7 @@ export default function SignupHubUser() {
   };
 
   // Add effect to validate form whenever form data changes
+  // But only validate fields that have been touched
   React.useEffect(() => {
     validateForm();
   }, [formData]);
@@ -130,7 +155,14 @@ export default function SignupHubUser() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !token || typeof token !== "string") {
+    // Mark all fields as touched for final validation
+    const allFields = Object.keys(formData) as Array<keyof FormData>;
+    setTouched(
+      allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
+    );
+
+    // Validate all fields regardless of touch state
+    if (!validateForm(allFields) || !token || typeof token !== "string") {
       return;
     }
 
@@ -197,10 +229,19 @@ export default function SignupHubUser() {
     (
       e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
     ) => {
+      // Mark field as touched
+      if (!touched[field]) {
+        setTouched((prev) => ({
+          ...prev,
+          [field]: true,
+        }));
+      }
+
       setFormData((prev) => ({
         ...prev,
         [field]: e.target.value,
       }));
+
       // Clear error when user starts typing
       if (errors[field]) {
         setErrors((prev) => ({
@@ -211,6 +252,12 @@ export default function SignupHubUser() {
     };
 
   const handleConfirmPasswordBlur = () => {
+    // Mark confirm_password as touched
+    setTouched((prev) => ({
+      ...prev,
+      confirm_password: true,
+    }));
+
     if (
       formData.confirm_password &&
       formData.password !== formData.confirm_password

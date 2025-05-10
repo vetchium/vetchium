@@ -55,7 +55,9 @@ export default function SignupRequestPage() {
       setSuccess(true);
       setEmail("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("signup.errors.signupFailed"));
+      setError(
+        err instanceof Error ? err.message : t("signup.errors.signupFailed")
+      );
     }
   };
 
@@ -90,7 +92,10 @@ export default function SignupRequestPage() {
           <Typography component="h1" variant="h5">
             {t("signup.title")}
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1, mb: 3, textAlign: "center" }}>
+          <Typography
+            variant="body2"
+            sx={{ mt: 1, mb: 3, textAlign: "center" }}
+          >
             {t("signup.description")}
           </Typography>
 
