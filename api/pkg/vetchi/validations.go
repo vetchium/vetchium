@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -56,6 +57,11 @@ func InitValidator(log util.Logger) (*Vator, error) {
 			value := fl.Field().String()
 			if len(value) < 3 || len(value) > 254 {
 				log.Dbg("Invalid email length", "length", len(value))
+				return false
+			}
+
+			if strings.Contains(value, "+") {
+				log.Dbg("email contains + symbol", "email", value)
 				return false
 			}
 

@@ -185,21 +185,39 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 							"invalid@truly-unapproved-0027-example.com",
 						),
 					},
-					wantStatus: http.StatusUnprocessableEntity, // 422 - Domain not approved
+					wantStatus: http.StatusUnprocessableEntity,
 				},
 				{
 					description: "invalid email format",
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress("invalid-email"),
 					},
-					wantStatus: http.StatusBadRequest, // 400 - Invalid email format
+					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "empty email",
 					request: hub.SignupHubUserRequest{
 						Email: "",
 					},
-					wantStatus: http.StatusBadRequest, // 400 - Empty email
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "email with more than one @",
+					request: hub.SignupHubUserRequest{
+						Email: common.EmailAddress(
+							"invalid@invalid@invalid.com",
+						),
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "email with + symbol",
+					request: hub.SignupHubUserRequest{
+						Email: common.EmailAddress(
+							"invalid+symbol@invalid.com",
+						),
+					},
+					wantStatus: http.StatusBadRequest,
 				},
 			}
 
