@@ -257,9 +257,13 @@ interface SignupHubUser {
     signupHubUser(@body signupHubUserRequest: SignupHubUserRequest): {
         @statusCode statusCode: 200;
     } | {
-        @doc("The domain of the email address is not supported. Or the user is already invited or a member.")
+        @doc("The domain of the email address is not supported.")
         @statusCode
-        statusCode: 422;
+        statusCode: 460;
+    } | {
+        @doc("The user is already a member or has been invited.")
+        @statusCode
+        statusCode: 461;
     };
 }
 

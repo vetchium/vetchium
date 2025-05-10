@@ -59,13 +59,13 @@ func SignupHubUser(h wand.Wand) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, db.ErrDomainNotApprovedForSignup) {
 				h.Dbg("domain not approved for signup")
-				http.Error(w, "", http.StatusUnprocessableEntity)
+				http.Error(w, "", 460) // Custom status code for unsupported domain
 				return
 			}
 
 			if errors.Is(err, db.ErrInviteNotNeeded) {
 				h.Dbg("invite not needed")
-				http.Error(w, "", http.StatusUnprocessableEntity)
+				http.Error(w, "", 461) // Custom status code for already invited/member
 				return
 			}
 

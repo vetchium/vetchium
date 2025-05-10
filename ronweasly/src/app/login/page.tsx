@@ -14,6 +14,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -150,6 +151,13 @@ export default function LoginPage() {
             >
               {t("common.login")}
             </Button>
+            <Box sx={{ textAlign: "center" }}>
+              <Link href="/signup-request" style={{ textDecoration: "none" }}>
+                <Typography variant="body2" color="primary">
+                  {t("signup.requestAccount")}
+                </Typography>
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Box>

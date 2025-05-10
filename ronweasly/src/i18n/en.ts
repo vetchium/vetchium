@@ -1,4 +1,17 @@
 export const en = {
+  signup: {
+    title: "Sign Up",
+    description: "Enter your professional email address",
+    submitButton: "Create Account",
+    requestAccount: "Don't have an account? Create one",
+    success: "Your signup has been submitted successfully. Please check your email for further instructions.",
+    errors: {
+      domainNotSupported: "The domain that you used is not recognized as a professional work domain. Please talk to your domain administrator to onboard the domain to Vetchium, following the instructions under <link>",
+      alreadyMemberOrInvited: "This email address is already registered or has been invited. Please check your inbox for the invitation or try signing in.",
+      invalidEmail: "Please enter a valid email address.",
+      signupFailed: "Failed to submit signup. Please try again later."
+    }
+  },
   common: {
     login: "Sign In",
     logout: "Logout",

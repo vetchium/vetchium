@@ -169,14 +169,14 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress("existing@0027-example.com"),
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: 461, // Custom status code for already invited/member
 				},
 				{
 					description: "already invited user",
 					request: hub.SignupHubUserRequest{
 						Email: common.EmailAddress("invited@0027-example.com"),
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: 461, // Custom status code for already invited/member
 				},
 				{
 					description: "unapproved domain",
@@ -185,7 +185,7 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 							"invalid@truly-unapproved-0027-example.com",
 						),
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: 460, // Custom status code for unsupported domain
 				},
 				{
 					description: "invalid email format",
