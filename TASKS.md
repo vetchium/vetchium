@@ -33,13 +33,12 @@
 - [] Articles
 - [] VibeCheck for posts
 - [] Bulk load of employer (F500+ more) names & domains from a configmap !? Or should we seed in the db ?!
-- [] Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too.
 - [] Audit logs
 - [] Introductory videos for Employer as well as the Product
 - [] Tag specific fetching of posts
-- [] Communities / Groups !?
 - [] Follow support for Orgs
 - [] Post message support for Orgs
+- [] GreatHall support (upvotes, downvotes, anonymous comments, etc.)
 
 # Future Features
 
@@ -135,6 +134,8 @@ Depends on incorporation to choose a payment vendor.
 ### 13. DB Sharding based on regions, to support Data Sovereignity across countries
 
 ### 14. DB monitoring
+
+### 15. Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too
 
 # Code Cleanups
 * Better templating
