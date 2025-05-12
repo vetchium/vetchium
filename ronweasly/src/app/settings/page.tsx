@@ -181,7 +181,6 @@ export default function Settings() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        const errorData = await response.json();
         if (response.status === 401) {
           setPasswordError(t("settings.changePassword.error.invalidPassword"));
         } else {
@@ -190,7 +189,6 @@ export default function Settings() {
       }
     } catch (error) {
       setPasswordError(t("settings.changePassword.error.failed"));
-      console.error("Password change error:", error);
     } finally {
       setPasswordLoading(false);
     }
