@@ -272,7 +272,13 @@ interface ChangeEmailAddress {
     @tag("HubUsers")
     @post
     @useAuth(HubAuth)
-    changeEmailAddress(@body changeEmailAddressRequest: ChangeEmailAddressRequest): {
+    changeEmailAddress(
+        @body changeEmailAddressRequest: ChangeEmailAddressRequest,
+    ): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("The email address is already in use, possibly by a different account")
+        @statusCode
+        statusCode: 409;
     };
 }

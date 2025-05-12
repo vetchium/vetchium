@@ -157,6 +157,12 @@ func (p *PG) ChangeEmailAddress(ctx context.Context, email string) error {
 		hubUserID,
 	)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			p.log.Dbg("email already exists", "email", email)
+			return db.ErrDupEmail
+		}
+
 		p.log.Err("failed to update email", "error", err)
 		return db.ErrInternal
 	}

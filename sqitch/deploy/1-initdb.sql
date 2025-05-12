@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS hub_users (
     profile_picture_url TEXT,
     timeline_last_refreshed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    CONSTRAINT unique_handle UNIQUE (handle)
+    CONSTRAINT unique_handle UNIQUE (handle),
+    CONSTRAINT unique_email UNIQUE (email)
 );
 
 CREATE TYPE hub_user_token_types AS ENUM (

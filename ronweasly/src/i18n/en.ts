@@ -397,8 +397,28 @@ export const en = {
       inviteButton: "Send Invite",
       success: "Invitation sent successfully",
       error: {
-        failed: "Failed to send invitation",
         invalidEmail: "Please enter a valid email address",
+        failed: "Failed to send invitation",
+        emailConflict:
+          "This email address is already in use by another account.",
+      },
+    },
+    changeEmail: {
+      title: "Change Email Address",
+      warning:
+        "No verification email will be sent. Please double-check your new email address carefully.",
+      success: "Email address changed successfully!",
+      error: {
+        emailInUse: "This email address is already in use by another account.",
+        failed: "Failed to change email address",
+      },
+    },
+    changePassword: {
+      title: "Change Password",
+      success: "Password changed successfully!",
+      error: {
+        failed: "Failed to change password",
+        passwordsDoNotMatch: "Passwords do not match",
       },
     },
     changeHandle: {

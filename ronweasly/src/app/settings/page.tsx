@@ -224,8 +224,12 @@ export default function Settings() {
         setNewEmail("");
         setConfirmEmail("");
       } else {
-        const errorData = await response.json();
-        setEmailError(errorData.message || "Failed to change email address");
+        if (response.status === 409) {
+          setEmailError(t("settings.changeEmail.error.emailInUse"));
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setEmailError(errorData.message || t("settings.changeEmail.error.failed"));
+        }
       }
     } catch (error) {
       setEmailError("An error occurred while changing email address");
