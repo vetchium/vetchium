@@ -32,7 +32,7 @@ docker_build(
 docker_build(
     'vetchium/ronweasly',
     '.',
-    dockerfile='ronweasly/Dockerfile-tilt',
+    dockerfile='ronweasly/Dockerfile-optimized',
     build_args={'API_ENDPOINT': 'http://hermione:8080'}
 )
 
