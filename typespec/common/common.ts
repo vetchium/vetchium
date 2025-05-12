@@ -4,6 +4,83 @@ export interface ValidationErrors {
 
 export type EmailAddress = string;
 export type Password = string;
+
+/**
+ * Validates an email address according to common.tsp requirements
+ * @param email The email address to validate
+ * @returns True if the email is valid, false otherwise
+ */
+export function validateEmailAddress(email: string): boolean {
+  // Check for min and max length as per common.tsp
+  if (email.length < 3 || email.length > 256) {
+    return false;
+  }
+
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Validates a password according to common.tsp requirements
+ * @param password The password to validate
+ * @returns An object with validation result and error message if any
+ */
+export function validatePassword(password: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  // Check for min and max length as per common.tsp
+  if (password.length < 12) {
+    return {
+      isValid: false,
+      error: "Password must be at least 12 characters long",
+    };
+  }
+
+  if (password.length > 64) {
+    return {
+      isValid: false,
+      error: "Password must be at most 64 characters long",
+    };
+  }
+
+  // Additional password strength requirements
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  if (!hasUpperCase) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one uppercase letter",
+    };
+  }
+
+  if (!hasLowerCase) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one lowercase letter",
+    };
+  }
+
+  if (!hasNumbers) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one number",
+    };
+  }
+
+  if (!hasSpecialChar) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one special character",
+    };
+  }
+
+  return { isValid: true };
+}
 export type City = string;
 export type Handle = string;
 
