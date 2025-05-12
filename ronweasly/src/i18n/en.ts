@@ -419,6 +419,7 @@ export const en = {
       error: {
         failed: "Failed to change password",
         passwordsDoNotMatch: "Passwords do not match",
+        invalidPassword: "Invalid old password",
       },
     },
     changeHandle: {

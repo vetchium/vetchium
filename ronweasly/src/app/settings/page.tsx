@@ -182,10 +182,14 @@ export default function Settings() {
         setConfirmPassword("");
       } else {
         const errorData = await response.json();
-        setPasswordError(errorData.message || "Failed to change password");
+        if (response.status === 401) {
+          setPasswordError(t("settings.changePassword.error.invalidPassword"));
+        } else {
+          setPasswordError(t("settings.changePassword.error.failed"));
+        }
       }
     } catch (error) {
-      setPasswordError("An error occurred while changing password");
+      setPasswordError(t("settings.changePassword.error.failed"));
       console.error("Password change error:", error);
     } finally {
       setPasswordLoading(false);
@@ -228,7 +232,9 @@ export default function Settings() {
           setEmailError(t("settings.changeEmail.error.emailInUse"));
         } else {
           const errorData = await response.json().catch(() => ({}));
-          setEmailError(errorData.message || t("settings.changeEmail.error.failed"));
+          setEmailError(
+            errorData.message || t("settings.changeEmail.error.failed")
+          );
         }
       }
     } catch (error) {

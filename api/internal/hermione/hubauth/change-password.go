@@ -41,6 +41,7 @@ func ChangePassword(h wand.Wand) http.HandlerFunc {
 			[]byte(changePasswordRequest.OldPassword),
 		)
 		if err != nil {
+			h.Dbg("failed to verify old password", "error", err)
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
@@ -64,6 +65,7 @@ func ChangePassword(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		h.Dbg("password changed successfully")
 		w.WriteHeader(http.StatusOK)
 	}
 }
