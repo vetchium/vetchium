@@ -16,6 +16,7 @@ export const en = {
     },
   },
   common: {
+    close: "Close",
     login: "Sign In",
     logout: "Logout",
     email: "Email Address",
@@ -269,6 +270,33 @@ export const en = {
     addAsColleague: "Add as Colleague",
     cannotAddAsColleague:
       "You need a verified email in a common domain to connect with this person",
+    changeHandle: {
+      title: "Change Handle",
+      currentHandle: "Current handle",
+      newHandleLabel: "New handle",
+      newHandlePlaceholder: "Enter new handle",
+      formatHelp:
+        "Handle must be 3-32 characters, using only letters, numbers, and underscores",
+      checkAvailabilityButton: "Check Availability",
+      available: "This handle is available!",
+      notAvailable: "This handle is not available",
+      suggestions: "Suggested alternatives",
+      setHandleButton: "Set Handle",
+      success: "Handle changed successfully!",
+      error: {
+        invalidFormat:
+          "Handle must be 3-32 characters, using only letters, numbers, and underscores",
+        checkFailed: "Failed to check handle availability",
+        notAvailableOrInvalid: "Handle is not available or is invalid",
+        setFailed: "Failed to change handle",
+      },
+    },
+    upgradeRequired: {
+      title: "Upgrade Required",
+      message:
+        "Changing your handle is only available for paid tier users. Please upgrade your account to access this feature.",
+      upgradeButton: "Upgrade Now",
+    },
     requestPending: "Connection request pending",
     receivedColleagueRequest:
       "This person wants to connect with you as a colleague",

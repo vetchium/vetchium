@@ -55,11 +55,6 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
             fullWidth
             required
           />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body1" color="text.secondary">
-              @{editedBio.handle}
-            </Typography>
-          </Box>
           <TextField
             label={t("profile.bio.shortBio")}
             value={editedBio.short_bio}
@@ -119,7 +114,7 @@ export default function Bio({ bio, onSave, isLoading = false }: BioProps) {
         {bio.full_name}
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 1 }}>
-        @{bio.handle} • {bio.short_bio}
+        {bio.short_bio}
       </Typography>
       <Typography variant="body1" sx={{ mt: 2, whiteSpace: "pre-wrap" }}>
         {bio.long_bio}

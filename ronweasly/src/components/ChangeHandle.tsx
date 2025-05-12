@@ -20,11 +20,13 @@ import { useState } from "react";
 interface ChangeHandleProps {
   currentHandle: string;
   userTier: HubUserTier;
+  onSuccess?: () => void;
 }
 
 export default function ChangeHandle({
   currentHandle,
   userTier,
+  onSuccess,
 }: ChangeHandleProps) {
   const { t } = useTranslation();
   const [newHandle, setNewHandle] = useState("");
@@ -44,7 +46,7 @@ export default function ChangeHandle({
     // Basic validation (adjust regex as needed based on actual rules)
     const handleRegex = /^[a-zA-Z0-9_]{3,32}$/;
     if (!handleRegex.test(handle)) {
-      setHandleValidationError(t("settings.changeHandle.error.invalidFormat"));
+      setHandleValidationError(t("profile.changeHandle.error.invalidFormat"));
       return false;
     } else {
       setHandleValidationError(null);
@@ -93,7 +95,7 @@ export default function ChangeHandle({
 
       if (!response.ok) {
         // Handle specific errors like 401, 403 (if free user tries)
-        throw new Error(t("settings.changeHandle.error.checkFailed"));
+        throw new Error(t("profile.changeHandle.error.checkFailed"));
       }
 
       const result: CheckHandleAvailabilityResponse = await response.json();
@@ -102,7 +104,7 @@ export default function ChangeHandle({
       setError(
         err instanceof Error
           ? err.message
-          : t("settings.changeHandle.error.checkFailed")
+          : t("profile.changeHandle.error.checkFailed")
       );
     } finally {
       setIsLoadingCheck(false);
@@ -111,7 +113,7 @@ export default function ChangeHandle({
 
   const handleSetHandle = async () => {
     if (!validateHandle(newHandle) || !availabilityResult?.is_available) {
-      setError(t("settings.changeHandle.error.notAvailableOrInvalid"));
+      setError(t("profile.changeHandle.error.notAvailableOrInvalid"));
       return;
     }
     setError(null);
@@ -147,16 +149,24 @@ export default function ChangeHandle({
         throw new Error(t("settings.changeHandle.error.setFailed"));
       }
 
-      setSuccess(t("settings.changeHandle.success"));
-      // Optionally, trigger a page reload or update the handle state in the parent
-      // For now, just clear the input and results
+      setSuccess(t("profile.changeHandle.success"));
+
+      // Clear the input and results
       setNewHandle("");
       setAvailabilityResult(null);
+
+      // Notify parent component of success and refresh page after a short delay
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        }
+        window.location.reload();
+      }, 1500); // Give user time to see success message
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : t("settings.changeHandle.error.setFailed")
+          : t("profile.changeHandle.error.setFailed")
       );
     } finally {
       setIsLoadingSet(false);
@@ -165,20 +175,16 @@ export default function ChangeHandle({
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        {t("settings.changeHandle.title")}
-      </Typography>
-
       <Typography variant="body1" paragraph>
-        {t("settings.changeHandle.currentHandle")}:{" "}
+        {t("profile.changeHandle.currentHandle")}:{" "}
         <strong>{currentHandle}</strong>
       </Typography>
 
       {!isPaidUser && (
         <Alert severity="info">
-          {t("settings.changeHandle.upgradePrompt")}{" "}
+          {t("profile.upgradeRequired.message")}{" "}
           <Link href="/upgrade" underline="hover">
-            {t("settings.changeHandle.upgradeLink")}
+            {t("profile.upgradeRequired.upgradeButton")}
           </Link>
         </Alert>
       )}
@@ -206,15 +212,15 @@ export default function ChangeHandle({
           )}
           <TextField
             fullWidth
-            label={t("settings.changeHandle.newHandleLabel")}
-            placeholder={t("settings.changeHandle.newHandlePlaceholder")}
+            label={t("profile.changeHandle.newHandleLabel")}
+            placeholder={t("profile.changeHandle.newHandlePlaceholder")}
             value={newHandle}
             onChange={handleInputChange}
             disabled={isLoadingCheck || isLoadingSet}
             required
             error={!!handleValidationError}
             helperText={
-              handleValidationError || t("settings.changeHandle.formatHelp")
+              handleValidationError || t("profile.changeHandle.formatHelp")
             }
             margin="normal"
             InputProps={{
@@ -230,7 +236,7 @@ export default function ChangeHandle({
                   {isLoadingCheck ? (
                     <CircularProgress size={20} />
                   ) : (
-                    t("settings.changeHandle.checkAvailabilityButton")
+                    t("profile.changeHandle.checkAvailabilityButton")
                   )}
                 </Button>
               ),
@@ -243,14 +249,14 @@ export default function ChangeHandle({
               sx={{ mt: 1, mb: 2 }}
             >
               {availabilityResult.is_available
-                ? t("settings.changeHandle.available")
-                : t("settings.changeHandle.notAvailable")}
+                ? t("profile.changeHandle.available")
+                : t("profile.changeHandle.notAvailable")}
               {!availabilityResult.is_available &&
                 availabilityResult.suggested_alternatives &&
                 availabilityResult.suggested_alternatives.length > 0 && (
                   <>
                     <br />
-                    {t("settings.changeHandle.suggestions")}:{" "}
+                    {t("profile.changeHandle.suggestions")}:{" "}
                     {availabilityResult.suggested_alternatives.join(", ")}
                   </>
                 )}
@@ -271,7 +277,7 @@ export default function ChangeHandle({
                 isLoadingSet ? <CircularProgress size={20} /> : undefined
               }
             >
-              {t("settings.changeHandle.setHandleButton")}
+              {t("profile.changeHandle.setHandleButton")}
             </Button>
           </Box>
         </Box>
