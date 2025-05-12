@@ -32,5 +32,6 @@ export * from "./employer/interviews";
 export * from "./employer/locations";
 export * from "./employer/openings";
 export * from "./employer/orgusers";
+export * from "./employer/posts";
 export * from "./employer/profilepage";
 export * from "./employer/settings";

@@ -21,6 +21,7 @@ import "./employer/interviews.tsp";
 import "./employer/locations.tsp";
 import "./employer/openings.tsp";
 import "./employer/orgusers.tsp";
+import "./employer/posts.tsp";
 import "./employer/profilepage.tsp";
 import "./employer/settings.tsp";
 

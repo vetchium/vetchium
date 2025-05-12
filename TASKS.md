@@ -140,3 +140,4 @@ Depends on incorporation to choose a payment vendor.
 # Code Cleanups
 * Better templating
 * The number of files under the postgres package has increased. Should we consider breaking it into subdirectories, like we do for handlers ? Does it offer any readability improvements ? Or is the current method best for passing to AI IDEs etc. ?
+* Better validation handling in the typespec/**/*.ts files with a builtin IsValid function; instead of adding validation in the nextjs files
