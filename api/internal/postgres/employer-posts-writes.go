@@ -82,7 +82,7 @@ LIMIT 1; -- Ensures only one row is returned in any case
 	}
 
 	tagsInsertQuery := `
-INSERT INTO employer_post_tags (post_id, tag_id)
+INSERT INTO employer_post_tags (employer_post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
 	for _, tagID := range tagIDs {

@@ -23,7 +23,9 @@ func (p *PG) convertToOrgUserRoles(
 			common.OpeningsCRUD,
 			common.OpeningsViewer,
 			common.OrgUsersCRUD,
-			common.OrgUsersViewer:
+			common.OrgUsersViewer,
+			common.EmployerPostsCRUD,
+			common.EmployerPostsViewer:
 			roles = append(roles, role)
 		default:
 			p.log.Err("invalid role in the database", "role", str)
