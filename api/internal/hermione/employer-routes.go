@@ -412,12 +412,20 @@ func RegisterEmployerRoutes(h *Hermione) {
 	h.mw.Protect(
 		"/employer/list-posts",
 		ep.ListEmployerPosts(h),
-		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+		[]common.OrgUserRole{
+			common.Admin,
+			common.EmployerPostsCRUD,
+			common.EmployerPostsViewer,
+		},
 	)
 
 	h.mw.Protect(
 		"/employer/get-post",
 		ep.GetEmployerPost(h),
-		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+		[]common.OrgUserRole{
+			common.Admin,
+			common.EmployerPostsCRUD,
+			common.EmployerPostsViewer,
+		},
 	)
 }

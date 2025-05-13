@@ -18,7 +18,7 @@ VALUES ('12345678-0026-0026-0026-000000000201'::uuid, '12345678-0026-0026-0026-0
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
 VALUES
     ('12345678-0026-0026-0026-000000040001'::uuid, 'admin@0026-employerposts.example.com', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000201'::uuid, timezone('UTC'::text, now())),
-    ('12345678-0026-0026-0026-000000040002'::uuid, 'marketing@0026-employerposts.example.com', 'Marketing User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['MARKETING_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000201'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0026-0026-0026-000000040002'::uuid, 'marketing@0026-employerposts.example.com', 'Marketing User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['EMPLOYER_POSTS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000201'::uuid, timezone('UTC'::text, now())),
     ('12345678-0026-0026-0026-000000040003'::uuid, 'regular@0026-employerposts.example.com', 'Regular User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000201'::uuid, timezone('UTC'::text, now()));
 
 -- Add tags for testing
