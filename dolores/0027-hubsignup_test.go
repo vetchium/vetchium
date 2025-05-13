@@ -16,7 +16,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Hub Signup", Ordered, func() {
+var _ = Describe("Hub Signup", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -101,7 +101,7 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 			// Verify the email contains the signup link
 			Expect(
 				emailContent,
-			).Should(ContainSubstring("https://vetchium.com/hub/signup?token="))
+			).Should(ContainSubstring("http://localhost:3002/signup-hubuser/"))
 
 			// Clean up the email after verification
 			cleanupEmail(messageID)
