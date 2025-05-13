@@ -64,6 +64,7 @@ export interface GetMyHomeTimelineRequest {
 
 export interface MyHomeTimeline {
   posts: Post[];
+  employer_posts: EmployerPost[];
   pagination_key: string;
 }
 
@@ -81,4 +82,8 @@ export interface DownvoteUserPostRequest {
 
 export interface UnvoteUserPostRequest {
   post_id: string;
+}
+
+export interface FollowOrgRequest {
+  domain: string;
 }

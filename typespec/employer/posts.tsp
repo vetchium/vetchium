@@ -9,14 +9,6 @@ using TypeSpec.Rest;
 
 namespace Vetchium;
 
-model EmployerPost {
-    id: string;
-    content: string;
-    tags: string[];
-    company_domain: string;
-    created_at: string;
-}
-
 model AddEmployerPostRequest {
     @minLength(1)
     @maxLength(4096)

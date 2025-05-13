@@ -87,3 +87,7 @@ type DownvoteUserPostRequest struct {
 type UnvoteUserPostRequest struct {
 	PostID string `json:"post_id" validate:"required"`
 }
+
+type FollowOrgRequest struct {
+	Domain string `json:"domain" validate:"required"`
+}

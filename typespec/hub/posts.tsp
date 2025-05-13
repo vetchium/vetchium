@@ -2,6 +2,8 @@ import "@typespec/http";
 import "@typespec/rest";
 import "@typespec/openapi3";
 
+import "../common/posts.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
@@ -108,6 +110,7 @@ model GetMyHomeTimelineRequest {
 
 model MyHomeTimeline {
     posts: Post[];
+    employer_posts: EmployerPost[];
     pagination_key: string;
 }
 
@@ -126,6 +129,10 @@ model DownvoteUserPostRequest {
 
 model UnvoteUserPostRequest {
     post_id: string;
+}
+
+model FollowOrgRequest {
+    domain: string;
 }
 
 @route("/hub/add-post")
@@ -259,5 +266,15 @@ interface UnvoteUserPost {
         @doc("This code will be returned in any of the following scenarios. 1) The Post ID is invalid 2) User is attempting to unvote their own post")
         @statusCode
         statuscode: 422;
+    };
+}
+
+@route("/hub/follow-org")
+interface FollowOrg {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    followOrg(@body request: FollowOrgRequest): {
+        @statusCode statusCode: 200;
     };
 }
