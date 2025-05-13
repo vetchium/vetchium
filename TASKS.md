@@ -39,6 +39,7 @@
 - [] Follow support for Orgs
 - [] Post message support for Orgs
 - [] GreatHall support (upvotes, downvotes, anonymous comments, etc.)
+- [] Tags is a bit of a mess. Should we allow everyone to create tags ? Should we gatekeep ? Should we (maintainers) hardcode a seed list and keep it updated ?
 
 # Future Features
 
