@@ -10,6 +10,7 @@ import (
 	"github.com/vetchium/vetchium/api/internal/hermione/education"
 	ea "github.com/vetchium/vetchium/api/internal/hermione/employerauth"
 	"github.com/vetchium/vetchium/api/internal/hermione/employersettings"
+	ep "github.com/vetchium/vetchium/api/internal/hermione/empposts"
 	he "github.com/vetchium/vetchium/api/internal/hermione/hubemp"
 	"github.com/vetchium/vetchium/api/internal/hermione/interview"
 	"github.com/vetchium/vetchium/api/internal/hermione/locations"
@@ -387,5 +388,36 @@ func RegisterEmployerRoutes(h *Hermione) {
 		"/employer/get-cool-off-period",
 		employersettings.GetCoolOffPeriod(h),
 		[]common.OrgUserRole{common.Admin},
+	)
+
+	// Posts related endpoints
+	h.mw.Protect(
+		"/employer/add-post",
+		ep.AddEmployerPost(h),
+		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+	)
+
+	h.mw.Protect(
+		"/employer/update-post",
+		ep.UpdateEmployerPost(h),
+		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+	)
+
+	h.mw.Protect(
+		"/employer/delete-post",
+		ep.DeleteEmployerPost(h),
+		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+	)
+
+	h.mw.Protect(
+		"/employer/list-posts",
+		ep.ListEmployerPosts(h),
+		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
+	)
+
+	h.mw.Protect(
+		"/employer/get-post",
+		ep.GetEmployerPost(h),
+		[]common.OrgUserRole{common.Admin, common.EmployerPostsCRUD},
 	)
 }

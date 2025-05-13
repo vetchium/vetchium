@@ -39,6 +39,26 @@ model DeleteEmployerPostRequest {
     post_id: string;
 }
 
+model ListEmployerPostsRequest {
+    @doc("The pagination key. If nothing is passed, the newest posts are returned")
+    pagination_key?: string;
+
+    @doc("If nothing is passed, 5 Posts are returned")
+    @minValue(1)
+    @maxValue(40)
+    limit?: integer;
+}
+
+model ListEmployerPostsResponse {
+    posts: EmployerPost[];
+    pagination_key: string;
+}
+
+model GetEmployerPostRequest {
+    @doc("The id of the post to get")
+    post_id: string;
+}
+
 @route("/employer/add-post")
 interface AddEmployerPost {
     @tag("Posts")
@@ -67,5 +87,28 @@ interface DeleteEmployerPost {
     @useAuth(EmployerAuth)
     deleteEmployerPost(@body request: DeleteEmployerPostRequest): {
         @statusCode statusCode: 200;
+    };
+}
+
+@route("/employer/list-employer-posts")
+interface ListEmployerPosts {
+    @tag("Posts")
+    @post
+    @doc("List employer posts in the descending order of the updated_at field. If there are multiple posts with the same updated_at timestamp, they are further sorted in the order of their post_ids")
+    @useAuth(EmployerAuth)
+    listEmployerPosts(@body request: ListEmployerPostsRequest): {
+        @statusCode statusCode: 200;
+        @body response: ListEmployerPostsResponse;
+    };
+}
+
+@route("/employer/get-post")
+interface GetEmployerPost {
+    @tag("Posts")
+    @post
+    @useAuth(EmployerAuth)
+    getEmployerPost(@body request: GetEmployerPostRequest): {
+        @statusCode statusCode: 200;
+        @body response: EmployerPost;
     };
 }

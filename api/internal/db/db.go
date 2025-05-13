@@ -456,6 +456,18 @@ type DB interface {
 	) error
 	UnvoteUserPost(ctx context.Context, req hub.UnvoteUserPostRequest) error
 
+	// Used by hermione - Employer posts related methods
+	AddEmployerPost(AddEmployerPostRequest) error
+	UpdateEmployerPost(UpdateEmployerPostRequest) error
+	GetEmployerPost(
+		ctx context.Context,
+		postID string,
+	) (common.EmployerPost, error)
+	ListEmployerPosts(
+		req ListEmployerPostsRequest,
+	) (employer.ListEmployerPostsResponse, error)
+	DeleteEmployerPost(ctx context.Context, postID string) error
+
 	// Used by hermione - Follow related methods
 	FollowUser(ctx context.Context, handle string) error
 	UnfollowUser(ctx context.Context, handle string) error

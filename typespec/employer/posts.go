@@ -1,5 +1,7 @@
 package employer
 
+import "github.com/vetchium/vetchium/typespec/common"
+
 type AddEmployerPostRequest struct {
 	Content string   `json:"content" validate:"required,min=1,max=4096"`
 	Tags    []string `json:"tags"    validate:"max=3"`
@@ -16,5 +18,19 @@ type UpdateEmployerPostRequest struct {
 }
 
 type DeleteEmployerPostRequest struct {
+	PostID string `json:"post_id" validate:"required"`
+}
+
+type ListEmployerPostsRequest struct {
+	PaginationKey string `json:"pagination_key"`
+	Limit         int    `json:"limit"          validate:"min=1,max=40"`
+}
+
+type ListEmployerPostsResponse struct {
+	Posts         []common.EmployerPost `json:"posts"`
+	PaginationKey string                `json:"pagination_key"`
+}
+
+type GetEmployerPostRequest struct {
 	PostID string `json:"post_id" validate:"required"`
 }

@@ -14,5 +14,6 @@ model EmployerPost {
     content: string;
     tags: string[];
     company_domain: string;
-    created_at: string;
+    created_at: utcDateTime;
+    updated_at: utcDateTime;
 }

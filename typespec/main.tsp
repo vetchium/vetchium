@@ -6,6 +6,7 @@ import "./common/achievements.tsp";
 import "./common/applications.tsp";
 import "./common/candidacies.tsp";
 import "./common/common.tsp";
+import "./common/posts.tsp";
 import "./common/education.tsp";
 import "./common/interviews.tsp";
 import "./common/openings.tsp";

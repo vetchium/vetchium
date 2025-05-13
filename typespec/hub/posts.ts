@@ -1,4 +1,5 @@
 import { Handle } from "../common/common";
+import { EmployerPost } from "../common/posts";
 import { VTagID, VTagName } from "../common/vtags";
 
 export interface AddPostRequest {

@@ -119,4 +119,6 @@ const (
 
 	OrgUsersCRUD   OrgUserRole = "ORG_USERS_CRUD"
 	OrgUsersViewer OrgUserRole = "ORG_USERS_VIEWER"
+
+	EmployerPostsCRUD OrgUserRole = "EMPLOYER_POSTS_CRUD"
 )
