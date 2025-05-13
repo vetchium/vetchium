@@ -1,4 +1,63 @@
 BEGIN;
 
+-- Delete employer post tags
+DELETE FROM employer_post_tags
+WHERE employer_post_id IN (
+    '12345678-0026-0026-0026-000000060001',
+    '12345678-0026-0026-0026-000000060002',
+    '12345678-0026-0026-0026-000000060003',
+    '12345678-0026-0026-0026-000000060004'
+);
+
+-- Delete employer posts
+DELETE FROM employer_posts
+WHERE id IN (
+    '12345678-0026-0026-0026-000000060001',
+    '12345678-0026-0026-0026-000000060002',
+    '12345678-0026-0026-0026-000000060003',
+    '12345678-0026-0026-0026-000000060004'
+);
+
+-- Clean up org user tokens and related tables
+DELETE FROM org_user_tfa_codes
+WHERE tfa_token IN (
+    SELECT token FROM org_user_tokens
+    WHERE org_user_id IN (
+        '12345678-0026-0026-0026-000000040001',
+        '12345678-0026-0026-0026-000000040002',
+        '12345678-0026-0026-0026-000000040003'
+    )
+);
+
+DELETE FROM org_user_tokens
+WHERE org_user_id IN (
+    '12345678-0026-0026-0026-000000040001',
+    '12345678-0026-0026-0026-000000040002',
+    '12345678-0026-0026-0026-000000040003'
+);
+
+-- Delete org users
+DELETE FROM org_users
+WHERE id IN (
+    '12345678-0026-0026-0026-000000040001',
+    '12345678-0026-0026-0026-000000040002',
+    '12345678-0026-0026-0026-000000040003'
+);
+
+-- Delete employer primary domain
+DELETE FROM employer_primary_domains
+WHERE employer_id = '12345678-0026-0026-0026-000000000201'::uuid;
+
+-- Delete domains
+DELETE FROM domains
+WHERE id = '12345678-0026-0026-0026-000000003001'::uuid;
+
+-- Delete employer
+DELETE FROM employers
+WHERE id = '12345678-0026-0026-0026-000000000201'::uuid;
+
+-- Delete emails
+DELETE FROM emails
+WHERE email_key = '12345678-0026-0026-0026-000000000011'::uuid;
 
 COMMIT;

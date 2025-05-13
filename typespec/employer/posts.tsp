@@ -47,7 +47,7 @@ model ListEmployerPostsRequest {
     pagination_key?: string;
 
     @doc("If nothing is passed, 5 Posts are returned")
-    @minValue(0)
+    @minValue(1)
     @maxValue(40)
     limit?: integer;
 }
