@@ -27,7 +27,7 @@ func DeleteEmployerPost(h wand.Wand) http.HandlerFunc {
 
 		err := h.DB().DeleteEmployerPost(r.Context(), req.PostID)
 		if err != nil {
-			if errors.Is(err, db.ErrNoPost) {
+			if errors.Is(err, db.ErrNoEmployerPost) {
 				h.Dbg("Post not found", "error", err)
 				http.Error(w, "", http.StatusNotFound)
 				return
@@ -38,5 +38,6 @@ func DeleteEmployerPost(h wand.Wand) http.HandlerFunc {
 			return
 		}
 		h.Dbg("employer post deleted", "post_id", req.PostID)
+		w.WriteHeader(http.StatusOK)
 	}
 }

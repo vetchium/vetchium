@@ -85,5 +85,6 @@ var (
 	ErrCannotApply         = errors.New("user cannot apply to this opening")
 	ErrUnpaidHubUser       = errors.New("user is not a paid hub user")
 	ErrNoPost              = errors.New("post not found")
+	ErrNoEmployerPost      = errors.New("employer post not found")
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
 )
