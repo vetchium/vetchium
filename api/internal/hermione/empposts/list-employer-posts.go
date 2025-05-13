@@ -24,6 +24,11 @@ func ListEmployerPosts(h wand.Wand) http.HandlerFunc {
 		}
 		h.Dbg("validated", "listEmployerPostsRequest", req)
 
+		// Set default limit if not provided
+		if req.Limit == 0 {
+			req.Limit = 5 // Default limit
+		}
+
 		resp, err := h.DB().
 			ListEmployerPosts(db.ListEmployerPostsRequest{
 				Context:                  r.Context(),

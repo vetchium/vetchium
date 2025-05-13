@@ -24,7 +24,7 @@ type DeleteEmployerPostRequest struct {
 
 type ListEmployerPostsRequest struct {
 	PaginationKey string `json:"pagination_key"`
-	Limit         int    `json:"limit"          validate:"min=1,max=40"`
+	Limit         int    `json:"limit"          validate:"min=0,max=40"`
 }
 
 type ListEmployerPostsResponse struct {

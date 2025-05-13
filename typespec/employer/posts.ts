@@ -47,7 +47,7 @@ export class ListEmployerPostsRequest {
   limit?: number;
 
   IsValid(): boolean {
-    return this.limit !== undefined && this.limit >= 1 && this.limit <= 40;
+    return this.limit !== undefined && this.limit >= 0 && this.limit <= 40;
   }
 }
 
