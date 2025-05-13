@@ -37,7 +37,7 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	tagIDs := make([]string, 0, len(req.Tags))
+	tagIDs := make([]string, 0, len(req.NewTags))
 	newTagsInsertQuery := `
 WITH inserted AS (
     -- Attempt to insert the tag.
@@ -62,7 +62,7 @@ WHERE t.name = $1 AND NOT EXISTS (SELECT 1 FROM inserted)
 LIMIT 1; -- Ensures only one row is returned in any case
 `
 
-	for _, tag := range req.Tags {
+	for _, tag := range req.NewTags {
 		var newTagID string
 		err = tx.QueryRow(
 			req.Context,
@@ -74,6 +74,10 @@ LIMIT 1; -- Ensures only one row is returned in any case
 			return err
 		}
 		tagIDs = append(tagIDs, newTagID)
+	}
+
+	for _, tagID := range req.TagIDs {
+		tagIDs = append(tagIDs, string(tagID))
 	}
 
 	tagsInsertQuery := `

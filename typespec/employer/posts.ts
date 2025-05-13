@@ -2,14 +2,19 @@ import { EmployerPost } from "../common/posts";
 
 export class AddEmployerPostRequest {
   content: string = "";
-  tags: string[] = [];
+  tag_ids: string[] = [];
+  new_tags: string[] = [];
 
   IsValid(): boolean {
     return (
       this.content.length > 0 &&
       this.content.length <= 4096 &&
-      this.tags.length > 0 &&
-      this.tags.length <= 3
+      this.tag_ids.length > 0 &&
+      this.tag_ids.length <= 3 &&
+      this.new_tags.length > 0 &&
+      this.new_tags.length <= 3 &&
+      this.new_tags.length + this.tag_ids.length <= 3 &&
+      this.new_tags.every((tag) => tag.length > 0 && tag.length <= 64)
     );
   }
 }

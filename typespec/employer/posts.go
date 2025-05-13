@@ -3,8 +3,9 @@ package employer
 import "github.com/vetchium/vetchium/typespec/common"
 
 type AddEmployerPostRequest struct {
-	Content string   `json:"content" validate:"required,min=1,max=4096"`
-	Tags    []string `json:"tags"    validate:"max=3"`
+	Content string            `json:"content"  validate:"required,min=1,max=4096"`
+	TagIDs  []common.VTagID   `json:"tag_ids"  validate:"max=3,dive,uuid"`
+	NewTags []common.VTagName `json:"new_tags" validate:"max=3"`
 }
 
 type AddEmployerPostResponse struct {

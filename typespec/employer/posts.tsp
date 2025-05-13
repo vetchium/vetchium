@@ -15,7 +15,10 @@ model AddEmployerPostRequest {
     content: string;
 
     @maxItems(3)
-    tags: string[];
+    tag_ids: string[];
+
+    @maxItems(3)
+    new_tags: string[];
 }
 
 model AddEmployerPostResponse {
