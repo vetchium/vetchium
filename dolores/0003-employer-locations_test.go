@@ -30,7 +30,7 @@ var _ = Describe("Employer Locations", Ordered, func() {
 
 	location1 := employer.AddLocationRequest{
 		Title:       "Location-1",
-		CountryCode: "UAE",
+		CountryCode: "ARE",
 		PostalCode:  "12345",
 		PostalAddress: `
 Number 6, Viveganandhar Theru,

@@ -94,8 +94,8 @@ VALUES
 INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
 VALUES ('12345678-0024-0024-0024-000000000001', NOW(), NOW());
 
-INSERT INTO hu_home_timelines (hub_user_id, post_id)
-SELECT '12345678-0024-0024-0024-000000000001', id
+INSERT INTO hu_home_timelines (hub_user_id, item_id, item_type)
+SELECT '12345678-0024-0024-0024-000000000001', id, 'USER_POST'::timeline_item_types
 FROM posts
 WHERE author_id IN (
     '12345678-0024-0024-0024-000000000002',
@@ -107,8 +107,8 @@ WHERE author_id IN (
 INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
 VALUES ('12345678-0024-0024-0024-000000000005', NOW(), NOW());
 
-INSERT INTO hu_home_timelines (hub_user_id, post_id)
-SELECT '12345678-0024-0024-0024-000000000005', id
+INSERT INTO hu_home_timelines (hub_user_id, item_id, item_type)
+SELECT '12345678-0024-0024-0024-000000000005', id, 'USER_POST'::timeline_item_types
 FROM posts
 WHERE author_id IN (
     '12345678-0024-0024-0024-000000000006',
@@ -119,8 +119,8 @@ WHERE author_id IN (
 INSERT INTO hu_active_home_timelines (hub_user_id, last_refreshed_at, last_accessed_at)
 VALUES ('12345678-0024-0024-0024-000000000011', NOW(), NOW());
 
-INSERT INTO hu_home_timelines (hub_user_id, post_id)
-SELECT '12345678-0024-0024-0024-000000000011', id
+INSERT INTO hu_home_timelines (hub_user_id, item_id, item_type)
+SELECT '12345678-0024-0024-0024-000000000011', id, 'USER_POST'::timeline_item_types
 FROM posts
 WHERE author_id IN (
     '12345678-0024-0024-0024-000000000012',

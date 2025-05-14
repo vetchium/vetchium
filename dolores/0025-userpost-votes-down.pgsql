@@ -3,7 +3,7 @@ BEGIN;
 -- First clean up timeline data since it references posts
 DELETE FROM hu_home_timelines
 WHERE hub_user_id::text LIKE '12345678-0025-0025-0025-%'
-   OR post_id IN (SELECT id FROM posts WHERE author_id::text LIKE '12345678-0025-0025-0025-%');
+   OR (item_id IN (SELECT id FROM posts WHERE author_id::text LIKE '12345678-0025-0025-0025-%') AND item_type = 'USER_POST'::timeline_item_types);
 
 DELETE FROM hu_active_home_timelines
 WHERE hub_user_id::text LIKE '12345678-0025-0025-0025-%';
