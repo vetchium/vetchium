@@ -1151,6 +1151,22 @@ CREATE TABLE org_following_relationships (
     PRIMARY KEY (hub_user_id, employer_id)
 );
 
+-- This table stores all the posts from all the employers
+CREATE TABLE employer_posts (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+-- This table stores all the tags for each of the posts from all the employers
+CREATE TABLE employer_post_tags (
+    employer_post_id TEXT REFERENCES employer_posts(id) NOT NULL,
+    tag_id UUID REFERENCES tags(id) NOT NULL,
+    PRIMARY KEY (employer_post_id, tag_id)
+);
+
 -- TODO: Exclude this table from [active] backups. This can even be
 -- kept entirely in-memory in granger or a redis-like cache, if needed.
 --
@@ -1379,21 +1395,5 @@ BEGIN
     RETURN 'CAN_SIGNUP';
 END;
 $$ LANGUAGE plpgsql;
-
--- This table stores all the posts from all the employers
-CREATE TABLE employer_posts (
-    id TEXT PRIMARY KEY,
-    content TEXT NOT NULL,
-    employer_id UUID REFERENCES employers(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
-);
-
--- This table stores all the tags for each of the posts from all the employers
-CREATE TABLE employer_post_tags (
-    employer_post_id TEXT REFERENCES employer_posts(id) NOT NULL,
-    tag_id UUID REFERENCES tags(id) NOT NULL,
-    PRIMARY KEY (employer_post_id, tag_id)
-);
 
 COMMIT;

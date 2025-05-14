@@ -49,7 +49,7 @@ func (p *PG) GetEmployerPost(
 		&post.Content,
 		&post.CreatedAt,
 		&post.UpdatedAt,
-		&post.CompanyDomain,
+		&post.EmployerDomainName,
 		&tags,
 	)
 
@@ -120,7 +120,9 @@ func (p *PG) ListEmployerPosts(
 	// Complete the query with grouping, ordering and limit
 	query += `		GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, d.domain_name
 		ORDER BY ep.updated_at DESC, ep.id DESC
-		LIMIT $` + strconv.Itoa(len(args)+1) + `
+		LIMIT $` + strconv.Itoa(
+		len(args)+1,
+	) + `
 	)
 	SELECT * FROM ranked_posts
 	`
@@ -148,7 +150,7 @@ func (p *PG) ListEmployerPosts(
 			&post.Content,
 			&post.CreatedAt,
 			&post.UpdatedAt,
-			&post.CompanyDomain,
+			&post.EmployerDomainName,
 			&tags,
 		)
 
@@ -179,7 +181,13 @@ func (p *PG) ListEmployerPosts(
 		nextPaginationKey = lastPostID
 	}
 
-	p.log.Dbg("listed employer posts", "count", len(posts), "employer_id", orgUser.EmployerID)
+	p.log.Dbg(
+		"listed employer posts",
+		"count",
+		len(posts),
+		"employer_id",
+		orgUser.EmployerID,
+	)
 	return employer.ListEmployerPostsResponse{
 		Posts:         posts,
 		PaginationKey: nextPaginationKey,
