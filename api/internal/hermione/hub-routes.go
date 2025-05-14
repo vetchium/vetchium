@@ -348,4 +348,16 @@ func RegisterHubRoutes(h *Hermione) {
 		po.UnvoteUserPost(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+
+	h.mw.Guard(
+		"/hub/follow-org",
+		po.FollowOrg(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
+		"/hub/unfollow-org",
+		po.UnfollowOrg(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

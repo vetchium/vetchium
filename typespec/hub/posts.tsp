@@ -135,6 +135,10 @@ model FollowOrgRequest {
     domain: string;
 }
 
+model UnfollowOrgRequest {
+    domain: string;
+}
+
 @route("/hub/add-post")
 interface AddPost {
     @tag("Posts")
@@ -274,7 +278,19 @@ interface FollowOrg {
     @tag("Posts")
     @post
     @useAuth(HubAuth)
+    @doc("Follows an organization, if not followed already. If the organization is already followed, no error will be returned.")
     followOrg(@body request: FollowOrgRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/unfollow-org")
+interface UnfollowOrg {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    @doc("Unfollows an organization, if followed. If the organization is not followed, no error will be returned.")
+    unfollowOrg(@body request: UnfollowOrgRequest): {
         @statusCode statusCode: 200;
     };
 }

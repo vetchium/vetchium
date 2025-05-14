@@ -91,3 +91,7 @@ type UnvoteUserPostRequest struct {
 type FollowOrgRequest struct {
 	Domain string `json:"domain" validate:"required"`
 }
+
+type UnfollowOrgRequest struct {
+	Domain string `json:"domain" validate:"required"`
+}

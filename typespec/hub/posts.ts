@@ -88,3 +88,7 @@ export interface UnvoteUserPostRequest {
 export interface FollowOrgRequest {
   domain: string;
 }
+
+export interface UnfollowOrgRequest {
+  domain: string;
+}

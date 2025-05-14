@@ -475,6 +475,8 @@ type DB interface {
 		ctx context.Context,
 		handle string,
 	) (hub.FollowStatus, error)
+	FollowOrg(ctx context.Context, domain string) error
+	UnfollowOrg(ctx context.Context, domain string) error
 
 	// Used by granger
 	GetTimelinesToRefresh(ctx context.Context, limit int) ([]uuid.UUID, error)
