@@ -18,7 +18,7 @@ WHERE hub_user_id IN (
     '12345678-0024-0024-0024-000000000013',
     '12345678-0024-0024-0024-000000000014',
     '12345678-0024-0024-0024-000000000015'
-) OR post_id LIKE 'post-0024-%';
+) OR (item_id LIKE 'post-0024-%' AND item_type = 'USER_POST'::timeline_item_types);
 
 DELETE FROM hu_active_home_timelines
 WHERE hub_user_id IN (
