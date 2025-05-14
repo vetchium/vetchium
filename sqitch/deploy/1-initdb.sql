@@ -1137,6 +1137,14 @@ CREATE TABLE hu_home_timelines (
     PRIMARY KEY (hub_user_id, post_id)
 );
 
+-- This table stores all the orgs followed by each hubuser
+-- This has nothing to do with org_users and should not be confused
+CREATE TABLE org_following_relationships (
+    hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
+    employer_id UUID REFERENCES employers(id) NOT NULL,
+    PRIMARY KEY (hub_user_id, employer_id)
+);
+
 -- TODO: Exclude this table from [active] backups. This can even be
 -- kept entirely in-memory in granger or a redis-like cache, if needed.
 CREATE TABLE hu_active_home_timelines (
