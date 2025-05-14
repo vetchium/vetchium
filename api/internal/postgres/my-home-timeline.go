@@ -170,7 +170,7 @@ WHERE hub_user_id = $1
 	defer rows.Close()
 
 	var userPosts []hub.Post
-	var employerPosts []hub.EmployerPost
+	var employerPosts []common.EmployerPost
 	var paginationKey string
 
 	for rows.Next() {
@@ -236,7 +236,7 @@ WHERE hub_user_id = $1
 			}
 			userPosts = append(userPosts, userPost)
 		} else if itemType == common.TimelineItemEmployerPost {
-			employerPost := hub.EmployerPost{
+			employerPost := common.EmployerPost{
 				ID:                 itemID,
 				Content:            content,
 				Tags:               tags,

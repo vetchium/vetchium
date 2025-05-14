@@ -68,8 +68,9 @@ type GetMyHomeTimelineRequest struct {
 }
 
 type MyHomeTimeline struct {
-	Posts         []Post `json:"posts"`
-	PaginationKey string `json:"pagination_key"`
+	Posts         []Post                `json:"posts"`
+	EmployerPosts []common.EmployerPost `json:"employer_posts"`
+	PaginationKey string                `json:"pagination_key"`
 }
 
 type GetPostDetailsRequest struct {
