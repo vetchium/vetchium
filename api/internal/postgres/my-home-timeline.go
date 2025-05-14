@@ -2,13 +2,13 @@ package postgres
 
 import (
 	"context"
-	"database/sql" // Needed for sql.NullString and other nullable types from view
-	"fmt"
-	"time" // Added for time parsing
+	"database/sql"
+	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/vetchium/vetchium/api/internal/db"
-	"github.com/vetchium/vetchium/typespec/common" // Assuming Handle might be here for casting
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -22,23 +22,20 @@ func (pg *PG) GetMyHomeTimeline(
 	hubUserIDStr, err := getHubUserID(ctx)
 	if err != nil {
 		pg.log.Err("Failed to get hub user ID from context", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf(
-			"failed to get hub user ID: %w",
-			err,
-		)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 
 	hubUserID, err := uuid.Parse(hubUserIDStr)
 	if err != nil {
 		pg.log.Err("Failed to parse hub user ID", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf("invalid hub user ID: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 
 	// Start a transaction
 	tx, err := pg.pool.Begin(ctx)
 	if err != nil {
 		pg.log.Err("Failed to begin transaction", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 	defer tx.Rollback(context.Background())
 
@@ -51,24 +48,16 @@ func (pg *PG) GetMyHomeTimeline(
 		`, hubUserID, *req.PaginationKey).Scan(&lastItemUpdatedAtString)
 
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				pg.log.Dbg("Invalid pagination key", "key", *req.PaginationKey)
 				return hub.MyHomeTimeline{}, db.ErrInvalidPaginationKey
 			}
-			pg.log.Err(
-				"Failed to check pagination key and get updated_at",
-				"error",
-				err,
-			)
-			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+			pg.log.Err("pagination_key updated_at parsing", "error", err)
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 		if !lastItemUpdatedAtString.Valid {
 			// This case should ideally not happen if item_id is valid and in the view
-			pg.log.Err(
-				"Pagination key item has NULL updated_at",
-				"key",
-				*req.PaginationKey,
-			)
+			pg.log.Err("NULL updated_at", "key", *req.PaginationKey)
 			return hub.MyHomeTimeline{}, db.ErrInvalidPaginationKey
 		}
 	}
@@ -83,7 +72,7 @@ func (pg *PG) GetMyHomeTimeline(
 
 	if err != nil {
 		pg.log.Err("Failed to check if timeline exists", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 
 	// If user doesn't have a timeline yet, create one and refresh it
@@ -101,14 +90,14 @@ func (pg *PG) GetMyHomeTimeline(
 
 		if err != nil {
 			pg.log.Err("Failed to create timeline entry", "error", err)
-			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 
 		// Call RefreshTimeline function to populate the timeline
 		_, err = tx.Exec(ctx, `SELECT RefreshTimeline($1)`, hubUserID)
 		if err != nil {
 			pg.log.Err("Failed to refresh new timeline", "error", err)
-			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 	} else {
 		// Just update the last_accessed_at timestamp
@@ -120,7 +109,7 @@ func (pg *PG) GetMyHomeTimeline(
 
 		if err != nil {
 			pg.log.Err("Failed to update last_accessed_at", "error", err)
-			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 	}
 
@@ -156,16 +145,12 @@ WHERE hub_user_id = $1
 
 	rows, err := tx.Query(ctx, query, args...)
 	if err != nil {
-		pg.log.Err(
-			"Failed to query timeline posts",
-			"error",
-			err,
-			"query",
-			query,
-			"args",
-			args,
+		pg.log.Err("Failed to query timeline posts",
+			"error", err,
+			"query", query,
+			"args", args,
 		)
-		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 	defer rows.Close()
 
@@ -175,7 +160,7 @@ WHERE hub_user_id = $1
 
 	for rows.Next() {
 		var itemID, itemTypeStr, content string
-		var createdAtStr, updatedAtStr string // Read as string
+		var createdAt, updatedAt time.Time
 		var authorHandle, authorName sql.NullString
 		var authorProfilePicURL sql.NullString
 		var tags []string // View already aggregates tags into an array of strings
@@ -184,7 +169,7 @@ WHERE hub_user_id = $1
 		var employerName, employerIDInternal, employerDomainName sql.NullString
 
 		err := rows.Scan(
-			&itemID, &itemTypeStr, &content, &createdAtStr, &updatedAtStr,
+			&itemID, &itemTypeStr, &content, &createdAt, &updatedAt,
 			&authorHandle, &authorName, &authorProfilePicURL,
 			&tags, &upvotesCount, &downvotesCount, &score,
 			&meUpvoted, &meDownvoted, &canUpvote, &canDownvote, &amIAuthor,
@@ -192,38 +177,19 @@ WHERE hub_user_id = $1
 		)
 		if err != nil {
 			pg.log.Err("Failed to scan timeline item row", "error", err)
-			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
-		}
-
-		// Common time parsing logic (assuming RFC3339 or similar from DB)
-		parseTime := func(timeStr string) time.Time {
-			if t, pErr := time.Parse(time.RFC3339, timeStr); pErr == nil {
-				return t
-			}
-			// Fallback or error handling if parse fails. For now, return zero time.
-			// Log an error here in a real scenario if parsing is critical.
-			pg.log.Inf(
-				"Failed to parse time string from DB, returning zero time",
-				"time_string",
-				timeStr,
-			)
-			return time.Time{}
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 
 		itemType := common.TimelineItemType(itemTypeStr)
 
 		if itemType == common.TimelineItemUserPost {
 			userPost := hub.Post{
-				ID:         itemID,
-				Content:    content,
-				Tags:       tags,
-				AuthorName: authorName.String,
-				AuthorHandle: common.Handle(
-					authorHandle.String,
-				), // Cast to common.Handle
-				CreatedAt: parseTime(
-					createdAtStr,
-				), // Parse to time.Time
+				ID:             itemID,
+				Content:        content,
+				Tags:           tags,
+				AuthorName:     authorName.String,
+				AuthorHandle:   common.Handle(authorHandle.String),
+				CreatedAt:      createdAt,
 				UpvotesCount:   upvotesCount.Int32,
 				DownvotesCount: downvotesCount.Int32,
 				Score:          score.Int32,
@@ -232,7 +198,6 @@ WHERE hub_user_id = $1
 				CanUpvote:      canUpvote.Bool,
 				CanDownvote:    canDownvote.Bool,
 				AmIAuthor:      amIAuthor.Bool,
-				// ProfilePicURL needs to be handled if it's part of Post struct
 			}
 			userPosts = append(userPosts, userPost)
 		} else if itemType == common.TimelineItemEmployerPost {
@@ -242,10 +207,13 @@ WHERE hub_user_id = $1
 				Tags:               tags,
 				EmployerName:       employerName.String,
 				EmployerDomainName: employerDomainName.String,
-				CreatedAt:          parseTime(createdAtStr), // Parse to time.Time
-				UpdatedAt:          parseTime(updatedAtStr), // Parse to time.Time
+				CreatedAt:          createdAt,
+				UpdatedAt:          updatedAt,
 			}
 			employerPosts = append(employerPosts, employerPost)
+		} else {
+			pg.log.Err("Unknown item type", "item_type", itemTypeStr)
+			return hub.MyHomeTimeline{}, db.ErrInternal
 		}
 
 		paginationKey = itemID // The ID of the last processed item
@@ -253,13 +221,13 @@ WHERE hub_user_id = $1
 
 	if err := rows.Err(); err != nil {
 		pg.log.Err("Error while iterating timeline items", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 
 	// Commit the transaction
 	if err := tx.Commit(context.Background()); err != nil {
 		pg.log.Err("Failed to commit transaction", "error", err)
-		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
+		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 
 	// Only include paginationKey if we have fetched up to the limit
