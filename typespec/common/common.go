@@ -123,3 +123,13 @@ const (
 	EmployerPostsCRUD   OrgUserRole = "EMPLOYER_POSTS_CRUD"
 	EmployerPostsViewer OrgUserRole = "EMPLOYER_POSTS_VIEWER"
 )
+
+// TimelineItemType defines the type of item in a user's timeline.
+type TimelineItemType string
+
+const (
+	// TimelineItemUserPost represents a post made by a hub user.
+	TimelineItemUserPost TimelineItemType = "USER_POST"
+	// TimelineItemEmployerPost represents a post made by an employer.
+	TimelineItemEmployerPost TimelineItemType = "EMPLOYER_POST"
+)

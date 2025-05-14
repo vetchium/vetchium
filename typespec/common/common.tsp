@@ -234,6 +234,12 @@ alias OpeningsViewer = "OPENINGS_VIEWER";
 alias OrgUsersCRUD = "ORG_USERS_CRUD";
 alias OrgUsersViewer = "ORG_USERS_VIEWER";
 
+@doc("Discriminator for timeline item types")
+union TimelineItemType {
+    UserPost: "USER_POST",
+    EmployerPost: "EMPLOYER_POST",
+}
+
 model HubAuth {
     @doc("Http authentication")
     type: AuthType.http;

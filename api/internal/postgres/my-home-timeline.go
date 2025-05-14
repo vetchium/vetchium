@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql" // Needed for sql.NullString and other nullable types from view
 	"fmt"
+	"time" // Added for time parsing
 
 	"github.com/google/uuid"
 	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/typespec/common" // Assuming Handle might be here for casting
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -39,21 +42,33 @@ func (pg *PG) GetMyHomeTimeline(
 	}
 	defer tx.Rollback(context.Background())
 
-	// Check if the pagination key exists if provided
+	// For pagination, we need the updated_at of the pagination key item
+	var lastItemUpdatedAtString sql.NullString // Use sql.NullString for potential NULL from view
 	if req.PaginationKey != nil && *req.PaginationKey != "" {
-		var exists bool
 		err = tx.QueryRow(ctx, `
-			SELECT EXISTS (
-				SELECT 1 FROM posts WHERE id = $1
-			)
-		`, *req.PaginationKey).Scan(&exists)
+			SELECT updated_at FROM hu_timeline_extended
+			WHERE hub_user_id = $1 AND item_id = $2
+		`, hubUserID, *req.PaginationKey).Scan(&lastItemUpdatedAtString)
+
 		if err != nil {
-			pg.log.Err("Failed to check pagination key", "error", err)
+			if err == sql.ErrNoRows {
+				pg.log.Dbg("Invalid pagination key", "key", *req.PaginationKey)
+				return hub.MyHomeTimeline{}, db.ErrInvalidPaginationKey
+			}
+			pg.log.Err(
+				"Failed to check pagination key and get updated_at",
+				"error",
+				err,
+			)
 			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 		}
-
-		if !exists {
-			pg.log.Dbg("Invalid pagination key", "key", *req.PaginationKey)
+		if !lastItemUpdatedAtString.Valid {
+			// This case should ideally not happen if item_id is valid and in the view
+			pg.log.Err(
+				"Pagination key item has NULL updated_at",
+				"key",
+				*req.PaginationKey,
+			)
 			return hub.MyHomeTimeline{}, db.ErrInvalidPaginationKey
 		}
 	}
@@ -113,84 +128,131 @@ func (pg *PG) GetMyHomeTimeline(
 	var query string
 	var args []interface{}
 
-	if req.PaginationKey != nil && *req.PaginationKey != "" {
-		// Query with pagination
-		query = `
+	// The view hu_timeline_extended is already ORDER BY updated_at DESC, item_id DESC
+	baseQuery := `
 SELECT
-    post_id, content, created_at,
-    author_handle, author_name, author_profile_pic_url, tags,
-    upvotes_count, downvotes_count, score,
-    me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author
-FROM hu_timeline_extended
-WHERE hub_user_id = $1 AND post_id < $2
-ORDER BY created_at DESC, post_id DESC
-LIMIT $3
-`
-		args = []interface{}{hubUserID, *req.PaginationKey, req.Limit}
-	} else {
-		// Query without pagination
-		query = `
-SELECT
-    post_id, content, created_at, author_handle, author_name,
-    author_profile_pic_url, tags,
-    upvotes_count, downvotes_count, score,
-    me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author
+    item_id, item_type, content, created_at, updated_at,
+    author_handle, author_name, author_profile_pic_url,
+    tags, upvotes_count, downvotes_count, score,
+    me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author,
+    employer_name, employer_id_internal, employer_domain_name
 FROM hu_timeline_extended
 WHERE hub_user_id = $1
-ORDER BY created_at DESC, post_id DESC
-LIMIT $2
 `
+
+	if req.PaginationKey != nil && *req.PaginationKey != "" &&
+		lastItemUpdatedAtString.Valid {
+		query = baseQuery + `AND (updated_at < $2 OR (updated_at = $2 AND item_id < $3)) ORDER BY updated_at DESC, item_id DESC LIMIT $4`
+		args = []interface{}{
+			hubUserID,
+			lastItemUpdatedAtString.String,
+			*req.PaginationKey,
+			req.Limit,
+		}
+	} else {
+		query = baseQuery + `ORDER BY updated_at DESC, item_id DESC LIMIT $2`
 		args = []interface{}{hubUserID, req.Limit}
 	}
 
 	rows, err := tx.Query(ctx, query, args...)
 	if err != nil {
-		pg.log.Err("Failed to query timeline posts", "error", err)
+		pg.log.Err(
+			"Failed to query timeline posts",
+			"error",
+			err,
+			"query",
+			query,
+			"args",
+			args,
+		)
 		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 	}
 	defer rows.Close()
 
-	var posts []hub.Post
+	var userPosts []hub.Post
+	var employerPosts []hub.EmployerPost
 	var paginationKey string
 
 	for rows.Next() {
-		var post hub.Post
-		var profilePicURL *string
-		var tags []string
+		var itemID, itemTypeStr, content string
+		var createdAtStr, updatedAtStr string // Read as string
+		var authorHandle, authorName sql.NullString
+		var authorProfilePicURL sql.NullString
+		var tags []string // View already aggregates tags into an array of strings
+		var upvotesCount, downvotesCount, score sql.NullInt32
+		var meUpvoted, meDownvoted, canUpvote, canDownvote, amIAuthor sql.NullBool
+		var employerName, employerIDInternal, employerDomainName sql.NullString
 
 		err := rows.Scan(
-			&post.ID,
-			&post.Content,
-			&post.CreatedAt,
-			&post.AuthorHandle,
-			&post.AuthorName,
-			&profilePicURL,
-			&tags,
-			&post.UpvotesCount,
-			&post.DownvotesCount,
-			&post.Score,
-			&post.MeUpvoted,
-			&post.MeDownvoted,
-			&post.CanUpvote,
-			&post.CanDownvote,
-			&post.AmIAuthor,
+			&itemID, &itemTypeStr, &content, &createdAtStr, &updatedAtStr,
+			&authorHandle, &authorName, &authorProfilePicURL,
+			&tags, &upvotesCount, &downvotesCount, &score,
+			&meUpvoted, &meDownvoted, &canUpvote, &canDownvote, &amIAuthor,
+			&employerName, &employerIDInternal, &employerDomainName,
 		)
 		if err != nil {
-			pg.log.Err("Failed to scan post row", "error", err)
+			pg.log.Err("Failed to scan timeline item row", "error", err)
 			return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 		}
 
-		// Tags are already retrieved from the view
-		post.Tags = tags
+		// Common time parsing logic (assuming RFC3339 or similar from DB)
+		parseTime := func(timeStr string) time.Time {
+			if t, pErr := time.Parse(time.RFC3339, timeStr); pErr == nil {
+				return t
+			}
+			// Fallback or error handling if parse fails. For now, return zero time.
+			// Log an error here in a real scenario if parsing is critical.
+			pg.log.Inf(
+				"Failed to parse time string from DB, returning zero time",
+				"time_string",
+				timeStr,
+			)
+			return time.Time{}
+		}
 
-		// Update pagination key to the last post ID
-		paginationKey = post.ID
+		itemType := common.TimelineItemType(itemTypeStr)
 
-		posts = append(posts, post)
+		if itemType == common.TimelineItemUserPost {
+			userPost := hub.Post{
+				ID:         itemID,
+				Content:    content,
+				Tags:       tags,
+				AuthorName: authorName.String,
+				AuthorHandle: common.Handle(
+					authorHandle.String,
+				), // Cast to common.Handle
+				CreatedAt: parseTime(
+					createdAtStr,
+				), // Parse to time.Time
+				UpvotesCount:   upvotesCount.Int32,
+				DownvotesCount: downvotesCount.Int32,
+				Score:          score.Int32,
+				MeUpvoted:      meUpvoted.Bool,
+				MeDownvoted:    meDownvoted.Bool,
+				CanUpvote:      canUpvote.Bool,
+				CanDownvote:    canDownvote.Bool,
+				AmIAuthor:      amIAuthor.Bool,
+				// ProfilePicURL needs to be handled if it's part of Post struct
+			}
+			userPosts = append(userPosts, userPost)
+		} else if itemType == common.TimelineItemEmployerPost {
+			employerPost := hub.EmployerPost{
+				ID:                 itemID,
+				Content:            content,
+				Tags:               tags,
+				EmployerName:       employerName.String,
+				EmployerDomainName: employerDomainName.String,
+				CreatedAt:          parseTime(createdAtStr), // Parse to time.Time
+				UpdatedAt:          parseTime(updatedAtStr), // Parse to time.Time
+			}
+			employerPosts = append(employerPosts, employerPost)
+		}
+
+		paginationKey = itemID // The ID of the last processed item
 	}
 
 	if err := rows.Err(); err != nil {
-		pg.log.Err("Error while iterating posts", "error", err)
+		pg.log.Err("Error while iterating timeline items", "error", err)
 		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 	}
 
@@ -200,13 +262,15 @@ LIMIT $2
 		return hub.MyHomeTimeline{}, fmt.Errorf("database error: %w", err)
 	}
 
-	// Only include paginationKey if we have the maximum number of posts
-	if len(posts) < req.Limit {
+	// Only include paginationKey if we have fetched up to the limit
+	// The total number of items fetched is len(userPosts) + len(employerPosts)
+	if (len(userPosts) + len(employerPosts)) < req.Limit {
 		paginationKey = ""
 	}
 
 	return hub.MyHomeTimeline{
-		Posts:         posts,
+		Posts:         userPosts,
+		EmployerPosts: employerPosts,
 		PaginationKey: paginationKey,
 	}, nil
 }

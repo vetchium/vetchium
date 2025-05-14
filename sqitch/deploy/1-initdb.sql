@@ -1036,11 +1036,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE TYPE timeline_item_types AS ENUM ('USER_POST', 'EMPLOYER_POST');
+
 CREATE TABLE posts (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
 
     upvotes_count INTEGER NOT NULL DEFAULT 0,
     downvotes_count INTEGER NOT NULL DEFAULT 0,
@@ -1125,16 +1128,19 @@ CREATE TRIGGER update_post_vote_counts_trigger
 AFTER INSERT OR UPDATE OR DELETE ON post_votes
 FOR EACH ROW EXECUTE FUNCTION update_post_vote_counts();
 
+-- This table stores all the hubusers that a hubuser follows
 CREATE TABLE following_relationships (
     consuming_hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     producing_hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     PRIMARY KEY (consuming_hub_user_id, producing_hub_user_id)
 );
 
+-- This table stores all the post ids from all the hubusers that each hubuser follows
 CREATE TABLE hu_home_timelines (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
-    post_id TEXT REFERENCES posts(id) NOT NULL,
-    PRIMARY KEY (hub_user_id, post_id)
+    item_id TEXT NOT NULL,
+    item_type timeline_item_types NOT NULL,
+    PRIMARY KEY (hub_user_id, item_id, item_type)
 );
 
 -- This table stores all the orgs followed by each hubuser
@@ -1147,6 +1153,10 @@ CREATE TABLE org_following_relationships (
 
 -- TODO: Exclude this table from [active] backups. This can even be
 -- kept entirely in-memory in granger or a redis-like cache, if needed.
+--
+-- This table is used to identify the active hubusers who are refreshing
+-- their timelines and trying to read the new posts from the hubusers
+-- that they follow.
 CREATE TABLE hu_active_home_timelines (
     hub_user_id UUID REFERENCES hub_users(id) NOT NULL,
     last_refreshed_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -1203,11 +1213,12 @@ BEGIN
     -- TODO: In future, when we support Updating of existing posts, we need to,
     -- Delete existing timeline entries for posts that are updated
 
-    -- Insert new timeline entries from self and followed users
-    INSERT INTO hu_home_timelines (hub_user_id, post_id)
+    -- Insert new timeline entries from self and followed hub users
+    INSERT INTO hu_home_timelines (hub_user_id, item_id, item_type)
     SELECT
         p_hub_user_id,
-        p.id
+        p.id,
+        'USER_POST'::timeline_item_types
     FROM posts p
     WHERE (
         -- Posts from users that the current user follows
@@ -1219,11 +1230,30 @@ BEGIN
         -- Include user's own posts
         OR p.author_id = p_hub_user_id
     )
-    AND p.created_at >= v_cutoff_date
+    AND p.updated_at >= v_cutoff_date
     -- Avoid duplicates
     AND NOT EXISTS (
         SELECT 1 FROM hu_home_timelines
-        WHERE hub_user_id = p_hub_user_id AND post_id = p.id
+        WHERE hub_user_id = p_hub_user_id AND item_id = p.id AND item_type = 'USER_POST'::timeline_item_types
+    );
+
+    -- Insert new timeline entries from followed employers
+    INSERT INTO hu_home_timelines (hub_user_id, item_id, item_type)
+    SELECT
+        p_hub_user_id,
+        ep.id,
+        'EMPLOYER_POST'::timeline_item_types
+    FROM employer_posts ep
+    WHERE ep.employer_id IN (
+        SELECT employer_id
+        FROM org_following_relationships
+        WHERE hub_user_id = p_hub_user_id
+    )
+    AND ep.updated_at >= v_cutoff_date
+    -- Avoid duplicates
+    AND NOT EXISTS (
+        SELECT 1 FROM hu_home_timelines
+        WHERE hub_user_id = p_hub_user_id AND item_id = ep.id AND item_type = 'EMPLOYER_POST'::timeline_item_types
     );
 
     -- Update the last_refreshed_at timestamp or insert if not present
@@ -1239,16 +1269,18 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE VIEW hu_timeline_extended AS
 SELECT
     ht.hub_user_id,
-    p.id AS post_id,
+    ht.item_id,
+    ht.item_type,
     p.content,
     p.created_at,
+    p.updated_at,
     p.upvotes_count,
     p.downvotes_count,
     p.score,
     hu.handle AS author_handle,
     hu.full_name AS author_name,
     hu.profile_picture_url AS author_profile_pic_url,
-    ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+    ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
     EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id AND vote_value = 1) AS me_upvoted,
     EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id AND vote_value = -1) AS me_downvoted,
     -- can_upvote is false if: user has already voted or is the author
@@ -1257,23 +1289,52 @@ SELECT
     -- can_downvote is false if: user has already voted or is the author
     NOT (EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id) OR
          p.author_id = ht.hub_user_id) AS can_downvote,
-    p.author_id = ht.hub_user_id AS am_i_author
+    p.author_id = ht.hub_user_id AS am_i_author,
+    NULL::text AS employer_name,
+    NULL::uuid AS employer_id_internal, -- internal use only, not exposed in API
+    NULL::text AS employer_domain_name
 FROM hu_home_timelines ht
-JOIN posts p ON ht.post_id = p.id
+JOIN posts p ON ht.item_id = p.id AND ht.item_type = 'USER_POST'::timeline_item_types
 JOIN hub_users hu ON p.author_id = hu.id
 LEFT JOIN post_tags pt ON p.id = pt.post_id
 LEFT JOIN tags t ON pt.tag_id = t.id
 GROUP BY
+    ht.hub_user_id, ht.item_id, ht.item_type, p.id, hu.id
+
+UNION ALL
+
+SELECT
     ht.hub_user_id,
-    p.id,
-    p.content,
-    p.created_at,
-    p.upvotes_count,
-    p.downvotes_count,
-    p.score,
-    hu.handle,
-    hu.full_name,
-    hu.profile_picture_url;
+    ht.item_id,
+    ht.item_type,
+    ep.content,
+    ep.created_at,
+    ep.updated_at,
+    NULL AS upvotes_count,
+    NULL AS downvotes_count,
+    NULL AS score,
+    NULL AS author_handle,
+    NULL AS author_name,
+    NULL AS author_profile_pic_url,
+    ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+    NULL AS me_upvoted,
+    NULL AS me_downvoted,
+    NULL AS can_upvote,
+    NULL AS can_downvote,
+    NULL AS am_i_author,
+    e.company_name AS employer_name,
+    e.id AS employer_id_internal, -- internal use only, not exposed in API
+    d.domain_name AS employer_domain_name
+FROM hu_home_timelines ht
+JOIN employer_posts ep ON ht.item_id = ep.id AND ht.item_type = 'EMPLOYER_POST'::timeline_item_types
+JOIN employers e ON ep.employer_id = e.id
+LEFT JOIN employer_primary_domains epd ON e.id = epd.employer_id
+LEFT JOIN domains d ON epd.domain_id = d.id
+LEFT JOIN employer_post_tags ept ON ep.id = ept.employer_post_id
+LEFT JOIN tags t ON ept.tag_id = t.id
+GROUP BY
+    ht.hub_user_id, ht.item_id, ht.item_type, ep.id, e.id, d.domain_name
+ORDER BY updated_at DESC, item_id DESC;
 
 -- Function to check hub user signup eligibility
 CREATE OR REPLACE FUNCTION check_hub_user_signup_eligibility(p_email TEXT)
@@ -1319,6 +1380,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- This table stores all the posts from all the employers
 CREATE TABLE employer_posts (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
@@ -1327,6 +1389,7 @@ CREATE TABLE employer_posts (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
+-- This table stores all the tags for each of the posts from all the employers
 CREATE TABLE employer_post_tags (
     employer_post_id TEXT REFERENCES employer_posts(id) NOT NULL,
     tag_id UUID REFERENCES tags(id) NOT NULL,

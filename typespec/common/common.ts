@@ -303,3 +303,8 @@ export interface EmployerAuth {
   type: "http";
   scheme: "bearer";
 }
+
+export type TimelineItemType = "USER_POST" | "EMPLOYER_POST";
+
+export const TimelineItemUserPost: TimelineItemType = "USER_POST";
+export const TimelineItemEmployerPost: TimelineItemType = "EMPLOYER_POST";
