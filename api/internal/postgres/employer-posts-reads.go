@@ -29,14 +29,16 @@ func (p *PG) GetEmployerPost(
 		ep.content, 
 		ep.created_at, 
 		ep.updated_at,
-		e.primary_domain as company_domain,
+		d.domain_name as company_domain,
 		ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
 	FROM employer_posts ep
 	JOIN employers e ON ep.employer_id = e.id
+	JOIN employer_primary_domains epd ON e.id = epd.employer_id
+	JOIN domains d ON epd.domain_id = d.id
 	LEFT JOIN employer_post_tags ept ON ep.id = ept.employer_post_id
 	LEFT JOIN tags t ON ept.tag_id = t.id
 	WHERE ep.id = $1 AND ep.employer_id = $2
-	GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, e.primary_domain
+	GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, d.domain_name
 	`
 
 	var post common.EmployerPost
@@ -95,10 +97,12 @@ func (p *PG) ListEmployerPosts(
 			ep.content, 
 			ep.created_at, 
 			ep.updated_at,
-			e.primary_domain as company_domain,
+			d.domain_name as company_domain,
 			ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
 		FROM employer_posts ep
 		JOIN employers e ON ep.employer_id = e.id
+		JOIN employer_primary_domains epd ON e.id = epd.employer_id
+		JOIN domains d ON epd.domain_id = d.id
 		LEFT JOIN employer_post_tags ept ON ep.id = ept.employer_post_id
 		LEFT JOIN tags t ON ept.tag_id = t.id
 		WHERE ep.employer_id = $1
@@ -114,7 +118,7 @@ func (p *PG) ListEmployerPosts(
 	}
 
 	// Complete the query with grouping, ordering and limit
-	query += `		GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, e.primary_domain
+	query += `		GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, d.domain_name
 		ORDER BY ep.updated_at DESC, ep.id DESC
 		LIMIT $` + strconv.Itoa(len(args)+1) + `
 	)
