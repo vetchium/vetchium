@@ -13,7 +13,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = FDescribe("Employer Posts", Ordered, func() {
+var _ = Describe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -318,7 +318,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						Expect(post.ID).Should(Equal(postID))
 						Expect(post.Content).Should(Equal("Test post for get"))
 						Expect(
-							post.CompanyDomain,
+							post.EmployerDomainName,
 						).Should(Equal("0026-employerposts2.example.com"))
 						Expect(
 							post.Tags,
