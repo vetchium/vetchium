@@ -17,58 +17,12 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
-
-		// Org user tokens
-		adminToken     string
-		marketingToken string
-		regularToken   string
-
-		// Post IDs for testing
-		postIDs []string
 	)
 
 	BeforeAll(func() {
 		pool = setupTestDB()
 		Expect(pool).NotTo(BeNil())
 		seedDatabase(pool, "0026-employerpost-up.pgsql")
-
-		// Login org users and get tokens
-		var wg sync.WaitGroup
-		wg.Add(3) // 3 org users to sign in
-
-		employerSigninAsync(
-			"0026-employerposts.example.com",
-			"admin@0026-employerposts.example.com",
-			"NewPassword123$",
-			&adminToken,
-			&wg,
-		)
-
-		employerSigninAsync(
-			"0026-employerposts.example.com",
-			"marketing@0026-employerposts.example.com",
-			"NewPassword123$",
-			&marketingToken,
-			&wg,
-		)
-
-		employerSigninAsync(
-			"0026-employerposts.example.com",
-			"regular@0026-employerposts.example.com",
-			"NewPassword123$",
-			&regularToken,
-			&wg,
-		)
-
-		wg.Wait()
-
-		// Store post IDs for testing
-		postIDs = []string{
-			"12345678-0026-0026-0026-000000060001",
-			"12345678-0026-0026-0026-000000060002",
-			"12345678-0026-0026-0026-000000060003",
-			"12345678-0026-0026-0026-000000060004",
-		}
 	})
 
 	AfterAll(func() {
@@ -77,7 +31,82 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 		pool.Close()
 	})
 
+	// Helper function to create a test post
+	createTestPost := func(token string, content string, tagIDs []common.VTagID, newTags []common.VTagName) string {
+		request := employer.AddEmployerPostRequest{
+			Content: content,
+			TagIDs:  tagIDs,
+			NewTags: newTags,
+		}
+
+		resp := testPOSTGetResp(
+			token,
+			request,
+			"/employer/add-post",
+			http.StatusOK,
+		).([]byte)
+
+		var addResp employer.AddEmployerPostResponse
+		err := json.Unmarshal(resp, &addResp)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(addResp.PostID).ShouldNot(BeEmpty())
+
+		return addResp.PostID
+	}
+
+	// Helper function to create multiple test posts
+	createTestPosts := func(token string, count int) []string {
+		postIDs := make([]string, count)
+		for i := 0; i < count; i++ {
+			postIDs[i] = createTestPost(
+				token,
+				fmt.Sprintf("Test post %d", i+1),
+				nil,
+				nil,
+			)
+		}
+		return postIDs
+	}
+
 	Describe("Add Employer Post", func() {
+		var (
+			adminToken     string
+			marketingToken string
+			regularToken   string
+		)
+
+		BeforeEach(func() {
+			// Login org users and get tokens
+			var wg sync.WaitGroup
+			wg.Add(3) // 3 org users to sign in
+
+			employerSigninAsync(
+				"0026-employerposts.example.com",
+				"admin@0026-employerposts.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-employerposts.example.com",
+				"marketing@0026-employerposts.example.com",
+				"NewPassword123$",
+				&marketingToken,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-employerposts.example.com",
+				"regular@0026-employerposts.example.com",
+				"NewPassword123$",
+				&regularToken,
+				&wg,
+			)
+
+			wg.Wait()
+		})
+
 		type addEmployerPostTestCase struct {
 			description string
 			token       string
@@ -190,6 +219,42 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 	})
 
 	Describe("Get Employer Post", func() {
+		var (
+			adminToken string
+			postID     string
+		)
+
+		BeforeEach(func() {
+			// Login admin user
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			employerSigninAsync(
+				"0026-employerposts2.example.com",
+				"admin@0026-employerposts2.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			wg.Wait()
+
+			// Create a fresh post for each test
+			postID = createTestPost(
+				adminToken,
+				"Test post for get",
+				[]common.VTagID{
+					common.VTagID(
+						"12345678-0026-0026-0026-000000050001",
+					), // engineering
+					common.VTagID(
+						"12345678-0026-0026-0026-000000050003",
+					), // golang
+				},
+				nil,
+			)
+		})
+
 		type getEmployerPostTestCase struct {
 			description string
 			token       string
@@ -199,12 +264,35 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various get employer post scenarios", func() {
+			// Login other users for this test
+			var marketingToken, regularToken string
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			employerSigninAsync(
+				"0026-employerposts2.example.com",
+				"marketing@0026-employerposts2.example.com",
+				"NewPassword123$",
+				&marketingToken,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-employerposts2.example.com",
+				"regular@0026-employerposts2.example.com",
+				"NewPassword123$",
+				&regularToken,
+				&wg,
+			)
+
+			wg.Wait()
+
 			testCases := []getEmployerPostTestCase{
 				{
 					description: "without authentication",
 					token:       "",
 					request: employer.GetEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -212,7 +300,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "with invalid token",
 					token:       "invalid-token",
 					request: employer.GetEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -220,20 +308,21 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "admin can get post",
 					token:       adminToken,
 					request: employer.GetEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
 						var post common.EmployerPost
 						err := json.Unmarshal(respBody, &post)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(post.ID).Should(Equal(postIDs[0]))
-						Expect(
-							post.Content,
-						).Should(Equal("First employer post for testing"))
+						Expect(post.ID).Should(Equal(postID))
+						Expect(post.Content).Should(Equal("Test post for get"))
 						Expect(
 							post.CompanyDomain,
-						).Should(Equal("0026-employerposts.example.com"))
+						).Should(Equal("0026-employerposts2.example.com"))
+						Expect(
+							post.Tags,
+						).Should(ContainElements("engineering", "golang"))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -242,17 +331,15 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "marketing user can get post",
 					token:       marketingToken,
 					request: employer.GetEmployerPostRequest{
-						PostID: postIDs[1], // Post with tags
+						PostID: postID,
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
 						var post common.EmployerPost
 						err := json.Unmarshal(respBody, &post)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(post.ID).Should(Equal(postIDs[1]))
-						Expect(
-							post.Content,
-						).Should(Equal("Second employer post with tags"))
+						Expect(post.ID).Should(Equal(postID))
+						Expect(post.Content).Should(Equal("Test post for get"))
 						Expect(
 							post.Tags,
 						).Should(ContainElements("engineering", "golang"))
@@ -262,7 +349,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "regular user cannot get post",
 					token:       regularToken,
 					request: employer.GetEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusForbidden,
 				},
@@ -296,6 +383,30 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 	})
 
 	Describe("List Employer Posts", func() {
+		var (
+			adminToken string
+			postIDs    []string
+		)
+
+		BeforeEach(func() {
+			// Login admin user
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			employerSigninAsync(
+				"0026-employerposts3.example.com",
+				"admin@0026-employerposts3.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			wg.Wait()
+
+			// Create fresh posts for each test
+			postIDs = createTestPosts(adminToken, 4)
+		})
+
 		type listEmployerPostsTestCase struct {
 			description string
 			token       string
@@ -305,6 +416,29 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various list employer posts scenarios", func() {
+			// Login other users for this test
+			var marketingToken, regularToken string
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			employerSigninAsync(
+				"0026-employerposts3.example.com",
+				"marketing@0026-employerposts3.example.com",
+				"NewPassword123$",
+				&marketingToken,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-employerposts3.example.com",
+				"regular@0026-employerposts3.example.com",
+				"NewPassword123$",
+				&regularToken,
+				&wg,
+			)
+
+			wg.Wait()
+
 			testCases := []listEmployerPostsTestCase{
 				{
 					description: "without authentication",
@@ -327,26 +461,14 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						var resp employer.ListEmployerPostsResponse
 						err := json.Unmarshal(respBody, &resp)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(
-							resp.Posts,
-						).Should(HaveLen(4))
-						// Default limit is 5, we have 4 posts
-						Expect(
-							resp.PaginationKey,
-						).Should(BeEmpty())
-						// No more posts to fetch
+						Expect(resp.Posts).Should(HaveLen(4))
+						Expect(resp.PaginationKey).Should(BeEmpty())
 
 						// Verify posts are ordered by updated_at DESC
-						Expect(
-							resp.Posts[0].ID,
-						).Should(Equal(postIDs[3]))
-						// Most recent post
+						Expect(resp.Posts[0].ID).Should(Equal(postIDs[3]))
 						Expect(resp.Posts[1].ID).Should(Equal(postIDs[2]))
 						Expect(resp.Posts[2].ID).Should(Equal(postIDs[1]))
-						Expect(
-							resp.Posts[3].ID,
-						).Should(Equal(postIDs[0]))
-						// Oldest post
+						Expect(resp.Posts[3].ID).Should(Equal(postIDs[0]))
 					},
 				},
 				{
@@ -360,20 +482,11 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						var resp employer.ListEmployerPostsResponse
 						err := json.Unmarshal(respBody, &resp)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(
-							resp.Posts,
-						).Should(HaveLen(2))
-						// Requested limit is 2
-						Expect(
-							resp.PaginationKey,
-						).ShouldNot(BeEmpty())
-						// More posts to fetch
+						Expect(resp.Posts).Should(HaveLen(2))
+						Expect(resp.PaginationKey).ShouldNot(BeEmpty())
 
 						// Verify posts are ordered by updated_at DESC
-						Expect(
-							resp.Posts[0].ID,
-						).Should(Equal(postIDs[3]))
-						// Most recent post
+						Expect(resp.Posts[0].ID).Should(Equal(postIDs[3]))
 						Expect(resp.Posts[1].ID).Should(Equal(postIDs[2]))
 					},
 				},
@@ -389,10 +502,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						var resp employer.ListEmployerPostsResponse
 						err := json.Unmarshal(respBody, &resp)
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(
-							resp.Posts,
-						).Should(HaveLen(2))
-						// Requested limit is 2
+						Expect(resp.Posts).Should(HaveLen(2))
 						Expect(resp.Posts[0].ID).Should(Equal(postIDs[1]))
 						Expect(resp.Posts[1].ID).Should(Equal(postIDs[0]))
 					},
@@ -422,7 +532,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				resp := testPOSTGetResp(
 					tc.token,
 					tc.request,
-					"/employer/list-employer-posts",
+					"/employer/list-posts",
 					tc.wantStatus,
 				)
 				if tc.validate != nil && tc.wantStatus == http.StatusOK {
@@ -433,6 +543,35 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 	})
 
 	Describe("Delete Employer Post", func() {
+		var (
+			adminToken string
+			postID     string
+		)
+
+		BeforeEach(func() {
+			// Login admin user
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			employerSigninAsync(
+				"0026-employerposts4.example.com",
+				"admin@0026-employerposts4.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			wg.Wait()
+
+			// Create a fresh post for each test
+			postID = createTestPost(
+				adminToken,
+				"Test post for delete",
+				nil,
+				nil,
+			)
+		})
+
 		type deleteEmployerPostTestCase struct {
 			description string
 			token       string
@@ -441,12 +580,35 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various delete employer post scenarios", func() {
+			// Login other users for this test
+			var marketingToken, regularToken string
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			employerSigninAsync(
+				"0026-employerposts4.example.com",
+				"marketing@0026-employerposts4.example.com",
+				"NewPassword123$",
+				&marketingToken,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-employerposts4.example.com",
+				"regular@0026-employerposts4.example.com",
+				"NewPassword123$",
+				&regularToken,
+				&wg,
+			)
+
+			wg.Wait()
+
 			testCases := []deleteEmployerPostTestCase{
 				{
 					description: "without authentication",
 					token:       "",
 					request: employer.DeleteEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -454,7 +616,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "with invalid token",
 					token:       "invalid-token",
 					request: employer.DeleteEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -462,7 +624,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "regular user cannot delete post",
 					token:       regularToken,
 					request: employer.DeleteEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusForbidden,
 				},
@@ -478,7 +640,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					description: "marketing user can delete post",
 					token:       marketingToken,
 					request: employer.DeleteEmployerPostRequest{
-						PostID: postIDs[0],
+						PostID: postID,
 					},
 					wantStatus: http.StatusOK,
 				},

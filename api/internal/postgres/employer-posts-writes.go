@@ -143,7 +143,7 @@ func (p *PG) DeleteEmployerPost(ctx context.Context, postID string) error {
 
 	_, err = tx.Exec(
 		ctx,
-		"DELETE FROM employer_post_tags WHERE post_id = $1",
+		"DELETE FROM employer_post_tags WHERE employer_post_id = $1",
 		postID,
 	)
 	if err != nil {
