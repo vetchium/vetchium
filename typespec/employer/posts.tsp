@@ -93,7 +93,7 @@ interface DeleteEmployerPost {
     };
 }
 
-@route("/employer/list-employer-posts")
+@route("/employer/list-posts")
 interface ListEmployerPosts {
     @tag("Posts")
     @post
