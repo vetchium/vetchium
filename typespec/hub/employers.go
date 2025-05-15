@@ -13,3 +13,13 @@ type HubEmployer struct {
 type FilterEmployersResponse struct {
 	Employers []HubEmployer `json:"employers"`
 }
+
+type GetEmployerDetailsRequest struct {
+	Domain string `json:"domain" validate:"required,validate_domain"`
+}
+
+type HubEmployerDetails struct {
+	Name                   string `json:"name"`
+	VerifiedEmployeesCount int    `json:"verified_employees_count"`
+	ActiveOpeningsCount    int    `json:"active_openings_count"`
+}

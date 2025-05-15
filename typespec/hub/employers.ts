@@ -11,3 +11,13 @@ export interface HubEmployer {
 export interface FilterEmployersResponse {
   employers: HubEmployer[];
 }
+
+export interface GetEmployerDetailsRequest {
+  domain: string;
+}
+
+export interface HubEmployerDetails {
+  name: string;
+  verified_employees_count: number;
+  active_openings_count: number;
+}
