@@ -25,6 +25,16 @@ model FilterEmployersResponse {
     employers: HubEmployer[];
 }
 
+model GetEmployerDetailsRequest {
+    domain: string;
+}
+
+model HubEmployerDetails {
+    name: string;
+    verified_employees_count: numeric;
+    active_openings_count: numeric;
+}
+
 @route("/hub/filter-employers")
 interface FilterEmployers {
     @post
@@ -45,5 +55,16 @@ interface GetEmployerLogo {
         @statusCode statusCode: 200;
         @header contentType: "image/png" | "image/jpeg" | "image/gif";
         @body content: bytes;
+    };
+}
+
+@route("/hub/get-employer-details")
+interface GetEmployerDetails {
+    @post
+    @useAuth(HubAuth)
+    @tag("HubEmployer")
+    getEmployerDetails(@body request: GetEmployerDetailsRequest): {
+        @statusCode statusCode: 200;
+        @body HubEmployerDetails: HubEmployerDetails;
     };
 }
