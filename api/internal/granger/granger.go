@@ -22,7 +22,8 @@ import (
 
 const (
 	// Should this be configurable ?
-	dbTimeout = 3 * time.Second
+	dbTimeout  = 3 * time.Second
+	counterTTL = 5 * time.Minute
 )
 
 type Config struct {

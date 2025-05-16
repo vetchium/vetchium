@@ -62,7 +62,7 @@ func (g *Granger) getEmployerActiveJobCount(domain string) (uint32, bool) {
 	}
 
 	g.log.Dbg("active job count", "domain", domain, "count", count)
-	g.employerActiveJobCountCache.Set(domain, count, 32)
+	g.employerActiveJobCountCache.SetWithTTL(domain, count, 32, counterTTL)
 	return count, true
 }
 
@@ -82,6 +82,6 @@ func (g *Granger) getEmployerEmployeeCount(domain string) (uint32, bool) {
 	}
 
 	g.log.Dbg("employee count", "domain", domain, "count", count)
-	g.employerEmployeeCountCache.Set(domain, count, 32)
+	g.employerEmployeeCountCache.SetWithTTL(domain, count, 32, counterTTL)
 	return count, true
 }
