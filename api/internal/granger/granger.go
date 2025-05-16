@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	ristretto "github.com/dgraph-io/ristretto/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/postgres"
@@ -78,6 +79,9 @@ type Granger struct {
 	db  db.DB
 	log util.Logger
 	wg  sync.WaitGroup
+
+	employerActiveJobCountCache *ristretto.Cache
+	employerEmployeeCountCache  *ristretto.Cache
 }
 
 func NewGranger() (*Granger, error) {
@@ -145,6 +149,17 @@ func NewGranger() (*Granger, error) {
 
 		db:  db,
 		log: logger,
+
+		employerActiveJobCountCache: ristretto.NewCache(&ristretto.Config{
+			NumCounters: 1e6,
+			MaxCost:     1 << 20,
+			BufferItems: 64,
+		}),
+		employerEmployeeCountCache: ristretto.NewCache(&ristretto.Config{
+			NumCounters: 1e6,
+			MaxCost:     1 << 20,
+			BufferItems: 64,
+		}),
 	}
 
 	return g, nil
@@ -177,8 +192,15 @@ func (g *Granger) Run() error {
 	go g.TimelineRefresher(timelineRefresherQuit)
 
 	go func() {
-		// For now, we don't have any routes to serve
-		// but we will keep this around for future use
+		http.HandleFunc(
+			"/internal/get-employer-active-job-count",
+			g.getEmployerActiveJobCount,
+		)
+
+		http.HandleFunc(
+			"/internal/get-employer-employee-count",
+			g.getEmployerEmployeeCount,
+		)
 
 		err := http.ListenAndServe(g.port, nil)
 		if err != nil {
