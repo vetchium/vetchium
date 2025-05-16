@@ -8,24 +8,26 @@ import (
 	"github.com/vetchium/vetchium/typespec/libgranger"
 )
 
-func (g *Granger) getEmployerCounts(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
+func (g *Granger) getEmployerCounts(w http.ResponseWriter, r *http.Request) {
 	var request libgranger.GetEmployerCountsRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		g.log.Dbg("failed to decode request", "error", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	domain := request.Domain
+
 	activeOpeningsCounts, ok := g.getEmployerActiveJobCount(request.Domain)
 	if !ok {
+		g.log.Dbg("failed to get employer active job count", "domain", domain)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
 	verifiedEmployeesCounts, ok := g.getEmployerEmployeeCount(request.Domain)
 	if !ok {
+		g.log.Dbg("failed to get employer employee count", "domain", domain)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
