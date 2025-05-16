@@ -87,4 +87,6 @@ var (
 	ErrNoPost              = errors.New("post not found")
 	ErrNoEmployerPost      = errors.New("employer post not found")
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
+
+	ErrNoDomain = errors.New("domain not found")
 )

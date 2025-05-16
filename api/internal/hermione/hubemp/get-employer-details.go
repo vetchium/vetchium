@@ -3,9 +3,11 @@ package hubemp
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/vetchium/vetchium/api/internal/config"
+	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/typespec/hub"
 	"github.com/vetchium/vetchium/typespec/libgranger"
@@ -20,7 +22,21 @@ func GetEmployerDetails(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Get the employer name
+		detailsFromDB, err := h.DB().GetHubEmployerDetailsByDomain(
+			r.Context(),
+			request.Domain,
+		)
+		if err != nil {
+			if errors.Is(err, db.ErrNoDomain) {
+				h.Dbg("domain not found", "domain", request.Domain)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
+			h.Dbg("failed to get employer details", "error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
 
 		grangerReq := libgranger.GetEmployerCountsRequest{
 			Domain: request.Domain,
@@ -44,32 +60,29 @@ func GetEmployerDetails(h wand.Wand) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		defer grangerResp.Body.Close()
 
 		if grangerResp.StatusCode != http.StatusOK {
-			h.Dbg(
-				"failed to get employer counts",
-				"status",
-				grangerResp.StatusCode,
-			)
+			h.Dbg("granger call failed", "status", grangerResp.StatusCode)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		if err := json.NewDecoder(grangerResp.Body).Decode(&employerCounts); err != nil {
+		err = json.NewDecoder(grangerResp.Body).Decode(&employerCounts)
+		if err != nil {
 			h.Dbg("failed to decode employer counts", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
 		hubEmployerDetails := hub.HubEmployerDetails{
-			Name:                   request.Domain,
+			Name:                   detailsFromDB.Name,
 			VerifiedEmployeesCount: employerCounts.VerifiedEmployeesCount,
 			ActiveOpeningsCount:    employerCounts.ActiveOpeningsCount,
 		}
 
-		if err := json.NewEncoder(w).Encode(hubEmployerDetails); err != nil {
+		err = json.NewEncoder(w).Encode(hubEmployerDetails)
+		if err != nil {
 			h.Err("failed to encode response", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

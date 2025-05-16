@@ -491,4 +491,9 @@ type DB interface {
 		ctx context.Context,
 		domain string,
 	) (uint32, error)
+
+	GetHubEmployerDetailsByDomain(
+		ctx context.Context,
+		domain string,
+	) (EmployerDetailsForHub, error)
 }
