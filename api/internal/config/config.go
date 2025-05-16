@@ -10,6 +10,9 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// Granger's url within the k8s cluster, resolveable from the hermione pod
+const GrangerBaseURL = "http://granger:8080"
+
 type HermioneConfigOnDisk struct {
 	Employer struct {
 		WebURL         string `json:"web_url" validate:"required"`

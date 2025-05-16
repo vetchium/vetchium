@@ -360,4 +360,10 @@ func RegisterHubRoutes(h *Hermione) {
 		po.UnfollowOrg(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+
+	h.mw.Guard(
+		"/hub/get-employer-details",
+		he.GetEmployerDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

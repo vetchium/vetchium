@@ -20,6 +20,6 @@ type GetEmployerDetailsRequest struct {
 
 type HubEmployerDetails struct {
 	Name                   string `json:"name"`
-	VerifiedEmployeesCount int    `json:"verified_employees_count"`
-	ActiveOpeningsCount    int    `json:"active_openings_count"`
+	VerifiedEmployeesCount uint32 `json:"verified_employees_count"`
+	ActiveOpeningsCount    uint32 `json:"active_openings_count"`
 }

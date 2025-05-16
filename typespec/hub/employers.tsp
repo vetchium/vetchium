@@ -31,8 +31,8 @@ model GetEmployerDetailsRequest {
 
 model HubEmployerDetails {
     name: string;
-    verified_employees_count: numeric;
-    active_openings_count: numeric;
+    verified_employees_count: uint32;
+    active_openings_count: uint32;
 }
 
 @route("/hub/filter-employers")
