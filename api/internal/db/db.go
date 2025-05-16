@@ -481,4 +481,14 @@ type DB interface {
 	// Used by granger
 	GetTimelinesToRefresh(ctx context.Context, limit int) ([]uuid.UUID, error)
 	RefreshTimeline(ctx context.Context, timelineID uuid.UUID) error
+
+	// Used by granger
+	GetEmployerActiveJobCount(
+		ctx context.Context,
+		domain string,
+	) (uint32, error)
+	GetEmployerEmployeeCount(
+		ctx context.Context,
+		domain string,
+	) (uint32, error)
 }

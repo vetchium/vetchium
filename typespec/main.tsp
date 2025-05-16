@@ -39,6 +39,8 @@ import "./hub/posts.tsp";
 import "./hub/profilepage.tsp";
 import "./hub/workhistory.tsp";
 
+import "./libgranger/employers.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 

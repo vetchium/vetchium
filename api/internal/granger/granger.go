@@ -20,6 +20,11 @@ import (
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
 )
 
+const (
+	// Should this be configurable ?
+	dbTimeout = 3 * time.Second
+)
+
 type Config struct {
 	Env              string `json:"env"                validate:"required,min=1"`
 	OnboardTokenLife string `json:"onboard_token_life" validate:"required,min=1"`
@@ -80,8 +85,8 @@ type Granger struct {
 	log util.Logger
 	wg  sync.WaitGroup
 
-	employerActiveJobCountCache *ristretto.Cache
-	employerEmployeeCountCache  *ristretto.Cache
+	employerActiveJobCountCache *ristretto.Cache[string, uint32]
+	employerEmployeeCountCache  *ristretto.Cache[string, uint32]
 }
 
 func NewGranger() (*Granger, error) {
@@ -138,6 +143,30 @@ func NewGranger() (*Granger, error) {
 		return nil, fmt.Errorf("OnboardTokenLife is invalid: %w", err)
 	}
 
+	employerActiveJobCountCache, err := ristretto.NewCache(
+		&ristretto.Config[string, uint32]{
+			// TODO: These defaults are arbitrary and possibly not optimal
+			NumCounters: 1e6,
+			MaxCost:     1 << 20,
+			BufferItems: 64,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("employerActiveJobCountCache: %w", err)
+	}
+
+	employerEmployeeCountCache, err := ristretto.NewCache(
+		&ristretto.Config[string, uint32]{
+			// TODO: These defaults are arbitrary and possibly not optimal
+			NumCounters: 1e6,
+			MaxCost:     1 << 20,
+			BufferItems: 64,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("employerEmployeeCountCache: %w", err)
+	}
+
 	g := &Granger{
 		env:              config.Env,
 		port:             fmt.Sprintf(":%s", config.Port),
@@ -150,16 +179,8 @@ func NewGranger() (*Granger, error) {
 		db:  db,
 		log: logger,
 
-		employerActiveJobCountCache: ristretto.NewCache(&ristretto.Config{
-			NumCounters: 1e6,
-			MaxCost:     1 << 20,
-			BufferItems: 64,
-		}),
-		employerEmployeeCountCache: ristretto.NewCache(&ristretto.Config{
-			NumCounters: 1e6,
-			MaxCost:     1 << 20,
-			BufferItems: 64,
-		}),
+		employerActiveJobCountCache: employerActiveJobCountCache,
+		employerEmployeeCountCache:  employerEmployeeCountCache,
 	}
 
 	return g, nil
@@ -193,13 +214,8 @@ func (g *Granger) Run() error {
 
 	go func() {
 		http.HandleFunc(
-			"/internal/get-employer-active-job-count",
-			g.getEmployerActiveJobCount,
-		)
-
-		http.HandleFunc(
-			"/internal/get-employer-employee-count",
-			g.getEmployerEmployeeCount,
+			"/internal/get-employer-counts",
+			g.getEmployerCounts,
 		)
 
 		err := http.ListenAndServe(g.port, nil)
