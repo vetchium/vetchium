@@ -40,6 +40,9 @@ export const en = {
       sessionExpired: "Session expired. Please log in again.",
       serverError: "The server is experiencing issues. Please try again later",
       requiredField: "This field is required",
+      invalidParamsDetail:
+        "Please check the URL or try navigating again from the main page.",
+      authenticationNeededTitle: "Authentication Required",
     },
     retry: "Retry",
     back: "Back",
@@ -95,6 +98,16 @@ export const en = {
     recentApplications: "Recent Applications",
     activeOpenings: "Active Openings",
     upcomingInterviews: "Upcoming Interviews",
+  },
+  employerDetails: {
+    activeOpenings: "Active Openings",
+    error: {
+      notFound: "Employer not found",
+      loadFailed: "Failed to load employer details. Please try again later.",
+    },
+    verifiedEmployees: "Verified Employees",
+    notFound: "The details for this employer could not be displayed.",
+    notFoundTitle: "Employer Information Unavailable",
   },
   findOpenings: {
     title: "Find Openings",
