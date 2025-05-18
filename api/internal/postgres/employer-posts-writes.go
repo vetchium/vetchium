@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/middleware"
 )
@@ -71,8 +73,40 @@ LIMIT 1; -- Ensures only one row is returned in any case
 			tag,
 		).Scan(&newTagID)
 		if err != nil {
-			p.log.Err("failed to insert new tags", "error", err)
-			return err
+			if errors.Is(err, pgx.ErrNoRows) {
+				p.log.Err(
+					"failed to resolve tag_id for new tag, tag not found after get-or-create attempt",
+					"tag_name",
+					tag,
+					"error",
+					err,
+				)
+				// This indicates a logic issue or an unexpected state, as the query is designed to always return an ID if the tag exists or is created.
+				return fmt.Errorf(
+					"database error: could not resolve tag_id for new tag '%s'",
+					tag,
+				)
+			}
+			p.log.Err("failed to scan new tag ID from get-or-create query",
+				"tag_name", tag, "error", err)
+			return fmt.Errorf(
+				"database error: scanning tag_id for new tag '%s' failed: %w",
+				tag,
+				err,
+			)
+		}
+		// Ensure newTagID is not an empty string, which would cause FK violation if attempted to cast to UUID or used directly if column was text.
+		// The tag_id in employer_post_tags is UUID.
+		if newTagID == "" {
+			p.log.Err(
+				"resolved newTagID is empty string, get-or-create logic failed for tag",
+				"tag_name",
+				tag,
+			)
+			return fmt.Errorf(
+				"database error: resolved newTagID is empty for new tag '%s'",
+				tag,
+			)
 		}
 		tagIDs = append(tagIDs, newTagID)
 	}
@@ -93,8 +127,20 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 			tagID,
 		)
 		if err != nil {
-			p.log.Err("failed to insert to post_tags", "error", err)
-			return err
+			p.log.Err(
+				"failed to insert into employer_post_tags",
+				"post_id",
+				req.PostID,
+				"tag_id",
+				tagID,
+				"error",
+				err,
+			)
+			return fmt.Errorf(
+				"database error: inserting into employer_post_tags for tag_id '%s' failed: %w",
+				tagID,
+				err,
+			)
 		}
 	}
 

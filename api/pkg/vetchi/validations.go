@@ -54,18 +54,62 @@ func InitValidator(log util.Logger) (*Vator, error) {
 	err = validate.RegisterValidation(
 		"email",
 		func(fl validator.FieldLevel) bool {
-			value := fl.Field().String()
-			if len(value) < 3 || len(value) > 254 {
-				log.Dbg("Invalid email length", "length", len(value))
+			email := fl.Field().String()
+			if len(email) < 3 || len(email) > 254 {
+				log.Dbg("Invalid email length", "length", len(email))
 				return false
 			}
 
-			if strings.Contains(value, "+") {
-				log.Dbg("email contains + symbol", "email", value)
+			// Check for exactly one '@'
+			if strings.Count(email, "@") != 1 {
 				return false
 			}
 
-			_, err := mail.ParseAddress(value)
+			parts := strings.Split(email, "@")
+			local := parts[0]
+			domain := parts[1]
+
+			// Local and domain should not be empty
+			if len(local) == 0 || len(domain) == 0 {
+				return false
+			}
+
+			// Domain must contain at least one dot
+			if !strings.Contains(domain, ".") {
+				return false
+			}
+
+			// Domain must not start or end with a dot
+			if strings.HasPrefix(domain, ".") ||
+				strings.HasSuffix(domain, ".") {
+				return false
+			}
+
+			// Domain must not have consecutive dots
+			if strings.Contains(domain, "..") {
+				return false
+			}
+
+			// Regex for local part: alphanumeric, dot, underscore, percent, hyphen
+			// '+' is explicitly disallowed
+			localRegex := `^[a-zA-Z0-9._%-]+$`
+
+			// Regex for domain part: must contain at least one dot and valid TLD
+			domainRegex := `^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+
+			localValid := regexp.MustCompile(localRegex).MatchString(local)
+			if !localValid {
+				log.Dbg("invalid local part", "local", local)
+				return false
+			}
+
+			domainValid := regexp.MustCompile(domainRegex).MatchString(domain)
+			if !domainValid {
+				log.Dbg("invalid domain part", "domain", domain)
+				return false
+			}
+
+			_, err := mail.ParseAddress(email)
 			return err == nil
 		},
 	)

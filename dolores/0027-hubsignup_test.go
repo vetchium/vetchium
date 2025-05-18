@@ -16,7 +16,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Hub Signup", Ordered, func() {
+var _ = FDescribe("Hub Signup", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {

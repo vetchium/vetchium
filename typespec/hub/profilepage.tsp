@@ -117,25 +117,17 @@ interface AddOfficialEmail {
     @tag("HubProfile")
     @post
     @useAuth(HubAuth)
-    addOfficialEmail(@body request: AddOfficialEmailRequest):
-        | {
-              @statusCode statusCode: 200;
-          }
-        | {
-              @doc("The user has reached the maximum (50) allowed official emails per user.")
-              @statusCode
-              statusCode: 422;
-          }
-        | {
-              @doc("The domain of the email address is not associated with an employer")
-              @statusCode
-              statusCode: 412;
-          }
-        | {
-              @doc("The email address is already associated with an account")
-              @statusCode
-              statusCode: 409;
-          };
+    addOfficialEmail(@body request: AddOfficialEmailRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("The user has reached the maximum (50) allowed official emails per user.")
+        @statusCode
+        statusCode: 422;
+    } | {
+        @doc("The email address is already associated with an account")
+        @statusCode
+        statusCode: 409;
+    };
 }
 
 @route("/hub/verify-official-email")

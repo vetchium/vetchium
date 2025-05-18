@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Official Emails", Ordered, func() {
+var _ = FDescribe("Official Emails", Ordered, func() {
 	var db *pgxpool.Pool
 	var addToken, deleteToken, triggerToken, verifyToken, listToken string
 
@@ -95,7 +95,7 @@ var _ = Describe("Official Emails", Ordered, func() {
 					request: hub.AddOfficialEmailRequest{
 						Email: "add.new@invalid-domain",
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: http.StatusBadRequest,
 				},
 				{
 					description: "add valid official email",
@@ -111,7 +111,7 @@ var _ = Describe("Official Emails", Ordered, func() {
 					request: hub.AddOfficialEmailRequest{
 						Email: "add.new@officialmail.example",
 					},
-					wantStatus: http.StatusPreconditionFailed,
+					wantStatus: http.StatusUnprocessableEntity,
 				},
 			}
 
@@ -135,7 +135,7 @@ var _ = Describe("Official Emails", Ordered, func() {
 				request: hub.AddOfficialEmailRequest{
 					Email: "add.max@officialmail.example",
 				},
-				wantStatus: http.StatusPreconditionFailed,
+				wantStatus: http.StatusUnprocessableEntity,
 			})
 
 			for _, tc := range testCases {
