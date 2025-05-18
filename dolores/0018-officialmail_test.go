@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Official Emails", Ordered, func() {
+var _ = Describe("Official Emails", Ordered, func() {
 	var db *pgxpool.Pool
 	var addToken, deleteToken, triggerToken, verifyToken, listToken, maxEmailsToken string
 
@@ -69,7 +69,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 		db.Close()
 	})
 
-	FDescribe("Add Official Email", func() {
+	Describe("Add Official Email", func() {
 		type addOfficialEmailTestCase struct {
 			description string
 			token       string
@@ -139,7 +139,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 			},
 		)
 
-		FIt(
+		It(
 			"should reject adding email when maximum limit is reached for a user",
 			func() {
 				// This test uses 'maxemailuser@0018-hub.example' (maxEmailsToken)
