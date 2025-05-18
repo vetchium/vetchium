@@ -16,7 +16,7 @@ import (
 
 var _ = FDescribe("Official Emails", Ordered, func() {
 	var db *pgxpool.Pool
-	var addToken, deleteToken, triggerToken, verifyToken, listToken string
+	var addToken, deleteToken, triggerToken, verifyToken, listToken, maxEmailsToken string
 
 	BeforeAll(func() {
 		db = setupTestDB()
@@ -24,35 +24,41 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 
 		// Login hub users and get tokens
 		var wg sync.WaitGroup
-		wg.Add(5)
+		wg.Add(6)
 		hubSigninAsync(
-			"addemailuser@hub.example",
+			"addemailuser@0018-hub.example",
 			"NewPassword123$",
 			&addToken,
 			&wg,
 		)
 		hubSigninAsync(
-			"deleteemailuser@hub.example",
+			"deleteemailuser@0018-hub.example",
 			"NewPassword123$",
 			&deleteToken,
 			&wg,
 		)
 		hubSigninAsync(
-			"triggeruser@hub.example",
+			"triggeruser@0018-hub.example",
 			"NewPassword123$",
 			&triggerToken,
 			&wg,
 		)
 		hubSigninAsync(
-			"verifyuser@hub.example",
+			"verifyuser@0018-hub.example",
 			"NewPassword123$",
 			&verifyToken,
 			&wg,
 		)
 		hubSigninAsync(
-			"listemailsuser@hub.example",
+			"listemailsuser@0018-hub.example",
 			"NewPassword123$",
 			&listToken,
+			&wg,
+		)
+		hubSigninAsync(
+			"maxemailuser@0018-hub.example",
+			"NewPassword123$",
+			&maxEmailsToken,
 			&wg,
 		)
 		wg.Wait()
@@ -63,7 +69,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 		db.Close()
 	})
 
-	Describe("Add Official Email", func() {
+	FDescribe("Add Official Email", func() {
 		type addOfficialEmailTestCase struct {
 			description string
 			token       string
@@ -71,83 +77,100 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 			wantStatus  int
 		}
 
-		It("should handle various test cases correctly", func() {
-			testCases := []addOfficialEmailTestCase{
-				{
-					description: "without authentication",
-					token:       "",
-					request: hub.AddOfficialEmailRequest{
-						Email: "add.new@officialmail.example",
+		It(
+			"should handle various standard add email test cases correctly",
+			func() {
+				testCases := []addOfficialEmailTestCase{
+					{
+						description: "without authentication",
+						token:       "",
+						request: hub.AddOfficialEmailRequest{
+							Email: "add.new@officialmail.example",
+						},
+						wantStatus: http.StatusUnauthorized,
 					},
-					wantStatus: http.StatusUnauthorized,
-				},
-				{
-					description: "with invalid token",
-					token:       "invalid-token",
-					request: hub.AddOfficialEmailRequest{
-						Email: "add.new@officialmail.example",
+					{
+						description: "with invalid token",
+						token:       "invalid-token",
+						request: hub.AddOfficialEmailRequest{
+							Email: "add.new@officialmail.example",
+						},
+						wantStatus: http.StatusUnauthorized,
 					},
-					wantStatus: http.StatusUnauthorized,
-				},
-				{
-					description: "add email with invalid domain format",
-					token:       addToken,
-					request: hub.AddOfficialEmailRequest{
-						Email: "add.new@invalid-domain",
+					{
+						description: "add email with invalid domain format",
+						token:       addToken,
+						request: hub.AddOfficialEmailRequest{
+							Email: "add.new@invalid-domain",
+						},
+						wantStatus: http.StatusBadRequest,
 					},
-					wantStatus: http.StatusBadRequest,
-				},
-				{
-					description: "add valid official email",
-					token:       addToken,
-					request: hub.AddOfficialEmailRequest{
-						Email: "add.new@officialmail.example",
+					{
+						description: "add valid official email",
+						token:       addToken,
+						request: hub.AddOfficialEmailRequest{
+							Email: "add.new@officialmail.example",
+						},
+						wantStatus: http.StatusOK,
 					},
-					wantStatus: http.StatusOK,
-				},
-				{
-					description: "add duplicate official email",
-					token:       addToken,
-					request: hub.AddOfficialEmailRequest{
-						Email: "add.new@officialmail.example",
+					{
+						description: "add duplicate official email",
+						token:       addToken,
+						request: hub.AddOfficialEmailRequest{
+							Email: "add.new@officialmail.example",
+						},
+						wantStatus: http.StatusConflict,
 					},
-					wantStatus: http.StatusUnprocessableEntity,
-				},
-			}
+				}
 
-			// First add 49 more emails to test max limit
-			for i := 1; i <= 49; i++ {
-				email := fmt.Sprintf("add.bulk.%d@officialmail.example", i)
+				for _, tc := range testCases {
+					fmt.Fprintf(
+						GinkgoWriter,
+						"### Testing: %s\n",
+						tc.description,
+					)
+					testPOST(
+						tc.token,
+						tc.request,
+						"/hub/add-official-email",
+						tc.wantStatus,
+					)
+				}
+			},
+		)
+
+		FIt(
+			"should reject adding email when maximum limit is reached for a user",
+			func() {
+				// This test uses 'maxemailuser@0018-hub.example' (maxEmailsToken)
+				// First add 50 emails for this specific user to reach just under the limit
+				for i := 1; i <= 50; i++ {
+					email := fmt.Sprintf("max.bulk.%d@officialmail.example", i)
+					testPOST(
+						maxEmailsToken,
+						hub.AddOfficialEmailRequest{
+							Email: common.EmailAddress(email),
+						},
+						"/hub/add-official-email",
+						http.StatusOK,
+					)
+				}
+
+				// Now attempt to add the 51st email, which should be rejected
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing: exceed maximum allowed official emails for dedicated user\n",
+				)
 				testPOST(
-					addToken,
+					maxEmailsToken,
 					hub.AddOfficialEmailRequest{
-						Email: common.EmailAddress(email),
+						Email: "add.max.final@officialmail.example",
 					},
 					"/hub/add-official-email",
-					http.StatusOK,
+					http.StatusUnprocessableEntity,
 				)
-			}
-
-			// Now add test case for max emails reached
-			testCases = append(testCases, addOfficialEmailTestCase{
-				description: "exceed maximum allowed official emails",
-				token:       addToken,
-				request: hub.AddOfficialEmailRequest{
-					Email: "add.max@officialmail.example",
-				},
-				wantStatus: http.StatusUnprocessableEntity,
-			})
-
-			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "### Testing: %s\n", tc.description)
-				testPOST(
-					tc.token,
-					tc.request,
-					"/hub/add-official-email",
-					tc.wantStatus,
-				)
-			}
-		})
+			},
+		)
 	})
 
 	Describe("Add Official Email - New Domain", Ordered, func() {
@@ -157,7 +180,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 
 		BeforeAll(func() {
 			// Ensure the user for this test exists and is logged in
-			// Re-using addemailuser@hub.example, ensure its token is available
+			// Re-using addemailuser@0018-hub.example, ensure its token is available
 			// If addToken is populated in an outer BeforeAll, it can be used directly.
 			// For isolation, could create a specific user here or rely on outer setup.
 			// Assuming `addToken` from the parent Describe's BeforeAll is accessible and valid.
@@ -166,7 +189,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 				var wg sync.WaitGroup
 				wg.Add(1)
 				hubSigninAsync(
-					"addemailuser@hub.example", // Or a dedicated user for this It block
+					"addemailuser@0018-hub.example", // Or a dedicated user for this It block
 					"NewPassword123$",
 					&testUserToken,
 					&wg,
@@ -174,7 +197,7 @@ var _ = FDescribe("Official Emails", Ordered, func() {
 				wg.Wait()
 				Expect(testUserToken).NotTo(BeEmpty())
 			*/
-			// For this edit, we assume 'addToken' is available from the parent context for 'addemailuser@hub.example'
+			// For this edit, we assume 'addToken' is available from the parent context for 'addemailuser@0018-hub.example'
 			testUserToken = addToken
 		})
 

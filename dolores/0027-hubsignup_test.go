@@ -16,7 +16,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Hub Signup", Ordered, func() {
+var _ = Describe("Hub Signup", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -65,7 +65,7 @@ var _ = FDescribe("Hub Signup", Ordered, func() {
 			var foundEmail bool
 			// Try a few times with delay to allow email to be delivered
 			for i := 0; i < 3; i++ {
-				<-time.After(2 * time.Second)
+				<-time.After(5 * time.Second)
 				mailPitResp, err := http.Get(mailURL)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))

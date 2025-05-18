@@ -11,7 +11,7 @@ INSERT INTO hub_users (
     '12345678-0018-0018-0018-000000000001',
     'Add Email Test User',
     'addemailuser',
-    'addemailuser@hub.example',
+    'addemailuser@0018-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'FREE_HUB_USER',
@@ -27,7 +27,7 @@ INSERT INTO hub_users (
     '12345678-0018-0018-0018-000000000002',
     'Delete Email Test User',
     'deleteemailuser',
-    'deleteemailuser@hub.example',
+    'deleteemailuser@0018-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'FREE_HUB_USER',
@@ -43,7 +43,7 @@ INSERT INTO hub_users (
     '12345678-0018-0018-0018-000000000003',
     'Trigger Verification Test User',
     'triggeruser',
-    'triggeruser@hub.example',
+    'triggeruser@0018-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'FREE_HUB_USER',
@@ -59,7 +59,7 @@ INSERT INTO hub_users (
     '12345678-0018-0018-0018-000000000004',
     'Verify Email Test User',
     'verifyuser',
-    'verifyuser@hub.example',
+    'verifyuser@0018-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'FREE_HUB_USER',
@@ -75,7 +75,7 @@ INSERT INTO hub_users (
     '12345678-0018-0018-0018-000000000005',
     'List Emails Test User',
     'listemailsuser',
-    'listemailsuser@hub.example',
+    'listemailsuser@0018-hub.example',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
     'ACTIVE_HUB_USER',
     'FREE_HUB_USER',
@@ -85,6 +85,22 @@ INSERT INTO hub_users (
     'List Emails Test User is systematic',
     'List Emails Test User was born in India and finished education at IIT Kharagpur and has 7 years as experience.',
     timezone('UTC'::text, now())
+),
+-- User for max emails tests
+(
+    '12345678-0018-0018-0018-000000000006',
+    'Max Emails Test User',
+    'maxemailuser',
+    'maxemailuser@0018-hub.example',
+    '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+    'ACTIVE_HUB_USER',
+    'FREE_HUB_USER',
+    'IND',
+    'Mumbai',
+    'en',
+    'Max Emails Test User is exhaustive',
+    'Max Emails Test User was born in India and finished education at IIT Mumbai and has 8 years as experience.',
+    timezone('UTC'::text, now())
 );
 
 -- Create test employer
@@ -93,7 +109,7 @@ INSERT INTO employers (
     onboard_admin_email
 ) VALUES
 (
-    '12345678-0018-0018-0018-000000000006',
+    '12345678-0018-0018-0018-100000000006',
     'DOMAIN',
     'ONBOARDED',
     'Official Mail Test Employer',
@@ -109,14 +125,14 @@ INSERT INTO domains (
     '12345678-0018-0018-0018-000000000007',
     'officialmail.example',
     'VERIFIED',
-    '12345678-0018-0018-0018-000000000006'
+    '12345678-0018-0018-0018-100000000006'
 ),
 -- Unverified domain
 (
     '12345678-0018-0018-0018-000000000008',
     'unverified.example',
     'UNVERIFIED',
-    '12345678-0018-0018-0018-000000000006'
+    '12345678-0018-0018-0018-100000000006'
 );
 
 -- Set primary domain for employer
@@ -124,7 +140,7 @@ INSERT INTO employer_primary_domains (
     employer_id, domain_id
 ) VALUES
 (
-    '12345678-0018-0018-0018-000000000006',
+    '12345678-0018-0018-0018-100000000006',
     '12345678-0018-0018-0018-000000000007'
 );
 

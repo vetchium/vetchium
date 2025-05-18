@@ -7,7 +7,8 @@ WHERE hub_user_id IN (
     '12345678-0018-0018-0018-000000000002',
     '12345678-0018-0018-0018-000000000003',
     '12345678-0018-0018-0018-000000000004',
-    '12345678-0018-0018-0018-000000000005'
+    '12345678-0018-0018-0018-000000000005',
+    '12345678-0018-0018-0018-000000000006'
 );
 
 -- Clean up emails table
@@ -22,12 +23,13 @@ WHERE email_to && ARRAY[
     'verify.expired@officialmail.example',
     'list.verified@officialmail.example',
     'list.pending@officialmail.example',
-    'list.expired@officialmail.example'
+    'list.expired@officialmail.example',
+    'max.email.%@officialmail.example'
 ];
 
 -- Clean up primary domains
 DELETE FROM employer_primary_domains
-WHERE employer_id = '12345678-0018-0018-0018-000000000006';
+WHERE employer_id = '12345678-0018-0018-0018-100000000006';
 
 -- Clean up domains
 DELETE FROM domains
@@ -38,7 +40,7 @@ WHERE id IN (
 
 -- Clean up employers
 DELETE FROM employers
-WHERE id = '12345678-0018-0018-0018-000000000006';
+WHERE id = '12345678-0018-0018-0018-100000000006';
 
 -- Clean up hub user tokens and related tables first
 DELETE FROM hub_user_tfa_codes
@@ -59,7 +61,8 @@ WHERE hub_user_id IN (
     '12345678-0018-0018-0018-000000000002',
     '12345678-0018-0018-0018-000000000003',
     '12345678-0018-0018-0018-000000000004',
-    '12345678-0018-0018-0018-000000000005'
+    '12345678-0018-0018-0018-000000000005',
+    '12345678-0018-0018-0018-000000000006'
 );
 
 -- Finally clean up hub users
@@ -69,7 +72,8 @@ WHERE id IN (
     '12345678-0018-0018-0018-000000000002',
     '12345678-0018-0018-0018-000000000003',
     '12345678-0018-0018-0018-000000000004',
-    '12345678-0018-0018-0018-000000000005'
+    '12345678-0018-0018-0018-000000000005',
+    '12345678-0018-0018-0018-000000000006'
 );
 
 -- Cleanup for the dynamically created domain and employer from the new test case
