@@ -6,4 +6,6 @@ type EmployerDetailsForHub struct {
 	Name          string
 	PrimaryDomain string
 	OtherDomains  []string
+	IsOnboarded   bool
+	IsFollowing   bool
 }

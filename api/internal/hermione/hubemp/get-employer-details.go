@@ -79,6 +79,8 @@ func GetEmployerDetails(h wand.Wand) http.HandlerFunc {
 			Name:                   detailsFromDB.Name,
 			VerifiedEmployeesCount: employerCounts.VerifiedEmployeesCount,
 			ActiveOpeningsCount:    employerCounts.ActiveOpeningsCount,
+			IsOnboarded:            detailsFromDB.IsOnboarded,
+			IsFollowing:            detailsFromDB.IsFollowing,
 		}
 
 		err = json.NewEncoder(w).Encode(hubEmployerDetails)

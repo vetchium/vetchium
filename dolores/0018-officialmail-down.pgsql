@@ -72,4 +72,21 @@ WHERE id IN (
     '12345678-0018-0018-0018-000000000005'
 );
 
+-- Cleanup for the dynamically created domain and employer from the new test case
+-- These values must match what the test creates and the get_or_create_dummy_employer function produces.
+DELETE FROM hub_users_official_emails WHERE official_email = 'contact@newlycreated.example.com';
+DELETE FROM emails WHERE email_to && ARRAY['contact@newlycreated.example.com'];
+
+-- Delete the primary domain entry first (if created - get_or_create_dummy_employer sets it as primary)
+DELETE FROM employer_primary_domains
+WHERE domain_id = (SELECT id FROM domains WHERE domain_name = 'newlycreated.example.com')
+  AND employer_id = (SELECT id FROM employers WHERE company_name = 'newlycreated.example.com' AND employer_state = 'HUB_ADDED_EMPLOYER');
+
+-- Then delete the domain
+DELETE FROM domains WHERE domain_name = 'newlycreated.example.com';
+
+-- Then delete the dummy employer
+-- (get_or_create_dummy_employer uses domain name as company name for dummy record and sets state to HUB_ADDED_EMPLOYER)
+DELETE FROM employers WHERE company_name = 'newlycreated.example.com' AND employer_state = 'HUB_ADDED_EMPLOYER';
+
 COMMIT;

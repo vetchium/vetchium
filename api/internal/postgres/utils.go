@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vetchium/vetchium/typespec/common"
 )
@@ -33,4 +34,12 @@ func (p *PG) convertToOrgUserRoles(
 		}
 	}
 	return roles, nil
+}
+
+func extractDomainFromEmail(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return "" // Should be validated by caller
 }

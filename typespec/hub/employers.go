@@ -21,5 +21,9 @@ type GetEmployerDetailsRequest struct {
 type HubEmployerDetails struct {
 	Name                   string `json:"name"`
 	VerifiedEmployeesCount uint32 `json:"verified_employees_count"`
-	ActiveOpeningsCount    uint32 `json:"active_openings_count"`
+
+	// Anything below this line should be ignored if IsOnboarded is false
+	IsOnboarded         bool   `json:"is_onboarded"`
+	ActiveOpeningsCount uint32 `json:"active_openings_count"`
+	IsFollowing         bool   `json:"is_following"`
 }

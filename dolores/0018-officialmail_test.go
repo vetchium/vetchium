@@ -1,6 +1,7 @@
 package dolores
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -147,6 +148,93 @@ var _ = Describe("Official Emails", Ordered, func() {
 				)
 			}
 		})
+	})
+
+	Describe("Add Official Email - New Domain", Ordered, func() {
+		var testUserToken string
+		const newDomain = "newlycreated.example.com" // Unique enough for testing
+		const newEmailAddress = "contact@" + newDomain
+
+		BeforeAll(func() {
+			// Ensure the user for this test exists and is logged in
+			// Re-using addemailuser@hub.example, ensure its token is available
+			// If addToken is populated in an outer BeforeAll, it can be used directly.
+			// For isolation, could create a specific user here or rely on outer setup.
+			// Assuming `addToken` from the parent Describe's BeforeAll is accessible and valid.
+			// If not, perform login here:
+			/*
+				var wg sync.WaitGroup
+				wg.Add(1)
+				hubSigninAsync(
+					"addemailuser@hub.example", // Or a dedicated user for this It block
+					"NewPassword123$",
+					&testUserToken,
+					&wg,
+				)
+				wg.Wait()
+				Expect(testUserToken).NotTo(BeEmpty())
+			*/
+			// For this edit, we assume 'addToken' is available from the parent context for 'addemailuser@hub.example'
+			testUserToken = addToken
+		})
+
+		It(
+			"should successfully add an official email for a domain not yet in the system",
+			func() {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing: Add official email for new domain %s\n",
+					newEmailAddress,
+				)
+				testPOST(
+					testUserToken,
+					hub.AddOfficialEmailRequest{
+						Email: common.EmailAddress(newEmailAddress),
+					},
+					"/hub/add-official-email",
+					http.StatusOK,
+				)
+
+				// Assertions: Verify domain, employer, and official email were created
+				var domainExists bool
+				err := db.QueryRow(
+					context.Background(),
+					`SELECT EXISTS(SELECT 1 FROM domains WHERE domain_name = $1)`,
+					newDomain,
+				).Scan(&domainExists)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					domainExists,
+				).Should(BeTrue(), "Domain %s should have been created", newDomain)
+
+				var employerExists bool
+				err = db.QueryRow(
+					context.Background(),
+					`SELECT EXISTS(SELECT 1 FROM employers e JOIN domains d ON e.id = d.employer_id WHERE d.domain_name = $1 AND e.employer_state = 'HUB_ADDED_EMPLOYER')`,
+					newDomain,
+				).Scan(&employerExists)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					employerExists,
+				).Should(BeTrue(), "Dummy employer for domain %s should have been created", newDomain)
+
+				var officialEmailLinked bool
+				err = db.QueryRow(context.Background(),
+					`SELECT EXISTS(
+						SELECT 1 FROM hub_users_official_emails huoe
+						JOIN domains d ON huoe.domain_id = d.id
+						WHERE huoe.official_email = $1 AND d.domain_name = $2
+					)`, newEmailAddress, newDomain,
+				).Scan(&officialEmailLinked)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					officialEmailLinked,
+				).Should(BeTrue(), "Official email %s should be linked to domain %s", newEmailAddress, newDomain)
+			},
+		)
+
+		// No AfterAll here to allow main AfterAll to cleanup generic users.
+		// Specific cleanup for 'newlycreated.example.com' will be in the main 0018-officialmail-down.pgsql
 	})
 
 	Describe("Delete Official Email", func() {

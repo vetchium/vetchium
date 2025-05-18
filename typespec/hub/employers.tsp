@@ -31,8 +31,17 @@ model GetEmployerDetailsRequest {
 
 model HubEmployerDetails {
     name: string;
+
+    @doc("Tells how many Users have added a domain of this employer to their verified email in their profile page")
     verified_employees_count: uint32;
+
+    @doc("Tells if this employer is onboarded to Vetchium by its owner. If this is false, any fields below this should be ignored.")
+    is_onboarded: boolean;
+
     active_openings_count: uint32;
+
+    @doc("Tells if the current user is following this Employer's posts")
+    is_following: boolean;
 }
 
 @route("/hub/filter-employers")
