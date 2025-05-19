@@ -171,6 +171,7 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		p.log.Err("failed to send token mail", "error", err)
 		return err
 	}
+	p.log.Dbg("Enqueued token mail", "email_key", emailKey)
 
 	err = tx.Commit(context.Background())
 	if err != nil {
@@ -178,6 +179,7 @@ func (p *PG) AddOfficialEmail(req db.AddOfficialEmailReq) error {
 		return err
 	}
 
+	p.log.Dbg("Added official email", "email", req.Email.EmailTo)
 	return nil
 }
 

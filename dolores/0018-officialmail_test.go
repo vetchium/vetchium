@@ -1,11 +1,14 @@
 package dolores
 
 import (
-	"context"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"sync"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
@@ -179,25 +182,7 @@ var _ = Describe("Official Emails", Ordered, func() {
 		const newEmailAddress = "contact@" + newDomain
 
 		BeforeAll(func() {
-			// Ensure the user for this test exists and is logged in
-			// Re-using addemailuser@0018-hub.example, ensure its token is available
-			// If addToken is populated in an outer BeforeAll, it can be used directly.
-			// For isolation, could create a specific user here or rely on outer setup.
-			// Assuming `addToken` from the parent Describe's BeforeAll is accessible and valid.
-			// If not, perform login here:
-			/*
-				var wg sync.WaitGroup
-				wg.Add(1)
-				hubSigninAsync(
-					"addemailuser@0018-hub.example", // Or a dedicated user for this It block
-					"NewPassword123$",
-					&testUserToken,
-					&wg,
-				)
-				wg.Wait()
-				Expect(testUserToken).NotTo(BeEmpty())
-			*/
-			// For this edit, we assume 'addToken' is available from the parent context for 'addemailuser@0018-hub.example'
+			// Use addToken from parent context
 			testUserToken = addToken
 		})
 
@@ -218,46 +203,92 @@ var _ = Describe("Official Emails", Ordered, func() {
 					http.StatusOK,
 				)
 
-				// Assertions: Verify domain, employer, and official email were created
-				var domainExists bool
-				err := db.QueryRow(
-					context.Background(),
-					`SELECT EXISTS(SELECT 1 FROM domains WHERE domain_name = $1)`,
-					newDomain,
-				).Scan(&domainExists)
+				// Verify that a verification email was sent using mailpit
+				baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(
-					domainExists,
-				).Should(BeTrue(), "Domain %s should have been created", newDomain)
+				query := url.Values{}
+				query.Add(
+					"query",
+					fmt.Sprintf(
+						"to:%s subject:\"Vetchium - Confirm Email Ownership\"",
+						newEmailAddress,
+					),
+				)
+				baseURL.RawQuery = query.Encode()
 
-				var employerExists bool
-				err = db.QueryRow(
-					context.Background(),
-					`SELECT EXISTS(SELECT 1 FROM employers e JOIN domains d ON e.id = d.employer_id WHERE d.domain_name = $1 AND e.employer_state = 'HUB_ADDED_EMPLOYER')`,
-					newDomain,
-				).Scan(&employerExists)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(
-					employerExists,
-				).Should(BeTrue(), "Dummy employer for domain %s should have been created", newDomain)
+				var messageID string
+				var foundEmail bool
+				// Try a few times with delay to allow email to be delivered
+				delay := 10 * time.Second
+				for i := 0; i < 5; i++ {
+					<-time.After(delay)
+					delay *= 2
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(mailPitResp.StatusCode).Should(Equal(http.StatusOK))
 
-				var officialEmailLinked bool
-				err = db.QueryRow(context.Background(),
-					`SELECT EXISTS(
-						SELECT 1 FROM hub_users_official_emails huoe
-						JOIN domains d ON huoe.domain_id = d.id
-						WHERE huoe.official_email = $1 AND d.domain_name = $2
-					)`, newEmailAddress, newDomain,
-				).Scan(&officialEmailLinked)
-				Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						messageID = mailPitRespObj.Messages[0].ID
+						foundEmail = true
+						break
+					}
+				}
 				Expect(
-					officialEmailLinked,
-				).Should(BeTrue(), "Official email %s should be linked to domain %s", newEmailAddress, newDomain)
+					foundEmail,
+				).Should(BeTrue(), "Verification email should have been sent")
+
+				// Clean up the email
+				deleteReqBody, err := json.Marshal(MailPitDeleteRequest{
+					IDs: []string{messageID},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				req, err := http.NewRequest(
+					"DELETE",
+					mailPitURL+"/api/v1/messages",
+					bytes.NewBuffer(deleteReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Accept", "application/json")
+				req.Header.Add("Content-Type", "application/json")
+
+				deleteResp, err := http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(deleteResp.StatusCode).Should(Equal(http.StatusOK))
+
+				// Verify the email appears in the user's official emails list
+				resp := testPOSTGetResp(
+					testUserToken,
+					nil,
+					"/hub/my-official-emails",
+					http.StatusOK,
+				).([]byte)
+
+				var emails []hub.OfficialEmail
+				err = json.Unmarshal(resp, &emails)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				var foundInList bool
+				for _, email := range emails {
+					if string(email.Email) == newEmailAddress {
+						foundInList = true
+						Expect(email.LastVerifiedAt).Should(BeNil())
+						Expect(email.VerifyInProgress).Should(BeTrue())
+						break
+					}
+				}
+				Expect(
+					foundInList,
+				).Should(BeTrue(), "New email should appear in official emails list")
 			},
 		)
-
-		// No AfterAll here to allow main AfterAll to cleanup generic users.
-		// Specific cleanup for 'newlycreated.example.com' will be in the main 0018-officialmail-down.pgsql
 	})
 
 	Describe("Delete Official Email", func() {
