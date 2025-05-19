@@ -13,7 +13,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = FDescribe("Employer Posts", Ordered, func() {
+var _ = Describe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
