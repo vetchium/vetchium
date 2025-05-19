@@ -22,7 +22,7 @@ dev: ## Start development environment with Tilt and live reload
 test: ## Run tests using ginkgo. make dev should have been called ahead of this.
 	@ORIG_URI=$$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
 	MOD_URI=$$(echo $$ORIG_URI | sed 's/postgres-rw.vetchium-dev/localhost/g'); \
-	POSTGRES_URI=$$MOD_URI ginkgo -v ./dolores/...
+	POSTGRES_URI=$$MOD_URI ginkgo -v -r ./dolores/...
 
 seed: ## Seed the development database
 	@ORIG_URI=$$(kubectl -n vetchium-dev get secret postgres-app -o jsonpath='{.data.uri}' | base64 -d); \
