@@ -89,4 +89,5 @@ var (
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
 
 	ErrNoDomain = errors.New("domain not found")
+	ErrNoTag    = errors.New("tag not found")
 )

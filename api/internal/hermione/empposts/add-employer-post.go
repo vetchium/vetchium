@@ -2,6 +2,7 @@ package empposts
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/vetchium/vetchium/api/internal/db"
@@ -35,6 +36,12 @@ func AddEmployerPost(h wand.Wand) http.HandlerFunc {
 			AddEmployerPostRequest: addPostReq,
 		})
 		if err != nil {
+			if errors.Is(err, db.ErrNoTag) {
+				h.Dbg("invalid tags passed")
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Dbg("failed to add employer post", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

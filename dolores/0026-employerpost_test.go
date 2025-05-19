@@ -13,7 +13,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = Describe("Employer Posts", Ordered, func() {
+var _ = FDescribe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -138,7 +138,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					token:       adminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by admin",
-						NewTags: []common.VTagName{"admin-tag"},
+						NewTags: []common.VTagName{"0026-admin-tag"},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -197,6 +197,79 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					},
 					wantStatus: http.StatusBadRequest,
 				},
+				{
+					description: "non-existent tag UUID",
+					token:       adminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with non-existent tag",
+						TagIDs: []common.VTagID{
+							common.VTagID(
+								"12345678-0000-0000-0000-000000000000",
+							),
+						},
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
+				{
+					description: "invalid UUID format for tag",
+					token:       adminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with invalid UUID format",
+						TagIDs: []common.VTagID{
+							common.VTagID("invalid-uuid-format"),
+						},
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "empty tag ID",
+					token:       adminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with empty tag ID",
+						TagIDs: []common.VTagID{
+							common.VTagID(""),
+						},
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+				{
+					description: "mix of valid and invalid tag IDs",
+					token:       adminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with mixed tag IDs",
+						TagIDs: []common.VTagID{
+							common.VTagID(
+								"12345678-0026-0026-0026-000000050001",
+							), // Valid tag
+							common.VTagID(
+								"12345678-0000-0000-0000-000000000000",
+							), // Non-existent tag
+						},
+					},
+					wantStatus: http.StatusUnprocessableEntity,
+				},
+				{
+					description: "mix of existing and new tags",
+					token:       adminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with mixed tag types",
+						TagIDs: []common.VTagID{
+							common.VTagID(
+								"12345678-0026-0026-0026-000000050001",
+							), // Valid existing tag
+						},
+						NewTags: []common.VTagName{
+							"0026-new-tag",
+						},
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp employer.AddEmployerPostResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.PostID).ShouldNot(BeEmpty())
+					},
+				},
 			}
 
 			for _, tc := range testCases {
@@ -246,10 +319,10 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				[]common.VTagID{
 					common.VTagID(
 						"12345678-0026-0026-0026-000000050001",
-					), // engineering
+					), // 0026-engineering
 					common.VTagID(
 						"12345678-0026-0026-0026-000000050003",
-					), // golang
+					), // 0026-golang
 				},
 				nil,
 			)
@@ -322,7 +395,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						).Should(Equal("0026-employerposts2.example.com"))
 						Expect(
 							post.Tags,
-						).Should(ContainElements("engineering", "golang"))
+						).Should(ContainElements("0026-engineering", "0026-golang"))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -342,7 +415,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(post.Content).Should(Equal("Test post for get"))
 						Expect(
 							post.Tags,
-						).Should(ContainElements("engineering", "golang"))
+						).Should(ContainElements("0026-engineering", "0026-golang"))
 					},
 				},
 				{

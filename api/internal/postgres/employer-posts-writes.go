@@ -40,7 +40,7 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	tagIDs := make([]string, 0, len(req.NewTags))
+	tagIDs := make([]string, 0, len(req.NewTags)+len(req.TagIDs))
 	newTagsInsertQuery := `
 WITH inserted AS (
     -- Attempt to insert the tag.
@@ -74,45 +74,60 @@ LIMIT 1; -- Ensures only one row is returned in any case
 		).Scan(&newTagID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				p.log.Err(
-					"failed to resolve tag_id for new tag, tag not found after get-or-create attempt",
-					"tag_name",
-					tag,
-					"error",
-					err,
-				)
-				// This indicates a logic issue or an unexpected state, as the query is designed to always return an ID if the tag exists or is created.
-				return fmt.Errorf(
-					"database error: could not resolve tag_id for new tag '%s'",
-					tag,
-				)
+				p.log.Err("new tag not created", "error", err)
+				return db.ErrInternal
 			}
-			p.log.Err("failed to scan new tag ID from get-or-create query",
-				"tag_name", tag, "error", err)
-			return fmt.Errorf(
-				"database error: scanning tag_id for new tag '%s' failed: %w",
-				tag,
-				err,
-			)
+
+			p.log.Err("scan new tagID failed", "error", err)
+			return db.ErrInternal
 		}
-		// Ensure newTagID is not an empty string, which would cause FK violation if attempted to cast to UUID or used directly if column was text.
-		// The tag_id in employer_post_tags is UUID.
+
 		if newTagID == "" {
-			p.log.Err(
-				"resolved newTagID is empty string, get-or-create logic failed for tag",
-				"tag_name",
-				tag,
-			)
-			return fmt.Errorf(
-				"database error: resolved newTagID is empty for new tag '%s'",
-				tag,
-			)
+			p.log.Err("resolved newTagID is empty string", "tag_name", tag)
+			return db.ErrInternal
 		}
 		tagIDs = append(tagIDs, newTagID)
 	}
 
-	for _, tagID := range req.TagIDs {
-		tagIDs = append(tagIDs, string(tagID))
+	// Validate existing TagIDs from req.TagIDs using a single SQL query for existence check.
+	if len(req.TagIDs) > 0 {
+		// 1. Convert req.TagIDs to a slice of non-empty strings.
+		providedTagIDStrings := make([]string, 0, len(req.TagIDs))
+		for _, tagIDInstance := range req.TagIDs {
+			sTagID := string(tagIDInstance)
+			if sTagID != "" {
+				providedTagIDStrings = append(providedTagIDStrings, sTagID)
+			}
+		}
+
+		// Only proceed with DB check if there are actual tag ID strings to validate.
+		if len(providedTagIDStrings) > 0 {
+			var allProvidedTagsExist bool
+			query := `
+SELECT NOT EXISTS (
+	SELECT 1
+	FROM unnest($1::text[]) AS pid_text
+	LEFT JOIN tags t ON t.id = pid_text::uuid
+	WHERE t.id IS NULL
+)
+`
+			err = tx.QueryRow(req.Context, query, providedTagIDStrings).
+				Scan(&allProvidedTagsExist)
+			if err != nil {
+				p.log.Err("failed tag existence check", "error", err)
+				return db.ErrInternal
+			}
+
+			if !allProvidedTagsExist {
+				p.log.Dbg("one or more provided tag IDs do not exist")
+				return db.ErrNoTag
+			}
+		}
+
+		// All tags are valid, append them to the tagIDs list.
+		for _, existingTagUUID := range req.TagIDs {
+			tagIDs = append(tagIDs, string(existingTagUUID))
+		}
 	}
 
 	tagsInsertQuery := `
@@ -127,20 +142,8 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 			tagID,
 		)
 		if err != nil {
-			p.log.Err(
-				"failed to insert into employer_post_tags",
-				"post_id",
-				req.PostID,
-				"tag_id",
-				tagID,
-				"error",
-				err,
-			)
-			return fmt.Errorf(
-				"database error: inserting into employer_post_tags for tag_id '%s' failed: %w",
-				tagID,
-				err,
-			)
+			p.log.Err("failed to insert into employer_post_tags", "error", err)
+			return db.ErrInternal
 		}
 	}
 
