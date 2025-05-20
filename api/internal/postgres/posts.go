@@ -46,27 +46,16 @@ VALUES ($1, $2, $3)
 
 	tagIDs := make([]string, 0, len(addPostReq.NewTags))
 	newTagsInsertQuery := `
-WITH inserted AS (
-    -- Attempt to insert the tag.
-    -- If it succeeds, return the new id and the name.
-    -- If it conflicts (name exists), DO NOTHING and return nothing from this CTE.
+WITH tag_insert AS (
     INSERT INTO tags (name)
-    VALUES ($1)  -- $1 is your tag name parameter
+    VALUES ($1)
     ON CONFLICT (name) DO NOTHING
-    RETURNING id, name
+    RETURNING id
 )
--- First, try to select the id from the 'inserted' CTE (if the insert succeeded).
-SELECT id
-FROM inserted
+SELECT id FROM tag_insert
 UNION ALL
--- If the 'inserted' CTE is empty (meaning ON CONFLICT DO NOTHING happened),
--- select the id from the main 'tags' table where the name matches.
--- The 'WHERE NOT EXISTS (SELECT 1 FROM inserted)' clause ensures this part
--- only runs if the INSERT was skipped.
-SELECT t.id
-FROM tags t
-WHERE t.name = $1 AND NOT EXISTS (SELECT 1 FROM inserted)
-LIMIT 1; -- Ensures only one row is returned in any case
+SELECT id FROM tags WHERE name = $1
+LIMIT 1
 `
 
 	for _, tag := range addPostReq.NewTags {
