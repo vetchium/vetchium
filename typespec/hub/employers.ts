@@ -18,8 +18,8 @@ export interface GetEmployerDetailsRequest {
 
 export interface HubEmployerDetails {
   name: string;
-  verified_employees_count: Uint32Array;
+  verified_employees_count: number;
   is_onboarded: boolean;
-  active_openings_count: Uint32Array;
+  active_openings_count: number;
   is_following: boolean;
 }

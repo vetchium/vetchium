@@ -104,10 +104,16 @@ export const en = {
     error: {
       notFound: "Employer not found",
       loadFailed: "Failed to load employer details. Please try again later.",
+      followFailed:
+        "Failed to follow this organization. Please try again later.",
+      unfollowFailed:
+        "Failed to unfollow this organization. Please try again later.",
     },
     verifiedEmployees: "Verified Employees",
     notFound: "The details for this employer could not be displayed.",
     notFoundTitle: "Employer Information Unavailable",
+    followOrg: "Follow Organization",
+    unfollowOrg: "Unfollow Organization",
   },
   findOpenings: {
     title: "Find Openings",

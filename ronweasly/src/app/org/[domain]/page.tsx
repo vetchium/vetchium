@@ -3,9 +3,11 @@
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
+import BusinessIcon from "@mui/icons-material/Business";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -25,6 +27,9 @@ export default function EmployerDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [employerDetails, setEmployerDetails] =
     useState<HubEmployerDetails | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
 
   if (!params?.domain) {
     return (
@@ -88,6 +93,7 @@ export default function EmployerDetailsPage() {
         } else {
           const data: HubEmployerDetails = await response.json();
           setEmployerDetails(data);
+          setIsFollowing(data.is_following);
           // setError(null) is already done at the start of the function
         }
       } catch (err) {
@@ -103,6 +109,52 @@ export default function EmployerDetailsPage() {
       fetchEmployerDetails();
     }
   }, [companyDomain, t, router]);
+
+  const handleFollowToggle = async () => {
+    if (!employerDetails) return;
+
+    setIsFollowLoading(true);
+    setFollowError(null);
+    const token = Cookies.get("session_token");
+    if (!token) {
+      setError(t("common.error.notAuthenticated"));
+      setIsFollowLoading(false);
+      return;
+    }
+
+    try {
+      const endpoint = isFollowing ? "/hub/unfollow-org" : "/hub/follow-org";
+      const response = await fetch(`${config.API_SERVER_PREFIX}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ domain: companyDomain }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          isFollowing
+            ? t("employerDetails.error.unfollowFailed")
+            : t("employerDetails.error.followFailed")
+        );
+      }
+
+      setIsFollowing(!isFollowing);
+    } catch (err) {
+      console.error("Error toggling follow status:", err);
+      setFollowError(
+        err instanceof Error
+          ? err.message
+          : isFollowing
+          ? t("employerDetails.error.unfollowFailed")
+          : t("employerDetails.error.followFailed")
+      );
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -122,7 +174,7 @@ export default function EmployerDetailsPage() {
             <AlertTitle>
               {error === t("common.error.notAuthenticated") ||
               error === t("common.error.sessionExpired")
-                ? t("common.error.authenticationNeededTitle") // Assuming a new title for auth issues
+                ? t("common.error.authenticationNeededTitle")
                 : t("common.error.serverError")}
             </AlertTitle>
             {error}
@@ -149,17 +201,54 @@ export default function EmployerDetailsPage() {
     <AuthenticatedLayout>
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
         <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            {employerDetails.name}
-          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              mb: 3,
+            }}
+          >
+            <Typography variant="h4" gutterBottom>
+              {employerDetails.name}
+            </Typography>
+            {employerDetails.is_onboarded && (
+              <Button
+                variant={isFollowing ? "outlined" : "contained"}
+                color="primary"
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+                startIcon={
+                  isFollowLoading ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <BusinessIcon />
+                  )
+                }
+              >
+                {isFollowLoading
+                  ? t("common.loading")
+                  : isFollowing
+                  ? t("employerDetails.unfollowOrg")
+                  : t("employerDetails.followOrg")}
+              </Button>
+            )}
+          </Box>
+          {followError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {followError}
+            </Alert>
+          )}
           <Typography variant="body1" sx={{ mb: 1 }}>
             {t("employerDetails.verifiedEmployees")}:{" "}
             {employerDetails.verified_employees_count}
           </Typography>
-          <Typography variant="body1">
-            {t("employerDetails.activeOpenings")}:{" "}
-            {employerDetails.active_openings_count}
-          </Typography>
+          {employerDetails.is_onboarded && (
+            <Typography variant="body1">
+              {t("employerDetails.activeOpenings")}:{" "}
+              {employerDetails.active_openings_count}
+            </Typography>
+          )}
         </Paper>
       </Box>
     </AuthenticatedLayout>
