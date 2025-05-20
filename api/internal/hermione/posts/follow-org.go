@@ -2,8 +2,10 @@ package posts
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
@@ -25,6 +27,12 @@ func FollowOrg(h wand.Wand) http.HandlerFunc {
 
 		err := h.DB().FollowOrg(r.Context(), req.Domain)
 		if err != nil {
+			if errors.Is(err, db.ErrNoDomain) {
+				h.Dbg("Domain not found", "domain", req.Domain)
+				http.Error(w, "Domain not found", http.StatusNotFound)
+				return
+			}
+
 			h.Dbg("Failed to follow org", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

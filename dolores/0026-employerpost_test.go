@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/employer"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 var _ = Describe("Employer Posts", Ordered, func() {
@@ -732,6 +734,269 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					tc.wantStatus,
 				)
 			}
+		})
+	})
+
+	Describe("Follow/Unfollow Organization", func() {
+		var (
+			hubUserToken1 string
+			hubUserToken2 string
+			adminToken    string
+		)
+
+		BeforeEach(func() {
+			// Login hub users
+			var wg sync.WaitGroup
+			wg.Add(3) // 2 hub users + 1 org admin
+
+			hubSigninAsync(
+				"test1@0026-hubuser.example.com",
+				"NewPassword123$",
+				&hubUserToken1,
+				&wg,
+			)
+
+			hubSigninAsync(
+				"test2@0026-hubuser.example.com",
+				"NewPassword123$",
+				&hubUserToken2,
+				&wg,
+			)
+
+			// Login org admin
+			employerSigninAsync(
+				"0026-orgfollow.example.com",
+				"admin@0026-orgfollow.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			wg.Wait()
+		})
+
+		It("should handle various follow org scenarios", func() {
+			testCases := []struct {
+				description string
+				token       string
+				request     hub.FollowOrgRequest
+				wantStatus  int
+			}{
+				{
+					description: "without authentication",
+					token:       "",
+					request: hub.FollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					request: hub.FollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "follow non-existent org",
+					token:       hubUserToken1,
+					request: hub.FollowOrgRequest{
+						Domain: "non-existent.example.com",
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "follow org successfully",
+					token:       hubUserToken1,
+					request: hub.FollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "follow org again (should be idempotent)",
+					token:       hubUserToken1,
+					request: hub.FollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusOK,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing FollowOrg: %s\n",
+					tc.description,
+				)
+				testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/follow-org",
+					tc.wantStatus,
+				)
+			}
+		})
+
+		It("should handle various unfollow org scenarios", func() {
+			// First follow the org
+			testPOSTGetResp(
+				hubUserToken2,
+				hub.FollowOrgRequest{
+					Domain: "0026-orgfollow.example.com",
+				},
+				"/hub/follow-org",
+				http.StatusOK,
+			)
+
+			testCases := []struct {
+				description string
+				token       string
+				request     hub.UnfollowOrgRequest
+				wantStatus  int
+			}{
+				{
+					description: "without authentication",
+					token:       "",
+					request: hub.UnfollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					request: hub.UnfollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "unfollow non-existent org",
+					token:       hubUserToken2,
+					request: hub.UnfollowOrgRequest{
+						Domain: "non-existent.example.com",
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "unfollow org successfully",
+					token:       hubUserToken2,
+					request: hub.UnfollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusOK,
+				},
+				{
+					description: "unfollow org again (should be idempotent)",
+					token:       hubUserToken2,
+					request: hub.UnfollowOrgRequest{
+						Domain: "0026-orgfollow.example.com",
+					},
+					wantStatus: http.StatusOK,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing UnfollowOrg: %s\n",
+					tc.description,
+				)
+				testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/unfollow-org",
+					tc.wantStatus,
+				)
+			}
+		})
+
+		It("should show employer posts in timeline after following", func() {
+			// First follow the org
+			testPOSTGetResp(
+				hubUserToken1,
+				hub.FollowOrgRequest{
+					Domain: "0026-orgfollow.example.com",
+				},
+				"/hub/follow-org",
+				http.StatusOK,
+			)
+
+			// Create a post as org admin
+			postID := createTestPost(adminToken, "Test post", nil, nil)
+
+			var timeline hub.MyHomeTimeline
+			var found bool
+			for i := 0; i < 5; i++ {
+				// Wait for timeline to be refreshed
+				<-time.After(30 * time.Second)
+				resp := testPOSTGetResp(
+					hubUserToken1,
+					hub.GetMyHomeTimelineRequest{},
+					"/hub/get-my-home-timeline",
+					http.StatusOK,
+				).([]byte)
+
+				err := json.Unmarshal(resp, &timeline)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Check if the post is in the timeline
+				for _, post := range timeline.EmployerPosts {
+					if post.ID == postID {
+						found = true
+						break
+					}
+				}
+
+				if found {
+					break
+				}
+			}
+			Expect(found).Should(BeTrue(), "not got post after following org")
+
+			// Unfollow the org
+			testPOSTGetResp(
+				hubUserToken1,
+				hub.UnfollowOrgRequest{
+					Domain: "0026-orgfollow.example.com",
+				},
+				"/hub/unfollow-org",
+				http.StatusOK,
+			)
+
+			// Create another post
+			postID2 := createTestPost(adminToken, "after unfollow", nil, nil)
+
+			found = false
+			for i := 0; i < 5; i++ {
+				// Wait for timeline to be refreshed
+				<-time.After(30 * time.Second)
+				resp := testPOSTGetResp(
+					hubUserToken1,
+					hub.GetMyHomeTimelineRequest{},
+					"/hub/get-my-home-timeline",
+					http.StatusOK,
+				).([]byte)
+
+				err := json.Unmarshal(resp, &timeline)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Check if the new post is in the timeline
+				for _, post := range timeline.EmployerPosts {
+					if post.ID == postID2 {
+						found = true
+						break
+					}
+				}
+
+				if found {
+					break
+				}
+			}
+
+			Expect(found).Should(BeFalse(), "got post after unfollowing org")
 		})
 	})
 })
