@@ -4,7 +4,7 @@ metadata:
   name: postgres
   namespace: vetchium-dev
 spec:
-  instances: 3
+  instances: 1
   storage:
     size: 1Gi
   monitoring:
