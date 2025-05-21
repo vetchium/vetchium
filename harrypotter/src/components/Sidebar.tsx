@@ -4,6 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BusinessIcon from "@mui/icons-material/Business";
 import HomeIcon from "@mui/icons-material/Home";
+import MessageIcon from "@mui/icons-material/Message";
 import PeopleIcon from "@mui/icons-material/People";
 import SettingsIcon from "@mui/icons-material/Settings";
 import WorkIcon from "@mui/icons-material/Work";
@@ -53,6 +54,11 @@ export default function Sidebar({ open }: SidebarProps) {
       text: t("orgUsers.title"),
       icon: <PeopleIcon />,
       path: "/org-users",
+    },
+    {
+      text: t("common.posts"),
+      icon: <MessageIcon />,
+      path: "/posts",
     },
     {
       text: t("common.settings"),
