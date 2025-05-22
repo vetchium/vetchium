@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -925,7 +926,8 @@ var _ = Describe("Employer Posts", Ordered, func() {
 			)
 
 			// Create a post as org admin
-			postID := createTestPost(adminToken, "Test post", nil, nil)
+			postContent := uuid.New().String()
+			postID := createTestPost(adminToken, postContent, nil, nil)
 
 			var timeline hub.MyHomeTimeline
 			var found bool
@@ -944,7 +946,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 				// Check if the post is in the timeline
 				for _, post := range timeline.EmployerPosts {
-					if post.ID == postID {
+					if post.ID == postID && post.Content == postContent {
 						found = true
 						break
 					}
