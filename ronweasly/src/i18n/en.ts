@@ -654,5 +654,7 @@ export const en = {
       "Detailed post view with comments and interactions coming soon",
     loadMore: "Load More",
     noMorePosts: "No more posts to show",
+    fromEmployers: "From Organizations You Follow",
+    fromUsers: "From People You Follow",
   },
 };

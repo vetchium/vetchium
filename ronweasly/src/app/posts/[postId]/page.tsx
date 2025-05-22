@@ -13,11 +13,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { GetPostDetailsRequest, Post } from "@vetchium/typespec";
+import { EmployerPost, GetPostDetailsRequest, Post } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import EmployerPostCard from "../components/EmployerPostCard";
 import PostCard from "../components/PostCard";
+
+type PostType = Post | EmployerPost;
 
 export default function PostDetailPage() {
   const { t } = useTranslation();
@@ -25,9 +28,14 @@ export default function PostDetailPage() {
   const params = useParams();
   const postId = (params?.postId as string) || "";
   const [loading, setLoading] = useState(true);
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<PostType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
+
+  // Function to determine if a post is an EmployerPost
+  const isEmployerPost = (post: any): post is EmployerPost => {
+    return post && "employer_name" in post && "employer_domain_name" in post;
+  };
 
   // Fetch post details on component mount
   useEffect(() => {
@@ -39,12 +47,12 @@ export default function PostDetailPage() {
 
     const fetchPostDetails = async () => {
       try {
-        // Using the GetPostDetailsRequest structure from typespec
+        // Try fetching user post first
         const requestBody: GetPostDetailsRequest = {
           post_id: postId,
         };
 
-        const response = await fetch(
+        let response = await fetch(
           `${config.API_SERVER_PREFIX}/hub/get-post-details`,
           {
             method: "POST",
@@ -55,6 +63,25 @@ export default function PostDetailPage() {
             body: JSON.stringify(requestBody),
           }
         );
+
+        // If not found as a user post, try as an employer post
+        if (response.status === 404) {
+          try {
+            response = await fetch(
+              `${config.API_SERVER_PREFIX}/employer/get-post`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ post_id: postId }),
+              }
+            );
+          } catch (err) {
+            console.error("Error fetching employer post:", err);
+          }
+        }
 
         if (response.status === 404) {
           setIsNotFound(true);
@@ -77,8 +104,8 @@ export default function PostDetailPage() {
           throw new Error("Invalid post data received");
         }
 
-        // Ensure post.tags is always an array
-        const safePost: Post = {
+        // Ensure tags is always an array
+        const safePost = {
           ...postData,
           tags: Array.isArray(postData.tags) ? postData.tags : [],
         };
@@ -178,7 +205,11 @@ export default function PostDetailPage() {
 
           {post ? (
             <Box sx={{ mt: 3 }}>
-              <PostCard post={post} hideOpenInNewTab={true} />
+              {isEmployerPost(post) ? (
+                <EmployerPostCard post={post} hideOpenInNewTab={true} />
+              ) : (
+                <PostCard post={post as Post} hideOpenInNewTab={true} />
+              )}
             </Box>
           ) : (
             <Typography>{t("posts.notFound")}</Typography>
