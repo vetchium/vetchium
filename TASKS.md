@@ -42,6 +42,7 @@
 - [] Tags is a bit of a mess. Should we allow everyone to create tags ? Should we gatekeep ? Should we (maintainers) hardcode a seed list and keep it updated ?
 - [] Cleaner RBAC error codes and UI alerts
 - [] LoadTests should test for EmployerPosts also
+- [] API for EmployerPost details getting
 
 # Future Features
 
