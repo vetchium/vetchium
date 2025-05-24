@@ -2,10 +2,8 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/middleware"
 )
@@ -41,44 +39,38 @@ VALUES ($1, $2, $3)
 	}
 
 	tagIDs := make([]string, 0, len(req.NewTags)+len(req.TagIDs))
-	newTagsInsertQuery := `
-WITH inserted AS (
-    -- Attempt to insert the tag.
-    -- If it succeeds, return the new id and the name.
-    -- If it conflicts (name exists), DO NOTHING and return nothing from this CTE.
-    INSERT INTO tags (name)
-    VALUES ($1)  -- $1 is your tag name parameter
-    ON CONFLICT (name) DO NOTHING
-    RETURNING id, name
-)
--- First, try to select the id from the 'inserted' CTE (if the insert succeeded).
-SELECT id
-FROM inserted
-UNION ALL
--- If the 'inserted' CTE is empty (meaning ON CONFLICT DO NOTHING happened),
--- select the id from the main 'tags' table where the name matches.
--- The 'WHERE NOT EXISTS (SELECT 1 FROM inserted)' clause ensures this part
--- only runs if the INSERT was skipped.
-SELECT t.id
-FROM tags t
-WHERE t.name = $1 AND NOT EXISTS (SELECT 1 FROM inserted)
-LIMIT 1; -- Ensures only one row is returned in any case
-`
-
 	for _, tag := range req.NewTags {
 		var newTagID string
+
+		// Use a proper upsert pattern that handles concurrency safely:
+		// 1. First try to insert (ignoring conflicts)
+		// 2. Then select the ID (which will always exist after step 1)
+
+		// Try to insert the tag, ignore if it already exists
+		_, err = tx.Exec(
+			req.Context,
+			"INSERT INTO tags (name) VALUES ($1) ON CONFLICT (name) DO NOTHING",
+			tag,
+		)
+		if err != nil {
+			p.log.Err("failed to insert tag", "tag_name", tag, "error", err)
+			return db.ErrInternal
+		}
+
+		// Now select the ID (guaranteed to exist after the INSERT above)
 		err = tx.QueryRow(
 			req.Context,
-			newTagsInsertQuery,
+			"SELECT id FROM tags WHERE name = $1",
 			tag,
 		).Scan(&newTagID)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				p.log.Err("new tag not created", "error", err)
-				return db.ErrInternal
-			}
-
-			p.log.Err("scan new tagID failed", "error", err)
+			p.log.Err(
+				"failed to select tag ID after upsert",
+				"tag_name",
+				tag,
+				"error",
+				err,
+			)
 			return db.ErrInternal
 		}
 

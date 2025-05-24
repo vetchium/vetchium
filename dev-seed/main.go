@@ -49,6 +49,8 @@ func main() {
 	loginHubUsers()
 	color.Cyan("Follow other users")
 	followUsers()
+	color.Cyan("Follow organizations")
+	followOrgs()
 	color.Cyan("Write posts")
 	writePosts()
 
@@ -76,6 +78,8 @@ func main() {
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")
 	signinAdmins()
+	color.Cyan("Write employer posts")
+	writeEmployerPosts()
 	color.Cyan("Initializing locations")
 	createLocations()
 	color.Cyan("Initializing cost centers")

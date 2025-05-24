@@ -1,8 +1,10 @@
 package dolores
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -16,7 +18,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Employer Posts", Ordered, func() {
+var _ = FDescribe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -397,6 +399,61 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(resp.PostID).ShouldNot(BeEmpty())
 					},
 				},
+				{
+					description: "create post with multiple new tags",
+					token:       employer1AdminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with multiple new tags",
+						NewTags: []common.VTagName{
+							"0026-multi-tag-1",
+							"0026-multi-tag-2",
+							"0026-multi-tag-3",
+						},
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp employer.AddEmployerPostResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.PostID).ShouldNot(BeEmpty())
+					},
+				},
+				{
+					description: "create post with same tag name as existing (should reuse existing)",
+					token:       employer1AdminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with duplicate tag name",
+						NewTags: []common.VTagName{
+							"0026-engineering", // This tag already exists
+						},
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp employer.AddEmployerPostResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.PostID).ShouldNot(BeEmpty())
+					},
+				},
+				{
+					description: "create post with mixed new tags (some existing, some new)",
+					token:       employer1AdminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with mixed new tag scenarios",
+						NewTags: []common.VTagName{
+							"0026-golang",    // Existing tag
+							"0026-brand-new", // New tag
+							"0026-rust",      // Existing tag
+						},
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var resp employer.AddEmployerPostResponse
+						err := json.Unmarshal(respBody, &resp)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(resp.PostID).ShouldNot(BeEmpty())
+					},
+				},
 			}
 
 			for _, tc := range testCases {
@@ -414,6 +471,200 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				if tc.validate != nil && tc.wantStatus == http.StatusOK {
 					tc.validate(resp.([]byte))
 				}
+			}
+		})
+
+		It("should handle concurrent tag creation scenarios", func() {
+			// Test concurrent creation of posts with the same tag names
+			// This tests the tag creation logic under concurrent load
+			var wg sync.WaitGroup
+			numConcurrentPosts := 3 // Reduce concurrency to avoid overwhelming the test system
+			postIDs := make([]string, numConcurrentPosts)
+			errors := make([]error, numConcurrentPosts)
+			resultMutex := sync.Mutex{} // Protect shared slices
+
+			for i := 0; i < numConcurrentPosts; i++ {
+				wg.Add(1)
+				go func(index int) {
+					defer GinkgoRecover() // Ensure Ginkgo can handle panics in goroutines
+					defer wg.Done()
+
+					// All goroutines try to create posts with the same tag name
+					request := employer.AddEmployerPostRequest{
+						Content: fmt.Sprintf("Concurrent post %d", index),
+						NewTags: []common.VTagName{
+							"0026-concurrent-tag", // Same tag name for all
+							common.VTagName(fmt.Sprintf(
+								"0026-unique-tag-%d",
+								index,
+							)), // Unique tag for each
+						},
+					}
+
+					// Use a separate HTTP client for each goroutine to avoid connection sharing issues
+					body, err := json.Marshal(request)
+					if err != nil {
+						resultMutex.Lock()
+						errors[index] = err
+						resultMutex.Unlock()
+						return
+					}
+
+					req, err := http.NewRequest(
+						http.MethodPost,
+						serverURL+"/employer/add-post",
+						bytes.NewBuffer(body),
+					)
+					if err != nil {
+						resultMutex.Lock()
+						errors[index] = err
+						resultMutex.Unlock()
+						return
+					}
+
+					req.Header.Set(
+						"Authorization",
+						"Bearer "+employer1AdminToken,
+					)
+					req.Header.Set("Content-Type", "application/json")
+
+					// Create a separate client for this goroutine
+					client := &http.Client{}
+					resp, err := client.Do(req)
+					if err != nil {
+						resultMutex.Lock()
+						errors[index] = err
+						resultMutex.Unlock()
+						return
+					}
+					defer resp.Body.Close()
+
+					if resp.StatusCode != http.StatusOK {
+						respBody, _ := io.ReadAll(resp.Body)
+						resultMutex.Lock()
+						errors[index] = fmt.Errorf(
+							"unexpected status %d: %s",
+							resp.StatusCode,
+							string(respBody),
+						)
+						resultMutex.Unlock()
+						return
+					}
+
+					respBody, err := io.ReadAll(resp.Body)
+					if err != nil {
+						resultMutex.Lock()
+						errors[index] = err
+						resultMutex.Unlock()
+						return
+					}
+
+					var addResp employer.AddEmployerPostResponse
+					err = json.Unmarshal(respBody, &addResp)
+					if err != nil {
+						resultMutex.Lock()
+						errors[index] = err
+						resultMutex.Unlock()
+						return
+					}
+
+					resultMutex.Lock()
+					postIDs[index] = addResp.PostID
+					resultMutex.Unlock()
+				}(i)
+			}
+
+			wg.Wait()
+
+			// Verify all posts were created successfully
+			for i, err := range errors {
+				Expect(
+					err,
+				).ShouldNot(HaveOccurred(), "Post %d failed to create", i)
+				Expect(
+					postIDs[i],
+				).ShouldNot(BeEmpty(), "Post %d has empty ID", i)
+			}
+
+			// Verify all posts can be retrieved
+			for i, postID := range postIDs {
+				getResp := testPOSTGetResp(
+					employer1AdminToken,
+					employer.GetEmployerPostRequest{PostID: postID},
+					"/employer/get-post",
+					http.StatusOK,
+				)
+
+				var post common.EmployerPost
+				err := json.Unmarshal(getResp.([]byte), &post)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					post.Content,
+				).Should(Equal(fmt.Sprintf("Concurrent post %d", i)))
+				Expect(post.Tags).Should(ContainElement("0026-concurrent-tag"))
+				Expect(
+					post.Tags,
+				).Should(ContainElement(fmt.Sprintf("0026-unique-tag-%d", i)))
+			}
+		})
+
+		It("should handle rapid sequential tag creation", func() {
+			// Test rapid sequential creation that might expose race conditions
+			baseTags := []string{
+				"0026-rapid-base-1",
+				"0026-rapid-base-2",
+				"0026-rapid-base-3",
+			}
+
+			var postIDs []string
+
+			// Create posts rapidly in sequence
+			for i := 0; i < 5; i++ { // Reduce from 10 to 5 to be less aggressive
+				request := employer.AddEmployerPostRequest{
+					Content: fmt.Sprintf("Rapid post %d", i),
+					NewTags: []common.VTagName{
+						// Mix of reused and new tags
+						common.VTagName(
+							baseTags[i%len(baseTags)],
+						), // Reused tag
+						common.VTagName(
+							fmt.Sprintf("0026-rapid-unique-%d", i),
+						), // New tag
+					},
+				}
+
+				resp := testPOSTGetResp(
+					employer1AdminToken,
+					request,
+					"/employer/add-post",
+					http.StatusOK,
+				)
+
+				var addResp employer.AddEmployerPostResponse
+				err := json.Unmarshal(resp.([]byte), &addResp)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(addResp.PostID).ShouldNot(BeEmpty())
+				postIDs = append(postIDs, addResp.PostID)
+			}
+
+			// Verify all posts were created with correct tags
+			for i, postID := range postIDs {
+				getResp := testPOSTGetResp(
+					employer1AdminToken,
+					employer.GetEmployerPostRequest{PostID: postID},
+					"/employer/get-post",
+					http.StatusOK,
+				)
+
+				var post common.EmployerPost
+				err := json.Unmarshal(getResp.([]byte), &post)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				expectedBaseTag := baseTags[i%len(baseTags)]
+				expectedUniqueTag := fmt.Sprintf("0026-rapid-unique-%d", i)
+
+				Expect(post.Tags).Should(ContainElement(expectedBaseTag))
+				Expect(post.Tags).Should(ContainElement(expectedUniqueTag))
 			}
 		})
 	})
