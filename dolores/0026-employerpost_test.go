@@ -20,12 +20,173 @@ var _ = Describe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
+
+		// Token variables for all tests
+		// Employer 1 (0026-employerposts.example.com) - used by Add Employer Post tests
+		employer1AdminToken     string
+		employer1MarketingToken string
+		employer1RegularToken   string
+
+		// Employer 2 (0026-employerposts2.example.com) - used by Get Employer Post tests
+		employer2AdminToken     string
+		employer2MarketingToken string
+		employer2RegularToken   string
+
+		// Employer 3 (0026-employerposts3.example.com) - used by List Employer Posts tests
+		employer3AdminToken     string
+		employer3MarketingToken string
+		employer3RegularToken   string
+
+		// Employer 4 (0026-employerposts4.example.com) - used by Delete Employer Post tests
+		employer4AdminToken     string
+		employer4MarketingToken string
+		employer4RegularToken   string
+
+		// Org follow employer (0026-orgfollow.example.com) - used by Follow/Unfollow and Hub tests
+		orgFollowAdminToken string
+
+		// Different employer (0026-hubtest-different.example.com) - used by Hub tests for different employer
+		differentAdminToken string
+
+		// Hub users
+		hubUserToken1 string
+		hubUserToken2 string
 	)
 
 	BeforeAll(func() {
 		pool = setupTestDB()
 		Expect(pool).NotTo(BeNil())
 		seedDatabase(pool, "0026-employerpost-up.pgsql")
+
+		// Sign in all users once at the beginning
+		var wg sync.WaitGroup
+		wg.Add(16) // Total number of signin operations
+
+		// Employer 1 (0026-employerposts.example.com) users
+		employerSigninAsync(
+			"0026-employerposts.example.com",
+			"admin@0026-employerposts.example.com",
+			"NewPassword123$",
+			&employer1AdminToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts.example.com",
+			"marketing@0026-employerposts.example.com",
+			"NewPassword123$",
+			&employer1MarketingToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts.example.com",
+			"regular@0026-employerposts.example.com",
+			"NewPassword123$",
+			&employer1RegularToken,
+			&wg,
+		)
+
+		// Employer 2 (0026-employerposts2.example.com) users
+		employerSigninAsync(
+			"0026-employerposts2.example.com",
+			"admin@0026-employerposts2.example.com",
+			"NewPassword123$",
+			&employer2AdminToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts2.example.com",
+			"marketing@0026-employerposts2.example.com",
+			"NewPassword123$",
+			&employer2MarketingToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts2.example.com",
+			"regular@0026-employerposts2.example.com",
+			"NewPassword123$",
+			&employer2RegularToken,
+			&wg,
+		)
+
+		// Employer 3 (0026-employerposts3.example.com) users
+		employerSigninAsync(
+			"0026-employerposts3.example.com",
+			"admin@0026-employerposts3.example.com",
+			"NewPassword123$",
+			&employer3AdminToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts3.example.com",
+			"marketing@0026-employerposts3.example.com",
+			"NewPassword123$",
+			&employer3MarketingToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts3.example.com",
+			"regular@0026-employerposts3.example.com",
+			"NewPassword123$",
+			&employer3RegularToken,
+			&wg,
+		)
+
+		// Employer 4 (0026-employerposts4.example.com) users
+		employerSigninAsync(
+			"0026-employerposts4.example.com",
+			"admin@0026-employerposts4.example.com",
+			"NewPassword123$",
+			&employer4AdminToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts4.example.com",
+			"marketing@0026-employerposts4.example.com",
+			"NewPassword123$",
+			&employer4MarketingToken,
+			&wg,
+		)
+		employerSigninAsync(
+			"0026-employerposts4.example.com",
+			"regular@0026-employerposts4.example.com",
+			"NewPassword123$",
+			&employer4RegularToken,
+			&wg,
+		)
+
+		// Org follow employer (0026-orgfollow.example.com)
+		employerSigninAsync(
+			"0026-orgfollow.example.com",
+			"admin@0026-orgfollow.example.com",
+			"NewPassword123$",
+			&orgFollowAdminToken,
+			&wg,
+		)
+
+		// Different employer (0026-hubtest-different.example.com)
+		employerSigninAsync(
+			"0026-hubtest-different.example.com",
+			"admin@0026-hubtest-different.example.com",
+			"NewPassword123$",
+			&differentAdminToken,
+			&wg,
+		)
+
+		// Hub users
+		hubSigninAsync(
+			"test1@0026-hubuser.example.com",
+			"NewPassword123$",
+			&hubUserToken1,
+			&wg,
+		)
+		hubSigninAsync(
+			"test2@0026-hubuser.example.com",
+			"NewPassword123$",
+			&hubUserToken2,
+			&wg,
+		)
+
+		wg.Wait()
 	})
 
 	AfterAll(func() {
@@ -72,43 +233,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 	}
 
 	Describe("Add Employer Post", func() {
-		var (
-			adminToken     string
-			marketingToken string
-			regularToken   string
-		)
-
-		BeforeEach(func() {
-			// Login org users and get tokens
-			var wg sync.WaitGroup
-			wg.Add(3) // 3 org users to sign in
-
-			employerSigninAsync(
-				"0026-employerposts.example.com",
-				"admin@0026-employerposts.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-employerposts.example.com",
-				"marketing@0026-employerposts.example.com",
-				"NewPassword123$",
-				&marketingToken,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-employerposts.example.com",
-				"regular@0026-employerposts.example.com",
-				"NewPassword123$",
-				&regularToken,
-				&wg,
-			)
-
-			wg.Wait()
-		})
 
 		type addEmployerPostTestCase struct {
 			description string
@@ -138,7 +262,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "admin can add post",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by admin",
 						NewTags: []common.VTagName{"0026-admin-tag"},
@@ -153,7 +277,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "marketing user can add post",
-					token:       marketingToken,
+					token:       employer1MarketingToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by marketing",
 						TagIDs: []common.VTagID{
@@ -172,7 +296,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "regular user cannot add post",
-					token:       regularToken,
+					token:       employer1RegularToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by regular user",
 					},
@@ -180,7 +304,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "empty content",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "",
 					},
@@ -188,7 +312,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "too many tags",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with too many tags",
 						NewTags: []common.VTagName{
@@ -202,7 +326,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "non-existent tag UUID",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with non-existent tag",
 						TagIDs: []common.VTagID{
@@ -215,7 +339,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "invalid UUID format for tag",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with invalid UUID format",
 						TagIDs: []common.VTagID{
@@ -226,7 +350,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "empty tag ID",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with empty tag ID",
 						TagIDs: []common.VTagID{
@@ -237,7 +361,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "mix of valid and invalid tag IDs",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with mixed tag IDs",
 						TagIDs: []common.VTagID{
@@ -253,7 +377,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "mix of existing and new tags",
-					token:       adminToken,
+					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with mixed tag types",
 						TagIDs: []common.VTagID{
@@ -296,28 +420,13 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 	Describe("Get Employer Post", func() {
 		var (
-			adminToken string
-			postID     string
+			postID string
 		)
 
 		BeforeEach(func() {
-			// Login admin user
-			var wg sync.WaitGroup
-			wg.Add(1)
-
-			employerSigninAsync(
-				"0026-employerposts2.example.com",
-				"admin@0026-employerposts2.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			// Create a fresh post for each test
 			postID = createTestPost(
-				adminToken,
+				employer2AdminToken,
 				"Test post for get",
 				[]common.VTagID{
 					common.VTagID(
@@ -340,28 +449,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various get employer post scenarios", func() {
-			// Login other users for this test
-			var marketingToken, regularToken string
-			var wg sync.WaitGroup
-			wg.Add(2)
-
-			employerSigninAsync(
-				"0026-employerposts2.example.com",
-				"marketing@0026-employerposts2.example.com",
-				"NewPassword123$",
-				&marketingToken,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-employerposts2.example.com",
-				"regular@0026-employerposts2.example.com",
-				"NewPassword123$",
-				&regularToken,
-				&wg,
-			)
-
-			wg.Wait()
 
 			testCases := []getEmployerPostTestCase{
 				{
@@ -382,7 +469,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "admin can get post",
-					token:       adminToken,
+					token:       employer2AdminToken,
 					request: employer.GetEmployerPostRequest{
 						PostID: postID,
 					},
@@ -405,7 +492,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "marketing user can get post",
-					token:       marketingToken,
+					token:       employer2MarketingToken,
 					request: employer.GetEmployerPostRequest{
 						PostID: postID,
 					},
@@ -423,7 +510,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "regular user cannot get post",
-					token:       regularToken,
+					token:       employer2RegularToken,
 					request: employer.GetEmployerPostRequest{
 						PostID: postID,
 					},
@@ -431,7 +518,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "non-existent post",
-					token:       adminToken,
+					token:       employer2AdminToken,
 					request: employer.GetEmployerPostRequest{
 						PostID: "non-existent-post-id",
 					},
@@ -460,27 +547,12 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 	Describe("List Employer Posts", func() {
 		var (
-			adminToken string
-			postIDs    []string
+			postIDs []string
 		)
 
 		BeforeEach(func() {
-			// Login admin user
-			var wg sync.WaitGroup
-			wg.Add(1)
-
-			employerSigninAsync(
-				"0026-employerposts3.example.com",
-				"admin@0026-employerposts3.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			// Create fresh posts for each test
-			postIDs = createTestPosts(adminToken, 4)
+			postIDs = createTestPosts(employer3AdminToken, 4)
 		})
 
 		type listEmployerPostsTestCase struct {
@@ -492,28 +564,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various list employer posts scenarios", func() {
-			// Login other users for this test
-			var marketingToken, regularToken string
-			var wg sync.WaitGroup
-			wg.Add(2)
-
-			employerSigninAsync(
-				"0026-employerposts3.example.com",
-				"marketing@0026-employerposts3.example.com",
-				"NewPassword123$",
-				&marketingToken,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-employerposts3.example.com",
-				"regular@0026-employerposts3.example.com",
-				"NewPassword123$",
-				&regularToken,
-				&wg,
-			)
-
-			wg.Wait()
 
 			testCases := []listEmployerPostsTestCase{
 				{
@@ -530,7 +580,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "admin can list posts with default limit",
-					token:       adminToken,
+					token:       employer3AdminToken,
 					request:     employer.ListEmployerPostsRequest{},
 					wantStatus:  http.StatusOK,
 					validate: func(respBody []byte) {
@@ -549,7 +599,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "marketing user can list posts with custom limit",
-					token:       marketingToken,
+					token:       employer3MarketingToken,
 					request: employer.ListEmployerPostsRequest{
 						Limit: 2,
 					},
@@ -568,7 +618,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "pagination works correctly",
-					token:       adminToken,
+					token:       employer3AdminToken,
 					request: employer.ListEmployerPostsRequest{
 						Limit:         2,
 						PaginationKey: postIDs[2], // Start after the third newest post
@@ -585,13 +635,13 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "regular user cannot list posts",
-					token:       regularToken,
+					token:       employer3RegularToken,
 					request:     employer.ListEmployerPostsRequest{},
 					wantStatus:  http.StatusForbidden,
 				},
 				{
 					description: "invalid limit",
-					token:       adminToken,
+					token:       employer3AdminToken,
 					request: employer.ListEmployerPostsRequest{
 						Limit: 50, // Max is 40
 					},
@@ -620,28 +670,13 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 	Describe("Delete Employer Post", func() {
 		var (
-			adminToken string
-			postID     string
+			postID string
 		)
 
 		BeforeEach(func() {
-			// Login admin user
-			var wg sync.WaitGroup
-			wg.Add(1)
-
-			employerSigninAsync(
-				"0026-employerposts4.example.com",
-				"admin@0026-employerposts4.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			// Create a fresh post for each test
 			postID = createTestPost(
-				adminToken,
+				employer4AdminToken,
 				"Test post for delete",
 				nil,
 				nil,
@@ -656,29 +691,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 		}
 
 		It("should handle various delete employer post scenarios", func() {
-			// Login other users for this test
-			var marketingToken, regularToken string
-			var wg sync.WaitGroup
-			wg.Add(2)
-
-			employerSigninAsync(
-				"0026-employerposts4.example.com",
-				"marketing@0026-employerposts4.example.com",
-				"NewPassword123$",
-				&marketingToken,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-employerposts4.example.com",
-				"regular@0026-employerposts4.example.com",
-				"NewPassword123$",
-				&regularToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			testCases := []deleteEmployerPostTestCase{
 				{
 					description: "without authentication",
@@ -698,7 +710,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "regular user cannot delete post",
-					token:       regularToken,
+					token:       employer4RegularToken,
 					request: employer.DeleteEmployerPostRequest{
 						PostID: postID,
 					},
@@ -706,7 +718,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "non-existent post",
-					token:       adminToken,
+					token:       employer4AdminToken,
 					request: employer.DeleteEmployerPostRequest{
 						PostID: "non-existent-post-id",
 					},
@@ -714,7 +726,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				},
 				{
 					description: "marketing user can delete post",
-					token:       marketingToken,
+					token:       employer4MarketingToken,
 					request: employer.DeleteEmployerPostRequest{
 						PostID: postID,
 					},
@@ -739,42 +751,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 	})
 
 	Describe("Follow/Unfollow Organization", func() {
-		var (
-			hubUserToken1 string
-			hubUserToken2 string
-			adminToken    string
-		)
-
-		BeforeEach(func() {
-			// Login hub users
-			var wg sync.WaitGroup
-			wg.Add(3) // 2 hub users + 1 org admin
-
-			hubSigninAsync(
-				"test1@0026-hubuser.example.com",
-				"NewPassword123$",
-				&hubUserToken1,
-				&wg,
-			)
-
-			hubSigninAsync(
-				"test2@0026-hubuser.example.com",
-				"NewPassword123$",
-				&hubUserToken2,
-				&wg,
-			)
-
-			// Login org admin
-			employerSigninAsync(
-				"0026-orgfollow.example.com",
-				"admin@0026-orgfollow.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			wg.Wait()
-		})
 
 		It("should handle various follow org scenarios", func() {
 			testCases := []struct {
@@ -927,7 +903,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 			// Create a post as org admin
 			postContent := uuid.New().String()
-			postID := createTestPost(adminToken, postContent, nil, nil)
+			postID := createTestPost(orgFollowAdminToken, postContent, nil, nil)
 
 			var timeline hub.MyHomeTimeline
 			var found bool
@@ -969,7 +945,12 @@ var _ = Describe("Employer Posts", Ordered, func() {
 			)
 
 			// Create another post
-			postID2 := createTestPost(adminToken, "after unfollow", nil, nil)
+			postID2 := createTestPost(
+				orgFollowAdminToken,
+				"after unfollow",
+				nil,
+				nil,
+			)
 
 			found = false
 			for i := 0; i < 5; i++ {
@@ -1004,44 +985,13 @@ var _ = Describe("Employer Posts", Ordered, func() {
 
 	Describe("Get Employer Post Details (Hub)", func() {
 		var (
-			hubUserToken1 string
-			hubUserToken2 string
-			adminToken    string
-			postID        string
+			postID string
 		)
 
 		BeforeEach(func() {
-			// Login hub users and employer admin
-			var wg sync.WaitGroup
-			wg.Add(3)
-
-			hubSigninAsync(
-				"test1@0026-hubuser.example.com",
-				"NewPassword123$",
-				&hubUserToken1,
-				&wg,
-			)
-
-			hubSigninAsync(
-				"test2@0026-hubuser.example.com",
-				"NewPassword123$",
-				&hubUserToken2,
-				&wg,
-			)
-
-			employerSigninAsync(
-				"0026-orgfollow.example.com",
-				"admin@0026-orgfollow.example.com",
-				"NewPassword123$",
-				&adminToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			// Create a test post with tags
 			postID = createTestPost(
-				adminToken,
+				orgFollowAdminToken,
 				"Test employer post for hub users to read",
 				[]common.VTagID{
 					common.VTagID(
@@ -1165,7 +1115,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 		It("should verify all response fields are populated correctly", func() {
 			// Create a fresh post with no tags for this specific test
 			postWithoutTags := createTestPost(
-				adminToken,
+				orgFollowAdminToken,
 				"Post without tags for field verification",
 				nil,
 				nil,
@@ -1205,21 +1155,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 		})
 
 		It("should handle posts from different employers correctly", func() {
-			// Login to a different employer (dedicated for this test)
-			var differentAdminToken string
-			var wg sync.WaitGroup
-			wg.Add(1)
-
-			employerSigninAsync(
-				"0026-hubtest-different.example.com",
-				"admin@0026-hubtest-different.example.com",
-				"NewPassword123$",
-				&differentAdminToken,
-				&wg,
-			)
-
-			wg.Wait()
-
 			// Create a post from different employer
 			differentPostID := createTestPost(
 				differentAdminToken,
