@@ -1,9 +1,11 @@
 ---
-description: Adding new code
+description: 
 globs: 
+alwaysApply: true
 ---
 # Your rule content
 
+- We are implementing a social networking and jobs website. ronweasly directory contains a nextjs app which is the user-facing website. harrypotter directory contains a nextjs app which is the employer-facing website. api directory contains the backend golang code. sqitch directory contains the SQL needed for the database tables and operations
 - When making network calls in *.tsx code, always try to use struct or const exposed from the typespec library. Do not create json.stringify with unstructured data.
 - When writing SQL queries in *.go or *.pgsql files always adhere to the database schema defined under [1-initdb.sql](mdc:sqitch/deploy/1-initdb.sql) or the *.sql files under sqitch directory
 - Vetchium is a jobs and professional social networking site. Its code organization is explained below
