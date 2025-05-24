@@ -350,6 +350,12 @@ func RegisterHubRoutes(h *Hermione) {
 	)
 
 	h.mw.Guard(
+		"/hub/get-employer-post-details",
+		po.GetEmployerPostDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	h.mw.Guard(
 		"/hub/follow-org",
 		po.FollowOrg(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},

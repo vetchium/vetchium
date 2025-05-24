@@ -463,6 +463,10 @@ type DB interface {
 		ctx context.Context,
 		postID string,
 	) (common.EmployerPost, error)
+	GetEmployerPostForHub(
+		ctx context.Context,
+		postID string,
+	) (common.EmployerPost, error)
 	ListEmployerPosts(
 		req ListEmployerPostsRequest,
 	) (employer.ListEmployerPostsResponse, error)

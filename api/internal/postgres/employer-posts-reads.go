@@ -193,3 +193,68 @@ func (p *PG) ListEmployerPosts(
 		PaginationKey: nextPaginationKey,
 	}, nil
 }
+
+func (p *PG) GetEmployerPostForHub(
+	ctx context.Context,
+	postID string,
+) (common.EmployerPost, error) {
+	// Verify hub user exists in context
+	_, err := getHubUserID(ctx)
+	if err != nil {
+		p.log.Err("failed to get hubUserID from context", "error", err)
+		return common.EmployerPost{}, db.ErrInternal
+	}
+
+	// Query to get post details and tags - includes employer name
+	query := `
+	SELECT 
+		ep.id, 
+		ep.content, 
+		ep.created_at, 
+		ep.updated_at,
+		e.company_name as employer_name,
+		d.domain_name as company_domain,
+		ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
+	FROM employer_posts ep
+	JOIN employers e ON ep.employer_id = e.id
+	JOIN employer_primary_domains epd ON e.id = epd.employer_id
+	JOIN domains d ON epd.domain_id = d.id
+	LEFT JOIN employer_post_tags ept ON ep.id = ept.employer_post_id
+	LEFT JOIN tags t ON ept.tag_id = t.id
+	WHERE ep.id = $1
+	GROUP BY ep.id, ep.content, ep.created_at, ep.updated_at, e.company_name, d.domain_name
+	`
+
+	var post common.EmployerPost
+	var tags []string
+
+	err = p.pool.QueryRow(ctx, query, postID).Scan(
+		&post.ID,
+		&post.Content,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+		&post.EmployerName,
+		&post.EmployerDomainName,
+		&tags,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("employer post not found", "post_id", postID)
+			return common.EmployerPost{}, db.ErrNoEmployerPost
+		}
+
+		p.log.Err("failed to scan employer post", "error", err)
+		return common.EmployerPost{}, db.ErrInternal
+	}
+
+	// Set tags if they exist
+	if len(tags) > 0 && tags[0] != "" {
+		post.Tags = tags
+	} else {
+		post.Tags = []string{}
+	}
+
+	p.log.Dbg("fetched employer post for hub user", "post_id", postID)
+	return post, nil
+}
