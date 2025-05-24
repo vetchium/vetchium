@@ -123,7 +123,13 @@ export default function PostDetailPage() {
   }, [postId, router, t]);
 
   const handleBack = () => {
-    router.back();
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // No history, navigate to home page
+      router.push("/");
+    }
   };
 
   if (loading) {

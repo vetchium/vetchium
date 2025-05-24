@@ -60,7 +60,7 @@ export default function EmployerPostDetailPage() {
 
         if (response.status === 404) {
           setIsNotFound(true);
-          setError(t("posts.notFoundError") || "Employer post not found");
+          setError(t("posts.notFoundError") || "Post not found");
           setLoading(false);
           return;
         }
@@ -98,9 +98,7 @@ export default function EmployerPostDetailPage() {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching employer post details:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load employer post"
-        );
+        setError(err instanceof Error ? err.message : "Failed to load post");
         setLoading(false);
       }
     };
@@ -109,7 +107,13 @@ export default function EmployerPostDetailPage() {
   }, [postId, router, t]);
 
   const handleBack = () => {
-    router.back();
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // No history, navigate to home page
+      router.push("/");
+    }
   };
 
   if (loading) {
@@ -142,12 +146,11 @@ export default function EmployerPostDetailPage() {
           </Button>
           <Paper sx={{ p: 3, mb: 4 }}>
             <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 2 }}>
-              {t("posts.employerPostNotFoundError") ||
-                "Employer post not found"}
+              {t("posts.notFoundError") || "Post not found"}
             </Alert>
             <Typography variant="body1">
-              {t("posts.employerPostNotFoundDescription") ||
-                "The employer post you're looking for could not be found. It may have been deleted or you may not have permission to view it."}
+              {t("posts.notFoundDescription") ||
+                "The post you're looking for could not be found. It may have been deleted or you may not have permission to view it."}
             </Typography>
           </Paper>
         </Box>
@@ -187,7 +190,7 @@ export default function EmployerPostDetailPage() {
 
         <Paper sx={{ p: 3, mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            {t("posts.viewEmployerPost") || "View Employer Post"}
+            {t("posts.viewPost") || "View Post"}
           </Typography>
 
           {post ? (
@@ -195,9 +198,7 @@ export default function EmployerPostDetailPage() {
               <EmployerPostCard post={post} hideOpenInNewTab={true} />
             </Box>
           ) : (
-            <Typography>
-              {t("posts.employerPostNotFound") || "Employer post not found"}
-            </Typography>
+            <Typography>{t("posts.notFound") || "Post not found"}</Typography>
           )}
         </Paper>
       </Box>
