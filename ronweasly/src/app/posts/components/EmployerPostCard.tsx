@@ -117,7 +117,7 @@ export default function EmployerPostCard({
             <Tooltip title={t("common.externalLink.message")}>
               <IconButton
                 component={Link}
-                href={`/posts/${post.id}`}
+                href={`/employer-posts/${post.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("common.externalLink.message")}
