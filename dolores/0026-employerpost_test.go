@@ -1001,4 +1001,256 @@ var _ = Describe("Employer Posts", Ordered, func() {
 			Expect(found).Should(BeFalse(), "got post after unfollowing org")
 		})
 	})
+
+	Describe("Get Employer Post Details (Hub)", func() {
+		var (
+			hubUserToken1 string
+			hubUserToken2 string
+			adminToken    string
+			postID        string
+		)
+
+		BeforeEach(func() {
+			// Login hub users and employer admin
+			var wg sync.WaitGroup
+			wg.Add(3)
+
+			hubSigninAsync(
+				"test1@0026-hubuser.example.com",
+				"NewPassword123$",
+				&hubUserToken1,
+				&wg,
+			)
+
+			hubSigninAsync(
+				"test2@0026-hubuser.example.com",
+				"NewPassword123$",
+				&hubUserToken2,
+				&wg,
+			)
+
+			employerSigninAsync(
+				"0026-orgfollow.example.com",
+				"admin@0026-orgfollow.example.com",
+				"NewPassword123$",
+				&adminToken,
+				&wg,
+			)
+
+			wg.Wait()
+
+			// Create a test post with tags
+			postID = createTestPost(
+				adminToken,
+				"Test employer post for hub users to read",
+				[]common.VTagID{
+					common.VTagID(
+						"12345678-0026-0026-0026-000000050001",
+					), // 0026-engineering
+				},
+				[]common.VTagName{"0026-hub-test"},
+			)
+		})
+
+		type getEmployerPostDetailsTestCase struct {
+			description string
+			token       string
+			request     hub.GetEmployerPostDetailsRequest
+			wantStatus  int
+			validate    func([]byte)
+		}
+
+		It("should handle various get employer post details scenarios", func() {
+			testCases := []getEmployerPostDetailsTestCase{
+				{
+					description: "without authentication",
+					token:       "",
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: postID,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "with invalid token",
+					token:       "invalid-token",
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: postID,
+					},
+					wantStatus: http.StatusUnauthorized,
+				},
+				{
+					description: "hub user can get employer post details",
+					token:       hubUserToken1,
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: postID,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var post common.EmployerPost
+						err := json.Unmarshal(respBody, &post)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(post.ID).Should(Equal(postID))
+						Expect(
+							post.Content,
+						).Should(Equal("Test employer post for hub users to read"))
+						Expect(post.EmployerName).ShouldNot(BeEmpty())
+						Expect(
+							post.EmployerDomainName,
+						).Should(Equal("0026-orgfollow.example.com"))
+						Expect(
+							post.Tags,
+						).Should(ContainElements("0026-engineering", "0026-hub-test"))
+						Expect(post.CreatedAt).ShouldNot(BeZero())
+						Expect(post.UpdatedAt).ShouldNot(BeZero())
+					},
+				},
+				{
+					description: "different hub user can also get employer post details",
+					token:       hubUserToken2,
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: postID,
+					},
+					wantStatus: http.StatusOK,
+					validate: func(respBody []byte) {
+						var post common.EmployerPost
+						err := json.Unmarshal(respBody, &post)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(post.ID).Should(Equal(postID))
+						Expect(
+							post.Content,
+						).Should(Equal("Test employer post for hub users to read"))
+						Expect(post.EmployerName).ShouldNot(BeEmpty())
+						Expect(
+							post.EmployerDomainName,
+						).Should(Equal("0026-orgfollow.example.com"))
+						Expect(post.Tags).Should(HaveLen(2))
+					},
+				},
+				{
+					description: "non-existent post",
+					token:       hubUserToken1,
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: "non-existent-post-id",
+					},
+					wantStatus: http.StatusNotFound,
+				},
+				{
+					description: "empty post ID",
+					token:       hubUserToken1,
+					request: hub.GetEmployerPostDetailsRequest{
+						EmployerPostID: "",
+					},
+					wantStatus: http.StatusBadRequest,
+				},
+			}
+
+			for _, tc := range testCases {
+				fmt.Fprintf(
+					GinkgoWriter,
+					"### Testing GetEmployerPostDetails (Hub): %s\n",
+					tc.description,
+				)
+				resp := testPOSTGetResp(
+					tc.token,
+					tc.request,
+					"/hub/get-employer-post-details",
+					tc.wantStatus,
+				)
+				if tc.validate != nil && tc.wantStatus == http.StatusOK {
+					tc.validate(resp.([]byte))
+				}
+			}
+		})
+
+		It("should verify all response fields are populated correctly", func() {
+			// Create a fresh post with no tags for this specific test
+			postWithoutTags := createTestPost(
+				adminToken,
+				"Post without tags for field verification",
+				nil,
+				nil,
+			)
+
+			resp := testPOSTGetResp(
+				hubUserToken1,
+				hub.GetEmployerPostDetailsRequest{
+					EmployerPostID: postWithoutTags,
+				},
+				"/hub/get-employer-post-details",
+				http.StatusOK,
+			).([]byte)
+
+			var post common.EmployerPost
+			err := json.Unmarshal(resp, &post)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Verify all required fields are present and have expected types
+			Expect(post.ID).Should(Equal(postWithoutTags))
+			Expect(
+				post.Content,
+			).Should(Equal("Post without tags for field verification"))
+			Expect(post.EmployerName).ShouldNot(BeEmpty())
+			Expect(
+				post.EmployerDomainName,
+			).Should(Equal("0026-orgfollow.example.com"))
+			Expect(post.Tags).Should(BeEmpty()) // This post has no tags
+			Expect(post.CreatedAt).ShouldNot(BeZero())
+			Expect(post.UpdatedAt).ShouldNot(BeZero())
+
+			// Verify timestamps are reasonable (within last minute)
+			now := time.Now()
+			Expect(post.CreatedAt).Should(BeTemporally("~", now, time.Minute))
+			Expect(post.UpdatedAt).Should(BeTemporally("~", now, time.Minute))
+			Expect(post.UpdatedAt).Should(BeTemporally(">=", post.CreatedAt))
+		})
+
+		It("should handle posts from different employers correctly", func() {
+			// Login to a different employer (dedicated for this test)
+			var differentAdminToken string
+			var wg sync.WaitGroup
+			wg.Add(1)
+
+			employerSigninAsync(
+				"0026-hubtest-different.example.com",
+				"admin@0026-hubtest-different.example.com",
+				"NewPassword123$",
+				&differentAdminToken,
+				&wg,
+			)
+
+			wg.Wait()
+
+			// Create a post from different employer
+			differentPostID := createTestPost(
+				differentAdminToken,
+				"Post from different employer",
+				[]common.VTagID{
+					common.VTagID(
+						"12345678-0026-0026-0026-000000050002",
+					), // 0026-marketing
+				},
+				nil,
+			)
+
+			// Hub user should be able to get posts from any employer
+			resp := testPOSTGetResp(
+				hubUserToken1,
+				hub.GetEmployerPostDetailsRequest{
+					EmployerPostID: differentPostID,
+				},
+				"/hub/get-employer-post-details",
+				http.StatusOK,
+			).([]byte)
+
+			var post common.EmployerPost
+			err := json.Unmarshal(resp, &post)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(post.ID).Should(Equal(differentPostID))
+			Expect(post.Content).Should(Equal("Post from different employer"))
+			Expect(
+				post.EmployerDomainName,
+			).Should(Equal("0026-hubtest-different.example.com"))
+			Expect(post.Tags).Should(ContainElement("0026-marketing"))
+		})
+	})
 })

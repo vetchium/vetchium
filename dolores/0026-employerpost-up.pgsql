@@ -78,22 +78,27 @@ VALUES
 -- Create test employer for org following tests
 INSERT INTO emails (email_key, email_from, email_to, email_cc, email_bcc, email_subject, email_html_body, email_text_body, email_state, created_at, processed_at)
 VALUES 
-    ('12345678-0026-0026-0026-000000000015'::uuid, 'no-reply@vetchi.org', ARRAY['admin@0026-orgfollow.example.com'], NULL, NULL, 'Welcome to Vetchium Subject', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
+    ('12345678-0026-0026-0026-000000000015'::uuid, 'no-reply@vetchi.org', ARRAY['admin@0026-orgfollow.example.com'], NULL, NULL, 'Welcome to Vetchium Subject', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now())),
+    ('12345678-0026-0026-0026-000000000016'::uuid, 'no-reply@vetchi.org', ARRAY['admin@0026-hubtest-different.example.com'], NULL, NULL, 'Welcome to Vetchium Subject', 'Welcome HTML', 'Welcome Text', 'PROCESSED', timezone('UTC'::text, now()), timezone('UTC'::text, now()));
 
 INSERT INTO employers (id, client_id_type, employer_state, company_name, onboard_admin_email, onboard_secret_token, token_valid_till, onboard_email_id, created_at)
 VALUES 
-    ('12345678-0026-0026-0026-000000000205'::uuid, 'DOMAIN', 'ONBOARDED', '0026-orgfollow.example.com', 'admin@0026-orgfollow.example.com', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0026-0026-0026-000000000015'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0026-0026-0026-000000000205'::uuid, 'DOMAIN', 'ONBOARDED', '0026-orgfollow.example.com', 'admin@0026-orgfollow.example.com', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0026-0026-0026-000000000015'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0026-0026-0026-000000000206'::uuid, 'DOMAIN', 'ONBOARDED', '0026-hubtest-different.example.com', 'admin@0026-hubtest-different.example.com', 'blah', timezone('UTC'::text, now()) + interval '1 day', '12345678-0026-0026-0026-000000000016'::uuid, timezone('UTC'::text, now()));
 
 INSERT INTO domains (id, domain_name, domain_state, employer_id, created_at)
 VALUES 
-    ('12345678-0026-0026-0026-000000003005'::uuid, '0026-orgfollow.example.com', 'VERIFIED', '12345678-0026-0026-0026-000000000205'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0026-0026-0026-000000003005'::uuid, '0026-orgfollow.example.com', 'VERIFIED', '12345678-0026-0026-0026-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0026-0026-0026-000000003006'::uuid, '0026-hubtest-different.example.com', 'VERIFIED', '12345678-0026-0026-0026-000000000206'::uuid, timezone('UTC'::text, now()));
 
 INSERT INTO employer_primary_domains (employer_id, domain_id)
 VALUES 
-    ('12345678-0026-0026-0026-000000000205'::uuid, '12345678-0026-0026-0026-000000003005'::uuid);
+    ('12345678-0026-0026-0026-000000000205'::uuid, '12345678-0026-0026-0026-000000003005'::uuid),
+    ('12345678-0026-0026-0026-000000000206'::uuid, '12345678-0026-0026-0026-000000003006'::uuid);
 
 INSERT INTO org_users (id, email, name, password_hash, org_user_roles, org_user_state, employer_id, created_at)
 VALUES
-    ('12345678-0026-0026-0026-000000040013'::uuid, 'admin@0026-orgfollow.example.com', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000205'::uuid, timezone('UTC'::text, now()));
+    ('12345678-0026-0026-0026-000000040013'::uuid, 'admin@0026-orgfollow.example.com', 'Admin User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000205'::uuid, timezone('UTC'::text, now())),
+    ('12345678-0026-0026-0026-000000040014'::uuid, 'admin@0026-hubtest-different.example.com', 'Different Employer Admin', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['ADMIN']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000206'::uuid, timezone('UTC'::text, now()));
 
 COMMIT;
