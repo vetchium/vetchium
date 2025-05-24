@@ -139,6 +139,10 @@ model UnfollowOrgRequest {
     domain: string;
 }
 
+model GetEmployerPostDetailsRequest {
+    employer_post_id: string;
+}
+
 @route("/hub/add-post")
 interface AddPost {
     @tag("Posts")
@@ -292,5 +296,16 @@ interface UnfollowOrg {
     @doc("Unfollows an organization, if followed. If the organization is not followed, no error will be returned.")
     unfollowOrg(@body request: UnfollowOrgRequest): {
         @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/get-employer-post-details")
+interface GetEmployerPostDetails {
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    getEmployerPostDetails(@body request: GetEmployerPostDetailsRequest): {
+        @statusCode statusCode: 200;
+        @body response: EmployerPost;
     };
 }

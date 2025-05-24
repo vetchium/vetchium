@@ -96,3 +96,7 @@ type FollowOrgRequest struct {
 type UnfollowOrgRequest struct {
 	Domain string `json:"domain" validate:"required"`
 }
+
+type GetEmployerPostDetailsRequest struct {
+	EmployerPostID string `json:"employer_post_id" validate:"required"`
+}

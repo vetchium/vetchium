@@ -92,3 +92,7 @@ export interface FollowOrgRequest {
 export interface UnfollowOrgRequest {
   domain: string;
 }
+
+export interface GetEmployerPostDetailsRequest {
+  employer_post_id: string;
+}
