@@ -43,6 +43,8 @@
 - [] Cleaner RBAC error codes and UI alerts
 - [] LoadTests should test for EmployerPosts also
 - [] API for EmployerPost details getting
+- [] HubUser account deletion and the triggered cleanup workflows for posts, comments, etc.
+- [] Employer account deletion and the triggered cleanup workflows for posts, comments, openings, candidacies, applications, etc.
 
 # Future Features
 
