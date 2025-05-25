@@ -32,7 +32,7 @@ type PostComment struct {
 
 type DisablePostCommentsRequest struct {
 	PostID                 string `json:"post_id"                  validate:"required"`
-	DeleteExistingComments bool   `json:"delete_existing_comments" validate:"required"`
+	DeleteExistingComments bool   `json:"delete_existing_comments"`
 }
 
 type EnablePostCommentsRequest struct {

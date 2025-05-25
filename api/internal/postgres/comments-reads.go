@@ -2,7 +2,11 @@ package postgres
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
@@ -45,17 +49,33 @@ func (pg *PG) GetPostComments(
 
 	// Add pagination condition if provided
 	if req.PaginationKey != "" {
-		// For pagination, we need to find comments created before the pagination key comment
-		// or with the same created_at but lower ID
-		query += ` AND (
-			pc.created_at < (SELECT created_at FROM post_comments WHERE id = $2)
-			OR (
-				pc.created_at = (SELECT created_at FROM post_comments WHERE id = $2)
-				AND pc.id < $2
-			)
-		)`
-		argCount++
-		args = append(args, req.PaginationKey)
+		// First check if the pagination key exists and get its created_at timestamp
+		var paginationCreatedAt time.Time
+		var paginationID string
+		err := pg.pool.QueryRow(ctx, `
+			SELECT created_at, id FROM post_comments WHERE id = $1 LIMIT 1
+		`, req.PaginationKey).Scan(&paginationCreatedAt, &paginationID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				// Invalid pagination key - proceed without pagination clause (effectively first page)
+				pg.log.Dbg("invalid pagination key, returning first page",
+					"pagination_key", req.PaginationKey)
+			} else {
+				pg.log.Err("failed to get pagination key", "error", err)
+				return nil, db.ErrInternal
+			}
+		} else {
+			// Valid pagination key - add pagination condition
+			query += ` AND (
+				pc.created_at < $2
+				OR (
+					pc.created_at = $2
+					AND pc.id < $3
+				)
+			)`
+			argCount += 2
+			args = append(args, paginationCreatedAt, req.PaginationKey)
+		}
 	}
 
 	// Order by newest first, then by ID descending for tie-breaking
@@ -63,7 +83,7 @@ func (pg *PG) GetPostComments(
 
 	// Add limit
 	argCount++
-	query += ` LIMIT $` + string(rune('0'+argCount))
+	query += fmt.Sprintf(` LIMIT $%d`, argCount)
 	args = append(args, req.Limit)
 
 	rows, err := pg.pool.Query(ctx, query, args...)

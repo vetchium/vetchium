@@ -26,7 +26,7 @@ model AddPostCommentResponse {
 model GetPostCommentsRequest {
     post_id: string;
 
-    @doc("The comments are returned ordered by the newest of created_at timestamp. If two comments are created at the same time, the one with the higher id is returned first. The pagination key is the id of the last comment in the previous response. The item corresponding to the passed pagination_key will not be included in the response.")
+    @doc("The comments are returned ordered by the newest of created_at timestamp. If two comments are created at the same time, the one with the higher id is returned first. The pagination key is the id of the last comment in the previous response. The item corresponding to the passed pagination_key will not be included in the response. If an invalid pagination_key is provided (comment does not exist), the API will return comments from the beginning (first page).")
     pagination_key?: string;
 
     @doc("If nothing is passed, 10 Comments are returned")

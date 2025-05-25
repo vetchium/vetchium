@@ -1402,11 +1402,11 @@ CREATE TABLE post_comments (
     post_id TEXT REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-
-    -- Index for efficient pagination and ordering
-    CONSTRAINT post_comments_ordering_idx UNIQUE (post_id, created_at DESC, id DESC)
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
+
+-- Index for efficient pagination and ordering (newest first)
+CREATE INDEX idx_post_comments_pagination ON post_comments (post_id, created_at DESC, id DESC);
 
 
 
