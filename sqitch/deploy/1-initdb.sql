@@ -1047,7 +1047,8 @@ CREATE TABLE posts (
 
     upvotes_count INTEGER NOT NULL DEFAULT 0,
     downvotes_count INTEGER NOT NULL DEFAULT 0,
-    score INTEGER NOT NULL DEFAULT 0
+    score INTEGER NOT NULL DEFAULT 0,
+    comments_enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE post_tags (
@@ -1395,5 +1396,18 @@ BEGIN
     RETURN 'CAN_SIGNUP';
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE post_comments (
+    id TEXT PRIMARY KEY,
+    post_id TEXT REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES hub_users(id) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
+    -- Index for efficient pagination and ordering
+    CONSTRAINT post_comments_ordering_idx UNIQUE (post_id, created_at DESC, id DESC)
+);
+
+
 
 COMMIT;

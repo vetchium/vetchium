@@ -29,6 +29,7 @@ const (
 
 	ApplicationIDLenBytes = 16
 	CandidacyIDLenBytes   = 16
+	CommentIDLenBytes     = 12
 	EndorsementIDLenBytes = 16
 	InterviewIDLenBytes   = 16
 	PostIDLenBytes        = 24

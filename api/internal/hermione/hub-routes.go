@@ -7,6 +7,7 @@ import (
 	app "github.com/vetchium/vetchium/api/internal/hermione/applications"
 	ca "github.com/vetchium/vetchium/api/internal/hermione/candidacy"
 	co "github.com/vetchium/vetchium/api/internal/hermione/colleagues"
+	com "github.com/vetchium/vetchium/api/internal/hermione/comments"
 	ed "github.com/vetchium/vetchium/api/internal/hermione/education"
 	ha "github.com/vetchium/vetchium/api/internal/hermione/hubauth"
 	he "github.com/vetchium/vetchium/api/internal/hermione/hubemp"
@@ -352,6 +353,38 @@ func RegisterHubRoutes(h *Hermione) {
 	h.mw.Guard(
 		"/hub/get-employer-post-details",
 		po.GetEmployerPostDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	// Comment related endpoints
+	h.mw.Guard(
+		"/hub/add-post-comment",
+		com.AddPostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-post-comments",
+		com.GetPostComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/disable-post-comments",
+		com.DisablePostComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/enable-post-comments",
+		com.EnablePostComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-post-comment",
+		com.DeletePostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-my-comment",
+		com.DeleteMyComment(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
 

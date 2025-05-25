@@ -90,4 +90,10 @@ var (
 
 	ErrNoDomain = errors.New("domain not found")
 	ErrNoTag    = errors.New("tag not found")
+
+	// Comment related errors
+	ErrNoComment        = errors.New("comment not found")
+	ErrCommentsDisabled = errors.New("comments are disabled for this post")
+	ErrNotPostAuthor    = errors.New("user is not the author of this post")
+	ErrNotCommentAuthor = errors.New("user is not the author of this comment")
 )

@@ -73,6 +73,14 @@ interface AddPostComment {
     addPostComment(@body request: AddPostCommentRequest): {
         @statusCode statusCode: 200;
         @body response: AddPostCommentResponse;
+    } | {
+        @doc("Comments are disabled for this post")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @doc("Post not found")
+        @statusCode
+        statusCode: 404;
     };
 }
 
@@ -84,6 +92,10 @@ interface GetPostComments {
     getPostComments(@body request: GetPostCommentsRequest): {
         @statusCode statusCode: 200;
         @body response: PostComment[];
+    } | {
+        @doc("Post not found")
+        @statusCode
+        statusCode: 404;
     };
 }
 
@@ -95,6 +107,14 @@ interface DisablePostComments {
     @useAuth(HubAuth)
     disablePostComments(@body request: DisablePostCommentsRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("Logged in user is not the author of this post")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @doc("Post not found")
+        @statusCode
+        statusCode: 404;
     };
 }
 
@@ -106,6 +126,14 @@ interface EnablePostComments {
     @useAuth(HubAuth)
     enablePostComments(@body request: EnablePostCommentsRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("Logged in user is not the author of this post")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @doc("Post not found")
+        @statusCode
+        statusCode: 404;
     };
 }
 
@@ -117,6 +145,14 @@ interface DeletePostComment {
     @useAuth(HubAuth)
     deletePostComment(@body request: DeletePostCommentRequest): {
         @statusCode statusCode: 200;
+    } | {
+        @doc("Logged in user is not the author of this post")
+        @statusCode
+        statusCode: 403;
+    } | {
+        @doc("Post not found")
+        @statusCode
+        statusCode: 404;
     };
 }
 

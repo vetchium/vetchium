@@ -456,6 +456,32 @@ type DB interface {
 	) error
 	UnvoteUserPost(ctx context.Context, req hub.UnvoteUserPostRequest) error
 
+	// Used by hermione - Post Comments related methods
+	AddPostComment(
+		ctx context.Context,
+		req AddPostCommentRequest,
+	) (hub.AddPostCommentResponse, error)
+	GetPostComments(
+		ctx context.Context,
+		req hub.GetPostCommentsRequest,
+	) ([]hub.PostComment, error)
+	DisablePostComments(
+		ctx context.Context,
+		req hub.DisablePostCommentsRequest,
+	) error
+	EnablePostComments(
+		ctx context.Context,
+		req hub.EnablePostCommentsRequest,
+	) error
+	DeletePostComment(
+		ctx context.Context,
+		req hub.DeletePostCommentRequest,
+	) error
+	DeleteMyComment(
+		ctx context.Context,
+		req hub.DeleteMyCommentRequest,
+	) error
+
 	// Used by hermione - Employer posts related methods
 	AddEmployerPost(AddEmployerPostRequest) error
 	UpdateEmployerPost(UpdateEmployerPostRequest) error
