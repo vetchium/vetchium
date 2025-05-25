@@ -14,6 +14,7 @@ export * from "./hub/achievements";
 export * from "./hub/applications";
 export * from "./hub/candidacy";
 export * from "./hub/colleagues";
+export * from "./hub/comments";
 export * from "./hub/education";
 export * from "./hub/employers";
 export * from "./hub/hubusers";
