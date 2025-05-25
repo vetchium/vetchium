@@ -30,6 +30,7 @@ import "./hub/achievements.tsp";
 import "./hub/applications.tsp";
 import "./hub/candidacy.tsp";
 import "./hub/colleagues.tsp";
+import "./hub/comments.tsp";
 import "./hub/education.tsp";
 import "./hub/employers.tsp";
 import "./hub/hubusers.tsp";
