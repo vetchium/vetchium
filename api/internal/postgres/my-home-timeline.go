@@ -166,6 +166,8 @@ WHERE hub_user_id = $1
 		var tags []string // View already aggregates tags into an array of strings
 		var upvotesCount, downvotesCount, score sql.NullInt32
 		var meUpvoted, meDownvoted, canUpvote, canDownvote, amIAuthor sql.NullBool
+		var canComment bool
+		var commentsCount int32
 		var employerName, employerIDInternal, employerDomainName sql.NullString
 
 		err := rows.Scan(
@@ -173,6 +175,7 @@ WHERE hub_user_id = $1
 			&authorHandle, &authorName, &authorProfilePicURL,
 			&tags, &upvotesCount, &downvotesCount, &score,
 			&meUpvoted, &meDownvoted, &canUpvote, &canDownvote, &amIAuthor,
+			&canComment, &commentsCount,
 			&employerName, &employerIDInternal, &employerDomainName,
 		)
 		if err != nil {
@@ -198,6 +201,8 @@ WHERE hub_user_id = $1
 				CanUpvote:      canUpvote.Bool,
 				CanDownvote:    canDownvote.Bool,
 				AmIAuthor:      amIAuthor.Bool,
+				CanComment:     canComment,
+				CommentsCount:  commentsCount,
 			}
 			userPosts = append(userPosts, userPost)
 		} else if itemType == common.TimelineItemEmployerPost {

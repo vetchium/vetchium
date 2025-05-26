@@ -204,7 +204,9 @@ func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 			) AS me_downvoted,
 			p.upvotes_count,
 			p.downvotes_count,
-			p.score
+			p.score,
+			p.comments_enabled AS can_comment,
+			(SELECT COUNT(*) FROM post_comments WHERE post_id = p.id)::int AS comments_count
 		FROM
 			posts p
 		JOIN
@@ -234,6 +236,8 @@ func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 			&post.UpvotesCount,
 			&post.DownvotesCount,
 			&post.Score,
+			&post.CanComment,
+			&post.CommentsCount,
 		)
 
 	if err != nil {
@@ -330,7 +334,9 @@ func (pg *PG) GetUserPosts(
 			) AS me_downvoted,
 			p.upvotes_count,
 			p.downvotes_count,
-			p.score
+			p.score,
+			p.comments_enabled AS can_comment,
+			(SELECT COUNT(*) FROM post_comments WHERE post_id = p.id)::int AS comments_count
 		FROM
 			posts p
 		JOIN
@@ -414,6 +420,8 @@ func (pg *PG) GetUserPosts(
 			&post.UpvotesCount,
 			&post.DownvotesCount,
 			&post.Score,
+			&post.CanComment,
+			&post.CommentsCount,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan post row", "error", err)

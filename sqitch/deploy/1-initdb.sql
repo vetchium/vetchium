@@ -1307,6 +1307,8 @@ SELECT
     NOT (EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id) OR
          p.author_id = ht.hub_user_id) AS can_downvote,
     p.author_id = ht.hub_user_id AS am_i_author,
+    p.comments_enabled AS can_comment,
+    (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id)::int AS comments_count,
     NULL::text AS employer_name,
     NULL::uuid AS employer_id_internal, -- internal use only, not exposed in API
     NULL::text AS employer_domain_name
@@ -1339,6 +1341,8 @@ SELECT
     NULL AS can_upvote,
     NULL AS can_downvote,
     NULL AS am_i_author,
+    FALSE AS can_comment,
+    0 AS comments_count,
     e.company_name AS employer_name,
     e.id AS employer_id_internal, -- internal use only, not exposed in API
     d.domain_name AS employer_domain_name
