@@ -69,10 +69,3 @@ const (
 	MailSenderInterval              = 5 * time.Second
 	ScoreApplicationsInterval       = 1 * time.Minute
 )
-
-const (
-	WrongTierStatusCode = 452
-
-	// Employer RBAC mismatch
-	EmployerRBACMismatchStatusCode = 453
-)

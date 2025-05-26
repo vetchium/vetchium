@@ -93,7 +93,7 @@ var _ = Describe("Org Users", Ordered, func() {
 						Name:  "New User Three",
 						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with non-orgusers token",
@@ -103,7 +103,7 @@ var _ = Describe("Org Users", Ordered, func() {
 						Name:  "New User Four",
 						Roles: []common.OrgUserRole{"ORG_USERS_VIEWER"},
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with duplicate email",
@@ -240,7 +240,7 @@ var _ = Describe("Org Users", Ordered, func() {
 						Name:  "Should Not Update",
 						Roles: []common.OrgUserRole{"ORG_USERS_CRUD"},
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "update non-existent user",
@@ -357,7 +357,7 @@ var _ = Describe("Org Users", Ordered, func() {
 					request: employer.DisableOrgUserRequest{
 						Email: "crud@orgusers.example",
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "disable last admin",
@@ -452,7 +452,7 @@ var _ = Describe("Org Users", Ordered, func() {
 					description: "with non-orgusers token",
 					token:       nonOrgUsersToken,
 					request:     employer.FilterOrgUsersRequest{},
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "with invalid limit",
@@ -604,7 +604,7 @@ var _ = Describe("Org Users", Ordered, func() {
 				{
 					description: "with non-orgusers token",
 					token:       nonOrgUsersToken,
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 			}
 
@@ -744,7 +744,7 @@ var _ = Describe("Org Users", Ordered, func() {
 					request: employer.EnableOrgUserRequest{
 						Email: "to-enable2@orgusers.example",
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with non-orgusers token - should fail",
@@ -752,7 +752,7 @@ var _ = Describe("Org Users", Ordered, func() {
 					request: employer.EnableOrgUserRequest{
 						Email: "to-enable2@orgusers.example",
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "enable non-existent user",

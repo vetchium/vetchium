@@ -88,7 +88,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 						request: employer.ShortlistApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-4",
 						},
-						wantStatus: http.StatusForbidden,
+						wantStatus: common.ErrEmployerRBAC,
 					},
 					{
 						description: "shortlist non-existent application",
@@ -207,7 +207,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-2",
 							ColorTag:      employer.YellowApplicationColorTag,
 						},
-						wantStatus: http.StatusForbidden,
+						wantStatus: common.ErrEmployerRBAC,
 					},
 					{
 						description: "set color tag for non-existent application",
@@ -253,7 +253,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 						request: employer.RemoveApplicationColorTagRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-2",
 						},
-						wantStatus: http.StatusForbidden,
+						wantStatus: common.ErrEmployerRBAC,
 					},
 					{
 						description: "remove color tag for non-existent application",
@@ -301,7 +301,7 @@ var _ = Describe("Applied Openings", Ordered, func() {
 						request: employer.RejectApplicationRequest{
 							ApplicationID: "APP-12345678-0010-0010-0010-000000000201-6",
 						},
-						wantStatus: http.StatusForbidden,
+						wantStatus: common.ErrEmployerRBAC,
 					},
 					{
 						description: "reject non-existent application",

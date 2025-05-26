@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -268,7 +269,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 						token:       hubToken2, // Free user
 						imageBytes:  sampleImageBytes,
 						filename:    "avatar1.jpg",
-						wantStatus:  http.StatusForbidden,
+						wantStatus:  common.ErrEmployerRBAC,
 					},
 					{
 						description: "upload valid image by paid user",

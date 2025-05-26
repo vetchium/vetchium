@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/vetchium/vetchium/api/internal/db"
-	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -52,7 +52,7 @@ func (m *Middleware) Guard(
 			if len(allowedTiers) > 0 &&
 				!slices.Contains(allowedTiers, hubUser.Tier) {
 				m.log.Dbg("User is not allowed to access this route")
-				http.Error(w, "", vetchi.WrongTierStatusCode)
+				http.Error(w, "", common.ErrHubWrongTier)
 				return
 			}
 

@@ -302,7 +302,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by regular user",
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "empty content",
@@ -765,7 +765,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					request: employer.GetEmployerPostRequest{
 						PostID: postID,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "non-existent post",
@@ -888,7 +888,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					description: "regular user cannot list posts",
 					token:       employer3RegularToken,
 					request:     employer.ListEmployerPostsRequest{},
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "invalid limit",
@@ -965,7 +965,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					request: employer.DeleteEmployerPostRequest{
 						PostID: postID,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "non-existent post",

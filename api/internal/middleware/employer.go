@@ -8,7 +8,6 @@ import (
 
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/internal/util"
-	"github.com/vetchium/vetchium/api/pkg/vetchi"
 	"github.com/vetchium/vetchium/typespec/common"
 )
 
@@ -82,7 +81,7 @@ func (m *Middleware) Protect(
 					"userRoles", orgUser.OrgUserRoles,
 					"allowedRoles", allowedRoles,
 				)
-				http.Error(w, "", vetchi.EmployerRBACMismatchStatusCode)
+				http.Error(w, "", common.ErrEmployerRBAC)
 				return
 			}
 

@@ -115,7 +115,7 @@ var _ = Describe("Candidacy Comments", Ordered, func() {
 						Comment:     "Regular user comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "invalid candidacy ID",
@@ -125,7 +125,7 @@ var _ = Describe("Candidacy Comments", Ordered, func() {
 						Comment:     "Invalid candidacy comment",
 					},
 					endpoint:   "/employer/add-candidacy-comment",
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "empty comment",

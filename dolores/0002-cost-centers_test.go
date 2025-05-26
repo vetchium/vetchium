@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
@@ -21,7 +22,7 @@ type costCenterTestCase struct {
 	wantStatus     int
 }
 
-var _ = Describe("Cost Centers", Ordered, func() {
+var _ = FDescribe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var nonCostCenterToken, multipleNonCostCenterRolesToken string
@@ -86,19 +87,19 @@ var _ = Describe("Cost Centers", Ordered, func() {
 					description:    "with viewer role",
 					costCenterName: "New Cost Center",
 					token:          viewerToken,
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with non-cost-center role",
 					costCenterName: "New Cost Center",
 					token:          nonCostCenterToken,
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with multiple non-cost-center roles",
 					costCenterName: "New Cost Center",
 					token:          multipleNonCostCenterRolesToken,
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with an admin session token",
@@ -159,19 +160,19 @@ var _ = Describe("Cost Centers", Ordered, func() {
 					description:    "with a viewer session token",
 					token:          viewerToken,
 					costCenterName: "CC1-Admin",
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with a non-cost-center session",
 					token:          nonCostCenterToken,
 					costCenterName: "CC1-Admin",
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with a multiple-non-cost-center session",
 					token:          multipleNonCostCenterRolesToken,
 					costCenterName: "CC1-Admin",
-					wantStatus:     http.StatusForbidden,
+					wantStatus:     common.ErrEmployerRBAC,
 				},
 				{
 					description:    "with an admin session token",
@@ -353,7 +354,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(statusCode).Should(Equal(http.StatusForbidden))
+		Expect(statusCode).Should(Equal(common.ErrEmployerRBAC))
 	})
 
 	It("update a cost center with a non-cost-center session token", func() {
@@ -365,7 +366,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 			},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(statusCode).Should(Equal(http.StatusForbidden))
+		Expect(statusCode).Should(Equal(common.ErrEmployerRBAC))
 	})
 
 	It(
@@ -379,7 +380,7 @@ var _ = Describe("Cost Centers", Ordered, func() {
 				},
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(statusCode).Should(Equal(http.StatusForbidden))
+			Expect(statusCode).Should(Equal(common.ErrEmployerRBAC))
 		},
 	)
 

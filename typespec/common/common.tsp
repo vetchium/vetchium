@@ -255,3 +255,6 @@ model EmployerAuth {
     @doc("bearer auth scheme")
     scheme: "bearer";
 }
+
+const ErrHubWrongTier = 452;
+const ErrEmployerRBAC = 453;

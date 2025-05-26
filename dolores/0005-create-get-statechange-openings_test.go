@@ -112,13 +112,13 @@ var _ = Describe("Openings", Ordered, func() {
 					description: "with Viewer token",
 					token:       viewerToken,
 					request:     validOpening,
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "with non-openings token",
 					token:       nonOpeningsToken,
 					request:     validOpening,
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "with missing title",
@@ -317,7 +317,7 @@ var _ = Describe("Openings", Ordered, func() {
 					description: "with non-openings token",
 					token:       nonOpeningsToken,
 					request:     employer.FilterOpeningsRequest{},
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "with invalid date range",
@@ -412,7 +412,7 @@ var _ = Describe("Openings", Ordered, func() {
 					request: employer.GetOpeningRequest{
 						ID: openingID,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with non-existent ID",
@@ -496,7 +496,7 @@ var _ = Describe("Openings", Ordered, func() {
 						FromState: common.SuspendedOpening,
 						ToState:   common.ClosedOpening,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with viewer token",
@@ -506,7 +506,7 @@ var _ = Describe("Openings", Ordered, func() {
 						FromState: common.SuspendedOpening,
 						ToState:   common.ClosedOpening,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with non-existent opening",

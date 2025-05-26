@@ -133,3 +133,9 @@ const (
 	// TimelineItemEmployerPost represents a post made by an employer.
 	TimelineItemEmployerPost TimelineItemType = "EMPLOYER_POST"
 )
+
+// Custom HTTP status codes for errors
+const (
+	ErrHubWrongTier = 452
+	ErrEmployerRBAC = 453
+)

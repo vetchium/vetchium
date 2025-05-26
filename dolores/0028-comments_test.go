@@ -545,7 +545,7 @@ var _ = FDescribe("Comments", Ordered, func() {
 						PostID:                 commentsDisabledPostID,
 						DeleteExistingComments: false,
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "disable comments with delete existing comments",

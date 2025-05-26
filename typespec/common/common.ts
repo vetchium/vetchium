@@ -308,3 +308,6 @@ export type TimelineItemType = "USER_POST" | "EMPLOYER_POST";
 
 export const TimelineItemUserPost: TimelineItemType = "USER_POST";
 export const TimelineItemEmployerPost: TimelineItemType = "EMPLOYER_POST";
+
+export const ErrHubWrongTier = 452;
+export const ErrEmployerRBAC = 453;

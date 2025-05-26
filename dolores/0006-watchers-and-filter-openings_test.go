@@ -232,7 +232,7 @@ var _ = Describe("Openings", Ordered, func() {
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
 					request:     employer.FilterOpeningsRequest{},
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 			}
 
@@ -315,7 +315,7 @@ var _ = Describe("Openings", Ordered, func() {
 					description: "with non-openings role",
 					token:       nonOpeningsToken,
 					openingID:   "2024-Feb-15-001",
-					wantStatus:  http.StatusForbidden,
+					wantStatus:  common.ErrEmployerRBAC,
 				},
 				{
 					description: "with invalid opening ID",
@@ -388,7 +388,7 @@ var _ = Describe("Openings", Ordered, func() {
 							"watcher1@openings0006.example",
 						},
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with invalid opening ID",
@@ -459,7 +459,7 @@ var _ = Describe("Openings", Ordered, func() {
 						OpeningID: "2024-Feb-15-001",
 						Email:     "watcher1@openings0006.example",
 					},
-					wantStatus: http.StatusForbidden,
+					wantStatus: common.ErrEmployerRBAC,
 				},
 				{
 					description: "with invalid opening ID",
