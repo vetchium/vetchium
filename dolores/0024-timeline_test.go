@@ -15,7 +15,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Timeline Operations", Ordered, func() {
+var _ = Describe("Timeline Operations", Ordered, func() {
 	var db *pgxpool.Pool
 
 	// Constants for timeline test - aligned with backend timing in api/internal/granger/timelines.go
