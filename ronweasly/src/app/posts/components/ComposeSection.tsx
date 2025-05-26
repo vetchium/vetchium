@@ -1,21 +1,24 @@
 "use client";
 
 import { config } from "@/config";
+import { useMyDetails } from "@/hooks/useMyDetails";
 import { useTranslation } from "@/hooks/useTranslation";
 import AddIcon from "@mui/icons-material/Add";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
   Chip,
   CircularProgress,
+  Link,
   Paper,
   TextField,
   Typography,
 } from "@mui/material";
 import { createFilterOptions } from "@mui/material/Autocomplete";
-import { VTag } from "@vetchium/typespec";
+import { HubUserTiers, VTag } from "@vetchium/typespec";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -42,11 +45,20 @@ export default function ComposeSection({
 }: ComposeProps) {
   const { t } = useTranslation();
   const router = useRouter();
+  const {
+    details,
+    isLoading: isLoadingDetails,
+    error: detailsError,
+  } = useMyDetails();
   const [postContent, setPostContent] = useState("");
   const [selectedTags, setSelectedTags] = useState<VTag[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<VTag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Determine if user is on free tier
+  const isFreeTier = details?.tier === HubUserTiers.FreeHubUserTier;
+  const maxContentLength = isFreeTier ? 255 : 4096;
 
   // Filter configuration for Autocomplete
   const filter = createFilterOptions<TagOption>();
@@ -107,6 +119,12 @@ export default function ComposeSection({
       return;
     }
 
+    // Check content length based on tier
+    if (postContent.length > maxContentLength) {
+      onError(t("posts.error.contentTooLong"));
+      return;
+    }
+
     const token = Cookies.get("session_token");
     if (!token) {
       router.push("/login");
@@ -116,19 +134,32 @@ export default function ComposeSection({
     setLoading(true);
 
     try {
-      const response = await fetch(`${config.API_SERVER_PREFIX}/hub/add-post`, {
+      // Use different endpoints based on user tier
+      const endpoint = isFreeTier
+        ? `${config.API_SERVER_PREFIX}/hub/add-ft-post`
+        : `${config.API_SERVER_PREFIX}/hub/add-post`;
+
+      // Prepare request body based on tier
+      const requestBody = isFreeTier
+        ? {
+            content: postContent,
+            tag_ids: selectedTags.map((tag) => tag.id).filter(Boolean),
+          }
+        : {
+            content: postContent,
+            tag_ids: selectedTags.map((tag) => tag.id).filter(Boolean),
+            new_tags: selectedTags
+              .filter((tag) => !tag.id)
+              .map((tag) => tag.name),
+          };
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          content: postContent,
-          tag_ids: selectedTags.map((tag) => tag.id).filter(Boolean),
-          new_tags: selectedTags
-            .filter((tag) => !tag.id)
-            .map((tag) => tag.name),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -162,6 +193,32 @@ export default function ComposeSection({
     }
   };
 
+  // Show loading state while fetching user details
+  if (isLoadingDetails) {
+    return (
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Paper>
+    );
+  }
+
+  // Show error if failed to fetch user details
+  if (detailsError) {
+    return (
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Alert severity="error">{t("posts.error.tierCheckFailed")}</Alert>
+      </Paper>
+    );
+  }
+
   return (
     <Paper
       sx={{
@@ -173,14 +230,38 @@ export default function ComposeSection({
       }}
     >
       <Typography variant="h6">{t("posts.compose")}</Typography>
+
+      {/* Show tier-specific limitations for free users */}
+      {isFreeTier && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>{t("posts.freeTierLimits.title")}</strong>
+          </Typography>
+          <Typography variant="body2" component="ul" sx={{ pl: 2, mb: 1 }}>
+            <li>{t("posts.freeTierLimits.characterLimit")}</li>
+            <li>{t("posts.freeTierLimits.noNewTags")}</li>
+          </Typography>
+          <Typography variant="body2">
+            {t("posts.freeTierLimits.upgradePrompt")}{" "}
+            <Link href="/upgrade" underline="hover">
+              {t("posts.freeTierLimits.upgradeButton")}
+            </Link>
+          </Typography>
+        </Alert>
+      )}
+
       <TextField
         fullWidth
         multiline
         rows={4}
         value={postContent}
         onChange={(e) => setPostContent(e.target.value)}
-        placeholder={t("posts.placeholder")}
+        placeholder={
+          isFreeTier ? t("posts.placeholderFree") : t("posts.placeholder")
+        }
         variant="outlined"
+        helperText={`${postContent.length}/${maxContentLength} characters`}
+        error={postContent.length > maxContentLength}
       />
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -211,7 +292,7 @@ export default function ComposeSection({
             key={`tag-input-${selectedTags.length}`}
             id="tags-search"
             options={tagSuggestions}
-            freeSolo
+            freeSolo={!isFreeTier}
             value={null}
             inputValue={searchQuery}
             onInputChange={(_, newInputValue) => {
@@ -227,12 +308,14 @@ export default function ComposeSection({
               let newTag: VTag;
 
               if (typeof newValue === "string") {
-                // String input - create tag from the string
+                // String input - create tag from the string (only for paid users)
+                if (isFreeTier) return;
                 newTag = { name: newValue, id: "" };
               } else if (
                 typeof (newValue as TagOption).inputValue === "string"
               ) {
-                // Create tag from inputValue
+                // Create tag from inputValue (only for paid users)
+                if (isFreeTier) return;
                 newTag = {
                   name: (newValue as TagOption).inputValue as string,
                   id: "",
@@ -255,7 +338,7 @@ export default function ComposeSection({
               const { inputValue } = params;
 
               // Only suggest creating a new tag if it's not already in suggestions
-              // and not already selected and not empty
+              // and not already selected and not empty, and user is not on free tier
               const isExisting = options.some(
                 (option) => option.name === inputValue
               );
@@ -263,7 +346,12 @@ export default function ComposeSection({
                 (tag) => tag.name === inputValue
               );
 
-              if (inputValue !== "" && !isExisting && !isSelected) {
+              if (
+                inputValue !== "" &&
+                !isExisting &&
+                !isSelected &&
+                !isFreeTier
+              ) {
                 filtered.push({
                   inputValue,
                   name: inputValue,
@@ -304,6 +392,8 @@ export default function ComposeSection({
                 placeholder={
                   selectedTags.length >= 3
                     ? t("posts.maxTags")
+                    : isFreeTier
+                    ? t("posts.searchTagsOnly")
                     : t("posts.searchTags")
                 }
                 disabled={selectedTags.length >= 3}
