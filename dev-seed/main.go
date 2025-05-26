@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vetchium/vetchium/typespec/hub"
 )
 
 // Store session tokens for each user in a thread-safe map
@@ -16,6 +17,28 @@ var hubSessionTokens sync.Map
 
 var serverURL = "http://localhost:8080"
 var mailPitURL = "http://localhost:8025"
+
+func showTierStatistics() {
+	freeTierCount := 0
+	paidTierCount := 0
+
+	for _, user := range hubUsers {
+		if user.Tier == hub.FreeHubUserTier {
+			freeTierCount++
+		} else {
+			paidTierCount++
+		}
+	}
+
+	total := len(hubUsers)
+	freePercent := float64(freeTierCount) / float64(total) * 100
+	paidPercent := float64(paidTierCount) / float64(total) * 100
+
+	color.Green("Hub User Tier Statistics:")
+	color.Green("  Free Tier: %d users (%.1f%%)", freeTierCount, freePercent)
+	color.Green("  Paid Tier: %d users (%.1f%%)", paidTierCount, paidPercent)
+	color.Green("  Total: %d users", total)
+}
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -44,6 +67,7 @@ func main() {
 	initOrgUsers(db)
 	color.Cyan("Initializing hub users")
 	initHubUsers(db)
+	showTierStatistics()
 
 	color.Cyan("Signing in hub users")
 	loginHubUsers()

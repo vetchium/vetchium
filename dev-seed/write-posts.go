@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -30,31 +31,54 @@ func writePosts() {
 			postUniverse := broadAreaPostsMap[user.BroadArea]
 			numPosts := rand.Intn(len(postUniverse))
 
-			var posts []hub.AddPostRequest
-			for j := 0; j < numPosts; j++ {
-				post := postUniverse[rand.Intn(len(postUniverse))]
-				posts = append(posts, hub.AddPostRequest{
-					Content: post.Content,
-					NewTags: post.NewTags,
-				})
-			}
-
 			tokenI, ok := hubSessionTokens.Load(user.Email)
 			if !ok {
 				log.Fatalf("no auth token found for %s", user.Email)
 			}
 			authToken := tokenI.(string)
 
-			for k, post := range posts {
+			// Determine if user is free tier
+			isFreeTier := user.Tier == hub.FreeHubUserTier
+
+			for j := 0; j < numPosts; j++ {
+				post := postUniverse[rand.Intn(len(postUniverse))]
+
+				// Prepare request based on user tier
 				var body bytes.Buffer
-				err := json.NewEncoder(&body).Encode(post)
+				var endpoint string
+				var err error
+
+				if isFreeTier {
+					// Free tier users: use AddFTPostRequest (255 char limit, existing tags only)
+					content := post.Content
+					if len(content) > 255 {
+						content = content[:252] + "..." // Truncate to fit limit
+					}
+
+					ftPost := hub.AddFTPostRequest{
+						Content: content,
+						TagIDs:  []common.VTagID{}, // Free tier users can only use existing tags, so we'll leave this empty for now
+					}
+					err = json.NewEncoder(&body).Encode(ftPost)
+					endpoint = serverURL + "/hub/add-ft-post"
+				} else {
+					// Paid tier users: use AddPostRequest (4096 char limit, can create new tags)
+					paidPost := hub.AddPostRequest{
+						Content: post.Content,
+						NewTags: post.NewTags,
+						TagIDs:  []common.VTagID{}, // We'll use new tags instead of existing tag IDs
+					}
+					err = json.NewEncoder(&body).Encode(paidPost)
+					endpoint = serverURL + "/hub/add-post"
+				}
+
 				if err != nil {
 					log.Fatalf("failed to encode post: %v", err)
 				}
 
 				req, err := http.NewRequest(
 					http.MethodPost,
-					serverURL+"/hub/add-post",
+					endpoint,
 					&body,
 				)
 				if err != nil {
@@ -64,14 +88,28 @@ func writePosts() {
 				req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Authorization", "Bearer "+authToken)
 
-				color.Yellow("thread %d in action for post %d", i, k)
+				tierStr := "paid"
+				if isFreeTier {
+					tierStr = "free"
+				}
+				color.Yellow(
+					"thread %d (%s tier) in action for post %d",
+					i,
+					tierStr,
+					j,
+				)
+
 				resp, err := http.DefaultClient.Do(req)
 				if err != nil {
 					log.Fatalf("failed to send request: %v", err)
 				}
 
 				if resp.StatusCode != http.StatusOK {
-					log.Fatalf("failed to add post: %v", resp.Status)
+					log.Fatalf(
+						"failed to add post for %s tier user: %v",
+						tierStr,
+						resp.Status,
+					)
 				}
 
 				resp.Body.Close()
