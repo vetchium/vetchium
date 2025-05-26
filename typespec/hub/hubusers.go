@@ -101,7 +101,7 @@ type ChangeEmailAddressRequest struct {
 }
 
 type MyDetails struct {
-	Handle   common.Handle `json:"handle"`
-	FullName string        `json:"full_name"`
-	Tier     HubUserTier   `json:"tier"`
+	Handle   string      `json:"handle"`
+	FullName string      `json:"full_name"`
+	Tier     HubUserTier `json:"tier"`
 }

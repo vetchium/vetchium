@@ -291,6 +291,7 @@ interface ChangeEmailAddress {
 
 @route("/hub/get-my-details")
 interface GetMyDetails {
+    @doc("This could potentially replace /hub/get-my-handle and /hub/my-tier")
     @tag("HubUsers")
     @get
     @useAuth(HubAuth)
