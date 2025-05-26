@@ -24,6 +24,8 @@ import { formatDistanceToNow } from "date-fns";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import CommentSettings from "./CommentSettings";
+import Comments from "./Comments";
 
 // Cache for profile pictures with timestamps to enable expiration
 interface ProfilePictureCacheEntry {
@@ -55,6 +57,8 @@ export default function PostCard({
   const [downvotesCount, setDownvotesCount] = useState(post.downvotes_count);
   const [canUpvote, setCanUpvote] = useState(post.can_upvote);
   const [canDownvote, setCanDownvote] = useState(post.can_downvote);
+  const [canComment, setCanComment] = useState(post.can_comment);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
 
   useEffect(() => {
     let objectUrl: string | null = null;
@@ -219,23 +223,32 @@ export default function PostCard({
           </Box>
         }
         action={
-          !hideOpenInNewTab ? (
-            <Tooltip title={t("common.externalLink.message")}>
-              <IconButton
-                component={Link}
-                href={`/posts/${post.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t("common.externalLink.message")}
-                sx={{
-                  color: theme.palette.text.secondary,
-                  mt: -0.5,
-                }}
-              >
-                <OpenInNewIcon sx={{ fontSize: "1.125rem" }} />
-              </IconButton>
-            </Tooltip>
-          ) : null
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            {post.am_i_author && (
+              <CommentSettings
+                postId={post.id}
+                canComment={canComment}
+                onCommentSettingsChange={setCanComment}
+              />
+            )}
+            {!hideOpenInNewTab && (
+              <Tooltip title={t("common.externalLink.message")}>
+                <IconButton
+                  component={Link}
+                  href={`/posts/${post.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t("common.externalLink.message")}
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    mt: -0.5,
+                  }}
+                >
+                  <OpenInNewIcon sx={{ fontSize: "1.125rem" }} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         }
         sx={{
           alignItems: "flex-start",
@@ -430,6 +443,15 @@ export default function PostCard({
             ))}
           </Box>
         )}
+
+        {/* Comments section */}
+        <Comments
+          postId={post.id}
+          commentsCount={commentsCount}
+          canComment={canComment}
+          amIAuthor={post.am_i_author}
+          onCommentsCountChange={setCommentsCount}
+        />
       </CardContent>
     </Card>
   );
