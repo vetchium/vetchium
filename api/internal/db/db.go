@@ -440,6 +440,7 @@ type DB interface {
 
 	// Used by hermione - Posts related methods
 	AddPost(req AddPostRequest) error
+	AddFTPost(req AddFTPostRequest) error
 	GetUserPosts(
 		ctx context.Context,
 		req hub.GetUserPostsRequest,

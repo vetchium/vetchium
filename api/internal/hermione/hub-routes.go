@@ -310,6 +310,11 @@ func RegisterHubRoutes(h *Hermione) {
 		[]hub.HubUserTier{hub.PaidHubUserTier},
 	)
 	h.mw.Guard(
+		"/hub/add-ft-post",
+		po.AddFreeTierPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier},
+	)
+	h.mw.Guard(
 		"/hub/get-user-posts",
 		po.GetUserPosts(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},

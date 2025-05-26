@@ -13,6 +13,12 @@ type AddPostRequest struct {
 	hub.AddPostRequest
 }
 
+type AddFTPostRequest struct {
+	Context context.Context
+	PostID  string `json:"post_id"`
+	hub.AddFTPostRequest
+}
+
 type GetPostRequest struct {
 	Context context.Context
 	PostID  string `json:"post_id"`
