@@ -49,6 +49,8 @@ export interface Post {
   can_upvote: boolean;
   can_downvote: boolean;
   am_i_author: boolean;
+  can_comment: boolean;
+  comments_count: number;
 }
 
 export interface GetUserPostsRequest {

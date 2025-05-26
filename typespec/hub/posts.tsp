@@ -61,6 +61,9 @@ model Post {
 
     @doc("Whether the logged in user is the author of this post")
     am_i_author: boolean;
+
+    can_comment: boolean;
+    comments_count: int32;
 }
 
 model GetUserPostsRequest {

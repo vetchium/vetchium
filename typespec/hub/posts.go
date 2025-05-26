@@ -36,6 +36,8 @@ type Post struct {
 	CanUpvote      bool          `json:"can_upvote"`
 	CanDownvote    bool          `json:"can_downvote"`
 	AmIAuthor      bool          `json:"am_i_author"`
+	CanComment     bool          `json:"can_comment"`
+	CommentsCount  int32         `json:"comments_count"`
 }
 
 type GetUserPostsRequest struct {
