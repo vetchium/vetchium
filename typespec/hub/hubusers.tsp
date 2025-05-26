@@ -126,6 +126,12 @@ model ChangeEmailAddressRequest {
     email: EmailAddress;
 }
 
+model MyDetails {
+    handle: Handle;
+    full_name: string;
+    tier: HubUserTier;
+}
+
 @route("/hub/login")
 interface Login {
     @tag("HubUsers")
@@ -280,5 +286,16 @@ interface ChangeEmailAddress {
         @doc("The email address is already in use, possibly by a different account")
         @statusCode
         statusCode: 409;
+    };
+}
+
+@route("/hub/get-my-details")
+interface GetMyDetails {
+    @tag("HubUsers")
+    @get
+    @useAuth(HubAuth)
+    getMyDetails(): {
+        @statusCode statusCode: 200;
+        @body getMyDetailsResponse: MyDetails;
     };
 }

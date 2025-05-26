@@ -99,3 +99,9 @@ type SignupHubUserRequest struct {
 type ChangeEmailAddressRequest struct {
 	Email common.EmailAddress `json:"email" validate:"required,email"`
 }
+
+type MyDetails struct {
+	Handle   common.Handle `json:"handle"`
+	FullName string        `json:"full_name"`
+	Tier     HubUserTier   `json:"tier"`
+}

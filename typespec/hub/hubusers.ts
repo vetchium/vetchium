@@ -98,3 +98,9 @@ export interface SignupHubUserRequest {
 export interface ChangeEmailAddressRequest {
   email: EmailAddress;
 }
+
+export interface MyDetails {
+  handle: Handle;
+  full_name: string;
+  tier: HubUserTier;
+}
