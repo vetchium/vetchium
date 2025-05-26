@@ -124,6 +124,7 @@ SELECT
     author_handle, author_name, author_profile_pic_url,
     tags, upvotes_count, downvotes_count, score,
     me_upvoted, me_downvoted, can_upvote, can_downvote, am_i_author,
+    can_comment, comments_count,
     employer_name, employer_id_internal, employer_domain_name
 FROM hu_timeline_extended
 WHERE hub_user_id = $1
