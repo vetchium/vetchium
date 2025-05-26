@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Comments", Ordered, func() {
+var _ = Describe("Comments", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -545,7 +545,7 @@ var _ = FDescribe("Comments", Ordered, func() {
 						PostID:                 commentsDisabledPostID,
 						DeleteExistingComments: false,
 					},
-					wantStatus: common.ErrEmployerRBAC,
+					wantStatus: http.StatusForbidden,
 				},
 				{
 					description: "disable comments with delete existing comments",

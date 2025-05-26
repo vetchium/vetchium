@@ -13,7 +13,7 @@ INSERT INTO hub_users (
     'post-author@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'USA',
     'New York',
     'en',
@@ -28,7 +28,7 @@ INSERT INTO hub_users (
     'commenter@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'GBR',
     'London',
     'en',
@@ -43,7 +43,7 @@ INSERT INTO hub_users (
     'other-user@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'CAN',
     'Toronto',
     'en',
@@ -58,7 +58,7 @@ INSERT INTO hub_users (
     'disable-comments@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'FRA',
     'Paris',
     'fr',
@@ -73,7 +73,7 @@ INSERT INTO hub_users (
     'delete-comment@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'DEU',
     'Berlin',
     'de',
@@ -88,7 +88,7 @@ INSERT INTO hub_users (
     'delete-my-comment@0028-comments.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'AUS',
     'Sydney',
     'en',

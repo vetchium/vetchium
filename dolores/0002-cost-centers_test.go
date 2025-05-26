@@ -22,7 +22,7 @@ type costCenterTestCase struct {
 	wantStatus     int
 }
 
-var _ = FDescribe("Cost Centers", Ordered, func() {
+var _ = Describe("Cost Centers", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, viewerToken string
 	var nonCostCenterToken, multipleNonCostCenterRolesToken string
