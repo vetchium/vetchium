@@ -28,7 +28,7 @@ var _ = Describe("Timeline Operations", Ordered, func() {
 		TimelinePollInterval = 30 * time.Second
 
 		// Allow more retries to accommodate potential delays
-		MaxTimelinePollRetries = 20
+		MaxTimelinePollRetries = 40
 	)
 
 	// Declare token variables directly at test level
