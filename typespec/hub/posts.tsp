@@ -9,6 +9,15 @@ using TypeSpec.Rest;
 
 namespace Vetchium;
 
+model AddFTPostRequest {
+    @minLength(1)
+    @maxLength(255)
+    content: string;
+
+    @maxItems(3)
+    tag_ids: VTagID[];
+}
+
 model AddPostRequest {
     @minLength(1)
     @maxLength(4096)
@@ -143,14 +152,31 @@ model GetEmployerPostDetailsRequest {
     employer_post_id: string;
 }
 
+@route("/hub/add-ft-post")
+interface AddFTPost {
+    @doc("AddFTPost is for free tier users and does not support images or adding new tags. It is also limited to 255 characters.")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    addFTPost(@body request: AddFTPostRequest): {
+        @statusCode statusCode: 200;
+        @body response: AddPostResponse;
+    };
+}
+
 @route("/hub/add-post")
 interface AddPost {
+    @doc("AddPost is for paid tier users and supports images and adding new tags. It is limited to 4096 characters.")
     @tag("Posts")
     @post
     @useAuth(HubAuth)
     addPost(@body request: AddPostRequest): {
         @statusCode statusCode: 200;
         @body response: AddPostResponse;
+    } | {
+        @doc("The user is not a paid tier user")
+        @statusCode
+        statusCode: 452;
     };
 }
 
