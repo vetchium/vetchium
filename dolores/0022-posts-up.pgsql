@@ -13,7 +13,7 @@ INSERT INTO hub_users (
     'add-user@0022-posts.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'USA',
     'New York',
     'en',
@@ -28,7 +28,7 @@ INSERT INTO hub_users (
     'auth-user@0022-posts.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'GBR',
     'London',
     'en',
@@ -44,7 +44,7 @@ INSERT INTO hub_users (
     'get-user1@0022-posts.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'CAN',
     'Toronto',
     'en',
@@ -59,7 +59,7 @@ INSERT INTO hub_users (
     'get-user2@0022-posts.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'FRA',
     'Paris',
     'fr',
@@ -74,7 +74,7 @@ INSERT INTO hub_users (
     'get-details@0022-posts.example.com',
     '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', -- NewPassword123$
     'ACTIVE_HUB_USER',
-    'FREE_HUB_USER',
+    'PAID_HUB_USER',
     'DEU',
     'Berlin',
     'de',

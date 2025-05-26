@@ -269,7 +269,7 @@ var _ = Describe("Profile Page", Ordered, func() {
 						token:       hubToken2, // Free user
 						imageBytes:  sampleImageBytes,
 						filename:    "avatar1.jpg",
-						wantStatus:  common.ErrEmployerRBAC,
+						wantStatus:  common.ErrHubWrongTier,
 					},
 					{
 						description: "upload valid image by paid user",
