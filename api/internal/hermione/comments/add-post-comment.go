@@ -66,12 +66,9 @@ func AddPostComment(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg(
-			"successfully added comment",
-			"comment_id",
-			response.CommentID,
-			"post_id",
-			response.PostID,
+		h.Dbg("successfully added comment",
+			"comment_id", response.CommentID,
+			"post_id", response.PostID,
 		)
 	}
 }
