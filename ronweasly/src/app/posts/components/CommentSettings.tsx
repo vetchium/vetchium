@@ -2,7 +2,6 @@
 
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
-import SettingsIcon from "@mui/icons-material/Settings";
 import {
   Box,
   Button,
@@ -14,9 +13,8 @@ import {
   DialogContentText,
   DialogTitle,
   FormControlLabel,
-  IconButton,
-  Menu,
-  MenuItem,
+  Switch,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import {
@@ -41,18 +39,9 @@ export default function CommentSettings({
   const { t } = useTranslation();
   const router = useRouter();
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteExistingComments, setDeleteExistingComments] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleEnableComments = async () => {
     setLoading(true);
@@ -88,7 +77,6 @@ export default function CommentSettings({
       }
 
       onCommentSettingsChange(true);
-      handleMenuClose();
     } catch (error) {
       console.error("Error enabling comments:", error);
     } finally {
@@ -132,8 +120,16 @@ export default function CommentSettings({
 
       onCommentSettingsChange(false);
       setDialogOpen(false);
-      handleMenuClose();
       setDeleteExistingComments(false);
+
+      // If comments were deleted, refresh the comments view
+      if (deleteExistingComments) {
+        const commentsElement = document.getElementById(`comments-${postId}`);
+        if (commentsElement) {
+          const event = new CustomEvent("refreshComments");
+          commentsElement.dispatchEvent(event);
+        }
+      }
     } catch (error) {
       console.error("Error disabling comments:", error);
     } finally {
@@ -141,47 +137,47 @@ export default function CommentSettings({
     }
   };
 
-  const openDisableDialog = () => {
-    setDialogOpen(true);
-    handleMenuClose();
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
+    if (newValue) {
+      handleEnableComments();
+    } else {
+      setDialogOpen(true);
+    }
   };
 
   return (
     <>
-      <IconButton
-        size="small"
-        onClick={handleMenuOpen}
-        sx={{
-          color: "text.secondary",
-          "&:hover": {
-            color: "text.primary",
-          },
-        }}
+      <Tooltip
+        title={
+          canComment
+            ? t("comments.switchTooltipEnabled")
+            : t("comments.switchTooltipDisabled")
+        }
       >
-        <SettingsIcon fontSize="small" />
-      </IconButton>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
-      >
-        <MenuItem
-          onClick={canComment ? openDisableDialog : handleEnableComments}
-        >
-          {canComment
-            ? t("comments.disableComments")
-            : t("comments.enableComments")}
-        </MenuItem>
-      </Menu>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{ fontSize: "0.7rem", color: "text.secondary" }}
+          >
+            {t("comments.switchLabel")}
+          </Typography>
+          <Switch
+            checked={canComment}
+            onChange={handleSwitchChange}
+            disabled={loading}
+            size="small"
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "primary.main",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "primary.main",
+              },
+            }}
+          />
+        </Box>
+      </Tooltip>
 
       <Dialog
         open={dialogOpen}

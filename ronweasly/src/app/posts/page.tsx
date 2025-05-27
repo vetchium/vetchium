@@ -11,7 +11,6 @@ import {
   Snackbar,
   Tab,
   Tabs,
-  Typography,
 } from "@mui/material";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -48,10 +47,6 @@ function PostsContent() {
 
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
-      <Typography variant="h4" gutterBottom align="center">
-        {t("posts.title")}
-      </Typography>
-
       {/* Compose Section */}
       <ComposeSection
         onPostCreated={handlePostCreated}

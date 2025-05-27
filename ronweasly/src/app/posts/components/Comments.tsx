@@ -3,10 +3,7 @@
 import { config } from "@/config";
 import { useMyDetails } from "@/hooks/useMyDetails";
 import { useTranslation } from "@/hooks/useTranslation";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Avatar,
   Box,
@@ -67,6 +64,7 @@ export default function Comments({
     null
   );
   const [deletingComment, setDeletingComment] = useState(false);
+  const [showCommentInput, setShowCommentInput] = useState(false);
 
   const maxCommentLength = 4096;
 
@@ -76,6 +74,43 @@ export default function Comments({
       loadComments();
     }
   }, [isExpanded, commentsCount]);
+
+  // Handle toggle comments event from PostCard
+  useEffect(() => {
+    const handleToggleComments = () => {
+      if (commentsCount > 0) {
+        setIsExpanded(!isExpanded);
+      }
+      if (canComment) {
+        setShowCommentInput(!showCommentInput);
+      }
+    };
+
+    const handleRefreshComments = () => {
+      // Clear comments and reset state when comments are deleted
+      setComments([]);
+      setIsExpanded(false);
+      setShowCommentInput(false);
+      onCommentsCountChange(0);
+    };
+
+    const element = document.getElementById(`comments-${postId}`);
+    if (element) {
+      element.addEventListener("toggleComments", handleToggleComments);
+      element.addEventListener("refreshComments", handleRefreshComments);
+      return () => {
+        element.removeEventListener("toggleComments", handleToggleComments);
+        element.removeEventListener("refreshComments", handleRefreshComments);
+      };
+    }
+  }, [
+    postId,
+    isExpanded,
+    showCommentInput,
+    commentsCount,
+    canComment,
+    onCommentsCountChange,
+  ]);
 
   const loadComments = async () => {
     setLoading(true);
@@ -256,189 +291,237 @@ export default function Comments({
     return amIAuthor || comment.author_handle === details?.handle;
   };
 
+  // Don't render anything if no comments and can't comment
   if (commentsCount === 0 && !canComment) {
     return null;
   }
 
   return (
-    <Box sx={{ mt: 1 }}>
-      {/* Comments toggle button */}
+    <Box id={`comments-${postId}`} sx={{ mt: 0.5 }}>
+      {/* Compact comment interface */}
       {commentsCount > 0 && (
-        <Button
-          startIcon={<ChatBubbleOutlineIcon />}
-          endIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          onClick={() => setIsExpanded(!isExpanded)}
-          size="small"
-          sx={{
-            color: theme.palette.text.secondary,
-            textTransform: "none",
-            "&:hover": {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}
-        >
-          {isExpanded ? t("comments.hideComments") : t("comments.showComments")}{" "}
-          ({commentsCount})
-        </Button>
-      )}
-
-      {/* Add comment section */}
-      {canComment && (
-        <Box sx={{ mt: 1, mb: 1 }}>
-          <TextField
-            fullWidth
-            multiline
-            rows={2}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t("comments.addPlaceholder")}
-            variant="outlined"
-            size="small"
-            helperText={`${newComment.length}/${maxCommentLength} characters`}
-            error={newComment.length > maxCommentLength}
-            sx={{ mb: 1 }}
-          />
-          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleAddComment}
-              disabled={
-                addingComment ||
-                !newComment.trim() ||
-                newComment.length > maxCommentLength
-              }
-            >
-              {addingComment ? (
-                <CircularProgress size={16} color="inherit" />
-              ) : (
-                t("comments.add")
-              )}
-            </Button>
+        <Collapse in={isExpanded}>
+          <Box sx={{ mt: 1, mb: 1 }}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 1 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : comments.length > 0 ? (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {comments.slice(0, 3).map((comment) => (
+                  <Box
+                    key={comment.id}
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      p: 1,
+                      backgroundColor: theme.palette.background.default,
+                      borderRadius: 1,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Link
+                      href={`/u/${comment.author_handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none" }}
+                    >
+                      <Avatar sx={{ width: 24, height: 24 }}>
+                        {comment.author_name?.charAt(0) ||
+                          comment.author_handle.charAt(0)}
+                      </Avatar>
+                    </Link>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          mb: 0.25,
+                        }}
+                      >
+                        <Link
+                          href={`/u/${comment.author_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: "none", color: "inherit" }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontWeight: 500,
+                              color: theme.palette.text.primary,
+                            }}
+                          >
+                            {comment.author_name || comment.author_handle}
+                          </Typography>
+                        </Link>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: theme.palette.text.secondary }}
+                        >
+                          @{comment.author_handle}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: theme.palette.text.secondary }}
+                        >
+                          ·
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: theme.palette.text.secondary }}
+                        >
+                          {formatDistanceToNow(new Date(comment.created_at), {
+                            addSuffix: true,
+                          })}
+                        </Typography>
+                        {canDeleteComment(comment) && (
+                          <IconButton
+                            size="small"
+                            onClick={() => openDeleteDialog(comment)}
+                            sx={{
+                              ml: "auto",
+                              color: theme.palette.text.secondary,
+                              "&:hover": {
+                                color: theme.palette.error.main,
+                              },
+                              p: 0.25,
+                            }}
+                          >
+                            <DeleteIcon sx={{ fontSize: "0.8rem" }} />
+                          </IconButton>
+                        )}
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: theme.palette.text.primary,
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                          fontSize: "0.8rem",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {comment.content}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+                {comments.length > 3 && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      textAlign: "center",
+                      cursor: "pointer",
+                      "&:hover": {
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                    onClick={() => {
+                      // Navigate to full post page to see all comments
+                      router.push(`/posts/${postId}`);
+                    }}
+                  >
+                    View {comments.length - 3} more comments
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  textAlign: "center",
+                  p: 1,
+                }}
+              >
+                {t("comments.noComments")}
+              </Typography>
+            )}
           </Box>
-        </Box>
+        </Collapse>
       )}
 
-      {/* Comments list */}
-      <Collapse in={isExpanded}>
-        <Box sx={{ mt: 1 }}>
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
-          ) : comments.length > 0 ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {comments.map((comment) => (
+      {/* Compact comment input */}
+      {canComment && (
+        <Collapse in={showCommentInput}>
+          <Box sx={{ mt: 1, mb: 1 }}>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+              <Avatar sx={{ width: 24, height: 24 }}>
+                {details?.full_name?.charAt(0) || details?.handle?.charAt(0)}
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder={t("comments.addPlaceholder")}
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: "0.8rem",
+                    },
+                  }}
+                />
                 <Box
-                  key={comment.id}
                   sx={{
                     display: "flex",
-                    gap: 1,
-                    p: 1,
-                    backgroundColor: theme.palette.background.default,
-                    borderRadius: 1,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mt: 0.5,
                   }}
                 >
-                  <Link
-                    href={`/u/${comment.author_handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none" }}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color:
+                        newComment.length > maxCommentLength
+                          ? theme.palette.error.main
+                          : theme.palette.text.secondary,
+                    }}
                   >
-                    <Avatar sx={{ width: 32, height: 32 }}>
-                      {comment.author_name?.charAt(0) ||
-                        comment.author_handle.charAt(0)}
-                    </Avatar>
-                  </Link>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 0.5,
+                    {newComment.length}/{maxCommentLength}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setShowCommentInput(false);
+                        setNewComment("");
                       }}
+                      sx={{ fontSize: "0.7rem" }}
                     >
-                      <Link
-                        href={`/u/${comment.author_handle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: "none", color: "inherit" }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 500,
-                            color: theme.palette.text.primary,
-                          }}
-                        >
-                          {comment.author_name || comment.author_handle}
-                        </Typography>
-                      </Link>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: theme.palette.text.secondary }}
-                      >
-                        @{comment.author_handle}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: theme.palette.text.secondary }}
-                      >
-                        ·
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: theme.palette.text.secondary }}
-                      >
-                        {formatDistanceToNow(new Date(comment.created_at), {
-                          addSuffix: true,
-                        })}
-                      </Typography>
-                      {canDeleteComment(comment) && (
-                        <IconButton
-                          size="small"
-                          onClick={() => openDeleteDialog(comment)}
-                          sx={{
-                            ml: "auto",
-                            color: theme.palette.text.secondary,
-                            "&:hover": {
-                              color: theme.palette.error.main,
-                            },
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleAddComment}
+                      disabled={
+                        addingComment ||
+                        !newComment.trim() ||
+                        newComment.length > maxCommentLength
+                      }
+                      sx={{ fontSize: "0.7rem" }}
+                    >
+                      {addingComment ? (
+                        <CircularProgress size={12} color="inherit" />
+                      ) : (
+                        t("comments.add")
                       )}
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: theme.palette.text.primary,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {comment.content}
-                    </Typography>
+                    </Button>
                   </Box>
                 </Box>
-              ))}
+              </Box>
             </Box>
-          ) : (
-            <Typography
-              variant="body2"
-              sx={{
-                color: theme.palette.text.secondary,
-                textAlign: "center",
-                p: 2,
-              }}
-            >
-              {t("comments.noComments")}
-            </Typography>
-          )}
-        </Box>
-      </Collapse>
+          </Box>
+        </Collapse>
+      )}
 
       {/* Delete confirmation dialog */}
       <Dialog
@@ -453,8 +536,8 @@ export default function Comments({
         <DialogContent>
           <DialogContentText>
             {commentToDelete?.author_handle === details?.handle
-              ? t("comments.confirmDeleteMyComment")
-              : t("comments.confirmDeleteComment")}
+              ? t("comments.deleteMyCommentConfirm")
+              : t("comments.deleteCommentConfirm")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -462,9 +545,11 @@ export default function Comments({
             {t("common.cancel")}
           </Button>
           <Button
-            onClick={() =>
-              commentToDelete && handleDeleteComment(commentToDelete)
-            }
+            onClick={() => {
+              if (commentToDelete) {
+                handleDeleteComment(commentToDelete);
+              }
+            }}
             color="error"
             disabled={deletingComment}
           >
