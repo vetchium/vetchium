@@ -154,27 +154,31 @@ export default function EmployerPostCard({
           {post.content}
         </Typography>
         {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
-          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {post.tags.map((tag) => (
               <Chip
                 key={tag}
-                label={`#${tag}`}
+                label={tag}
                 size="small"
-                variant="outlined"
+                variant="filled"
                 clickable
                 sx={{
-                  borderRadius: "4px",
-                  backgroundColor: "transparent",
-                  borderColor: "transparent",
-                  color: theme.palette.text.secondary,
+                  borderRadius: "16px",
+                  backgroundColor: theme.palette.primary.main + "15",
+                  color: theme.palette.primary.main,
                   fontSize: "0.75rem",
-                  p: "0 4px",
-                  height: "auto",
+                  height: "24px",
+                  border: `1px solid ${theme.palette.primary.main}30`,
                   "& .MuiChip-label": {
-                    padding: "0",
+                    padding: "0 8px",
+                    fontWeight: 500,
                   },
                   "&:hover": {
-                    backgroundColor: theme.palette.action.hover,
+                    backgroundColor: theme.palette.primary.main + "25",
+                    borderColor: theme.palette.primary.main + "50",
+                  },
+                  "&:focus": {
+                    backgroundColor: theme.palette.primary.main + "25",
                   },
                 }}
               />
