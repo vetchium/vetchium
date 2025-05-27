@@ -310,163 +310,206 @@ export default function PostCard({
         >
           {/* Left side: Voting and Comments */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            {/* Upvote */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <IconButton
-                onClick={async () => {
-                  const token = Cookies.get("session_token");
-                  if (!token) return;
+            {/* Only show voting buttons if user is not the author */}
+            {!post.am_i_author && (
+              <>
+                {/* Upvote */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <IconButton
+                    onClick={async () => {
+                      const token = Cookies.get("session_token");
+                      if (!token) return;
 
-                  try {
-                    const endpoint = isUpvoted
-                      ? `${config.API_SERVER_PREFIX}/hub/unvote-user-post`
-                      : `${config.API_SERVER_PREFIX}/hub/upvote-user-post`;
+                      try {
+                        const endpoint = isUpvoted
+                          ? `${config.API_SERVER_PREFIX}/hub/unvote-user-post`
+                          : `${config.API_SERVER_PREFIX}/hub/upvote-user-post`;
 
-                    const response = await fetch(endpoint, {
-                      method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({ post_id: post.id }),
-                    });
+                        const response = await fetch(endpoint, {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ post_id: post.id }),
+                        });
 
-                    if (response.ok) {
-                      if (isUpvoted) {
-                        setUpvotesCount((prev) => prev - 1);
-                        setIsUpvoted(false);
-                        setCanUpvote(true);
-                        setCanDownvote(true);
-                      } else if (isDownvoted) {
-                        setDownvotesCount((prev) => prev - 1);
-                        setIsDownvoted(false);
-                        setUpvotesCount((prev) => prev + 1);
-                        setIsUpvoted(true);
-                        setCanUpvote(false);
-                        setCanDownvote(false);
-                      } else {
-                        setUpvotesCount((prev) => prev + 1);
-                        setIsUpvoted(true);
-                        setCanUpvote(false);
-                        setCanDownvote(false);
+                        if (response.ok) {
+                          if (isUpvoted) {
+                            setUpvotesCount((prev) => prev - 1);
+                            setIsUpvoted(false);
+                            setCanUpvote(true);
+                            setCanDownvote(true);
+                          } else if (isDownvoted) {
+                            setDownvotesCount((prev) => prev - 1);
+                            setIsDownvoted(false);
+                            setUpvotesCount((prev) => prev + 1);
+                            setIsUpvoted(true);
+                            setCanUpvote(false);
+                            setCanDownvote(false);
+                          } else {
+                            setUpvotesCount((prev) => prev + 1);
+                            setIsUpvoted(true);
+                            setCanUpvote(false);
+                            setCanDownvote(false);
+                          }
+                        }
+                      } catch (error) {
+                        console.error("Error voting:", error);
                       }
-                    }
-                  } catch (error) {
-                    console.error("Error voting:", error);
-                  }
-                }}
-                disabled={!canUpvote && !isUpvoted && !post.am_i_author}
-                size="small"
-                sx={{
-                  color: isUpvoted
-                    ? theme.palette.primary.main
-                    : theme.palette.text.secondary,
-                  "&:hover": {
-                    color: theme.palette.primary.main,
-                    backgroundColor: theme.palette.primary.main + "10",
-                  },
-                  borderRadius: "50%",
-                  p: 0.5,
-                }}
-              >
-                {isUpvoted ? (
-                  <ThumbUpIcon fontSize="small" />
-                ) : (
-                  <ThumbUpOutlinedIcon fontSize="small" />
-                )}
-              </IconButton>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: isUpvoted
-                    ? theme.palette.primary.main
-                    : theme.palette.text.secondary,
-                  fontSize: "0.8rem",
-                  minWidth: "20px",
-                }}
-              >
-                {upvotesCount}
-              </Typography>
-            </Box>
-
-            {/* Downvote */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <IconButton
-                onClick={async () => {
-                  const token = Cookies.get("session_token");
-                  if (!token) return;
-
-                  try {
-                    const endpoint = isDownvoted
-                      ? `${config.API_SERVER_PREFIX}/hub/unvote-user-post`
-                      : `${config.API_SERVER_PREFIX}/hub/downvote-user-post`;
-
-                    const response = await fetch(endpoint, {
-                      method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
+                    }}
+                    disabled={!canUpvote && !isUpvoted}
+                    size="small"
+                    sx={{
+                      color: isUpvoted
+                        ? theme.palette.primary.main
+                        : theme.palette.text.secondary,
+                      "&:hover": {
+                        color: theme.palette.primary.main,
+                        backgroundColor: theme.palette.primary.main + "10",
                       },
-                      body: JSON.stringify({ post_id: post.id }),
-                    });
+                      borderRadius: "50%",
+                      p: 0.5,
+                    }}
+                  >
+                    {isUpvoted ? (
+                      <ThumbUpIcon fontSize="small" />
+                    ) : (
+                      <ThumbUpOutlinedIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: isUpvoted
+                        ? theme.palette.primary.main
+                        : theme.palette.text.secondary,
+                      fontSize: "0.8rem",
+                      minWidth: "20px",
+                    }}
+                  >
+                    {upvotesCount}
+                  </Typography>
+                </Box>
 
-                    if (response.ok) {
-                      if (isDownvoted) {
-                        setDownvotesCount((prev) => prev - 1);
-                        setIsDownvoted(false);
-                        setCanUpvote(true);
-                        setCanDownvote(true);
-                      } else if (isUpvoted) {
-                        setUpvotesCount((prev) => prev - 1);
-                        setIsUpvoted(false);
-                        setDownvotesCount((prev) => prev + 1);
-                        setIsDownvoted(true);
-                        setCanUpvote(false);
-                        setCanDownvote(false);
-                      } else {
-                        setDownvotesCount((prev) => prev + 1);
-                        setIsDownvoted(true);
-                        setCanUpvote(false);
-                        setCanDownvote(false);
+                {/* Downvote */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <IconButton
+                    onClick={async () => {
+                      const token = Cookies.get("session_token");
+                      if (!token) return;
+
+                      try {
+                        const endpoint = isDownvoted
+                          ? `${config.API_SERVER_PREFIX}/hub/unvote-user-post`
+                          : `${config.API_SERVER_PREFIX}/hub/downvote-user-post`;
+
+                        const response = await fetch(endpoint, {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ post_id: post.id }),
+                        });
+
+                        if (response.ok) {
+                          if (isDownvoted) {
+                            setDownvotesCount((prev) => prev - 1);
+                            setIsDownvoted(false);
+                            setCanUpvote(true);
+                            setCanDownvote(true);
+                          } else if (isUpvoted) {
+                            setUpvotesCount((prev) => prev - 1);
+                            setIsUpvoted(false);
+                            setDownvotesCount((prev) => prev + 1);
+                            setIsDownvoted(true);
+                            setCanUpvote(false);
+                            setCanDownvote(false);
+                          } else {
+                            setDownvotesCount((prev) => prev + 1);
+                            setIsDownvoted(true);
+                            setCanUpvote(false);
+                            setCanDownvote(false);
+                          }
+                        }
+                      } catch (error) {
+                        console.error("Error voting:", error);
                       }
-                    }
-                  } catch (error) {
-                    console.error("Error voting:", error);
-                  }
-                }}
-                disabled={!canDownvote && !isDownvoted && !post.am_i_author}
-                size="small"
-                sx={{
-                  color: isDownvoted
-                    ? theme.palette.error.main
-                    : theme.palette.text.secondary,
-                  "&:hover": {
-                    color: theme.palette.error.main,
-                    backgroundColor: theme.palette.error.main + "10",
-                  },
-                  borderRadius: "50%",
-                  p: 0.5,
-                }}
-              >
-                {isDownvoted ? (
-                  <ThumbDownIcon fontSize="small" />
-                ) : (
-                  <ThumbDownOutlinedIcon fontSize="small" />
-                )}
-              </IconButton>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: isDownvoted
-                    ? theme.palette.error.main
-                    : theme.palette.text.secondary,
-                  fontSize: "0.8rem",
-                  minWidth: "20px",
-                }}
-              >
-                {downvotesCount}
-              </Typography>
-            </Box>
+                    }}
+                    disabled={!canDownvote && !isDownvoted}
+                    size="small"
+                    sx={{
+                      color: isDownvoted
+                        ? theme.palette.error.main
+                        : theme.palette.text.secondary,
+                      "&:hover": {
+                        color: theme.palette.error.main,
+                        backgroundColor: theme.palette.error.main + "10",
+                      },
+                      borderRadius: "50%",
+                      p: 0.5,
+                    }}
+                  >
+                    {isDownvoted ? (
+                      <ThumbDownIcon fontSize="small" />
+                    ) : (
+                      <ThumbDownOutlinedIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: isDownvoted
+                        ? theme.palette.error.main
+                        : theme.palette.text.secondary,
+                      fontSize: "0.8rem",
+                      minWidth: "20px",
+                    }}
+                  >
+                    {downvotesCount}
+                  </Typography>
+                </Box>
+              </>
+            )}
+
+            {/* Show vote counts only for author's own posts */}
+            {post.am_i_author && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <ThumbUpOutlinedIcon
+                    fontSize="small"
+                    sx={{ color: theme.palette.text.secondary }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      fontSize: "0.8rem",
+                      minWidth: "20px",
+                    }}
+                  >
+                    {upvotesCount}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <ThumbDownOutlinedIcon
+                    fontSize="small"
+                    sx={{ color: theme.palette.text.secondary }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      fontSize: "0.8rem",
+                      minWidth: "20px",
+                    }}
+                  >
+                    {downvotesCount}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             {/* Comments */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
