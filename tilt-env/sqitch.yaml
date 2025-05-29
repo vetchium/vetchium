@@ -85,7 +85,15 @@ spec:
 
               # Read and process the JSON file to insert tags
               echo "Processing vetchium-tags.json..."
-              cat /vetchi/migrations/vetchium-tags.json | jq -r '.[] | "INSERT INTO tags (id, display_name) VALUES (\047" + .id + "\047, \047" + .display_name + "\047) ON CONFLICT (id) DO NOTHING;"' | psql "${URI}"
+              JSON_DATA=$(cat /vetchi/migrations/vetchium-tags.json)
+              psql "${URI}" -c "
+                INSERT INTO tags (id, display_name) 
+                SELECT 
+                    elem->>'id' as id,
+                    elem->>'display_name' as display_name
+                FROM json_array_elements('${JSON_DATA}'::json) as elem
+                ON CONFLICT (id) DO NOTHING;
+              "
 
               echo "Tags insertion completed successfully"
           volumeMounts:

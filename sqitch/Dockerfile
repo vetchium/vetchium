@@ -1,9 +1,9 @@
 FROM sqitch/sqitch:v1.4
 
-# Install psql and jq for the vetchium-tags-creat job
+# Install psql for the vetchium-tags-creat job
 USER root
 RUN apt-get update && \
-    apt-get install -y postgresql-client jq && \
+    apt-get install -y postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
