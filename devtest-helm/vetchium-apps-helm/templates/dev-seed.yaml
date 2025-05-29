@@ -24,7 +24,7 @@ spec:
                 echo "Waiting for hermione pods to be running..."
                 sleep 5
               done
-              until kubectl get pods -l app=mailpit -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
+              until kubectl get pods -l app.kubernetes.io/name=mailpit -n {{ .Release.Namespace }} -o jsonpath='{.items[0].status.phase}' | grep -q "Running"; do
                 echo "Waiting for mailpit pods to be running..."
                 sleep 5
               done
