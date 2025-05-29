@@ -1,6 +1,6 @@
 import { Handle } from "../common/common";
 import { EmployerPost } from "../common/posts";
-import { VTagID, VTagName } from "../common/vtags";
+import { VTagID } from "../common/vtags";
 
 export class AddFTPostRequest {
   content: string = "";
@@ -18,14 +18,12 @@ export class AddFTPostRequest {
 export class AddPostRequest {
   content: string = "";
   tag_ids: VTagID[] = [];
-  new_tags: VTagName[] = [];
 
   IsValid(): boolean {
     return (
       this.content.length > 0 &&
       this.content.length <= 4096 &&
-      this.tag_ids.length <= 3 &&
-      this.new_tags.length <= 3
+      this.tag_ids.length <= 3
     );
   }
 }

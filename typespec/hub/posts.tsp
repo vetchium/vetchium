@@ -26,9 +26,6 @@ model AddPostRequest {
     @maxItems(3)
     tag_ids: VTagID[];
 
-    @maxItems(3)
-    new_tags: VTagName[];
-
     // TODO: Images
 }
 
