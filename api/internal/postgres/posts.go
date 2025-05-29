@@ -13,37 +13,30 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-// addPostInternal is a shared helper function for adding posts
-func (pg *PG) addPostInternal(
-	ctx context.Context,
-	postID string,
-	content string,
-	existingTagIDs []string,
-	newTags []string,
-) error {
-	hubUserID, err := getHubUserID(ctx)
+func (pg *PG) AddPost(addPostReq db.AddPostRequest) error {
+	hubUserID, err := getHubUserID(addPostReq.Context)
 	if err != nil {
 		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
-	tx, err := pg.pool.Begin(ctx)
+	tx, err := pg.pool.Begin(addPostReq.Context)
 	if err != nil {
 		pg.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(context.Background())
 
+	// Insert the post
 	postsInsertQuery := `
 INSERT INTO posts (id, content, author_id)
 VALUES ($1, $2, $3)
 `
-
 	_, err = tx.Exec(
-		ctx,
+		addPostReq.Context,
 		postsInsertQuery,
-		postID,
-		content,
+		addPostReq.PostID,
+		addPostReq.Content,
 		hubUserID,
 	)
 	if err != nil {
@@ -51,54 +44,18 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	// Collect all tag IDs (new + existing)
-	tagIDs := make([]string, 0, len(newTags)+len(existingTagIDs))
-
-	// Create new tags if any
-	if len(newTags) > 0 {
-		newTagsInsertQuery := `
-WITH tag_insert AS (
-    INSERT INTO tags (name)
-    VALUES ($1)
-    ON CONFLICT (name) DO NOTHING
-    RETURNING id
-)
-SELECT id FROM tag_insert
-UNION ALL
-SELECT id FROM tags WHERE name = $1
-LIMIT 1
-`
-
-		for _, tag := range newTags {
-			var newTagID string
-			err = tx.QueryRow(
-				ctx,
-				newTagsInsertQuery,
-				tag,
-			).Scan(&newTagID)
-			if err != nil {
-				pg.log.Err("failed to insert new tags", "error", err)
-				return err
-			}
-			tagIDs = append(tagIDs, newTagID)
-		}
-	}
-
-	// Add existing tag IDs
-	tagIDs = append(tagIDs, existingTagIDs...)
-
-	// Insert post-tag relationships
-	if len(tagIDs) > 0 {
+	// Insert post-tag relationships for existing tags
+	if len(addPostReq.TagIDs) > 0 {
 		tagsInsertQuery := `
 INSERT INTO post_tags (post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
-		for _, tagID := range tagIDs {
+		for _, tagID := range addPostReq.TagIDs {
 			_, err = tx.Exec(
-				ctx,
+				addPostReq.Context,
 				tagsInsertQuery,
-				postID,
-				tagID,
+				addPostReq.PostID,
+				string(tagID),
 			)
 			if err != nil {
 				pg.log.Err("failed to insert to post_tags", "error", err)
@@ -116,43 +73,64 @@ VALUES ($1, $2) ON CONFLICT DO NOTHING
 	return nil
 }
 
-func (pg *PG) AddPost(addPostReq db.AddPostRequest) error {
-	// Convert TagIDs to string slice
-	existingTagIDs := make([]string, len(addPostReq.TagIDs))
-	for i, tagID := range addPostReq.TagIDs {
-		existingTagIDs[i] = string(tagID)
-	}
-
-	// Convert NewTags to string slice
-	newTags := make([]string, len(addPostReq.NewTags))
-	for i, tag := range addPostReq.NewTags {
-		newTags[i] = string(tag)
-	}
-
-	return pg.addPostInternal(
-		addPostReq.Context,
-		addPostReq.PostID,
-		addPostReq.Content,
-		existingTagIDs,
-		newTags,
-	)
-}
-
 func (pg *PG) AddFTPost(addFTPostReq db.AddFTPostRequest) error {
-	// Convert TagIDs to string slice
-	existingTagIDs := make([]string, len(addFTPostReq.TagIDs))
-	for i, tagID := range addFTPostReq.TagIDs {
-		existingTagIDs[i] = string(tagID)
+	hubUserID, err := getHubUserID(addFTPostReq.Context)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return err
 	}
 
-	// Free tier posts don't support creating new tags
-	return pg.addPostInternal(
+	tx, err := pg.pool.Begin(addFTPostReq.Context)
+	if err != nil {
+		pg.log.Err("failed to begin transaction", "error", err)
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	// Insert the post
+	postsInsertQuery := `
+INSERT INTO posts (id, content, author_id)
+VALUES ($1, $2, $3)
+`
+	_, err = tx.Exec(
 		addFTPostReq.Context,
+		postsInsertQuery,
 		addFTPostReq.PostID,
 		addFTPostReq.Content,
-		existingTagIDs,
-		nil, // no new tags for free tier
+		hubUserID,
 	)
+	if err != nil {
+		pg.log.Err("failed to insert post", "error", err)
+		return err
+	}
+
+	// Insert post-tag relationships for existing tags
+	if len(addFTPostReq.TagIDs) > 0 {
+		tagsInsertQuery := `
+INSERT INTO post_tags (post_id, tag_id)
+VALUES ($1, $2) ON CONFLICT DO NOTHING
+`
+		for _, tagID := range addFTPostReq.TagIDs {
+			_, err = tx.Exec(
+				addFTPostReq.Context,
+				tagsInsertQuery,
+				addFTPostReq.PostID,
+				string(tagID),
+			)
+			if err != nil {
+				pg.log.Err("failed to insert to post_tags", "error", err)
+				return err
+			}
+		}
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		pg.log.Err("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
