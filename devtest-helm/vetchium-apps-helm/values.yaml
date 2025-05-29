@@ -24,7 +24,7 @@ harrypotter:
   image:
     repository: ghcr.io/vetchium/harrypotter
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   service:
     type: LoadBalancer
     port: 3001
@@ -36,7 +36,7 @@ granger:
   image:
     repository: ghcr.io/vetchium/granger
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   serviceAccount:
     create: true
   config:
@@ -58,7 +58,7 @@ hermione:
   image:
     repository: ghcr.io/vetchium/hermione
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   serviceAccount:
     create: true
   initContainer:
@@ -96,7 +96,7 @@ ronweasly:
   image:
     repository: ghcr.io/vetchium/ronweasly
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   serviceAccount:
     create: false
     name: "default"
@@ -127,7 +127,7 @@ sortinghat:
   image:
     repository: ghcr.io/vetchium/sortinghat
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   config:
     port: "8080"
   serviceAccount:
@@ -165,7 +165,7 @@ sqitch:
   image:
     repository: ghcr.io/vetchium/sqitch
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   serviceAccount:
     create: true
   secrets:
@@ -183,7 +183,7 @@ devSeed:
   image:
     repository: ghcr.io/vetchium/dev-seed
     pullPolicy: IfNotPresent
-    tag: "8bbaccff77dad34d0b"
+    tag: "c2176973f7f7122240"
   serviceAccount:
     create: true
   secrets:
