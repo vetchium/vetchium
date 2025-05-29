@@ -2,7 +2,7 @@ To setup helm based backend pods on a fresh ubuntu VM, do:
 ```bash
 apt update && apt install make
 snap install docker
-snap install helm --classic
+snap install helm --channel=3.7/stable --classic
 
 # Ensure that the firewall is disabled and stopped
 systemctl disable ufw
