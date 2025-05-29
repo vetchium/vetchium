@@ -564,8 +564,8 @@ CREATE TABLE interview_interviewers (
 );
 
 CREATE TABLE tags (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL UNIQUE,
+    id TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
 );
 
@@ -576,29 +576,6 @@ CREATE TABLE opening_tag_mappings (
     tag_id UUID REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (employer_id, opening_id, tag_id)
 );
-
--- Seed data for common opening tags
-INSERT INTO tags (name) VALUES
-    ('DevOps'),
-    ('Golang'),
-    ('Database Administrator'),
-    ('Frontend Developer'),
-    ('Backend Developer'),
-    ('Full Stack Developer'),
-    ('Site Reliability Engineer'),
-    ('Cloud Engineer'),
-    ('Data Scientist'),
-    ('Machine Learning Engineer'),
-    ('Product Manager'),
-    ('UI/UX Designer'),
-    ('QA Engineer'),
-    ('Security Engineer'),
-    ('Mobile Developer'),
-    ('Technical Writer'),
-    ('Engineering Manager'),
-    ('Technical Support'),
-    ('Business Analyst'),
-    ('System Administrator');
 
 CREATE OR REPLACE FUNCTION get_or_create_dummy_employer(p_domain_name text)
 RETURNS UUID AS $$

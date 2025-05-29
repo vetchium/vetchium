@@ -50,6 +50,62 @@ spec:
             secretName: {{ .Values.sqitch.secrets.postgres }} # Assumes secret is in the same namespace
       restartPolicy: Never
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vetchium-tags-creat-{{ .Values.sqitch.image.tag }}
+  labels:
+    app: vetchium-tags-creat
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: vetchium-tags-creat
+        version: {{ .Values.sqitch.image.tag }}
+    spec:
+      serviceAccountName: sqitch-sa
+      initContainers:
+        - name: wait-for-sqitch
+          image: bitnami/kubectl:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Waiting for sqitch job to complete..."
+              until kubectl wait --for=condition=complete job/sqitch-{{ .Values.sqitch.image.tag }} --timeout=600s -n {{ .Release.Namespace }}; do
+                echo "Sqitch job not complete yet, waiting..."
+                sleep 10
+              done
+              echo "Sqitch job completed successfully"
+      containers:
+        - name: vetchium-tags-creat
+          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag }}"
+          imagePullPolicy: {{ .Values.sqitch.image.pullPolicy }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "Starting vetchium-tags-creat job..."
+              
+              # Get the PostgreSQL connection URI (no transformation needed for psql)
+              URI=$(cat /mnt/secrets/uri)
+              echo "Connecting to database..."
+              
+              # Read and process the JSON file to insert tags
+              echo "Processing vetchium-tags.json..."
+              cat /vetchi/migrations/vetchium-tags.json | jq -r '.[] | "INSERT INTO tags (id, display_name) VALUES (\047" + .id + "\047, \047" + .display_name + "\047) ON CONFLICT (id) DO NOTHING;"' | psql "${URI}"
+              
+              echo "Tags insertion completed successfully"
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: postgres-creds
+          secret:
+            secretName: {{ .Values.sqitch.secrets.postgres }}
+      restartPolicy: Never
+---
 {{- if .Values.sqitch.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
