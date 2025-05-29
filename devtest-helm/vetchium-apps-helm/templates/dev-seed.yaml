@@ -40,7 +40,7 @@ spec:
             - name: SERVER_URL
               value: "http://hermione:8080"
             - name: MAIL_PIT_URL
-              value: "{{ .Values.devSeed.mailpitServiceUrl }}"
+              value: "http://{{ .Values.global.vmaddr }}:{{ .Values.devSeed.mailpitPort }}"
       restartPolicy: Never
 
 ---

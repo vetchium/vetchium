@@ -189,7 +189,7 @@ devSeed:
   secrets:
     postgres: postgres-app
   hermioneServiceUrl: "http://hermione:{{ .Values.hermione.service.port }}"
-  mailpitServiceUrl: "http://{{ .Values.global.vmaddr }}:8025"
+  mailpitPort: 8025
   initContainer:
     kubectlImage: bitnami/kubectl:latest
     postgresLabelSelector: "cnpg.io/cluster=postgres"
