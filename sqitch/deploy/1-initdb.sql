@@ -1285,7 +1285,7 @@ SELECT
     hu.handle AS author_handle,
     hu.full_name AS author_name,
     hu.profile_picture_url AS author_profile_pic_url,
-    ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+    ARRAY_AGG(DISTINCT t.display_name) FILTER (WHERE t.display_name IS NOT NULL) AS tags,
     EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id AND vote_value = 1) AS me_upvoted,
     EXISTS (SELECT 1 FROM post_votes WHERE post_id = p.id AND user_id = ht.hub_user_id AND vote_value = -1) AS me_downvoted,
     -- can_upvote is false if: user has already voted or is the author
@@ -1323,7 +1323,7 @@ SELECT
     NULL AS author_handle,
     NULL AS author_name,
     NULL AS author_profile_pic_url,
-    ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+    ARRAY_AGG(DISTINCT t.display_name) FILTER (WHERE t.display_name IS NOT NULL) AS tags,
     NULL AS me_upvoted,
     NULL AS me_downvoted,
     NULL AS can_upvote,
