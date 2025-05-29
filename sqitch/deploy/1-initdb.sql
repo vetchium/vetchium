@@ -573,7 +573,7 @@ CREATE TABLE opening_tag_mappings (
     employer_id UUID NOT NULL,
     opening_id TEXT NOT NULL,
     CONSTRAINT fk_opening FOREIGN KEY (employer_id, opening_id) REFERENCES openings (employer_id, id),
-    tag_id UUID REFERENCES tags(id) NOT NULL,
+    tag_id TEXT REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (employer_id, opening_id, tag_id)
 );
 
@@ -1041,7 +1041,7 @@ CREATE INDEX idx_post_comments_pagination ON post_comments (post_id, created_at 
 
 CREATE TABLE post_tags (
     post_id TEXT REFERENCES posts(id) NOT NULL,
-    tag_id UUID REFERENCES tags(id) NOT NULL,
+    tag_id TEXT REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (post_id, tag_id)
 );
 
@@ -1152,7 +1152,7 @@ CREATE TABLE employer_posts (
 -- This table stores all the tags for each of the posts from all the employers
 CREATE TABLE employer_post_tags (
     employer_post_id TEXT REFERENCES employer_posts(id) NOT NULL,
-    tag_id UUID REFERENCES tags(id) NOT NULL,
+    tag_id TEXT REFERENCES tags(id) NOT NULL,
     PRIMARY KEY (employer_post_id, tag_id)
 );
 
