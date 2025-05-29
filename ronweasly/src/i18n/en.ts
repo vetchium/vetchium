@@ -670,15 +670,11 @@ export const en = {
     placeholder: "What's on your mind?",
     placeholderFree: "What's on your mind? (255 characters max)",
     publish: "Publish",
-    addTag: "Add tag: {tag}",
     removeTag: "Remove",
     maxTags: "Maximum of 3 tags allowed",
-    newTag: "Create new tag: {name}",
-    searchTags: "Search for tags or create new ones",
-    searchTagsOnly: "Search for existing tags only",
+    searchTagsOnly: "Search for existing tags",
     tags: "Tags",
     tagsPlaceholder: "Add tags...",
-    upgrade: "Upgrade",
     following: "Following",
     trending: "Trending",
     compose: {
@@ -688,10 +684,6 @@ export const en = {
     freeTierLimits: {
       title: "Free Tier Limitations",
       characterLimit: "Free tier users are limited to 255 characters per post",
-      noNewTags:
-        "Free tier users can only use existing tags, not create new ones",
-      upgradePrompt: "Upgrade to paid tier for more features",
-      upgradeButton: "Upgrade Now",
     },
     error: {
       fetchFailed: "Failed to fetch posts",
