@@ -97,15 +97,4 @@ INSERT INTO hub_users (
     timezone('UTC'::text, now())
 );
 
--- Add tags needed for comment tests
-INSERT INTO tags (name) VALUES
-('0028-comments'),
-('0028-test'),
-('0028-disable'),
-('0028-delete'),
-('0028-get'),
-('0028-my'),
-('0028-enable')
-ON CONFLICT (name) DO NOTHING;
-
 COMMIT;

@@ -109,10 +109,10 @@ WHERE author_id IN (
 -- Clean up tags
 DELETE FROM tags
 WHERE id IN (
-    '12345678-0024-0024-0024-000000000001',
-    '12345678-0024-0024-0024-000000000002',
-    '12345678-0024-0024-0024-000000000003',
-    '12345678-0024-0024-0024-000000000004'
+    '0024-timeline-test',
+    '0024-testing',
+    '0024-examples',
+    '0024-automation'
 );
 
 -- Clean up hub user tokens and related tables

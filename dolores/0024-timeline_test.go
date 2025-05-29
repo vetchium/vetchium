@@ -413,7 +413,7 @@ var _ = Describe("Timeline Operations", Ordered, func() {
 			postReq := hub.AddPostRequest{
 				Content: "This is a new post from user3 for timeline testing!",
 				TagIDs: []common.VTagID{
-					common.VTagID("12345678-0024-0024-0024-000000000001"),
+					common.VTagID("technology"),
 				},
 			}
 

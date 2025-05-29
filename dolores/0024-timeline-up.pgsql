@@ -50,10 +50,11 @@ VALUES
 -- Create some test tags
 INSERT INTO tags (id, name) 
 VALUES 
-    ('12345678-0024-0024-0024-000000000001', '0024-timeline-test'),
-    ('12345678-0024-0024-0024-000000000002', '0024-testing'),
-    ('12345678-0024-0024-0024-000000000003', '0024-examples'),
-    ('12345678-0024-0024-0024-000000000004', '0024-automation');
+    ('0024-timeline-test', '0024-timeline-test'),
+    ('0024-testing', '0024-testing'),
+    ('0024-examples', '0024-examples'),
+    ('0024-automation', '0024-automation')
+ON CONFLICT (id) DO NOTHING;
 
 -- Create some initial posts for testing with pre-populated timelines
 INSERT INTO posts (id, content, author_id, created_at)
@@ -79,15 +80,15 @@ VALUES
     ('post-0024-000000000010', 'This is post 1 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '2 days'),
     ('post-0024-000000000011', 'This is post 2 from timeline-user13-0024', '12345678-0024-0024-0024-000000000013', NOW() - INTERVAL '1 day');
 
--- Add tags to some posts
+-- Add tags to some posts (using existing tags from vetchium-tags.json)
 INSERT INTO post_tags (post_id, tag_id)
 VALUES
-    ('post-0024-000000000001', '12345678-0024-0024-0024-000000000001'),
-    ('post-0024-000000000001', '12345678-0024-0024-0024-000000000002'),
-    ('post-0024-000000000002', '12345678-0024-0024-0024-000000000003'),
-    ('post-0024-000000000004', '12345678-0024-0024-0024-000000000004'),
-    ('post-0024-000000000007', '12345678-0024-0024-0024-000000000001'),
-    ('post-0024-000000000010', '12345678-0024-0024-0024-000000000002');
+    ('post-0024-000000000001', 'technology'),
+    ('post-0024-000000000001', 'innovation'),
+    ('post-0024-000000000002', 'marketing'),
+    ('post-0024-000000000004', 'productivity'),
+    ('post-0024-000000000007', 'technology'),
+    ('post-0024-000000000010', 'innovation');
 
 -- Create some initial timelines for testing
 -- For user1 (following users 2,3,4)

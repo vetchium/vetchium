@@ -84,13 +84,13 @@ INSERT INTO hub_users (
 );
 
 -- Add tags needed for GetUserPosts tests, ensuring they exist
-INSERT INTO tags (name) VALUES
-('pagination'),
-('specific-test'),
-('golang'),
-('testing'),
-('details-tag1'),
-('details-tag2')
-ON CONFLICT (name) DO NOTHING;
+-- Note: These tags should already exist from vetchium-tags.json
+-- but we add them here in case they don't exist in test environment
+INSERT INTO tags (id, name) VALUES
+('productivity', 'Productivity'),
+('innovation', 'Innovation'),
+('golang', 'Go Programming Language'),
+('technology', 'Technology')
+ON CONFLICT (id) DO NOTHING;
 
 COMMIT;

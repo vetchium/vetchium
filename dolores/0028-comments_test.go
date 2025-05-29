@@ -91,7 +91,6 @@ var _ = Describe("Comments", Ordered, func() {
 			postAuthorToken,
 			hub.AddPostRequest{
 				Content: "Post for adding comments test",
-				NewTags: []common.VTagName{"0028-comments", "0028-test"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -105,7 +104,6 @@ var _ = Describe("Comments", Ordered, func() {
 			disableCommentsToken,
 			hub.AddPostRequest{
 				Content: "Post for disable comments test",
-				NewTags: []common.VTagName{"0028-disable", "0028-test"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -119,7 +117,6 @@ var _ = Describe("Comments", Ordered, func() {
 			deleteCommentToken,
 			hub.AddPostRequest{
 				Content: "Post for delete comment test",
-				NewTags: []common.VTagName{"0028-delete", "0028-test"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -133,7 +130,6 @@ var _ = Describe("Comments", Ordered, func() {
 			commenterToken,
 			hub.AddPostRequest{
 				Content: "Post for get comments test with multiple comments",
-				NewTags: []common.VTagName{"0028-get", "0028-comments"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -147,7 +143,6 @@ var _ = Describe("Comments", Ordered, func() {
 			otherUserToken,
 			hub.AddPostRequest{
 				Content: "Post for delete my comment test",
-				NewTags: []common.VTagName{"0028-delete", "0028-my"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -161,7 +156,6 @@ var _ = Describe("Comments", Ordered, func() {
 			postAuthorToken,
 			hub.AddPostRequest{
 				Content: "Post for enable comments test",
-				NewTags: []common.VTagName{"0028-enable", "0028-test"},
 			},
 			"/hub/add-post",
 			http.StatusOK,

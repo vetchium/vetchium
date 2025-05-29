@@ -13,19 +13,6 @@ WHERE post_id IN (
     )
 );
 
--- Delete tags associated with ALL test posts in this file
-DELETE FROM post_tags
-WHERE post_id IN (
-    SELECT id FROM posts WHERE author_id IN (
-        '12345678-0028-0028-0028-000000000001',
-        '12345678-0028-0028-0028-000000000002',
-        '12345678-0028-0028-0028-000000000003',
-        '12345678-0028-0028-0028-000000000004',
-        '12345678-0028-0028-0028-000000000005',
-        '12345678-0028-0028-0028-000000000006'
-    )
-);
-
 -- Delete ALL posts created in this test file
 DELETE FROM posts WHERE author_id IN (
     '12345678-0028-0028-0028-000000000001',
@@ -69,18 +56,6 @@ WHERE id IN (
     '12345678-0028-0028-0028-000000000004',
     '12345678-0028-0028-0028-000000000005',
     '12345678-0028-0028-0028-000000000006'
-);
-
--- Clean up tags created for this test file
-DELETE FROM tags
-WHERE name IN (
-    '0028-comments',
-    '0028-test',
-    '0028-disable',
-    '0028-delete',
-    '0028-get',
-    '0028-my',
-    '0028-enable'
 );
 
 COMMIT;

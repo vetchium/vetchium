@@ -78,7 +78,6 @@ var _ = Describe("Posts", Ordered, func() {
 			getUser1Token,
 			hub.AddPostRequest{
 				Content: "First post by get-user1",
-				NewTags: nil,
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -92,7 +91,7 @@ var _ = Describe("Posts", Ordered, func() {
 			getUser1Token,
 			hub.AddPostRequest{
 				Content: "Second post by get-user1, with tags",
-				NewTags: []common.VTagName{"golang", "testing"},
+				TagIDs:  []common.VTagID{"golang", "technology"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -106,7 +105,7 @@ var _ = Describe("Posts", Ordered, func() {
 			getUser1Token,
 			hub.AddPostRequest{
 				Content: "Third post, updated recently",
-				NewTags: []common.VTagName{"pagination"},
+				TagIDs:  []common.VTagID{"productivity"},
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -120,7 +119,6 @@ var _ = Describe("Posts", Ordered, func() {
 			getUser1Token,
 			hub.AddPostRequest{
 				Content: "Fourth post, newest",
-				NewTags: nil,
 			},
 			"/hub/add-post",
 			http.StatusOK,
@@ -132,7 +130,7 @@ var _ = Describe("Posts", Ordered, func() {
 		// Create post for get-user2
 		addPostReq := hub.AddPostRequest{
 			Content: "First post by get-user2",
-			NewTags: []common.VTagName{"specific-test"},
+			TagIDs:  []common.VTagID{"innovation"},
 		}
 		respBytes := testPOSTGetResp(
 			getUser2Token,
@@ -149,7 +147,7 @@ var _ = Describe("Posts", Ordered, func() {
 		// Create the post for GetDetails tests
 		addPostReq = hub.AddPostRequest{
 			Content: "Post for GetDetails test (created via API)",
-			NewTags: []common.VTagName{"details-tag1", "details-tag2"},
+			TagIDs:  []common.VTagID{"technology", "innovation"},
 		}
 		respBytes = testPOSTGetResp(
 			getDetailsUserToken,
@@ -188,7 +186,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       "",
 					request: hub.AddPostRequest{
 						Content: "This post should not be added.",
-						NewTags: []common.VTagName{"test"},
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -197,7 +194,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       "invalid-token",
 					request: hub.AddPostRequest{
 						Content: "Another post that should not be added.",
-						NewTags: []common.VTagName{"fail"},
 					},
 					wantStatus: http.StatusUnauthorized,
 				},
@@ -206,7 +202,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "This is my first post!",
-						NewTags: []common.VTagName{}, // Empty tags
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
@@ -225,10 +220,10 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Exploring the world of Go testing.",
-						NewTags: []common.VTagName{
+						TagIDs: []common.VTagID{
 							"golang",
-							"testing",
-							"backend",
+							"technology",
+							"software-engineering",
 						},
 					},
 					wantStatus: http.StatusOK,
@@ -244,7 +239,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "", // Missing content
-						NewTags: []common.VTagName{"empty"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -253,7 +247,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: strings.Repeat("x", 4097), // MaxLength is 4096
-						NewTags: []common.VTagName{"long"},
 					},
 					wantStatus: http.StatusBadRequest,
 				},
@@ -262,7 +255,6 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: strings.Repeat("y", 4096), // Exactly MaxLength
-						NewTags: []common.VTagName{"maxlength"},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(resp []byte) {
@@ -277,11 +269,11 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Trying to add too many tags.",
-						NewTags: []common.VTagName{
-							"one",
-							"two",
-							"three",
-							"four",
+						TagIDs: []common.VTagID{
+							"innovation",
+							"technology",
+							"management",
+							"leadership",
 						}, // MaxItems is 3
 					},
 					wantStatus: http.StatusBadRequest,
@@ -291,10 +283,10 @@ var _ = Describe("Posts", Ordered, func() {
 					token:       addUserToken,
 					request: hub.AddPostRequest{
 						Content: "Testing maximum number of tags.",
-						NewTags: []common.VTagName{
-							"tag1",
-							"tag2",
-							"tag3",
+						TagIDs: []common.VTagID{
+							"innovation",
+							"technology",
+							"management",
 						}, // Exactly MaxItems
 					},
 					wantStatus: http.StatusOK,
@@ -306,21 +298,14 @@ var _ = Describe("Posts", Ordered, func() {
 					},
 				},
 				{
-					description: "add post with null tags (should be treated as empty)",
+					description: "add post with invalid tag ID",
 					token:       addUserToken,
 					request: hub.AddPostRequest{
-						Content: "Testing with null tags.",
-						NewTags: nil,
+						Content: "Testing with invalid tag ID.",
+						TagIDs:  []common.VTagID{"non-existent-tag"},
 					},
-					wantStatus: http.StatusOK,
-					validate: func(resp []byte) {
-						var response hub.AddPostResponse
-						err := json.Unmarshal(resp, &response)
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(response.PostID).ShouldNot(BeEmpty())
-					},
+					wantStatus: http.StatusBadRequest,
 				},
-				// Add more edge cases if needed, e.g., tags with special characters, unicode content etc.
 			}
 
 			for _, tc := range testCases {
@@ -412,10 +397,10 @@ var _ = Describe("Posts", Ordered, func() {
 						Expect(
 							resp.Posts[0].AuthorName,
 						).Should(Equal("Get Posts User One"))
-						// Check tags for the second post (should have golang and testing tags)
+						// Check tags for the second post (should have golang and technology tags)
 						Expect(
 							resp.Posts[2].Tags,
-						).Should(ConsistOf("golang", "testing"))
+						).Should(ConsistOf("golang", "technology"))
 
 						// Validate voting and authorship fields for own posts
 						for _, post := range resp.Posts {
@@ -505,7 +490,7 @@ var _ = Describe("Posts", Ordered, func() {
 						).Should(Equal(common.Handle("get-user2")))
 						Expect(
 							resp.Posts[0].Tags,
-						).Should(ConsistOf("specific-test"))
+						).Should(ConsistOf("innovation"))
 						Expect(resp.PaginationKey).Should(BeEmpty())
 					},
 				},
@@ -706,7 +691,7 @@ var _ = Describe("Posts", Ordered, func() {
 						).Should(Equal("Get Details User"))
 						Expect(
 							resp.Tags,
-						).Should(ConsistOf("details-tag1", "details-tag2"))
+						).Should(ConsistOf("technology", "innovation"))
 						Expect(resp.CreatedAt).ShouldNot(BeZero())
 
 						// Validate voting and authorship fields for post author

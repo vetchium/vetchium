@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
-	github.com/vetchium/vetchium/typespec v0.0.0-20250525093819-bef79e5ff30a
+	github.com/vetchium/vetchium/typespec v0.0.0-20250529175348-68485238e1c4
 )
 
 replace github.com/vetchium/vetchium/typespec => ../typespec
