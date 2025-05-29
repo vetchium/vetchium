@@ -95,6 +95,7 @@ devtest: ## Deploy the development environment to a remote VM
 	helm upgrade --install vetchium-apps ./devtest-helm/vetchium-apps-helm \
 		--namespace vetchium-devtest-$(VMUSER) \
 		--create-namespace \
+		--set global.vmaddr=$(VMADDR) \
 		--wait --timeout 10m
 
 	@echo "=========================================================="
