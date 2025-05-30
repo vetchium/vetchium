@@ -70,9 +70,6 @@ export interface CreateOpeningRequest {
 
   // Should be minimum 1 and maximum 3
   tags: VTagID[];
-
-  // Can be maximum 3
-  new_tags?: string[];
 }
 
 export interface CreateOpeningResponse {
