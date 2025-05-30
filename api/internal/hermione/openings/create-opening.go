@@ -41,12 +41,12 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		// Validate tags
-		totalTags := len(createOpeningReq.Tags) + len(createOpeningReq.NewTags)
+		totalTags := len(createOpeningReq.Tags)
 		if totalTags == 0 {
 			h.Dbg("no tags specified", "createOpeningReq", createOpeningReq)
 			w.WriteHeader(http.StatusBadRequest)
 			err = json.NewEncoder(w).Encode(common.ValidationErrors{
-				Errors: []string{"tags", "new_tags"},
+				Errors: []string{"tags"},
 			})
 			if err != nil {
 				h.Err("failed to encode validation errors", "error", err)
@@ -62,7 +62,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 			)
 			w.WriteHeader(http.StatusBadRequest)
 			err = json.NewEncoder(w).Encode(common.ValidationErrors{
-				Errors: []string{"tags", "new_tags"},
+				Errors: []string{"tags"},
 			})
 			if err != nil {
 				h.Err("failed to encode validation errors", "error", err)
@@ -115,6 +115,17 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 
 		openingID, err := h.DB().CreateOpening(r.Context(), createOpeningReq)
 		if err != nil {
+			if errors.Is(err, db.ErrInvalidTagIDs) {
+				h.Dbg("invalid tag IDs provided", "error", err)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"tags"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
+				return
+			}
 			if errors.Is(err, db.ErrNoRecruiter) ||
 				errors.Is(err, db.ErrNoLocation) ||
 				errors.Is(err, db.ErrNoHiringManager) ||

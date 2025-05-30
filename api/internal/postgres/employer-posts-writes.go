@@ -38,104 +38,55 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	tagIDs := make([]string, 0, len(req.NewTags)+len(req.TagIDs))
-	for _, tag := range req.NewTags {
-		var newTagID string
-
-		// Use a proper upsert pattern that handles concurrency safely:
-		// 1. First try to insert (ignoring conflicts)
-		// 2. Then select the ID (which will always exist after step 1)
-
-		// Try to insert the tag, ignore if it already exists
-		_, err = tx.Exec(
-			req.Context,
-			"INSERT INTO tags (name) VALUES ($1) ON CONFLICT (name) DO NOTHING",
-			tag,
-		)
-		if err != nil {
-			p.log.Err("failed to insert tag", "tag_name", tag, "error", err)
-			return db.ErrInternal
-		}
-
-		// Now select the ID (guaranteed to exist after the INSERT above)
-		err = tx.QueryRow(
-			req.Context,
-			"SELECT id FROM tags WHERE name = $1",
-			tag,
-		).Scan(&newTagID)
-		if err != nil {
-			p.log.Err(
-				"failed to select tag ID after upsert",
-				"tag_name",
-				tag,
-				"error",
-				err,
-			)
-			return db.ErrInternal
-		}
-
-		if newTagID == "" {
-			p.log.Err("resolved newTagID is empty string", "tag_name", tag)
-			return db.ErrInternal
-		}
-		tagIDs = append(tagIDs, newTagID)
-	}
-
-	// Validate existing TagIDs from req.TagIDs using a single SQL query for existence check.
+	// Validate existing TagIDs if provided
 	if len(req.TagIDs) > 0 {
-		// 1. Convert req.TagIDs to a slice of non-empty strings.
-		providedTagIDStrings := make([]string, 0, len(req.TagIDs))
-		for _, tagIDInstance := range req.TagIDs {
-			sTagID := string(tagIDInstance)
-			if sTagID != "" {
-				providedTagIDStrings = append(providedTagIDStrings, sTagID)
-			}
-		}
-
-		// Only proceed with DB check if there are actual tag ID strings to validate.
-		if len(providedTagIDStrings) > 0 {
-			var allProvidedTagsExist bool
-			query := `
-SELECT NOT EXISTS (
-	SELECT 1
-	FROM unnest($1::text[]) AS pid_text
-	LEFT JOIN tags t ON t.id = pid_text::uuid
-	WHERE t.id IS NULL
-)
+		validateTagsQuery := `
+SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 `
-			err = tx.QueryRow(req.Context, query, providedTagIDStrings).
-				Scan(&allProvidedTagsExist)
-			if err != nil {
-				p.log.Err("failed tag existence check", "error", err)
-				return db.ErrInternal
-			}
-
-			if !allProvidedTagsExist {
-				p.log.Dbg("one or more provided tag IDs do not exist")
-				return db.ErrNoTag
-			}
+		var validTagCount int
+		tagIDs := make([]string, len(req.TagIDs))
+		for i, tagID := range req.TagIDs {
+			tagIDs[i] = string(tagID)
 		}
 
-		// All tags are valid, append them to the tagIDs list.
-		for _, existingTagUUID := range req.TagIDs {
-			tagIDs = append(tagIDs, string(existingTagUUID))
+		err = tx.QueryRow(req.Context, validateTagsQuery, tagIDs).
+			Scan(&validTagCount)
+		if err != nil {
+			p.log.Err("failed to validate tag IDs", "error", err)
+			return err
 		}
-	}
 
-	tagsInsertQuery := `
+		if validTagCount != len(req.TagIDs) {
+			p.log.Dbg(
+				"invalid tag IDs provided",
+				"expected",
+				len(req.TagIDs),
+				"found",
+				validTagCount,
+			)
+			return db.ErrInvalidTagIDs
+		}
+
+		// Insert post-tag relationships for existing tags
+		tagsInsertQuery := `
 INSERT INTO employer_post_tags (employer_post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
-	for _, tagID := range tagIDs {
-		_, err = tx.Exec(
-			req.Context,
-			tagsInsertQuery,
-			req.PostID,
-			tagID,
-		)
-		if err != nil {
-			p.log.Err("failed to insert into employer_post_tags", "error", err)
-			return db.ErrInternal
+		for _, tagID := range req.TagIDs {
+			_, err = tx.Exec(
+				req.Context,
+				tagsInsertQuery,
+				req.PostID,
+				string(tagID),
+			)
+			if err != nil {
+				p.log.Err(
+					"failed to insert into employer_post_tags",
+					"error",
+					err,
+				)
+				return err
+			}
 		}
 	}
 

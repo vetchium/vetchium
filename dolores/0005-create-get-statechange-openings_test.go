@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = FDescribe("Openings", Ordered, func() {
+var _ = Describe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
@@ -84,7 +84,9 @@ var _ = FDescribe("Openings", Ordered, func() {
 					MaxAmount: 100000,
 					Currency:  "USD",
 				},
-				NewTags: []string{"DevOps"},
+				Tags: []common.VTagID{
+					"devops", // DevOps tag ID
+				},
 			}
 
 			type createOpeningTestCase struct {
@@ -241,7 +243,9 @@ var _ = FDescribe("Openings", Ordered, func() {
 								MaxAmount: 100000,
 								Currency:  "USD",
 							},
-							NewTags: []string{"DevOps"},
+							Tags: []common.VTagID{
+								"devops", // DevOps tag ID
+							},
 						}
 					}(),
 					wantStatus:    http.StatusBadRequest,
@@ -593,7 +597,9 @@ func createTestOpening(token string) string {
 			"IND",
 			"USA",
 		},
-		NewTags: []string{"DevOps"},
+		Tags: []common.VTagID{
+			"devops", // DevOps tag ID
+		},
 	}
 
 	resp := testPOSTGetResp(
@@ -632,7 +638,9 @@ func createTestOpenings(token string) {
 				"IND",
 				"USA",
 			},
-			NewTags: []string{"DevOps"},
+			Tags: []common.VTagID{
+				"devops", // DevOps tag ID
+			},
 		}
 
 		_ = testPOSTGetResp(
@@ -672,7 +680,9 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 				"IND",
 				"USA",
 			},
-			NewTags: []string{"DevOps"},
+			Tags: []common.VTagID{
+				"devops", // DevOps tag ID
+			},
 		}
 
 		resp := testPOSTGetResp(

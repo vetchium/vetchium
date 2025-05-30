@@ -1,311 +1,19 @@
 [
   {
-    "id": "innovation",
-    "display_name": "Innovation"
-  },
-  {
-    "id": "management",
-    "display_name": "Management"
-  },
-  {
-    "id": "digital-marketing",
-    "display_name": "Digital Marketing"
-  },
-  {
-    "id": "technology",
-    "display_name": "Technology"
-  },
-  {
-    "id": "creativity",
-    "display_name": "Creativity"
-  },
-  {
-    "id": "future-of-work",
-    "display_name": "Future of Work"
-  },
-  {
-    "id": "startups",
-    "display_name": "Startups"
-  },
-  {
-    "id": "marketing",
-    "display_name": "Marketing"
-  },
-  {
-    "id": "social-media",
-    "display_name": "Social Media"
-  },
-  {
-    "id": "leadership",
-    "display_name": "Leadership"
-  },
-  {
-    "id": "personal-development",
-    "display_name": "Personal Development"
-  },
-  {
-    "id": "artificial-intelligence",
-    "display_name": "Artificial Intelligence (AI)"
-  },
-  {
-    "id": "data-science",
-    "display_name": "Data Science"
-  },
-  {
-    "id": "entrepreneurship",
-    "display_name": "Entrepreneurship"
-  },
-  {
-    "id": "software-engineering",
-    "display_name": "Software Engineering"
-  },
-  {
-    "id": "cloud-computing",
-    "display_name": "Cloud Computing"
-  },
-  {
-    "id": "cybersecurity",
-    "display_name": "Cybersecurity"
-  },
-  {
-    "id": "project-management",
-    "display_name": "Project Management"
-  },
-  {
-    "id": "sales",
-    "display_name": "Sales"
-  },
-  {
-    "id": "human-resources",
-    "display_name": "Human Resources (HR)"
-  },
-  {
-    "id": "finance",
-    "display_name": "Finance"
-  },
-  {
-    "id": "remote-work",
-    "display_name": "Remote Work"
-  },
-  {
-    "id": "sustainability",
-    "display_name": "Sustainability"
-  },
-  {
-    "id": "branding",
-    "display_name": "Branding"
-  },
-  {
-    "id": "networking",
-    "display_name": "Networking"
-  },
-  {
-    "id": "careers",
-    "display_name": "Careers"
-  },
-  {
-    "id": "job-search",
-    "display_name": "Job Search"
-  },
-  {
-    "id": "health",
-    "display_name": "Health"
-  },
-  {
-    "id": "healthcare",
-    "display_name": "Healthcare"
-  },
-  {
-    "id": "education",
-    "display_name": "Education"
-  },
-  {
-    "id": "edtech",
-    "display_name": "EdTech"
-  },
-  {
-    "id": "fintech",
-    "display_name": "FinTech"
-  },
-  {
-    "id": "ecommerce",
-    "display_name": "E-commerce"
-  },
-  {
-    "id": "business-development",
-    "display_name": "Business Development"
-  },
-  {
-    "id": "strategy",
-    "display_name": "Strategy"
-  },
-  {
-    "id": "motivation",
-    "display_name": "Motivation"
-  },
-  {
-    "id": "productivity",
-    "display_name": "Productivity"
-  },
-  {
-    "id": "content-creation",
-    "display_name": "Content Creation"
-  },
-  {
-    "id": "seo",
-    "display_name": "SEO (Search Engine Optimization)"
-  },
-  {
-    "id": "web-development",
-    "display_name": "Web Development"
-  },
-  {
-    "id": "mobile-development",
-    "display_name": "Mobile Development"
-  },
-  {
-    "id": "devops",
-    "display_name": "DevOps"
-  },
-  {
-    "id": "golang",
-    "display_name": "Go Programming Language"
-  },
-  {
-    "id": "python",
-    "display_name": "Python Programming"
-  },
-  {
-    "id": "javascript",
-    "display_name": "JavaScript"
-  },
-  {
-    "id": "java",
-    "display_name": "Java"
-  },
-  {
-    "id": "csharp",
-    "display_name": "C# Programming"
-  },
-  {
-    "id": "machine-learning",
-    "display_name": "Machine Learning"
-  },
-  {
-    "id": "deep-learning",
-    "display_name": "Deep Learning"
-  },
-  {
-    "id": "big-data",
-    "display_name": "Big Data"
-  },
-  {
-    "id": "iot",
-    "display_name": "IoT (Internet of Things)"
-  },
-  {
-    "id": "blockchain",
-    "display_name": "Blockchain"
-  },
-  {
-    "id": "cryptocurrency",
-    "display_name": "Cryptocurrency"
-  },
-  {
-    "id": "nft",
-    "display_name": "NFT (Non-Fungible Token)"
-  },
-  {
-    "id": "metaverse",
-    "display_name": "Metaverse"
-  },
-  {
-    "id": "venture-capital",
-    "display_name": "Venture Capital"
+    "id": "agile",
+    "display_name": "Agile Methodologies"
   },
   {
     "id": "angel-investing",
     "display_name": "Angel Investing"
   },
   {
-    "id": "small-business",
-    "display_name": "Small Business"
+    "id": "artificial-intelligence",
+    "display_name": "Artificial Intelligence (AI)"
   },
   {
-    "id": "customer-experience",
-    "display_name": "Customer Experience (CX)"
-  },
-  {
-    "id": "user-experience",
-    "display_name": "User Experience (UX)"
-  },
-  {
-    "id": "ui-design",
-    "display_name": "UI Design"
-  },
-  {
-    "id": "product-management",
-    "display_name": "Product Management"
-  },
-  {
-    "id": "business-analysis",
-    "display_name": "Business Analysis"
-  },
-  {
-    "id": "supply-chain",
-    "display_name": "Supply Chain Management"
-  },
-  {
-    "id": "logistics",
-    "display_name": "Logistics"
-  },
-  {
-    "id": "real-estate",
-    "display_name": "Real Estate"
-  },
-  {
-    "id": "digital-transformation",
-    "display_name": "Digital Transformation"
-  },
-  {
-    "id": "thought-leadership",
-    "display_name": "Thought Leadership"
-  },
-  {
-    "id": "public-speaking",
-    "display_name": "Public Speaking"
-  },
-  {
-    "id": "coaching",
-    "display_name": "Coaching"
-  },
-  {
-    "id": "mentorship",
-    "display_name": "Mentorship"
-  },
-  {
-    "id": "freelancing",
-    "display_name": "Freelancing"
-  },
-  {
-    "id": "graphic-design",
-    "display_name": "Graphic Design"
-  },
-  {
-    "id": "content-marketing",
-    "display_name": "Content Marketing"
-  },
-  {
-    "id": "social-media-marketing",
-    "display_name": "Social Media Marketing"
-  },
-  {
-    "id": "influencer-marketing",
-    "display_name": "Influencer Marketing"
-  },
-  {
-    "id": "email-marketing",
-    "display_name": "Email Marketing"
+    "id": "automotive",
+    "display_name": "Automotive"
   },
   {
     "id": "b2b-marketing",
@@ -316,103 +24,395 @@
     "display_name": "B2C Marketing"
   },
   {
-    "id": "saas",
-    "display_name": "SaaS (Software as a Service)"
+    "id": "big-data",
+    "display_name": "Big Data"
   },
   {
-    "id": "paas",
-    "display_name": "PaaS (Platform as a Service)"
+    "id": "blockchain",
+    "display_name": "Blockchain"
   },
   {
-    "id": "iaas",
-    "display_name": "IaaS (Infrastructure as a Service)"
+    "id": "branding",
+    "display_name": "Branding"
   },
   {
-    "id": "agile",
-    "display_name": "Agile Methodologies"
+    "id": "business-analysis",
+    "display_name": "Business Analysis"
   },
   {
-    "id": "scrum",
-    "display_name": "Scrum"
+    "id": "business-development",
+    "display_name": "Business Development"
   },
   {
-    "id": "lean-startup",
-    "display_name": "Lean Startup"
-  },
-  {
-    "id": "growth-hacking",
-    "display_name": "Growth Hacking"
-  },
-  {
-    "id": "corporate-social-responsibility",
-    "display_name": "Corporate Social Responsibility (CSR)"
-  },
-  {
-    "id": "diversity-and-inclusion",
-    "display_name": "Diversity and Inclusion (D&I)"
-  },
-  {
-    "id": "mental-health-awareness",
-    "display_name": "Mental Health Awareness"
-  },
-  {
-    "id": "work-life-balance",
-    "display_name": "Work-Life Balance"
+    "id": "careers",
+    "display_name": "Careers"
   },
   {
     "id": "climate-change",
     "display_name": "Climate Change"
   },
   {
-    "id": "renewable-energy",
-    "display_name": "Renewable Energy"
+    "id": "cloud-computing",
+    "display_name": "Cloud Computing"
   },
   {
-    "id": "nonprofit",
-    "display_name": "Nonprofit"
+    "id": "coaching",
+    "display_name": "Coaching"
   },
   {
-    "id": "volunteering",
-    "display_name": "Volunteering"
+    "id": "content-creation",
+    "display_name": "Content Creation"
   },
   {
-    "id": "travel",
-    "display_name": "Travel"
+    "id": "content-marketing",
+    "display_name": "Content Marketing"
   },
   {
-    "id": "photography",
-    "display_name": "Photography"
+    "id": "corporate-social-responsibility",
+    "display_name": "Corporate Social Responsibility (CSR)"
   },
   {
-    "id": "writing",
-    "display_name": "Writing"
+    "id": "creativity",
+    "display_name": "Creativity"
   },
   {
-    "id": "music",
-    "display_name": "Music"
+    "id": "cryptocurrency",
+    "display_name": "Cryptocurrency"
   },
   {
-    "id": "film",
-    "display_name": "Film"
+    "id": "csharp",
+    "display_name": "C# Programming"
   },
   {
-    "id": "gaming",
-    "display_name": "Gaming"
+    "id": "customer-experience",
+    "display_name": "Customer Experience (CX)"
   },
   {
-    "id": "sports",
-    "display_name": "Sports"
+    "id": "cybersecurity",
+    "display_name": "Cybersecurity"
   },
   {
-    "id": "food",
-    "display_name": "Food"
+    "id": "data-science",
+    "display_name": "Data Science"
+  },
+  {
+    "id": "deep-learning",
+    "display_name": "Deep Learning"
+  },
+  {
+    "id": "devops",
+    "display_name": "DevOps"
+  },
+  {
+    "id": "digital-marketing",
+    "display_name": "Digital Marketing"
+  },
+  {
+    "id": "digital-transformation",
+    "display_name": "Digital Transformation"
+  },
+  {
+    "id": "diversity-and-inclusion",
+    "display_name": "Diversity and Inclusion (D&I)"
+  },
+  {
+    "id": "ecommerce",
+    "display_name": "E-commerce"
+  },
+  {
+    "id": "edtech",
+    "display_name": "EdTech"
+  },
+  {
+    "id": "education",
+    "display_name": "Education"
+  },
+  {
+    "id": "email-marketing",
+    "display_name": "Email Marketing"
+  },
+  {
+    "id": "entrepreneurship",
+    "display_name": "Entrepreneurship"
   },
   {
     "id": "fashion",
     "display_name": "Fashion"
   },
   {
-    "id": "automotive",
-    "display_name": "Automotive"
+    "id": "film",
+    "display_name": "Film"
+  },
+  {
+    "id": "finance",
+    "display_name": "Finance"
+  },
+  {
+    "id": "fintech",
+    "display_name": "FinTech"
+  },
+  {
+    "id": "food",
+    "display_name": "Food"
+  },
+  {
+    "id": "freelancing",
+    "display_name": "Freelancing"
+  },
+  {
+    "id": "future-of-work",
+    "display_name": "Future of Work"
+  },
+  {
+    "id": "gaming",
+    "display_name": "Gaming"
+  },
+  {
+    "id": "golang",
+    "display_name": "Go Programming Language"
+  },
+  {
+    "id": "graphic-design",
+    "display_name": "Graphic Design"
+  },
+  {
+    "id": "growth-hacking",
+    "display_name": "Growth Hacking"
+  },
+  {
+    "id": "health",
+    "display_name": "Health"
+  },
+  {
+    "id": "healthcare",
+    "display_name": "Healthcare"
+  },
+  {
+    "id": "human-resources",
+    "display_name": "Human Resources (HR)"
+  },
+  {
+    "id": "iaas",
+    "display_name": "IaaS (Infrastructure as a Service)"
+  },
+  {
+    "id": "influencer-marketing",
+    "display_name": "Influencer Marketing"
+  },
+  {
+    "id": "innovation",
+    "display_name": "Innovation"
+  },
+  {
+    "id": "iot",
+    "display_name": "IoT (Internet of Things)"
+  },
+  {
+    "id": "java",
+    "display_name": "Java"
+  },
+  {
+    "id": "javascript",
+    "display_name": "JavaScript"
+  },
+  {
+    "id": "job-search",
+    "display_name": "Job Search"
+  },
+  {
+    "id": "leadership",
+    "display_name": "Leadership"
+  },
+  {
+    "id": "lean-startup",
+    "display_name": "Lean Startup"
+  },
+  {
+    "id": "logistics",
+    "display_name": "Logistics"
+  },
+  {
+    "id": "machine-learning",
+    "display_name": "Machine Learning"
+  },
+  {
+    "id": "management",
+    "display_name": "Management"
+  },
+  {
+    "id": "marketing",
+    "display_name": "Marketing"
+  },
+  {
+    "id": "mental-health-awareness",
+    "display_name": "Mental Health Awareness"
+  },
+  {
+    "id": "mentorship",
+    "display_name": "Mentorship"
+  },
+  {
+    "id": "metaverse",
+    "display_name": "Metaverse"
+  },
+  {
+    "id": "mobile-development",
+    "display_name": "Mobile Development"
+  },
+  {
+    "id": "motivation",
+    "display_name": "Motivation"
+  },
+  {
+    "id": "music",
+    "display_name": "Music"
+  },
+  {
+    "id": "networking",
+    "display_name": "Networking"
+  },
+  {
+    "id": "nft",
+    "display_name": "NFT (Non-Fungible Token)"
+  },
+  {
+    "id": "nonprofit",
+    "display_name": "Nonprofit"
+  },
+  {
+    "id": "paas",
+    "display_name": "PaaS (Platform as a Service)"
+  },
+  {
+    "id": "personal-development",
+    "display_name": "Personal Development"
+  },
+  {
+    "id": "photography",
+    "display_name": "Photography"
+  },
+  {
+    "id": "product-management",
+    "display_name": "Product Management"
+  },
+  {
+    "id": "productivity",
+    "display_name": "Productivity"
+  },
+  {
+    "id": "project-management",
+    "display_name": "Project Management"
+  },
+  {
+    "id": "public-speaking",
+    "display_name": "Public Speaking"
+  },
+  {
+    "id": "python",
+    "display_name": "Python Programming"
+  },
+  {
+    "id": "real-estate",
+    "display_name": "Real Estate"
+  },
+  {
+    "id": "remote-work",
+    "display_name": "Remote Work"
+  },
+  {
+    "id": "renewable-energy",
+    "display_name": "Renewable Energy"
+  },
+  {
+    "id": "saas",
+    "display_name": "SaaS (Software as a Service)"
+  },
+  {
+    "id": "sales",
+    "display_name": "Sales"
+  },
+  {
+    "id": "scrum",
+    "display_name": "Scrum"
+  },
+  {
+    "id": "seo",
+    "display_name": "SEO (Search Engine Optimization)"
+  },
+  {
+    "id": "small-business",
+    "display_name": "Small Business"
+  },
+  {
+    "id": "social-media",
+    "display_name": "Social Media"
+  },
+  {
+    "id": "social-media-marketing",
+    "display_name": "Social Media Marketing"
+  },
+  {
+    "id": "software-engineering",
+    "display_name": "Software Engineering"
+  },
+  {
+    "id": "sports",
+    "display_name": "Sports"
+  },
+  {
+    "id": "startups",
+    "display_name": "Startups"
+  },
+  {
+    "id": "strategy",
+    "display_name": "Strategy"
+  },
+  {
+    "id": "supply-chain",
+    "display_name": "Supply Chain Management"
+  },
+  {
+    "id": "sustainability",
+    "display_name": "Sustainability"
+  },
+  {
+    "id": "technology",
+    "display_name": "Technology"
+  },
+  {
+    "id": "thought-leadership",
+    "display_name": "Thought Leadership"
+  },
+  {
+    "id": "travel",
+    "display_name": "Travel"
+  },
+  {
+    "id": "ui-design",
+    "display_name": "UI Design"
+  },
+  {
+    "id": "user-experience",
+    "display_name": "User Experience (UX)"
+  },
+  {
+    "id": "venture-capital",
+    "display_name": "Venture Capital"
+  },
+  {
+    "id": "volunteering",
+    "display_name": "Volunteering"
+  },
+  {
+    "id": "web-development",
+    "display_name": "Web Development"
+  },
+  {
+    "id": "work-life-balance",
+    "display_name": "Work-Life Balance"
+  },
+  {
+    "id": "writing",
+    "display_name": "Writing"
   }
 ]

@@ -20,7 +20,7 @@ import (
 
 var bachelorEducation_0006 *common.EducationLevel
 
-var _ = FDescribe("Watchers and Filter Openings", Ordered, func() {
+var _ = Describe("Watchers and Filter Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string
@@ -524,7 +524,7 @@ var _ = FDescribe("Watchers and Filter Openings", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				NewTags: []string{"DevOps"},
+				Tags: []common.VTagID{"devops"},
 			}
 
 			resp := testPOSTGetResp(

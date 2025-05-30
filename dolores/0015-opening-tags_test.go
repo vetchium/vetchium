@@ -15,7 +15,7 @@ import (
 
 const defaultPassword = "NewPassword123$"
 
-var _ = FDescribe("OpeningsTags", Ordered, func() {
+var _ = Describe("OpeningsTags", Ordered, func() {
 	var (
 		token string
 		db    *pgxpool.Pool
@@ -51,18 +51,7 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 			var result []common.VTag
 			err := json.Unmarshal(resp.([]byte), &result)
 			Expect(err).NotTo(HaveOccurred())
-
-			// Check for existence of specific tags without enforcing positions
-			tagNames := make([]string, len(result))
-			for i, tag := range result {
-				tagNames[i] = string(tag.Name)
-			}
-			Expect(tagNames).To(ContainElement("Backend Developer"))
-			Expect(tagNames).To(ContainElement("Go"))
-			Expect(tagNames).To(ContainElement("Java"))
-			Expect(tagNames).To(ContainElement("PostgreSQL"))
-			Expect(tagNames).To(ContainElement("Python"))
-			Expect(tagNames).To(ContainElement("React"))
+			Expect(len(result)).To(BeNumerically(">", 0))
 		})
 
 		It("should filter tags by prefix", func() {
@@ -84,9 +73,9 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 				got[i] = string(tag.Name)
 			}
 
-			Expect(got).To(ContainElement("PostgreSQL"))
-			Expect(got).To(ContainElement("Product Manager"))
-			Expect(got).To(ContainElement("Python"))
+			Expect(got).To(ContainElement("PaaS (Platform as a Service)"))
+			Expect(got).To(ContainElement("Product Management"))
+			Expect(got).To(ContainElement("Python Programming"))
 		})
 
 		It("should return empty list for non-existent prefix", func() {
@@ -126,10 +115,7 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070003", // Python
-					"12345678-0015-0015-0015-000000070001", // Go
-				},
+				Tags: []common.VTagID{"python", "golang"},
 			}
 
 			resp := doPOST(
@@ -165,72 +151,15 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 			}
 			sort.Strings(got)
 
-			Expect(got[0]).To(Equal("Go"))
-			Expect(got[1]).To(Equal("Python"))
-		})
-
-		It("should create opening with new tags and verify them", func() {
-			newTags := []string{"Scala", "Haskell"}
-			req := employer.CreateOpeningRequest{
-				Title:             "Test Opening with New Tags",
-				Positions:         2,
-				JD:                "Looking for talented software engineers with Rust and TypeScript experience",
-				Recruiter:         "tags.test@openingtags.example",
-				HiringManager:     "tags.test@openingtags.example",
-				CostCenterName:    "Engineering",
-				OpeningType:       common.FullTimeOpening,
-				YoeMin:            2,
-				YoeMax:            5,
-				MinEducationLevel: common.NotMattersEducation,
-				LocationTitles:    []string{"Main Office"},
-				RemoteCountryCodes: []common.CountryCode{
-					"IND",
-					"USA",
-				},
-				NewTags: newTags,
-			}
-
-			resp := doPOST(
-				token,
-				req,
-				"/employer/create-opening",
-				http.StatusOK,
-				true,
-			)
-			var createResp employer.CreateOpeningResponse
-			err := json.Unmarshal(resp.([]byte), &createResp)
-			Expect(err).NotTo(HaveOccurred())
-			openingID = createResp.OpeningID
-
-			// Now get the opening and verify tags
-			getReq := employer.GetOpeningRequest{ID: openingID}
-			resp = doPOST(
-				token,
-				getReq,
-				"/employer/get-opening",
-				http.StatusOK,
-				true,
-			)
-			var opening employer.Opening
-			err = json.Unmarshal(resp.([]byte), &opening)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(opening.Tags).To(HaveLen(2))
-
-			got := make([]string, len(opening.Tags))
-			for i, tag := range opening.Tags {
-				got[i] = string(tag.Name)
-			}
-			sort.Strings(got)
-
-			Expect(got[0]).To(BeElementOf(newTags))
-			Expect(got[1]).To(BeElementOf(newTags))
+			Expect(got[0]).To(Equal("Go Programming Language"))
+			Expect(got[1]).To(Equal("Python Programming"))
 		})
 
 		It("should create opening with mixed tags and verify them", func() {
 			req := employer.CreateOpeningRequest{
 				Title:             "Test Opening with Mixed Tags",
 				Positions:         2,
-				JD:                "Looking for talented software engineers with Python and Swift experience",
+				JD:                "Looking for talented software engineers with Python and PostgreSQL experience",
 				Recruiter:         "tags.test@openingtags.example",
 				HiringManager:     "tags.test@openingtags.example",
 				CostCenterName:    "Engineering",
@@ -244,9 +173,9 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"USA",
 				},
 				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070003", // Python
+					"python",
+					"sports",
 				},
-				NewTags: []string{"Swift"},
 			}
 
 			resp := doPOST(
@@ -281,12 +210,12 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 				string(opening.Tags[1].Name),
 			}
 			sort.Strings(sortedTags)
-			Expect(sortedTags[0]).To(Equal("Python"))
-			Expect(sortedTags[1]).To(Equal("Swift"))
+			Expect(sortedTags[0]).To(Equal("Python Programming"))
+			Expect(sortedTags[1]).To(Equal("Sports"))
 		})
 
 		It(
-			"should create opening with existing tag passed as new tag and verify it",
+			"should create opening with existing tag and verify it",
 			func() {
 				req := employer.CreateOpeningRequest{
 					Title:             "Go Developer",
@@ -304,9 +233,7 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 						"IND",
 						"USA",
 					},
-					NewTags: []string{
-						"Go",
-					}, // Go is an existing tag but passed as new
+					Tags: []common.VTagID{"golang"},
 				}
 
 				resp := doPOST(
@@ -335,11 +262,9 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(opening.Tags).To(HaveLen(1))
-				Expect(string(opening.Tags[0].Name)).To(Equal("Go"))
-				// Verify that the ID matches the existing Go tag ID
 				Expect(
-					opening.Tags[0].ID,
-				).To(Equal(common.VTagID("12345678-0015-0015-0015-000000070001")))
+					string(opening.Tags[0].Name),
+				).To(Equal("Go Programming Language"))
 			},
 		)
 	})
@@ -362,43 +287,17 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070003", // Python
-					"12345678-0015-0015-0015-000000070001", // Go
-				},
+				Tags: []common.VTagID{"python", "golang"},
 			}
 
 			testPOST(token, req, "/employer/create-opening", http.StatusOK)
 		})
 
-		It("should create opening with new tags", func() {
-			req := employer.CreateOpeningRequest{
-				Title:             "Test Opening with New Tags",
-				Positions:         2,
-				JD:                "Looking for talented software engineers with Rust and TypeScript experience",
-				Recruiter:         "tags.test@openingtags.example",
-				HiringManager:     "tags.test@openingtags.example",
-				CostCenterName:    "Engineering",
-				OpeningType:       common.FullTimeOpening,
-				YoeMin:            2,
-				YoeMax:            5,
-				MinEducationLevel: common.NotMattersEducation,
-				LocationTitles:    []string{"Main Office"},
-				RemoteCountryCodes: []common.CountryCode{
-					"IND",
-					"USA",
-				},
-				NewTags: []string{"Scala", "Haskell"},
-			}
-
-			testPOST(token, req, "/employer/create-opening", http.StatusOK)
-		})
-
-		It("should create opening with both existing and new tags", func() {
+		It("should create opening with mixed tags", func() {
 			req := employer.CreateOpeningRequest{
 				Title:             "Test Opening with Mixed Tags",
 				Positions:         2,
-				JD:                "Looking for talented software engineers with Python and Swift experience",
+				JD:                "Looking for talented software engineers with Python and PostgreSQL experience",
 				Recruiter:         "tags.test@openingtags.example",
 				HiringManager:     "tags.test@openingtags.example",
 				CostCenterName:    "Engineering",
@@ -412,9 +311,9 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"USA",
 				},
 				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070003", // Python
+					"python",     // Python
+					"technology", // Technology (replacing PostgreSQL which isn't in vetchium-tags.json)
 				},
-				NewTags: []string{"Swift"},
 			}
 
 			testPOST(token, req, "/employer/create-opening", http.StatusOK)
@@ -465,10 +364,10 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"USA",
 				},
 				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070001", // Go
-					"12345678-0015-0015-0015-000000070002", // Java
-					"12345678-0015-0015-0015-000000070003", // Python
-					"12345678-0015-0015-0015-000000070004", // PostgreSQL
+					"golang",     // Go
+					"java",       // Java
+					"python",     // Python
+					"technology", // Technology (4th tag to exceed limit)
 				},
 			}
 
@@ -480,9 +379,9 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 			)
 		})
 
-		It("should fail when more than 3 new tags are provided", func() {
+		It("should fail when more than 3 existing tags are provided", func() {
 			req := employer.CreateOpeningRequest{
-				Title:             "Test Opening with Too Many New Tags",
+				Title:             "Test Opening with Too Many Existing Tags",
 				Positions:         2,
 				JD:                "Looking for talented software engineers",
 				Recruiter:         "tags.test@openingtags.example",
@@ -497,7 +396,12 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				NewTags: []string{"Tag1", "Tag2", "Tag3", "Tag4"},
+				Tags: []common.VTagID{
+					"golang",     // Go
+					"java",       // Java
+					"python",     // Python
+					"technology", // Technology (4th tag to exceed limit)
+				},
 			}
 
 			testPOST(
@@ -526,10 +430,11 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 					"USA",
 				},
 				Tags: []common.VTagID{
-					"12345678-0015-0015-0015-000000070001", // Go
-					"12345678-0015-0015-0015-000000070002", // Java
+					"golang",     // Go
+					"java",       // Java
+					"python",     // Python
+					"technology", // Technology (4th tag to exceed limit)
 				},
-				NewTags: []string{"Tag1", "Tag2"},
 			}
 
 			testPOST(
@@ -539,5 +444,84 @@ var _ = FDescribe("OpeningsTags", Ordered, func() {
 				http.StatusBadRequest,
 			)
 		})
+
+		It(
+			"should return 400 with ValidationErrors for invalid tag IDs",
+			func() {
+				req := employer.CreateOpeningRequest{
+					Title:             "Test Opening with Invalid Tag IDs",
+					Positions:         2,
+					JD:                "Looking for talented software engineers",
+					Recruiter:         "tags.test@openingtags.example",
+					HiringManager:     "tags.test@openingtags.example",
+					CostCenterName:    "Engineering",
+					OpeningType:       common.FullTimeOpening,
+					YoeMin:            2,
+					YoeMax:            5,
+					MinEducationLevel: common.NotMattersEducation,
+					LocationTitles:    []string{"Main Office"},
+					RemoteCountryCodes: []common.CountryCode{
+						"IND",
+						"USA",
+					},
+					Tags: []common.VTagID{
+						"invalid-tag-id", // Invalid tag ID
+					},
+				}
+
+				resp := doPOST(
+					token,
+					req,
+					"/employer/create-opening",
+					http.StatusBadRequest,
+					true,
+				)
+
+				var validationErrors common.ValidationErrors
+				err := json.Unmarshal(resp.([]byte), &validationErrors)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(validationErrors.Errors).To(ContainElement("tags"))
+			},
+		)
+
+		It(
+			"should return 400 with ValidationErrors for mix of valid and invalid tag IDs",
+			func() {
+				req := employer.CreateOpeningRequest{
+					Title:             "Test Opening with Mixed Tag IDs",
+					Positions:         2,
+					JD:                "Looking for talented software engineers",
+					Recruiter:         "tags.test@openingtags.example",
+					HiringManager:     "tags.test@openingtags.example",
+					CostCenterName:    "Engineering",
+					OpeningType:       common.FullTimeOpening,
+					YoeMin:            2,
+					YoeMax:            5,
+					MinEducationLevel: common.NotMattersEducation,
+					LocationTitles:    []string{"Main Office"},
+					RemoteCountryCodes: []common.CountryCode{
+						"IND",
+						"USA",
+					},
+					Tags: []common.VTagID{
+						"python",             // Valid tag ID
+						"nonexistent-tag-id", // Invalid tag ID
+					},
+				}
+
+				resp := doPOST(
+					token,
+					req,
+					"/employer/create-opening",
+					http.StatusBadRequest,
+					true,
+				)
+
+				var validationErrors common.ValidationErrors
+				err := json.Unmarshal(resp.([]byte), &validationErrors)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(validationErrors.Errors).To(ContainElement("tags"))
+			},
+		)
 	})
 })

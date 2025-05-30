@@ -18,7 +18,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Employer Posts", Ordered, func() {
+var _ = Describe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -198,11 +198,10 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 	})
 
 	// Helper function to create a test post
-	createTestPost := func(token string, content string, tagIDs []common.VTagID, newTags []common.VTagName) string {
+	createTestPost := func(token string, content string, tagIDs []common.VTagID) string {
 		request := employer.AddEmployerPostRequest{
 			Content: content,
 			TagIDs:  tagIDs,
-			NewTags: newTags,
 		}
 
 		resp := testPOSTGetResp(
@@ -227,7 +226,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 			postIDs[i] = createTestPost(
 				token,
 				fmt.Sprintf("Test post %d", i+1),
-				nil,
 				nil,
 			)
 		}
@@ -267,7 +265,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by admin",
-						NewTags: []common.VTagName{"0026-admin-tag"},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -283,10 +280,8 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by marketing",
 						TagIDs: []common.VTagID{
-							common.VTagID(
-								"12345678-0026-0026-0026-000000050002",
-							),
-						}, // marketing tag
+							"marketing", // marketing tag
+						},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -317,11 +312,11 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with too many tags",
-						NewTags: []common.VTagName{
-							"tag1",
-							"tag2",
-							"tag3",
-							"tag4",
+						TagIDs: []common.VTagID{
+							"technology",
+							"marketing",
+							"innovation",
+							"entrepreneurship", // 4th tag to exceed limit
 						},
 					},
 					wantStatus: http.StatusBadRequest,
@@ -337,7 +332,15 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 							),
 						},
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: http.StatusBadRequest,
+					validate: func(respBody []byte) {
+						var validationErrors common.ValidationErrors
+						err := json.Unmarshal(respBody, &validationErrors)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							validationErrors.Errors,
+						).Should(ContainElement("tags"))
+					},
 				},
 				{
 					description: "invalid UUID format for tag",
@@ -367,15 +370,39 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with mixed tag IDs",
 						TagIDs: []common.VTagID{
-							common.VTagID(
-								"12345678-0026-0026-0026-000000050001",
-							), // Valid tag
-							common.VTagID(
-								"12345678-0000-0000-0000-000000000000",
-							), // Non-existent tag
+							"technology",         // Valid tag
+							"nonexistent-tag-id", // Non-existent tag
 						},
 					},
-					wantStatus: http.StatusUnprocessableEntity,
+					wantStatus: http.StatusBadRequest,
+					validate: func(respBody []byte) {
+						var validationErrors common.ValidationErrors
+						err := json.Unmarshal(respBody, &validationErrors)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							validationErrors.Errors,
+						).Should(ContainElement("tags"))
+					},
+				},
+				{
+					description: "invalid tag IDs should return 400 with ValidationErrors",
+					token:       employer1AdminToken,
+					request: employer.AddEmployerPostRequest{
+						Content: "Post with invalid tag IDs",
+						TagIDs: []common.VTagID{
+							"invalid-tag-1",
+							"invalid-tag-2",
+						},
+					},
+					wantStatus: http.StatusBadRequest,
+					validate: func(respBody []byte) {
+						var validationErrors common.ValidationErrors
+						err := json.Unmarshal(respBody, &validationErrors)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							validationErrors.Errors,
+						).Should(ContainElement("tags"))
+					},
 				},
 				{
 					description: "mix of existing and new tags",
@@ -383,12 +410,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with mixed tag types",
 						TagIDs: []common.VTagID{
-							common.VTagID(
-								"12345678-0026-0026-0026-000000050001",
-							), // Valid existing tag
-						},
-						NewTags: []common.VTagName{
-							"0026-new-tag",
+							"technology", // Valid existing tag
 						},
 					},
 					wantStatus: http.StatusOK,
@@ -404,11 +426,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with multiple new tags",
-						NewTags: []common.VTagName{
-							"0026-multi-tag-1",
-							"0026-multi-tag-2",
-							"0026-multi-tag-3",
-						},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -423,9 +440,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with duplicate tag name",
-						NewTags: []common.VTagName{
-							"0026-engineering", // This tag already exists
-						},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -440,10 +454,10 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					token:       employer1AdminToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "Post with mixed new tag scenarios",
-						NewTags: []common.VTagName{
-							"0026-golang",    // Existing tag
-							"0026-brand-new", // New tag
-							"0026-rust",      // Existing tag
+						TagIDs: []common.VTagID{
+							"technology", // Existing tag
+							"marketing",  // Another existing tag
+							"innovation", // Another existing tag
 						},
 					},
 					wantStatus: http.StatusOK,
@@ -489,15 +503,11 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 					defer GinkgoRecover() // Ensure Ginkgo can handle panics in goroutines
 					defer wg.Done()
 
-					// All goroutines try to create posts with the same tag name
+					// All goroutines try to create posts with existing tags
 					request := employer.AddEmployerPostRequest{
 						Content: fmt.Sprintf("Concurrent post %d", index),
-						NewTags: []common.VTagName{
-							"0026-concurrent-tag", // Same tag name for all
-							common.VTagName(fmt.Sprintf(
-								"0026-unique-tag-%d",
-								index,
-							)), // Unique tag for each
+						TagIDs: []common.VTagID{
+							"technology", // Use a valid existing tag
 						},
 					}
 
@@ -601,19 +611,16 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				Expect(
 					post.Content,
 				).Should(Equal(fmt.Sprintf("Concurrent post %d", i)))
-				Expect(post.Tags).Should(ContainElement("0026-concurrent-tag"))
-				Expect(
-					post.Tags,
-				).Should(ContainElement(fmt.Sprintf("0026-unique-tag-%d", i)))
+				Expect(post.Tags).Should(ContainElement("technology"))
 			}
 		})
 
 		It("should handle rapid sequential tag creation", func() {
-			// Test rapid sequential creation that might expose race conditions
+			// Test rapid sequential creation using existing tags
 			baseTags := []string{
-				"0026-rapid-base-1",
-				"0026-rapid-base-2",
-				"0026-rapid-base-3",
+				"technology",
+				"marketing",
+				"innovation",
 			}
 
 			var postIDs []string
@@ -622,14 +629,12 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 			for i := 0; i < 5; i++ { // Reduce from 10 to 5 to be less aggressive
 				request := employer.AddEmployerPostRequest{
 					Content: fmt.Sprintf("Rapid post %d", i),
-					NewTags: []common.VTagName{
-						// Mix of reused and new tags
-						common.VTagName(
+					TagIDs: []common.VTagID{
+						// Use existing tags
+						common.VTagID(
 							baseTags[i%len(baseTags)],
-						), // Reused tag
-						common.VTagName(
-							fmt.Sprintf("0026-rapid-unique-%d", i),
-						), // New tag
+						), // Existing tag
+						"entrepreneurship", // Another existing tag
 					},
 				}
 
@@ -661,7 +666,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				expectedBaseTag := baseTags[i%len(baseTags)]
-				expectedUniqueTag := fmt.Sprintf("0026-rapid-unique-%d", i)
+				expectedUniqueTag := "entrepreneurship"
 
 				Expect(post.Tags).Should(ContainElement(expectedBaseTag))
 				Expect(post.Tags).Should(ContainElement(expectedUniqueTag))
@@ -680,14 +685,9 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				employer2AdminToken,
 				"Test post for get",
 				[]common.VTagID{
-					common.VTagID(
-						"12345678-0026-0026-0026-000000050001",
-					), // 0026-engineering
-					common.VTagID(
-						"12345678-0026-0026-0026-000000050003",
-					), // 0026-golang
+					"software-engineering", // engineering-related tag
+					"golang",               // golang tag
 				},
-				nil,
 			)
 		})
 
@@ -736,7 +736,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						).Should(Equal("0026-employerposts2.example.com"))
 						Expect(
 							post.Tags,
-						).Should(ContainElements("0026-engineering", "0026-golang"))
+						).Should(ContainElements("software-engineering", "golang"))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -756,7 +756,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						Expect(post.Content).Should(Equal("Test post for get"))
 						Expect(
 							post.Tags,
-						).Should(ContainElements("0026-engineering", "0026-golang"))
+						).Should(ContainElements("software-engineering", "golang"))
 					},
 				},
 				{
@@ -929,8 +929,10 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 			postID = createTestPost(
 				employer4AdminToken,
 				"Test post for delete",
-				nil,
-				nil,
+				[]common.VTagID{
+					"software-engineering", // engineering-related tag
+					"golang",               // golang tag
+				},
 			)
 		})
 
@@ -1154,7 +1156,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 
 			// Create a post as org admin
 			postContent := uuid.New().String()
-			postID := createTestPost(orgFollowAdminToken, postContent, nil, nil)
+			postID := createTestPost(orgFollowAdminToken, postContent, nil)
 
 			var timeline hub.MyHomeTimeline
 			var found bool
@@ -1200,7 +1202,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				orgFollowAdminToken,
 				"after unfollow",
 				nil,
-				nil,
 			)
 
 			found = false
@@ -1245,11 +1246,8 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				orgFollowAdminToken,
 				"Test employer post for hub users to read",
 				[]common.VTagID{
-					common.VTagID(
-						"12345678-0026-0026-0026-000000050001",
-					), // 0026-engineering
+					"software-engineering", // engineering-related tag
 				},
-				[]common.VTagName{"0026-hub-test"},
 			)
 		})
 
@@ -1300,7 +1298,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						).Should(Equal("0026-orgfollow.example.com"))
 						Expect(
 							post.Tags,
-						).Should(ContainElements("0026-engineering", "0026-hub-test"))
+						).Should(ContainElements("software-engineering"))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -1324,7 +1322,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 						Expect(
 							post.EmployerDomainName,
 						).Should(Equal("0026-orgfollow.example.com"))
-						Expect(post.Tags).Should(HaveLen(2))
+						Expect(post.Tags).Should(HaveLen(1))
 					},
 				},
 				{
@@ -1369,7 +1367,6 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				orgFollowAdminToken,
 				"Post without tags for field verification",
 				nil,
-				nil,
 			)
 
 			resp := testPOSTGetResp(
@@ -1411,11 +1408,8 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 				differentAdminToken,
 				"Post from different employer",
 				[]common.VTagID{
-					common.VTagID(
-						"12345678-0026-0026-0026-000000050002",
-					), // 0026-marketing
+					"marketing", // marketing tag
 				},
-				nil,
 			)
 
 			// Hub user should be able to get posts from any employer
@@ -1436,7 +1430,7 @@ var _ = FDescribe("Employer Posts", Ordered, func() {
 			Expect(
 				post.EmployerDomainName,
 			).Should(Equal("0026-hubtest-different.example.com"))
-			Expect(post.Tags).Should(ContainElement("0026-marketing"))
+			Expect(post.Tags).Should(ContainElement("marketing"))
 		})
 	})
 })

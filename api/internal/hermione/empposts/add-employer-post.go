@@ -9,6 +9,7 @@ import (
 	"github.com/vetchium/vetchium/api/internal/util"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
@@ -36,9 +37,15 @@ func AddEmployerPost(h wand.Wand) http.HandlerFunc {
 			AddEmployerPostRequest: addPostReq,
 		})
 		if err != nil {
-			if errors.Is(err, db.ErrNoTag) {
-				h.Dbg("invalid tags passed")
-				http.Error(w, "", http.StatusUnprocessableEntity)
+			if errors.Is(err, db.ErrInvalidTagIDs) {
+				h.Dbg("invalid tag IDs provided", "error", err)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"tags"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
 				return
 			}
 

@@ -45,7 +45,7 @@ SELECT
     jsonb_build_object('email', r.email, 'name', r.name, 'vetchi_handle', hu_r.handle) AS recruiter,
     ARRAY_AGG(DISTINCT l.title) FILTER (WHERE l.title IS NOT NULL) AS locations,
     ARRAY_AGG(DISTINCT jsonb_build_object('email', ht.email, 'name', ht.name, 'vetchi_handle', hu_ht.handle)) FILTER (WHERE ht.email IS NOT NULL) AS hiring_team,
-    ARRAY_AGG(DISTINCT jsonb_build_object('id', ot.id, 'name', ot.name)) FILTER (WHERE ot.id IS NOT NULL) AS tags
+    ARRAY_AGG(DISTINCT jsonb_build_object('id', ot.id, 'name', ot.display_name)) FILTER (WHERE ot.id IS NOT NULL) AS tags
 FROM
     openings o
     LEFT JOIN org_cost_centers cc ON o.cost_center_id = cc.id

@@ -288,9 +288,36 @@ AND l.employer_id = $1
 
 	// Handle tags
 	if len(createOpeningReq.Tags) > 0 {
+		// Validate that all provided tag IDs exist
+		validateTagsQuery := `
+SELECT COUNT(*) FROM tags WHERE id = ANY($1)
+`
+		var validTagCount int
+		tagIDs := make([]string, len(createOpeningReq.Tags))
+		for i, tagID := range createOpeningReq.Tags {
+			tagIDs[i] = string(tagID)
+		}
+
+		err = tx.QueryRow(ctx, validateTagsQuery, tagIDs).Scan(&validTagCount)
+		if err != nil {
+			p.log.Err("failed to validate tag IDs", "error", err)
+			return "", err
+		}
+
+		if validTagCount != len(createOpeningReq.Tags) {
+			p.log.Dbg(
+				"invalid tag IDs provided",
+				"expected",
+				len(createOpeningReq.Tags),
+				"found",
+				validTagCount,
+			)
+			return "", db.ErrInvalidTagIDs
+		}
+
 		insertTagMappingsQuery := `
 INSERT INTO opening_tag_mappings (employer_id, opening_id, tag_id)
-SELECT $1, $2, UNNEST($3::uuid[])
+SELECT $1, $2, UNNEST($3::text[])
 `
 		_, err = tx.Exec(
 			ctx,
@@ -301,55 +328,6 @@ SELECT $1, $2, UNNEST($3::uuid[])
 		)
 		if err != nil {
 			p.log.Err("failed to insert tag mappings", "error", err)
-			return "", err
-		}
-	}
-
-	// Handle new tags
-	if len(createOpeningReq.NewTags) > 0 {
-		// First get IDs of any pre-existing tags from the names
-		getExistingTagsQuery := `
-SELECT id, display_name FROM tags WHERE display_name = ANY($1)
-`
-		rows, err := tx.Query(
-			ctx,
-			getExistingTagsQuery,
-			createOpeningReq.NewTags,
-		)
-		if err != nil {
-			p.log.Err("failed to get existing tag ids", "error", err)
-			return "", err
-		}
-		defer rows.Close()
-
-		var tagIDs []uuid.UUID
-		existingTagNames := make(map[string]struct{})
-		for rows.Next() {
-			var tagID uuid.UUID
-			var tagName string
-			err = rows.Scan(&tagID, &tagName)
-			if err != nil {
-				p.log.Err("failed to scan existing tag id", "error", err)
-				return "", err
-			}
-			tagIDs = append(tagIDs, tagID)
-			existingTagNames[tagName] = struct{}{}
-		}
-
-		// Insert mappings for all tags
-		insertTagMappingsQuery := `
-INSERT INTO opening_tag_mappings (employer_id, opening_id, tag_id)
-SELECT $1, $2, UNNEST($3::uuid[])
-`
-		_, err = tx.Exec(
-			ctx,
-			insertTagMappingsQuery,
-			orgUser.EmployerID,
-			openingID,
-			tagIDs,
-		)
-		if err != nil {
-			p.log.Err("failed to insert new tag mappings", "error", err)
 			return "", err
 		}
 	}

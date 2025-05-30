@@ -12,7 +12,7 @@ func (p *PG) FilterVTags(
 	req common.FilterVTagsRequest,
 ) ([]common.VTag, error) {
 	query := `
-SELECT id, name
+SELECT id, display_name
 FROM tags
 WHERE 1=1
 `
@@ -21,12 +21,12 @@ WHERE 1=1
 
 	if req.Prefix != nil {
 		// TODO: Use Semantic matching search instead of just prefix
-		query += fmt.Sprintf(" AND name ILIKE $%d", argPos)
+		query += fmt.Sprintf(" AND display_name ILIKE $%d", argPos)
 		args = append(args, fmt.Sprintf("%s%%", *req.Prefix))
 		argPos++
 	}
 
-	query += ` ORDER BY name ASC`
+	query += ` ORDER BY display_name ASC`
 
 	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {

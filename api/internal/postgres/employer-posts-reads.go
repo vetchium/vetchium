@@ -30,7 +30,7 @@ func (p *PG) GetEmployerPost(
 		ep.created_at, 
 		ep.updated_at,
 		d.domain_name as company_domain,
-		ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
+		ARRAY_AGG(t.display_name) FILTER (WHERE t.display_name IS NOT NULL) as tags
 	FROM employer_posts ep
 	JOIN employers e ON ep.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id
@@ -98,7 +98,7 @@ func (p *PG) ListEmployerPosts(
 			ep.created_at, 
 			ep.updated_at,
 			d.domain_name as company_domain,
-			ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
+			ARRAY_AGG(t.display_name) FILTER (WHERE t.display_name IS NOT NULL) as tags
 		FROM employer_posts ep
 		JOIN employers e ON ep.employer_id = e.id
 		JOIN employer_primary_domains epd ON e.id = epd.employer_id
@@ -214,7 +214,7 @@ func (p *PG) GetEmployerPostForHub(
 		ep.updated_at,
 		e.company_name as employer_name,
 		d.domain_name as company_domain,
-		ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL) as tags
+		ARRAY_AGG(t.display_name) FILTER (WHERE t.display_name IS NOT NULL) as tags
 	FROM employer_posts ep
 	JOIN employers e ON ep.employer_id = e.id
 	JOIN employer_primary_domains epd ON e.id = epd.employer_id

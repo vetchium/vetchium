@@ -31,7 +31,6 @@ import {
   OrgUserShort,
   validTimezones,
   VTag,
-  VTagID,
 } from "@vetchium/typespec";
 import countries from "@vetchium/typespec/common/countries.json";
 import Cookies from "js-cookie";
@@ -260,27 +259,16 @@ export default function CreateOpeningPage() {
     }
   }, [fetchCostCenters, fetchLocations, fetchOrgUsers, isInitialDataLoaded]);
 
-  const handleTagChange = (
-    event: React.SyntheticEvent,
-    newValue: (VTag | string)[]
-  ) => {
-    const processedTags = newValue.map((tag): VTag => {
-      if (typeof tag === "string") {
-        // This is a new tag
-        return {
-          id: "" as VTagID,
-          name: tag.trim(),
-        };
-      }
-      return tag;
-    });
+  const handleTagChange = (event: React.SyntheticEvent, newValue: VTag[]) => {
+    // Only allow existing tags (with valid IDs)
+    const validTags = newValue.filter((tag) => tag.id && tag.id !== "");
 
-    if (processedTags.length > 3) {
+    if (validTags.length > 3) {
       setError(t("openings.maxTagsError"));
       return;
     }
 
-    setSelectedTags(processedTags);
+    setSelectedTags(validTags);
   };
 
   const handleSave = async () => {
@@ -340,12 +328,6 @@ export default function CreateOpeningPage() {
         return;
       }
 
-      // Separate existing tags and new tags
-      const existingTags = selectedTags.filter((tag) => tag.id !== "");
-      const newTags = selectedTags
-        .filter((tag) => tag.id === "")
-        .map((tag) => tag.name);
-
       const request: CreateOpeningRequest = {
         title,
         positions,
@@ -366,8 +348,7 @@ export default function CreateOpeningPage() {
           : selectedCountries.length > 0
           ? selectedCountries
           : [],
-        tags: existingTags.map((tag) => tag.id),
-        new_tags: newTags.length > 0 ? newTags : undefined,
+        tags: selectedTags.map((tag) => tag.id),
       };
 
       const response = await fetch(
@@ -705,30 +686,16 @@ export default function CreateOpeningPage() {
           <Autocomplete
             multiple
             options={availableTags}
-            getOptionLabel={(option: VTag | string) => {
-              if (typeof option === "string") {
-                return option;
-              }
-              return option.name;
-            }}
+            getOptionLabel={(option: VTag) => option.name}
             value={selectedTags}
             onChange={handleTagChange}
             onInputChange={(_, value) => {
               fetchTags(value);
             }}
             loading={isLoadingTags}
-            freeSolo
-            filterSelectedOptions
             renderOption={(props, option) => {
               // Extract key from props
               const { key, ...otherProps } = props;
-              if (typeof option === "string") {
-                return (
-                  <li key={key} {...otherProps}>
-                    {t("openings.createNewTag")}: &ldquo;{option}&rdquo;
-                  </li>
-                );
-              }
               return (
                 <li key={key} {...otherProps}>
                   {option.name}
@@ -743,7 +710,7 @@ export default function CreateOpeningPage() {
                 label={t("openings.tags")}
                 placeholder={
                   selectedTags.length < 3
-                    ? t("openings.selectOrCreateTag")
+                    ? t("openings.selectTag")
                     : t("openings.maxTagsReached")
                 }
                 helperText={t("openings.tagsHelp")}
@@ -763,46 +730,16 @@ export default function CreateOpeningPage() {
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
                 <Chip
-                  label={typeof option === "string" ? option : option.name}
+                  label={option.name}
                   {...getTagProps({ index })}
-                  key={
-                    typeof option === "string"
-                      ? option
-                      : option.id || option.name
-                  }
+                  key={option.id}
                 />
               ))
             }
-            filterOptions={(options, params) => {
-              const filtered = options.filter((option) =>
-                typeof option === "string"
-                  ? option
-                      .toLowerCase()
-                      .includes(params.inputValue.toLowerCase())
-                  : option.name
-                      .toLowerCase()
-                      .includes(params.inputValue.toLowerCase())
-              );
-
-              // Add option to create a new tag if input value exists and doesn't match exactly
-              const inputValue = params.inputValue.trim();
-              if (
-                inputValue !== "" &&
-                !options.some((option) =>
-                  typeof option === "string"
-                    ? option.toLowerCase() === inputValue.toLowerCase()
-                    : option.name.toLowerCase() === inputValue.toLowerCase()
-                )
-              ) {
-                filtered.push(inputValue);
-              }
-
-              return filtered;
-            }}
             noOptionsText={
               selectedTags.length >= 3
                 ? t("openings.maxTagsReached")
-                : t("openings.createNewTag")
+                : t("openings.noTagsFound")
             }
           />
 
