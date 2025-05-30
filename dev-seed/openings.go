@@ -80,7 +80,7 @@ func createOpenings() {
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Diagon"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -98,7 +98,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Diagon"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -116,7 +116,7 @@ func createOpenings() {
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Diagon"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -134,7 +134,7 @@ func createOpenings() {
 				YoeMax:            6,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Diagon"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -152,7 +152,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Diagon"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 
@@ -172,7 +172,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Cauldron"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -190,7 +190,7 @@ func createOpenings() {
 				YoeMax:            8,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Cauldron"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -208,7 +208,7 @@ func createOpenings() {
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Cauldron"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -226,7 +226,7 @@ func createOpenings() {
 				YoeMax:            12,
 				MinEducationLevel: common.DoctorateEducation,
 				LocationTitles:    []string{"Chennai Cauldron"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -244,7 +244,7 @@ func createOpenings() {
 				YoeMax:            12,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Cauldron"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 
@@ -264,7 +264,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Flourish"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -282,7 +282,7 @@ func createOpenings() {
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Flourish"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -300,7 +300,7 @@ func createOpenings() {
 				YoeMax:            6,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Flourish"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -318,7 +318,7 @@ func createOpenings() {
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Flourish"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -336,7 +336,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Flourish"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 
@@ -356,7 +356,7 @@ func createOpenings() {
 				YoeMax:            15,
 				MinEducationLevel: common.MasterEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -374,7 +374,7 @@ func createOpenings() {
 				YoeMax:            10,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -392,7 +392,7 @@ func createOpenings() {
 				YoeMax:            8,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -410,7 +410,7 @@ func createOpenings() {
 				YoeMax:            12,
 				MinEducationLevel: common.BachelorEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 		{
@@ -428,7 +428,7 @@ func createOpenings() {
 				YoeMax:            12,
 				MinEducationLevel: common.DoctorateEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
-				NewTags:           []string{"DevOps"},
+				TagIDs:            []common.VTagID{"devops"},
 			},
 		},
 	}
