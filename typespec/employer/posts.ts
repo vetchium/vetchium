@@ -3,7 +3,6 @@ import { EmployerPost } from "../common/posts";
 export class AddEmployerPostRequest {
   content: string = "";
   tag_ids: string[] = [];
-  new_tags: string[] = [];
 
   IsValid(): boolean {
     return (
@@ -11,10 +10,7 @@ export class AddEmployerPostRequest {
       this.content.length <= 4096 &&
       this.tag_ids.length > 0 &&
       this.tag_ids.length <= 3 &&
-      this.new_tags.length > 0 &&
-      this.new_tags.length <= 3 &&
-      this.new_tags.length + this.tag_ids.length <= 3 &&
-      this.new_tags.every((tag) => tag.length > 0 && tag.length <= 64)
+      this.tag_ids.every((tag) => tag.length > 0 && tag.length <= 64)
     );
   }
 }
