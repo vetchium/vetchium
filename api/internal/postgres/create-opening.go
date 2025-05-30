@@ -287,14 +287,14 @@ AND l.employer_id = $1
 	}
 
 	// Handle tags
-	if len(createOpeningReq.Tags) > 0 {
+	if len(createOpeningReq.TagIDs) > 0 {
 		// Validate that all provided tag IDs exist
 		validateTagsQuery := `
 SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 `
 		var validTagCount int
-		tagIDs := make([]string, len(createOpeningReq.Tags))
-		for i, tagID := range createOpeningReq.Tags {
+		tagIDs := make([]string, len(createOpeningReq.TagIDs))
+		for i, tagID := range createOpeningReq.TagIDs {
 			tagIDs[i] = string(tagID)
 		}
 
@@ -304,11 +304,11 @@ SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 			return "", err
 		}
 
-		if validTagCount != len(createOpeningReq.Tags) {
+		if validTagCount != len(createOpeningReq.TagIDs) {
 			p.log.Dbg(
 				"invalid tag IDs provided",
 				"expected",
-				len(createOpeningReq.Tags),
+				len(createOpeningReq.TagIDs),
 				"found",
 				validTagCount,
 			)
@@ -324,7 +324,7 @@ SELECT $1, $2, UNNEST($3::text[])
 			insertTagMappingsQuery,
 			orgUser.EmployerID,
 			openingID,
-			createOpeningReq.Tags,
+			createOpeningReq.TagIDs,
 		)
 		if err != nil {
 			p.log.Err("failed to insert tag mappings", "error", err)

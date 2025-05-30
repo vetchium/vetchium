@@ -348,7 +348,7 @@ export default function CreateOpeningPage() {
           : selectedCountries.length > 0
           ? selectedCountries
           : [],
-        tags: selectedTags.map((tag) => tag.id),
+        tag_ids: selectedTags.map((tag) => tag.id),
       };
 
       const response = await fetch(

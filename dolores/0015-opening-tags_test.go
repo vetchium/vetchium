@@ -115,7 +115,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{"python", "golang"},
+				TagIDs: []common.VTagID{"python", "golang"},
 			}
 
 			resp := doPOST(
@@ -172,7 +172,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"python",
 					"sports",
 				},
@@ -233,7 +233,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 						"IND",
 						"USA",
 					},
-					Tags: []common.VTagID{"golang"},
+					TagIDs: []common.VTagID{"golang"},
 				}
 
 				resp := doPOST(
@@ -287,7 +287,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{"python", "golang"},
+				TagIDs: []common.VTagID{"python", "golang"},
 			}
 
 			testPOST(token, req, "/employer/create-opening", http.StatusOK)
@@ -310,7 +310,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"python",     // Python
 					"technology", // Technology (replacing PostgreSQL which isn't in vetchium-tags.json)
 				},
@@ -363,7 +363,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"golang",     // Go
 					"java",       // Java
 					"python",     // Python
@@ -396,7 +396,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"golang",     // Go
 					"java",       // Java
 					"python",     // Python
@@ -429,7 +429,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"golang",     // Go
 					"java",       // Java
 					"python",     // Python
@@ -464,7 +464,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 						"IND",
 						"USA",
 					},
-					Tags: []common.VTagID{
+					TagIDs: []common.VTagID{
 						"invalid-tag-id", // Invalid tag ID
 					},
 				}
@@ -503,7 +503,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 						"IND",
 						"USA",
 					},
-					Tags: []common.VTagID{
+					TagIDs: []common.VTagID{
 						"python",             // Valid tag ID
 						"nonexistent-tag-id", // Invalid tag ID
 					},

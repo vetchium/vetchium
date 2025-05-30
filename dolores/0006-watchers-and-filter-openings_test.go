@@ -524,7 +524,7 @@ var _ = Describe("Watchers and Filter Openings", Ordered, func() {
 					"IND",
 					"USA",
 				},
-				Tags: []common.VTagID{"devops"},
+				TagIDs: []common.VTagID{"devops"},
 			}
 
 			resp := testPOSTGetResp(

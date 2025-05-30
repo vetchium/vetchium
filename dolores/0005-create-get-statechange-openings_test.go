@@ -84,7 +84,7 @@ var _ = Describe("Openings", Ordered, func() {
 					MaxAmount: 100000,
 					Currency:  "USD",
 				},
-				Tags: []common.VTagID{
+				TagIDs: []common.VTagID{
 					"devops", // DevOps tag ID
 				},
 			}
@@ -243,7 +243,7 @@ var _ = Describe("Openings", Ordered, func() {
 								MaxAmount: 100000,
 								Currency:  "USD",
 							},
-							Tags: []common.VTagID{
+							TagIDs: []common.VTagID{
 								"devops", // DevOps tag ID
 							},
 						}
@@ -597,7 +597,7 @@ func createTestOpening(token string) string {
 			"IND",
 			"USA",
 		},
-		Tags: []common.VTagID{
+		TagIDs: []common.VTagID{
 			"devops", // DevOps tag ID
 		},
 	}
@@ -638,7 +638,7 @@ func createTestOpenings(token string) {
 				"IND",
 				"USA",
 			},
-			Tags: []common.VTagID{
+			TagIDs: []common.VTagID{
 				"devops", // DevOps tag ID
 			},
 		}
@@ -680,7 +680,7 @@ func bulkCreateOpenings(token string, runID string, count int, limit int) {
 				"IND",
 				"USA",
 			},
-			Tags: []common.VTagID{
+			TagIDs: []common.VTagID{
 				"devops", // DevOps tag ID
 			},
 		}

@@ -153,9 +153,10 @@ model CreateOpeningRequest {
     min_education_level: EducationLevel;
     salary?: Salary;
 
-    @doc("List of tags to be used for the Opening. Atleast one tag should be specified either here or in new_tags.")
+    @doc("List of tag IDs to be used for the Opening. Atleast one tag should be specified either here or in new_tags.")
     @maxItems(3)
-    tags?: VTagID[];
+    @minItems(1)
+    tag_ids?: VTagID[];
 }
 
 model CreateOpeningResponse {

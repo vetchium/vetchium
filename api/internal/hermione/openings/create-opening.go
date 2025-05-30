@@ -41,7 +41,7 @@ func CreateOpening(h wand.Wand) http.HandlerFunc {
 		}
 
 		// Validate tags
-		totalTags := len(createOpeningReq.Tags)
+		totalTags := len(createOpeningReq.TagIDs)
 		if totalTags == 0 {
 			h.Dbg("no tags specified", "createOpeningReq", createOpeningReq)
 			w.WriteHeader(http.StatusBadRequest)
