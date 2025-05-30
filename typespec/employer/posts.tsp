@@ -31,7 +31,7 @@ model UpdateEmployerPostRequest {
     content: string;
 
     @maxItems(3)
-    tags: string[];
+    tag_ids: string[];
 }
 
 model DeleteEmployerPostRequest {

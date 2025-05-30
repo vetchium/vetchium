@@ -22,14 +22,14 @@ export interface AddEmployerPostResponse {
 export class UpdateEmployerPostRequest {
   post_id: string = "";
   content: string = "";
-  tags: string[] = [];
+  tag_ids: string[] = [];
 
   IsValid(): boolean {
     return (
       this.content.length > 0 &&
       this.content.length <= 4096 &&
-      this.tags.length > 0 &&
-      this.tags.length <= 3
+      this.tag_ids.length > 0 &&
+      this.tag_ids.length <= 3
     );
   }
 }
