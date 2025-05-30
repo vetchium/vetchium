@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -17,6 +18,15 @@ var hubSessionTokens sync.Map
 
 var serverURL = "http://localhost:8080"
 var mailPitURL = "http://localhost:8025"
+
+var tagsList = []common.VTagID{
+	"software-engineering",
+	"leadership",
+	"devops",
+	"marketing",
+	"data-science",
+	"deep-learning",
+}
 
 func showTierStatistics() {
 	freeTierCount := 0

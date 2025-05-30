@@ -48,6 +48,14 @@ func writePosts() {
 				var endpoint string
 				var err error
 
+				randomTagIDs := []common.VTagID{}
+				for i := 0; i < rand.Intn(3); i++ {
+					randomTagIDs = append(
+						randomTagIDs,
+						tagsList[rand.Intn(len(tagsList))],
+					)
+				}
+
 				if isFreeTier {
 					// Free tier users: use AddFTPostRequest (255 char limit, existing tags only)
 					content := post.Content
@@ -57,16 +65,15 @@ func writePosts() {
 
 					ftPost := hub.AddFTPostRequest{
 						Content: content,
-						TagIDs:  []common.VTagID{}, // Free tier users can only use existing tags, so we'll leave this empty for now
+						TagIDs:  randomTagIDs,
 					}
 					err = json.NewEncoder(&body).Encode(ftPost)
 					endpoint = serverURL + "/hub/add-ft-post"
 				} else {
-					// Paid tier users: use AddPostRequest (4096 char limit, can create new tags)
+					// Paid tier users: use AddPostRequest (4096 char limit)
 					paidPost := hub.AddPostRequest{
 						Content: post.Content,
-						NewTags: post.NewTags,
-						TagIDs:  []common.VTagID{}, // We'll use new tags instead of existing tag IDs
+						TagIDs:  randomTagIDs,
 					}
 					err = json.NewEncoder(&body).Encode(paidPost)
 					endpoint = serverURL + "/hub/add-post"

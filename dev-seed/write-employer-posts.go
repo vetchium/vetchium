@@ -40,82 +40,62 @@ func writeEmployerPosts() {
 	// Sample employer post content organized by categories
 	employerPostContent := map[string][]struct {
 		content string
-		tags    []string
+		tags    []common.VTagID
 	}{
 		"company-updates": {
 			{
 				content: "We're excited to announce our Q4 results! Our team has achieved remarkable growth and we're expanding to new markets. Thanks to all our dedicated employees for making this possible.",
-				tags: []string{
-					"company-news",
-					"growth",
-					"quarterly-results",
-				},
+				tags:    []common.VTagID{"leadership"},
 			},
 			{
 				content: "New office opening next month! We're expanding our presence and creating more opportunities for talented individuals to join our team.",
-				tags:    []string{"expansion", "office-opening", "careers"},
+				tags:    []common.VTagID{"leadership"},
 			},
 			{
 				content: "Proud to announce our partnership with leading technology companies. This collaboration will drive innovation and bring cutting-edge solutions to our clients.",
-				tags:    []string{"partnership", "innovation", "technology"},
+				tags:    []common.VTagID{"leadership"},
 			},
 		},
 		"hiring": {
 			{
 				content: "We're hiring! Looking for passionate software engineers to join our growing team. Competitive salary, excellent benefits, and opportunity to work on exciting projects.",
-				tags:    []string{"hiring", "software-engineer", "jobs"},
+				tags:    []common.VTagID{"hiring", "software-engineering"},
 			},
 			{
 				content: "Join our marketing team! We're seeking creative minds to help us tell our story and connect with customers in meaningful ways.",
-				tags:    []string{"marketing", "careers", "creative"},
+				tags:    []common.VTagID{"hiring", "marketing"},
 			},
 			{
 				content: "Open positions in our finance department. Looking for detail-oriented professionals who want to be part of our financial success story.",
-				tags:    []string{"finance", "accounting", "careers"},
+				tags:    []common.VTagID{"hiring", "finance"},
 			},
 		},
 		"culture": {
 			{
 				content: "Team building day was a huge success! Our employees enjoyed outdoor activities, team challenges, and great food. Building strong relationships is key to our success.",
-				tags: []string{
-					"team-building",
-					"culture",
-					"employee-engagement",
-				},
+				tags:    []common.VTagID{"leadership"},
 			},
 			{
 				content: "Celebrating our employees' achievements this month. Recognition and appreciation are fundamental values in our workplace culture.",
-				tags: []string{
-					"employee-recognition",
-					"culture",
-					"achievements",
-				},
+				tags:    []common.VTagID{"leadership"},
 			},
 			{
 				content: "Lunch and learn session today featuring industry experts. We believe in continuous learning and professional development for all our team members.",
-				tags: []string{
-					"learning",
-					"professional-development",
-					"education",
-				},
+				tags:    []common.VTagID{"leadership", "entrepreneurship"},
 			},
 		},
 		"product": {
 			{
 				content: "Introducing our latest product features! We've listened to customer feedback and implemented improvements that enhance user experience and functionality.",
-				tags: []string{
-					"product-update",
-					"features",
-					"customer-feedback",
-				},
+				tags:    []common.VTagID{"product-management"},
 			},
 			{
 				content: "Behind the scenes: How our engineering team builds reliable, scalable solutions. Innovation and quality are at the heart of everything we do.",
-				tags:    []string{"engineering", "scalability", "innovation"},
+				tags:    []common.VTagID{"product-management"},
 			},
 			{
 				content: "Customer success story: How our solutions helped a client achieve 300% growth in efficiency. Real results that make a difference.",
-				tags:    []string{"success-story", "customer", "efficiency"},
+				tags:    []common.VTagID{"product-management"},
 			},
 		},
 	}
@@ -158,19 +138,9 @@ func writeEmployerPosts() {
 				categoryPosts := employerPostContent[category]
 				selectedPost := categoryPosts[rand.Intn(len(categoryPosts))]
 
-				// Convert tags to the required types
-				var tagIDs []common.VTagID
-				var newTags []common.VTagName
-
-				// For simplicity, we'll use all tags as new tags
-				for _, tag := range selectedPost.tags {
-					newTags = append(newTags, common.VTagName(tag))
-				}
-
 				posts = append(posts, employer.AddEmployerPostRequest{
 					Content: selectedPost.content,
-					TagIDs:  tagIDs,
-					NewTags: newTags,
+					TagIDs:  selectedPost.tags,
 				})
 			}
 
