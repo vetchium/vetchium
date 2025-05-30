@@ -29,27 +29,33 @@ func (pg *PG) AddPost(addPostReq db.AddPostRequest) error {
 
 	// Validate tag IDs if provided
 	if len(addPostReq.TagIDs) > 0 {
+		// Deduplicate tag IDs
+		uniqueTagIDs := make(map[string]bool)
+		var deduplicatedTagIDs []string
+		for _, tagID := range addPostReq.TagIDs {
+			tagIDStr := string(tagID)
+			if !uniqueTagIDs[tagIDStr] {
+				uniqueTagIDs[tagIDStr] = true
+				deduplicatedTagIDs = append(deduplicatedTagIDs, tagIDStr)
+			}
+		}
+
 		validateTagsQuery := `
 SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 `
 		var validTagCount int
-		tagIDs := make([]string, len(addPostReq.TagIDs))
-		for i, tagID := range addPostReq.TagIDs {
-			tagIDs[i] = string(tagID)
-		}
-
-		err = tx.QueryRow(addPostReq.Context, validateTagsQuery, tagIDs).
+		err = tx.QueryRow(addPostReq.Context, validateTagsQuery, deduplicatedTagIDs).
 			Scan(&validTagCount)
 		if err != nil {
 			pg.log.Err("failed to validate tag IDs", "error", err)
 			return err
 		}
 
-		if validTagCount != len(addPostReq.TagIDs) {
+		if validTagCount != len(deduplicatedTagIDs) {
 			pg.log.Dbg(
 				"invalid tag IDs provided",
 				"expected",
-				len(addPostReq.TagIDs),
+				len(deduplicatedTagIDs),
 				"found",
 				validTagCount,
 			)
@@ -74,18 +80,29 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	// Insert post-tag relationships for existing tags
+	// Insert post-tag relationships for existing tags (using deduplicated IDs)
 	if len(addPostReq.TagIDs) > 0 {
+		// Deduplicate tag IDs again for insertion (reuse the logic)
+		uniqueTagIDs := make(map[string]bool)
+		var deduplicatedTagIDs []string
+		for _, tagID := range addPostReq.TagIDs {
+			tagIDStr := string(tagID)
+			if !uniqueTagIDs[tagIDStr] {
+				uniqueTagIDs[tagIDStr] = true
+				deduplicatedTagIDs = append(deduplicatedTagIDs, tagIDStr)
+			}
+		}
+
 		tagsInsertQuery := `
 INSERT INTO post_tags (post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
-		for _, tagID := range addPostReq.TagIDs {
+		for _, tagID := range deduplicatedTagIDs {
 			_, err = tx.Exec(
 				addPostReq.Context,
 				tagsInsertQuery,
 				addPostReq.PostID,
-				string(tagID),
+				tagID,
 			)
 			if err != nil {
 				pg.log.Err("failed to insert to post_tags", "error", err)
@@ -119,27 +136,33 @@ func (pg *PG) AddFTPost(addFTPostReq db.AddFTPostRequest) error {
 
 	// Validate tag IDs if provided
 	if len(addFTPostReq.TagIDs) > 0 {
+		// Deduplicate tag IDs
+		uniqueTagIDs := make(map[string]bool)
+		var deduplicatedTagIDs []string
+		for _, tagID := range addFTPostReq.TagIDs {
+			tagIDStr := string(tagID)
+			if !uniqueTagIDs[tagIDStr] {
+				uniqueTagIDs[tagIDStr] = true
+				deduplicatedTagIDs = append(deduplicatedTagIDs, tagIDStr)
+			}
+		}
+
 		validateTagsQuery := `
 SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 `
 		var validTagCount int
-		tagIDs := make([]string, len(addFTPostReq.TagIDs))
-		for i, tagID := range addFTPostReq.TagIDs {
-			tagIDs[i] = string(tagID)
-		}
-
-		err = tx.QueryRow(addFTPostReq.Context, validateTagsQuery, tagIDs).
+		err = tx.QueryRow(addFTPostReq.Context, validateTagsQuery, deduplicatedTagIDs).
 			Scan(&validTagCount)
 		if err != nil {
 			pg.log.Err("failed to validate tag IDs", "error", err)
 			return err
 		}
 
-		if validTagCount != len(addFTPostReq.TagIDs) {
+		if validTagCount != len(deduplicatedTagIDs) {
 			pg.log.Dbg(
 				"invalid tag IDs provided",
 				"expected",
-				len(addFTPostReq.TagIDs),
+				len(deduplicatedTagIDs),
 				"found",
 				validTagCount,
 			)
@@ -164,18 +187,29 @@ VALUES ($1, $2, $3)
 		return err
 	}
 
-	// Insert post-tag relationships for existing tags
+	// Insert post-tag relationships for existing tags (using deduplicated IDs)
 	if len(addFTPostReq.TagIDs) > 0 {
+		// Deduplicate tag IDs again for insertion (reuse the logic)
+		uniqueTagIDs := make(map[string]bool)
+		var deduplicatedTagIDs []string
+		for _, tagID := range addFTPostReq.TagIDs {
+			tagIDStr := string(tagID)
+			if !uniqueTagIDs[tagIDStr] {
+				uniqueTagIDs[tagIDStr] = true
+				deduplicatedTagIDs = append(deduplicatedTagIDs, tagIDStr)
+			}
+		}
+
 		tagsInsertQuery := `
 INSERT INTO post_tags (post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
-		for _, tagID := range addFTPostReq.TagIDs {
+		for _, tagID := range deduplicatedTagIDs {
 			_, err = tx.Exec(
 				addFTPostReq.Context,
 				tagsInsertQuery,
 				addFTPostReq.PostID,
-				string(tagID),
+				tagID,
 			)
 			if err != nil {
 				pg.log.Err("failed to insert to post_tags", "error", err)

@@ -40,44 +40,50 @@ VALUES ($1, $2, $3)
 
 	// Validate existing TagIDs if provided
 	if len(req.TagIDs) > 0 {
+		// Deduplicate tag IDs
+		uniqueTagIDs := make(map[string]bool)
+		var deduplicatedTagIDs []string
+		for _, tagID := range req.TagIDs {
+			tagIDStr := string(tagID)
+			if !uniqueTagIDs[tagIDStr] {
+				uniqueTagIDs[tagIDStr] = true
+				deduplicatedTagIDs = append(deduplicatedTagIDs, tagIDStr)
+			}
+		}
+
 		validateTagsQuery := `
 SELECT COUNT(*) FROM tags WHERE id = ANY($1)
 `
 		var validTagCount int
-		tagIDs := make([]string, len(req.TagIDs))
-		for i, tagID := range req.TagIDs {
-			tagIDs[i] = string(tagID)
-		}
-
-		err = tx.QueryRow(req.Context, validateTagsQuery, tagIDs).
+		err = tx.QueryRow(req.Context, validateTagsQuery, deduplicatedTagIDs).
 			Scan(&validTagCount)
 		if err != nil {
 			p.log.Err("failed to validate tag IDs", "error", err)
 			return err
 		}
 
-		if validTagCount != len(req.TagIDs) {
+		if validTagCount != len(deduplicatedTagIDs) {
 			p.log.Dbg(
 				"invalid tag IDs provided",
 				"expected",
-				len(req.TagIDs),
+				len(deduplicatedTagIDs),
 				"found",
 				validTagCount,
 			)
 			return db.ErrInvalidTagIDs
 		}
 
-		// Insert post-tag relationships for existing tags
+		// Insert post-tag relationships for existing tags (using deduplicated IDs)
 		tagsInsertQuery := `
 INSERT INTO employer_post_tags (employer_post_id, tag_id)
 VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
-		for _, tagID := range req.TagIDs {
+		for _, tagID := range deduplicatedTagIDs {
 			_, err = tx.Exec(
 				req.Context,
 				tagsInsertQuery,
 				req.PostID,
-				string(tagID),
+				tagID,
 			)
 			if err != nil {
 				p.log.Err(

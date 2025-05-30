@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -112,6 +113,18 @@ func writePosts() {
 				}
 
 				if resp.StatusCode != http.StatusOK {
+					color.Red("tags list: %v", randomTagIDs)
+
+					body, err := io.ReadAll(resp.Body)
+					if err != nil {
+						log.Fatalf("failed to read response body: %v", err)
+					}
+					log.Fatalf(
+						"failed to add post for %s tier user: %v",
+						tierStr,
+						string(body),
+					)
+
 					log.Fatalf(
 						"failed to add post for %s tier user: %v",
 						tierStr,
