@@ -42,7 +42,7 @@ func AddPost(h wand.Wand) http.HandlerFunc {
 				h.Dbg("invalid tag IDs provided", "error", err)
 				w.WriteHeader(http.StatusBadRequest)
 				err = json.NewEncoder(w).Encode(common.ValidationErrors{
-					Errors: []string{"tag_ids"},
+					Errors: []string{"tags"},
 				})
 				if err != nil {
 					h.Err("failed to encode validation errors", "error", err)

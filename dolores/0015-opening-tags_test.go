@@ -449,7 +449,7 @@ var _ = Describe("OpeningsTags", Ordered, func() {
 			"should return 400 with ValidationErrors for invalid tag IDs",
 			func() {
 				req := employer.CreateOpeningRequest{
-					Title:             "Test Opening with Invalid Tag IDs",
+					Title:             "Opening - Invalid TagID",
 					Positions:         2,
 					JD:                "Looking for talented software engineers",
 					Recruiter:         "tags.test@openingtags.example",

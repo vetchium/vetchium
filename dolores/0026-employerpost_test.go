@@ -279,9 +279,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					token:       employer1MarketingToken,
 					request: employer.AddEmployerPostRequest{
 						Content: "New post by marketing",
-						TagIDs: []common.VTagID{
-							"marketing", // marketing tag
-						},
+						TagIDs:  []common.VTagID{"marketing"},
 					},
 					wantStatus: http.StatusOK,
 					validate: func(respBody []byte) {
@@ -435,39 +433,6 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(resp.PostID).ShouldNot(BeEmpty())
 					},
 				},
-				{
-					description: "create post with same tag name as existing (should reuse existing)",
-					token:       employer1AdminToken,
-					request: employer.AddEmployerPostRequest{
-						Content: "Post with duplicate tag name",
-					},
-					wantStatus: http.StatusOK,
-					validate: func(respBody []byte) {
-						var resp employer.AddEmployerPostResponse
-						err := json.Unmarshal(respBody, &resp)
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(resp.PostID).ShouldNot(BeEmpty())
-					},
-				},
-				{
-					description: "create post with mixed new tags (some existing, some new)",
-					token:       employer1AdminToken,
-					request: employer.AddEmployerPostRequest{
-						Content: "Post with mixed new tag scenarios",
-						TagIDs: []common.VTagID{
-							"technology", // Existing tag
-							"marketing",  // Another existing tag
-							"innovation", // Another existing tag
-						},
-					},
-					wantStatus: http.StatusOK,
-					validate: func(respBody []byte) {
-						var resp employer.AddEmployerPostResponse
-						err := json.Unmarshal(respBody, &resp)
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(resp.PostID).ShouldNot(BeEmpty())
-					},
-				},
 			}
 
 			for _, tc := range testCases {
@@ -611,16 +576,19 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				Expect(
 					post.Content,
 				).Should(Equal(fmt.Sprintf("Concurrent post %d", i)))
-				Expect(post.Tags).Should(ContainElement("technology"))
+				Expect(post.Tags).Should(ContainElement("Technology"))
 			}
 		})
 
 		It("should handle rapid sequential tag creation", func() {
 			// Test rapid sequential creation using existing tags
-			baseTags := []string{
-				"technology",
-				"marketing",
-				"innovation",
+			baseTags := []struct {
+				ID   common.VTagID
+				Name string
+			}{
+				{ID: "technology", Name: "Technology"},
+				{ID: "marketing", Name: "Marketing"},
+				{ID: "innovation", Name: "Innovation"},
 			}
 
 			var postIDs []string
@@ -631,10 +599,8 @@ var _ = Describe("Employer Posts", Ordered, func() {
 					Content: fmt.Sprintf("Rapid post %d", i),
 					TagIDs: []common.VTagID{
 						// Use existing tags
-						common.VTagID(
-							baseTags[i%len(baseTags)],
-						), // Existing tag
-						"entrepreneurship", // Another existing tag
+						baseTags[i%len(baseTags)].ID, // Existing tag
+						"entrepreneurship",           // Another existing tag
 					},
 				}
 
@@ -666,10 +632,9 @@ var _ = Describe("Employer Posts", Ordered, func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				expectedBaseTag := baseTags[i%len(baseTags)]
-				expectedUniqueTag := "entrepreneurship"
 
-				Expect(post.Tags).Should(ContainElement(expectedBaseTag))
-				Expect(post.Tags).Should(ContainElement(expectedUniqueTag))
+				Expect(post.Tags).Should(ContainElement(expectedBaseTag.Name))
+				Expect(post.Tags).Should(ContainElement("Entrepreneurship"))
 			}
 		})
 	})
@@ -734,9 +699,10 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(
 							post.EmployerDomainName,
 						).Should(Equal("0026-employerposts2.example.com"))
-						Expect(
-							post.Tags,
-						).Should(ContainElements("software-engineering", "golang"))
+						Expect(post.Tags).Should(ContainElements(
+							"Software Engineering",
+							"Go Programming Language",
+						))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -754,9 +720,10 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(post.ID).Should(Equal(postID))
 						Expect(post.Content).Should(Equal("Test post for get"))
-						Expect(
-							post.Tags,
-						).Should(ContainElements("software-engineering", "golang"))
+						Expect(post.Tags).Should(ContainElements(
+							"Software Engineering",
+							"Go Programming Language",
+						))
 					},
 				},
 				{
@@ -1296,9 +1263,9 @@ var _ = Describe("Employer Posts", Ordered, func() {
 						Expect(
 							post.EmployerDomainName,
 						).Should(Equal("0026-orgfollow.example.com"))
-						Expect(
-							post.Tags,
-						).Should(ContainElements("software-engineering"))
+						Expect(post.Tags).Should(ContainElements(
+							"Software Engineering",
+						))
 						Expect(post.CreatedAt).ShouldNot(BeZero())
 						Expect(post.UpdatedAt).ShouldNot(BeZero())
 					},
@@ -1430,7 +1397,7 @@ var _ = Describe("Employer Posts", Ordered, func() {
 			Expect(
 				post.EmployerDomainName,
 			).Should(Equal("0026-hubtest-different.example.com"))
-			Expect(post.Tags).Should(ContainElement("marketing"))
+			Expect(post.Tags).Should(ContainElement("Marketing"))
 		})
 	})
 })

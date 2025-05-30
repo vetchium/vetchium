@@ -117,6 +117,17 @@ func (p *PG) DeleteEmployerPost(ctx context.Context, postID string) error {
 	}
 	defer tx.Rollback(context.Background())
 
+	// TODO: Should we keep them for some time for compliance ?
+	_, err = tx.Exec(
+		ctx,
+		"DELETE FROM employer_post_tags WHERE employer_post_id = $1",
+		postID,
+	)
+	if err != nil {
+		p.log.Err("failed to delete employer post tags", "error", err)
+		return err
+	}
+
 	res, err := tx.Exec(
 		ctx,
 		"DELETE FROM employer_posts WHERE id = $1 AND employer_id = $2",
@@ -131,16 +142,6 @@ func (p *PG) DeleteEmployerPost(ctx context.Context, postID string) error {
 	if res.RowsAffected() == 0 {
 		p.log.Dbg("employer post not found", "post_id", postID)
 		return db.ErrNoEmployerPost
-	}
-
-	_, err = tx.Exec(
-		ctx,
-		"DELETE FROM employer_post_tags WHERE employer_post_id = $1",
-		postID,
-	)
-	if err != nil {
-		p.log.Err("failed to delete employer post tags", "error", err)
-		return err
 	}
 
 	err = tx.Commit(context.Background())

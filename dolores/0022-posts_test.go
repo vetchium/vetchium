@@ -311,7 +311,7 @@ var _ = Describe("Posts", Ordered, func() {
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(
 							validationErrors.Errors,
-						).Should(ContainElement("tag_ids"))
+						).Should(ContainElement("tags"))
 					},
 				},
 			}
