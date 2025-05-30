@@ -309,7 +309,7 @@ SELECT $1, $2, UNNEST($3::uuid[])
 	if len(createOpeningReq.NewTags) > 0 {
 		// First get IDs of any pre-existing tags from the names
 		getExistingTagsQuery := `
-SELECT id, name FROM tags WHERE name = ANY($1)
+SELECT id, display_name FROM tags WHERE display_name = ANY($1)
 `
 		rows, err := tx.Query(
 			ctx,
@@ -334,39 +334,6 @@ SELECT id, name FROM tags WHERE name = ANY($1)
 			}
 			tagIDs = append(tagIDs, tagID)
 			existingTagNames[tagName] = struct{}{}
-		}
-
-		// Find which tags need to be created
-		var newTagNames []string
-		for _, tagName := range createOpeningReq.NewTags {
-			if _, exists := existingTagNames[tagName]; !exists {
-				newTagNames = append(newTagNames, tagName)
-			}
-		}
-
-		// Create only the tags that don't exist
-		if len(newTagNames) > 0 {
-			insertNewTagsQuery := `
-INSERT INTO tags (name)
-SELECT UNNEST($1::text[])
-RETURNING id
-`
-			rows, err := tx.Query(ctx, insertNewTagsQuery, newTagNames)
-			if err != nil {
-				p.log.Err("failed to insert new tags", "error", err)
-				return "", err
-			}
-			defer rows.Close()
-
-			for rows.Next() {
-				var tagID uuid.UUID
-				err = rows.Scan(&tagID)
-				if err != nil {
-					p.log.Err("failed to scan tag id", "error", err)
-					return "", err
-				}
-				tagIDs = append(tagIDs, tagID)
-			}
 		}
 
 		// Insert mappings for all tags

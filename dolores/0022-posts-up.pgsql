@@ -83,14 +83,4 @@ INSERT INTO hub_users (
     timezone('UTC'::text, now())
 );
 
--- Add tags needed for GetUserPosts tests, ensuring they exist
--- Note: These tags should already exist from vetchium-tags.json
--- but we add them here in case they don't exist in test environment
-INSERT INTO tags (id, name) VALUES
-('productivity', 'Productivity'),
-('innovation', 'Innovation'),
-('golang', 'Go Programming Language'),
-('technology', 'Technology')
-ON CONFLICT (id) DO NOTHING;
-
 COMMIT;

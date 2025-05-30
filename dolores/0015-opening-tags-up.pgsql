@@ -59,13 +59,4 @@ INSERT INTO hub_users (
     timezone('UTC'::text, now())
 );
 
--- Create pre-existing tags for testing
-INSERT INTO tags (id, name, created_at)
-VALUES 
-    ('12345678-0015-0015-0015-000000070001'::uuid, 'Go', timezone('UTC'::text, now())),
-    ('12345678-0015-0015-0015-000000070002'::uuid, 'Java', timezone('UTC'::text, now())),
-    ('12345678-0015-0015-0015-000000070003'::uuid, 'Python', timezone('UTC'::text, now())),
-    ('12345678-0015-0015-0015-000000070004'::uuid, 'PostgreSQL', timezone('UTC'::text, now())),
-    ('12345678-0015-0015-0015-000000070005'::uuid, 'React', timezone('UTC'::text, now()));
-
 COMMIT;

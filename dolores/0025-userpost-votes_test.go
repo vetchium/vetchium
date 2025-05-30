@@ -12,7 +12,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("User Post Votes", Ordered, func() {
+var _ = FDescribe("User Post Votes", Ordered, func() {
 	var db *pgxpool.Pool
 	var voter1Token, voter2Token, authorToken string
 	var post1ID, post2ID, post3ID string

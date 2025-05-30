@@ -8,12 +8,12 @@ import (
 
 type AddFTPostRequest struct {
 	Content string          `json:"content" validate:"required,min=1,max=255"`
-	TagIDs  []common.VTagID `json:"tag_ids" validate:"max=3,dive,uuid"`
+	TagIDs  []common.VTagID `json:"tag_ids" validate:"max=3"`
 }
 
 type AddPostRequest struct {
 	Content string          `json:"content" validate:"required,min=1,max=4096"`
-	TagIDs  []common.VTagID `json:"tag_ids" validate:"max=3,dive,uuid"`
+	TagIDs  []common.VTagID `json:"tag_ids" validate:"max=3"`
 }
 
 type AddPostResponse struct {

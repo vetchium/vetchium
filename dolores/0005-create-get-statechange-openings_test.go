@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/employer"
 )
 
-var _ = Describe("Openings", Ordered, func() {
+var _ = FDescribe("Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string

@@ -88,8 +88,9 @@ var (
 	ErrNoEmployerPost      = errors.New("employer post not found")
 	ErrNonVoteableUserPost = errors.New("user cannot vote for this post")
 
-	ErrNoDomain = errors.New("domain not found")
-	ErrNoTag    = errors.New("tag not found")
+	ErrNoDomain      = errors.New("domain not found")
+	ErrNoTag         = errors.New("tag not found")
+	ErrInvalidTagIDs = errors.New("one or more invalid tag IDs specified")
 
 	// Comment related errors
 	ErrNoComment        = errors.New("comment not found")

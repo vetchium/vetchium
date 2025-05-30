@@ -27,6 +27,36 @@ func (pg *PG) AddPost(addPostReq db.AddPostRequest) error {
 	}
 	defer tx.Rollback(context.Background())
 
+	// Validate tag IDs if provided
+	if len(addPostReq.TagIDs) > 0 {
+		validateTagsQuery := `
+SELECT COUNT(*) FROM tags WHERE id = ANY($1)
+`
+		var validTagCount int
+		tagIDs := make([]string, len(addPostReq.TagIDs))
+		for i, tagID := range addPostReq.TagIDs {
+			tagIDs[i] = string(tagID)
+		}
+
+		err = tx.QueryRow(addPostReq.Context, validateTagsQuery, tagIDs).
+			Scan(&validTagCount)
+		if err != nil {
+			pg.log.Err("failed to validate tag IDs", "error", err)
+			return err
+		}
+
+		if validTagCount != len(addPostReq.TagIDs) {
+			pg.log.Dbg(
+				"invalid tag IDs provided",
+				"expected",
+				len(addPostReq.TagIDs),
+				"found",
+				validTagCount,
+			)
+			return db.ErrInvalidTagIDs
+		}
+	}
+
 	// Insert the post
 	postsInsertQuery := `
 INSERT INTO posts (id, content, author_id)
@@ -86,6 +116,36 @@ func (pg *PG) AddFTPost(addFTPostReq db.AddFTPostRequest) error {
 		return err
 	}
 	defer tx.Rollback(context.Background())
+
+	// Validate tag IDs if provided
+	if len(addFTPostReq.TagIDs) > 0 {
+		validateTagsQuery := `
+SELECT COUNT(*) FROM tags WHERE id = ANY($1)
+`
+		var validTagCount int
+		tagIDs := make([]string, len(addFTPostReq.TagIDs))
+		for i, tagID := range addFTPostReq.TagIDs {
+			tagIDs[i] = string(tagID)
+		}
+
+		err = tx.QueryRow(addFTPostReq.Context, validateTagsQuery, tagIDs).
+			Scan(&validTagCount)
+		if err != nil {
+			pg.log.Err("failed to validate tag IDs", "error", err)
+			return err
+		}
+
+		if validTagCount != len(addFTPostReq.TagIDs) {
+			pg.log.Dbg(
+				"invalid tag IDs provided",
+				"expected",
+				len(addFTPostReq.TagIDs),
+				"found",
+				validTagCount,
+			)
+			return db.ErrInvalidTagIDs
+		}
+	}
 
 	// Insert the post
 	postsInsertQuery := `
@@ -150,7 +210,7 @@ func (pg *PG) GetPost(req db.GetPostRequest) (hub.Post, error) {
 			hu.full_name AS author_full_name,
 			COALESCE(
 				(
-					SELECT json_agg(t.name ORDER BY t.name)
+					SELECT json_agg(t.display_name ORDER BY t.display_name)
 					FROM post_tags pt
 					JOIN tags t ON pt.tag_id = t.id
 					WHERE pt.post_id = p.id
@@ -280,7 +340,7 @@ func (pg *PG) GetUserPosts(
 			hu.full_name AS author_full_name,
 			COALESCE(
 				(
-					SELECT json_agg(t.name ORDER BY t.name)
+					SELECT json_agg(t.display_name ORDER BY t.display_name)
 					FROM post_tags pt
 					JOIN tags t ON pt.tag_id = t.id
 					WHERE pt.post_id = p.id

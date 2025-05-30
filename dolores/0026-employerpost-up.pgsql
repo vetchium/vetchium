@@ -53,16 +53,6 @@ VALUES
     ('12345678-0026-0026-0026-000000040011'::uuid, 'marketing@0026-employerposts4.example.com', 'Marketing User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['EMPLOYER_POSTS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000204'::uuid, timezone('UTC'::text, now())),
     ('12345678-0026-0026-0026-000000040012'::uuid, 'regular@0026-employerposts4.example.com', 'Regular User', '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', ARRAY['APPLICATIONS_CRUD']::org_user_roles[], 'ACTIVE_ORG_USER', '12345678-0026-0026-0026-000000000204'::uuid, timezone('UTC'::text, now()));
 
--- Add tags for testing
-INSERT INTO tags (id, name)
-VALUES
-    ('12345678-0026-0026-0026-000000050001'::uuid, '0026-engineering'),
-    ('12345678-0026-0026-0026-000000050002'::uuid, '0026-marketing'),
-    ('12345678-0026-0026-0026-000000050003'::uuid, '0026-golang'),
-    ('12345678-0026-0026-0026-000000050004'::uuid, '0026-react'),
-    ('12345678-0026-0026-0026-000000050005'::uuid, '0026-testing')
-ON CONFLICT (name) DO NOTHING;
-
 -- Create test hub users for org following tests
 INSERT INTO hub_users (id, full_name, handle, email, password_hash, state, tier, resident_country_code, preferred_language, short_bio, long_bio, created_at)
 VALUES 

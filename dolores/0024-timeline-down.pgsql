@@ -106,15 +106,6 @@ WHERE author_id IN (
     WHERE handle LIKE '%timeline-user%-0024'
 );
 
--- Clean up tags
-DELETE FROM tags
-WHERE id IN (
-    '0024-timeline-test',
-    '0024-testing',
-    '0024-examples',
-    '0024-automation'
-);
-
 -- Clean up hub user tokens and related tables
 DELETE FROM hub_user_tfa_codes
 WHERE tfa_token IN (

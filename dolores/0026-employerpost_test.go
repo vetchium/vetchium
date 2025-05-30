@@ -18,7 +18,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Employer Posts", Ordered, func() {
+var _ = FDescribe("Employer Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool

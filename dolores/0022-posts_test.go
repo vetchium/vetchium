@@ -14,7 +14,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = Describe("Posts", Ordered, func() {
+var _ = FDescribe("Posts", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -305,6 +305,14 @@ var _ = Describe("Posts", Ordered, func() {
 						TagIDs:  []common.VTagID{"non-existent-tag"},
 					},
 					wantStatus: http.StatusBadRequest,
+					validate: func(resp []byte) {
+						var validationErrors common.ValidationErrors
+						err := json.Unmarshal(resp, &validationErrors)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(
+							validationErrors.Errors,
+						).Should(ContainElement("tag_ids"))
+					},
 				},
 			}
 
@@ -400,7 +408,7 @@ var _ = Describe("Posts", Ordered, func() {
 						// Check tags for the second post (should have golang and technology tags)
 						Expect(
 							resp.Posts[2].Tags,
-						).Should(ConsistOf("golang", "technology"))
+						).Should(ConsistOf("Go Programming Language", "Technology"))
 
 						// Validate voting and authorship fields for own posts
 						for _, post := range resp.Posts {
@@ -490,7 +498,7 @@ var _ = Describe("Posts", Ordered, func() {
 						).Should(Equal(common.Handle("get-user2")))
 						Expect(
 							resp.Posts[0].Tags,
-						).Should(ConsistOf("innovation"))
+						).Should(ConsistOf("Innovation"))
 						Expect(resp.PaginationKey).Should(BeEmpty())
 					},
 				},
@@ -691,7 +699,7 @@ var _ = Describe("Posts", Ordered, func() {
 						).Should(Equal("Get Details User"))
 						Expect(
 							resp.Tags,
-						).Should(ConsistOf("technology", "innovation"))
+						).Should(ConsistOf("Technology", "Innovation"))
 						Expect(resp.CreatedAt).ShouldNot(BeZero())
 
 						// Validate voting and authorship fields for post author

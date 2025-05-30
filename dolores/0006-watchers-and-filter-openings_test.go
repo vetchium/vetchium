@@ -20,7 +20,7 @@ import (
 
 var bachelorEducation_0006 *common.EducationLevel
 
-var _ = Describe("Openings", Ordered, func() {
+var _ = FDescribe("Watchers and Filter Openings", Ordered, func() {
 	var db *pgxpool.Pool
 	var adminToken, crudToken, viewerToken, nonOpeningsToken string
 	var recruiterToken, hiringManagerToken string

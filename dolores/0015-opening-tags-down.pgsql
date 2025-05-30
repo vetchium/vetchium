@@ -9,15 +9,6 @@ DELETE FROM opening_locations WHERE employer_id = '12345678-0015-0015-0015-00000
 -- Then clean up openings
 DELETE FROM openings WHERE employer_id = '12345678-0015-0015-0015-000000000201'::uuid;
 
--- Clean up pre-existing tags
-DELETE FROM tags WHERE id IN (
-    '12345678-0015-0015-0015-000000070001'::uuid,
-    '12345678-0015-0015-0015-000000070002'::uuid,
-    '12345678-0015-0015-0015-000000070003'::uuid,
-    '12345678-0015-0015-0015-000000070004'::uuid,
-    '12345678-0015-0015-0015-000000070005'::uuid
-);
-
 -- Clean up hub user
 DELETE FROM hub_users WHERE id = '12345678-0015-0015-0015-000000050002'::uuid;
 

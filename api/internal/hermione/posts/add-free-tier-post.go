@@ -8,6 +8,7 @@ import (
 	"github.com/vetchium/vetchium/api/internal/util"
 	"github.com/vetchium/vetchium/api/internal/wand"
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -37,6 +38,17 @@ func AddFreeTierPost(h wand.Wand) http.HandlerFunc {
 			AddFTPostRequest: addFTPostReq,
 		})
 		if err != nil {
+			if err == db.ErrInvalidTagIDs {
+				h.Dbg("invalid tag IDs provided", "error", err)
+				w.WriteHeader(http.StatusBadRequest)
+				err = json.NewEncoder(w).Encode(common.ValidationErrors{
+					Errors: []string{"tag_ids"},
+				})
+				if err != nil {
+					h.Err("failed to encode validation errors", "error", err)
+				}
+				return
+			}
 			h.Dbg("adding free tier post failed", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

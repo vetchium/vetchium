@@ -47,15 +47,6 @@ VALUES
     ('12345678-0024-0024-0024-000000000011', '12345678-0024-0024-0024-000000000013'),
     ('12345678-0024-0024-0024-000000000011', '12345678-0024-0024-0024-000000000014');
 
--- Create some test tags
-INSERT INTO tags (id, name) 
-VALUES 
-    ('0024-timeline-test', '0024-timeline-test'),
-    ('0024-testing', '0024-testing'),
-    ('0024-examples', '0024-examples'),
-    ('0024-automation', '0024-automation')
-ON CONFLICT (id) DO NOTHING;
-
 -- Create some initial posts for testing with pre-populated timelines
 INSERT INTO posts (id, content, author_id, created_at)
 VALUES
