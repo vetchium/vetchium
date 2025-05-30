@@ -59,15 +59,18 @@ func writeEmployerPosts() {
 		"hiring": {
 			{
 				content: "We're hiring! Looking for passionate software engineers to join our growing team. Competitive salary, excellent benefits, and opportunity to work on exciting projects.",
-				tags:    []common.VTagID{"hiring", "software-engineering"},
+				tags: []common.VTagID{
+					"human-resources",
+					"software-engineering",
+				},
 			},
 			{
 				content: "Join our marketing team! We're seeking creative minds to help us tell our story and connect with customers in meaningful ways.",
-				tags:    []common.VTagID{"hiring", "marketing"},
+				tags:    []common.VTagID{"human-resources", "marketing"},
 			},
 			{
 				content: "Open positions in our finance department. Looking for detail-oriented professionals who want to be part of our financial success story.",
-				tags:    []common.VTagID{"hiring", "finance"},
+				tags:    []common.VTagID{"human-resources", "finance"},
 			},
 		},
 		"culture": {
