@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const publicPaths = ["/login", "/tfa"];
+const publicPaths = ["/login", "/tfa", "/forgot-password", "/reset-password"];
 const signupPathRegex = /^\/signup-hubuser\/.+/;
 
 export function middleware(request: NextRequest) {

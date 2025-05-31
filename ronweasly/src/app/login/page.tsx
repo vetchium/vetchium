@@ -13,8 +13,8 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -151,6 +151,13 @@ export default function LoginPage() {
             >
               {t("common.login")}
             </Button>
+            <Box sx={{ textAlign: "center", mb: 2 }}>
+              <Link href="/forgot-password" style={{ textDecoration: "none" }}>
+                <Typography variant="body2" color="primary">
+                  {t("auth.forgotPasswordLink")}
+                </Typography>
+              </Link>
+            </Box>
             <Box sx={{ textAlign: "center" }}>
               <Link href="/signup-request" style={{ textDecoration: "none" }}>
                 <Typography variant="body2" color="primary">
