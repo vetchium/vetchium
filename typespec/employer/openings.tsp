@@ -44,7 +44,7 @@ model Opening {
     filled_positions: integer;
 
     @minLength(10)
-    @maxLength(1024)
+    @maxLength(8192)
     jd: string;
 
     recruiter: OrgUserShort;

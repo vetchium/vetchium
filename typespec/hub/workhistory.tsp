@@ -11,9 +11,16 @@ using TypeSpec.Rest;
 namespace Vetchium;
 
 model AddWorkHistoryRequest {
-    employer_domain: string;
+    employer_domain: Domain;
+
+    @minLength(3)
+    @maxLength(64)
     title: string;
+
+    @format("date")
     start_date: string;
+
+    @format("date")
     end_date?: string;
 
     @maxLength(1024)
@@ -34,6 +41,8 @@ model WorkHistory {
     employer_logo_url?: string;
 
     @doc("The title of the Job")
+    @minLength(3)
+    @maxLength(64)
     title: string;
 
     start_date: string;
@@ -45,10 +54,16 @@ model WorkHistory {
 
 model UpdateWorkHistoryRequest {
     id: string;
+
+    @minLength(3)
+    @maxLength(64)
     title: string;
+
+    @format("date")
     start_date: string;
 
     @doc("If end date already existed and not passed now, the old one will be removed")
+    @format("date")
     end_date?: string;
 
     @doc("If description already existed and not passed now, the old one will be removed")

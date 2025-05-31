@@ -68,9 +68,13 @@ union HubUserTier {
 
 model OnboardHubUserRequest {
     @doc("The token from the invite email")
+    @minLength(1)
+    @maxLength(255)
     token: string;
 
     @doc("The full name of the user")
+    @minLength(1)
+    @maxLength(64)
     full_name: string;
 
     @doc("The country code where the user resides")
@@ -85,11 +89,15 @@ model OnboardHubUserRequest {
     @doc("Optional preferred language for the user")
     preferred_language?: string;
 
-    @doc("Optional short bio for the user profile")
-    short_bio?: string;
+    @doc("Short bio for the user profile")
+    @minLength(1)
+    @maxLength(64)
+    short_bio: string;
 
-    @doc("Optional long bio for the user profile")
-    long_bio?: string;
+    @doc("Long bio for the user profile")
+    @minLength(1)
+    @maxLength(2048)
+    long_bio: string;
 }
 
 model OnboardHubUserResponse {

@@ -22,6 +22,9 @@ model ExperienceRange {
 
 model LocationFilter {
     country_code: CountryCode;
+
+    @minLength(3)
+    @maxLength(32)
     city: string;
 }
 
@@ -37,7 +40,7 @@ model FindHubOpeningsRequest {
 
     @doc("If nothing is passed, all companies are considered")
     @maxItems(4)
-    company_domains?: string[];
+    company_domains?: Domain[];
 
     @doc("If nothing is passed, all experience ranges are considered")
     experience_range?: ExperienceRange;
