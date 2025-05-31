@@ -1,6 +1,7 @@
 "use client";
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import CloseIcon from "@mui/icons-material/Close";
 import {
@@ -12,9 +13,8 @@ import {
   Tab,
   Tabs,
 } from "@mui/material";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import ComposeSection from "./components/ComposeSection";
 import TabPanel from "./components/TabPanel";
 import TimelineTab from "./components/TimelineTab";
@@ -22,18 +22,11 @@ import TimelineTab from "./components/TimelineTab";
 function PostsContent() {
   const { t } = useTranslation();
   const router = useRouter();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Check authentication on component mount
-  useEffect(() => {
-    const token = Cookies.get("session_token");
-    if (!token) {
-      router.push("/login");
-    }
-  }, [router]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

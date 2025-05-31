@@ -3,6 +3,7 @@
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import ProfilePicture from "@/components/ProfilePicture";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useColleagueApprovals } from "@/hooks/useColleagueApprovals";
 import { useColleagues } from "@/hooks/useColleagues";
 import { useEndorseApprovals } from "@/hooks/useEndorseApprovals";
@@ -26,6 +27,7 @@ const PAGE_SIZE = 20;
 
 export default function MyApprovalsPage() {
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
 
   // Colleague approvals state
   const [paginationKey, setPaginationKey] = useState<string | undefined>();

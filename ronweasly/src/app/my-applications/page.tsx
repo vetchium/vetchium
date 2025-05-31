@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Alert from "@mui/material/Alert";
@@ -63,6 +64,7 @@ const getChipColor = (state: ApplicationState) => {
 export default function MyApplicationsPage() {
   const { t } = useTranslation();
   const router = useRouter();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [applications, setApplications] = useState<HubApplication[]>([]);

@@ -8,6 +8,7 @@ import { Patents } from "@/components/Patents";
 import ProfilePicture from "@/components/ProfilePicture";
 import { Publications } from "@/components/Publications";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useColleagues } from "@/hooks/useColleagues";
 import { useFollowUser } from "@/hooks/useFollowUser";
 import { useMyHandle } from "@/hooks/useMyHandle";
@@ -49,6 +50,7 @@ export default function UserProfilePage() {
   const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
+  useAuth(); // Check authentication and redirect if not authenticated
   const userHandle = (params?.handle as string) || null;
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
   const {

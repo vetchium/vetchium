@@ -1,6 +1,7 @@
 "use client";
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import CheckIcon from "@mui/icons-material/Check";
 import StarIcon from "@mui/icons-material/Star";
@@ -19,6 +20,7 @@ import {
 
 export default function UpgradePage() {
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
 
   const paidFeatures = [
     "Unlimited post length (up to 4096 characters)",

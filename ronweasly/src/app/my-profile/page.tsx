@@ -10,6 +10,7 @@ import { Patents } from "@/components/Patents";
 import ProfilePicture from "@/components/ProfilePicture";
 import { Publications } from "@/components/Publications";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useMyHandle } from "@/hooks/useMyHandle";
 import { useMyTier } from "@/hooks/useMyTier";
 import { useProfile } from "@/hooks/useProfile";
@@ -35,6 +36,7 @@ import { WorkHistory } from "../u/[handle]/WorkHistory";
 export default function MyProfilePage() {
   const { myHandle, isLoading: isLoadingHandle } = useMyHandle();
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [timestamp, setTimestamp] = useState(Date.now());
   const [showChangeHandle, setShowChangeHandle] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);

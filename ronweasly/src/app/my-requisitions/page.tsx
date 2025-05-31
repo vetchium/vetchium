@@ -3,6 +3,7 @@
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import ProfilePicture from "@/components/ProfilePicture";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useColleagueSeeks } from "@/hooks/useColleagueSeeks";
 import { useTranslation } from "@/hooks/useTranslation";
 import Alert from "@mui/material/Alert";
@@ -19,6 +20,7 @@ const PAGE_SIZE = 20;
 
 export default function MyRequisitionsPage() {
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [paginationKey, setPaginationKey] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
   const [seeksList, setSeeksList] = useState<HubUserShort[]>([]);

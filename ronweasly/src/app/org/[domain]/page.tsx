@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import BusinessIcon from "@mui/icons-material/Business";
 import Alert from "@mui/material/Alert";
@@ -23,6 +24,7 @@ export default function EmployerDetailsPage() {
   const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [employerDetails, setEmployerDetails] =

@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import UserInvite from "@/components/UserInvite";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -56,6 +57,7 @@ const changeEmailAddress = async (
 export default function Settings() {
   const { t } = useTranslation();
   const router = useRouter();
+  useAuth(); // Check authentication and redirect if not authenticated
 
   // Password change state
   const [oldPassword, setOldPassword] = useState("");

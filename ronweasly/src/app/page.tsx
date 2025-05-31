@@ -1,19 +1,21 @@
 "use client";
 
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Link from "next/link";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
 
   return (
     <AuthenticatedLayout>

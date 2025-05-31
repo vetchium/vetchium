@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import AddIcon from "@mui/icons-material/Add";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -47,6 +48,7 @@ let searchCache: {
 function FindOpeningsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [searchQuery, setSearchQuery] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [searchResults, setSearchResults] = useState<HubOpening[]>([]);

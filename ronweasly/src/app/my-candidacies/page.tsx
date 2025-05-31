@@ -2,6 +2,7 @@
 
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Alert from "@mui/material/Alert";
@@ -46,6 +47,7 @@ const getCandidacyStateColor = (
 export default function MyCandidaciesPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  useAuth(); // Check authentication and redirect if not authenticated
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [candidacies, setCandidacies] = useState<MyCandidacy[]>([]);
