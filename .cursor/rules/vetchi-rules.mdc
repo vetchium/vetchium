@@ -11,6 +11,9 @@ alwaysApply: false
 - [hub-routes.go](mdc:api/internal/hermione/hub-routes.go) contains the API endpoints entrpoint for the /hub APIs
 - All the http handlers for the backend api are implemented under a suitable directory under the api/internal/hermione directory
 - All the database functions come from [db.go](mdc:api/internal/db/db.go) interface. The implementation of these functions come from api/internal/postgres directory. No other part of the api backend code should have any SQL
+- All the default values should be handled in the handler code and not on the SQL code or postgres package
+- The postgres package should contain all the SQL to talk to a postgresql database
+- All the error communication between the handler code and the postgres package should happen via [errors.go](mdc:api/internal/db/errors.go) and the db package. postgres specific errors or codes should not be sent to the handler
 - When making network calls in *.tsx code, always try to use struct or const exposed from the typespec library. Do not create json.stringify with unstructured data.
 - When writing SQL queries in *.go or *.pgsql files always adhere to the database schema defined under [1-initdb.sql](mdc:sqitch/deploy/1-initdb.sql) or the *.sql files under sqitch directory
 - The sqitch directory contains the database migrations under *.sql files. postgresql is used to save the data.
