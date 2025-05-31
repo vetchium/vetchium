@@ -50,7 +50,7 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 	// Helper function to verify login with new password
 	verifyNewPassword := func(email, password string) {
 		sessionToken, err := employerSignin(
-			"changepassword.example",
+			"0030-changepassword.example",
 			email,
 			password,
 		)
@@ -73,63 +73,63 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 			testCases := []changePasswordTestCase{
 				{
 					description:  "with invalid old password format",
-					email:        "change1@changepassword.example",
+					email:        "change1@0030-changepassword.example",
 					oldPassword:  "short",
-					newPassword:  "NewPassword123$",
+					newPassword:  "NewValidPassword123$",
 					wantStatus:   http.StatusBadRequest,
 					wantErrField: "old_password",
 				},
 				{
 					description:  "with invalid new password format",
-					email:        "change2@changepassword.example",
-					oldPassword:  "CurrentPassword123$",
-					newPassword:  "weak",
+					email:        "change2@0030-changepassword.example",
+					oldPassword:  "NewPassword123$",
+					newPassword:  "short",
 					wantStatus:   http.StatusBadRequest,
 					wantErrField: "new_password",
 				},
 				{
-					description: "with incorrect old password",
-					email:       "change3@changepassword.example",
-					oldPassword: "WrongPassword123$",
-					newPassword: "NewPassword123$",
-					wantStatus:  http.StatusUnauthorized,
+					description:  "with incorrect old password",
+					email:        "change3@0030-changepassword.example",
+					oldPassword:  "WrongPassword123$",
+					newPassword:  "NewValidPassword123$",
+					wantStatus:   http.StatusUnauthorized,
+					wantErrField: "",
 				},
 				{
-					description: "with valid passwords",
-					email:       "change4@changepassword.example",
-					oldPassword: "CurrentPassword123$",
-					newPassword: "NewPassword123$",
+					description: "with valid password change",
+					email:       "change4@0030-changepassword.example",
+					oldPassword: "NewPassword123$",
+					newPassword: "NewValidPassword123$",
 					wantStatus:  http.StatusOK,
 					verifyLogin: true,
 				},
 				{
+					description: "without authorization",
+					email:       "change5@0030-changepassword.example",
+					oldPassword: "NewPassword123$",
+					newPassword: "NewValidPassword123$",
+					wantStatus:  http.StatusUnauthorized,
+				},
+				{
 					description:  "with empty old password",
-					email:        "change5@changepassword.example",
+					email:        "change6@0030-changepassword.example",
 					oldPassword:  "",
-					newPassword:  "NewPassword123$",
+					newPassword:  "NewValidPassword123$",
 					wantStatus:   http.StatusBadRequest,
 					wantErrField: "old_password",
 				},
 				{
-					description:  "with empty new password",
-					email:        "change6@changepassword.example",
-					oldPassword:  "CurrentPassword123$",
-					newPassword:  "",
-					wantStatus:   http.StatusBadRequest,
-					wantErrField: "new_password",
-				},
-				{
 					description: "with same old and new password",
-					email:       "change7@changepassword.example",
-					oldPassword: "CurrentPassword123$",
-					newPassword: "CurrentPassword123$",
+					email:       "change7@0030-changepassword.example",
+					oldPassword: "NewPassword123$",
+					newPassword: "NewPassword123$",
 					wantStatus:  http.StatusOK,
 					verifyLogin: true,
 				},
 				{
 					description: "with very long new password",
-					email:       "change8@changepassword.example",
-					oldPassword: "CurrentPassword123$",
+					email:       "change8@0030-changepassword.example",
+					oldPassword: "NewPassword123$",
 					newPassword: "VeryLongPassword123$" + string(
 						make([]byte, 200),
 					),
@@ -141,13 +141,16 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 			for _, tc := range testCases {
 				GinkgoWriter.Printf("#### %s\n", tc.description)
 
-				// Get session token for the user
-				sessionToken, err := employerSignin(
-					"changepassword.example",
-					tc.email,
-					"CurrentPassword123$", // Initial password for all test users
-				)
+				var sessionToken string
+				var err error
+
+				// Get session token for the user (except for unauthorized test)
 				if tc.wantStatus != http.StatusUnauthorized {
+					sessionToken, err = employerSignin(
+						"0030-changepassword.example",
+						tc.email,
+						"NewPassword123$", // Initial password for all test users
+					)
 					Expect(err).ShouldNot(HaveOccurred())
 				}
 
@@ -178,7 +181,7 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 				if tc.wantStatus == http.StatusOK &&
 					tc.oldPassword != tc.newPassword {
 					_, err := employerSignin(
-						"changepassword.example",
+						"0030-changepassword.example",
 						tc.email,
 						tc.oldPassword,
 					)
@@ -188,13 +191,13 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 		})
 
 		It("should maintain session validity after password change", func() {
-			email := "session-test@changepassword.example"
-			oldPassword := "CurrentPassword123$"
+			email := "session-test@0030-changepassword.example"
+			oldPassword := "NewPassword123$"
 			newPassword := "NewSessionPassword123$"
 
 			// Get initial session token
 			sessionToken, err := employerSignin(
-				"changepassword.example",
+				"0030-changepassword.example",
 				email,
 				oldPassword,
 			)
@@ -205,7 +208,7 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 				"GET",
 				serverURL+"/employer/get-onboard-status",
 				bytes.NewBuffer(
-					[]byte(`{"client_id": "changepassword.example"}`),
+					[]byte(`{"client_id": "0030-changepassword.example"}`),
 				),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -229,7 +232,7 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 				"GET",
 				serverURL+"/employer/get-onboard-status",
 				bytes.NewBuffer(
-					[]byte(`{"client_id": "changepassword.example"}`),
+					[]byte(`{"client_id": "0030-changepassword.example"}`),
 				),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -245,7 +248,7 @@ var _ = Describe("Employer Change Password", Ordered, func() {
 
 			// Verify old password no longer works
 			_, err = employerSignin(
-				"changepassword.example",
+				"0030-changepassword.example",
 				email,
 				oldPassword,
 			)

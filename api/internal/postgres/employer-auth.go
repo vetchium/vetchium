@@ -582,6 +582,7 @@ SELECT
     ou.email,
     ou.employer_id,
     ou.org_user_roles,
+    ou.password_hash,
     ou.org_user_state,
     ou.created_at
 FROM
@@ -606,6 +607,7 @@ WHERE
 		&orgUser.Email,
 		&orgUser.EmployerID,
 		&roles,
+		&orgUser.PasswordHash,
 		&orgUser.OrgUserState,
 		&orgUser.CreatedAt,
 	)
