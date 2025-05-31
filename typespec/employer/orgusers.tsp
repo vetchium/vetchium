@@ -103,6 +103,11 @@ model EmployerResetPasswordRequest {
     password: Password;
 }
 
+model EmployerChangePasswordRequest {
+    old_password: Password;
+    new_password: Password;
+}
+
 @route("/employer/add-org-user")
 interface AddOrgUser {
     @tag("OrgUsers")
@@ -206,6 +211,26 @@ interface EmployerResetPassword {
         @statusCode statusCode: 200;
     } | {
         @doc("Invalid or expired token")
+        @statusCode
+        statusCode: 401;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/change-password")
+interface EmployerChangePassword {
+    @tag("Auth")
+    @doc("Change password for authenticated employer user")
+    @post
+    @useAuth(EmployerAuth)
+    changePassword(
+        @body changePasswordRequest: EmployerChangePasswordRequest,
+    ): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Invalid old password")
         @statusCode
         statusCode: 401;
     } | {

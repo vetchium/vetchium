@@ -1026,6 +1026,190 @@ var _ = Describe("Hub Login", Ordered, func() {
 			}
 		})
 
+		It(
+			"should invalidate previous tokens when multiple requests are made",
+			func() {
+				email := "multiple-requests@hub.example"
+
+				// Send first forgot password request
+				forgotPasswordReqBody, err := json.Marshal(
+					hub.ForgotPasswordRequest{
+						Email: common.EmailAddress(email),
+					},
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				resp1, err := http.Post(
+					serverURL+"/hub/forgot-password",
+					"application/json",
+					bytes.NewBuffer(forgotPasswordReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp1.StatusCode).Should(Equal(http.StatusOK))
+
+				// Get first token
+				var messageID1 string
+				var resetToken1 string
+
+				baseURL, err := url.Parse(mailPitURL + "/api/v1/search")
+				Expect(err).ShouldNot(HaveOccurred())
+				query := url.Values{}
+				query.Add(
+					"query",
+					fmt.Sprintf(
+						"to:%s subject:Vetchium Password Reset",
+						email,
+					),
+				)
+				baseURL.RawQuery = query.Encode()
+
+				// Wait and retry for first email
+				for i := 0; i < 3; i++ {
+					<-time.After(10 * time.Second)
+
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						messageID1 = mailPitRespObj.Messages[0].ID
+						break
+					}
+				}
+				Expect(messageID1).ShouldNot(BeEmpty())
+
+				// Get email content and extract first reset token
+				mailResp, err := http.Get(
+					mailPitURL + "/api/v1/message/" + messageID1,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err := io.ReadAll(mailResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				re := regexp.MustCompile(
+					`/reset-password\?token=([a-zA-Z0-9]+)`,
+				)
+				matches := re.FindStringSubmatch(string(body))
+				Expect(len(matches)).Should(BeNumerically(">=", 2))
+				resetToken1 = matches[1]
+
+				// Clean up first email
+				cleanupEmail(messageID1)
+
+				// Send second forgot password request
+				resp2, err := http.Post(
+					serverURL+"/hub/forgot-password",
+					"application/json",
+					bytes.NewBuffer(forgotPasswordReqBody),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp2.StatusCode).Should(Equal(http.StatusOK))
+
+				// Get second token
+				var messageID2 string
+				var resetToken2 string
+
+				// Wait and retry for second email
+				for i := 0; i < 3; i++ {
+					<-time.After(10 * time.Second)
+
+					mailPitResp, err := http.Get(baseURL.String())
+					Expect(err).ShouldNot(HaveOccurred())
+					body, err := io.ReadAll(mailPitResp.Body)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					var mailPitRespObj MailPitResponse
+					err = json.Unmarshal(body, &mailPitRespObj)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					if len(mailPitRespObj.Messages) > 0 {
+						messageID2 = mailPitRespObj.Messages[0].ID
+						break
+					}
+				}
+				Expect(messageID2).ShouldNot(BeEmpty())
+
+				// Get email content and extract second reset token
+				mailResp, err = http.Get(
+					mailPitURL + "/api/v1/message/" + messageID2,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				body, err = io.ReadAll(mailResp.Body)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				matches = re.FindStringSubmatch(string(body))
+				Expect(len(matches)).Should(BeNumerically(">=", 2))
+				resetToken2 = matches[1]
+
+				// Clean up second email
+				cleanupEmail(messageID2)
+
+				// Verify tokens are different
+				Expect(resetToken1).ShouldNot(Equal(resetToken2))
+
+				// Try to use first token - should fail because it was invalidated
+				resetPasswordReqBody1, err := json.Marshal(
+					hub.ResetPasswordRequest{
+						Token:    resetToken1,
+						Password: "FirstPassword123$",
+					},
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				resetResp1, err := http.Post(
+					serverURL+"/hub/reset-password",
+					"application/json",
+					bytes.NewBuffer(resetPasswordReqBody1),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(
+					resetResp1.StatusCode,
+				).Should(Equal(http.StatusUnauthorized))
+
+				// Use second token - should succeed
+				resetPasswordReqBody2, err := json.Marshal(
+					hub.ResetPasswordRequest{
+						Token:    resetToken2,
+						Password: "SecondPassword123$",
+					},
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				resetResp2, err := http.Post(
+					serverURL+"/hub/reset-password",
+					"application/json",
+					bytes.NewBuffer(resetPasswordReqBody2),
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resetResp2.StatusCode).Should(Equal(http.StatusOK))
+
+				// Verify login with new password works
+				tfaToken := getLoginToken(email, "SecondPassword123$")
+				tfaCode, messageID := getTFACode(email)
+				sessionToken := getSessionToken(tfaToken, tfaCode, false)
+
+				req, err := http.NewRequest(
+					"GET",
+					serverURL+"/hub/get-my-handle",
+					nil,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer "+sessionToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+
+				// Clean up TFA email
+				cleanupEmail(messageID)
+			},
+		)
+
 		It("Password Reset Token Expiry", func() {
 			email := "token-expiry@hub.example"
 

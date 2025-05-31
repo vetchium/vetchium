@@ -29,6 +29,23 @@ func RegisterEmployerRoutes(h *Hermione) {
 	http.HandleFunc("/employer/forgot-password", ea.ForgotPassword(h))
 	http.HandleFunc("/employer/reset-password", ea.ResetPassword(h))
 
+	// Password management endpoints
+	h.mw.Protect(
+		"/employer/change-password",
+		ea.ChangePassword(h),
+		[]common.OrgUserRole{
+			common.Admin,
+			common.CostCentersCRUD,
+			common.CostCentersViewer,
+			common.LocationsCRUD,
+			common.LocationsViewer,
+			common.OrgUsersCRUD,
+			common.OrgUsersViewer,
+			common.OpeningsCRUD,
+			common.OpeningsViewer,
+		}, // All roles can change their own password
+	)
+
 	// CostCenter related endpoints
 	h.mw.Protect(
 		"/employer/add-cost-center",

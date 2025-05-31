@@ -149,5 +149,20 @@ VALUES
         'TFA Test User is diligent',
         'TFA Test User was born in Japan and finished education at University of Tokyo and has 6 years as experience.',
         timezone('UTC'::text, now())
+    ),
+    (
+        '12345678-0007-0007-0007-000000050010'::uuid,
+        'Multiple Requests Test User',
+        'multiple_requests_user',
+        'multiple-requests@hub.example',
+        '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK',
+        'ACTIVE_HUB_USER',
+        'FREE_HUB_USER',
+        'CAN',
+        'Toronto',
+        'en',
+        'Multiple Requests Test User is systematic',
+        'Multiple Requests Test User was born in Canada and finished education at University of Toronto and has 4 years as experience.',
+        timezone('UTC'::text, now())
     );
 COMMIT;

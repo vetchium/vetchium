@@ -534,4 +534,6 @@ type DB interface {
 		ctx context.Context,
 		domain string,
 	) (EmployerDetailsForHub, error)
+
+	ChangeOrgUserPassword(context.Context, uuid.UUID, string) error
 }

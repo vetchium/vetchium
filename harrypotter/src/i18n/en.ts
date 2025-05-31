@@ -15,6 +15,7 @@ export const en = {
     add: "Add",
     save: "Save",
     cancel: "Cancel",
+    delete: "Delete",
     warning: "Warning",
     proceed: "Proceed",
     external_url_warning:
@@ -175,6 +176,7 @@ export const en = {
     stateChangeSuccess: "Opening state updated successfully",
     viewApplications: "View Applications",
     tags: "Opening Tags",
+    selectTag: "Select Tag",
     selectTags: "Select Existing Tags",
     selectTagsPlaceholder: "Type to search or select tags...",
     tagsHelp: "Select up to 3 tags that best describe this opening",
@@ -549,6 +551,30 @@ export const en = {
       success: "Cool-off period updated successfully",
       error: "Failed to update cool-off period",
       fetchError: "Failed to fetch cool-off period",
+    },
+    password: {
+      title: "Change Password",
+      description: "Update your account password for enhanced security",
+      oldPassword: "Current Password",
+      newPassword: "New Password",
+      confirmPassword: "Confirm New Password",
+      change: "Change Password",
+      success: "Password changed successfully",
+      requirements:
+        "Must be at least 8 characters with uppercase, lowercase, numbers, and special characters",
+      errors: {
+        required: "This field is required",
+        tooShort: "Password must be at least 8 characters long",
+        missingLowercase: "Password must contain at least one lowercase letter",
+        missingUppercase: "Password must contain at least one uppercase letter",
+        missingNumber: "Password must contain at least one number",
+        missingSpecial:
+          "Password must contain at least one special character (!@#$%^&*)",
+        mismatch: "Passwords do not match",
+        incorrectOldPassword: "Current password is incorrect",
+        invalid: "Invalid password format",
+        changeError: "Failed to change password. Please try again.",
+      },
     },
   },
   posts: {

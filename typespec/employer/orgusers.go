@@ -101,3 +101,8 @@ type EmployerResetPasswordRequest struct {
 	Token    string `json:"token"    validate:"required,min=1,max=255"`
 	Password string `json:"password" validate:"required,password"`
 }
+
+type EmployerChangePasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required,password"`
+	NewPassword string `json:"new_password" validate:"required,password"`
+}

@@ -73,6 +73,11 @@ export interface EmployerResetPasswordRequest {
   password: Password;
 }
 
+export interface EmployerChangePasswordRequest {
+  old_password: Password;
+  new_password: Password;
+}
+
 export function isValidOrgUserState(state: string): state is OrgUserState {
   return Object.values(OrgUserStates).includes(state as OrgUserState);
 }

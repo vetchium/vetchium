@@ -171,7 +171,7 @@ export default function SignupHubUser() {
 
     try {
       const response = await fetch(
-        `${config.API_SERVER_PREFIX}/hub/onboard-user`,
+        `${config.API_SERVER_PREFIX}/hub/onboard-hubuser`,
         {
           method: "POST",
           headers: {

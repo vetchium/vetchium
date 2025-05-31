@@ -764,3 +764,22 @@ RETURNING (SELECT id FROM password_update)
 
 	return nil
 }
+
+func (p *PG) ChangeOrgUserPassword(
+	ctx context.Context,
+	orgUserID uuid.UUID,
+	newPasswordHash string,
+) error {
+	query := `
+UPDATE org_users
+SET password_hash = $1
+WHERE id = $2`
+
+	_, err := p.pool.Exec(ctx, query, newPasswordHash, orgUserID)
+	if err != nil {
+		p.log.Err("failed to update password", "error", err)
+		return err
+	}
+
+	return nil
+}
