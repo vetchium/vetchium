@@ -83,3 +83,13 @@ type EmployerTFA struct {
 	TFAToken EmployerTokenReq
 	Email    Email
 }
+
+type EmployerInitPasswordReset struct {
+	Email Email
+	EmployerTokenReq
+}
+
+type EmployerPasswordReset struct {
+	Token        string
+	PasswordHash string
+}

@@ -23,17 +23,17 @@ type HermioneConfigOnDisk struct {
 	} `json:"employer" validate:"required"`
 
 	Hub struct {
-		WebURL               string `json:"web_url" validate:"required"`
-		TFATokLife           string `json:"tfa_tok_life" validate:"required"`
-		SessionTokLife       string `json:"session_tok_life" validate:"required"`
-		LTSTokLife           string `json:"lts_tok_life" validate:"required"`
-		InviteTokLife        string `json:"hub_user_invite_tok_life" validate:"required"`
-		PasswordResetTokLife string `json:"password_reset_tok_life" validate:"required"`
+		WebURL         string `json:"web_url" validate:"required"`
+		TFATokLife     string `json:"tfa_tok_life" validate:"required"`
+		SessionTokLife string `json:"session_tok_life" validate:"required"`
+		LTSTokLife     string `json:"lts_tok_life" validate:"required"`
+		InviteTokLife  string `json:"hub_user_invite_tok_life" validate:"required"`
 	} `json:"hub" validate:"required"`
 
 	Port string `json:"port" validate:"required,min=1,number"`
 
-	TimingAttackDelay string `json:"timing_attack_delay" validate:"required"`
+	TimingAttackDelay    string `json:"timing_attack_delay"     validate:"required"`
+	PasswordResetTokLife string `json:"password_reset_tok_life" validate:"required"`
 }
 
 type Hermione struct {
@@ -46,12 +46,11 @@ type Hermione struct {
 	}
 
 	Hub struct {
-		WebURL               string
-		TFATokLife           time.Duration
-		SessionTokLife       time.Duration
-		LTSTokLife           time.Duration
-		InviteTokLife        time.Duration
-		PasswordResetTokLife time.Duration
+		WebURL         string
+		TFATokLife     time.Duration
+		SessionTokLife time.Duration
+		LTSTokLife     time.Duration
+		InviteTokLife  time.Duration
 	}
 
 	S3 struct {
@@ -62,8 +61,9 @@ type Hermione struct {
 		SecretKey string
 	}
 
-	Port              int
-	TimingAttackDelay time.Duration
+	Port                 int
+	TimingAttackDelay    time.Duration
+	PasswordResetTokLife time.Duration
 
 	SignupHubUserURL   string
 	EmployerOnboardURL string
@@ -125,6 +125,13 @@ func LoadHermioneConfig() (*Hermione, error) {
 		return nil, fmt.Errorf("failed to parse timing attack delay: %w", err)
 	}
 
+	hc.PasswordResetTokLife, err = time.ParseDuration(
+		cmap.PasswordResetTokLife,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("password reset token life: %w", err)
+	}
+
 	emp := cmap.Employer
 	hc.Employer.WebURL = emp.WebURL
 	hc.Employer.TFATokLife, err = time.ParseDuration(emp.TFATokLife)
@@ -161,12 +168,6 @@ func LoadHermioneConfig() (*Hermione, error) {
 	hc.Hub.InviteTokLife, err = time.ParseDuration(hub.InviteTokLife)
 	if err != nil {
 		return nil, fmt.Errorf("hub invite token life: %w", err)
-	}
-	hc.Hub.PasswordResetTokLife, err = time.ParseDuration(
-		hub.PasswordResetTokLife,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("hub password reset token life: %w", err)
 	}
 
 	hc.SignupHubUserURL = hc.Hub.WebURL + "/signup-hubuser/"

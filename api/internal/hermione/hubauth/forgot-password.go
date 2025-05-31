@@ -89,7 +89,7 @@ func ForgotPassword(h wand.Wand) http.HandlerFunc {
 				HubTokenReq: db.HubTokenReq{
 					Token:            passwordResetToken,
 					TokenType:        db.HubUserResetPasswordToken,
-					ValidityDuration: h.Config().Hub.PasswordResetTokLife,
+					ValidityDuration: h.Config().PasswordResetTokLife,
 					HubUserID:        hubUser.ID,
 				},
 				Email: email,

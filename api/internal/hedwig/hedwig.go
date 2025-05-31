@@ -18,6 +18,7 @@ const (
 	InviteHubUserSignup          = "invite-hub-user-signup"
 	HubUserTFA                   = "hub-user-tfa"
 	HubPasswordReset             = "hub-password-reset"
+	EmployerPasswordReset        = "employer-password-reset"
 	ShortlistApplication         = "shortlist-application"
 	RejectApplication            = "reject-application"
 	NotifyNewInterviewer         = "notify-new-interviewer"
@@ -42,6 +43,7 @@ func NewHedwig(log util.Logger) (Hedwig, error) {
 		InviteEmployee,
 		HubUserTFA,
 		HubPasswordReset,
+		EmployerPasswordReset,
 		ShortlistApplication,
 		RejectApplication,
 		NotifyNewInterviewer,

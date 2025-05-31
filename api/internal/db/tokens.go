@@ -18,6 +18,9 @@ const (
 	// This is sent as a response to the signin request and should be used
 	// in the tfa request, to get one of the session tokens.
 	EmployerTFAToken EmployerTokenType = "EMPLOYER_TFA_TOKEN"
+
+	// This is sent as a response to the Reset Password request.
+	EmployerResetPasswordToken EmployerTokenType = "EMPLOYER_RESET_PASSWORD_TOKEN"
 )
 
 type HubTokenType string

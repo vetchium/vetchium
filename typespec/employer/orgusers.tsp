@@ -94,6 +94,15 @@ model SignupOrgUserRequest {
     password: Password;
 }
 
+model EmployerForgotPasswordRequest {
+    email: EmailAddress;
+}
+
+model EmployerResetPasswordRequest {
+    token: string;
+    password: Password;
+}
+
 @route("/employer/add-org-user")
 interface AddOrgUser {
     @tag("OrgUsers")
@@ -163,6 +172,42 @@ interface SignupOrgUser {
         @doc("Either Invite Token is not found or expired")
         @statusCode
         statusCode: 403;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/forgot-password")
+interface EmployerForgotPassword {
+    @tag("Auth")
+    @doc("Send password reset email to employer user")
+    @post
+    forgotPassword(
+        @body forgotPasswordRequest: EmployerForgotPasswordRequest,
+    ): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("User not found")
+        @statusCode
+        statusCode: 404;
+    } | {
+        @statusCode statusCode: 400;
+        @body error: ValidationErrors;
+    };
+}
+
+@route("/employer/reset-password")
+interface EmployerResetPassword {
+    @tag("Auth")
+    @doc("Reset password using token from email")
+    @post
+    resetPassword(@body resetPasswordRequest: EmployerResetPasswordRequest): {
+        @statusCode statusCode: 200;
+    } | {
+        @doc("Invalid or expired token")
+        @statusCode
+        statusCode: 401;
     } | {
         @statusCode statusCode: 400;
         @body error: ValidationErrors;

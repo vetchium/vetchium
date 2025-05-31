@@ -98,7 +98,9 @@ type DB interface {
 	) (OrgUserTO, error)
 	InitEmployerAndDomain(context.Context, Employer, Domain) error
 	InitEmployerTFA(context.Context, EmployerTFA) error
+	InitEmployerPasswordReset(context.Context, EmployerInitPasswordReset) error
 	OnboardAdmin(context.Context, OnboardReq) error
+	ResetEmployerPassword(context.Context, EmployerPasswordReset) error
 	GetHubUserByEmail(c context.Context, email string) (HubUserTO, error)
 	InitHubUserTFA(context.Context, HubUserTFA) error
 

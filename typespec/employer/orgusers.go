@@ -92,3 +92,12 @@ type SignupOrgUserRequest struct {
 	Password    string `json:"password"     validate:"required,password"`
 	InviteToken string `json:"invite_token" validate:"required,min=1,max=255"`
 }
+
+type EmployerForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type EmployerResetPasswordRequest struct {
+	Token    string `json:"token"    validate:"required,min=1,max=255"`
+	Password string `json:"password" validate:"required,password"`
+}

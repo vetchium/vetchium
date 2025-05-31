@@ -26,6 +26,8 @@ func RegisterEmployerRoutes(h *Hermione) {
 	http.HandleFunc("/employer/set-onboard-password", ea.SetOnboardPassword(h))
 	http.HandleFunc("/employer/signin", ea.EmployerSignin(h))
 	http.HandleFunc("/employer/tfa", ea.EmployerTFA(h))
+	http.HandleFunc("/employer/forgot-password", ea.ForgotPassword(h))
+	http.HandleFunc("/employer/reset-password", ea.ResetPassword(h))
 
 	// CostCenter related endpoints
 	h.mw.Protect(

@@ -645,3 +645,102 @@ func (p *PG) GetEmployerByID(
 
 	return employer, nil
 }
+
+func (p *PG) InitEmployerPasswordReset(
+	ctx context.Context,
+	initPasswordResetReq db.EmployerInitPasswordReset,
+) error {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	tokensQuery := `
+INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
+VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
+`
+	_, err = tx.Exec(
+		ctx,
+		tokensQuery,
+		initPasswordResetReq.Token,
+		initPasswordResetReq.OrgUserID,
+		initPasswordResetReq.ValidityDuration.Minutes(),
+		db.EmployerResetPasswordToken,
+	)
+	if err != nil {
+		p.log.Err("failed to insert password reset token", "error", err)
+		return err
+	}
+
+	emailQuery := `
+INSERT INTO emails (email_from, email_to, email_subject, email_html_body, email_text_body, email_state) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err = tx.Exec(
+		ctx,
+		emailQuery,
+		initPasswordResetReq.Email.EmailFrom,
+		initPasswordResetReq.Email.EmailTo,
+		initPasswordResetReq.Email.EmailSubject,
+		initPasswordResetReq.Email.EmailHTMLBody,
+		initPasswordResetReq.Email.EmailTextBody,
+		initPasswordResetReq.Email.EmailState,
+	)
+	if err != nil {
+		p.log.Err("failed to insert email", "error", err)
+		return err
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		p.log.Err("failed to commit transaction", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (p *PG) ResetEmployerPassword(
+	ctx context.Context,
+	employerPasswordReset db.EmployerPasswordReset,
+) error {
+	query := `
+WITH token_info AS (
+    SELECT org_user_id, token
+    FROM org_user_tokens
+    WHERE token = $2
+),
+password_update AS (
+    UPDATE org_users
+    SET password_hash = $1
+	WHERE id = (SELECT org_user_id FROM token_info)
+    RETURNING id
+)
+DELETE FROM org_user_tokens
+WHERE token = (
+    SELECT token
+    FROM token_info
+)
+AND EXISTS (SELECT 1 FROM password_update)
+RETURNING (SELECT id FROM password_update)
+`
+	var orgUserID uuid.UUID
+	err := p.pool.QueryRow(
+		ctx,
+		query,
+		employerPasswordReset.PasswordHash,
+		employerPasswordReset.Token,
+	).Scan(&orgUserID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			p.log.Dbg("invalid password reset token", "error", err)
+			return db.ErrInvalidPasswordResetToken
+		}
+
+		p.log.Err("failed to reset password", "error", err)
+		return err
+	}
+
+	p.log.Dbg("password reset", "orgUserID", orgUserID)
+
+	return nil
+}
