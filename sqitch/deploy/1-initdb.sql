@@ -288,7 +288,10 @@ CREATE TYPE org_user_token_types AS ENUM (
     'EMPLOYER_LTS',
 
     -- Sent as response to the SignIn API
-    'EMPLOYER_TFA_TOKEN'
+    'EMPLOYER_TFA_TOKEN',
+
+    -- Sent as response to the Reset Password API
+    'EMPLOYER_RESET_PASSWORD_TOKEN'
 );
 CREATE TABLE org_user_tokens (
     token TEXT CONSTRAINT org_user_tokens_pkey PRIMARY KEY,
