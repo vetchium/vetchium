@@ -15,7 +15,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { validatePassword } from "@vetchium/typespec";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 interface ResetPasswordRequest {
@@ -25,7 +25,6 @@ interface ResetPasswordRequest {
 
 function ResetPasswordContent() {
   const { t } = useTranslation();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
