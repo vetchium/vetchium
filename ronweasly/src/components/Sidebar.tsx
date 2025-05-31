@@ -4,7 +4,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import HomeIcon from "@mui/icons-material/Home";
 import MessageIcon from "@mui/icons-material/Message";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
@@ -51,9 +50,8 @@ export default function Sidebar({ open }: SidebarProps) {
   };
 
   const menuItems = [
-    { text: "home", icon: <HomeIcon />, path: "/" },
-    { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
     { text: "posts", icon: <MessageIcon />, path: "/posts" },
+    { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
     {
       text: "myApplications",
       icon: <AssignmentIcon />,

@@ -130,12 +130,6 @@ export const en = {
       invalidCodeLength: "Code must be 4 characters",
     },
   },
-  dashboard: {
-    title: "Dashboard",
-    recentApplications: "Recent Applications",
-    activeOpenings: "Active Openings",
-    upcomingInterviews: "Upcoming Interviews",
-  },
   employerDetails: {
     activeOpenings: "Active Openings",
     error: {
@@ -224,7 +218,6 @@ export const en = {
     },
   },
   navigation: {
-    home: "Home",
     findOpenings: "Find Openings",
     posts: "Posts",
     myApplications: "My Applications",
@@ -585,7 +578,7 @@ export const en = {
       description: "Your account is created successfully.",
       handle:
         "Your generated handle is: {handle} If you are a paid user, you can change your Handle in the Settings page",
-      redirecting: "Redirecting to dashboard...",
+      redirecting: "Redirecting to posts in {{seconds}} seconds...",
     },
   },
   education: {

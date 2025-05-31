@@ -16,9 +16,9 @@ export function middleware(request: NextRequest) {
 
   // Allow public paths
   if (publicPaths.includes(pathname)) {
-    // If user is already authenticated, redirect to home
+    // If user is already authenticated, redirect to posts
     if (sessionToken) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/posts", request.url));
     }
     return NextResponse.next();
   }
