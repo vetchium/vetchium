@@ -60,8 +60,8 @@ const (
 )
 
 type OnboardHubUserRequest struct {
-	Token               string             `json:"token"                 validate:"required"`
-	FullName            string             `json:"full_name"             validate:"required"`
+	Token               string             `json:"token"                 validate:"required,min=1,max=255"`
+	FullName            string             `json:"full_name"             validate:"required,min=1,max=64,validate_printable_text"`
 	ResidentCountryCode common.CountryCode `json:"resident_country_code" validate:"required,validate_country_code"`
 	Password            common.Password    `json:"password"              validate:"required,password"`
 	SelectedTier        HubUserTier        `json:"selected_tier"         validate:"required"`
@@ -70,8 +70,8 @@ type OnboardHubUserRequest struct {
 	PreferredLanguage string `json:"preferred_language" validate:"required,eq=en"`
 
 	// TODO: Make the lengths consistent across various APIs
-	ShortBio string `json:"short_bio" validate:"required,max=64"`
-	LongBio  string `json:"long_bio"  validate:"required,max=2048"`
+	ShortBio string `json:"short_bio" validate:"required,min=1,max=64,validate_printable_text"`
+	LongBio  string `json:"long_bio"  validate:"required,min=1,max=2048,validate_printable_text"`
 }
 
 type OnboardHubUserResponse struct {

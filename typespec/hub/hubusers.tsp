@@ -62,8 +62,8 @@ model HubUserInviteRequest {
 
 @doc("Enum representing the possible tiers for a hub user")
 union HubUserTier {
-    FreeTier: "FREE_TIER",
-    PaidTier: "PAID_TIER",
+    FreeTier: "FREE_HUB_USER",
+    PaidTier: "PAID_HUB_USER",
 }
 
 model OnboardHubUserRequest {

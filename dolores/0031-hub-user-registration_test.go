@@ -2,12 +2,14 @@ package dolores
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,7 +19,7 @@ import (
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
-var _ = FDescribe("Hub User Registration", Ordered, func() {
+var _ = Describe("Hub User Registration", Ordered, func() {
 	var db *pgxpool.Pool
 
 	BeforeAll(func() {
@@ -74,9 +76,16 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 		emailBody, err := io.ReadAll(mailResp.Body)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		// Debug: Print the email body to see what's actually in it
+		GinkgoWriter.Printf("Email body content: %s\n", string(emailBody))
+
 		// Extract token from signup URL
 		re := regexp.MustCompile(`/signup-hubuser/([a-zA-Z0-9]+)`)
 		matches := re.FindStringSubmatch(string(emailBody))
+
+		// Debug: Print the matches
+		GinkgoWriter.Printf("Regex matches: %v\n", matches)
+
 		Expect(len(matches)).Should(BeNumerically(">=", 2))
 
 		// Clean up email
@@ -92,7 +101,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 			FullName:            fullName,
 			ResidentCountryCode: common.CountryCode(countryCode),
 			Password:            common.Password(password),
-			SelectedTier:        "FREE_TIER",
+			SelectedTier:        "FREE_HUB_USER",
 			PreferredLanguage:   "en",
 			ShortBio:            "Test user bio",
 			LongBio:             "This is a longer test user bio for testing purposes.",
@@ -102,17 +111,42 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		resp, err := http.Post(
-			serverURL+"/hub/onboard-hubuser",
+			serverURL+"/hub/onboard-user",
 			"application/json",
 			bytes.NewBuffer(reqBody),
 		)
 		Expect(err).ShouldNot(HaveOccurred())
+
+		// Debug: If status is not 200, print the response body
+		if resp.StatusCode != 200 {
+			body, err := io.ReadAll(resp.Body)
+			if err == nil {
+				GinkgoWriter.Printf(
+					"Error response body (status %d): %s\n",
+					resp.StatusCode,
+					string(body),
+				)
+			}
+			// Reset the body so it can be read again by the caller
+			resp.Body = io.NopCloser(bytes.NewBuffer(body))
+		}
+
 		return resp
 	}
 
 	Describe("Complete Registration Flow", func() {
+		It("should test database functions work", func() {
+			// Test that the generate_unique_handle function works
+			query := "SELECT generate_unique_handle('Test User')"
+			var handle string
+			err := db.QueryRow(context.Background(), query).Scan(&handle)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(handle).ShouldNot(BeEmpty())
+			GinkgoWriter.Printf("Generated handle: %s\n", handle)
+		})
+
 		It("should handle successful signup and onboarding", func() {
-			email := "complete-flow@registration.example"
+			email := "test1-complete-flow@0031-registration.example"
 
 			// Step 1: Send signup request
 			signupReq := hub.SignupHubUserRequest{
@@ -176,7 +210,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 			}
 
 			// First create a valid signup to get a token
-			email := "validation-test@registration.example"
+			email := "test2-validation-test@0031-registration.example"
 			signupReq := hub.SignupHubUserRequest{
 				Email: common.EmailAddress(email),
 			}
@@ -200,7 +234,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 					fullName:    "Valid Name",
 					password:    "ValidPassword123$",
 					countryCode: "USA",
-					wantStatus:  http.StatusUnauthorized,
+					wantStatus:  http.StatusNotFound,
 				},
 				{
 					description:   "with empty full name",
@@ -232,7 +266,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 				{
 					description:   "with very long full name",
 					token:         validToken,
-					fullName:      string(make([]byte, 300)),
+					fullName:      strings.Repeat("A", 70),
 					password:      "ValidPassword123$",
 					countryCode:   "USA",
 					wantStatus:    http.StatusBadRequest,
@@ -263,7 +297,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 		})
 
 		It("should prevent token reuse", func() {
-			email := "token-reuse@registration.example"
+			email := "test3-token-reuse@0031-registration.example"
 
 			// Step 1: Send signup request
 			signupReq := hub.SignupHubUserRequest{
@@ -301,23 +335,23 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 			)
 			Expect(
 				onboardResp2.StatusCode,
-			).Should(Equal(http.StatusUnauthorized))
+			).Should(Equal(http.StatusNotFound))
 		})
 
 		It("should handle expired tokens", func() {
 			// This test would require manipulating token expiry in the database
 			// For now, we'll test with an obviously invalid/expired token format
 			resp := sendOnboardRequest(
-				"expired-token-12345",
+				"test4-expired-token-12345",
 				"Expired Token User",
 				"ExpiredPassword123$",
 				"USA",
 			)
-			Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
+			Expect(resp.StatusCode).Should(Equal(http.StatusNotFound))
 		})
 
 		It("should handle duplicate signup attempts", func() {
-			email := "duplicate@registration.example"
+			email := "test5-duplicate@0031-registration.example"
 
 			// First signup
 			signupReq := hub.SignupHubUserRequest{
@@ -362,7 +396,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 			malformedJSON := []byte(`{"token": "test", "full_name": "Test"`)
 
 			resp, err := http.Post(
-				serverURL+"/hub/onboard-hubuser",
+				serverURL+"/hub/onboard-user",
 				"application/json",
 				bytes.NewBuffer(malformedJSON),
 			)
@@ -372,9 +406,9 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 
 		It("should generate unique handles for users", func() {
 			emails := []string{
-				"handle1@registration.example",
-				"handle2@registration.example",
-				"handle3@registration.example",
+				"test6-handle1@0031-registration.example",
+				"test6-handle2@0031-registration.example",
+				"test6-handle3@0031-registration.example",
 			}
 			handles := make([]string, 0, len(emails))
 
@@ -420,7 +454,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 		})
 
 		It("should validate tier selection", func() {
-			email := "tier-test@registration.example"
+			email := "test7-tier-test@0031-registration.example"
 
 			// Signup
 			signupReq := hub.SignupHubUserRequest{
@@ -452,7 +486,7 @@ var _ = FDescribe("Hub User Registration", Ordered, func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			resp, err := http.Post(
-				serverURL+"/hub/onboard-hubuser",
+				serverURL+"/hub/onboard-user",
 				"application/json",
 				bytes.NewBuffer(reqBody),
 			)

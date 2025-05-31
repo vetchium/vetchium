@@ -782,6 +782,41 @@ func InitValidator(log util.Logger) (*Vator, error) {
 		return nil, err
 	}
 
+	err = validate.RegisterValidation(
+		"validate_printable_text",
+		func(fl validator.FieldLevel) bool {
+			text := fl.Field().String()
+
+			// Check for null characters and other control characters
+			for _, char := range text {
+				// Reject null characters (0x00) and most control characters
+				// Allow only printable characters, spaces, tabs, and newlines
+				if char == 0 ||
+					(char < 32 && char != 9 && char != 10 && char != 13) {
+					log.Dbg(
+						"text contains invalid control characters",
+						"text",
+						text,
+					)
+					return false
+				}
+			}
+
+			// Trim whitespace and check if the result is not empty
+			trimmed := strings.TrimSpace(text)
+			if len(trimmed) == 0 {
+				log.Dbg("text is empty or only whitespace", "text", text)
+				return false
+			}
+
+			return true
+		},
+	)
+	if err != nil {
+		log.Err("failed to register printable text validation", "error", err)
+		return nil, err
+	}
+
 	return &Vator{validate: validate, log: log}, nil
 }
 
