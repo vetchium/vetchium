@@ -37,6 +37,42 @@ export const en = {
     verify: "Verify",
     submit: "Submit",
     rememberMe: "Remember me",
+    forgotPassword: {
+      title: "Reset Password",
+      description:
+        "Enter your email address and we'll send you a link to reset your password",
+      emailLabel: "Email Address",
+      sendLinkButton: "Send Reset Link",
+      success:
+        "Password reset link has been sent to your email address. Please check your inbox and follow the instructions.",
+      backToSignin: "Back to Sign In",
+      error: {
+        invalidEmail: "Please enter a valid email address",
+        sendFailed: "Failed to send reset link. Please try again later.",
+        userNotFound: "No account found with this email address",
+      },
+    },
+    resetPassword: {
+      title: "Create New Password",
+      description: "Enter your new password below",
+      passwordLabel: "New Password",
+      confirmPasswordLabel: "Confirm New Password",
+      resetButton: "Reset Password",
+      success:
+        "Your password has been reset successfully. You can now sign in with your new password.",
+      backToSignin: "Go to Sign In",
+      error: {
+        invalidToken:
+          "Invalid or expired reset link. Please request a new password reset.",
+        passwordRequired: "Password is required",
+        passwordsDoNotMatch: "Passwords do not match",
+        resetFailed: "Failed to reset password. Please try again later.",
+        weakPassword: "Password does not meet security requirements",
+      },
+      passwordHelp:
+        "Password must be at least 12 characters long and include uppercase, lowercase, numbers, and special characters.",
+    },
+    forgotPasswordLink: "Forgot your password?",
     domainNotVerifiedDetail:
       "TXT record `vetchiumadmin.<your_domain>` not found or is incorrect. Please verify your DNS settings. Propagation may take a few hours.",
     domainVerifyPendingDetail:

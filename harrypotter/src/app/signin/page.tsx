@@ -21,6 +21,7 @@ import {
   OnboardStatuses,
 } from "@vetchium/typespec";
 import Cookies from "js-cookie";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -196,6 +197,16 @@ export default function SignIn() {
               >
                 {t("auth.submit")}
               </Button>
+              <Box sx={{ textAlign: "center" }}>
+                <Link
+                  href="/forgot-password"
+                  style={{ textDecoration: "none" }}
+                >
+                  <Typography variant="body2" color="primary">
+                    {t("auth.forgotPasswordLink")}
+                  </Typography>
+                </Link>
+              </Box>
             </>
           )}
         </Box>

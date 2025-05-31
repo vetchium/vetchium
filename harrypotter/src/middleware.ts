@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/signin", "/tfa"];
+const PUBLIC_PATHS = ["/signin", "/tfa", "/forgot-password", "/reset-password"];
 const PUBLIC_PATH_PREFIXES = ["/signup-orguser/"];
 
 export function middleware(request: NextRequest) {

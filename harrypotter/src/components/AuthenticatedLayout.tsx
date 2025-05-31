@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
+import { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -13,6 +14,7 @@ export default function AuthenticatedLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const theme = useTheme();
+  useAuth(); // Check authentication and redirect if not authenticated
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
