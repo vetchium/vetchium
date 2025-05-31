@@ -76,7 +76,7 @@ hermione:
     hubSessionTokLife: "15m"
     hubLtsTokLife: "730h"
     hubUserInviteTokLife: "5m"
-    hubPasswordResetTokLife: "5m"
+    passwordResetTokLife: "5m"
     port: "8080"
     timingAttackDelay: "1s"
   secrets:

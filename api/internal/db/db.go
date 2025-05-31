@@ -149,6 +149,11 @@ type DB interface {
 		employer.UpdateOrgUserRequest,
 	) (uuid.UUID, error)
 	GetOrgUserByEmail(context.Context, string) (OrgUserTO, error)
+	GetOrgUserByEmailAndDomain(
+		context.Context,
+		string,
+		string,
+	) (OrgUserTO, error)
 
 	// Used by granger
 	CreateOnboardEmail(context.Context, OnboardEmailInfo) error

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/vetchium/vetchium/api/internal/db"
@@ -43,7 +44,7 @@ func ForgotPassword(h wand.Wand) http.HandlerFunc {
 		h.Dbg("validated", "forgotPasswordRequest", forgotPasswordRequest)
 
 		orgUser, err := h.DB().
-			GetOrgUserByEmail(r.Context(), forgotPasswordRequest.Email)
+			GetOrgUserByEmailAndDomain(r.Context(), forgotPasswordRequest.Email, strings.Split(forgotPasswordRequest.Email, "@")[1])
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
 				// Send OK irrespective of whether the user exists or not

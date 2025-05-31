@@ -300,6 +300,26 @@ func (p *PG) InitHubUserPasswordReset(
 	}
 	defer tx.Rollback(context.Background())
 
+	// Delete any existing password reset tokens for this user
+	deleteTokensQuery := `
+DELETE FROM hub_user_tokens 
+WHERE hub_user_id = $1 AND token_type = $2
+`
+	_, err = tx.Exec(
+		ctx,
+		deleteTokensQuery,
+		initPasswordResetReq.HubUserID,
+		db.HubUserResetPasswordToken,
+	)
+	if err != nil {
+		p.log.Err(
+			"failed to delete existing password reset tokens",
+			"error",
+			err,
+		)
+		return err
+	}
+
 	tokensQuery := `
 INSERT INTO hub_user_tokens(token, hub_user_id, token_valid_till, token_type)
 VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)

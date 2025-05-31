@@ -18,11 +18,11 @@ data:
         "tfa_tok_life": "5m",
         "session_tok_life": "15m",
         "lts_tok_life": "730h",
-        "hub_user_invite_tok_life": "5m",
-        "password_reset_tok_life": "5m"
+        "hub_user_invite_tok_life": "5m"
       },
       "port": "8080",
-      "timing_attack_delay": "1s"
+      "timing_attack_delay": "1s",
+      "password_reset_tok_life": "5m"
     }
 ---
 apiVersion: apps/v1

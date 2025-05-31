@@ -17,11 +17,11 @@ data:
         "tfa_tok_life": {{ .Values.hermione.config.hubTfaTokLife | quote }},
         "session_tok_life": {{ .Values.hermione.config.hubSessionTokLife | quote }},
         "lts_tok_life": {{ .Values.hermione.config.hubLtsTokLife | quote }},
-        "hub_user_invite_tok_life": {{ .Values.hermione.config.hubUserInviteTokLife | quote }},
-        "password_reset_tok_life": {{ .Values.hermione.config.hubPasswordResetTokLife | quote }}
+        "hub_user_invite_tok_life": {{ .Values.hermione.config.hubUserInviteTokLife | quote }}
       },
       "port": {{ .Values.hermione.config.port | quote }},
-      "timing_attack_delay": {{ .Values.hermione.config.timingAttackDelay | quote }}
+      "timing_attack_delay": {{ .Values.hermione.config.timingAttackDelay | quote }},
+      "password_reset_tok_life": {{ .Values.hermione.config.passwordResetTokLife | quote }}
     }
 ---
 apiVersion: apps/v1

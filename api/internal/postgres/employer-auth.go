@@ -656,6 +656,26 @@ func (p *PG) InitEmployerPasswordReset(
 	}
 	defer tx.Rollback(context.Background())
 
+	// Delete any existing password reset tokens for this user
+	deleteTokensQuery := `
+DELETE FROM org_user_tokens 
+WHERE org_user_id = $1 AND token_type = $2
+`
+	_, err = tx.Exec(
+		ctx,
+		deleteTokensQuery,
+		initPasswordResetReq.OrgUserID,
+		db.EmployerResetPasswordToken,
+	)
+	if err != nil {
+		p.log.Err(
+			"failed to delete existing password reset tokens",
+			"error",
+			err,
+		)
+		return err
+	}
+
 	tokensQuery := `
 INSERT INTO org_user_tokens(token, org_user_id, token_valid_till, token_type)
 VALUES ($1, $2, (NOW() AT TIME ZONE 'utc' + ($3 * INTERVAL '1 minute')), $4)
