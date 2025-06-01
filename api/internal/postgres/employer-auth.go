@@ -424,12 +424,21 @@ WHERE
 			return db.OrgUserAuth{}, db.ErrNoOrgUser
 		}
 
-		p.log.Err("failed to query org user auth", "error", err)
+		p.log.Err(
+			"failed to query org user auth",
+			"error",
+			err,
+			"email",
+			orgUserCreds.Email,
+			"clientID",
+			orgUserCreds.ClientID,
+		)
 		return db.OrgUserAuth{}, err
 	}
 
 	orgUserAuth.OrgUserRoles, err = p.convertToOrgUserRoles(roles)
 	if err != nil {
+		p.log.Err("failed to convert org user roles", "error", err)
 		return db.OrgUserAuth{}, err
 	}
 
@@ -729,7 +738,7 @@ func (p *PG) ResetEmployerPassword(
 WITH token_info AS (
     SELECT org_user_id, token
     FROM org_user_tokens
-    WHERE token = $2
+    WHERE token = $2 AND token_valid_till > NOW()
 ),
 password_update AS (
     UPDATE org_users

@@ -371,7 +371,7 @@ func (p *PG) ResetHubUserPassword(
 WITH token_info AS (
     SELECT hub_user_id, token
     FROM hub_user_tokens
-    WHERE token = $2
+    WHERE token = $2 AND token_valid_till > NOW()
 ),
 password_update AS (
     UPDATE hub_users

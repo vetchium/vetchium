@@ -20,6 +20,8 @@ import (
 
 func EmployerSignin(h wand.Wand) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		h.Dbg("Entered EmployerSignin")
+
 		// Simulate a random delay to avoid timing attacks
 		<-time.After(
 			time.Millisecond * time.Duration(
@@ -31,13 +33,20 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&employerSigninReq)
 		if err != nil {
+			h.Dbg("failed to decode signin request", "error", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if !h.Vator().Struct(w, &employerSigninReq) {
+			h.Dbg("validation failed")
 			return
 		}
+
+		h.Dbg("validated",
+			"clientID", employerSigninReq.ClientID,
+			"email", employerSigninReq.Email,
+		)
 
 		orgUserAuth, err := h.DB().GetOrgUserAuth(
 			r.Context(),
@@ -48,16 +57,31 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 		)
 		if err != nil {
 			if errors.Is(err, db.ErrNoOrgUser) {
+				h.Dbg("no org user found",
+					"clientID", employerSigninReq.ClientID,
+					"email", employerSigninReq.Email,
+				)
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 
+			h.Dbg("database error getting org user", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
+		h.Dbg("org user found",
+			"orgUserID", orgUserAuth.OrgUserID,
+			"orgUserState", orgUserAuth.OrgUserState,
+			"employerState", orgUserAuth.EmployerState,
+		)
+
 		if orgUserAuth.OrgUserState != employer.ActiveOrgUserState ||
 			orgUserAuth.EmployerState != db.OnboardedEmployerState {
+			h.Dbg("user or employer state check failed",
+				"orgUserState", orgUserAuth.OrgUserState,
+				"employerState", orgUserAuth.EmployerState,
+			)
 			http.Error(w, "", http.StatusUnprocessableEntity)
 			return
 		}
@@ -67,9 +91,12 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			[]byte(employerSigninReq.Password),
 		)
 		if err != nil {
+			h.Dbg("password check failed", "error", err)
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
+
+		h.Dbg("password check passed")
 
 		tfaMailCode, err := util.RandNumString(6)
 		if err != nil {
@@ -109,6 +136,7 @@ func EmployerSignin(h wand.Wand) http.HandlerFunc {
 			},
 		)
 		if err != nil {
+			h.Dbg("failed to init employer tfa", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}

@@ -45,21 +45,6 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		// Debug: log response body if not successful
-		if resp.StatusCode >= 400 {
-			body, err := io.ReadAll(resp.Body)
-			if err == nil {
-				fmt.Fprintf(
-					GinkgoWriter,
-					"Error response body: %s\n",
-					string(body),
-				)
-			}
-			resp.Body.Close()
-			// Recreate body for caller
-			resp.Body = io.NopCloser(bytes.NewReader(body))
-		}
-
 		return resp
 	}
 
@@ -153,7 +138,7 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 
 	verifyEmployerLogin := func(email, password string) {
 		sessionToken, err := employerSignin(
-			"passwordreset.example",
+			"0029-passwordreset.example",
 			email,
 			password,
 		)
@@ -163,6 +148,11 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 
 	Describe("Forgot Password", func() {
 		It("should handle various forgot password scenarios", func() {
+			email := "test001-forgot-scenarios@0029-passwordreset.example"
+
+			// Verify original password works before testing forgot password
+			verifyEmployerLogin(email, "NewPassword123$")
+
 			type forgotPasswordTestCase struct {
 				description  string
 				email        string
@@ -174,19 +164,19 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			testCases := []forgotPasswordTestCase{
 				{
 					description: "with valid active user email",
-					email:       "active@passwordreset.example",
+					email:       email,
 					wantStatus:  http.StatusOK,
 					checkEmail:  true,
 				},
 				{
 					description: "with valid disabled user email",
-					email:       "disabled@passwordreset.example",
+					email:       "test008-disabled@0029-passwordreset.example",
 					wantStatus:  http.StatusOK,
 					checkEmail:  true,
 				},
 				{
 					description: "with non-existent email",
-					email:       "nonexistent@passwordreset.example",
+					email:       "nonexistent@0029-passwordreset.example",
 					wantStatus:  http.StatusOK,
 					checkEmail:  false,
 				},
@@ -215,14 +205,14 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 					email: strings.Repeat(
 						"a",
 						250,
-					) + "@passwordreset.example",
+					) + "@0029-passwordreset.example",
 					wantStatus:   http.StatusBadRequest,
 					checkEmail:   false,
 					wantErrField: "email",
 				},
 				{
 					description:  "with SQL injection attempt",
-					email:        "test'; DROP TABLE org_users; --@passwordreset.example",
+					email:        "test'; DROP TABLE org_users; --@0029-passwordreset.example",
 					wantStatus:   http.StatusBadRequest,
 					checkEmail:   false,
 					wantErrField: "email",
@@ -230,8 +220,6 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
-
 				resp := sendForgotPasswordRequest(tc.email)
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
@@ -252,12 +240,18 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 					cleanupEmail(messageID)
 				}
 			}
+
+			// Verify original password still works after forgot password requests
+			verifyEmployerLogin(email, "NewPassword123$")
 		})
 
 		It(
 			"should invalidate previous tokens when multiple requests are made",
 			func() {
-				email := "multiple-requests@passwordreset.example"
+				email := "test002-multiple-requests@0029-passwordreset.example"
+
+				// Verify original password works before test
+				verifyEmployerLogin(email, "NewPassword123$")
 
 				// Send first forgot password request
 				resp1 := sendForgotPasswordRequest(email)
@@ -266,6 +260,9 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 				// Get first token
 				token1, messageID1 := getPasswordResetTokenFromEmail(email)
 				cleanupEmail(messageID1)
+
+				// Verify original password still works
+				verifyEmployerLogin(email, "NewPassword123$")
 
 				// Send second forgot password request
 				resp2 := sendForgotPasswordRequest(email)
@@ -287,6 +284,9 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 					resetResp1.StatusCode,
 				).Should(Equal(http.StatusUnauthorized))
 
+				// Verify original password still works after failed reset
+				verifyEmployerLogin(email, "NewPassword123$")
+
 				// Use second token - should succeed
 				resetResp2 := sendResetPasswordRequest(
 					token2,
@@ -302,6 +302,11 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 
 	Describe("Reset Password", func() {
 		It("should handle various reset password scenarios", func() {
+			email := "test003-reset-scenarios@0029-passwordreset.example"
+
+			// Verify original password works before test
+			verifyEmployerLogin(email, "NewPassword123$")
+
 			type resetPasswordTestCase struct {
 				description  string
 				setupEmail   string
@@ -313,10 +318,12 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			}
 
 			// Setup valid token for positive test cases
-			validEmail := "valid-reset@passwordreset.example"
-			sendForgotPasswordRequest(validEmail)
-			validToken, messageID := getPasswordResetTokenFromEmail(validEmail)
+			sendForgotPasswordRequest(email)
+			validToken, messageID := getPasswordResetTokenFromEmail(email)
 			defer cleanupEmail(messageID)
+
+			// Verify original password still works after forgot password
+			verifyEmployerLogin(email, "NewPassword123$")
 
 			testCases := []resetPasswordTestCase{
 				{
@@ -325,7 +332,7 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 					password:    "NewValidPassword123$",
 					wantStatus:  http.StatusOK,
 					verifyLogin: true,
-					setupEmail:  validEmail,
+					setupEmail:  email,
 				},
 				{
 					description: "with invalid token",
@@ -377,8 +384,6 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			}
 
 			for _, tc := range testCases {
-				fmt.Fprintf(GinkgoWriter, "#### %s\n", tc.description)
-
 				resp := sendResetPasswordRequest(tc.token, tc.password)
 				Expect(resp.StatusCode).Should(Equal(tc.wantStatus))
 
@@ -398,7 +403,10 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 		})
 
 		It("should handle token expiry", func() {
-			email := "token-expiry@passwordreset.example"
+			email := "test004-token-expiry@0029-passwordreset.example"
+
+			// Verify original password works before test
+			verifyEmployerLogin(email, "NewPassword123$")
 
 			// Send forgot password request
 			resp := sendForgotPasswordRequest(email)
@@ -408,19 +416,25 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			resetToken, messageID := getPasswordResetTokenFromEmail(email)
 			cleanupEmail(messageID)
 
-			// Wait for token to expire (password reset tokens have short validity in test config)
-			<-time.After(7 * time.Minute)
+			// Verify original password still works after forgot password
+			verifyEmployerLogin(email, "NewPassword123$")
+
+			// Wait for token to expire (tokens expire after 5 minutes in test config)
+			<-time.After(6 * time.Minute)
 
 			// Try to use expired token
 			resetResp := sendResetPasswordRequest(resetToken, "NewPassword123$")
 			Expect(resetResp.StatusCode).Should(Equal(http.StatusUnauthorized))
 
-			// Verify original password still works
+			// Verify original password still works after expired token attempt
 			verifyEmployerLogin(email, "NewPassword123$")
 		})
 
 		It("should prevent token reuse", func() {
-			email := "token-reuse@passwordreset.example"
+			email := "test005-token-reuse@0029-passwordreset.example"
+
+			// Verify original password works before test
+			verifyEmployerLogin(email, "NewPassword123$")
 
 			// Send forgot password request
 			resp := sendForgotPasswordRequest(email)
@@ -429,6 +443,9 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			// Get reset token
 			resetToken, messageID := getPasswordResetTokenFromEmail(email)
 			cleanupEmail(messageID)
+
+			// Verify original password still works after forgot password
+			verifyEmployerLogin(email, "NewPassword123$")
 
 			// First password reset should succeed
 			resetResp1 := sendResetPasswordRequest(
@@ -452,30 +469,38 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 		})
 
 		It("should handle cross-employer token attempts", func() {
+			email := "test006-cross-employer@0029-passwordreset.example"
+
+			// Verify original password works before test
+			verifyEmployerLogin(email, "NewPassword123$")
+
 			// Setup token for one employer
-			email1 := "cross-test@passwordreset.example"
-			resp1 := sendForgotPasswordRequest(email1)
+			resp1 := sendForgotPasswordRequest(email)
 			Expect(resp1.StatusCode).Should(Equal(http.StatusOK))
 
-			token1, messageID1 := getPasswordResetTokenFromEmail(email1)
+			token1, messageID1 := getPasswordResetTokenFromEmail(email)
 			defer cleanupEmail(messageID1)
 
-			// Try to use token from different employer context
-			// This should fail as tokens are tied to specific employers
+			// Verify original password still works after forgot password
+			verifyEmployerLogin(email, "NewPassword123$")
+
+			// Use token - should work for the correct user
 			resetResp := sendResetPasswordRequest(token1, "HackedPassword123$")
-			// Token should be valid for the correct user
 			Expect(resetResp.StatusCode).Should(Equal(http.StatusOK))
 
-			// Verify login works
-			verifyEmployerLogin(email1, "HackedPassword123$")
+			// Verify login works with new password
+			verifyEmployerLogin(email, "HackedPassword123$")
 		})
 
 		It("should maintain session validity after password reset", func() {
-			email := "session-test@passwordreset.example"
+			email := "test007-session-validity@0029-passwordreset.example"
+
+			// Verify original password works before test
+			verifyEmployerLogin(email, "NewPassword123$")
 
 			// Get session token before password reset
 			sessionToken, err := employerSignin(
-				"passwordreset.example",
+				"0029-passwordreset.example",
 				email,
 				"NewPassword123$",
 			)
@@ -486,7 +511,7 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 				"GET",
 				serverURL+"/employer/get-onboard-status",
 				bytes.NewBuffer(
-					[]byte(`{"client_id": "passwordreset.example"}`),
+					[]byte(`{"client_id": "0029-passwordreset.example"}`),
 				),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -504,6 +529,9 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			resetToken, messageID := getPasswordResetTokenFromEmail(email)
 			defer cleanupEmail(messageID)
 
+			// Verify original password still works before reset
+			verifyEmployerLogin(email, "NewPassword123$")
+
 			resetResp := sendResetPasswordRequest(
 				resetToken,
 				"NewSessionPassword123$",
@@ -511,12 +539,11 @@ var _ = Describe("Employer Password Reset", Ordered, func() {
 			Expect(resetResp.StatusCode).Should(Equal(http.StatusOK))
 
 			// Session should still work after password reset
-			// (implementation detail - some systems invalidate sessions, others don't)
 			req2, err := http.NewRequest(
 				"GET",
 				serverURL+"/employer/get-onboard-status",
 				bytes.NewBuffer(
-					[]byte(`{"client_id": "passwordreset.example"}`),
+					[]byte(`{"client_id": "0029-passwordreset.example"}`),
 				),
 			)
 			Expect(err).ShouldNot(HaveOccurred())
