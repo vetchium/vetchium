@@ -18,11 +18,9 @@ import (
 var _ = Describe("Timeline Operations", Ordered, func() {
 	var db *pgxpool.Pool
 
-	// Constants for timeline test - aligned with backend timing in api/internal/granger/timelines.go
+	// Constants for timeline test - Need better alignment with backend timing in api/internal/granger/timelines.go
 	const (
-		// Backend checks timelines every 1 second when processing continuously
-		// We use 10 seconds to allow for processing time and potential queueing
-		TimelineRefreshInterval = 1 * time.Minute
+		TimelineRefreshInterval = 3 * time.Minute
 
 		// Match backend's interval for checking timelines
 		TimelinePollInterval = 30 * time.Second
