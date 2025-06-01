@@ -11,7 +11,8 @@ WHERE hub_user_id IN (
         'token-expiry@hub.example',
         'token-reuse@hub.example',
         'rememberme@hub.example',
-        'tfatest@hub.example'
+        'tfatest@hub.example',
+        'multiple-requests@hub.example'
     )
 );
 
@@ -25,6 +26,7 @@ WHERE email IN (
     'token-expiry@hub.example',
     'token-reuse@hub.example',
     'rememberme@hub.example',
-    'tfatest@hub.example'
+    'tfatest@hub.example',
+    'multiple-requests@hub.example'
 );
 COMMIT;
