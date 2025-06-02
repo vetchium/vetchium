@@ -10,11 +10,11 @@ spec:
     metadata:
       labels:
         app: ronweasly
-        version: {{ .Values.ronweasly.image.tag }}
+        version: {{ .Values.ronweasly.image.tag | default .Values.global.imageTag }}
     spec:
       containers:
         - name: ronweasly
-          image: "{{ .Values.ronweasly.image.repository }}:{{ .Values.ronweasly.image.tag }}"
+          image: "{{ .Values.ronweasly.image.repository }}:{{ .Values.ronweasly.image.tag | default .Values.global.imageTag }}"
           ports:
             - containerPort: {{ .Values.ronweasly.service.targetPort }}
           resources:
@@ -43,7 +43,7 @@ kind: Service
 metadata:
   name: ronweasly
 spec:
-  type: {{ .Values.harrypotter.service.type }}
+  type: {{ .Values.ronweasly.service.type }}
   selector:
     app: ronweasly
   ports:

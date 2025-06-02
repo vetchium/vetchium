@@ -1,1 +1,3 @@
 api/internal/hedwig/templates/*.html
+devtest-helm/vetchium-env-helm/charts/grafana-dashboard/templates/**
+devtest-helm/vetchium-apps-helm/templates/**

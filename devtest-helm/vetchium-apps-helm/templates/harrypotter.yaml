@@ -10,11 +10,11 @@ spec:
     metadata:
       labels:
         app: harrypotter
-        version: {{ .Values.harrypotter.image.tag }}
+        version: {{ .Values.harrypotter.image.tag | default .Values.global.imageTag }}
     spec:
       containers:
         - name: harrypotter
-          image: "{{ .Values.harrypotter.image.repository }}:{{ .Values.harrypotter.image.tag }}"
+          image: "{{ .Values.harrypotter.image.repository }}:{{ .Values.harrypotter.image.tag | default .Values.global.imageTag }}"
           ports:
             - containerPort: {{ .Values.harrypotter.service.targetPort }}
 ---

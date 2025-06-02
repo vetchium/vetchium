@@ -10,7 +10,7 @@ spec:
     metadata:
       labels:
         app: dev-seed
-        version: {{ .Values.devSeed.image.tag }}
+        version: {{ .Values.devSeed.image.tag | default .Values.global.imageTag }}
     spec:
       serviceAccountName: dev-seed-sa
       initContainers:
@@ -30,7 +30,7 @@ spec:
               done
       containers:
         - name: dev-seed
-          image: "{{ .Values.devSeed.image.repository }}:{{ .Values.devSeed.image.tag }}"
+          image: "{{ .Values.devSeed.image.repository }}:{{ .Values.devSeed.image.tag | default .Values.global.imageTag }}"
           env:
             - name: POSTGRES_URI
               valueFrom:

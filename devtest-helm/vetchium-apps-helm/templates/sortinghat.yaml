@@ -21,12 +21,12 @@ spec:
     metadata:
       labels:
         app: sortinghat
-        version: {{ .Values.sortinghat.image.tag }}
+        version: {{ .Values.sortinghat.image.tag | default .Values.global.imageTag }}
     spec:
       serviceAccountName: sortinghat-sa
       containers:
         - name: sortinghat
-          image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag }}"
+          image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag | default .Values.global.imageTag }}"
           ports:
             - containerPort: {{ .Values.sortinghat.config.port | int }}
           env:

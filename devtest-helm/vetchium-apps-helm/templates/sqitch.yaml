@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sqitch-{{ .Values.sqitch.image.tag }}
+  name: sqitch-{{ .Values.sqitch.image.tag | default .Values.global.imageTag }}
   labels:
     app: sqitch
 spec:
@@ -10,7 +10,7 @@ spec:
     metadata:
       labels:
         app: sqitch
-        version: {{ .Values.sqitch.image.tag }}
+        version: {{ .Values.sqitch.image.tag | default .Values.global.imageTag }}
     spec:
       serviceAccountName: sqitch-sa
       initContainers:
@@ -25,7 +25,7 @@ spec:
               done
       containers:
         - name: sqitch
-          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag }}"
+          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag | default .Values.global.imageTag }}"
           imagePullPolicy: {{ .Values.sqitch.image.pullPolicy }}
           command: ["sh", "-c"]
           args:
@@ -53,7 +53,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vetchium-tags-creat-{{ .Values.sqitch.image.tag }}
+  name: vetchium-tags-creat-{{ .Values.sqitch.image.tag | default .Values.global.imageTag }}
   labels:
     app: vetchium-tags-creat
 spec:
@@ -62,7 +62,7 @@ spec:
     metadata:
       labels:
         app: vetchium-tags-creat
-        version: {{ .Values.sqitch.image.tag }}
+        version: {{ .Values.sqitch.image.tag | default .Values.global.imageTag }}
     spec:
       serviceAccountName: sqitch-sa
       initContainers:
@@ -72,14 +72,14 @@ spec:
           args:
             - |
               echo "Waiting for sqitch job to complete..."
-              until kubectl wait --for=condition=complete job/sqitch-{{ .Values.sqitch.image.tag }} --timeout=600s -n {{ .Release.Namespace }}; do
+              until kubectl wait --for=condition=complete job/sqitch-{{ .Values.sqitch.image.tag | default .Values.global.imageTag }} --timeout=600s -n {{ .Release.Namespace }}; do
                 echo "Sqitch job not complete yet, waiting..."
                 sleep 10
               done
               echo "Sqitch job completed successfully"
       containers:
         - name: vetchium-tags-creat
-          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag }}"
+          image: "{{ .Values.sqitch.image.repository }}:{{ .Values.sqitch.image.tag | default .Values.global.imageTag }}"
           imagePullPolicy: {{ .Values.sqitch.image.pullPolicy }}
           command: ["sh", "-c"]
           args:
