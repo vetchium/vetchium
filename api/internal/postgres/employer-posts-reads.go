@@ -24,10 +24,10 @@ func (p *PG) GetEmployerPost(
 
 	// Query to get post details and tags
 	query := `
-	SELECT 
-		ep.id, 
-		ep.content, 
-		ep.created_at, 
+	SELECT
+		ep.id,
+		ep.content,
+		ep.created_at,
 		ep.updated_at,
 		d.domain_name as company_domain,
 		ARRAY_AGG(t.display_name) FILTER (WHERE t.display_name IS NOT NULL) as tags
@@ -92,11 +92,15 @@ func (p *PG) ListEmployerPosts(
 	// Build the query with pagination
 	query := `
 	WITH ranked_posts AS (
-		SELECT 
-			ep.id, 
-			ep.content, 
-			ep.created_at, 
+		SELECT
+			ep.id,
+			ep.content,
+			ep.created_at,
 			ep.updated_at,
+
+			-- TODO: Use domain until we support company name
+			d.domain_name as company_name,
+
 			d.domain_name as company_domain,
 			ARRAY_AGG(t.display_name) FILTER (WHERE t.display_name IS NOT NULL) as tags
 		FROM employer_posts ep
@@ -111,7 +115,7 @@ func (p *PG) ListEmployerPosts(
 	// Add pagination condition if pagination_key is provided
 	args := []interface{}{orgUser.EmployerID}
 	if req.PaginationKey != "" {
-		query += `		AND (ep.updated_at < (SELECT updated_at FROM employer_posts WHERE id = $2) 
+		query += `		AND (ep.updated_at < (SELECT updated_at FROM employer_posts WHERE id = $2)
 		      OR (ep.updated_at = (SELECT updated_at FROM employer_posts WHERE id = $2) AND ep.id < $2))
 `
 		args = append(args, req.PaginationKey)
@@ -150,6 +154,7 @@ func (p *PG) ListEmployerPosts(
 			&post.Content,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.EmployerName,
 			&post.EmployerDomainName,
 			&tags,
 		)
@@ -207,10 +212,10 @@ func (p *PG) GetEmployerPostForHub(
 
 	// Query to get post details and tags - includes employer name
 	query := `
-	SELECT 
-		ep.id, 
-		ep.content, 
-		ep.created_at, 
+	SELECT
+		ep.id,
+		ep.content,
+		ep.created_at,
 		ep.updated_at,
 		e.company_name as employer_name,
 		d.domain_name as company_domain,
