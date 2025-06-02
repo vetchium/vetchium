@@ -7,10 +7,8 @@ global:
 minio:
   fullnameOverride: minio
   mode: standalone
-  accessKey:
-    password: "minioadmin"
-  secretKey:
-    password: "minioadmin"
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin"
 
 mailpit:
   fullnameOverride: mailpit
