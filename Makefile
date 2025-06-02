@@ -96,6 +96,7 @@ devtest: ## Deploy the development environment to a remote VM
 		--namespace vetchium-devtest-$(VMUSER) \
 		--create-namespace \
 		--set global.vmaddr=$(VMADDR) \
+		--set global.imageTag=$(GIT_SHA) \
 		--wait --timeout 10m
 
 	@echo "=========================================================="
