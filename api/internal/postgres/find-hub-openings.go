@@ -100,7 +100,7 @@ FROM openings o
 		}
 		// Use EXISTS to properly handle the LEFT JOIN case and match against tag IDs
 		tagConds := fmt.Sprintf(
-			"EXISTS (SELECT 1 FROM opening_tag_mappings otm2 WHERE otm2.employer_id = o.employer_id AND otm2.opening_id = o.id AND otm2.tag_id = ANY(ARRAY[%s]::uuid[]))",
+			"EXISTS (SELECT 1 FROM opening_tag_mappings otm2 WHERE otm2.employer_id = o.employer_id AND otm2.opening_id = o.id AND otm2.tag_id = ANY(ARRAY[%s]::text[]))",
 			strings.Join(placeholders, ","),
 		)
 		whereConditions = append(whereConditions, tagConds)
