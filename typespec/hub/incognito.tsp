@@ -21,11 +21,6 @@ model IncognitoPost {
     is_deleted: boolean;
 }
 
-model GetIncognitoPostRequest {
-    @doc("The ID of the IncognitoPost to get")
-    incognito_post_id: string;
-}
-
 model AddIncognitoPostRequest {
     @doc("The content of the IncognitoPost")
     @minLength(1)
@@ -44,41 +39,43 @@ model AddIncognitoPostResponse {
 model IncognitoPostComment {
     comment_id: string;
     content: string;
-    in_reply_to: string;
-    created_at: string;
+
+    @doc("The ID of the parent comment. Null for top-level comments.")
+    in_reply_to?: string;
+
+    @doc("The creation timestamp of the comment")
+    created_at: utcDateTime;
+
     upvotes: integer;
     downvotes: integer;
 
     @doc("Whether the comment was created by the currently logged in user")
     is_created_by_me: boolean;
+
+    @doc("Whether the comment has been deleted by its author")
+    is_deleted: boolean;
+
+    @doc("The current user's vote on this comment: 'upvote', 'downvote', or null")
+    my_vote?: "upvote" | "downvote";
+
+    @doc("The nesting depth of the comment (0 for top-level, 1 for first reply, etc.)")
+    depth: integer;
 }
 
 model AddIncognitoPostCommentRequest {
+    @doc("The ID of the IncognitoPost to add the comment to")
+    incognito_post_id: string;
+
     @doc("The content of the comment")
     @minLength(1)
     @maxLength(512)
     content: string;
 
-    @doc("The ID of the comment to which this comment is a reply. If nothing is provided, the new comment will be a top-level comment.")
-    in_reply_to: string;
+    @doc("The ID of the comment to which this comment is a reply. If not provided, the new comment will be a top-level comment.")
+    in_reply_to?: string;
 }
 
 model AddIncognitoPostCommentResponse {
-    incognito_post_id: string;
-    comment_id: string;
-}
-
-model UpvoteIncognitoPostCommentRequest {
-    incognito_post_id: string;
-    comment_id: string;
-}
-
-model DownvoteIncognitoPostCommentRequest {
-    incognito_post_id: string;
-    comment_id: string;
-}
-
-model UnvoteIncognitoPostCommentRequest {
     incognito_post_id: string;
     comment_id: string;
 }
@@ -87,33 +84,60 @@ model GetIncognitoPostCommentsRequest {
     @doc("The ID of the IncognitoPost to get comments for")
     incognito_post_id: string;
 
-    @doc("Pagination key to fetch the next page of comments. The comments are sorted based on the upvotes of the top-level comments. Use the commentID of the last top-level comment as the pagination_key.")
+    @doc("Pagination key to fetch the next page of comments. Comments are sorted by upvotes (descending), then by creation time (ascending) for ties.")
     pagination_key?: string;
 
-    @doc("Number of top-level comments to fetch per page")
+    @doc("Number of comments to fetch per page")
     @minValue(1)
     @maxValue(100)
     limit: integer;
+
+    @doc("The ID of the parent comment to get replies for. If not provided, gets top-level comments.")
+    parent_comment_id?: string;
+
+    @doc("Maximum depth of nested comments to include in response. Set to 0 for flat list.")
+    @minValue(0)
+    @maxValue(5)
+    include_nested_depth?: integer = 0;
 }
 
 model GetIncognitoPostCommentsResponse {
-    @doc("The comments for the IncognitoPost")
+    @doc("The comments for the IncognitoPost, sorted by upvotes (desc) then creation time (asc)")
     comments: IncognitoPostComment[];
 
-    @doc("Pagination key to fetch the next page of comments. The comments are sorted based on the upvotes of the top-level comments. Use the commentID of the last top-level comment as the pagination_key.")
+    @doc("Pagination key for fetching the next page of comments")
     pagination_key?: string;
+
+    @doc("Whether there are more comments available")
+    has_more: boolean;
+
+    @doc("Total count of comments at the requested level")
+    total_count: integer;
 }
 
 model DeleteIncognitoPostCommentRequest {
-    @doc("The ID of the IncognitoPost to which the comment belongs")
+    @doc("The ID of the IncognitoPost")
     incognito_post_id: string;
 
     @doc("The ID of the comment to delete. Only the comment creator can delete their own comment.")
     comment_id: string;
 }
 
+model VoteIncognitoPostCommentRequest {
+    @doc("The ID of the IncognitoPost")
+    incognito_post_id: string;
+
+    @doc("The ID of the comment to vote on")
+    comment_id: string;
+}
+
+model GetIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to get")
+    incognito_post_id: string;
+}
+
 model DeleteIncognitoPostRequest {
-    @doc("The ID of the IncognitoPost to delete. Only the IncognitoPost creator can delete their own IncognitoPost. Deleting an IncognitoPost does not delete the comments.")
+    @doc("The ID of the IncognitoPost to delete")
     incognito_post_id: string;
 }
 
@@ -147,7 +171,7 @@ interface DeleteIncognitoPost {
     @tag("Posts")
     @delete
     @useAuth(HubAuth)
-    deleteIncognitoPost(@path request: DeleteIncognitoPostRequest): {
+    deleteIncognitoPost(@body request: DeleteIncognitoPostRequest): {
         @statusCode statusCode: 200;
     };
 }
@@ -166,7 +190,7 @@ interface AddIncognitoPostComment {
 
 @route("/hub/get-incognito-post-comments")
 interface GetIncognitoPostComments {
-    @doc("GetIncognitoPostComments gets the comments for an IncognitoPost")
+    @doc("GetIncognitoPostComments gets the comments for an IncognitoPost. Use parent_comment_id to get replies to a specific comment, or leave it null for top-level comments.")
     @tag("Posts")
     @get
     @useAuth(HubAuth)
@@ -196,9 +220,15 @@ interface UpvoteIncognitoPostComment {
     @post
     @useAuth(HubAuth)
     upvoteIncognitoPostComment(
-        @body request: UpvoteIncognitoPostCommentRequest,
+        @body request: VoteIncognitoPostCommentRequest,
     ): {
-        @statusCode statusCode: 200;
+        @doc("Comment upvote registered. 200 will be returned even if the user has already upvoted.")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("This code will be returned in any of the following scenarios: 1) User has already downvoted the comment 2) The comment ID is invalid 3) User is attempting to upvote their own comment")
+        @statusCode
+        statusCode: 422;
     };
 }
 
@@ -209,21 +239,33 @@ interface DownvoteIncognitoPostComment {
     @post
     @useAuth(HubAuth)
     downvoteIncognitoPostComment(
-        @body request: DownvoteIncognitoPostCommentRequest,
+        @body request: VoteIncognitoPostCommentRequest,
     ): {
-        @statusCode statusCode: 200;
+        @doc("Comment downvote registered. 200 will be returned even if the user has already downvoted.")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("This code will be returned in any of the following scenarios: 1) User has already upvoted the comment 2) The comment ID is invalid 3) User is attempting to downvote their own comment")
+        @statusCode
+        statusCode: 422;
     };
 }
 
 @route("/hub/unvote-incognito-post-comment")
 interface UnvoteIncognitoPostComment {
-    @doc("UnvoteIncognitoPostComment unvotes a comment on an IncognitoPost")
+    @doc("UnvoteIncognitoPostComment removes the user's vote from a comment on an IncognitoPost")
     @tag("Posts")
     @post
     @useAuth(HubAuth)
     unvoteIncognitoPostComment(
-        @body request: UnvoteIncognitoPostCommentRequest,
+        @body request: VoteIncognitoPostCommentRequest,
     ): {
-        @statusCode statusCode: 200;
+        @doc("Whatever upvote or downvote registered by the logged in user for the comment is removed. No error is returned even if the user has already unvoted or has never voted for the comment")
+        @statusCode
+        statusCode: 200;
+    } | {
+        @doc("This code will be returned in any of the following scenarios: 1) The comment ID is invalid 2) User is attempting to unvote their own comment")
+        @statusCode
+        statusCode: 422;
     };
 }
