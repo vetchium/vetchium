@@ -24,7 +24,7 @@ model IncognitoPost {
 model AddIncognitoPostRequest {
     @doc("The content of the IncognitoPost")
     @minLength(1)
-    @maxLength(4096)
+    @maxLength(1024)
     content: string;
 
     @maxItems(3)

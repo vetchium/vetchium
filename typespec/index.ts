@@ -18,6 +18,7 @@ export * from "./hub/comments";
 export * from "./hub/education";
 export * from "./hub/employers";
 export * from "./hub/hubusers";
+export * from "./hub/incognito";
 export * from "./hub/interviews";
 export * from "./hub/openings";
 export * from "./hub/posts";
