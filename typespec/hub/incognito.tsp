@@ -123,11 +123,27 @@ model DeleteIncognitoPostCommentRequest {
     comment_id: string;
 }
 
-model VoteIncognitoPostCommentRequest {
+model UpvoteIncognitoPostCommentRequest {
     @doc("The ID of the IncognitoPost")
     incognito_post_id: string;
 
     @doc("The ID of the comment to vote on")
+    comment_id: string;
+}
+
+model DownvoteIncognitoPostCommentRequest {
+    @doc("The ID of the IncognitoPost")
+    incognito_post_id: string;
+
+    @doc("The ID of the comment to vote on")
+    comment_id: string;
+}
+
+model UnvoteIncognitoPostCommentRequest {
+    @doc("The ID of the IncognitoPost")
+    incognito_post_id: string;
+
+    @doc("The ID of the comment to unvote on")
     comment_id: string;
 }
 
@@ -220,7 +236,7 @@ interface UpvoteIncognitoPostComment {
     @post
     @useAuth(HubAuth)
     upvoteIncognitoPostComment(
-        @body request: VoteIncognitoPostCommentRequest,
+        @body request: UpvoteIncognitoPostCommentRequest,
     ): {
         @doc("Comment upvote registered. 200 will be returned even if the user has already upvoted.")
         @statusCode
@@ -239,7 +255,7 @@ interface DownvoteIncognitoPostComment {
     @post
     @useAuth(HubAuth)
     downvoteIncognitoPostComment(
-        @body request: VoteIncognitoPostCommentRequest,
+        @body request: DownvoteIncognitoPostCommentRequest,
     ): {
         @doc("Comment downvote registered. 200 will be returned even if the user has already downvoted.")
         @statusCode
@@ -258,7 +274,7 @@ interface UnvoteIncognitoPostComment {
     @post
     @useAuth(HubAuth)
     unvoteIncognitoPostComment(
-        @body request: VoteIncognitoPostCommentRequest,
+        @body request: UnvoteIncognitoPostCommentRequest,
     ): {
         @doc("Whatever upvote or downvote registered by the logged in user for the comment is removed. No error is returned even if the user has already unvoted or has never voted for the comment")
         @statusCode
