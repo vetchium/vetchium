@@ -10,14 +10,24 @@ using TypeSpec.Rest;
 
 namespace Vetchium;
 
-model Immi {
-    id: string;
+model IncognitoPost {
+    incognito_post_id: string;
     content: string;
-    tags: string[];
+    tags: VTag[];
+    created_at: utcDateTime;
+    upvotes: integer;
+    downvotes: integer;
+    is_created_by_me: boolean;
+    is_deleted: boolean;
 }
 
-model AddImmiRequest {
-    @doc("The content of the Immi")
+model GetIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to get")
+    incognito_post_id: string;
+}
+
+model AddIncognitoPostRequest {
+    @doc("The content of the IncognitoPost")
     @minLength(1)
     @maxLength(4096)
     content: string;
@@ -26,7 +36,7 @@ model AddImmiRequest {
     tag_ids: VTagID[];
 }
 
-model ImmiComment {
+model IncognitoPostComment {
     id: string;
     content: string;
     in_reply_to: string;
@@ -38,7 +48,7 @@ model ImmiComment {
     is_created_by_me: boolean;
 }
 
-model AddImmiCommentRequest {
+model AddIncognitoPostCommentRequest {
     @doc("The content of the comment")
     @minLength(1)
     @maxLength(512)
@@ -48,21 +58,21 @@ model AddImmiCommentRequest {
     in_reply_to: string;
 }
 
-model UpvoteImmiCommentRequest {
+model UpvoteIncognitoPostCommentRequest {
     comment_id: string;
 }
 
-model DownvoteImmiCommentRequest {
+model DownvoteIncognitoPostCommentRequest {
     comment_id: string;
 }
 
-model UnvoteImmiCommentRequest {
+model UnvoteIncognitoPostCommentRequest {
     comment_id: string;
 }
 
-model GetImmiCommentsRequest {
-    @doc("The ID of the Immi to get comments for")
-    immi_id: string;
+model GetIncognitoPostCommentsRequest {
+    @doc("The ID of the IncognitoPost to get comments for")
+    incognito_post_id: string;
 
     @doc("Pagination key to fetch the next page of comments. The comments are sorted based on the upvotes of the top-level comments. Use the commentID of the last top-level comment as the pagination_key.")
     pagination_key?: string;
@@ -73,20 +83,20 @@ model GetImmiCommentsRequest {
     limit: integer;
 }
 
-model GetImmiCommentsResponse {
-    @doc("The comments for the Immi")
-    comments: ImmiComment[];
+model GetIncognitoPostCommentsResponse {
+    @doc("The comments for the IncognitoPost")
+    comments: IncognitoPostComment[];
 
     @doc("Pagination key to fetch the next page of comments. The comments are sorted based on the upvotes of the top-level comments. Use the commentID of the last top-level comment as the pagination_key.")
     pagination_key?: string;
 }
 
-model DeleteImmiCommentRequest {
+model DeleteIncognitoPostCommentRequest {
     @doc("The ID of the comment to delete. Only the comment creator can delete their own comment.")
     comment_id: string;
 }
 
-model DeleteImmiRequest {
-    @doc("The ID of the Immi to delete. Only the Immi creator can delete their own Immi.")
-    immi_id: string;
+model DeleteIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to delete. Only the IncognitoPost creator can delete their own IncognitoPost. Deleting an IncognitoPost does not delete the comments.")
+    incognito_post_id: string;
 }

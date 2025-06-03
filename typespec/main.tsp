@@ -34,7 +34,7 @@ import "./hub/comments.tsp";
 import "./hub/education.tsp";
 import "./hub/employers.tsp";
 import "./hub/hubusers.tsp";
-import "./hub/immi.tsp";
+import "./hub/incognito.tsp";
 import "./hub/interviews.tsp";
 import "./hub/openings.tsp";
 import "./hub/posts.tsp";
