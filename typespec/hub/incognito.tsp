@@ -36,8 +36,13 @@ model AddIncognitoPostRequest {
     tag_ids: VTagID[];
 }
 
+model AddIncognitoPostResponse {
+    @doc("The ID of the IncognitoPost")
+    incognito_post_id: string;
+}
+
 model IncognitoPostComment {
-    id: string;
+    comment_id: string;
     content: string;
     in_reply_to: string;
     created_at: string;
@@ -58,15 +63,23 @@ model AddIncognitoPostCommentRequest {
     in_reply_to: string;
 }
 
+model AddIncognitoPostCommentResponse {
+    incognito_post_id: string;
+    comment_id: string;
+}
+
 model UpvoteIncognitoPostCommentRequest {
+    incognito_post_id: string;
     comment_id: string;
 }
 
 model DownvoteIncognitoPostCommentRequest {
+    incognito_post_id: string;
     comment_id: string;
 }
 
 model UnvoteIncognitoPostCommentRequest {
+    incognito_post_id: string;
     comment_id: string;
 }
 
@@ -92,6 +105,9 @@ model GetIncognitoPostCommentsResponse {
 }
 
 model DeleteIncognitoPostCommentRequest {
+    @doc("The ID of the IncognitoPost to which the comment belongs")
+    incognito_post_id: string;
+
     @doc("The ID of the comment to delete. Only the comment creator can delete their own comment.")
     comment_id: string;
 }
@@ -99,4 +115,115 @@ model DeleteIncognitoPostCommentRequest {
 model DeleteIncognitoPostRequest {
     @doc("The ID of the IncognitoPost to delete. Only the IncognitoPost creator can delete their own IncognitoPost. Deleting an IncognitoPost does not delete the comments.")
     incognito_post_id: string;
+}
+
+@route("/hub/add-incognito-post")
+interface AddIncognitoPost {
+    @doc("AddIncognitoPost adds a new IncognitoPost. It is available for both free and paid tier users.")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    addIncognitoPost(@body request: AddIncognitoPostRequest): {
+        @statusCode statusCode: 200;
+        @body response: AddIncognitoPostResponse;
+    };
+}
+
+@route("/hub/get-incognito-post")
+interface GetIncognitoPost {
+    @doc("GetIncognitoPost gets an IncognitoPost by its ID")
+    @tag("Posts")
+    @get
+    @useAuth(HubAuth)
+    getIncognitoPost(@body request: GetIncognitoPostRequest): {
+        @statusCode statusCode: 200;
+        @body response: IncognitoPost;
+    };
+}
+
+@route("/hub/delete-incognito-post")
+interface DeleteIncognitoPost {
+    @doc("DeleteIncognitoPost deletes an IncognitoPost by its ID. Only the author of an IncognitoPost can delete it.")
+    @tag("Posts")
+    @delete
+    @useAuth(HubAuth)
+    deleteIncognitoPost(@path request: DeleteIncognitoPostRequest): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/add-incognito-post-comment")
+interface AddIncognitoPostComment {
+    @doc("AddIncognitoPostComment adds a new comment to an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    addIncognitoPostComment(@body request: AddIncognitoPostCommentRequest): {
+        @statusCode statusCode: 200;
+        @body response: AddIncognitoPostCommentResponse;
+    };
+}
+
+@route("/hub/get-incognito-post-comments")
+interface GetIncognitoPostComments {
+    @doc("GetIncognitoPostComments gets the comments for an IncognitoPost")
+    @tag("Posts")
+    @get
+    @useAuth(HubAuth)
+    getIncognitoPostComments(@body request: GetIncognitoPostCommentsRequest): {
+        @statusCode statusCode: 200;
+        @body response: GetIncognitoPostCommentsResponse;
+    };
+}
+
+@route("/hub/delete-incognito-post-comment")
+interface DeleteIncognitoPostComment {
+    @doc("DeleteIncognitoPostComment deletes a comment from an IncognitoPost. Only the comment author can delete their own comment.")
+    @tag("Posts")
+    @delete
+    @useAuth(HubAuth)
+    deleteIncognitoPostComment(
+        @body request: DeleteIncognitoPostCommentRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/upvote-incognito-post-comment")
+interface UpvoteIncognitoPostComment {
+    @doc("UpvoteIncognitoPostComment upvotes a comment on an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    upvoteIncognitoPostComment(
+        @body request: UpvoteIncognitoPostCommentRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/downvote-incognito-post-comment")
+interface DownvoteIncognitoPostComment {
+    @doc("DownvoteIncognitoPostComment downvotes a comment on an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    downvoteIncognitoPostComment(
+        @body request: DownvoteIncognitoPostCommentRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
+}
+
+@route("/hub/unvote-incognito-post-comment")
+interface UnvoteIncognitoPostComment {
+    @doc("UnvoteIncognitoPostComment unvotes a comment on an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    unvoteIncognitoPostComment(
+        @body request: UnvoteIncognitoPostCommentRequest,
+    ): {
+        @statusCode statusCode: 200;
+    };
 }
