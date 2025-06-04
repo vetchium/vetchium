@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
@@ -13,39 +14,83 @@ func (pg *PG) GetIncognitoPost(
 	ctx context.Context,
 	req hub.GetIncognitoPostRequest,
 ) (hub.IncognitoPost, error) {
+	pg.log.Dbg(
+		"entered GetIncognitoPost",
+		"incognito_post_id",
+		req.IncognitoPostID,
+	)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return hub.IncognitoPost{}, err
 	}
 
-	var post hub.IncognitoPost
+	// Single query to get post with tags and author check
 	query := `
 		SELECT 
 			ip.id,
 			ip.content,
-			ip.created_at
+			ip.created_at,
+			CASE WHEN ip.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			COALESCE(
+				ARRAY_AGG(t.id ORDER BY t.display_name) FILTER (WHERE t.id IS NOT NULL),
+				'{}'::text[]
+			) as tag_ids,
+			COALESCE(
+				ARRAY_AGG(t.display_name ORDER BY t.display_name) FILTER (WHERE t.display_name IS NOT NULL),
+				'{}'::text[]
+			) as tag_names
 		FROM incognito_posts ip
-		WHERE ip.id = $1 AND ip.author_id = $2
+		LEFT JOIN incognito_post_tags ipt ON ip.id = ipt.incognito_post_id
+		LEFT JOIN tags t ON ipt.tag_id = t.id
+		WHERE ip.id = $1 AND ip.is_deleted = FALSE
+		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id
 	`
+
+	var post hub.IncognitoPost
+	var tagIDs []string
+	var tagNames []string
 
 	err = pg.pool.QueryRow(ctx, query, req.IncognitoPostID, hubUserID).Scan(
 		&post.IncognitoPostID,
 		&post.Content,
 		&post.CreatedAt,
+		&post.IsCreatedByMe,
+		&tagIDs,
+		&tagNames,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
+			pg.log.Dbg(
+				"incognito post not found",
+				"incognito_post_id",
+				req.IncognitoPostID,
+			)
 			return hub.IncognitoPost{}, db.ErrNoIncognitoPost
 		}
+		pg.log.Err(
+			"failed to query incognito post",
+			"error",
+			err,
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return hub.IncognitoPost{}, err
 	}
 
-	tags, err := pg.getIncognitoPostTags(ctx, req.IncognitoPostID)
-	if err != nil {
-		return hub.IncognitoPost{}, err
+	// Build tags array
+	post.Tags = make([]common.VTag, len(tagIDs))
+	for i := 0; i < len(tagIDs) && i < len(tagNames); i++ {
+		post.Tags[i] = common.VTag{
+			ID:   common.VTagID(tagIDs[i]),
+			Name: common.VTagName(tagNames[i]),
+		}
 	}
-	post.Tags = tags
 
+	pg.log.Dbg("fetched incognito post",
+		"incognito_post_id", req.IncognitoPostID,
+		"author_match", post.IsCreatedByMe)
 	return post, nil
 }
 
@@ -53,16 +98,29 @@ func (pg *PG) GetIncognitoPostComments(
 	ctx context.Context,
 	req hub.GetIncognitoPostCommentsRequest,
 ) (hub.GetIncognitoPostCommentsResponse, error) {
+	pg.log.Dbg(
+		"entered GetIncognitoPostComments",
+		"incognito_post_id",
+		req.IncognitoPostID,
+	)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return hub.GetIncognitoPostCommentsResponse{}, err
 	}
 
-	if !pg.canAccessIncognitoPost(ctx, req.IncognitoPostID, hubUserID) {
+	// First check if the incognito post exists and is not deleted
+	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
+		pg.log.Dbg(
+			"incognito post not found or deleted",
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return hub.GetIncognitoPostCommentsResponse{}, db.ErrNoIncognitoPost
 	}
 
-	var comments []hub.IncognitoPostComment
+	// Single efficient query to get all comment data
 	query := `
 		SELECT 
 			ipc.id,
@@ -73,6 +131,7 @@ func (pg *PG) GetIncognitoPostComments(
 			ipc.upvotes_count,
 			ipc.downvotes_count,
 			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
 			CASE 
 				WHEN EXISTS(
 					SELECT 1 FROM incognito_post_comment_votes ipcv 
@@ -98,13 +157,24 @@ func (pg *PG) GetIncognitoPostComments(
 
 	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID)
 	if err != nil {
+		pg.log.Err(
+			"failed to query incognito post comments",
+			"error",
+			err,
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return hub.GetIncognitoPostCommentsResponse{}, err
 	}
 	defer rows.Close()
 
+	var comments []hub.IncognitoPostComment
+	var deletedCount int
+
 	for rows.Next() {
 		var comment hub.IncognitoPostComment
 		var parentCommentID sql.NullString
+		var isDeleted bool
 
 		err := rows.Scan(
 			&comment.CommentID,
@@ -115,9 +185,11 @@ func (pg *PG) GetIncognitoPostComments(
 			&comment.Upvotes,
 			&comment.Downvotes,
 			&comment.IsCreatedByMe,
+			&isDeleted,
 			&comment.MyVote,
 		)
 		if err != nil {
+			pg.log.Err("failed to scan comment row", "error", err)
 			return hub.GetIncognitoPostCommentsResponse{}, err
 		}
 
@@ -125,61 +197,42 @@ func (pg *PG) GetIncognitoPostComments(
 			comment.InReplyTo = &parentCommentID.String
 		}
 
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+			deletedCount++
+		}
+
 		comments = append(comments, comment)
 	}
 
 	if err := rows.Err(); err != nil {
+		pg.log.Err("error iterating comment rows", "error", err)
 		return hub.GetIncognitoPostCommentsResponse{}, err
 	}
+
+	pg.log.Dbg("fetched incognito post comments",
+		"incognito_post_id", req.IncognitoPostID,
+		"total_comments", len(comments),
+		"deleted_comments", deletedCount)
 
 	return hub.GetIncognitoPostCommentsResponse{
 		Comments: comments,
 	}, nil
 }
 
-func (pg *PG) getIncognitoPostTags(
+// Helper function to check if incognito post exists and is not deleted
+func (pg *PG) incognitoPostExists(
 	ctx context.Context,
 	incognitoPostID string,
-) ([]common.VTag, error) {
-	query := `
-		SELECT t.id, t.display_name
-		FROM incognito_post_tags ipt
-		JOIN tags t ON ipt.tag_id = t.id
-		WHERE ipt.incognito_post_id = $1
-		ORDER BY t.display_name
-	`
-
-	rows, err := pg.pool.Query(ctx, query, incognitoPostID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var tags []common.VTag
-	for rows.Next() {
-		var tag common.VTag
-		err := rows.Scan(&tag.ID, &tag.Name)
-		if err != nil {
-			return nil, err
-		}
-		tags = append(tags, tag)
-	}
-
-	return tags, rows.Err()
-}
-
-func (pg *PG) canAccessIncognitoPost(
-	ctx context.Context,
-	incognitoPostID string,
-	hubUserID string,
 ) bool {
 	var count int
 	query := `
 		SELECT COUNT(*)
 		FROM incognito_posts
-		WHERE id = $1 AND author_id = $2
+		WHERE id = $1 AND is_deleted = FALSE
 	`
 
-	err := pg.pool.QueryRow(ctx, query, incognitoPostID, hubUserID).Scan(&count)
+	err := pg.pool.QueryRow(ctx, query, incognitoPostID).Scan(&count)
 	return err == nil && count > 0
 }

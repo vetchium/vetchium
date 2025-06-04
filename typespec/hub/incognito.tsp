@@ -198,10 +198,26 @@ interface AddIncognitoPostComment {
     @tag("Posts")
     @post
     @useAuth(HubAuth)
-    addIncognitoPostComment(@body request: AddIncognitoPostCommentRequest): {
-        @statusCode statusCode: 200;
-        @body response: AddIncognitoPostCommentResponse;
-    };
+    addIncognitoPostComment(@body request: AddIncognitoPostCommentRequest):
+        | {
+              @statusCode statusCode: 200;
+              @body response: AddIncognitoPostCommentResponse;
+          }
+        | {
+              @doc("Bad Request: Invalid request data (content too long/short, missing required fields)")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post or parent comment does not exist or has been deleted")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("Unprocessable Entity: Cannot add comment due to business rules (e.g., maximum comment depth reached, replying to deleted comment)")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/hub/get-incognito-post-comments")

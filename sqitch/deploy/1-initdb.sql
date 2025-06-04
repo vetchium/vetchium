@@ -1397,7 +1397,8 @@ CREATE TABLE incognito_posts (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE incognito_post_comments (
@@ -1408,6 +1409,7 @@ CREATE TABLE incognito_post_comments (
     parent_comment_id TEXT REFERENCES incognito_post_comments(id) ON DELETE CASCADE,
     depth INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
 
     upvotes_count INTEGER NOT NULL DEFAULT 0,
     downvotes_count INTEGER NOT NULL DEFAULT 0,

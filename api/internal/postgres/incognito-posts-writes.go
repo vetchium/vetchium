@@ -11,17 +11,39 @@ func (pg *PG) AddIncognitoPost(
 	ctx context.Context,
 	req db.AddIncognitoPostRequest,
 ) error {
+	pg.log.Dbg(
+		"entered AddIncognitoPost",
+		"incognito_post_id",
+		req.IncognitoPostID,
+	)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
 	tx, err := pg.pool.Begin(ctx)
 	if err != nil {
+		pg.log.Err("failed to begin transaction", "error", err)
 		return err
 	}
 	defer tx.Rollback(ctx)
 
+	// Validate tag IDs if provided
+	if len(req.AddIncognitoPostReq.TagIDs) > 0 {
+		tagIDStrings := make([]string, len(req.AddIncognitoPostReq.TagIDs))
+		for i, tagID := range req.AddIncognitoPostReq.TagIDs {
+			tagIDStrings[i] = string(tagID)
+		}
+
+		if !pg.validateTagIDs(ctx, tagIDStrings) {
+			pg.log.Dbg("invalid tag IDs provided", "tag_ids", tagIDStrings)
+			return db.ErrInvalidTagIDs
+		}
+	}
+
+	// Insert the post
 	query := `
 		INSERT INTO incognito_posts (id, content, author_id)
 		VALUES ($1, $2, $3)
@@ -35,51 +57,102 @@ func (pg *PG) AddIncognitoPost(
 		hubUserID,
 	)
 	if err != nil {
+		pg.log.Err(
+			"failed to insert incognito post",
+			"error",
+			err,
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return err
 	}
 
+	// Insert tags if provided
 	if len(req.AddIncognitoPostReq.TagIDs) > 0 {
 		tagIDStrings := make([]string, len(req.AddIncognitoPostReq.TagIDs))
 		for i, tagID := range req.AddIncognitoPostReq.TagIDs {
 			tagIDStrings[i] = string(tagID)
 		}
-		err = pg.addIncognitoPostTags(
-			ctx,
-			tx,
-			req.IncognitoPostID,
-			tagIDStrings,
-		)
-		if err != nil {
-			return err
+
+		for _, tagID := range tagIDStrings {
+			tagQuery := `
+				INSERT INTO incognito_post_tags (incognito_post_id, tag_id)
+				VALUES ($1, $2)
+				ON CONFLICT DO NOTHING
+			`
+			_, err = tx.Exec(ctx, tagQuery, req.IncognitoPostID, tagID)
+			if err != nil {
+				pg.log.Err(
+					"failed to insert incognito post tag",
+					"error",
+					err,
+					"tag_id",
+					tagID,
+				)
+				return err
+			}
 		}
 	}
 
-	return tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		pg.log.Err("failed to commit transaction", "error", err)
+		return err
+	}
+
+	pg.log.Dbg("created incognito post",
+		"incognito_post_id", req.IncognitoPostID,
+		"tag_count", len(req.AddIncognitoPostReq.TagIDs))
+	return nil
 }
 
 func (pg *PG) DeleteIncognitoPost(
 	ctx context.Context,
 	req hub.DeleteIncognitoPostRequest,
 ) error {
+	pg.log.Dbg(
+		"entered DeleteIncognitoPost",
+		"incognito_post_id",
+		req.IncognitoPostID,
+	)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
+	// Soft delete - set is_deleted = true instead of DELETE
 	query := `
-		DELETE FROM incognito_posts
-		WHERE id = $1 AND author_id = $2
+		UPDATE incognito_posts
+		SET is_deleted = TRUE
+		WHERE id = $1 AND author_id = $2 AND is_deleted = FALSE
 	`
 
 	result, err := pg.pool.Exec(ctx, query, req.IncognitoPostID, hubUserID)
 	if err != nil {
+		pg.log.Err(
+			"failed to soft delete incognito post",
+			"error",
+			err,
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return err
 	}
 
 	if result.RowsAffected() == 0 {
+		pg.log.Dbg("incognito post not found or not owned by user",
+			"incognito_post_id", req.IncognitoPostID,
+			"hub_user_id", hubUserID)
 		return db.ErrNoIncognitoPost
 	}
 
+	pg.log.Dbg(
+		"soft deleted incognito post",
+		"incognito_post_id",
+		req.IncognitoPostID,
+	)
 	return nil
 }
 
@@ -87,29 +160,60 @@ func (pg *PG) AddIncognitoPostComment(
 	ctx context.Context,
 	req db.AddIncognitoPostCommentRequest,
 ) (hub.AddIncognitoPostCommentResponse, error) {
+	pg.log.Dbg("entered AddIncognitoPostComment",
+		"incognito_post_id", req.AddIncognitoPostCommentRequest.IncognitoPostID,
+		"comment_id", req.CommentID)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return hub.AddIncognitoPostCommentResponse{}, err
 	}
 
-	if !pg.canAccessIncognitoPost(
+	// Check if incognito post exists and is not deleted
+	if !pg.incognitoPostExists(
 		ctx,
 		req.AddIncognitoPostCommentRequest.IncognitoPostID,
-		hubUserID,
 	) {
+		pg.log.Dbg(
+			"incognito post not found or deleted",
+			"incognito_post_id",
+			req.AddIncognitoPostCommentRequest.IncognitoPostID,
+		)
 		return hub.AddIncognitoPostCommentResponse{}, db.ErrNoIncognitoPost
 	}
 
 	depth := 0
 	if req.AddIncognitoPostCommentRequest.InReplyTo != nil {
-		calculatedDepth, err := pg.calculateCommentDepth(
+		// Validate parent comment exists and is not deleted
+		parentDepth, err := pg.getCommentDepth(
 			ctx,
 			*req.AddIncognitoPostCommentRequest.InReplyTo,
 		)
 		if err != nil {
+			pg.log.Err(
+				"failed to get parent comment depth",
+				"error",
+				err,
+				"parent_comment_id",
+				*req.AddIncognitoPostCommentRequest.InReplyTo,
+			)
 			return hub.AddIncognitoPostCommentResponse{}, err
 		}
-		depth = calculatedDepth
+
+		// Check if adding a reply would exceed max depth
+		if parentDepth >= 10 {
+			pg.log.Dbg(
+				"comment depth limit reached",
+				"parent_depth",
+				parentDepth,
+				"parent_comment_id",
+				*req.AddIncognitoPostCommentRequest.InReplyTo,
+			)
+			return hub.AddIncognitoPostCommentResponse{}, db.ErrMaxCommentDepthReached
+		}
+
+		depth = parentDepth + 1
 	}
 
 	query := `
@@ -129,33 +233,60 @@ func (pg *PG) AddIncognitoPostComment(
 		depth,
 	)
 	if err != nil {
+		pg.log.Err(
+			"failed to insert incognito post comment",
+			"error",
+			err,
+			"comment_id",
+			req.CommentID,
+		)
 		return hub.AddIncognitoPostCommentResponse{}, err
 	}
 
-	return hub.AddIncognitoPostCommentResponse{
+	response := hub.AddIncognitoPostCommentResponse{
 		IncognitoPostID: req.AddIncognitoPostCommentRequest.IncognitoPostID,
 		CommentID:       req.CommentID,
-	}, nil
+	}
+
+	pg.log.Dbg("created incognito post comment",
+		"incognito_post_id", req.AddIncognitoPostCommentRequest.IncognitoPostID,
+		"comment_id", req.CommentID,
+		"depth", depth)
+	return response, nil
 }
 
 func (pg *PG) DeleteIncognitoPostComment(
 	ctx context.Context,
 	req hub.DeleteIncognitoPostCommentRequest,
 ) error {
+	pg.log.Dbg("entered DeleteIncognitoPostComment",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
-	if !pg.canAccessIncognitoPost(ctx, req.IncognitoPostID, hubUserID) {
+	// Check if incognito post exists
+	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
+		pg.log.Dbg(
+			"incognito post not found",
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return db.ErrNoIncognitoPost
 	}
 
+	// Soft delete comment - set is_deleted = true instead of DELETE
 	query := `
-		DELETE FROM incognito_post_comments
+		UPDATE incognito_post_comments
+		SET is_deleted = TRUE
 		WHERE id = $1 
 		AND incognito_post_id = $2 
 		AND author_id = $3
+		AND is_deleted = FALSE
 	`
 
 	result, err := pg.pool.Exec(
@@ -166,13 +297,27 @@ func (pg *PG) DeleteIncognitoPostComment(
 		hubUserID,
 	)
 	if err != nil {
+		pg.log.Err(
+			"failed to soft delete incognito post comment",
+			"error",
+			err,
+			"comment_id",
+			req.CommentID,
+		)
 		return err
 	}
 
 	if result.RowsAffected() == 0 {
+		pg.log.Dbg("incognito post comment not found or not owned by user",
+			"comment_id", req.CommentID,
+			"incognito_post_id", req.IncognitoPostID,
+			"hub_user_id", hubUserID)
 		return db.ErrNoIncognitoPostComment
 	}
 
+	pg.log.Dbg("soft deleted incognito post comment",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
 	return nil
 }
 
@@ -180,54 +325,146 @@ func (pg *PG) UpvoteIncognitoPostComment(
 	ctx context.Context,
 	req hub.UpvoteIncognitoPostCommentRequest,
 ) error {
-	return pg.voteIncognitoPostComment(
+	pg.log.Dbg("entered UpvoteIncognitoPostComment",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
+
+	err := pg.voteIncognitoPostComment(
 		ctx,
 		req.IncognitoPostID,
 		req.CommentID,
 		1,
 	)
+	if err != nil {
+		pg.log.Err(
+			"failed to upvote incognito post comment",
+			"error",
+			err,
+			"comment_id",
+			req.CommentID,
+		)
+		return err
+	}
+
+	pg.log.Dbg("upvoted incognito post comment", "comment_id", req.CommentID)
+	return nil
 }
 
 func (pg *PG) DownvoteIncognitoPostComment(
 	ctx context.Context,
 	req hub.DownvoteIncognitoPostCommentRequest,
 ) error {
-	return pg.voteIncognitoPostComment(
+	pg.log.Dbg("entered DownvoteIncognitoPostComment",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
+
+	err := pg.voteIncognitoPostComment(
 		ctx,
 		req.IncognitoPostID,
 		req.CommentID,
 		-1,
 	)
+	if err != nil {
+		pg.log.Err(
+			"failed to downvote incognito post comment",
+			"error",
+			err,
+			"comment_id",
+			req.CommentID,
+		)
+		return err
+	}
+
+	pg.log.Dbg("downvoted incognito post comment", "comment_id", req.CommentID)
+	return nil
 }
 
 func (pg *PG) UnvoteIncognitoPostComment(
 	ctx context.Context,
 	req hub.UnvoteIncognitoPostCommentRequest,
 ) error {
+	pg.log.Dbg("entered UnvoteIncognitoPostComment",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
+
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
 		return err
 	}
 
-	if !pg.canAccessIncognitoPost(ctx, req.IncognitoPostID, hubUserID) {
+	// Check if incognito post exists
+	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
+		pg.log.Dbg(
+			"incognito post not found",
+			"incognito_post_id",
+			req.IncognitoPostID,
+		)
 		return db.ErrNoIncognitoPost
 	}
 
-	if !pg.commentExists(ctx, req.CommentID, req.IncognitoPostID) {
-		return db.ErrNoIncognitoPostComment
-	}
-
-	if !pg.canVoteOnComment(ctx, req.CommentID, hubUserID) {
-		return db.ErrNonVoteableIncognitoPostComment
-	}
-
+	// Single query to check comment exists, not deleted, and remove vote
 	query := `
+		WITH comment_check AS (
+			SELECT id FROM incognito_post_comments 
+			WHERE id = $1 AND incognito_post_id = $2 AND is_deleted = FALSE
+		),
+		vote_check AS (
+			SELECT 1 FROM incognito_post_comment_votes ipcv
+			JOIN comment_check cc ON TRUE
+			WHERE ipcv.comment_id = $1 AND ipcv.user_id = $3
+		)
 		DELETE FROM incognito_post_comment_votes
-		WHERE comment_id = $1 AND user_id = $2
+		WHERE comment_id = $1 AND user_id = $3
+		AND EXISTS (SELECT 1 FROM comment_check)
+		AND EXISTS (SELECT 1 FROM vote_check)
 	`
 
-	_, err = pg.pool.Exec(ctx, query, req.CommentID, hubUserID)
-	return err
+	result, err := pg.pool.Exec(
+		ctx,
+		query,
+		req.CommentID,
+		req.IncognitoPostID,
+		hubUserID,
+	)
+	if err != nil {
+		pg.log.Err(
+			"failed to unvote incognito post comment",
+			"error",
+			err,
+			"comment_id",
+			req.CommentID,
+		)
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		// Check if comment exists but user can't vote (is author or comment doesn't exist)
+		if !pg.commentExistsAndNotDeleted(
+			ctx,
+			req.CommentID,
+			req.IncognitoPostID,
+		) {
+			pg.log.Dbg(
+				"incognito post comment not found",
+				"comment_id",
+				req.CommentID,
+			)
+			return db.ErrNoIncognitoPostComment
+		}
+		if !pg.canVoteOnComment(ctx, req.CommentID, hubUserID) {
+			pg.log.Dbg("user cannot vote on this comment",
+				"comment_id", req.CommentID,
+				"hub_user_id", hubUserID)
+			return db.ErrNonVoteableIncognitoPostComment
+		}
+		pg.log.Dbg("no existing vote to remove",
+			"comment_id", req.CommentID,
+			"hub_user_id", hubUserID)
+	}
+
+	pg.log.Dbg("unvoted incognito post comment", "comment_id", req.CommentID)
+	return nil
 }
 
 // Helper functions
@@ -243,18 +480,22 @@ func (pg *PG) voteIncognitoPostComment(
 		return err
 	}
 
-	if !pg.canAccessIncognitoPost(ctx, incognitoPostID, hubUserID) {
+	// Check if incognito post exists
+	if !pg.incognitoPostExists(ctx, incognitoPostID) {
 		return db.ErrNoIncognitoPost
 	}
 
-	if !pg.commentExists(ctx, commentID, incognitoPostID) {
+	// Check if comment exists and is not deleted
+	if !pg.commentExistsAndNotDeleted(ctx, commentID, incognitoPostID) {
 		return db.ErrNoIncognitoPostComment
 	}
 
+	// Check if user can vote (not the author)
 	if !pg.canVoteOnComment(ctx, commentID, hubUserID) {
 		return db.ErrNonVoteableIncognitoPostComment
 	}
 
+	// Insert or update vote
 	query := `
 		INSERT INTO incognito_post_comment_votes (comment_id, user_id, vote_value)
 		VALUES ($1, $2, $3)
@@ -266,7 +507,7 @@ func (pg *PG) voteIncognitoPostComment(
 	return err
 }
 
-func (pg *PG) commentExists(
+func (pg *PG) commentExistsAndNotDeleted(
 	ctx context.Context,
 	commentID, incognitoPostID string,
 ) bool {
@@ -274,7 +515,7 @@ func (pg *PG) commentExists(
 	query := `
 		SELECT COUNT(*)
 		FROM incognito_post_comments
-		WHERE id = $1 AND incognito_post_id = $2
+		WHERE id = $1 AND incognito_post_id = $2 AND is_deleted = FALSE
 	`
 
 	err := pg.pool.QueryRow(ctx, query, commentID, incognitoPostID).Scan(&count)
@@ -289,21 +530,26 @@ func (pg *PG) canVoteOnComment(
 	query := `
 		SELECT COUNT(*)
 		FROM incognito_post_comments
-		WHERE id = $1 AND author_id != $2
+		WHERE id = $1 AND author_id != $2 AND is_deleted = FALSE
 	`
 
 	err := pg.pool.QueryRow(ctx, query, commentID, hubUserID).Scan(&count)
 	return err == nil && count > 0
 }
 
-func (pg *PG) calculateCommentDepth(
+// getCommentDepth returns the depth of a comment and validates it exists and is not deleted
+func (pg *PG) getCommentDepth(
 	ctx context.Context,
-	parentCommentID string,
+	commentID string,
 ) (int, error) {
 	var depth int
-	query := `SELECT calculate_comment_depth($1)`
+	query := `
+		SELECT depth
+		FROM incognito_post_comments
+		WHERE id = $1 AND is_deleted = FALSE
+	`
 
-	err := pg.pool.QueryRow(ctx, query, parentCommentID).Scan(&depth)
+	err := pg.pool.QueryRow(ctx, query, commentID).Scan(&depth)
 	if err != nil {
 		return 0, db.ErrInvalidParentComment
 	}
@@ -311,38 +557,19 @@ func (pg *PG) calculateCommentDepth(
 	return depth, nil
 }
 
-func (pg *PG) addIncognitoPostTags(
-	ctx context.Context,
-	tx interface{},
-	incognitoPostID string,
-	tagIDs []string,
-) error {
-	// Check if all tag IDs exist
-	if !pg.validateTagIDs(ctx, tagIDs) {
-		return db.ErrInvalidTagIDs
-	}
-
-	for _, tagID := range tagIDs {
-		query := `
-			INSERT INTO incognito_post_tags (incognito_post_id, tag_id)
-			VALUES ($1, $2)
-			ON CONFLICT DO NOTHING
-		`
-
-		_, err := tx.(interface {
-			Exec(ctx context.Context, sql string, arguments ...interface{}) (interface{}, error)
-		}).Exec(ctx, query, incognitoPostID, tagID)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (pg *PG) validateTagIDs(ctx context.Context, tagIDs []string) bool {
 	if len(tagIDs) == 0 {
 		return true
+	}
+
+	// Deduplicate tag IDs
+	uniqueTagIDs := make(map[string]bool)
+	var deduplicatedTagIDs []string
+	for _, tagID := range tagIDs {
+		if !uniqueTagIDs[tagID] {
+			uniqueTagIDs[tagID] = true
+			deduplicatedTagIDs = append(deduplicatedTagIDs, tagID)
+		}
 	}
 
 	query := `
@@ -352,6 +579,6 @@ func (pg *PG) validateTagIDs(ctx context.Context, tagIDs []string) bool {
 	`
 
 	var count int
-	err := pg.pool.QueryRow(ctx, query, tagIDs).Scan(&count)
-	return err == nil && count == len(tagIDs)
+	err := pg.pool.QueryRow(ctx, query, deduplicatedTagIDs).Scan(&count)
+	return err == nil && count == len(deduplicatedTagIDs)
 }

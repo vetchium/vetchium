@@ -49,9 +49,23 @@ func AddIncognitoPostComment(h wand.Wand) http.HandlerFunc {
 				http.Error(w, "Incognito post not found", http.StatusNotFound)
 			case db.ErrInvalidParentComment:
 				h.Dbg("invalid parent comment", "in_reply_to", req.InReplyTo)
-				http.Error(w, "Invalid parent comment", http.StatusBadRequest)
+				http.Error(
+					w,
+					"Parent comment not found or has been deleted",
+					http.StatusNotFound,
+				)
+			case db.ErrMaxCommentDepthReached:
+				h.Dbg("max comment depth reached", "in_reply_to", req.InReplyTo)
+				http.Error(
+					w,
+					"Maximum comment depth reached. Cannot reply to this comment.",
+					http.StatusUnprocessableEntity,
+				)
+			case db.ErrNoIncognitoPostComment:
+				h.Dbg("parent comment not found", "in_reply_to", req.InReplyTo)
+				http.Error(w, "Parent comment not found", http.StatusNotFound)
 			default:
-				h.Dbg("internal unhandled error")
+				h.Err("internal unhandled error", "error", err)
 				http.Error(w, "", http.StatusInternalServerError)
 			}
 			return
@@ -67,7 +81,6 @@ func AddIncognitoPostComment(h wand.Wand) http.HandlerFunc {
 
 		h.Dbg("successfully added incognito post comment",
 			"comment_id", response.CommentID,
-			"incognito_post_id", response.IncognitoPostID,
-		)
+			"incognito_post_id", response.IncognitoPostID)
 	}
 }
