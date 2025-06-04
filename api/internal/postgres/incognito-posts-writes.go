@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
@@ -122,14 +123,44 @@ func (pg *PG) DeleteIncognitoPost(
 		return err
 	}
 
-	// Soft delete - set is_deleted = true instead of DELETE
-	query := `
+	// First check if the post exists and is not deleted
+	var authorID string
+	checkQuery := `
+		SELECT author_id 
+		FROM incognito_posts 
+		WHERE id = $1 AND is_deleted = FALSE
+	`
+
+	err = pg.pool.QueryRow(ctx, checkQuery, req.IncognitoPostID).Scan(&authorID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			pg.log.Dbg("incognito post not found",
+				"incognito_post_id", req.IncognitoPostID)
+			return db.ErrNoIncognitoPost
+		}
+		pg.log.Err("failed to check incognito post",
+			"error", err,
+			"incognito_post_id", req.IncognitoPostID)
+		return err
+	}
+
+	// Check if the user is the author
+	if authorID != hubUserID {
+		pg.log.Dbg("user is not the author of the incognito post",
+			"incognito_post_id", req.IncognitoPostID,
+			"hub_user_id", hubUserID,
+			"author_id", authorID)
+		return db.ErrNotIncognitoPostAuthor
+	}
+
+	// Soft delete - set is_deleted = true
+	updateQuery := `
 		UPDATE incognito_posts
 		SET is_deleted = TRUE
 		WHERE id = $1 AND author_id = $2 AND is_deleted = FALSE
 	`
 
-	result, err := pg.pool.Exec(ctx, query, req.IncognitoPostID, hubUserID)
+	_, err = pg.pool.Exec(ctx, updateQuery, req.IncognitoPostID, hubUserID)
 	if err != nil {
 		pg.log.Err(
 			"failed to soft delete incognito post",
@@ -139,13 +170,6 @@ func (pg *PG) DeleteIncognitoPost(
 			req.IncognitoPostID,
 		)
 		return err
-	}
-
-	if result.RowsAffected() == 0 {
-		pg.log.Dbg("incognito post not found or not owned by user",
-			"incognito_post_id", req.IncognitoPostID,
-			"hub_user_id", hubUserID)
-		return db.ErrNoIncognitoPost
 	}
 
 	pg.log.Dbg(
@@ -279,8 +303,41 @@ func (pg *PG) DeleteIncognitoPostComment(
 		return db.ErrNoIncognitoPost
 	}
 
-	// Soft delete comment - set is_deleted = true instead of DELETE
-	query := `
+	// First check if the comment exists and is not deleted
+	var authorID string
+	checkQuery := `
+		SELECT author_id 
+		FROM incognito_post_comments 
+		WHERE id = $1 AND incognito_post_id = $2 AND is_deleted = FALSE
+	`
+
+	err = pg.pool.QueryRow(ctx, checkQuery, req.CommentID, req.IncognitoPostID).
+		Scan(&authorID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			pg.log.Dbg("incognito post comment not found",
+				"comment_id", req.CommentID,
+				"incognito_post_id", req.IncognitoPostID)
+			return db.ErrNoIncognitoPostComment
+		}
+		pg.log.Err("failed to check incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
+		return err
+	}
+
+	// Check if the user is the author
+	if authorID != hubUserID {
+		pg.log.Dbg("user is not the author of the incognito post comment",
+			"comment_id", req.CommentID,
+			"incognito_post_id", req.IncognitoPostID,
+			"hub_user_id", hubUserID,
+			"author_id", authorID)
+		return db.ErrNotIncognitoPostCommentAuthor
+	}
+
+	// Soft delete comment - set is_deleted = true
+	updateQuery := `
 		UPDATE incognito_post_comments
 		SET is_deleted = TRUE
 		WHERE id = $1 
@@ -289,9 +346,9 @@ func (pg *PG) DeleteIncognitoPostComment(
 		AND is_deleted = FALSE
 	`
 
-	result, err := pg.pool.Exec(
+	_, err = pg.pool.Exec(
 		ctx,
-		query,
+		updateQuery,
 		req.CommentID,
 		req.IncognitoPostID,
 		hubUserID,
@@ -305,14 +362,6 @@ func (pg *PG) DeleteIncognitoPostComment(
 			req.CommentID,
 		)
 		return err
-	}
-
-	if result.RowsAffected() == 0 {
-		pg.log.Dbg("incognito post comment not found or not owned by user",
-			"comment_id", req.CommentID,
-			"incognito_post_id", req.IncognitoPostID,
-			"hub_user_id", hubUserID)
-		return db.ErrNoIncognitoPostComment
 	}
 
 	pg.log.Dbg("soft deleted incognito post comment",
