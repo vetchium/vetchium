@@ -45,6 +45,11 @@ type AddIncognitoPostCommentRequest struct {
 	InReplyTo       *string `json:"in_reply_to"`
 }
 
+type AddIncognitoPostCommentResponse struct {
+	IncognitoPostID string `json:"incognito_post_id"`
+	CommentID       string `json:"comment_id"`
+}
+
 type GetIncognitoPostCommentsRequest struct {
 	IncognitoPostID    string  `json:"incognito_post_id"    validate:"required"`
 	PaginationKey      *string `json:"pagination_key"`
