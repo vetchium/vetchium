@@ -1392,4 +1392,119 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Incognito Posts Tables
+CREATE TABLE incognito_posts (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    author_id UUID REFERENCES hub_users(id) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now())
+);
+
+CREATE TABLE incognito_post_comments (
+    id TEXT PRIMARY KEY,
+    incognito_post_id TEXT REFERENCES incognito_posts(id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES hub_users(id) NOT NULL,
+    content TEXT NOT NULL,
+    parent_comment_id TEXT REFERENCES incognito_post_comments(id) ON DELETE CASCADE,
+    depth INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+
+    upvotes_count INTEGER NOT NULL DEFAULT 0,
+    downvotes_count INTEGER NOT NULL DEFAULT 0,
+    score INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT valid_depth CHECK (depth >= 0 AND depth <= 10)
+);
+
+CREATE INDEX idx_incognito_post_comments_post ON incognito_post_comments (incognito_post_id, created_at DESC);
+CREATE INDEX idx_incognito_post_comments_parent ON incognito_post_comments (parent_comment_id, created_at ASC) WHERE parent_comment_id IS NOT NULL;
+
+CREATE TABLE incognito_post_comment_votes (
+    comment_id TEXT REFERENCES incognito_post_comments(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES hub_users(id) ON DELETE CASCADE NOT NULL,
+    vote_value SMALLINT NOT NULL CHECK (vote_value IN (1, -1)),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    PRIMARY KEY (comment_id, user_id)
+);
+
+CREATE TABLE incognito_post_tags (
+    incognito_post_id TEXT REFERENCES incognito_posts(id) ON DELETE CASCADE NOT NULL,
+    tag_id TEXT REFERENCES tags(id) NOT NULL,
+    PRIMARY KEY (incognito_post_id, tag_id)
+);
+
+-- Function to calculate comment depth based on parent
+CREATE OR REPLACE FUNCTION calculate_comment_depth(p_parent_comment_id TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+    parent_depth INTEGER;
+BEGIN
+    IF p_parent_comment_id IS NULL THEN
+        RETURN 0;
+    END IF;
+    
+    SELECT depth INTO parent_depth
+    FROM incognito_post_comments
+    WHERE id = p_parent_comment_id;
+    
+    IF parent_depth IS NULL THEN
+        RAISE EXCEPTION 'Parent comment not found';
+    END IF;
+    
+    RETURN parent_depth + 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update incognito post comment vote counts
+CREATE OR REPLACE FUNCTION update_incognito_comment_vote_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        UPDATE incognito_post_comments
+        SET
+            upvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = OLD.comment_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = OLD.comment_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = OLD.comment_id
+            )
+        WHERE id = OLD.comment_id;
+    ELSE
+        UPDATE incognito_post_comments
+        SET
+            upvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = NEW.comment_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = NEW.comment_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM incognito_post_comment_votes
+                WHERE comment_id = NEW.comment_id
+            )
+        WHERE id = NEW.comment_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to update vote counts on vote changes
+CREATE TRIGGER update_incognito_comment_vote_counts_trigger
+AFTER INSERT OR UPDATE OR DELETE ON incognito_post_comment_votes
+FOR EACH ROW EXECUTE FUNCTION update_incognito_comment_vote_counts();
+
 COMMIT;

@@ -81,6 +81,19 @@ type UnscoredApplicationBatch struct {
 	Applications []ApplicationForScoring // max 10 elements
 }
 
+// Incognito Posts request types - only for functions that generate IDs
+type AddIncognitoPostRequest struct {
+	Context             context.Context
+	IncognitoPostID     string
+	AddIncognitoPostReq hub.AddIncognitoPostRequest
+}
+
+type AddIncognitoPostCommentRequest struct {
+	Context                        context.Context
+	CommentID                      string
+	AddIncognitoPostCommentRequest hub.AddIncognitoPostCommentRequest
+}
+
 // TODO: We should group this interface better
 type DB interface {
 	// Used by hermione and granger
@@ -536,4 +549,39 @@ type DB interface {
 	) (EmployerDetailsForHub, error)
 
 	ChangeOrgUserPassword(context.Context, uuid.UUID, string) error
+
+	// Used by hermione - Incognito Posts related methods
+	AddIncognitoPost(ctx context.Context, req AddIncognitoPostRequest) error
+	GetIncognitoPost(
+		ctx context.Context,
+		req hub.GetIncognitoPostRequest,
+	) (hub.IncognitoPost, error)
+	DeleteIncognitoPost(
+		ctx context.Context,
+		req hub.DeleteIncognitoPostRequest,
+	) error
+	AddIncognitoPostComment(
+		ctx context.Context,
+		req AddIncognitoPostCommentRequest,
+	) (hub.AddIncognitoPostCommentResponse, error)
+	GetIncognitoPostComments(
+		ctx context.Context,
+		req hub.GetIncognitoPostCommentsRequest,
+	) (hub.GetIncognitoPostCommentsResponse, error)
+	DeleteIncognitoPostComment(
+		ctx context.Context,
+		req hub.DeleteIncognitoPostCommentRequest,
+	) error
+	UpvoteIncognitoPostComment(
+		ctx context.Context,
+		req hub.UpvoteIncognitoPostCommentRequest,
+	) error
+	DownvoteIncognitoPostComment(
+		ctx context.Context,
+		req hub.DownvoteIncognitoPostCommentRequest,
+	) error
+	UnvoteIncognitoPostComment(
+		ctx context.Context,
+		req hub.UnvoteIncognitoPostCommentRequest,
+	) error
 }

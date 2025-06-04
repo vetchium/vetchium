@@ -96,4 +96,20 @@ var (
 	ErrCommentsDisabled = errors.New("comments are disabled for this post")
 	ErrNotPostAuthor    = errors.New("user is not the author of this post")
 	ErrNotCommentAuthor = errors.New("user is not the author of this comment")
+
+	// Incognito post related errors
+	ErrNoIncognitoPost        = errors.New("incognito post not found")
+	ErrNotIncognitoPostAuthor = errors.New(
+		"user is not the author of this incognito post",
+	)
+	ErrNoIncognitoPostComment = errors.New(
+		"incognito post comment not found",
+	)
+	ErrNotIncognitoPostCommentAuthor = errors.New(
+		"user is not the author of this incognito post comment",
+	)
+	ErrNonVoteableIncognitoPostComment = errors.New(
+		"user cannot vote for this incognito post comment",
+	)
+	ErrInvalidParentComment = errors.New("invalid parent comment")
 )

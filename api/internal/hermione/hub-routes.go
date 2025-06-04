@@ -13,6 +13,7 @@ import (
 	he "github.com/vetchium/vetchium/api/internal/hermione/hubemp"
 	ho "github.com/vetchium/vetchium/api/internal/hermione/hubopenings"
 	hu "github.com/vetchium/vetchium/api/internal/hermione/hubusers"
+	ic "github.com/vetchium/vetchium/api/internal/hermione/incognito"
 	in "github.com/vetchium/vetchium/api/internal/hermione/interview"
 	po "github.com/vetchium/vetchium/api/internal/hermione/posts"
 	pp "github.com/vetchium/vetchium/api/internal/hermione/profilepage"
@@ -413,6 +414,53 @@ func RegisterHubRoutes(h *Hermione) {
 	h.mw.Guard(
 		"/hub/get-employer-details",
 		he.GetEmployerDetails(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+
+	// Incognito post related endpoints
+	h.mw.Guard(
+		"/hub/add-incognito-post",
+		ic.AddIncognitoPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-incognito-post",
+		ic.GetIncognitoPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-incognito-post",
+		ic.DeleteIncognitoPost(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/add-incognito-post-comment",
+		ic.AddIncognitoPostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-incognito-post-comments",
+		ic.GetIncognitoPostComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/delete-incognito-post-comment",
+		ic.DeleteIncognitoPostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/upvote-incognito-post-comment",
+		ic.UpvoteIncognitoPostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/downvote-incognito-post-comment",
+		ic.DownvoteIncognitoPostComment(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/unvote-incognito-post-comment",
+		ic.UnvoteIncognitoPostComment(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
 }
