@@ -19,6 +19,7 @@ export class AddIncognitoPostRequest {
     return (
       this.content.length > 0 &&
       this.content.length <= 1024 &&
+      this.tag_ids.length >= 1 &&
       this.tag_ids.length <= 3
     );
   }

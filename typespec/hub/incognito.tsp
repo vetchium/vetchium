@@ -27,6 +27,8 @@ model AddIncognitoPostRequest {
     @maxLength(1024)
     content: string;
 
+    @doc("There must be atleast one tag for an IncognitoPost")
+    @minItems(1)
     @maxItems(3)
     tag_ids: VTagID[];
 }

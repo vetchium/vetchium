@@ -19,7 +19,7 @@ type IncognitoPost struct {
 
 type AddIncognitoPostRequest struct {
 	Content string          `json:"content" validate:"required,min=1,max=1024"`
-	TagIDs  []common.VTagID `json:"tag_ids" validate:"max=3"`
+	TagIDs  []common.VTagID `json:"tag_ids" validate:"min=1,max=3"`
 }
 
 type AddIncognitoPostResponse struct {
