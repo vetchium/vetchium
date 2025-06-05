@@ -924,6 +924,539 @@ var _ = FDescribe("Incognito Posts API", Ordered, func() {
 		})
 	})
 
+	Describe("Incognito Post Voting", func() {
+		It("should upvote incognito post successfully", func() {
+			// Create a post by Alice
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post to be upvoted by Bob.",
+				TagIDs:  []common.VTagID{"technology"},
+			}
+			createResp := testPOSTGetResp(
+				aliceToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Bob upvotes Alice's post
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				bobToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Verify the vote by getting the post
+			getReq := hub.GetIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			getResp := testPOSTGetResp(
+				bobToken,
+				getReq,
+				"/hub/get-incognito-post",
+				http.StatusOK,
+			)
+			var getResponse hub.IncognitoPost
+			err = json.Unmarshal(getResp.([]byte), &getResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getResponse.Upvotes).Should(Equal(1))
+			Expect(getResponse.Downvotes).Should(Equal(0))
+			Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+		})
+
+		It("should downvote incognito post successfully", func() {
+			// Create a post by Charlie
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post to be downvoted by Eve.",
+				TagIDs:  []common.VTagID{"careers"},
+			}
+			createResp := testPOSTGetResp(
+				charlieToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Eve downvotes Charlie's post
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				eveToken,
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Verify the vote by getting the post
+			getReq := hub.GetIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			getResp := testPOSTGetResp(
+				eveToken,
+				getReq,
+				"/hub/get-incognito-post",
+				http.StatusOK,
+			)
+			var getResponse hub.IncognitoPost
+			err = json.Unmarshal(getResp.([]byte), &getResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getResponse.Upvotes).Should(Equal(0))
+			Expect(getResponse.Downvotes).Should(Equal(1))
+			Expect(getResponse.MyVote).Should(Equal(strptr("downvote")))
+		})
+
+		It("should unvote incognito post successfully", func() {
+			// Create a post by Frank
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post to be voted and unvoted by Alice.",
+				TagIDs:  []common.VTagID{"mentorship"},
+			}
+			createResp := testPOSTGetResp(
+				frankToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Alice upvotes Frank's post first
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				aliceToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Alice unvotes the post
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				aliceToken,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Verify the vote is removed
+			getReq := hub.GetIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			getResp := testPOSTGetResp(
+				aliceToken,
+				getReq,
+				"/hub/get-incognito-post",
+				http.StatusOK,
+			)
+			var getResponse hub.IncognitoPost
+			err = json.Unmarshal(getResp.([]byte), &getResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getResponse.Upvotes).Should(Equal(0))
+			Expect(getResponse.Downvotes).Should(Equal(0))
+			Expect(getResponse.MyVote).Should(BeNil())
+		})
+
+		It("should fail to upvote own post", func() {
+			// Create a post
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post that author tries to upvote.",
+				TagIDs:  []common.VTagID{"technology"},
+			}
+			createResp := testPOSTGetResp(
+				bobToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Try to upvote own post
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				bobToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusUnprocessableEntity,
+			)
+		})
+
+		It("should fail to downvote own post", func() {
+			// Create a post
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post that author tries to downvote.",
+				TagIDs:  []common.VTagID{"careers"},
+			}
+			createResp := testPOSTGetResp(
+				charlieToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Try to downvote own post
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				charlieToken,
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusUnprocessableEntity,
+			)
+		})
+
+		It("should fail to unvote own post", func() {
+			// Create a post
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post that author tries to unvote.",
+				TagIDs:  []common.VTagID{"personal-development"},
+			}
+			createResp := testPOSTGetResp(
+				eveToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Try to unvote own post
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				eveToken,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusUnprocessableEntity,
+			)
+		})
+
+		It(
+			"should handle vote conflict - upvote when already downvoted",
+			func() {
+				// Create a post by Frank
+				createReq := hub.AddIncognitoPostRequest{
+					Content: "Post for vote conflict test - upvote after downvote.",
+					TagIDs:  []common.VTagID{"mentorship"},
+				}
+				createResp := testPOSTGetResp(
+					frankToken,
+					createReq,
+					"/hub/add-incognito-post",
+					http.StatusOK,
+				)
+				var addResp hub.AddIncognitoPostResponse
+				err := json.Unmarshal(createResp.([]byte), &addResp)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Alice downvotes first
+				downvoteReq := hub.DownvoteIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				testPOST(
+					aliceToken,
+					downvoteReq,
+					"/hub/downvote-incognito-post",
+					http.StatusOK,
+				)
+
+				// Alice tries to upvote (should fail with 422)
+				upvoteReq := hub.UpvoteIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				testPOST(
+					aliceToken,
+					upvoteReq,
+					"/hub/upvote-incognito-post",
+					http.StatusUnprocessableEntity,
+				)
+
+				// Verify the downvote is still there
+				getReq := hub.GetIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				getResp := testPOSTGetResp(
+					aliceToken,
+					getReq,
+					"/hub/get-incognito-post",
+					http.StatusOK,
+				)
+				var getResponse hub.IncognitoPost
+				err = json.Unmarshal(getResp.([]byte), &getResponse)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(getResponse.MyVote).Should(Equal(strptr("downvote")))
+			},
+		)
+
+		It(
+			"should handle vote conflict - downvote when already upvoted",
+			func() {
+				// Create a post by Bob
+				createReq := hub.AddIncognitoPostRequest{
+					Content: "Post for vote conflict test - downvote after upvote.",
+					TagIDs:  []common.VTagID{"technology"},
+				}
+				createResp := testPOSTGetResp(
+					bobToken,
+					createReq,
+					"/hub/add-incognito-post",
+					http.StatusOK,
+				)
+				var addResp hub.AddIncognitoPostResponse
+				err := json.Unmarshal(createResp.([]byte), &addResp)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				// Charlie upvotes first
+				upvoteReq := hub.UpvoteIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				testPOST(
+					charlieToken,
+					upvoteReq,
+					"/hub/upvote-incognito-post",
+					http.StatusOK,
+				)
+
+				// Charlie tries to downvote (should fail with 422)
+				downvoteReq := hub.DownvoteIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				testPOST(
+					charlieToken,
+					downvoteReq,
+					"/hub/downvote-incognito-post",
+					http.StatusUnprocessableEntity,
+				)
+
+				// Verify the upvote is still there
+				getReq := hub.GetIncognitoPostRequest{
+					IncognitoPostID: addResp.IncognitoPostID,
+				}
+				getResp := testPOSTGetResp(
+					charlieToken,
+					getReq,
+					"/hub/get-incognito-post",
+					http.StatusOK,
+				)
+				var getResponse hub.IncognitoPost
+				err = json.Unmarshal(getResp.([]byte), &getResponse)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+			},
+		)
+
+		It("should allow same vote multiple times (idempotent)", func() {
+			// Create a post by Eve
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post for idempotent vote test.",
+				TagIDs:  []common.VTagID{"careers"},
+			}
+			createResp := testPOSTGetResp(
+				eveToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Frank upvotes
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				frankToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Frank upvotes again (should be OK)
+			testPOST(
+				frankToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Verify only one upvote
+			getReq := hub.GetIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			getResp := testPOSTGetResp(
+				frankToken,
+				getReq,
+				"/hub/get-incognito-post",
+				http.StatusOK,
+			)
+			var getResponse hub.IncognitoPost
+			err = json.Unmarshal(getResp.([]byte), &getResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getResponse.Upvotes).Should(Equal(1))
+			Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+		})
+
+		It("should allow unvote multiple times (idempotent)", func() {
+			// Create a post by Alice
+			createReq := hub.AddIncognitoPostRequest{
+				Content: "Post for idempotent unvote test.",
+				TagIDs:  []common.VTagID{"personal-development"},
+			}
+			createResp := testPOSTGetResp(
+				aliceToken,
+				createReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var addResp hub.AddIncognitoPostResponse
+			err := json.Unmarshal(createResp.([]byte), &addResp)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Bob downvotes first
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				bobToken,
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Bob unvotes
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			testPOST(
+				bobToken,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Bob unvotes again (should be OK)
+			testPOST(
+				bobToken,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusOK,
+			)
+
+			// Verify no vote
+			getReq := hub.GetIncognitoPostRequest{
+				IncognitoPostID: addResp.IncognitoPostID,
+			}
+			getResp := testPOSTGetResp(
+				bobToken,
+				getReq,
+				"/hub/get-incognito-post",
+				http.StatusOK,
+			)
+			var getResponse hub.IncognitoPost
+			err = json.Unmarshal(getResp.([]byte), &getResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(getResponse.Downvotes).Should(Equal(0))
+			Expect(getResponse.MyVote).Should(BeNil())
+		})
+
+		It("should fail without authentication for upvote", func() {
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: "any-post-id",
+			}
+			testPOST(
+				"",
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusUnauthorized,
+			)
+		})
+
+		It("should fail without authentication for downvote", func() {
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: "any-post-id",
+			}
+			testPOST(
+				"",
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusUnauthorized,
+			)
+		})
+
+		It("should fail without authentication for unvote", func() {
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: "any-post-id",
+			}
+			testPOST(
+				"",
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusUnauthorized,
+			)
+		})
+
+		It("should fail for non-existent post on upvote", func() {
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: "nonexistent",
+			}
+			testPOST(
+				charlieToken,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusNotFound,
+			)
+		})
+
+		It("should fail for non-existent post on downvote", func() {
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: "nonexistent",
+			}
+			testPOST(
+				eveToken,
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusNotFound,
+			)
+		})
+
+		It("should fail for non-existent post on unvote", func() {
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: "nonexistent",
+			}
+			testPOST(
+				frankToken,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusNotFound,
+			)
+		})
+	})
+
 	Describe("DeleteIncognitoPostComment", func() {
 		It("should delete own comment successfully", func() {
 			// Create post and comment

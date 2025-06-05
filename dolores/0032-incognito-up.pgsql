@@ -26,4 +26,12 @@ INSERT INTO hub_users (
     ('12345678-0032-0032-0032-000000000006', 'Frank Test0032', 'frank0032test', 'frank@test0032.com',
      '$2a$10$p7Z/hRlt3ZZiz1IbPSJUiOualKbokFExYiWWazpQvfv660LqskAUK', 'ACTIVE_HUB_USER', 'FREE_HUB_USER', 'US', 'Test City', 'en', 'Short bio', 'Long bio');
 
+-- Insert test tags for incognito posts testing (if they don't already exist)
+INSERT INTO tags (id, display_name) VALUES 
+    ('technology', 'Technology'),
+    ('careers', 'Careers'),
+    ('personal-development', 'Personal Development'),
+    ('mentorship', 'Mentorship')
+ON CONFLICT (id) DO NOTHING;
+
 COMMIT; 

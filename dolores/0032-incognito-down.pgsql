@@ -3,6 +3,15 @@ BEGIN;
 -- Cleanup script for incognito posts testing
 -- Remove in reverse order of dependencies
 
+-- Remove incognito post votes (if any were created during tests)
+DELETE FROM incognito_post_votes 
+WHERE incognito_post_id IN (
+    SELECT id FROM incognito_posts 
+    WHERE author_id IN (
+        SELECT id FROM hub_users WHERE id::text LIKE '12345678-0032-0032-0032-%'
+    )
+);
+
 -- Remove incognito post comment votes (if any were created during tests)
 DELETE FROM incognito_post_comment_votes 
 WHERE comment_id IN (
