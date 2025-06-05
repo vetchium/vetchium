@@ -36,6 +36,14 @@ func UpvoteIncognitoPostComment(h wand.Wand) http.HandlerFunc {
 				return
 			}
 
+			if errors.Is(err, db.ErrIncognitoPostCommentVoteConflict) {
+				h.Dbg(
+					"Comment vote conflict: user has already voted in opposite direction",
+				)
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			h.Err("failed to upvote incognito post comment", "error", err)
 			http.Error(w, "", http.StatusInternalServerError)
 			return

@@ -602,7 +602,30 @@ func (pg *PG) voteIncognitoPostComment(
 		return db.ErrNonVoteableIncognitoPostComment
 	}
 
-	// Insert or update vote
+	// Check for existing conflicting vote
+	var existingVote *int
+	voteCheckQuery := `
+		SELECT vote_value 
+		FROM incognito_post_comment_votes 
+		WHERE comment_id = $1 AND user_id = $2
+	`
+	err = pg.pool.QueryRow(ctx, voteCheckQuery, commentID, hubUserID).
+		Scan(&existingVote)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		pg.log.Err("failed to check existing comment vote", "error", err)
+		return err
+	}
+
+	// If there's an existing vote and it's different from the new vote, return conflict error
+	if existingVote != nil && *existingVote != voteValue {
+		pg.log.Dbg("comment vote conflict detected",
+			"comment_id", commentID,
+			"existing_vote", *existingVote,
+			"new_vote", voteValue)
+		return db.ErrIncognitoPostCommentVoteConflict
+	}
+
+	// Insert or update vote (this will be idempotent for same vote)
 	query := `
 		INSERT INTO incognito_post_comment_votes (comment_id, user_id, vote_value)
 		VALUES ($1, $2, $3)
@@ -737,23 +760,63 @@ func (pg *PG) voteIncognitoPost(
 		return db.ErrInternal
 	}
 
-	query := `
-		WITH post_check AS (
-			SELECT author_id 
-			FROM incognito_posts 
-			WHERE id = $1 AND is_deleted = FALSE
-		)
+	// Check if post exists and user is not the author
+	var authorID string
+	postCheckQuery := `
+		SELECT author_id 
+		FROM incognito_posts 
+		WHERE id = $1 AND is_deleted = FALSE
+	`
+	err = pg.pool.QueryRow(ctx, postCheckQuery, incognitoPostID).Scan(&authorID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			pg.log.Dbg("incognito post not found", "id", incognitoPostID)
+			return db.ErrNoIncognitoPost
+		}
+		pg.log.Err("failed to check if post exists", "error", err)
+		return err
+	}
+
+	// Check if user is the author
+	if authorID == hubUserID {
+		pg.log.Dbg("user is the author", "id", incognitoPostID)
+		return db.ErrNonVoteableIncognitoPost
+	}
+
+	// Check for existing conflicting vote
+	var existingVote *int
+	voteCheckQuery := `
+		SELECT vote_value 
+		FROM incognito_post_votes 
+		WHERE incognito_post_id = $1 AND user_id = $2
+	`
+	err = pg.pool.QueryRow(ctx, voteCheckQuery, incognitoPostID, hubUserID).
+		Scan(&existingVote)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		pg.log.Err("failed to check existing vote", "error", err)
+		return err
+	}
+
+	// If there's an existing vote and it's different from the new vote, return conflict error
+	if existingVote != nil && *existingVote != voteValue {
+		pg.log.Dbg("vote conflict detected",
+			"incognito_post_id", incognitoPostID,
+			"existing_vote", *existingVote,
+			"new_vote", voteValue)
+		return db.ErrIncognitoPostVoteConflict
+	}
+
+	// Insert or update vote (this will be idempotent for same vote)
+	insertQuery := `
 		INSERT INTO incognito_post_votes (incognito_post_id, user_id, vote_value)
-		SELECT $1, $2, $3
-		FROM post_check
-		WHERE author_id != $2
+		VALUES ($1, $2, $3)
 		ON CONFLICT (incognito_post_id, user_id)
 		DO UPDATE SET vote_value = EXCLUDED.vote_value
 	`
 
-	result, err := pg.pool.Exec(
+	_, err = pg.pool.Exec(
 		ctx,
-		query,
+		insertQuery,
 		incognitoPostID,
 		hubUserID,
 		voteValue,
@@ -761,31 +824,6 @@ func (pg *PG) voteIncognitoPost(
 	if err != nil {
 		pg.log.Err("failed to vote incognito post", "error", err)
 		return err
-	}
-
-	if result.RowsAffected() == 0 {
-		// Check if post exists to determine the specific error
-		var authorID string
-		checkQuery := `
-			SELECT author_id 
-			FROM incognito_posts 
-			WHERE id = $1 AND is_deleted = FALSE
-		`
-		err = pg.pool.QueryRow(ctx, checkQuery, incognitoPostID).Scan(&authorID)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				pg.log.Dbg("incognito post not found", "id", incognitoPostID)
-				return db.ErrNoIncognitoPost
-			}
-			pg.log.Err("failed to check if post exists", "error", err)
-			return err
-		}
-
-		// Post exists but user is the author
-		if authorID == hubUserID {
-			pg.log.Dbg("user is the author", "id", incognitoPostID)
-			return db.ErrNonVoteableIncognitoPost
-		}
 	}
 
 	pg.log.Dbg("voted", "incognito_post_id", incognitoPostID)

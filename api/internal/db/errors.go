@@ -114,6 +114,12 @@ var (
 	ErrNonVoteableIncognitoPost = errors.New(
 		"user cannot vote for this incognito post",
 	)
+	ErrIncognitoPostVoteConflict = errors.New(
+		"cannot vote: user has already voted in the opposite direction",
+	)
+	ErrIncognitoPostCommentVoteConflict = errors.New(
+		"cannot vote: user has already voted in the opposite direction on this comment",
+	)
 	ErrInvalidParentComment   = errors.New("invalid parent comment")
 	ErrMaxCommentDepthReached = errors.New("maximum comment depth reached")
 )
