@@ -127,8 +127,8 @@ func (pg *PG) DeleteIncognitoPost(
 	// First check if the post exists and is not deleted
 	var authorID string
 	checkQuery := `
-		SELECT author_id 
-		FROM incognito_posts 
+		SELECT author_id
+		FROM incognito_posts
 		WHERE id = $1 AND is_deleted = FALSE
 	`
 
@@ -307,8 +307,8 @@ func (pg *PG) DeleteIncognitoPostComment(
 	// First check if the comment exists and is not deleted
 	var authorID string
 	checkQuery := `
-		SELECT author_id 
-		FROM incognito_post_comments 
+		SELECT author_id
+		FROM incognito_post_comments
 		WHERE id = $1 AND incognito_post_id = $2 AND is_deleted = FALSE
 	`
 
@@ -341,8 +341,8 @@ func (pg *PG) DeleteIncognitoPostComment(
 	updateQuery := `
 		UPDATE incognito_post_comments
 		SET is_deleted = TRUE
-		WHERE id = $1 
-		AND incognito_post_id = $2 
+		WHERE id = $1
+		AND incognito_post_id = $2
 		AND author_id = $3
 		AND is_deleted = FALSE
 	`
@@ -446,7 +446,7 @@ func (pg *PG) UnvoteIncognitoPostComment(
 	// Single query to check comment exists, not deleted, and remove vote
 	query := `
 		WITH comment_check AS (
-			SELECT id FROM incognito_post_comments 
+			SELECT id FROM incognito_post_comments
 			WHERE id = $1 AND incognito_post_id = $2 AND is_deleted = FALSE
 		),
 		vote_check AS (
@@ -522,14 +522,14 @@ func (pg *PG) UnvoteIncognitoPost(
 	// Single query that checks post exists, user is not author, and removes vote
 	query := `
 		WITH post_check AS (
-			SELECT author_id 
-			FROM incognito_posts 
+			SELECT author_id
+			FROM incognito_posts
 			WHERE id = $1 AND is_deleted = FALSE
 		)
 		DELETE FROM incognito_post_votes
 		WHERE incognito_post_id = $1 AND user_id = $2
 		AND EXISTS (
-			SELECT 1 FROM post_check 
+			SELECT 1 FROM post_check
 			WHERE author_id != $2
 		)
 	`
@@ -544,8 +544,8 @@ func (pg *PG) UnvoteIncognitoPost(
 		// Check if post exists to determine the specific error
 		var authorID string
 		checkQuery := `
-			SELECT author_id 
-			FROM incognito_posts 
+			SELECT author_id
+			FROM incognito_posts
 			WHERE id = $1 AND is_deleted = FALSE
 		`
 		err = pg.pool.QueryRow(ctx, checkQuery, req.IncognitoPostID).
@@ -605,8 +605,8 @@ func (pg *PG) voteIncognitoPostComment(
 	// Check for existing conflicting vote
 	var existingVote *int
 	voteCheckQuery := `
-		SELECT vote_value 
-		FROM incognito_post_comment_votes 
+		SELECT vote_value
+		FROM incognito_post_comment_votes
 		WHERE comment_id = $1 AND user_id = $2
 	`
 	err = pg.pool.QueryRow(ctx, voteCheckQuery, commentID, hubUserID).
@@ -763,8 +763,8 @@ func (pg *PG) voteIncognitoPost(
 	// Check if post exists and user is not the author
 	var authorID string
 	postCheckQuery := `
-		SELECT author_id 
-		FROM incognito_posts 
+		SELECT author_id
+		FROM incognito_posts
 		WHERE id = $1 AND is_deleted = FALSE
 	`
 	err = pg.pool.QueryRow(ctx, postCheckQuery, incognitoPostID).Scan(&authorID)
@@ -786,8 +786,8 @@ func (pg *PG) voteIncognitoPost(
 	// Check for existing conflicting vote
 	var existingVote *int
 	voteCheckQuery := `
-		SELECT vote_value 
-		FROM incognito_post_votes 
+		SELECT vote_value
+		FROM incognito_post_votes
 		WHERE incognito_post_id = $1 AND user_id = $2
 	`
 	err = pg.pool.QueryRow(ctx, voteCheckQuery, incognitoPostID, hubUserID).
