@@ -19,6 +19,9 @@ model IncognitoPost {
     downvotes: integer;
     is_created_by_me: boolean;
     is_deleted: boolean;
+
+    @doc("The current user's vote on this post: 'upvote', 'downvote', or null")
+    my_vote?: "upvote" | "downvote";
 }
 
 model AddIncognitoPostRequest {
@@ -156,6 +159,21 @@ model GetIncognitoPostRequest {
 
 model DeleteIncognitoPostRequest {
     @doc("The ID of the IncognitoPost to delete")
+    incognito_post_id: string;
+}
+
+model UpvoteIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to vote on")
+    incognito_post_id: string;
+}
+
+model DownvoteIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to vote on")
+    incognito_post_id: string;
+}
+
+model UnvoteIncognitoPostRequest {
+    @doc("The ID of the IncognitoPost to unvote on")
     incognito_post_id: string;
 }
 
@@ -366,4 +384,91 @@ interface UnvoteIncognitoPostComment {
         @statusCode
         statusCode: 422;
     };
+}
+
+@route("/hub/upvote-incognito-post")
+interface UpvoteIncognitoPost {
+    @doc("UpvoteIncognitoPost upvotes an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    upvoteIncognitoPost(@body request: UpvoteIncognitoPostRequest):
+        | {
+              @doc("Post upvote registered. 200 will be returned even if the user has already upvoted.")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post does not exist")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User has already downvoted the post 2) User is attempting to upvote their own post")
+              @statusCode
+              statusCode: 422;
+          };
+}
+
+@route("/hub/downvote-incognito-post")
+interface DownvoteIncognitoPost {
+    @doc("DownvoteIncognitoPost downvotes an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    downvoteIncognitoPost(@body request: DownvoteIncognitoPostRequest):
+        | {
+              @doc("Post downvote registered. 200 will be returned even if the user has already downvoted.")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post does not exist")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User has already upvoted the post 2) User is attempting to downvote their own post")
+              @statusCode
+              statusCode: 422;
+          };
+}
+
+@route("/hub/unvote-incognito-post")
+interface UnvoteIncognitoPost {
+    @doc("UnvoteIncognitoPost removes the user's vote from an IncognitoPost")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    unvoteIncognitoPost(@body request: UnvoteIncognitoPostRequest):
+        | {
+              @doc("Whatever upvote or downvote registered by the logged in user for the post is removed. No error is returned even if the user has already unvoted or has never voted for the post")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post does not exist")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User is attempting to unvote their own post")
+              @statusCode
+              statusCode: 422;
+          };
 }

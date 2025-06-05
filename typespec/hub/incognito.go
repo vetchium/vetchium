@@ -15,6 +15,7 @@ type IncognitoPost struct {
 	Downvotes       int           `json:"downvotes"`
 	IsCreatedByMe   bool          `json:"is_created_by_me"`
 	IsDeleted       bool          `json:"is_deleted"`
+	MyVote          *string       `json:"my_vote"`
 }
 
 type AddIncognitoPostRequest struct {
@@ -90,5 +91,17 @@ type GetIncognitoPostRequest struct {
 }
 
 type DeleteIncognitoPostRequest struct {
+	IncognitoPostID string `json:"incognito_post_id" validate:"required"`
+}
+
+type UpvoteIncognitoPostRequest struct {
+	IncognitoPostID string `json:"incognito_post_id" validate:"required"`
+}
+
+type DownvoteIncognitoPostRequest struct {
+	IncognitoPostID string `json:"incognito_post_id" validate:"required"`
+}
+
+type UnvoteIncognitoPostRequest struct {
 	IncognitoPostID string `json:"incognito_post_id" validate:"required"`
 }

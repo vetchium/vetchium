@@ -1,6 +1,6 @@
 import { VTag, VTagID } from "../common/vtags";
 
-export class IncogntiPost {
+export class IncognitoPost {
   incognito_post_id: string = "";
   content: string = "";
   tags: VTag[] = [];
@@ -9,6 +9,7 @@ export class IncogntiPost {
   downvotes: number = 0;
   is_created_by_me: boolean = false;
   is_deleted: boolean = false;
+  my_vote?: "upvote" | "downvote" = undefined;
 }
 
 export class AddIncognitoPostRequest {
@@ -90,5 +91,17 @@ export class GetIncognitoPostRequest {
 }
 
 export class DeleteIncognitoPostRequest {
+  incognito_post_id: string = "";
+}
+
+export class UpvoteIncognitoPostRequest {
+  incognito_post_id: string = "";
+}
+
+export class DownvoteIncognitoPostRequest {
+  incognito_post_id: string = "";
+}
+
+export class UnvoteIncognitoPostRequest {
   incognito_post_id: string = "";
 }
