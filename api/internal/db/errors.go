@@ -111,6 +111,9 @@ var (
 	ErrNonVoteableIncognitoPostComment = errors.New(
 		"user cannot vote for this incognito post comment",
 	)
+	ErrNonVoteableIncognitoPost = errors.New(
+		"user cannot vote for this incognito post",
+	)
 	ErrInvalidParentComment   = errors.New("invalid parent comment")
 	ErrMaxCommentDepthReached = errors.New("maximum comment depth reached")
 )

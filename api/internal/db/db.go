@@ -584,4 +584,16 @@ type DB interface {
 		ctx context.Context,
 		req hub.UnvoteIncognitoPostCommentRequest,
 	) error
+	UpvoteIncognitoPost(
+		ctx context.Context,
+		req hub.UpvoteIncognitoPostRequest,
+	) error
+	DownvoteIncognitoPost(
+		ctx context.Context,
+		req hub.DownvoteIncognitoPostRequest,
+	) error
+	UnvoteIncognitoPost(
+		ctx context.Context,
+		req hub.UnvoteIncognitoPostRequest,
+	) error
 }

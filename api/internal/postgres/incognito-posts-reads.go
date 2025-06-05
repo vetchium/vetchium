@@ -33,6 +33,23 @@ func (pg *PG) GetIncognitoPost(
 			ip.content,
 			ip.created_at,
 			CASE WHEN ip.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			COALESCE(ip.upvotes_count, 0) as upvotes,
+			COALESCE(ip.downvotes_count, 0) as downvotes,
+			CASE 
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv 
+					WHERE ipv.incognito_post_id = ip.id 
+					AND ipv.user_id = $2 
+					AND ipv.vote_value = 1
+				) THEN 'upvote'
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv 
+					WHERE ipv.incognito_post_id = ip.id 
+					AND ipv.user_id = $2 
+					AND ipv.vote_value = -1
+				) THEN 'downvote'
+				ELSE NULL
+			END as my_vote,
 			COALESCE(
 				ARRAY_AGG(t.id ORDER BY t.display_name) FILTER (WHERE t.id IS NOT NULL),
 				'{}'::text[]
@@ -45,18 +62,22 @@ func (pg *PG) GetIncognitoPost(
 		LEFT JOIN incognito_post_tags ipt ON ip.id = ipt.incognito_post_id
 		LEFT JOIN tags t ON ipt.tag_id = t.id
 		WHERE ip.id = $1 AND ip.is_deleted = FALSE
-		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id
+		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count
 	`
 
 	var post hub.IncognitoPost
 	var tagIDs []string
 	var tagNames []string
+	var myVote sql.NullString
 
 	err = pg.pool.QueryRow(ctx, query, req.IncognitoPostID, hubUserID).Scan(
 		&post.IncognitoPostID,
 		&post.Content,
 		&post.CreatedAt,
 		&post.IsCreatedByMe,
+		&post.Upvotes,
+		&post.Downvotes,
+		&myVote,
 		&tagIDs,
 		&tagNames,
 	)
@@ -77,6 +98,11 @@ func (pg *PG) GetIncognitoPost(
 			req.IncognitoPostID,
 		)
 		return hub.IncognitoPost{}, err
+	}
+
+	// Set the user's vote if exists
+	if myVote.Valid {
+		post.MyVote = &myVote.String
 	}
 
 	// Build tags array

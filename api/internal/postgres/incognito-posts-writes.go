@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
@@ -442,16 +443,6 @@ func (pg *PG) UnvoteIncognitoPostComment(
 		return err
 	}
 
-	// Check if incognito post exists
-	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
-		pg.log.Dbg(
-			"incognito post not found",
-			"incognito_post_id",
-			req.IncognitoPostID,
-		)
-		return db.ErrNoIncognitoPost
-	}
-
 	// Single query to check comment exists, not deleted, and remove vote
 	query := `
 		WITH comment_check AS (
@@ -516,7 +507,74 @@ func (pg *PG) UnvoteIncognitoPostComment(
 	return nil
 }
 
-// Helper functions
+func (pg *PG) UnvoteIncognitoPost(
+	ctx context.Context,
+	req hub.UnvoteIncognitoPostRequest,
+) error {
+	pg.log.Dbg("entered UnvoteIncognitoPost", "id", req.IncognitoPostID)
+
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return err
+	}
+
+	// Single query that checks post exists, user is not author, and removes vote
+	query := `
+		WITH post_check AS (
+			SELECT author_id 
+			FROM incognito_posts 
+			WHERE id = $1 AND is_deleted = FALSE
+		)
+		DELETE FROM incognito_post_votes
+		WHERE incognito_post_id = $1 AND user_id = $2
+		AND EXISTS (
+			SELECT 1 FROM post_check 
+			WHERE author_id != $2
+		)
+	`
+
+	result, err := pg.pool.Exec(ctx, query, req.IncognitoPostID, hubUserID)
+	if err != nil {
+		pg.log.Err("failed to unvote incognito post", "error", err)
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		// Check if post exists to determine the specific error
+		var authorID string
+		checkQuery := `
+			SELECT author_id 
+			FROM incognito_posts 
+			WHERE id = $1 AND is_deleted = FALSE
+		`
+		err = pg.pool.QueryRow(ctx, checkQuery, req.IncognitoPostID).
+			Scan(&authorID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				pg.log.Dbg("incognitopost notfound", "id", req.IncognitoPostID)
+				return db.ErrNoIncognitoPost
+			}
+			pg.log.Err("failed to check if post exists", "error", err)
+			return err
+		}
+
+		// Post exists but user is the author
+		if authorID == hubUserID {
+			pg.log.Dbg("user is the author", "id", req.IncognitoPostID)
+			return db.ErrNonVoteableIncognitoPost
+		}
+
+		// Post exists, user is not author, but no vote existed to remove (this is fine)
+		pg.log.Dbg("no existing vote to remove",
+			"incognito_post_id", req.IncognitoPostID,
+			"hub_user_id", hubUserID,
+		)
+	}
+
+	pg.log.Dbg("unvoted", "incognito_post_id", req.IncognitoPostID)
+	return nil
+}
 
 func (pg *PG) voteIncognitoPostComment(
 	ctx context.Context,
@@ -630,4 +688,106 @@ func (pg *PG) validateTagIDs(ctx context.Context, tagIDs []string) bool {
 	var count int
 	err := pg.pool.QueryRow(ctx, query, deduplicatedTagIDs).Scan(&count)
 	return err == nil && count == len(deduplicatedTagIDs)
+}
+
+func (pg *PG) UpvoteIncognitoPost(
+	ctx context.Context,
+	req hub.UpvoteIncognitoPostRequest,
+) error {
+	pg.log.Dbg("entered UpvoteIncognitoPost",
+		"incognito_post_id", req.IncognitoPostID)
+
+	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, 1)
+	if err != nil {
+		pg.log.Dbg("failed to upvote incognito post",
+			"error", err,
+			"incognito_post_id", req.IncognitoPostID,
+		)
+		return err
+	}
+
+	pg.log.Dbg("upvoted", "incognito_post_id", req.IncognitoPostID)
+	return nil
+}
+
+func (pg *PG) DownvoteIncognitoPost(
+	ctx context.Context,
+	req hub.DownvoteIncognitoPostRequest,
+) error {
+	pg.log.Dbg("entered DownvoteIncognitoPost", "id", req.IncognitoPostID)
+
+	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, -1)
+	if err != nil {
+		pg.log.Dbg("failed to downvote incognito post", "error", err)
+		return err
+	}
+
+	pg.log.Dbg("downvoted", "incognito_post_id", req.IncognitoPostID)
+	return nil
+}
+
+func (pg *PG) voteIncognitoPost(
+	ctx context.Context,
+	incognitoPostID string,
+	voteValue int,
+) error {
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return db.ErrInternal
+	}
+
+	query := `
+		WITH post_check AS (
+			SELECT author_id 
+			FROM incognito_posts 
+			WHERE id = $1 AND is_deleted = FALSE
+		)
+		INSERT INTO incognito_post_votes (incognito_post_id, user_id, vote_value)
+		SELECT $1, $2, $3
+		FROM post_check
+		WHERE author_id != $2
+		ON CONFLICT (incognito_post_id, user_id)
+		DO UPDATE SET vote_value = EXCLUDED.vote_value
+	`
+
+	result, err := pg.pool.Exec(
+		ctx,
+		query,
+		incognitoPostID,
+		hubUserID,
+		voteValue,
+	)
+	if err != nil {
+		pg.log.Err("failed to vote incognito post", "error", err)
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		// Check if post exists to determine the specific error
+		var authorID string
+		checkQuery := `
+			SELECT author_id 
+			FROM incognito_posts 
+			WHERE id = $1 AND is_deleted = FALSE
+		`
+		err = pg.pool.QueryRow(ctx, checkQuery, incognitoPostID).Scan(&authorID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				pg.log.Dbg("incognito post not found", "id", incognitoPostID)
+				return db.ErrNoIncognitoPost
+			}
+			pg.log.Err("failed to check if post exists", "error", err)
+			return err
+		}
+
+		// Post exists but user is the author
+		if authorID == hubUserID {
+			pg.log.Dbg("user is the author", "id", incognitoPostID)
+			return db.ErrNonVoteableIncognitoPost
+		}
+	}
+
+	pg.log.Dbg("voted", "incognito_post_id", incognitoPostID)
+	return nil
 }

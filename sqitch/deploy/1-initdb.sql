@@ -1398,7 +1398,11 @@ CREATE TABLE incognito_posts (
     content TEXT NOT NULL,
     author_id UUID REFERENCES hub_users(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
-    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+
+    upvotes_count INTEGER NOT NULL DEFAULT 0,
+    downvotes_count INTEGER NOT NULL DEFAULT 0,
+    score INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE incognito_post_comments (
@@ -1427,6 +1431,14 @@ CREATE TABLE incognito_post_comment_votes (
     vote_value SMALLINT NOT NULL CHECK (vote_value IN (1, -1)),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
     PRIMARY KEY (comment_id, user_id)
+);
+
+CREATE TABLE incognito_post_votes (
+    incognito_post_id TEXT REFERENCES incognito_posts(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES hub_users(id) ON DELETE CASCADE NOT NULL,
+    vote_value SMALLINT NOT NULL CHECK (vote_value IN (1, -1)),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC', now()),
+    PRIMARY KEY (incognito_post_id, user_id)
 );
 
 CREATE TABLE incognito_post_tags (
@@ -1504,9 +1516,61 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to update incognito post vote counts
+CREATE OR REPLACE FUNCTION update_incognito_post_vote_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        UPDATE incognito_posts
+        SET
+            upvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = OLD.incognito_post_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = OLD.incognito_post_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = OLD.incognito_post_id
+            )
+        WHERE id = OLD.incognito_post_id;
+    ELSE
+        UPDATE incognito_posts
+        SET
+            upvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = NEW.incognito_post_id AND vote_value = 1
+            ),
+            downvotes_count = (
+                SELECT COUNT(*)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = NEW.incognito_post_id AND vote_value = -1
+            ),
+            score = (
+                SELECT COALESCE(SUM(vote_value), 0)
+                FROM incognito_post_votes
+                WHERE incognito_post_id = NEW.incognito_post_id
+            )
+        WHERE id = NEW.incognito_post_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create trigger to update vote counts on vote changes
 CREATE TRIGGER update_incognito_comment_vote_counts_trigger
 AFTER INSERT OR UPDATE OR DELETE ON incognito_post_comment_votes
 FOR EACH ROW EXECUTE FUNCTION update_incognito_comment_vote_counts();
+
+-- Create trigger to update incognito post vote counts on vote changes
+CREATE TRIGGER update_incognito_post_vote_counts_trigger
+AFTER INSERT OR UPDATE OR DELETE ON incognito_post_votes
+FOR EACH ROW EXECUTE FUNCTION update_incognito_post_vote_counts();
 
 COMMIT;
