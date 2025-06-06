@@ -23,3 +23,33 @@ alwaysApply: false
 - When generating test code, generate positive cases, negative cases, border conditions, invalid conditions, etc. Do not ignore any obvious failures.
 - When generating test code, for every It() function in the test case, create a new dedicated user and use that. Do not reuse user accounts across multiple It test cases which may cause problems.
 - When generating code avoid adding comments after the statement on each line. Comments should be done only on the start of a section. Imports should not have any comments.
+- In .go code, always compare errors using, errors.Is(), for example:
+```go
+if errors.Is(err, pgx.ErrNoRows)
+```
+
+instead of
+```go
+if err == pgx.ErrNoRows
+```
+- Ensure that the code stays within 80 columns as much as possible. In certain log statements, it may not be possible. In those cases, log it like:
+```go
+h.Dbg("Prompt"
+    "key1", "val1",
+    "key2", "val2",
+)
+```
+
+instead of
+```go
+h.Dbg(
+    "Prompt",
+    "key1",
+    "val1",
+    "key2",
+    "val2",
+)
+```
+- When writing front-end code, do not recreate any class or interface from the typespec directory. Instead of that, import the class or interface from the corresponding .ts file and use it. All the .ts file classes and interfaces are exported via the [index.ts](mdc:typespec/index.ts) and should be imported via that.
+- Tests are executed via "make test" command using the [Makefile](mdc:Makefile) There are no other ways to run tests as some environment values needs to be set before the tests are run. Do not offer to run tests any other way. If you want to run a particular test, do it via FDescribe on the test file. Do not use other methods to focus on a particular test file via command line arguments.
+- Do not add trailing whitespaces in the code that you generate
