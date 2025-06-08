@@ -24,28 +24,51 @@ func (pg *PG) GetIncognitoPost(
 
 	// Single query to get post with tags and author check
 	query := `
-		SELECT 
+		SELECT
 			ip.id,
 			ip.content,
 			ip.created_at,
 			CASE WHEN ip.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
-			COALESCE(ip.upvotes_count, 0) as upvotes,
-			COALESCE(ip.downvotes_count, 0) as downvotes,
-					CASE 
-			WHEN EXISTS(
-				SELECT 1 FROM incognito_post_votes ipv 
-				WHERE ipv.incognito_post_id = ip.id 
-				AND ipv.user_id = $2 
-				AND ipv.vote_value = $3
-			) THEN $4
-			WHEN EXISTS(
-				SELECT 1 FROM incognito_post_votes ipv 
-				WHERE ipv.incognito_post_id = ip.id 
-				AND ipv.user_id = $2 
-				AND ipv.vote_value = $5
-			) THEN $6
-			ELSE NULL
-		END as my_vote,
+			COALESCE(ip.upvotes_count, 0) as upvotes_count,
+			COALESCE(ip.downvotes_count, 0) as downvotes_count,
+			COALESCE(ip.score, 0) as score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
+					AND ipv.vote_value = $3
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
+					AND ipv.vote_value = $5
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ip.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ip.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			ip.is_deleted,
 			COALESCE(
 				ARRAY_AGG(t.id ORDER BY t.display_name) FILTER (WHERE t.id IS NOT NULL),
 				'{}'::text[]
@@ -58,24 +81,27 @@ func (pg *PG) GetIncognitoPost(
 		LEFT JOIN incognito_post_tags ipt ON ip.id = ipt.incognito_post_id
 		LEFT JOIN tags t ON ipt.tag_id = t.id
 		WHERE ip.id = $1 AND ip.is_deleted = FALSE
-		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count
+		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count, ip.score, ip.is_deleted
 	`
 
 	var post hub.IncognitoPost
 	var tagIDs []string
 	var tagNames []string
-	var myVote sql.NullString
 
 	err = pg.pool.QueryRow(ctx, query, req.IncognitoPostID, hubUserID,
-		db.UpvoteValue, db.Upvote,
-		db.DownvoteValue, db.Downvote).Scan(
+		db.UpvoteValue, db.DownvoteValue).Scan(
 		&post.IncognitoPostID,
 		&post.Content,
 		&post.CreatedAt,
 		&post.IsCreatedByMe,
 		&post.UpvotesCount,
 		&post.DownvotesCount,
-		&myVote,
+		&post.Score,
+		&post.MeUpvoted,
+		&post.MeDownvoted,
+		&post.CanUpvote,
+		&post.CanDownvote,
+		&post.IsDeleted,
 		&tagIDs,
 		&tagNames,
 	)
@@ -91,11 +117,7 @@ func (pg *PG) GetIncognitoPost(
 		return hub.IncognitoPost{}, err
 	}
 
-	// Set the user's vote if exists
-	if myVote.Valid {
-		post.MeUpvoted = myVote.String == db.Upvote
-		post.MeDownvoted = myVote.String == db.Downvote
-	}
+	// Vote fields are now directly scanned from the query
 
 	// Build tags array
 	post.Tags = make([]common.VTag, len(tagIDs))
@@ -132,7 +154,7 @@ func (pg *PG) GetIncognitoPostComments(
 
 	// Single efficient query to get all comment data
 	query := `
-		SELECT 
+		SELECT
 			ipc.id,
 			ipc.content,
 			ipc.parent_comment_id,
@@ -140,34 +162,55 @@ func (pg *PG) GetIncognitoPostComments(
 			ipc.created_at,
 			ipc.upvotes_count,
 			ipc.downvotes_count,
-			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
-			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
-			CASE 
+			COALESCE(ipc.score, 0) as score,
+			CASE
 				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv 
-					WHERE ipcv.comment_id = ipc.id 
-					AND ipcv.user_id = $2 
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
 					AND ipcv.vote_value = $3
-				) THEN $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
 				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv 
-					WHERE ipcv.comment_id = ipc.id 
-					AND ipcv.user_id = $2 
-					AND ipcv.vote_value = $5
-				) THEN $6
-				ELSE $7
-			END as my_vote
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+					AND ipcv.vote_value = $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted
 		FROM incognito_post_comments ipc
 		WHERE ipc.incognito_post_id = $1
-		ORDER BY 
+		ORDER BY
 			CASE WHEN ipc.parent_comment_id IS NULL THEN ipc.created_at END ASC,
 			ipc.parent_comment_id ASC NULLS FIRST,
 			ipc.created_at ASC
 	`
 
 	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID,
-		db.UpvoteValue, db.Upvote,
-		db.DownvoteValue, db.Downvote, db.NoVote)
+		db.UpvoteValue, db.DownvoteValue)
 	if err != nil {
 		pg.log.Err("failed to query incognito post comments",
 			"error", err,
@@ -184,7 +227,6 @@ func (pg *PG) GetIncognitoPostComments(
 		var comment hub.IncognitoPostComment
 		var parentCommentID sql.NullString
 		var isDeleted bool
-		var myVote string
 
 		err := rows.Scan(
 			&comment.CommentID,
@@ -194,9 +236,13 @@ func (pg *PG) GetIncognitoPostComments(
 			&comment.CreatedAt,
 			&comment.UpvotesCount,
 			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
 			&comment.IsCreatedByMe,
 			&isDeleted,
-			&myVote,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan comment row", "error", err)
@@ -207,9 +253,7 @@ func (pg *PG) GetIncognitoPostComments(
 			comment.InReplyTo = &parentCommentID.String
 		}
 
-		// Set voting status based on vote string
-		comment.MeUpvoted = myVote == db.Upvote
-		comment.MeDownvoted = myVote == db.Downvote
+		// Vote fields are now directly scanned from the query
 
 		comment.IsDeleted = isDeleted
 		if isDeleted {

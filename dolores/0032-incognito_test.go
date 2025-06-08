@@ -689,7 +689,7 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			reqBody := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID:    postResponse.IncognitoPostID,
 				Limit:              10,
-				IncludeNestedDepth: 3,
+				IncludeNestedDepth: int32ptr(3),
 			}
 
 			respData := testPOSTGetResp(
@@ -709,7 +709,7 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			reqBody := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID:    "any-post-id",
 				Limit:              10,
-				IncludeNestedDepth: 3,
+				IncludeNestedDepth: int32ptr(3),
 			}
 
 			testPOST(
@@ -724,7 +724,7 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			reqBody := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID:    "nonexistent",
 				Limit:              10,
-				IncludeNestedDepth: 3,
+				IncludeNestedDepth: int32ptr(3),
 			}
 
 			testPOST(
@@ -965,9 +965,10 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			var getResponse hub.IncognitoPost
 			err = json.Unmarshal(getResp.([]byte), &getResponse)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(getResponse.Upvotes).Should(Equal(1))
-			Expect(getResponse.Downvotes).Should(Equal(0))
-			Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+			Expect(getResponse.UpvotesCount).Should(Equal(int32(1)))
+			Expect(getResponse.DownvotesCount).Should(Equal(int32(0)))
+			Expect(getResponse.MeUpvoted).Should(BeTrue())
+			Expect(getResponse.MeDownvoted).Should(BeFalse())
 		})
 
 		It("should downvote incognito post successfully", func() {
@@ -1010,9 +1011,10 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			var getResponse hub.IncognitoPost
 			err = json.Unmarshal(getResp.([]byte), &getResponse)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(getResponse.Upvotes).Should(Equal(0))
-			Expect(getResponse.Downvotes).Should(Equal(1))
-			Expect(getResponse.MyVote).Should(Equal(strptr("downvote")))
+			Expect(getResponse.UpvotesCount).Should(Equal(int32(0)))
+			Expect(getResponse.DownvotesCount).Should(Equal(int32(1)))
+			Expect(getResponse.MeUpvoted).Should(BeFalse())
+			Expect(getResponse.MeDownvoted).Should(BeTrue())
 		})
 
 		It("should unvote incognito post successfully", func() {
@@ -1066,9 +1068,10 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			var getResponse hub.IncognitoPost
 			err = json.Unmarshal(getResp.([]byte), &getResponse)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(getResponse.Upvotes).Should(Equal(0))
-			Expect(getResponse.Downvotes).Should(Equal(0))
-			Expect(getResponse.MyVote).Should(BeNil())
+			Expect(getResponse.UpvotesCount).Should(Equal(int32(0)))
+			Expect(getResponse.DownvotesCount).Should(Equal(int32(0)))
+			Expect(getResponse.MeUpvoted).Should(BeFalse())
+			Expect(getResponse.MeDownvoted).Should(BeFalse())
 		})
 
 		It("should fail to upvote own post", func() {
@@ -1208,7 +1211,8 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 				var getResponse hub.IncognitoPost
 				err = json.Unmarshal(getResp.([]byte), &getResponse)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(getResponse.MyVote).Should(Equal(strptr("downvote")))
+				Expect(getResponse.MeUpvoted).Should(BeFalse())
+				Expect(getResponse.MeDownvoted).Should(BeTrue())
 			},
 		)
 
@@ -1265,7 +1269,8 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 				var getResponse hub.IncognitoPost
 				err = json.Unmarshal(getResp.([]byte), &getResponse)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+				Expect(getResponse.MeUpvoted).Should(BeTrue())
+				Expect(getResponse.MeDownvoted).Should(BeFalse())
 			},
 		)
 
@@ -1317,8 +1322,9 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			var getResponse hub.IncognitoPost
 			err = json.Unmarshal(getResp.([]byte), &getResponse)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(getResponse.Upvotes).Should(Equal(1))
-			Expect(getResponse.MyVote).Should(Equal(strptr("upvote")))
+			Expect(getResponse.UpvotesCount).Should(Equal(int32(1)))
+			Expect(getResponse.MeUpvoted).Should(BeTrue())
+			Expect(getResponse.MeDownvoted).Should(BeFalse())
 		})
 
 		It("should allow unvote multiple times (idempotent)", func() {
@@ -1380,8 +1386,9 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			var getResponse hub.IncognitoPost
 			err = json.Unmarshal(getResp.([]byte), &getResponse)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(getResponse.Downvotes).Should(Equal(0))
-			Expect(getResponse.MyVote).Should(BeNil())
+			Expect(getResponse.DownvotesCount).Should(Equal(int32(0)))
+			Expect(getResponse.MeUpvoted).Should(BeFalse())
+			Expect(getResponse.MeDownvoted).Should(BeFalse())
 		})
 
 		It("should fail without authentication for upvote", func() {
@@ -1547,3 +1554,7 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 		})
 	})
 })
+
+func int32ptr(i int32) *int32 {
+	return &i
+}
