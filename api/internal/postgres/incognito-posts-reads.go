@@ -31,21 +31,21 @@ func (pg *PG) GetIncognitoPost(
 			CASE WHEN ip.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
 			COALESCE(ip.upvotes_count, 0) as upvotes,
 			COALESCE(ip.downvotes_count, 0) as downvotes,
-			CASE 
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_votes ipv 
-					WHERE ipv.incognito_post_id = ip.id 
-					AND ipv.user_id = $2 
-					AND ipv.vote_value = 1
-				) THEN 'upvote'
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_votes ipv 
-					WHERE ipv.incognito_post_id = ip.id 
-					AND ipv.user_id = $2 
-					AND ipv.vote_value = -1
-				) THEN 'downvote'
-				ELSE NULL
-			END as my_vote,
+					CASE 
+			WHEN EXISTS(
+				SELECT 1 FROM incognito_post_votes ipv 
+				WHERE ipv.incognito_post_id = ip.id 
+				AND ipv.user_id = $2 
+				AND ipv.vote_value = $3
+			) THEN $4
+			WHEN EXISTS(
+				SELECT 1 FROM incognito_post_votes ipv 
+				WHERE ipv.incognito_post_id = ip.id 
+				AND ipv.user_id = $2 
+				AND ipv.vote_value = $5
+			) THEN $6
+			ELSE NULL
+		END as my_vote,
 			COALESCE(
 				ARRAY_AGG(t.id ORDER BY t.display_name) FILTER (WHERE t.id IS NOT NULL),
 				'{}'::text[]
@@ -66,7 +66,9 @@ func (pg *PG) GetIncognitoPost(
 	var tagNames []string
 	var myVote sql.NullString
 
-	err = pg.pool.QueryRow(ctx, query, req.IncognitoPostID, hubUserID).Scan(
+	err = pg.pool.QueryRow(ctx, query, req.IncognitoPostID, hubUserID,
+		db.UpvoteValue, db.Upvote,
+		db.DownvoteValue, db.Downvote).Scan(
 		&post.IncognitoPostID,
 		&post.Content,
 		&post.CreatedAt,
@@ -91,8 +93,8 @@ func (pg *PG) GetIncognitoPost(
 
 	// Set the user's vote if exists
 	if myVote.Valid {
-		post.MeUpvoted = myVote.String == "upvote"
-		post.MeDownvoted = myVote.String == "downvote"
+		post.MeUpvoted = myVote.String == db.Upvote
+		post.MeDownvoted = myVote.String == db.Downvote
 	}
 
 	// Build tags array
@@ -145,15 +147,15 @@ func (pg *PG) GetIncognitoPostComments(
 					SELECT 1 FROM incognito_post_comment_votes ipcv 
 					WHERE ipcv.comment_id = ipc.id 
 					AND ipcv.user_id = $2 
-					AND ipcv.vote_value = 1
-				) THEN 'UPVOTE'
+					AND ipcv.vote_value = $3
+				) THEN $4
 				WHEN EXISTS(
 					SELECT 1 FROM incognito_post_comment_votes ipcv 
 					WHERE ipcv.comment_id = ipc.id 
 					AND ipcv.user_id = $2 
-					AND ipcv.vote_value = -1
-				) THEN 'DOWNVOTE'
-				ELSE 'NO_VOTE'
+					AND ipcv.vote_value = $5
+				) THEN $6
+				ELSE $7
 			END as my_vote
 		FROM incognito_post_comments ipc
 		WHERE ipc.incognito_post_id = $1
@@ -163,7 +165,9 @@ func (pg *PG) GetIncognitoPostComments(
 			ipc.created_at ASC
 	`
 
-	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID)
+	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID,
+		db.UpvoteValue, db.Upvote,
+		db.DownvoteValue, db.Downvote, db.NoVote)
 	if err != nil {
 		pg.log.Err("failed to query incognito post comments",
 			"error", err,
@@ -180,6 +184,7 @@ func (pg *PG) GetIncognitoPostComments(
 		var comment hub.IncognitoPostComment
 		var parentCommentID sql.NullString
 		var isDeleted bool
+		var myVote string
 
 		err := rows.Scan(
 			&comment.CommentID,
@@ -191,8 +196,7 @@ func (pg *PG) GetIncognitoPostComments(
 			&comment.DownvotesCount,
 			&comment.IsCreatedByMe,
 			&isDeleted,
-			&comment.MeUpvoted,
-			&comment.MeDownvoted,
+			&myVote,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan comment row", "error", err)
@@ -202,6 +206,10 @@ func (pg *PG) GetIncognitoPostComments(
 		if parentCommentID.Valid {
 			comment.InReplyTo = &parentCommentID.String
 		}
+
+		// Set voting status based on vote string
+		comment.MeUpvoted = myVote == db.Upvote
+		comment.MeDownvoted = myVote == db.Downvote
 
 		comment.IsDeleted = isDeleted
 		if isDeleted {

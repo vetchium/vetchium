@@ -1392,6 +1392,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Vote response string enums for API consistency
+CREATE TYPE vote_response_strings AS ENUM ('upvote', 'downvote', 'no_vote');
+
+-- Vote values: 1 = upvote, -1 = downvote (stored as SMALLINT for efficient calculations)
+
 -- Incognito Posts Tables
 CREATE TABLE incognito_posts (
     id TEXT PRIMARY KEY,

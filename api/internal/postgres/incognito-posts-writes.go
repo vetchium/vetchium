@@ -383,7 +383,7 @@ func (pg *PG) UpvoteIncognitoPostComment(
 		ctx,
 		req.IncognitoPostID,
 		req.CommentID,
-		1,
+		db.UpvoteValue,
 	)
 	if err != nil {
 		pg.log.Err(
@@ -412,7 +412,7 @@ func (pg *PG) DownvoteIncognitoPostComment(
 		ctx,
 		req.IncognitoPostID,
 		req.CommentID,
-		-1,
+		db.DownvoteValue,
 	)
 	if err != nil {
 		pg.log.Err(
@@ -720,7 +720,7 @@ func (pg *PG) UpvoteIncognitoPost(
 	pg.log.Dbg("entered UpvoteIncognitoPost",
 		"incognito_post_id", req.IncognitoPostID)
 
-	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, 1)
+	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, db.UpvoteValue)
 	if err != nil {
 		pg.log.Dbg("failed to upvote incognito post",
 			"error", err,
@@ -739,7 +739,7 @@ func (pg *PG) DownvoteIncognitoPost(
 ) error {
 	pg.log.Dbg("entered DownvoteIncognitoPost", "id", req.IncognitoPostID)
 
-	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, -1)
+	err := pg.voteIncognitoPost(ctx, req.IncognitoPostID, db.DownvoteValue)
 	if err != nil {
 		pg.log.Dbg("failed to downvote incognito post", "error", err)
 		return err

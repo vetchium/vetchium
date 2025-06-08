@@ -11,6 +11,19 @@ import (
 	"github.com/google/uuid"
 )
 
+// Vote value constants for database storage
+const (
+	UpvoteValue   int = 1
+	DownvoteValue int = -1
+)
+
+// Vote string constants for API responses
+const (
+	Upvote   string = "upvote"
+	Downvote string = "downvote"
+	NoVote   string = "no_vote"
+)
+
 // Do not name parameters when passing objects. Name parameters when passing
 // primitive data types. Try to keep within 80 characters.
 
