@@ -41,6 +41,9 @@
 - [] HubUser account deletion and the triggered cleanup workflows for posts, comments, etc.
 - [] Employer account deletion and the triggered cleanup workflows for posts, comments, openings, candidacies, applications, etc.
 - [] Admin app
+- [] Report posts/comments
+- [] Bookmark posts/comments
+- [] Search posts/comments
 
 # Code cleanups
 - Limit is optional in some APIs, mandatory in some APIs. Should become consistent.
