@@ -275,6 +275,61 @@ model GetMyIncognitoPostsResponse {
     pagination_key: string;
 }
 
+model MyIncognitoPostComment {
+    comment_id: string;
+    content: string;
+
+    @doc("The ID of the parent comment. Null for top-level comments.")
+    in_reply_to?: string;
+
+    @doc("The creation timestamp of the comment")
+    created_at: utcDateTime;
+
+    upvotes_count: int32;
+    downvotes_count: int32;
+    score: int32;
+
+    @doc("Whether the logged in user has upvoted this comment")
+    me_upvoted: boolean;
+
+    @doc("Whether the logged in user has downvoted this comment")
+    me_downvoted: boolean;
+
+    @doc("Whether the comment has been deleted by its author")
+    is_deleted: boolean;
+
+    @doc("The nesting depth of the comment (0 for top-level, 1 for first reply, etc.)")
+    depth: int32;
+
+    @doc("The ID of the incognito post this comment belongs to")
+    incognito_post_id: string;
+
+    @doc("Preview of the incognito post content (first 100 characters) to provide context")
+    @maxLength(100)
+    post_content_preview: string;
+
+    @doc("Tags associated with the incognito post for additional context")
+    post_tags: VTag[];
+}
+
+model GetMyIncognitoPostCommentsRequest {
+    @doc("The comments are returned ordered by the newest created_at timestamp. If two comments are created at the same time, the one with the higher id is returned first. The pagination key is the id of the last comment in the previous response. The item corresponding to the passed pagination_key will not be included in the response.")
+    pagination_key?: string;
+
+    @doc("Number of comments to fetch per page")
+    @minValue(1)
+    @maxValue(40)
+    limit: int32 = 25;
+}
+
+model GetMyIncognitoPostCommentsResponse {
+    @doc("The list of incognito post comments created by the logged-in user across all incognito posts. Comments are sorted by creation date (descending, newest first). Includes both active and deleted comments.")
+    comments: MyIncognitoPostComment[];
+
+    @doc("Pagination key for fetching the next page of comments. Use this in subsequent requests. If this is empty, there are no more comments to fetch.")
+    pagination_key: string;
+}
+
 @route("/hub/add-incognito-post")
 interface AddIncognitoPost {
     @doc("AddIncognitoPost adds a new IncognitoPost. It is available for both free and paid tier users.")
@@ -601,4 +656,22 @@ interface UnvoteIncognitoPost {
               @statusCode
               statusCode: 422;
           };
+}
+
+@route("/hub/get-my-incognito-post-comments")
+interface GetMyIncognitoPostComments {
+    @doc("GetMyIncognitoPostComments gets a paginated list of incognito post comments created by the logged-in user across all incognito posts. Comments are sorted by creation date (descending, newest first). This includes both active and deleted comments, allowing users to manage their own anonymous comment activity.")
+    @tag("Posts")
+    @post
+    @useAuth(HubAuth)
+    getMyIncognitoPostComments(
+        @body request: GetMyIncognitoPostCommentsRequest,
+    ): {
+        @statusCode statusCode: 200;
+        @body response: GetMyIncognitoPostCommentsResponse;
+    } | {
+        @doc("Bad Request: Invalid request data (invalid limit values)")
+        @statusCode
+        statusCode: 400;
+    };
 }
