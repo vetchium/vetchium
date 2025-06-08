@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Incognito Posts Read APIs", Ordered, func() {
+var _ = Describe("Incognito Posts Read APIs", Ordered, func() {
 	var (
 		// Database connection
 		pool *pgxpool.Pool
@@ -73,6 +73,33 @@ var _ = FDescribe("Incognito Posts Read APIs", Ordered, func() {
 		alicePost1ID = addResp1.IncognitoPostID
 
 		fmt.Printf("DEBUG: Alice's post ID: %s\n", alicePost1ID)
+
+		// Alice creates a second post (different topic)
+		alicePost2 := hub.AddIncognitoPostRequest{
+			Content: "Alice's second post about startup entrepreneurship",
+			TagIDs:  []common.VTagID{"startups"},
+		}
+
+		fmt.Printf(
+			"DEBUG: About to create Alice's second post with token: %s\n",
+			aliceToken,
+		)
+
+		resp2 := testPOSTGetResp(
+			aliceToken,
+			alicePost2,
+			"/hub/add-incognito-post",
+			http.StatusOK,
+		)
+		var addResp2 hub.AddIncognitoPostResponse
+		err = json.Unmarshal(resp2.([]byte), &addResp2)
+		Expect(err).ShouldNot(HaveOccurred())
+		// We don't need to store this ID in a variable since it's not used elsewhere
+
+		fmt.Printf(
+			"DEBUG: Alice's second post ID: %s\n",
+			addResp2.IncognitoPostID,
+		)
 
 		// Bob creates a mentorship post
 		bobPost1 := hub.AddIncognitoPostRequest{
@@ -217,6 +244,22 @@ var _ = FDescribe("Incognito Posts Read APIs", Ordered, func() {
 		err = json.Unmarshal(resp4.([]byte), &commentResp4)
 		Expect(err).ShouldNot(HaveOccurred())
 		nestedCommentID = commentResp4.CommentID
+
+		// Alice adds another comment on Bob's mentorship post
+		aliceComment2 := hub.AddIncognitoPostCommentRequest{
+			IncognitoPostID: bobPost1ID,
+			Content:         "Alice's thoughts on mentorship best practices",
+		}
+		resp5 := testPOSTGetResp(
+			aliceToken,
+			aliceComment2,
+			"/hub/add-incognito-post-comment",
+			http.StatusOK,
+		)
+		var commentResp5 hub.AddIncognitoPostCommentResponse
+		err = json.Unmarshal(resp5.([]byte), &commentResp5)
+		Expect(err).ShouldNot(HaveOccurred())
+		// We don't need to store this ID since it's not used elsewhere
 
 		// Delete one of Alice's comments to test deleted comment inclusion
 		deleteCommentReq := hub.DeleteIncognitoPostCommentRequest{
