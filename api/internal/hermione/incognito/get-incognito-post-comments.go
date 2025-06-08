@@ -25,7 +25,7 @@ func GetIncognitoPostComments(h wand.Wand) http.HandlerFunc {
 		}
 
 		if req.Limit == 0 {
-			req.Limit = 10
+			req.Limit = 25
 		}
 
 		h.Dbg("Validated", "req", req)

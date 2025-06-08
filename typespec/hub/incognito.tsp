@@ -119,7 +119,7 @@ model GetIncognitoPostCommentsRequest {
     @doc("Number of comments to fetch per page")
     @minValue(1)
     @maxValue(100)
-    limit: int32;
+    limit: int32 = 25;
 
     @doc("The ID of the parent comment to get replies for. If not provided, gets top-level comments.")
     parent_comment_id?: string;
@@ -257,6 +257,24 @@ model GetIncognitoPostsResponse {
     pagination_key: string;
 }
 
+model GetMyIncognitoPostsRequest {
+    @doc("The posts are returned ordered by the newest created_at timestamp. If two posts are created at the same time, the one with the higher id is returned first. The pagination key is the id of the last post in the previous response. The item corresponding to the passed pagination_key will not be included in the response.")
+    pagination_key?: string;
+
+    @doc("Number of posts to fetch per page")
+    @minValue(1)
+    @maxValue(40)
+    limit: int32 = 25;
+}
+
+model GetMyIncognitoPostsResponse {
+    @doc("The list of incognito posts created by the logged-in user. Posts are sorted by creation date (descending, newest first). Includes both active and deleted posts.")
+    posts: IncognitoPostSummary[];
+
+    @doc("Pagination key for fetching the next page of posts. Use this in subsequent requests. If this is empty, there are no more posts to fetch.")
+    pagination_key: string;
+}
+
 @route("/hub/add-incognito-post")
 interface AddIncognitoPost {
     @doc("AddIncognitoPost adds a new IncognitoPost. It is available for both free and paid tier users.")
@@ -304,6 +322,22 @@ interface GetIncognitoPosts {
         @body response: GetIncognitoPostsResponse;
     } | {
         @doc("Bad Request: Invalid request data (invalid tag ID, invalid limit values, invalid time_filter values)")
+        @statusCode
+        statusCode: 400;
+    };
+}
+
+@route("/hub/get-my-incognito-posts")
+interface GetMyIncognitoPosts {
+    @doc("GetMyIncognitoPosts gets a paginated list of incognito posts created by the logged-in user. Posts are sorted by creation date (descending, newest first). This includes both active and deleted posts, allowing users to manage their own incognito content.")
+    @tag("Posts")
+    @get
+    @useAuth(HubAuth)
+    getMyIncognitoPosts(@body request: GetMyIncognitoPostsRequest): {
+        @statusCode statusCode: 200;
+        @body response: GetMyIncognitoPostsResponse;
+    } | {
+        @doc("Bad Request: Invalid request data (invalid limit values)")
         @statusCode
         statusCode: 400;
     };
