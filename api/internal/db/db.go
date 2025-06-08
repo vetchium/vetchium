@@ -609,4 +609,16 @@ type DB interface {
 		ctx context.Context,
 		req hub.UnvoteIncognitoPostRequest,
 	) error
+	GetIncognitoPosts(
+		ctx context.Context,
+		req hub.GetIncognitoPostsRequest,
+	) (hub.GetIncognitoPostsResponse, error)
+	GetMyIncognitoPosts(
+		ctx context.Context,
+		req hub.GetMyIncognitoPostsRequest,
+	) (hub.GetMyIncognitoPostsResponse, error)
+	GetMyIncognitoPostComments(
+		ctx context.Context,
+		req hub.GetMyIncognitoPostCommentsRequest,
+	) (hub.GetMyIncognitoPostCommentsResponse, error)
 }

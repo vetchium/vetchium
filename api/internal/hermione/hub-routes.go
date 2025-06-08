@@ -478,4 +478,19 @@ func RegisterHubRoutes(h *Hermione) {
 		ic.UnvoteIncognitoPost(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+	h.mw.Guard(
+		"/hub/get-incognito-posts",
+		ic.GetIncognitoPosts(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-my-incognito-posts",
+		ic.GetMyIncognitoPosts(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-my-incognito-post-comments",
+		ic.GetMyIncognitoPostComments(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

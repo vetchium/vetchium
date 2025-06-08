@@ -149,13 +149,12 @@ WHERE hub_user_id = $1
 		pg.log.Err("Failed to query timeline posts",
 			"error", err,
 			"query", query,
-			"args", args,
-		)
+			"args", args)
 		return hub.MyHomeTimeline{}, db.ErrInternal
 	}
 	defer rows.Close()
 
-	var userPosts []hub.Post
+	userPosts := make([]hub.Post, 0)
 	var employerPosts []common.EmployerPost
 	var paginationKey string
 

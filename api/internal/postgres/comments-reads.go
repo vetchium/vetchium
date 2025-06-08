@@ -94,7 +94,7 @@ func (pg *PG) GetPostComments(
 	}
 	defer rows.Close()
 
-	var comments []hub.PostComment
+	comments := make([]hub.PostComment, 0)
 	for rows.Next() {
 		var comment hub.PostComment
 		var authorName string

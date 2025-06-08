@@ -78,7 +78,7 @@ func (p *PG) GetMyEndorsementApprovals(
 	defer rows.Close()
 
 	// Process the results
-	var endorsements []hub.MyEndorseApproval
+	endorsements := make([]hub.MyEndorseApproval, 0)
 	var lastID string
 	for rows.Next() {
 		var endorsement hub.MyEndorseApproval

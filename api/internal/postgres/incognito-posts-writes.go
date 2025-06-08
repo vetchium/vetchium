@@ -59,13 +59,9 @@ func (pg *PG) AddIncognitoPost(
 		hubUserID,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to insert incognito post",
-			"error",
-			err,
-			"incognito_post_id",
-			req.IncognitoPostID,
-		)
+		pg.log.Err("failed to insert incognito post",
+			"error", err,
+			"incognito_post_id", req.IncognitoPostID)
 		return err
 	}
 
@@ -84,13 +80,9 @@ func (pg *PG) AddIncognitoPost(
 			`
 			_, err = tx.Exec(ctx, tagQuery, req.IncognitoPostID, tagID)
 			if err != nil {
-				pg.log.Err(
-					"failed to insert incognito post tag",
-					"error",
-					err,
-					"tag_id",
-					tagID,
-				)
+				pg.log.Err("failed to insert incognito post tag",
+					"error", err,
+					"tag_id", tagID)
 				return err
 			}
 		}
@@ -163,13 +155,9 @@ func (pg *PG) DeleteIncognitoPost(
 
 	_, err = pg.pool.Exec(ctx, updateQuery, req.IncognitoPostID, hubUserID)
 	if err != nil {
-		pg.log.Err(
-			"failed to soft delete incognito post",
-			"error",
-			err,
-			"incognito_post_id",
-			req.IncognitoPostID,
-		)
+		pg.log.Err("failed to soft delete incognito post",
+			"error", err,
+			"incognito_post_id", req.IncognitoPostID)
 		return err
 	}
 
@@ -258,13 +246,9 @@ func (pg *PG) AddIncognitoPostComment(
 		depth,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to insert incognito post comment",
-			"error",
-			err,
-			"comment_id",
-			req.CommentID,
-		)
+		pg.log.Err("failed to insert incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
 		return hub.AddIncognitoPostCommentResponse{}, err
 	}
 
@@ -355,13 +339,9 @@ func (pg *PG) DeleteIncognitoPostComment(
 		hubUserID,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to soft delete incognito post comment",
-			"error",
-			err,
-			"comment_id",
-			req.CommentID,
-		)
+		pg.log.Err("failed to soft delete incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
 		return err
 	}
 
@@ -386,13 +366,9 @@ func (pg *PG) UpvoteIncognitoPostComment(
 		db.UpvoteValue,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to upvote incognito post comment",
-			"error",
-			err,
-			"comment_id",
-			req.CommentID,
-		)
+		pg.log.Err("failed to upvote incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
 		return err
 	}
 
@@ -415,13 +391,9 @@ func (pg *PG) DownvoteIncognitoPostComment(
 		db.DownvoteValue,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to downvote incognito post comment",
-			"error",
-			err,
-			"comment_id",
-			req.CommentID,
-		)
+		pg.log.Err("failed to downvote incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
 		return err
 	}
 
@@ -468,13 +440,9 @@ func (pg *PG) UnvoteIncognitoPostComment(
 		hubUserID,
 	)
 	if err != nil {
-		pg.log.Err(
-			"failed to unvote incognito post comment",
-			"error",
-			err,
-			"comment_id",
-			req.CommentID,
-		)
+		pg.log.Err("failed to unvote incognito post comment",
+			"error", err,
+			"comment_id", req.CommentID)
 		return err
 	}
 
@@ -694,7 +662,7 @@ func (pg *PG) validateTagIDs(ctx context.Context, tagIDs []string) bool {
 
 	// Deduplicate tag IDs
 	uniqueTagIDs := make(map[string]bool)
-	var deduplicatedTagIDs []string
+	deduplicatedTagIDs := make([]string, 0)
 	for _, tagID := range tagIDs {
 		if !uniqueTagIDs[tagID] {
 			uniqueTagIDs[tagID] = true

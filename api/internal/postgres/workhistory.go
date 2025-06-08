@@ -34,13 +34,9 @@ func (p *PG) AddWorkHistory(
 		SELECT get_or_create_dummy_employer($1)
 	`, req.EmployerDomain).Scan(&employerID)
 	if err != nil {
-		p.log.Err(
-			"failed to get or create dummy employer",
-			"error",
-			err,
-			"domain",
-			req.EmployerDomain,
-		)
+		p.log.Err("failed to get or create dummy employer",
+			"error", err,
+			"domain", req.EmployerDomain)
 		return "", db.ErrInternal
 	}
 
@@ -89,24 +85,16 @@ func (p *PG) DeleteWorkHistory(
 	`, req.ID, hubUserID)
 
 	if err != nil {
-		p.log.Err(
-			"failed to delete work history",
-			"error",
-			err,
-			"work_history_id",
-			req.ID,
-		)
+		p.log.Err("failed to delete work history",
+			"error", err,
+			"work_history_id", req.ID)
 		return db.ErrInternal
 	}
 
 	if tag.RowsAffected() == 0 {
-		p.log.Dbg(
-			"work history not found or not owned by user",
-			"work_history_id",
-			req.ID,
-			"hub_user_id",
-			hubUserID,
-		)
+		p.log.Dbg("work history not found or not owned by user",
+			"work_history_id", req.ID,
+			"hub_user_id", hubUserID)
 		return db.ErrNoWorkHistory
 	}
 
@@ -127,13 +115,9 @@ func (p *PG) ListWorkHistory(
 			return nil, db.ErrNoHubUser
 		}
 		if err != nil {
-			p.log.Err(
-				"failed to get hub user by handle",
-				"error",
-				err,
-				"handle",
-				*req.UserHandle,
-			)
+			p.log.Err("failed to get hub user by handle",
+				"error", err,
+				"handle", *req.UserHandle)
 			return nil, db.ErrInternal
 		}
 	} else {
@@ -163,18 +147,14 @@ func (p *PG) ListWorkHistory(
 	`, userID)
 
 	if err != nil {
-		p.log.Err(
-			"failed to query work history",
-			"error",
-			err,
-			"hub_user_id",
-			userID,
-		)
+		p.log.Err("failed to query work history",
+			"error", err,
+			"hub_user_id", userID)
 		return nil, db.ErrInternal
 	}
 	defer rows.Close()
 
-	var workHistories []hub.WorkHistory
+	workHistories := make([]hub.WorkHistory, 0)
 	for rows.Next() {
 		var wh hub.WorkHistory
 		var companyName, endDate, description pgtype.Text
@@ -234,24 +214,16 @@ func (p *PG) UpdateWorkHistory(
 		WHERE id = $5 AND hub_user_id = $6
 	`, req.Title, req.StartDate, req.EndDate, req.Description, req.ID, hubUserID)
 	if err != nil {
-		p.log.Err(
-			"failed to update work history",
-			"error",
-			err,
-			"work_history_id",
-			req.ID,
-		)
+		p.log.Err("failed to update work history",
+			"error", err,
+			"work_history_id", req.ID)
 		return db.ErrInternal
 	}
 
 	if tag.RowsAffected() == 0 {
-		p.log.Dbg(
-			"work history not found or not owned by user",
-			"work_history_id",
-			req.ID,
-			"hub_user_id",
-			hubUserID,
-		)
+		p.log.Dbg("work history not found or not owned by user",
+			"work_history_id", req.ID,
+			"hub_user_id", hubUserID)
 		return db.ErrNoWorkHistory
 	}
 

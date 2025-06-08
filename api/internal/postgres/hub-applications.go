@@ -186,7 +186,7 @@ LIMIT $4;
 		"paginationKey", myApplicationsReq.PaginationKey,
 		"limit", myApplicationsReq.Limit)
 
-	var hubApplications []hub.HubApplication
+	hubApplications := make([]hub.HubApplication, 0)
 	rows, err := p.pool.Query(
 		ctx,
 		query,
