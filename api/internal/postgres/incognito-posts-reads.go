@@ -41,12 +41,12 @@ func (pg *PG) GetIncognitoPost(
 				) THEN TRUE
 				ELSE FALSE
 			END as me_upvoted,
-			CASE
+						CASE 
 				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_votes ipv
-					WHERE ipv.incognito_post_id = ip.id
-					AND ipv.user_id = $2
-					AND ipv.vote_value = $5
+					SELECT 1 FROM incognito_post_votes ipv 
+					WHERE ipv.incognito_post_id = ip.id 
+					AND ipv.user_id = $2 
+					AND ipv.vote_value = $4
 				) THEN TRUE
 				ELSE FALSE
 			END as me_downvoted,
