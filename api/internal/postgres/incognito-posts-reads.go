@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
@@ -41,11 +43,11 @@ func (pg *PG) GetIncognitoPost(
 				) THEN TRUE
 				ELSE FALSE
 			END as me_upvoted,
-						CASE 
+						CASE
 				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_votes ipv 
-					WHERE ipv.incognito_post_id = ip.id 
-					AND ipv.user_id = $2 
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
 					AND ipv.vote_value = $4
 				) THEN TRUE
 				ELSE FALSE
@@ -106,7 +108,7 @@ func (pg *PG) GetIncognitoPost(
 		&tagNames,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			pg.log.Dbg("incognito post not found", "id", req.IncognitoPostID)
 			return hub.IncognitoPost{}, db.ErrNoIncognitoPost
 		}
@@ -308,7 +310,10 @@ func (pg *PG) GetIncognitoPosts(
 	}
 
 	// Build the base query with pagination and filtering
-	query := `
+	var query string
+	var args []interface{}
+
+	baseQuery := `
 		SELECT
 			ip.id,
 			ip.content,
@@ -326,11 +331,11 @@ func (pg *PG) GetIncognitoPosts(
 				) THEN TRUE
 				ELSE FALSE
 			END as me_upvoted,
-			CASE 
+			CASE
 				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_votes ipv 
-					WHERE ipv.incognito_post_id = ip.id 
-					AND ipv.user_id = $2 
+					SELECT 1 FROM incognito_post_votes ipv
+					WHERE ipv.incognito_post_id = ip.id
+					AND ipv.user_id = $2
 					AND ipv.vote_value = $4
 				) THEN TRUE
 				ELSE FALSE
@@ -373,14 +378,51 @@ func (pg *PG) GetIncognitoPosts(
 		AND EXISTS (
 			SELECT 1 FROM incognito_post_tags ipt2
 			WHERE ipt2.incognito_post_id = ip.id AND ipt2.tag_id = $1
-		)
-		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count, ip.score, ip.is_deleted
-		ORDER BY ip.score DESC, ip.created_at DESC
-		LIMIT $5
-	`
+		)`
 
-	rows, err := pg.pool.Query(ctx, query, req.TagID, hubUserID,
-		db.UpvoteValue, db.DownvoteValue, req.Limit)
+	args = []interface{}{req.TagID, hubUserID, db.UpvoteValue, db.DownvoteValue}
+
+	// Add pagination logic
+	if req.PaginationKey != nil && *req.PaginationKey != "" {
+		// Get score and created_at of the pagination key post for cursor-based pagination
+		var lastScore sql.NullInt32
+		var lastCreatedAt sql.NullTime
+		err := pg.pool.QueryRow(ctx, `
+			SELECT COALESCE(score, 0), created_at
+			FROM incognito_posts
+			WHERE id = $1`,
+			*req.PaginationKey).Scan(&lastScore, &lastCreatedAt)
+
+		if err != nil {
+			pg.log.Err("failed to get pagination cursor data", "error", err)
+			return hub.GetIncognitoPostsResponse{}, err
+		}
+
+		if lastScore.Valid && lastCreatedAt.Valid {
+			// Add pagination condition: posts with lower score OR same score but
+			// older created_at OR same score and created_at but smaller ID
+			baseQuery += ` AND (
+				ip.score < $5 OR
+				(ip.score = $5 AND ip.created_at < $6) OR
+				(ip.score = $5 AND ip.created_at = $6 AND ip.id < $7)
+			)`
+			args = append(
+				args,
+				lastScore.Int32,
+				lastCreatedAt.Time,
+				*req.PaginationKey,
+			)
+		}
+	}
+
+	query = baseQuery + `
+		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count, ip.score, ip.is_deleted
+		ORDER BY ip.score DESC, ip.created_at DESC, ip.id DESC
+		LIMIT $` + fmt.Sprintf("%d", len(args)+1)
+
+	args = append(args, req.Limit)
+
+	rows, err := pg.pool.Query(ctx, query, args...)
 	if err != nil {
 		pg.log.Err("failed to query incognito posts",
 			"error", err,
@@ -438,8 +480,16 @@ func (pg *PG) GetIncognitoPosts(
 		"tag_id", req.TagID,
 		"count", len(posts))
 
+	// Set pagination key if we reached the limit (indicating more data available)
+	var paginationKey string
+	if len(posts) == int(req.Limit) {
+		// Use the last post's ID as pagination key
+		paginationKey = posts[len(posts)-1].IncognitoPostID
+	}
+
 	return hub.GetIncognitoPostsResponse{
-		Posts: posts,
+		Posts:         posts,
+		PaginationKey: paginationKey,
 	}, nil
 }
 
@@ -455,7 +505,10 @@ func (pg *PG) GetMyIncognitoPosts(
 		return hub.GetMyIncognitoPostsResponse{}, err
 	}
 
-	query := `
+	var query string
+	var args []interface{}
+
+	baseQuery := `
 		SELECT
 			ip.id,
 			ip.content,
@@ -484,13 +537,44 @@ func (pg *PG) GetMyIncognitoPosts(
 		FROM incognito_posts ip
 		LEFT JOIN incognito_post_tags ipt ON ip.id = ipt.incognito_post_id
 		LEFT JOIN tags t ON ipt.tag_id = t.id
-		WHERE ip.author_id = $1 AND ip.is_deleted = FALSE
-		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count, ip.score, ip.is_deleted
-		ORDER BY ip.created_at DESC
-		LIMIT $2
-	`
+		WHERE ip.author_id = $1`
 
-	rows, err := pg.pool.Query(ctx, query, hubUserID, req.Limit)
+	args = []interface{}{hubUserID}
+
+	// Add pagination logic
+	if req.PaginationKey != nil && *req.PaginationKey != "" {
+		// Get created_at of the pagination key post for cursor-based pagination
+		var lastCreatedAt sql.NullTime
+		err := pg.pool.QueryRow(ctx, `
+			SELECT created_at
+			FROM incognito_posts
+			WHERE id = $1 AND author_id = $2`,
+			*req.PaginationKey, hubUserID).Scan(&lastCreatedAt)
+
+		if err != nil {
+			pg.log.Err("failed to get my posts pagination cursor data",
+				"error", err)
+			return hub.GetMyIncognitoPostsResponse{}, err
+		}
+
+		if lastCreatedAt.Valid {
+			// Add pagination condition: posts older than the cursor OR same created_at but smaller ID
+			baseQuery += ` AND (
+				ip.created_at < $2 OR
+				(ip.created_at = $2 AND ip.id < $3)
+			)`
+			args = append(args, lastCreatedAt.Time, *req.PaginationKey)
+		}
+	}
+
+	query = baseQuery + `
+		GROUP BY ip.id, ip.content, ip.created_at, ip.author_id, ip.upvotes_count, ip.downvotes_count, ip.score, ip.is_deleted
+		ORDER BY ip.created_at DESC, ip.id DESC
+		LIMIT $` + fmt.Sprintf("%d", len(args)+1)
+
+	args = append(args, req.Limit)
+
+	rows, err := pg.pool.Query(ctx, query, args...)
 	if err != nil {
 		pg.log.Err("failed to query my incognito posts", "error", err)
 		return hub.GetMyIncognitoPostsResponse{}, err
@@ -544,8 +628,16 @@ func (pg *PG) GetMyIncognitoPosts(
 
 	pg.log.Dbg("fetched my incognito posts", "count", len(posts))
 
+	// Set pagination key if we reached the limit (indicating more data available)
+	var paginationKey string
+	if len(posts) == int(req.Limit) {
+		// Use the last post's ID as pagination key
+		paginationKey = posts[len(posts)-1].IncognitoPostID
+	}
+
 	return hub.GetMyIncognitoPostsResponse{
-		Posts: posts,
+		Posts:         posts,
+		PaginationKey: paginationKey,
 	}, nil
 }
 
@@ -561,7 +653,10 @@ func (pg *PG) GetMyIncognitoPostComments(
 		return hub.GetMyIncognitoPostCommentsResponse{}, err
 	}
 
-	query := `
+	var query string
+	var args []interface{}
+
+	baseQuery := `
 		SELECT
 			ipc.id,
 			ipc.incognito_post_id,
@@ -588,13 +683,45 @@ func (pg *PG) GetMyIncognitoPostComments(
 		JOIN incognito_posts ip ON ipc.incognito_post_id = ip.id
 		LEFT JOIN incognito_post_tags ipt ON ip.id = ipt.incognito_post_id
 		LEFT JOIN tags t ON ipt.tag_id = t.id
-		WHERE ipc.author_id = $1 AND ip.is_deleted = FALSE
-		GROUP BY ipc.id, ipc.incognito_post_id, ipc.content, ipc.parent_comment_id, ipc.depth, ipc.created_at, ipc.upvotes_count, ipc.downvotes_count, ipc.score, ipc.is_deleted, ip.content
-		ORDER BY ipc.created_at DESC
-		LIMIT $2
-	`
+		WHERE ipc.author_id = $1 AND ip.is_deleted = FALSE`
 
-	rows, err := pg.pool.Query(ctx, query, hubUserID, req.Limit)
+	args = []interface{}{hubUserID}
+
+	// Add pagination logic
+	if req.PaginationKey != nil && *req.PaginationKey != "" {
+		// Get created_at of the pagination key comment for cursor-based pagination
+		var lastCreatedAt sql.NullTime
+		err := pg.pool.QueryRow(ctx, `
+			SELECT created_at
+			FROM incognito_post_comments
+			WHERE id = $1 AND author_id = $2`,
+			*req.PaginationKey, hubUserID).Scan(&lastCreatedAt)
+
+		if err != nil {
+			pg.log.Err("failed to get my comments pagination cursor data",
+				"error", err)
+			return hub.GetMyIncognitoPostCommentsResponse{}, err
+		}
+
+		if lastCreatedAt.Valid {
+			// Add pagination condition: comments older than the cursor OR same
+			// created_at but smaller ID
+			baseQuery += ` AND (
+				ipc.created_at < $2 OR
+				(ipc.created_at = $2 AND ipc.id < $3)
+			)`
+			args = append(args, lastCreatedAt.Time, *req.PaginationKey)
+		}
+	}
+
+	query = baseQuery + `
+		GROUP BY ipc.id, ipc.incognito_post_id, ipc.content, ipc.parent_comment_id, ipc.depth, ipc.created_at, ipc.upvotes_count, ipc.downvotes_count, ipc.score, ipc.is_deleted, ip.content
+		ORDER BY ipc.created_at DESC, ipc.id DESC
+		LIMIT $` + fmt.Sprintf("%d", len(args)+1)
+
+	args = append(args, req.Limit)
+
+	rows, err := pg.pool.Query(ctx, query, args...)
 	if err != nil {
 		pg.log.Err("failed to query my incognito post comments", "error", err)
 		return hub.GetMyIncognitoPostCommentsResponse{}, err
@@ -659,7 +786,15 @@ func (pg *PG) GetMyIncognitoPostComments(
 
 	pg.log.Dbg("fetched my incognito post comments", "count", len(comments))
 
+	// Set pagination key if we reached the limit (indicating more data available)
+	var paginationKey string
+	if len(comments) == int(req.Limit) {
+		// Use the last comment's ID as pagination key
+		paginationKey = comments[len(comments)-1].CommentID
+	}
+
 	return hub.GetMyIncognitoPostCommentsResponse{
-		Comments: comments,
+		Comments:      comments,
+		PaginationKey: paginationKey,
 	}, nil
 }
