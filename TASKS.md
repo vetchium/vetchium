@@ -36,17 +36,17 @@
 - [] Audit logs
 - [] Introductory videos for Employer as well as the Product
 - [] Tag specific fetching of posts
-- [] Follow support for Orgs
-- [] Post message support for Orgs
-- [] GreatHall support (upvotes, downvotes, anonymous comments, etc.)
-- [] Tags is a bit of a mess. Should we allow everyone to create tags ? Should we gatekeep ? Should we (maintainers) hardcode a seed list and keep it updated ?
 - [] Cleaner RBAC error codes and UI alerts
-- [] LoadTests should test for EmployerPosts also
 - [] API for EmployerPost details getting
 - [] HubUser account deletion and the triggered cleanup workflows for posts, comments, etc.
 - [] Employer account deletion and the triggered cleanup workflows for posts, comments, openings, candidacies, applications, etc.
 - [] Admin app
-- [] Get incognito-posts API
+
+# Code cleanups
+- Limit is optional in some APIs, mandatory in some APIs. Should become consistent.
+- The default values are not properly set in some .tsp files using the = operator. Instead we mentioned them in the @doc tag. This should be fixed.
+- [] LoadTests should test for EmployerPosts and IncognitoPosts also
+- Errors handling on various forms are not complete. 400 ValidationErrors are not parsed correctly and appropriate input fields are not red-highlighted.
 
 # Future Features
 
