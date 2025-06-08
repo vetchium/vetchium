@@ -15,13 +15,27 @@ model IncognitoPost {
     content: string;
     tags: VTag[];
     created_at: utcDateTime;
-    upvotes: integer;
-    downvotes: integer;
-    is_created_by_me: boolean;
-    is_deleted: boolean;
+    upvotes_count: int32;
+    downvotes_count: int32;
+    score: int32;
 
-    @doc("The current user's vote on this post: 'upvote', 'downvote', or null")
-    my_vote?: "upvote" | "downvote";
+    @doc("Whether the logged in user has upvoted this post")
+    me_upvoted: boolean;
+
+    @doc("Whether the logged in user has downvoted this post")
+    me_downvoted: boolean;
+
+    @doc("Whether the logged in user can upvote this post. Will be false if the user is blocked from upvoting this post or if the user has already voted for this post.")
+    can_upvote: boolean;
+
+    @doc("Whether the logged in user can downvote this post. Will be false if the user is blocked from downvoting this post or if the user has already voted for this post.")
+    can_downvote: boolean;
+
+    @doc("Whether this post was created by the currently logged in user")
+    is_created_by_me: boolean;
+
+    @doc("Whether this post has been deleted by its author")
+    is_deleted: boolean;
 }
 
 model AddIncognitoPostRequest {
@@ -51,8 +65,21 @@ model IncognitoPostComment {
     @doc("The creation timestamp of the comment")
     created_at: utcDateTime;
 
-    upvotes: integer;
-    downvotes: integer;
+    upvotes_count: int32;
+    downvotes_count: int32;
+    score: int32;
+
+    @doc("Whether the logged in user has upvoted this comment")
+    me_upvoted: boolean;
+
+    @doc("Whether the logged in user has downvoted this comment")
+    me_downvoted: boolean;
+
+    @doc("Whether the logged in user can upvote this comment. Will be false if the user is blocked from upvoting this comment or if the user has already voted for this comment.")
+    can_upvote: boolean;
+
+    @doc("Whether the logged in user can downvote this comment. Will be false if the user is blocked from downvoting this comment or if the user has already voted for this comment.")
+    can_downvote: boolean;
 
     @doc("Whether the comment was created by the currently logged in user")
     is_created_by_me: boolean;
@@ -60,11 +87,8 @@ model IncognitoPostComment {
     @doc("Whether the comment has been deleted by its author")
     is_deleted: boolean;
 
-    @doc("The current user's vote on this comment: 'upvote', 'downvote', or null")
-    my_vote?: "upvote" | "downvote";
-
     @doc("The nesting depth of the comment (0 for top-level, 1 for first reply, etc.)")
-    depth: integer;
+    depth: int32;
 }
 
 model AddIncognitoPostCommentRequest {
@@ -89,13 +113,13 @@ model GetIncognitoPostCommentsRequest {
     @doc("The ID of the IncognitoPost to get comments for")
     incognito_post_id: string;
 
-    @doc("Pagination key to fetch the next page of comments. Comments are sorted by upvotes (descending), then by creation time (ascending) for ties.")
+    @doc("Pagination key to fetch the next page of comments. Comments are sorted by upvotes_count (descending), then by creation time (ascending) for ties.")
     pagination_key?: string;
 
     @doc("Number of comments to fetch per page")
     @minValue(1)
     @maxValue(100)
-    limit: integer;
+    limit: int32;
 
     @doc("The ID of the parent comment to get replies for. If not provided, gets top-level comments.")
     parent_comment_id?: string;
@@ -103,21 +127,15 @@ model GetIncognitoPostCommentsRequest {
     @doc("Maximum depth of nested comments to include in response. Set to 0 for flat list.")
     @minValue(0)
     @maxValue(5)
-    include_nested_depth?: integer = 0;
+    include_nested_depth?: int32 = 0;
 }
 
 model GetIncognitoPostCommentsResponse {
-    @doc("The comments for the IncognitoPost, sorted by upvotes (desc) then creation time (asc)")
+    @doc("The comments for the IncognitoPost, sorted by upvotes_count (desc) then creation time (asc)")
     comments: IncognitoPostComment[];
 
     @doc("Pagination key for fetching the next page of comments")
-    pagination_key?: string;
-
-    @doc("Whether there are more comments available")
-    has_more: boolean;
-
-    @doc("Total count of comments at the requested level")
-    total_count: integer;
+    pagination_key: string;
 }
 
 model DeleteIncognitoPostCommentRequest {
@@ -177,6 +195,68 @@ model UnvoteIncognitoPostRequest {
     incognito_post_id: string;
 }
 
+union IncognitoPostTimeFilter {
+    Past24Hours: "past_24_hours",
+    PastWeek: "past_week",
+    PastMonth: "past_month",
+    PastYear: "past_year",
+}
+
+model GetIncognitoPostsRequest {
+    @doc("Tag ID to filter posts by. Exactly one tag must be specified to ensure focused content discovery.")
+    tag_id: VTagID;
+
+    @doc("Time period to filter posts by. Controls the age of posts to include in results.")
+    time_filter?: IncognitoPostTimeFilter = IncognitoPostTimeFilter.Past24Hours;
+
+    @doc("Number of posts to fetch per page")
+    @minValue(1)
+    @maxValue(100)
+    limit: int32 = 25;
+
+    @doc("Pagination key to fetch the next page of posts.")
+    pagination_key?: string;
+}
+
+model IncognitoPostSummary {
+    incognito_post_id: string;
+    content: string;
+    tags: VTag[];
+    created_at: utcDateTime;
+    upvotes_count: int32;
+    downvotes_count: int32;
+    score: int32;
+
+    @doc("Whether the logged in user has upvoted this post")
+    me_upvoted: boolean;
+
+    @doc("Whether the logged in user has downvoted this post")
+    me_downvoted: boolean;
+
+    @doc("Whether the logged in user can upvote this post. Will be false if the user is blocked from upvoting this post or if the user has already voted for this post.")
+    can_upvote: boolean;
+
+    @doc("Whether the logged in user can downvote this post. Will be false if the user is blocked from downvoting this post or if the user has already voted for this post.")
+    can_downvote: boolean;
+
+    @doc("Total number of comments on this post (includes nested comments)")
+    comments_count: int32;
+
+    @doc("Whether this post was created by the currently logged in user")
+    is_created_by_me: boolean;
+
+    @doc("Whether this post has been deleted by its author")
+    is_deleted: boolean;
+}
+
+model GetIncognitoPostsResponse {
+    @doc("The list of incognito posts matching the specified criteria and filters. Posts are sorted by upvotes_count (descending), then by creation date (descending, newest first) for posts with the same upvote count. Deleted posts (where is_deleted=true) are excluded from results.")
+    posts: IncognitoPostSummary[];
+
+    @doc("Pagination key for fetching the next page of posts. Use this in subsequent requests. If this is empty, there are no more posts to fetch.")
+    pagination_key: string;
+}
+
 @route("/hub/add-incognito-post")
 interface AddIncognitoPost {
     @doc("AddIncognitoPost adds a new IncognitoPost. It is available for both free and paid tier users.")
@@ -210,6 +290,22 @@ interface GetIncognitoPost {
         @doc("Not Found: The specified incognito post does not exist")
         @statusCode
         statusCode: 404;
+    };
+}
+
+@route("/hub/get-incognito-posts")
+interface GetIncognitoPosts {
+    @doc("GetIncognitoPosts gets a paginated list of incognito posts filtered by a single tag within a specified time period. Posts are sorted by upvotes_count (descending), then by creation date (descending, newest first) for ties. Deleted posts are automatically excluded from results. This API provides discovery of anonymous content within specific topic areas.")
+    @tag("Posts")
+    @get
+    @useAuth(HubAuth)
+    getIncognitoPosts(@body request: GetIncognitoPostsRequest): {
+        @statusCode statusCode: 200;
+        @body response: GetIncognitoPostsResponse;
+    } | {
+        @doc("Bad Request: Invalid request data (invalid tag ID, invalid limit values, invalid time_filter values)")
+        @statusCode
+        statusCode: 400;
     };
 }
 
