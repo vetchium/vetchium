@@ -14,11 +14,7 @@ func (pg *PG) GetIncognitoPost(
 	ctx context.Context,
 	req hub.GetIncognitoPostRequest,
 ) (hub.IncognitoPost, error) {
-	pg.log.Dbg(
-		"entered GetIncognitoPost",
-		"incognito_post_id",
-		req.IncognitoPostID,
-	)
+	pg.log.Dbg("entered GetIncognitoPost", "id", req.IncognitoPostID)
 
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
@@ -75,34 +71,28 @@ func (pg *PG) GetIncognitoPost(
 		&post.Content,
 		&post.CreatedAt,
 		&post.IsCreatedByMe,
-		&post.Upvotes,
-		&post.Downvotes,
+		&post.UpvotesCount,
+		&post.DownvotesCount,
 		&myVote,
 		&tagIDs,
 		&tagNames,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			pg.log.Dbg(
-				"incognito post not found",
-				"incognito_post_id",
-				req.IncognitoPostID,
-			)
+			pg.log.Dbg("incognito post not found", "id", req.IncognitoPostID)
 			return hub.IncognitoPost{}, db.ErrNoIncognitoPost
 		}
-		pg.log.Err(
-			"failed to query incognito post",
-			"error",
-			err,
-			"incognito_post_id",
-			req.IncognitoPostID,
+		pg.log.Err("failed to query incognito post",
+			"error", err,
+			"id", req.IncognitoPostID,
 		)
 		return hub.IncognitoPost{}, err
 	}
 
 	// Set the user's vote if exists
 	if myVote.Valid {
-		post.MyVote = &myVote.String
+		post.MeUpvoted = myVote.String == "upvote"
+		post.MeDownvoted = myVote.String == "downvote"
 	}
 
 	// Build tags array
@@ -124,11 +114,7 @@ func (pg *PG) GetIncognitoPostComments(
 	ctx context.Context,
 	req hub.GetIncognitoPostCommentsRequest,
 ) (hub.GetIncognitoPostCommentsResponse, error) {
-	pg.log.Dbg(
-		"entered GetIncognitoPostComments",
-		"incognito_post_id",
-		req.IncognitoPostID,
-	)
+	pg.log.Dbg("entered GetIncognitoPostComments", "id", req.IncognitoPostID)
 
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
@@ -138,11 +124,7 @@ func (pg *PG) GetIncognitoPostComments(
 
 	// First check if the incognito post exists and is not deleted
 	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
-		pg.log.Dbg(
-			"incognito post not found or deleted",
-			"incognito_post_id",
-			req.IncognitoPostID,
-		)
+		pg.log.Dbg("not found or deleted", "id", req.IncognitoPostID)
 		return hub.GetIncognitoPostCommentsResponse{}, db.ErrNoIncognitoPost
 	}
 
@@ -183,12 +165,9 @@ func (pg *PG) GetIncognitoPostComments(
 
 	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID)
 	if err != nil {
-		pg.log.Err(
-			"failed to query incognito post comments",
-			"error",
-			err,
-			"incognito_post_id",
-			req.IncognitoPostID,
+		pg.log.Err("failed to query incognito post comments",
+			"error", err,
+			"incognito_post_id", req.IncognitoPostID,
 		)
 		return hub.GetIncognitoPostCommentsResponse{}, err
 	}
@@ -208,11 +187,12 @@ func (pg *PG) GetIncognitoPostComments(
 			&parentCommentID,
 			&comment.Depth,
 			&comment.CreatedAt,
-			&comment.Upvotes,
-			&comment.Downvotes,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
 			&comment.IsCreatedByMe,
 			&isDeleted,
-			&comment.MyVote,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
 		)
 		if err != nil {
 			pg.log.Err("failed to scan comment row", "error", err)
