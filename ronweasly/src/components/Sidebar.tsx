@@ -9,6 +9,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import SettingsIcon from "@mui/icons-material/Settings";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -51,6 +52,11 @@ export default function Sidebar({ open }: SidebarProps) {
 
   const menuItems = [
     { text: "posts", icon: <MessageIcon />, path: "/posts" },
+    {
+      text: "incognitoPosts",
+      icon: <VisibilityOffIcon />,
+      path: "/incognito-posts",
+    },
     { text: "findOpenings", icon: <SearchIcon />, path: "/find-openings" },
     {
       text: "myApplications",
