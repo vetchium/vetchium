@@ -1,11 +1,15 @@
 "use client";
 
+import { config } from "@/config";
 import { useCreateIncognitoPost } from "@/hooks/useIncognitoPosts";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
+  Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,9 +17,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { AddIncognitoPostRequest, VTag, VTagID } from "@vetchium/typespec";
+import { AddIncognitoPostRequest, VTag } from "@vetchium/typespec";
+import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
-import TagSelector from "./TagSelector";
 
 interface CreatePostDialogProps {
   open: boolean;
@@ -34,10 +38,56 @@ export default function CreatePostDialog({
   const { isCreating, error, createPost } = useCreateIncognitoPost();
 
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<VTagID[]>([]);
+  const [selectedTags, setSelectedTags] = useState<VTag[]>([]);
   const [availableTags, setAvailableTags] = useState<VTag[]>([]);
   const [contentError, setContentError] = useState("");
   const [tagsError, setTagsError] = useState("");
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [tagInputValue, setTagInputValue] = useState("");
+
+  // Load tags when dialog opens
+  useEffect(() => {
+    if (open && availableTags.length === 0) {
+      loadTags();
+    }
+  }, [open]);
+
+  const loadTags = async () => {
+    setIsLoadingTags(true);
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/filter-vtags`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ prefix: "" }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tags: ${response.statusText}`);
+      }
+
+      const data: VTag[] = await response.json();
+      setAvailableTags(data);
+    } catch (error) {
+      onError(
+        error instanceof Error
+          ? error.message
+          : t("incognitoPosts.errors.tagLoadFailed")
+      );
+    } finally {
+      setIsLoadingTags(false);
+    }
+  };
 
   useEffect(() => {
     if (error) {
@@ -51,6 +101,7 @@ export default function CreatePostDialog({
       setSelectedTags([]);
       setContentError("");
       setTagsError("");
+      setTagInputValue("");
       onClose();
     }
   };
@@ -90,7 +141,7 @@ export default function CreatePostDialog({
 
     const request = new AddIncognitoPostRequest();
     request.content = content.trim();
-    request.tag_ids = selectedTags;
+    request.tag_ids = selectedTags.map((tag) => tag.id);
 
     const postId = await createPost(request);
     if (postId) {
@@ -99,32 +150,34 @@ export default function CreatePostDialog({
     }
   };
 
-  const handleTagToggle = (tagId: VTagID) => {
-    setSelectedTags((prev) => {
-      if (prev.includes(tagId)) {
-        return prev.filter((id) => id !== tagId);
-      } else if (prev.length < 3) {
-        return [...prev, tagId];
+  const handleTagsChange = (_: any, newValue: VTag[]) => {
+    if (newValue.length <= 3) {
+      setSelectedTags(newValue);
+      // Clear tag error when user selects a tag
+      if (tagsError && newValue.length > 0) {
+        setTagsError("");
       }
-      return prev;
-    });
+    }
   };
 
-  const handleTagsLoaded = (tags: VTag[]) => {
-    setAvailableTags(tags);
-  };
-
-  const getSelectedTagNames = () => {
-    return selectedTags
-      .map((tagId) => availableTags.find((tag) => tag.id === tagId)?.name)
-      .filter(Boolean);
-  };
+  const isFormValid =
+    content.trim() && selectedTags.length > 0 && selectedTags.length <= 3;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>{t("incognitoPosts.compose.title")}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+          {/* Warning messages at the top of the dialog */}
+          <Box sx={{ mb: 2 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {t("incognitoPosts.compose.warnings.dataRetention")}
+            </Alert>
+            <Alert severity="info">
+              {t("incognitoPosts.compose.warnings.respectfulPosting")}
+            </Alert>
+          </Box>
+
           {/* Content Input */}
           <TextField
             label={t("incognitoPosts.compose.contentLabel")}
@@ -132,62 +185,72 @@ export default function CreatePostDialog({
             multiline
             rows={6}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              // Clear content error when user types
+              if (contentError) {
+                setContentError("");
+              }
+            }}
             error={!!contentError}
-            helperText={
-              contentError ||
-              `${content.length}/1024 ${t("posts.charactersLimit")}`
-            }
+            helperText={contentError || `${content.length}/1024 characters`}
             fullWidth
           />
 
-          {/* Tag Selection */}
+          {/* Tag Selection with Autocomplete */}
           <Box>
             <Typography variant="subtitle2" gutterBottom>
               {t("incognitoPosts.compose.tagsLabel")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t("incognitoPosts.compose.selectTags")} (1-3)
-            </Typography>
 
-            {/* Available Tags */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-              {availableTags.map((tag) => (
-                <Chip
-                  key={tag.id}
-                  label={tag.name}
-                  onClick={() => handleTagToggle(tag.id)}
-                  color={selectedTags.includes(tag.id) ? "primary" : "default"}
-                  variant={
-                    selectedTags.includes(tag.id) ? "filled" : "outlined"
+            <Autocomplete
+              multiple
+              options={availableTags}
+              getOptionLabel={(option) => option.name}
+              value={selectedTags}
+              onChange={handleTagsChange}
+              inputValue={tagInputValue}
+              onInputChange={(_, newInputValue) => {
+                setTagInputValue(newInputValue);
+              }}
+              loading={isLoadingTags}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    variant="outlined"
+                    label={option.name}
+                    {...getTagProps({ index })}
+                    key={option.id}
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={t("incognitoPosts.compose.tagPlaceholder")}
+                  error={!!tagsError}
+                  helperText={
+                    tagsError ||
+                    `Select 1-3 tags (${selectedTags.length}/3 selected)`
                   }
-                  clickable
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {isLoadingTags ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
                 />
-              ))}
-            </Box>
-
-            {/* Selected Tags Display */}
-            {selectedTags.length > 0 && (
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Selected: {getSelectedTagNames().join(", ")}
-                </Typography>
-              </Box>
-            )}
-
-            {tagsError && (
-              <Typography variant="body2" color="error">
-                {tagsError}
-              </Typography>
-            )}
-          </Box>
-
-          {/* Hidden TagSelector to load tags */}
-          <Box sx={{ display: "none" }}>
-            <TagSelector
-              selectedTag=""
-              onTagSelect={() => {}}
-              onError={onError}
+              )}
+              fullWidth
+              limitTags={3}
+              disableCloseOnSelect
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionDisabled={() => selectedTags.length >= 3}
             />
           </Box>
         </Box>
@@ -199,7 +262,7 @@ export default function CreatePostDialog({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={isCreating || !content.trim() || selectedTags.length === 0}
+          disabled={isCreating || !isFormValid}
         >
           {isCreating
             ? t("incognitoPosts.compose.posting")

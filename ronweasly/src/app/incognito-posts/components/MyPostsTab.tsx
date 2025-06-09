@@ -13,16 +13,10 @@ import { useEffect } from "react";
 import IncognitoPostCard from "./IncognitoPostCard";
 
 interface MyPostsTabProps {
-  refreshTrigger: number;
   onError: (error: string) => void;
-  onSuccess: (message: string) => void;
 }
 
-export default function MyPostsTab({
-  refreshTrigger,
-  onError,
-  onSuccess,
-}: MyPostsTabProps) {
+export default function MyPostsTab({ onError }: MyPostsTabProps) {
   const { t } = useTranslation();
   const {
     posts,
@@ -41,7 +35,7 @@ export default function MyPostsTab({
 
   useEffect(() => {
     loadMyPosts(true);
-  }, [refreshTrigger, loadMyPosts]);
+  }, [loadMyPosts]);
 
   const handleLoadMore = () => {
     loadMoreMyPosts();
@@ -49,11 +43,10 @@ export default function MyPostsTab({
 
   const handlePostDeleted = () => {
     loadMyPosts(true);
-    onSuccess(t("incognitoPosts.success.postDeleted"));
   };
 
   const handleVoteUpdated = () => {
-    onSuccess(t("incognitoPosts.success.voteUpdated"));
+    // Implementation needed
   };
 
   return (

@@ -158,7 +158,7 @@ export const useMyIncognitoPosts = (): UseMyIncognitoPostsResult => {
         const response = await fetch(
           `${config.API_SERVER_PREFIX}/hub/get-my-incognito-posts`,
           {
-            method: "GET",
+            method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,

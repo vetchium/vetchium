@@ -22,16 +22,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface MyCommentsTabProps {
-  refreshTrigger: number;
   onError: (error: string) => void;
-  onSuccess: (message: string) => void;
 }
 
-export default function MyCommentsTab({
-  refreshTrigger,
-  onError,
-  onSuccess,
-}: MyCommentsTabProps) {
+export default function MyCommentsTab({ onError }: MyCommentsTabProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [comments, setComments] = useState<MyIncognitoPostComment[]>([]);
@@ -58,7 +52,7 @@ export default function MyCommentsTab({
         const response = await fetch(
           `${config.API_SERVER_PREFIX}/hub/get-my-incognito-post-comments`,
           {
-            method: "GET",
+            method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
@@ -96,7 +90,7 @@ export default function MyCommentsTab({
 
   useEffect(() => {
     loadComments(true);
-  }, [refreshTrigger, loadComments]);
+  }, [loadComments]);
 
   const handleLoadMore = () => {
     loadComments(false);

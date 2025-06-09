@@ -8,13 +8,14 @@ import {
   Box,
   Button,
   CircularProgress,
+  Container,
   Paper,
   Snackbar,
   Tab,
   Tabs,
   Typography,
 } from "@mui/material";
-import { Suspense, useState } from "react";
+import React, { Suspense, useState } from "react";
 import BrowseTab from "./components/BrowseTab";
 import CreatePostDialog from "./components/CreatePostDialog";
 import MyCommentsTab from "./components/MyCommentsTab";
@@ -22,97 +23,73 @@ import MyPostsTab from "./components/MyPostsTab";
 
 function IncognitoPostsContent() {
   const { t } = useTranslation();
-  useAuth();
-  const [tabValue, setTabValue] = useState(0);
+  useAuth(); // Check authentication and redirect if not authenticated
+  const [currentTab, setCurrentTab] = useState(0);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
   };
 
   const handlePostCreated = () => {
-    setRefreshTrigger((prev) => prev + 1);
     setSuccess(t("incognitoPosts.success.postCreated"));
+    // Refresh the browse tab if it's active
+    if (currentTab === 0) {
+      window.location.reload(); // Simple refresh for now
+    }
   };
 
   const handleError = (errorMessage: string) => {
     setError(errorMessage);
   };
 
-  const handleSuccess = (successMessage: string) => {
-    setSuccess(successMessage);
-  };
-
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", mt: 4, px: 2 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, textAlign: "center" }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
           {t("incognitoPosts.title")}
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-          {t("incognitoPosts.subtitle")}
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setCreateDialogOpen(true)}
-          sx={{ mt: 2 }}
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          align="center"
+          sx={{ mb: 3 }}
         >
-          {t("incognitoPosts.createPost")}
-        </Button>
+          {t("incognitoPosts.description")}
+        </Typography>
+
+        {/* Create Post Button */}
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setCreateDialogOpen(true)}
+            sx={{ minWidth: 200 }}
+          >
+            {t("incognitoPosts.browsing.createPost")}
+          </Button>
+        </Box>
       </Box>
 
-      {/* Tabs Section */}
       <Paper sx={{ width: "100%" }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            aria-label="incognito posts tabs"
-            variant="fullWidth"
-          >
-            <Tab
-              label={t("incognitoPosts.browseByTags")}
-              id="incognito-tab-0"
-            />
-            <Tab
-              label={t("incognitoPosts.myPosts.title")}
-              id="incognito-tab-1"
-            />
-            <Tab
-              label={t("incognitoPosts.myComments.title")}
-              id="incognito-tab-2"
-            />
-          </Tabs>
-        </Box>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          centered
+        >
+          <Tab label={t("incognitoPosts.browsing.title")} />
+          <Tab label={t("incognitoPosts.browsing.myPosts")} />
+          <Tab label={t("incognitoPosts.browsing.myComments")} />
+        </Tabs>
 
-        {/* Tab Panels */}
         <Box sx={{ p: 3 }}>
-          {tabValue === 0 && (
-            <BrowseTab
-              refreshTrigger={refreshTrigger}
-              onError={handleError}
-              onSuccess={handleSuccess}
-            />
-          )}
-          {tabValue === 1 && (
-            <MyPostsTab
-              refreshTrigger={refreshTrigger}
-              onError={handleError}
-              onSuccess={handleSuccess}
-            />
-          )}
-          {tabValue === 2 && (
-            <MyCommentsTab
-              refreshTrigger={refreshTrigger}
-              onError={handleError}
-              onSuccess={handleSuccess}
-            />
-          )}
+          {currentTab === 0 && <BrowseTab onError={handleError} />}
+          {currentTab === 1 && <MyPostsTab onError={handleError} />}
+          {currentTab === 2 && <MyCommentsTab onError={handleError} />}
         </Box>
       </Paper>
 
@@ -148,7 +125,7 @@ function IncognitoPostsContent() {
           </Button>
         }
       />
-    </Box>
+    </Container>
   );
 }
 
