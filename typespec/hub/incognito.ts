@@ -51,6 +51,20 @@ export class IncognitoPostComment {
   depth: number = 0;
 }
 
+export class AddIncognitoPostCommentRequest {
+  incognito_post_id: string = "";
+  content: string = "";
+  in_reply_to?: string = undefined;
+
+  IsValid(): boolean {
+    return (
+      this.incognito_post_id.length > 0 &&
+      this.content.length > 0 &&
+      this.content.length <= 512
+    );
+  }
+}
+
 export class AddIncognitoPostCommentResponse {
   incognito_post_id: string = "";
   comment_id: string = "";
