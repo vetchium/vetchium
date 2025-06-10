@@ -531,12 +531,15 @@ func writeIncognitoVotes(postIDs []string) {
 					continue
 				}
 
-				if resp.StatusCode != http.StatusOK {
+				// 422 will be returned on self-post voting
+				if resp.StatusCode != http.StatusOK &&
+					resp.StatusCode != http.StatusUnprocessableEntity {
 					body, err := io.ReadAll(resp.Body)
 					if err != nil {
-						color.Red("failed to read vote error response: %v", err)
+						color.Red("vote error: %v %v", err, resp.StatusCode)
 					} else {
-						color.Red("failed to vote on post: %v", string(body))
+						color.Red("error: %v %v", string(body), resp.StatusCode)
+						log.Fatalf("failed to vote on post: %v %v", string(body), resp.StatusCode)
 					}
 				}
 
