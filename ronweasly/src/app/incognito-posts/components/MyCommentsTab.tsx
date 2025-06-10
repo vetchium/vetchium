@@ -143,7 +143,13 @@ export default function MyCommentsTab({ onError }: MyCommentsTabProps) {
                   >
                     <Box>
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(comment.created_at).toLocaleDateString()}
+                        {new Intl.DateTimeFormat(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(new Date(comment.created_at))}
                         {comment.depth > 0 && (
                           <>
                             {" • "}

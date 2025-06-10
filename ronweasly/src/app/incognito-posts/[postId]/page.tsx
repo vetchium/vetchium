@@ -300,7 +300,13 @@ function IncognitoPostDetailsContent() {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            {new Date(comment.created_at).toLocaleString()}
+            {new Intl.DateTimeFormat(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(new Date(comment.created_at))}
             {comment.depth > 0 && (
               <>
                 {" • "}
@@ -383,7 +389,13 @@ function IncognitoPostDetailsContent() {
             >
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  {new Date(post.created_at).toLocaleString()}
+                  {new Intl.DateTimeFormat(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(post.created_at))}
                   {post.is_created_by_me && (
                     <>
                       {" • "}
