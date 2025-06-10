@@ -85,8 +85,6 @@ func main() {
 	followUsers()
 	color.Cyan("Follow organizations")
 	followOrgs()
-	color.Cyan("Write posts")
-	writePosts()
 
 	color.Cyan("Create Achievements for Hub Users")
 	createAchievements()
@@ -112,8 +110,6 @@ func main() {
 	// Use APIs to write to the database
 	color.Cyan("Signing in admins")
 	signinAdmins()
-	color.Cyan("Write employer posts")
-	writeEmployerPosts()
 	color.Cyan("Initializing locations")
 	createLocations()
 	color.Cyan("Initializing cost centers")
@@ -124,4 +120,11 @@ func main() {
 	// Create applications with generated PDF resumes
 	color.Cyan("Creating applications")
 	createApplications()
+
+	color.Cyan("Write posts")
+	writePosts()
+	color.Cyan("Write employer posts")
+	writeEmployerPosts()
+	color.Cyan("Write incognito posts")
+	writeIncognitoPosts()
 }
