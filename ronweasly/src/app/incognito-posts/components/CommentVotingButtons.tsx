@@ -114,11 +114,6 @@ export default function CommentVotingButtons({
     }
   };
 
-  const formatScore = (score: number) => {
-    if (score === 0) return "0";
-    return score > 0 ? `+${score}` : `${score}`;
-  };
-
   const getUpvoteTooltip = () => {
     if (!canUpvote) return t("incognitoPosts.voting.cannotVoteOwn");
     if (meUpvoted) return t("incognitoPosts.voting.unvote");
@@ -155,28 +150,6 @@ export default function CommentVotingButtons({
         {upvotesCount}
       </Typography>
 
-      {/* Score */}
-      <Typography
-        variant="body2"
-        sx={{
-          fontWeight: "bold",
-          color:
-            score > 0
-              ? "success.main"
-              : score < 0
-              ? "error.main"
-              : "text.secondary",
-          minWidth: 30,
-          textAlign: "center",
-        }}
-      >
-        {formatScore(score)}
-      </Typography>
-
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }}>
-        {downvotesCount}
-      </Typography>
-
       {/* Downvote */}
       <Tooltip title={getDownvoteTooltip()}>
         <span>
@@ -194,6 +167,10 @@ export default function CommentVotingButtons({
           </IconButton>
         </span>
       </Tooltip>
+
+      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }}>
+        {downvotesCount}
+      </Typography>
     </Box>
   );
 }

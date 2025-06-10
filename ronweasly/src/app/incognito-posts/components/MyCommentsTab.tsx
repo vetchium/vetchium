@@ -203,20 +203,6 @@ export default function MyCommentsTab({ onError }: MyCommentsTabProps) {
                         t("incognitoPosts.post.downvotesPlural")
                       )}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: "bold",
-                        color:
-                          comment.score > 0
-                            ? "success.main"
-                            : comment.score < 0
-                            ? "error.main"
-                            : "text.secondary",
-                      }}
-                    >
-                      {t("incognitoPosts.post.score")}: {comment.score}
-                    </Typography>
                   </Box>
 
                   {/* Post Preview */}

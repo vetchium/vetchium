@@ -361,9 +361,7 @@ function IncognitoPostDetailsContent() {
         <IconButton onClick={() => router.back()}>
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5">
-          {t("incognitoPosts.post.viewDetails")}
-        </Typography>
+        <Typography variant="h5">Post Details</Typography>
       </Box>
 
       {/* Post Content */}

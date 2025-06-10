@@ -825,7 +825,6 @@ export const en = {
       noMorePosts: "No more posts to load",
     },
     post: {
-      score: "Score",
       upvotes: "upvote",
       upvotesPlural: "upvotes",
       downvotes: "downvote",
@@ -834,7 +833,6 @@ export const en = {
       commentsPlural: "comments",
       createdBy: "Created by you",
       createdByYou: "Created by you",
-      anonymous: "Anonymous",
       viewComments: "View Comments",
       hideComments: "Hide Comments",
       addComment: "Add Comment",
@@ -847,7 +845,6 @@ export const en = {
       confirmDeleteComment: "Are you sure you want to delete this comment?",
       reply: "Reply",
       inReplyTo: "In reply to",
-      viewDetails: "View Details",
       deleted: "This post has been deleted",
       votingDisabled: "You cannot vote on your own content",
     },

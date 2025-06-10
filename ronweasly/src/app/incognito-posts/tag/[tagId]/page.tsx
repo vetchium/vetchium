@@ -101,6 +101,7 @@ function IncognitoPostsByTagContent() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           {t("incognitoPosts.title")}
@@ -127,106 +128,111 @@ function IncognitoPostsByTagContent() {
         </Box>
       </Box>
 
-      <Paper sx={{ width: "100%" }}>
-        <Box sx={{ p: 3 }}>
-          {/* Header with tag info and filters */}
-          <Box
-            sx={{
-              mb: 3,
-              display: "flex",
-              gap: 2,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="h6">Posts tagged: {tagId}</Typography>
-
-            <Button
-              variant="outlined"
-              onClick={() => router.push("/incognito-posts")}
-              sx={{ ml: "auto" }}
+      {/* Main Content */}
+      <Box sx={{ maxWidth: 800, mx: "auto" }}>
+        <Paper sx={{ width: "100%" }}>
+          <Box sx={{ p: 3 }}>
+            {/* Header with tag info and filters */}
+            <Box
+              sx={{
+                mb: 3,
+                display: "flex",
+                gap: 2,
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              ← Browse All Tags
-            </Button>
-          </Box>
+              <Typography variant="h6">Posts tagged: {tagId}</Typography>
 
-          {/* Time Filter */}
-          <Box sx={{ mb: 3 }}>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>{t("incognitoPosts.filters.timeFilter")}</InputLabel>
-              <Select
-                value={timeFilter}
-                label={t("incognitoPosts.filters.timeFilter")}
-                onChange={(e) =>
-                  handleTimeFilterChange(
-                    e.target.value as IncognitoPostTimeFilter
-                  )
-                }
+              <Button
+                variant="outlined"
+                onClick={() => router.push("/incognito-posts")}
               >
-                <MenuItem value={IncognitoPostTimeFilter.Past24Hours}>
-                  {t("incognitoPosts.timeFilters.past24Hours")}
-                </MenuItem>
-                <MenuItem value={IncognitoPostTimeFilter.PastWeek}>
-                  {t("incognitoPosts.timeFilters.pastWeek")}
-                </MenuItem>
-                <MenuItem value={IncognitoPostTimeFilter.PastMonth}>
-                  {t("incognitoPosts.timeFilters.pastMonth")}
-                </MenuItem>
-                <MenuItem value={IncognitoPostTimeFilter.PastYear}>
-                  {t("incognitoPosts.timeFilters.pastYear")}
-                </MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          {/* Posts List */}
-          {posts.length === 0 && !isLoading ? (
-            <Alert severity="info">
-              {t("incognitoPosts.feed.noPostsForTag")}
-            </Alert>
-          ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {posts.map((post) => (
-                <IncognitoPostCard
-                  key={post.incognito_post_id}
-                  post={post}
-                  onDeleted={handlePostDeleted}
-                  onVoteUpdated={() => {}}
-                  onError={handleError}
-                />
-              ))}
-            </Box>
-          )}
-
-          {/* Loading indicator */}
-          {isLoading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <CircularProgress />
-            </Box>
-          )}
-
-          {/* Load More Button */}
-          {hasMorePages && !isLoading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-              <Button variant="outlined" onClick={handleLoadMore}>
-                {t("incognitoPosts.feed.loadMore")}
+                ← Browse All Tags
               </Button>
             </Box>
-          )}
 
-          {/* No More Posts Message */}
-          {!hasMorePages && posts.length > 0 && !isLoading && (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              align="center"
-              sx={{ mt: 3 }}
-            >
-              {t("incognitoPosts.feed.noMorePosts")}
-            </Typography>
-          )}
-        </Box>
-      </Paper>
+            {/* Time Filter */}
+            <Box sx={{ mb: 3 }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>
+                  {t("incognitoPosts.filters.timeFilter")}
+                </InputLabel>
+                <Select
+                  value={timeFilter}
+                  label={t("incognitoPosts.filters.timeFilter")}
+                  onChange={(e) =>
+                    handleTimeFilterChange(
+                      e.target.value as IncognitoPostTimeFilter
+                    )
+                  }
+                >
+                  <MenuItem value={IncognitoPostTimeFilter.Past24Hours}>
+                    {t("incognitoPosts.timeFilters.past24Hours")}
+                  </MenuItem>
+                  <MenuItem value={IncognitoPostTimeFilter.PastWeek}>
+                    {t("incognitoPosts.timeFilters.pastWeek")}
+                  </MenuItem>
+                  <MenuItem value={IncognitoPostTimeFilter.PastMonth}>
+                    {t("incognitoPosts.timeFilters.pastMonth")}
+                  </MenuItem>
+                  <MenuItem value={IncognitoPostTimeFilter.PastYear}>
+                    {t("incognitoPosts.timeFilters.pastYear")}
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Posts List */}
+            {posts.length === 0 && !isLoading ? (
+              <Alert severity="info">
+                {t("incognitoPosts.feed.noPostsForTag")}
+              </Alert>
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                {posts.map((post) => (
+                  <IncognitoPostCard
+                    key={post.incognito_post_id}
+                    post={post}
+                    onDeleted={handlePostDeleted}
+                    onVoteUpdated={() => {}}
+                    onError={handleError}
+                  />
+                ))}
+              </Box>
+            )}
+
+            {/* Loading More */}
+            {isLoading && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <CircularProgress />
+              </Box>
+            )}
+
+            {/* Load More Button */}
+            {!isLoading && hasMorePages && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <Button variant="outlined" onClick={handleLoadMore}>
+                  {t("incognitoPosts.browsing.loadMore")}
+                </Button>
+              </Box>
+            )}
+
+            {/* No More Posts */}
+            {!isLoading && !hasMorePages && posts.length > 0 && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ mt: 3 }}
+              >
+                {t("incognitoPosts.browsing.noMorePosts")}
+              </Typography>
+            )}
+          </Box>
+        </Paper>
+      </Box>
 
       {/* Create Post Dialog */}
       <CreatePostDialog

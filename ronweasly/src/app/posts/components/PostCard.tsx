@@ -154,6 +154,8 @@ export default function PostCard({
         boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         borderRadius: "8px",
         backgroundColor: theme.palette.background.paper,
+        borderTop: `2px solid #10b981`,
+        borderLeft: `4px solid #10b981`,
       }}
     >
       <CardHeader
@@ -275,21 +277,21 @@ export default function PostCard({
                 clickable
                 sx={{
                   borderRadius: "16px",
-                  backgroundColor: theme.palette.primary.main + "15",
-                  color: theme.palette.primary.main,
+                  backgroundColor: "#d1fae5",
+                  color: "#10b981",
                   fontSize: "0.75rem",
                   height: "24px",
-                  border: `1px solid ${theme.palette.primary.main}30`,
+                  border: "1px solid #a7f3d0",
                   "& .MuiChip-label": {
                     padding: "0 8px",
                     fontWeight: 500,
                   },
                   "&:hover": {
-                    backgroundColor: theme.palette.primary.main + "25",
-                    borderColor: theme.palette.primary.main + "50",
+                    backgroundColor: "#bbf7d0",
+                    borderColor: "#86efac",
                   },
                   "&:focus": {
-                    backgroundColor: theme.palette.primary.main + "25",
+                    backgroundColor: "#bbf7d0",
                   },
                 }}
               />
