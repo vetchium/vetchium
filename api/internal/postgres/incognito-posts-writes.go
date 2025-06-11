@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
 
@@ -204,24 +205,18 @@ func (pg *PG) AddIncognitoPostComment(
 			*req.AddIncognitoPostCommentRequest.InReplyTo,
 		)
 		if err != nil {
-			pg.log.Err(
-				"failed to get parent comment depth",
-				"error",
-				err,
-				"parent_comment_id",
-				*req.AddIncognitoPostCommentRequest.InReplyTo,
+			pg.log.Err("failed to get parent comment depth",
+				"error", err,
+				"id", *req.AddIncognitoPostCommentRequest.InReplyTo,
 			)
 			return hub.AddIncognitoPostCommentResponse{}, err
 		}
 
 		// Check if adding a reply would exceed max depth
-		if parentDepth >= 10 {
-			pg.log.Dbg(
-				"comment depth limit reached",
-				"parent_depth",
-				parentDepth,
-				"parent_comment_id",
-				*req.AddIncognitoPostCommentRequest.InReplyTo,
+		if parentDepth >= vetchi.MaxCommentDepth {
+			pg.log.Dbg("comment depth limit reached",
+				"parent_depth", parentDepth,
+				"id", *req.AddIncognitoPostCommentRequest.InReplyTo,
 			)
 			return hub.AddIncognitoPostCommentResponse{}, db.ErrMaxCommentDepthReached
 		}
@@ -280,10 +275,8 @@ func (pg *PG) DeleteIncognitoPostComment(
 
 	// Check if incognito post exists
 	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
-		pg.log.Dbg(
-			"incognito post not found",
-			"incognito_post_id",
-			req.IncognitoPostID,
+		pg.log.Dbg("incognito post not found",
+			"incognito_post_id", req.IncognitoPostID,
 		)
 		return db.ErrNoIncognitoPost
 	}
@@ -299,7 +292,7 @@ func (pg *PG) DeleteIncognitoPostComment(
 	err = pg.pool.QueryRow(ctx, checkQuery, req.CommentID, req.IncognitoPostID).
 		Scan(&authorID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			pg.log.Dbg("incognito post comment not found",
 				"comment_id", req.CommentID,
 				"incognito_post_id", req.IncognitoPostID)
@@ -453,10 +446,8 @@ func (pg *PG) UnvoteIncognitoPostComment(
 			req.CommentID,
 			req.IncognitoPostID,
 		) {
-			pg.log.Dbg(
-				"incognito post comment not found",
-				"comment_id",
-				req.CommentID,
+			pg.log.Dbg("incognito post comment not found",
+				"comment_id", req.CommentID,
 			)
 			return db.ErrNoIncognitoPostComment
 		}
@@ -552,21 +543,29 @@ func (pg *PG) voteIncognitoPostComment(
 ) error {
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
-		return err
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return db.ErrInternal
 	}
+
+	// TODO: There are too many database calls in here. We should optimize this with just one query and get all needed data
 
 	// Check if incognito post exists
 	if !pg.incognitoPostExists(ctx, incognitoPostID) {
+		pg.log.Dbg("incognito post not found", "id", incognitoPostID)
 		return db.ErrNoIncognitoPost
 	}
 
 	// Check if comment exists and is not deleted
 	if !pg.commentExistsAndNotDeleted(ctx, commentID, incognitoPostID) {
+		pg.log.Dbg("comment not found", "id", commentID)
 		return db.ErrNoIncognitoPostComment
 	}
 
 	// Check if user can vote (not the author)
 	if !pg.canVoteOnComment(ctx, commentID, hubUserID) {
+		pg.log.Dbg("user cannot vote on this comment",
+			"comment_id", commentID,
+			"hub_user_id", hubUserID)
 		return db.ErrNonVoteableIncognitoPostComment
 	}
 
@@ -649,6 +648,7 @@ func (pg *PG) getCommentDepth(
 
 	err := pg.pool.QueryRow(ctx, query, commentID).Scan(&depth)
 	if err != nil {
+		pg.log.Dbg("failed to get comment depth", "error", err)
 		return 0, db.ErrInvalidParentComment
 	}
 
@@ -657,6 +657,7 @@ func (pg *PG) getCommentDepth(
 
 func (pg *PG) validateTagIDs(ctx context.Context, tagIDs []string) bool {
 	if len(tagIDs) == 0 {
+		pg.log.Dbg("no tag IDs provided")
 		return true
 	}
 

@@ -69,3 +69,7 @@ const (
 	MailSenderInterval              = 5 * time.Second
 	ScoreApplicationsInterval       = 1 * time.Minute
 )
+
+const (
+	MaxCommentDepth = 5
+)
