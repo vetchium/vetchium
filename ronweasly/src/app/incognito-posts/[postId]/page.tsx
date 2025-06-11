@@ -510,18 +510,19 @@ function IncognitoPostDetailsContent() {
                         {comment.downvotes_count}
                       </Typography>
                     </Box>
-                    {!comment.is_deleted && comment.depth < 3 && (
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: "none",
-                          color: "text.secondary",
-                        }}
-                        onClick={() => setReplyToComment(comment.comment_id)}
-                      >
-                        Reply
-                      </Button>
-                    )}
+                    {!comment.is_deleted &&
+                      comment.depth < config.MAX_COMMENT_DEPTH && (
+                        <Button
+                          size="small"
+                          sx={{
+                            textTransform: "none",
+                            color: "text.secondary",
+                          }}
+                          onClick={() => setReplyToComment(comment.comment_id)}
+                        >
+                          Reply
+                        </Button>
+                      )}
                     <Typography
                       variant="caption"
                       color="text.secondary"
