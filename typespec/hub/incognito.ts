@@ -98,7 +98,17 @@ export class DeleteIncognitoPostCommentRequest {
   comment_id: string = "";
 }
 
-export class VoteIncognitoPostCommentRequest {
+export class UpvoteIncognitoPostCommentRequest {
+  incognito_post_id: string = "";
+  comment_id: string = "";
+}
+
+export class DownvoteIncognitoPostCommentRequest {
+  incognito_post_id: string = "";
+  comment_id: string = "";
+}
+
+export class UnvoteIncognitoPostCommentRequest {
   incognito_post_id: string = "";
   comment_id: string = "";
 }

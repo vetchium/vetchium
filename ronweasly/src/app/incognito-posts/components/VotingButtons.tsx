@@ -105,29 +105,25 @@ export default function VotingButtons({
   };
 
   const handleUpvote = () => {
-    if (meUpvoted) {
-      handleVote("unvote");
-    } else {
-      handleVote("upvote");
-    }
+    if (isVoting) return;
+    handleVote(meUpvoted ? "unvote" : "upvote");
   };
 
   const handleDownvote = () => {
-    if (meDownvoted) {
-      handleVote("unvote");
-    } else {
-      handleVote("downvote");
-    }
+    if (isVoting) return;
+    handleVote(meDownvoted ? "unvote" : "downvote");
   };
 
   const getUpvoteTooltip = () => {
-    if (!canUpvote) return t("incognitoPosts.voting.cannotVoteOwn");
+    if (meDownvoted) return "Remove your downvote to upvote";
+    if (!canUpvote && !meUpvoted) return "You cannot vote on your own post";
     if (meUpvoted) return t("incognitoPosts.voting.unvote");
     return t("incognitoPosts.voting.upvote");
   };
 
   const getDownvoteTooltip = () => {
-    if (!canDownvote) return t("incognitoPosts.voting.cannotVoteOwn");
+    if (meUpvoted) return "Remove your upvote to downvote";
+    if (!canDownvote && !meDownvoted) return "You cannot vote on your own post";
     if (meDownvoted) return t("incognitoPosts.voting.unvote");
     return t("incognitoPosts.voting.downvote");
   };
@@ -140,7 +136,7 @@ export default function VotingButtons({
           <IconButton
             size="small"
             onClick={handleUpvote}
-            disabled={!canUpvote || isVoting}
+            disabled={isVoting || meDownvoted || (!canUpvote && !meUpvoted)}
             color={meUpvoted ? "primary" : "default"}
           >
             {meUpvoted ? (
@@ -162,7 +158,7 @@ export default function VotingButtons({
           <IconButton
             size="small"
             onClick={handleDownvote}
-            disabled={!canDownvote || isVoting}
+            disabled={isVoting || meUpvoted || (!canDownvote && !meDownvoted)}
             color={meDownvoted ? "error" : "default"}
           >
             {meDownvoted ? (
