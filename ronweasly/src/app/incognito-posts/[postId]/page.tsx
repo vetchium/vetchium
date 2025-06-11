@@ -338,11 +338,8 @@ function IncognitoPostDetailsContent() {
           <Box
             sx={{
               display: "flex",
-              alignItems: "center",
               gap: 1,
-              mb: 1,
-              fontSize: "0.8rem",
-              color: "text.secondary",
+              alignItems: isCollapsed ? "center" : "flex-start",
             }}
           >
             {showCollapseButton && (
@@ -351,7 +348,6 @@ function IncognitoPostDetailsContent() {
                 onClick={() => toggleCollapseComment(comment.comment_id)}
                 sx={{
                   p: 0,
-                  mr: 0.5,
                   color: depthPattern.color,
                 }}
               >
@@ -362,154 +358,170 @@ function IncognitoPostDetailsContent() {
                 )}
               </IconButton>
             )}
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontSize: "0.8rem" }}
-            >
-              {new Intl.DateTimeFormat(undefined, {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              }).format(new Date(comment.created_at))}
-              {comment.is_created_by_me && " • (you)"}
-            </Typography>
-          </Box>
-
-          {!isCollapsed && (
-            <>
-              {comment.is_deleted ? (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  fontStyle="italic"
-                  sx={{ mb: 1 }}
-                >
-                  [deleted]
+            <Box sx={{ flex: 1 }}>
+              {isCollapsed ? (
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {comment.is_deleted
+                    ? "[deleted]"
+                    : comment.content.length > 60
+                    ? `${comment.content.substring(0, 60)}...`
+                    : comment.content}
                 </Typography>
               ) : (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 1,
-                    whiteSpace: "pre-wrap",
-                    fontSize: "0.9rem",
-                    lineHeight: 1.5,
-                    color: "text.primary",
-                  }}
-                >
-                  {comment.content}
-                </Typography>
+                <>
+                  {comment.is_deleted ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontStyle="italic"
+                      sx={{ mb: 1 }}
+                    >
+                      [deleted]
+                    </Typography>
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        mb: 1,
+                        whiteSpace: "pre-wrap",
+                        fontSize: "0.9rem",
+                        lineHeight: 1.5,
+                        color: "text.primary",
+                      }}
+                    >
+                      {comment.content}
+                    </Typography>
+                  )}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.25 }}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={async () => {
+                          try {
+                            const token = Cookies.get("session_token");
+                            if (!token)
+                              throw new Error("User not authenticated");
+                            const endpoint = comment.me_upvoted
+                              ? "/hub/unvote-incognito-post-comment"
+                              : "/hub/upvote-incognito-post-comment";
+                            const res = await fetch(
+                              `${config.API_SERVER_PREFIX}${endpoint}`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                  incognito_post_id: postId,
+                                  comment_id: comment.comment_id,
+                                }),
+                              }
+                            );
+                            if (!res.ok) throw new Error("Vote failed");
+                            handleCommentVoteUpdated();
+                          } catch (e) {
+                            handleError(
+                              e instanceof Error ? e.message : "Vote failed"
+                            );
+                          }
+                        }}
+                        disabled={!comment.can_upvote}
+                        sx={{
+                          color: comment.me_upvoted
+                            ? "primary.main"
+                            : "text.secondary",
+                        }}
+                      >
+                        ▲
+                      </IconButton>
+                      <Typography variant="caption" sx={{ minWidth: "16px" }}>
+                        {comment.upvotes_count}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={async () => {
+                          try {
+                            const token = Cookies.get("session_token");
+                            if (!token)
+                              throw new Error("User not authenticated");
+                            const endpoint = comment.me_downvoted
+                              ? "/hub/unvote-incognito-post-comment"
+                              : "/hub/downvote-incognito-post-comment";
+                            const res = await fetch(
+                              `${config.API_SERVER_PREFIX}${endpoint}`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                  incognito_post_id: postId,
+                                  comment_id: comment.comment_id,
+                                }),
+                              }
+                            );
+                            if (!res.ok) throw new Error("Vote failed");
+                            handleCommentVoteUpdated();
+                          } catch (e) {
+                            handleError(
+                              e instanceof Error ? e.message : "Vote failed"
+                            );
+                          }
+                        }}
+                        disabled={!comment.can_downvote}
+                        sx={{
+                          color: comment.me_downvoted
+                            ? "error.main"
+                            : "text.secondary",
+                        }}
+                      >
+                        ▼
+                      </IconButton>
+                      <Typography variant="caption" sx={{ minWidth: "16px" }}>
+                        {comment.downvotes_count}
+                      </Typography>
+                    </Box>
+                    {!comment.is_deleted && comment.depth < 3 && (
+                      <Button
+                        size="small"
+                        sx={{
+                          textTransform: "none",
+                          color: "text.secondary",
+                        }}
+                        onClick={() => setReplyToComment(comment.comment_id)}
+                      >
+                        Reply
+                      </Button>
+                    )}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: "0.8rem", ml: "auto" }}
+                    >
+                      {new Intl.DateTimeFormat(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }).format(new Date(comment.created_at))}
+                      {comment.is_created_by_me && " • (you)"}
+                    </Typography>
+                  </Box>
+                </>
               )}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  fontSize: "0.75rem",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-                  <IconButton
-                    size="small"
-                    onClick={async () => {
-                      try {
-                        const token = Cookies.get("session_token");
-                        if (!token) throw new Error("User not authenticated");
-                        const endpoint = comment.me_upvoted
-                          ? "/hub/unvote-incognito-post-comment"
-                          : "/hub/upvote-incognito-post-comment";
-                        const res = await fetch(
-                          `${config.API_SERVER_PREFIX}${endpoint}`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              incognito_post_id: postId,
-                              comment_id: comment.comment_id,
-                            }),
-                          }
-                        );
-                        if (!res.ok) throw new Error("Vote failed");
-                        handleCommentVoteUpdated();
-                      } catch (e) {
-                        handleError(
-                          e instanceof Error ? e.message : "Vote failed"
-                        );
-                      }
-                    }}
-                    disabled={!comment.can_upvote}
-                    sx={{
-                      color: comment.me_upvoted
-                        ? "primary.main"
-                        : "text.secondary",
-                    }}
-                  >
-                    ▲
-                  </IconButton>
-                  <Typography variant="caption" sx={{ minWidth: "16px" }}>
-                    {comment.upvotes_count}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={async () => {
-                      try {
-                        const token = Cookies.get("session_token");
-                        if (!token) throw new Error("User not authenticated");
-                        const endpoint = comment.me_downvoted
-                          ? "/hub/unvote-incognito-post-comment"
-                          : "/hub/downvote-incognito-post-comment";
-                        const res = await fetch(
-                          `${config.API_SERVER_PREFIX}${endpoint}`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({
-                              incognito_post_id: postId,
-                              comment_id: comment.comment_id,
-                            }),
-                          }
-                        );
-                        if (!res.ok) throw new Error("Vote failed");
-                        handleCommentVoteUpdated();
-                      } catch (e) {
-                        handleError(
-                          e instanceof Error ? e.message : "Vote failed"
-                        );
-                      }
-                    }}
-                    disabled={!comment.can_downvote}
-                    sx={{
-                      color: comment.me_downvoted
-                        ? "error.main"
-                        : "text.secondary",
-                    }}
-                  >
-                    ▼
-                  </IconButton>
-                  <Typography variant="caption" sx={{ minWidth: "16px" }}>
-                    {comment.downvotes_count}
-                  </Typography>
-                </Box>
-                {!comment.is_deleted && comment.depth < 3 && (
-                  <Button
-                    size="small"
-                    sx={{ textTransform: "none", color: "text.secondary" }}
-                    onClick={() => setReplyToComment(comment.comment_id)}
-                  >
-                    Reply
-                  </Button>
-                )}
-              </Box>
-            </>
-          )}
+            </Box>
+          </Box>
         </Box>
 
         {hasReplies && !isCollapsed && (
