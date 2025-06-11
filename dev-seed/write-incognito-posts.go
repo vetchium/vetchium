@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -135,6 +136,80 @@ var incognitoCommentContent = []string{
 	"This is the kind of discussion we need more of.",
 }
 
+// Lorem ipsum phrases for generating varied reply content
+var loremIpsumPhrases = []string{
+	"Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+	"Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+	"Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse.",
+	"Excepteur sint occaecat cupidatat non proident, sunt in culpa.",
+	"Nulla pariatur sed ut perspiciatis unde omnis iste natus error.",
+	"Accusantium doloremque laudantium, totam rem aperiam eaque ipsa.",
+	"Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.",
+	"Consectetur, adipisci velit, sed quia non numquam eius modi.",
+	"Tempora incidunt ut labore et dolore magnam aliquam quaerat.",
+	"Voluptatem accusantium doloremque laudantium totam rem aperiam.",
+	"Eaque ipsa quae ab illo inventore veritatis et quasi architecto.",
+	"Beatae vitae dicta sunt explicabo nemo enim ipsam voluptatem.",
+	"Quia voluptas sit aspernatur aut odit aut fugit sed quia.",
+	"Consequuntur magni dolores eos qui ratione voluptatem sequi.",
+	"At vero eos et accusamus et iusto odio dignissimos ducimus.",
+	"Qui blanditiis praesentium voluptatum deleniti atque corrupti.",
+	"Quos dolores et quas molestias excepturi sint occaecati.",
+	"Cupiditate non provident similique sunt in culpa qui officia.",
+	"Deserunt mollitia animi id est laborum et dolorum fuga.",
+}
+
+// Reply templates for more natural-sounding responses
+var replyTemplates = []string{
+	"Great point! %s",
+	"I think %s",
+	"That's interesting. %s",
+	"I disagree though. %s",
+	"Adding to this: %s",
+	"From my experience, %s",
+	"Actually, %s",
+	"This reminds me: %s",
+	"I've seen this too. %s",
+	"Totally agree! %s",
+	"Not sure about that. %s",
+	"Following up on this: %s",
+	"Building on your point: %s",
+	"Counter-argument: %s",
+	"Related thought: %s",
+}
+
+// Generate varied lorem ipsum content for replies
+func generateLoremReply() string {
+	template := replyTemplates[rand.Intn(len(replyTemplates))]
+
+	// Combine 1-3 lorem phrases
+	numPhrases := 1 + rand.Intn(3)
+	var phrases []string
+	for i := 0; i < numPhrases; i++ {
+		phrases = append(
+			phrases,
+			loremIpsumPhrases[rand.Intn(len(loremIpsumPhrases))],
+		)
+	}
+
+	loremContent := ""
+	for i, phrase := range phrases {
+		if i > 0 {
+			loremContent += " "
+		}
+		loremContent += phrase
+	}
+
+	// Sometimes just return the lorem content directly
+	if rand.Float32() < 0.3 {
+		return loremContent
+	}
+
+	// Otherwise use template
+	return fmt.Sprintf(template, loremContent)
+}
+
 func writeIncognitoPosts() {
 	var wg sync.WaitGroup
 	var createdPosts []string // Store post IDs for commenting later
@@ -238,28 +313,30 @@ func writeIncognitoPosts() {
 	wg.Wait()
 	color.Green("Created %d incognito posts", len(createdPosts))
 
-	// Second pass: Add comments to posts
-	writeIncognitoComments(createdPosts)
+	// Second pass: Add comments to posts with enhanced volume
+	writeIncognitoCommentsEnhanced(createdPosts)
 
 	// Third pass: Add votes to posts and comments
 	writeIncognitoVotes(createdPosts)
 }
 
-func writeIncognitoComments(postIDs []string) {
+func writeIncognitoCommentsEnhanced(postIDs []string) {
 	var wg sync.WaitGroup
-	var createdComments []struct {
+	var allComments []struct {
 		postID    string
 		commentID string
+		depth     int
 	}
 	var commentMutex sync.Mutex
 
+	// Phase 1: Initial comments (significantly increased volume)
 	for i := 0; i < len(hubUsers); i++ {
 		user := hubUsers[i]
 
 		if i%4 == 0 {
-			color.Magenta("incognito comments thread %d waiting", i)
+			color.Magenta("incognito comments phase 1 thread %d waiting", i)
 			wg.Wait()
-			color.Magenta("incognito comments thread %d resumes", i)
+			color.Magenta("incognito comments phase 1 thread %d resumes", i)
 		}
 		wg.Add(1)
 
@@ -272,8 +349,8 @@ func writeIncognitoComments(postIDs []string) {
 			}
 			authToken := tokenI.(string)
 
-			// Each user comments on 2-5 random posts
-			numComments := 2 + rand.Intn(4)
+			// Increased from 2-5 to 6-12 comments per user for 3x volume
+			numComments := 6 + rand.Intn(7)
 			for j := 0; j < numComments; j++ {
 				if len(postIDs) == 0 {
 					continue
@@ -345,12 +422,14 @@ func writeIncognitoComments(postIDs []string) {
 				}
 
 				commentMutex.Lock()
-				createdComments = append(createdComments, struct {
+				allComments = append(allComments, struct {
 					postID    string
 					commentID string
+					depth     int
 				}{
 					postID:    response.IncognitoPostID,
 					commentID: response.CommentID,
+					depth:     0, // Initial comments are depth 0
 				})
 				commentMutex.Unlock()
 
@@ -360,94 +439,212 @@ func writeIncognitoComments(postIDs []string) {
 	}
 
 	wg.Wait()
-	color.Green("Created %d incognito comments", len(createdComments))
+	color.Green("Created %d initial incognito comments", len(allComments))
 
-	// Add some nested replies
-	writeIncognitoReplies(createdComments)
+	// Phase 2: Multi-level nested replies
+	writeMultiLevelReplies(allComments)
 }
 
-func writeIncognitoReplies(comments []struct {
+func writeMultiLevelReplies(initialComments []struct {
 	postID    string
 	commentID string
+	depth     int
 }) {
-	if len(comments) == 0 {
+	if len(initialComments) == 0 {
 		return
 	}
 
-	var wg sync.WaitGroup
-
-	// Create some replies to existing comments
-	replyCount := len(comments) / 3 // About 1/3 of comments get replies
-	if replyCount > 20 {
-		replyCount = 20 // Cap at 20 replies
+	var allComments []struct {
+		postID    string
+		commentID string
+		depth     int
 	}
 
-	for i := 0; i < replyCount; i++ {
-		user := hubUsers[rand.Intn(len(hubUsers))]
-		wg.Add(1)
+	// Start with initial comments
+	allComments = append(allComments, initialComments...)
 
-		go func(user HubSeedUser, i int) {
-			defer wg.Done()
+	var commentMutex sync.Mutex
+	maxDepth := 4 // Allow up to 4 levels of nesting
 
-			tokenI, ok := hubSessionTokens.Load(user.Email)
-			if !ok {
-				log.Printf("no auth token found for %s", user.Email)
-				return
+	// Generate replies for each depth level
+	for currentDepth := 0; currentDepth < maxDepth; currentDepth++ {
+		var wg sync.WaitGroup
+
+		// Get comments at current depth to reply to
+		var commentsAtDepth []struct {
+			postID    string
+			commentID string
+			depth     int
+		}
+
+		for _, comment := range allComments {
+			if comment.depth == currentDepth {
+				commentsAtDepth = append(commentsAtDepth, comment)
 			}
-			authToken := tokenI.(string)
+		}
 
-			comment := comments[rand.Intn(len(comments))]
-			content := incognitoCommentContent[rand.Intn(len(incognitoCommentContent))]
+		if len(commentsAtDepth) == 0 {
+			continue
+		}
 
-			replyRequest := hub.AddIncognitoPostCommentRequest{
-				IncognitoPostID: comment.postID,
-				Content:         content,
-				InReplyTo:       &comment.commentID,
+		// Calculate reply ratio - more replies for shallower comments
+		var replyRatio float32
+		switch currentDepth {
+		case 0:
+			replyRatio = 0.7 // 70% of top-level comments get replies
+		case 1:
+			replyRatio = 0.5 // 50% of depth-1 comments get replies
+		case 2:
+			replyRatio = 0.3 // 30% of depth-2 comments get replies
+		case 3:
+			replyRatio = 0.15 // 15% of depth-3 comments get replies
+		}
+
+		targetReplies := int(float32(len(commentsAtDepth)) * replyRatio)
+		color.Cyan(
+			"Creating %d replies at depth %d",
+			targetReplies,
+			currentDepth+1,
+		)
+
+		// Create replies in batches to avoid overwhelming the server
+		batchSize := 20
+		for batch := 0; batch < targetReplies; batch += batchSize {
+			batchEnd := batch + batchSize
+			if batchEnd > targetReplies {
+				batchEnd = targetReplies
 			}
 
-			var body bytes.Buffer
-			err := json.NewEncoder(&body).Encode(replyRequest)
-			if err != nil {
-				log.Printf("failed to encode incognito reply: %v", err)
-				return
+			for i := batch; i < batchEnd; i++ {
+				wg.Add(1)
+
+				go func(replyIndex int) {
+					defer wg.Done()
+
+					// Pick a random user
+					user := hubUsers[rand.Intn(len(hubUsers))]
+
+					tokenI, ok := hubSessionTokens.Load(user.Email)
+					if !ok {
+						log.Printf("no auth token found for %s", user.Email)
+						return
+					}
+					authToken := tokenI.(string)
+
+					// Pick a random comment at current depth
+					parentComment := commentsAtDepth[rand.Intn(len(commentsAtDepth))]
+
+					// Generate lorem ipsum content for replies
+					content := generateLoremReply()
+
+					replyRequest := hub.AddIncognitoPostCommentRequest{
+						IncognitoPostID: parentComment.postID,
+						Content:         content,
+						InReplyTo:       &parentComment.commentID,
+					}
+
+					var body bytes.Buffer
+					err := json.NewEncoder(&body).Encode(replyRequest)
+					if err != nil {
+						log.Printf("failed to encode incognito reply: %v", err)
+						return
+					}
+
+					req, err := http.NewRequest(
+						http.MethodPost,
+						serverURL+"/hub/add-incognito-post-comment",
+						&body,
+					)
+					if err != nil {
+						log.Printf(
+							"failed to create incognito reply request: %v",
+							err,
+						)
+						return
+					}
+
+					req.Header.Set("Content-Type", "application/json")
+					req.Header.Set("Authorization", "Bearer "+authToken)
+
+					color.Blue(
+						"adding reply at depth %d (index %d)",
+						currentDepth+1,
+						replyIndex,
+					)
+
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						log.Printf(
+							"failed to send incognito reply request: %v",
+							err,
+						)
+						return
+					}
+					defer resp.Body.Close()
+
+					if resp.StatusCode != http.StatusOK {
+						body, err := io.ReadAll(resp.Body)
+						if err != nil {
+							color.Red(
+								"failed to read reply error response: %v",
+								err,
+							)
+							return
+						}
+						color.Red(
+							"failed to add incognito reply: %v",
+							string(body),
+						)
+						return
+					}
+
+					var response hub.AddIncognitoPostCommentResponse
+					err = json.NewDecoder(resp.Body).Decode(&response)
+					if err != nil {
+						log.Printf(
+							"failed to decode incognito reply response: %v",
+							err,
+						)
+						return
+					}
+
+					// Add the new reply to our tracking
+					commentMutex.Lock()
+					allComments = append(allComments, struct {
+						postID    string
+						commentID string
+						depth     int
+					}{
+						postID:    response.IncognitoPostID,
+						commentID: response.CommentID,
+						depth:     currentDepth + 1,
+					})
+					commentMutex.Unlock()
+				}(i)
 			}
 
-			req, err := http.NewRequest(
-				http.MethodPost,
-				serverURL+"/hub/add-incognito-post-comment",
-				&body,
-			)
-			if err != nil {
-				log.Printf("failed to create incognito reply request: %v", err)
-				return
-			}
+			// Wait for this batch to complete before starting the next
+			wg.Wait()
+		}
 
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer "+authToken)
-
-			color.Blue("adding reply %d", i)
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				log.Printf("failed to send incognito reply request: %v", err)
-				return
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				body, err := io.ReadAll(resp.Body)
-				if err != nil {
-					color.Red("failed to read reply error response: %v", err)
-					return
-				}
-				color.Red("failed to add incognito reply: %v", string(body))
-				return
-			}
-		}(user, i)
+		color.Green("Completed depth %d replies", currentDepth+1)
 	}
 
-	wg.Wait()
-	color.Green("Created %d incognito replies", replyCount)
+	// Count total comments by depth
+	depthCounts := make(map[int]int)
+	for _, comment := range allComments {
+		depthCounts[comment.depth]++
+	}
+
+	color.Green("Final comment distribution:")
+	totalComments := 0
+	for depth := 0; depth <= maxDepth; depth++ {
+		if count, exists := depthCounts[depth]; exists {
+			color.Green("  Depth %d: %d comments", depth, count)
+			totalComments += count
+		}
+	}
+	color.Green("Total comments created: %d", totalComments)
 }
 
 func writeIncognitoVotes(postIDs []string) {
