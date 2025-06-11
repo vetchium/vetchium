@@ -2,13 +2,7 @@
 
 import { config } from "@/config";
 import { useTranslation } from "@/hooks/useTranslation";
-import {
-  ThumbDown,
-  ThumbDownOutlined,
-  ThumbUp,
-  ThumbUpOutlined,
-} from "@mui/icons-material";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import Cookies from "js-cookie";
 import { useState } from "react";
 
@@ -127,50 +121,65 @@ export default function CommentVotingButtons({
   };
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      {/* Upvote */}
-      <Tooltip title={getUpvoteTooltip()}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={handleUpvote}
-            disabled={!canUpvote || isVoting}
-            color={meUpvoted ? "primary" : "default"}
-          >
-            {meUpvoted ? (
-              <ThumbUp fontSize="small" />
-            ) : (
-              <ThumbUpOutlined fontSize="small" />
-            )}
-          </IconButton>
-        </span>
-      </Tooltip>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      {/* Upvote Button */}
+      <Button
+        size="small"
+        onClick={handleUpvote}
+        disabled={!canUpvote || isVoting}
+        sx={{
+          minWidth: "auto",
+          p: 0.25,
+          fontSize: "0.75rem",
+          color: meUpvoted ? "primary.main" : "text.secondary",
+          textTransform: "none",
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+        aria-label={t("incognitoPosts.voting.upvote")}
+      >
+        ▲
+      </Button>
 
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }}>
-        {upvotesCount}
+      {/* Score */}
+      <Typography
+        variant="caption"
+        sx={{
+          mx: 0.5,
+          fontSize: "0.75rem",
+          fontWeight: meUpvoted || meDownvoted ? "bold" : "normal",
+          color: meUpvoted
+            ? "primary.main"
+            : meDownvoted
+            ? "error.main"
+            : "text.secondary",
+          minWidth: "20px",
+          textAlign: "center",
+        }}
+      >
+        {score}
       </Typography>
 
-      {/* Downvote */}
-      <Tooltip title={getDownvoteTooltip()}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={handleDownvote}
-            disabled={!canDownvote || isVoting}
-            color={meDownvoted ? "error" : "default"}
-          >
-            {meDownvoted ? (
-              <ThumbDown fontSize="small" />
-            ) : (
-              <ThumbDownOutlined fontSize="small" />
-            )}
-          </IconButton>
-        </span>
-      </Tooltip>
-
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }}>
-        {downvotesCount}
-      </Typography>
+      {/* Downvote Button */}
+      <Button
+        size="small"
+        onClick={handleDownvote}
+        disabled={!canDownvote || isVoting}
+        sx={{
+          minWidth: "auto",
+          p: 0.25,
+          fontSize: "0.75rem",
+          color: meDownvoted ? "error.main" : "text.secondary",
+          textTransform: "none",
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+        aria-label={t("incognitoPosts.voting.downvote")}
+      >
+        ▼
+      </Button>
     </Box>
   );
 }

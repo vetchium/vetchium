@@ -4,8 +4,10 @@ import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { config } from "@/config";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import {
   Alert,
   Box,
@@ -15,9 +17,7 @@ import {
   Chip,
   CircularProgress,
   Container,
-  Divider,
   IconButton,
-  Paper,
   Snackbar,
   TextField,
   Typography,
@@ -33,7 +33,6 @@ import {
 import Cookies from "js-cookie";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import CommentVotingButtons from "../components/CommentVotingButtons";
 import VotingButtons from "../components/VotingButtons";
 
 // Define the interface inline since it's missing from typespec
@@ -64,6 +63,9 @@ function IncognitoPostDetailsContent() {
     string | undefined
   >();
   const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
+    new Set()
+  );
 
   // Handle case where postId is not available
   if (!postId) {
@@ -191,7 +193,8 @@ function IncognitoPostDetailsContent() {
         content: newComment.trim(),
       };
 
-      if (replyToComment) {
+      // Only add in_reply_to if it's a real comment ID (not "new")
+      if (replyToComment && replyToComment !== "new") {
         request.in_reply_to = replyToComment;
       }
 
@@ -243,142 +246,312 @@ function IncognitoPostDetailsContent() {
     loadComments(true);
   };
 
-  const handlePostVote = async (action: "upvote" | "downvote" | "unvote") => {
-    try {
-      const token = Cookies.get("session_token");
-      if (!token) {
-        throw new Error("User not authenticated");
+  const toggleCollapseComment = (commentId: string) => {
+    setCollapsedComments((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
       }
-
-      const request = {
-        incognito_post_id: postId,
-      };
-
-      const endpoint =
-        action === "upvote"
-          ? "/hub/upvote-incognito-post"
-          : action === "downvote"
-          ? "/hub/downvote-incognito-post"
-          : "/hub/unvote-incognito-post";
-
-      const response = await fetch(`${config.API_SERVER_PREFIX}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} post: ${response.statusText}`);
-      }
-
-      handleVoteUpdated();
-    } catch (error) {
-      handleError(
-        error instanceof Error
-          ? error.message
-          : t("incognitoPosts.errors.voteFailed")
-      );
-    }
+      return newSet;
+    });
   };
 
-  const renderComment = (comment: IncognitoPostComment) => (
-    <Card
-      key={comment.comment_id}
-      variant="outlined"
-      sx={{ ml: comment.depth * 2 }}
-    >
-      <CardContent>
+  const isCommentCollapsed = (commentId: string) => {
+    return collapsedComments.has(commentId);
+  };
+
+  const buildCommentTree = (comments: IncognitoPostComment[]) => {
+    type CommentNode = IncognitoPostComment & { children: CommentNode[] };
+    const commentMap = new Map<string, CommentNode>();
+    const rootComments: CommentNode[] = [];
+
+    const sortedComments = [...comments].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
+    for (const comment of sortedComments) {
+      const commentNode: CommentNode = { ...comment, children: [] };
+      commentMap.set(comment.comment_id, commentNode);
+
+      if (comment.in_reply_to && commentMap.has(comment.in_reply_to)) {
+        const parent = commentMap.get(comment.in_reply_to);
+        parent?.children.push(commentNode);
+      } else {
+        rootComments.push(commentNode);
+      }
+    }
+
+    return rootComments;
+  };
+
+  const commentTree = buildCommentTree(comments);
+
+  const getDepthPattern = (depth: number) => {
+    const patterns = [
+      { borderStyle: "solid", color: "#2196f3" },
+      { borderStyle: "dashed", color: "#f44336" },
+      { borderStyle: "dotted", color: "#4caf50" },
+      { borderStyle: "solid", color: "#ff9800" },
+      { borderStyle: "dashed", color: "#9c27b0" },
+    ];
+    return patterns[depth % patterns.length];
+  };
+
+  const getDepthBackground = (depth: number) => {
+    const backgrounds = [
+      "rgba(33, 150, 243, 0.08)",
+      "rgba(244, 67, 54, 0.08)",
+      "rgba(76, 175, 80, 0.08)",
+      "rgba(255, 152, 0, 0.08)",
+      "rgba(156, 39, 176, 0.08)",
+    ];
+    return backgrounds[depth % backgrounds.length];
+  };
+
+  const CommentNode = ({
+    comment,
+  }: {
+    comment: IncognitoPostComment & { children: any[] };
+  }) => {
+    const isCollapsed = isCommentCollapsed(comment.comment_id);
+    const hasReplies = comment.children.length > 0;
+    const showCollapseButton = hasReplies;
+
+    const depthPattern = getDepthPattern(comment.depth);
+    const depthBackground = getDepthBackground(comment.depth);
+
+    return (
+      <Box sx={{ position: "relative" }}>
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            mb: 1,
+            backgroundColor: depthBackground,
+            borderRadius: 1,
+            p: 1.5,
+            mt: 2,
+            position: "relative",
+            zIndex: 1,
           }}
         >
-          <Typography variant="caption" color="text.secondary">
-            {new Intl.DateTimeFormat(undefined, {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }).format(new Date(comment.created_at))}
-            {comment.depth > 0 && (
-              <>
-                {" • "}
-                {t("incognitoPosts.post.inReplyTo")}
-              </>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1,
+              fontSize: "0.8rem",
+              color: "text.secondary",
+            }}
+          >
+            {showCollapseButton && (
+              <IconButton
+                size="small"
+                onClick={() => toggleCollapseComment(comment.comment_id)}
+                sx={{
+                  p: 0,
+                  mr: 0.5,
+                  color: depthPattern.color,
+                }}
+              >
+                {isCollapsed ? (
+                  <AddCircleOutlineIcon fontSize="inherit" />
+                ) : (
+                  <RemoveCircleOutlineIcon fontSize="inherit" />
+                )}
+              </IconButton>
             )}
-            {comment.is_created_by_me && (
-              <>
-                {" • "}
-                {t("incognitoPosts.post.createdByYou")}
-              </>
-            )}
-          </Typography>
-        </Box>
-
-        {comment.is_deleted ? (
-          <Typography variant="body2" color="text.secondary" fontStyle="italic">
-            {t("incognitoPosts.comments.deleted")}
-          </Typography>
-        ) : (
-          <Typography variant="body1" sx={{ mb: 2, whiteSpace: "pre-wrap" }}>
-            {comment.content}
-          </Typography>
-        )}
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <CommentVotingButtons
-            postId={postId}
-            commentId={comment.comment_id}
-            upvotesCount={comment.upvotes_count}
-            downvotesCount={comment.downvotes_count}
-            score={comment.score}
-            meUpvoted={comment.me_upvoted}
-            meDownvoted={comment.me_downvoted}
-            canUpvote={comment.can_upvote}
-            canDownvote={comment.can_downvote}
-            onVoteUpdated={handleCommentVoteUpdated}
-            onError={handleError}
-          />
-
-          {!comment.is_deleted && comment.depth < 3 && (
-            <Button
-              size="small"
-              onClick={() => setReplyToComment(comment.comment_id)}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ fontSize: "0.8rem" }}
             >
-              {t("incognitoPosts.post.reply")}
-            </Button>
+              {new Intl.DateTimeFormat(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(comment.created_at))}
+              {comment.is_created_by_me && " • (you)"}
+            </Typography>
+          </Box>
+
+          {!isCollapsed && (
+            <>
+              {comment.is_deleted ? (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontStyle="italic"
+                  sx={{ mb: 1 }}
+                >
+                  [deleted]
+                </Typography>
+              ) : (
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mb: 1,
+                    whiteSpace: "pre-wrap",
+                    fontSize: "0.9rem",
+                    lineHeight: 1.5,
+                    color: "text.primary",
+                  }}
+                >
+                  {comment.content}
+                </Typography>
+              )}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  fontSize: "0.75rem",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                  <IconButton
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        const token = Cookies.get("session_token");
+                        if (!token) throw new Error("User not authenticated");
+                        const endpoint = comment.me_upvoted
+                          ? "/hub/unvote-incognito-post-comment"
+                          : "/hub/upvote-incognito-post-comment";
+                        const res = await fetch(
+                          `${config.API_SERVER_PREFIX}${endpoint}`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              incognito_post_id: postId,
+                              comment_id: comment.comment_id,
+                            }),
+                          }
+                        );
+                        if (!res.ok) throw new Error("Vote failed");
+                        handleCommentVoteUpdated();
+                      } catch (e) {
+                        handleError(
+                          e instanceof Error ? e.message : "Vote failed"
+                        );
+                      }
+                    }}
+                    disabled={!comment.can_upvote}
+                    sx={{
+                      color: comment.me_upvoted
+                        ? "primary.main"
+                        : "text.secondary",
+                    }}
+                  >
+                    ▲
+                  </IconButton>
+                  <Typography variant="caption" sx={{ minWidth: "16px" }}>
+                    {comment.upvotes_count}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        const token = Cookies.get("session_token");
+                        if (!token) throw new Error("User not authenticated");
+                        const endpoint = comment.me_downvoted
+                          ? "/hub/unvote-incognito-post-comment"
+                          : "/hub/downvote-incognito-post-comment";
+                        const res = await fetch(
+                          `${config.API_SERVER_PREFIX}${endpoint}`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              incognito_post_id: postId,
+                              comment_id: comment.comment_id,
+                            }),
+                          }
+                        );
+                        if (!res.ok) throw new Error("Vote failed");
+                        handleCommentVoteUpdated();
+                      } catch (e) {
+                        handleError(
+                          e instanceof Error ? e.message : "Vote failed"
+                        );
+                      }
+                    }}
+                    disabled={!comment.can_downvote}
+                    sx={{
+                      color: comment.me_downvoted
+                        ? "error.main"
+                        : "text.secondary",
+                    }}
+                  >
+                    ▼
+                  </IconButton>
+                  <Typography variant="caption" sx={{ minWidth: "16px" }}>
+                    {comment.downvotes_count}
+                  </Typography>
+                </Box>
+                {!comment.is_deleted && comment.depth < 3 && (
+                  <Button
+                    size="small"
+                    sx={{ textTransform: "none", color: "text.secondary" }}
+                    onClick={() => setReplyToComment(comment.comment_id)}
+                  >
+                    Reply
+                  </Button>
+                )}
+              </Box>
+            </>
           )}
         </Box>
-      </CardContent>
-    </Card>
-  );
+
+        {hasReplies && !isCollapsed && (
+          <Box
+            sx={{
+              pl: 3,
+              ml: 3,
+              borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+            }}
+          >
+            {comment.children.map((child: any) => (
+              <CommentNode key={child.comment_id} comment={child} />
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      {/* Header */}
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <IconButton onClick={() => router.back()}>
+        <IconButton
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/incognito-posts");
+            }
+          }}
+        >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5">Post Details</Typography>
       </Box>
 
-      {/* Post Content */}
       {isLoadingPost ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : post ? (
-        <Paper sx={{ mb: 3 }}>
+        <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent>
-            {/* Post Header */}
             <Box
               sx={{
                 display: "flex",
@@ -406,7 +579,6 @@ function IncognitoPostDetailsContent() {
               </Box>
             </Box>
 
-            {/* Post Content */}
             {post.is_deleted ? (
               <Typography
                 variant="body1"
@@ -425,7 +597,6 @@ function IncognitoPostDetailsContent() {
               </Typography>
             )}
 
-            {/* Tags */}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
               {post.tags.map((tag) => (
                 <Chip
@@ -438,7 +609,6 @@ function IncognitoPostDetailsContent() {
               ))}
             </Box>
 
-            {/* Voting and Stats */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
               <VotingButtons
                 postId={postId}
@@ -452,77 +622,97 @@ function IncognitoPostDetailsContent() {
                 onVoteUpdated={handleVoteUpdated}
                 onError={handleError}
               />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setReplyToComment("new")}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "0.875rem",
+                }}
+              >
+                Add Comment
+              </Button>
             </Box>
           </CardContent>
-        </Paper>
+        </Card>
       ) : (
         <Alert severity="error">Post not found</Alert>
       )}
 
-      {/* Comments Section */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
           Comments
         </Typography>
 
-        {/* Add Comment */}
-        <Box sx={{ mb: 3 }}>
-          {replyToComment && (
+        {replyToComment && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              backgroundColor: "background.paper",
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
             <Alert severity="info" sx={{ mb: 2 }}>
-              Replying to comment...{" "}
+              {replyToComment === "new"
+                ? "Adding new comment..."
+                : "Replying to comment..."}{" "}
               <Button size="small" onClick={() => setReplyToComment(null)}>
                 Cancel
               </Button>
             </Alert>
-          )}
-
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            placeholder={t("incognitoPosts.post.commentPlaceholder")}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            disabled={isSubmittingComment}
-            sx={{ mb: 2 }}
-          />
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleAddComment}
-              disabled={!newComment.trim() || isSubmittingComment}
-            >
-              {isSubmittingComment
-                ? "Posting..."
-                : t("incognitoPosts.post.postComment")}
-            </Button>
-
-            {replyToComment && (
-              <Button onClick={() => setReplyToComment(null)}>
-                {t("incognitoPosts.post.cancelComment")}
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              placeholder={
+                replyToComment === "new"
+                  ? t("incognitoPosts.post.commentPlaceholder")
+                  : "Write your reply..."
+              }
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={isSubmittingComment}
+              sx={{ mb: 2 }}
+              autoFocus
+            />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant="contained"
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || isSubmittingComment}
+              >
+                {isSubmittingComment
+                  ? "Posting..."
+                  : replyToComment === "new"
+                  ? "Post Comment"
+                  : "Post Reply"}
               </Button>
-            )}
+              <Button onClick={() => setReplyToComment(null)}>Cancel</Button>
+            </Box>
           </Box>
-        </Box>
+        )}
 
-        <Divider sx={{ mb: 2 }} />
-
-        {/* Comments List */}
         {isLoadingComments && comments.length === 0 ? (
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress />
           </Box>
         ) : comments.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" align="center">
-            No comments yet. Be the first to comment!
-          </Typography>
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              No comments yet. Be the first to comment!
+            </Typography>
+          </Box>
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {comments.map(renderComment)}
-
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            {commentTree.map((comment) => (
+              <CommentNode key={comment.comment_id} comment={comment} />
+            ))}
             {hasMoreComments && (
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                 <Button
                   variant="outlined"
                   onClick={() => loadComments(false)}
@@ -534,9 +724,8 @@ function IncognitoPostDetailsContent() {
             )}
           </Box>
         )}
-      </Paper>
+      </Box>
 
-      {/* Notifications */}
       <Snackbar
         open={!!error}
         autoHideDuration={6000}
@@ -548,7 +737,6 @@ function IncognitoPostDetailsContent() {
           </Button>
         }
       />
-
       <Snackbar
         open={!!success}
         autoHideDuration={6000}
