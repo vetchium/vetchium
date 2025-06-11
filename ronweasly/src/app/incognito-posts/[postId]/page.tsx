@@ -264,27 +264,45 @@ function IncognitoPostDetailsContent() {
 
   const buildCommentTree = (comments: IncognitoPostComment[]) => {
     type CommentNode = IncognitoPostComment & { children: CommentNode[] };
-    const commentMap = new Map<string, CommentNode>();
-    const rootComments: CommentNode[] = [];
 
-    const sortedComments = [...comments].sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-
-    for (const comment of sortedComments) {
-      const commentNode: CommentNode = { ...comment, children: [] };
-      commentMap.set(comment.comment_id, commentNode);
-
-      if (comment.in_reply_to && commentMap.has(comment.in_reply_to)) {
-        const parent = commentMap.get(comment.in_reply_to);
-        parent?.children.push(commentNode);
-      } else {
-        rootComments.push(commentNode);
+    // Helper to sort comments by score (desc), then date (desc)
+    const sortByScoreThenDate = (
+      a: IncognitoPostComment,
+      b: IncognitoPostComment
+    ) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
       }
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    };
+
+    // Group comments by their parent ID
+    const childrenByParentId = new Map<string, IncognitoPostComment[]>();
+    comments.forEach((comment) => {
+      const parentId = comment.in_reply_to || "root";
+      if (!childrenByParentId.has(parentId)) {
+        childrenByParentId.set(parentId, []);
+      }
+      childrenByParentId.get(parentId)!.push(comment);
+    });
+
+    // Sort the children for each parent
+    for (const children of childrenByParentId.values()) {
+      children.sort(sortByScoreThenDate);
     }
 
-    return rootComments;
+    // Recursively build the tree from the root
+    const buildTreeRecursive = (parentId: string): CommentNode[] => {
+      const children = childrenByParentId.get(parentId) || [];
+      return children.map((comment) => ({
+        ...comment,
+        children: buildTreeRecursive(comment.comment_id),
+      }));
+    };
+
+    return buildTreeRecursive("root");
   };
 
   const commentTree = buildCommentTree(comments);
