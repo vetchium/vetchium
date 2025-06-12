@@ -44,8 +44,10 @@
 - [] Report posts/comments
 - [] Bookmark posts/comments
 - [] Search posts/comments
+- [] Some kind of upvote tracking for every user for every tag
 
 # Code cleanups
+
 - Limit is optional in some APIs, mandatory in some APIs. Should become consistent.
 - The default values are not properly set in some .tsp files using the = operator. Instead we mentioned them in the @doc tag. This should be fixed.
 - [] LoadTests should test for EmployerPosts and IncognitoPosts also
@@ -149,6 +151,6 @@ Depends on incorporation to choose a payment vendor.
 ### 15. Remove storing of the official email id in the db and use just hashes, for better privacy. Will have impact in "Potential Team Mates" in Opening creation too
 
 # Code Cleanups
-* Better templating
-* The number of files under the postgres package has increased. Should we consider breaking it into subdirectories, like we do for handlers ? Does it offer any readability improvements ? Or is the current method best for passing to AI IDEs etc. ?
-* Better validation handling in the typespec/**/*.ts files with a builtin IsValid function; instead of adding validation in the nextjs files
+- Better templating
+- The number of files under the postgres package has increased. Should we consider breaking it into subdirectories, like we do for handlers ? Does it offer any readability improvements ? Or is the current method best for passing to AI IDEs etc. ?
+- Better validation handling in the typespec/**/*.ts files with a builtin IsValid function; instead of adding validation in the nextjs files
