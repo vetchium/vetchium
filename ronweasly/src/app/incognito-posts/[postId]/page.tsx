@@ -296,18 +296,6 @@ function IncognitoPostDetailsContent() {
   const buildCommentTree = (comments: IncognitoPostComment[]) => {
     type CommentNode = IncognitoPostComment & { children: CommentNode[] };
 
-    const sortByScoreThenDate = (
-      a: IncognitoPostComment,
-      b: IncognitoPostComment
-    ) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    };
-
     const childrenByParentId = new Map<string, IncognitoPostComment[]>();
     comments.forEach((comment) => {
       const parentId = comment.in_reply_to || "root";
@@ -317,8 +305,13 @@ function IncognitoPostDetailsContent() {
       childrenByParentId.get(parentId)!.push(comment);
     });
 
+    // Preserve the original order from the server
     for (const children of childrenByParentId.values()) {
-      children.sort(sortByScoreThenDate);
+      // Sort by creation time to maintain consistent order
+      children.sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
     }
 
     const buildTreeRecursive = (parentId: string): CommentNode[] => {
@@ -417,7 +410,69 @@ function IncognitoPostDetailsContent() {
         if (!res.ok) {
           throw new Error("Vote failed");
         }
-        handleCommentVoteUpdated();
+
+        // Update the comment's vote counts and states locally
+        const updatedComment = { ...comment };
+        if (action === "unvote") {
+          if (comment.me_upvoted) {
+            updatedComment.upvotes_count--;
+            updatedComment.me_upvoted = false;
+          }
+          if (comment.me_downvoted) {
+            updatedComment.downvotes_count--;
+            updatedComment.me_downvoted = false;
+          }
+          updatedComment.score =
+            updatedComment.upvotes_count - updatedComment.downvotes_count;
+          updatedComment.can_upvote = true;
+          updatedComment.can_downvote = true;
+        } else if (action === "upvote") {
+          if (comment.me_downvoted) {
+            updatedComment.downvotes_count--;
+            updatedComment.me_downvoted = false;
+          }
+          updatedComment.upvotes_count++;
+          updatedComment.me_upvoted = true;
+          updatedComment.score =
+            updatedComment.upvotes_count - updatedComment.downvotes_count;
+          updatedComment.can_upvote = false;
+          updatedComment.can_downvote = false;
+        } else if (action === "downvote") {
+          if (comment.me_upvoted) {
+            updatedComment.upvotes_count--;
+            updatedComment.me_upvoted = false;
+          }
+          updatedComment.downvotes_count++;
+          updatedComment.me_downvoted = true;
+          updatedComment.score =
+            updatedComment.upvotes_count - updatedComment.downvotes_count;
+          updatedComment.can_upvote = false;
+          updatedComment.can_downvote = false;
+        }
+
+        // Update the comment in the comments array
+        setComments((prevComments) => {
+          type CommentWithChildren = IncognitoPostComment & {
+            children?: CommentWithChildren[];
+          };
+          const updateCommentInTree = (
+            comments: CommentWithChildren[]
+          ): CommentWithChildren[] => {
+            return comments.map((c) => {
+              if (c.comment_id === comment.comment_id) {
+                return { ...updatedComment, children: c.children };
+              }
+              if (c.children) {
+                return {
+                  ...c,
+                  children: updateCommentInTree(c.children),
+                };
+              }
+              return c;
+            });
+          };
+          return updateCommentInTree(prevComments as CommentWithChildren[]);
+        });
       } catch (e) {
         handleError(e instanceof Error ? e.message : "Vote failed");
       } finally {

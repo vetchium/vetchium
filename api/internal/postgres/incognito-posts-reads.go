@@ -205,8 +205,9 @@ func (pg *PG) GetIncognitoPostComments(
 		FROM incognito_post_comments ipc
 		WHERE ipc.incognito_post_id = $1
 		ORDER BY
-			CASE WHEN ipc.parent_comment_id IS NULL THEN ipc.created_at END ASC,
+			CASE WHEN ipc.parent_comment_id IS NULL THEN ipc.score END DESC,
 			ipc.parent_comment_id ASC NULLS FIRST,
+			ipc.score DESC,
 			ipc.created_at ASC
 	`
 
