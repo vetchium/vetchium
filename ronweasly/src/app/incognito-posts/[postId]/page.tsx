@@ -510,7 +510,10 @@ function IncognitoPostDetailsContent() {
                         onClick={() =>
                           handleVote(comment.me_upvoted ? "unvote" : "upvote")
                         }
-                        disabled={!comment.can_upvote || isVoting}
+                        disabled={
+                          (!comment.can_upvote && !comment.me_upvoted) ||
+                          isVoting
+                        }
                         sx={{
                           color: comment.me_upvoted
                             ? "primary.main"
@@ -533,7 +536,10 @@ function IncognitoPostDetailsContent() {
                             comment.me_downvoted ? "unvote" : "downvote"
                           )
                         }
-                        disabled={!comment.can_downvote || isVoting}
+                        disabled={
+                          (!comment.can_downvote && !comment.me_downvoted) ||
+                          isVoting
+                        }
                         sx={{
                           color: comment.me_downvoted
                             ? "error.main"
