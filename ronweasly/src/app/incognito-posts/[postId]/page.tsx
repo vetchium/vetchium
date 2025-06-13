@@ -381,6 +381,13 @@ function IncognitoPostDetailsContent() {
         let endpoint = "";
         let request: any;
 
+        // If user clicks on their existing vote, unvote instead
+        if (action === "upvote" && comment.me_upvoted) {
+          action = "unvote";
+        } else if (action === "downvote" && comment.me_downvoted) {
+          action = "unvote";
+        }
+
         switch (action) {
           case "upvote":
             endpoint = "/hub/upvote-incognito-post-comment";
