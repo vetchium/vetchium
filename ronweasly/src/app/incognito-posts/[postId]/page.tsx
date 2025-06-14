@@ -37,6 +37,7 @@ import {
   GetIncognitoPostRequest,
   IncognitoPost,
   IncognitoPostComment,
+  IncognitoPostCommentSortBy,
   UnvoteIncognitoPostCommentRequest,
   UpvoteIncognitoPostCommentRequest,
 } from "@vetchium/typespec";
@@ -66,6 +67,10 @@ function IncognitoPostDetailsContent() {
     string | undefined
   >();
   const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [totalCommentsCount, setTotalCommentsCount] = useState(0);
+  const [sortBy, setSortBy] = useState<IncognitoPostCommentSortBy>(
+    IncognitoPostCommentSortBy.Top
+  );
   const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
     new Set()
   );
@@ -82,7 +87,7 @@ function IncognitoPostDetailsContent() {
   useEffect(() => {
     loadPost();
     loadComments(true);
-  }, [postId]);
+  }, [postId, sortBy]);
 
   const loadPost = async () => {
     setIsLoadingPost(true);
@@ -138,7 +143,8 @@ function IncognitoPostDetailsContent() {
       const request = new GetIncognitoPostCommentsRequest();
       request.incognito_post_id = postId;
       request.limit = 25;
-      request.include_nested_depth = 3;
+      request.replies_preview_count = 5;
+      request.sort_by = sortBy;
 
       if (!refresh && commentsPaginationKey) {
         request.pagination_key = commentsPaginationKey;
@@ -170,6 +176,7 @@ function IncognitoPostDetailsContent() {
 
       setCommentsPaginationKey(data.pagination_key);
       setHasMoreComments(!!data.pagination_key);
+      setTotalCommentsCount(data.total_comments_count);
     } catch (error) {
       setError(
         error instanceof Error
@@ -239,10 +246,6 @@ function IncognitoPostDetailsContent() {
     loadPost();
   };
 
-  const handleCommentVoteUpdated = () => {
-    loadComments(true);
-  };
-
   const handleDeleteComment = async (commentId: string) => {
     try {
       const token = Cookies.get("session_token");
@@ -257,7 +260,7 @@ function IncognitoPostDetailsContent() {
       const response = await fetch(
         `${config.API_SERVER_PREFIX}/hub/delete-incognito-post-comment`,
         {
-          method: "POST",
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -296,33 +299,67 @@ function IncognitoPostDetailsContent() {
   const buildCommentTree = (comments: IncognitoPostComment[]) => {
     type CommentNode = IncognitoPostComment & { children: CommentNode[] };
 
-    const childrenByParentId = new Map<string, IncognitoPostComment[]>();
+    const commentMap = new Map<string, CommentNode>();
+    const rootComments: CommentNode[] = [];
+
+    // First pass: create all comment nodes
     comments.forEach((comment) => {
-      const parentId = comment.in_reply_to || "root";
-      if (!childrenByParentId.has(parentId)) {
-        childrenByParentId.set(parentId, []);
-      }
-      childrenByParentId.get(parentId)!.push(comment);
+      commentMap.set(comment.comment_id, {
+        ...comment,
+        children: [],
+      });
     });
 
-    // Preserve the original order from the server
-    for (const children of childrenByParentId.values()) {
-      // Sort by creation time to maintain consistent order
-      children.sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-    }
+    // Second pass: build the tree structure
+    comments.forEach((comment) => {
+      const commentNode = commentMap.get(comment.comment_id)!;
 
-    const buildTreeRecursive = (parentId: string): CommentNode[] => {
-      const children = childrenByParentId.get(parentId) || [];
-      return children.map((comment) => ({
-        ...comment,
-        children: buildTreeRecursive(comment.comment_id),
-      }));
+      if (comment.in_reply_to) {
+        const parentNode = commentMap.get(comment.in_reply_to);
+        if (parentNode) {
+          parentNode.children.push(commentNode);
+        } else {
+          // Parent not found in current page, treat as root
+          rootComments.push(commentNode);
+        }
+      } else {
+        rootComments.push(commentNode);
+      }
+    });
+
+    // Sort root comments and children according to sort preference
+    const sortComments = (comments: CommentNode[]) => {
+      return comments.sort((a, b) => {
+        switch (sortBy) {
+          case IncognitoPostCommentSortBy.Top:
+            if (a.score !== b.score) return b.score - a.score;
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          case IncognitoPostCommentSortBy.New:
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          case IncognitoPostCommentSortBy.Old:
+            return (
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime()
+            );
+          default:
+            return b.score - a.score;
+        }
+      });
     };
 
-    return buildTreeRecursive("root");
+    // Sort each level
+    const sortedRootComments = sortComments(rootComments);
+    sortedRootComments.forEach((comment) => {
+      comment.children = sortComments(comment.children);
+    });
+
+    return sortedRootComments;
   };
 
   const commentTree = buildCommentTree(comments);
@@ -359,6 +396,7 @@ function IncognitoPostDetailsContent() {
     const [isVoting, setIsVoting] = useState(false);
     const isCollapsed = isCommentCollapsed(comment.comment_id);
     const hasReplies = comment.children.length > 0;
+    const hasMoreReplies = comment.replies_count > comment.children.length;
     const showCollapseButton = hasReplies;
 
     const depthPattern = getDepthPattern(comment.depth);
@@ -452,26 +490,12 @@ function IncognitoPostDetailsContent() {
 
         // Update the comment in the comments array
         setComments((prevComments) => {
-          type CommentWithChildren = IncognitoPostComment & {
-            children?: CommentWithChildren[];
-          };
-          const updateCommentInTree = (
-            comments: CommentWithChildren[]
-          ): CommentWithChildren[] => {
-            return comments.map((c) => {
-              if (c.comment_id === comment.comment_id) {
-                return { ...updatedComment, children: c.children };
-              }
-              if (c.children) {
-                return {
-                  ...c,
-                  children: updateCommentInTree(c.children),
-                };
-              }
-              return c;
-            });
-          };
-          return updateCommentInTree(prevComments as CommentWithChildren[]);
+          return prevComments.map((c) => {
+            if (c.comment_id === comment.comment_id) {
+              return updatedComment;
+            }
+            return c;
+          });
         });
       } catch (e) {
         handleError(e instanceof Error ? e.message : "Vote failed");
@@ -612,7 +636,7 @@ function IncognitoPostDetailsContent() {
                       </Typography>
                     </Box>
                     {!comment.is_deleted &&
-                      comment.depth < config.MAX_COMMENT_DEPTH && (
+                      comment.depth < (config.MAX_COMMENT_DEPTH || 4) && (
                         <Button
                           size="small"
                           sx={{
@@ -671,6 +695,26 @@ function IncognitoPostDetailsContent() {
                 onDeleteComment={onDeleteComment}
               />
             ))}
+            {hasMoreReplies && (
+              <Box sx={{ mt: 1, pl: 1 }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  sx={{
+                    textTransform: "none",
+                    color: "primary.main",
+                    fontSize: "0.8rem",
+                  }}
+                  onClick={() => {
+                    // TODO: Implement load more replies when GetCommentReplies API is available
+                    setError("Load more replies feature coming soon");
+                  }}
+                >
+                  Load {comment.replies_count - comment.children.length} more
+                  replies
+                </Button>
+              </Box>
+            )}
           </Box>
         )}
       </Box>
@@ -691,6 +735,7 @@ function IncognitoPostDetailsContent() {
         >
           <ArrowBackIcon />
         </IconButton>
+        <Typography variant="h5">Incognito Post</Typography>
       </Box>
 
       {isLoadingPost ? (
@@ -789,9 +834,24 @@ function IncognitoPostDetailsContent() {
       )}
 
       <Box sx={{ mt: 3 }}>
-        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-          Comments
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+            Comments ({totalCommentsCount})
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {Object.values(IncognitoPostCommentSortBy).map((sort) => (
+              <Button
+                key={sort}
+                size="small"
+                variant={sortBy === sort ? "contained" : "outlined"}
+                onClick={() => setSortBy(sort)}
+                sx={{ textTransform: "capitalize" }}
+              >
+                {sort}
+              </Button>
+            ))}
+          </Box>
+        </Box>
 
         {replyToComment && (
           <Box
