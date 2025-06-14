@@ -56,6 +56,7 @@ function IncognitoPostDetailsContent() {
 
   const [post, setPost] = useState<IncognitoPost | null>(null);
   const [comments, setComments] = useState<IncognitoPostComment[]>([]);
+  const [sortedCommentTree, setSortedCommentTree] = useState<any[]>([]);
   const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,11 +169,18 @@ function IncognitoPostDetailsContent() {
 
       const data: GetIncognitoPostCommentsResponse = await response.json();
 
+      let newComments: IncognitoPostComment[];
       if (refresh) {
+        newComments = data.comments;
         setComments(data.comments);
       } else {
+        newComments = [...comments, ...data.comments];
         setComments((prev) => [...prev, ...data.comments]);
       }
+
+      // Build and sort the comment tree only when loading from server
+      const newSortedTree = buildCommentTree(newComments);
+      setSortedCommentTree(newSortedTree);
 
       setCommentsPaginationKey(data.pagination_key);
       setHasMoreComments(!!data.pagination_key);
@@ -362,7 +370,29 @@ function IncognitoPostDetailsContent() {
     return sortedRootComments;
   };
 
-  const commentTree = buildCommentTree(comments);
+  // Function to update comment data in the sorted tree without re-sorting
+  const updateCommentInTree = (
+    tree: any[],
+    targetCommentId: string,
+    updatedComment: IncognitoPostComment
+  ): any[] => {
+    return tree.map((comment) => {
+      if (comment.comment_id === targetCommentId) {
+        return { ...updatedComment, children: comment.children };
+      }
+      if (comment.children && comment.children.length > 0) {
+        return {
+          ...comment,
+          children: updateCommentInTree(
+            comment.children,
+            targetCommentId,
+            updatedComment
+          ),
+        };
+      }
+      return comment;
+    });
+  };
 
   const getDepthPattern = (depth: number) => {
     const patterns = [
@@ -488,7 +518,7 @@ function IncognitoPostDetailsContent() {
           updatedComment.can_downvote = false;
         }
 
-        // Update the comment in the comments array
+        // Update the comment in the comments array AND the sorted tree
         setComments((prevComments) => {
           return prevComments.map((c) => {
             if (c.comment_id === comment.comment_id) {
@@ -496,6 +526,15 @@ function IncognitoPostDetailsContent() {
             }
             return c;
           });
+        });
+
+        // Update the sorted tree without re-sorting to preserve positions
+        setSortedCommentTree((prevTree) => {
+          return updateCommentInTree(
+            prevTree,
+            comment.comment_id,
+            updatedComment
+          );
         });
       } catch (e) {
         handleError(e instanceof Error ? e.message : "Vote failed");
@@ -916,7 +955,7 @@ function IncognitoPostDetailsContent() {
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column" }}>
-            {commentTree.map((comment) => (
+            {sortedCommentTree.map((comment) => (
               <CommentNode
                 key={comment.comment_id}
                 comment={comment}
