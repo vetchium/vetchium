@@ -840,8 +840,8 @@ Looking forward to hearing diverse experiences and predictions about where we're
 	}
 	var commentMutex sync.Mutex
 
-	// Create approximately 100 top-level comments with staggering
-	numTopLevelComments := 100
+	// Create 25 top-level comments to keep total comment count reasonable (~50k instead of 200k)
+	numTopLevelComments := 25
 	color.Cyan(
 		"Creating %d top-level comments with time staggering...",
 		numTopLevelComments,
@@ -977,18 +977,26 @@ Looking forward to hearing diverse experiences and predictions about where we're
 
 	color.Green("Created %d top-level comments", len(topLevelComments))
 
-	// Step 3: Create massive nested thread structure
-	createMegaThreadReplies(topLevelComments, megaPostID)
+	// Step 3: Create massive nested thread structure and collect all comments
+	allMegaComments := createMegaThreadReplies(topLevelComments, megaPostID)
+
+	// Step 4: Add realistic voting patterns to the mega thread
+	color.Cyan("Adding voting patterns to mega thread...")
+	voteMegaThreadComments(allMegaComments)
 }
 
-// createMegaThreadReplies creates the bulk of the ~5000 comments through nested replies
+// createMegaThreadReplies creates nested replies up to maximum depth and returns all comments
 func createMegaThreadReplies(initialComments []struct {
 	postID    string
 	commentID string
 	depth     int
-}, postID string) {
+}, postID string) []struct {
+	postID    string
+	commentID string
+	depth     int
+} {
 	if len(initialComments) == 0 {
-		return
+		return nil
 	}
 
 	var allComments []struct {
@@ -1001,12 +1009,10 @@ func createMegaThreadReplies(initialComments []struct {
 	allComments = append(allComments, initialComments...)
 	var commentMutex sync.Mutex
 
-	maxDepth := 6 // Allow up to 6 levels of nesting for deeper conversations
-	targetTotalComments := 5000
+	maxDepth := 5 // Maximum depth is 5 levels (0-5) as per API specification
 
 	color.Cyan(
-		"Creating nested mega thread with target of %d total comments across %d depth levels",
-		targetTotalComments,
+		"Creating nested mega thread to maximum depth %d (natural comment distribution)",
 		maxDepth,
 	)
 
@@ -1033,34 +1039,28 @@ func createMegaThreadReplies(initialComments []struct {
 			break
 		}
 
-		// Calculate how many more comments we need
-		remaining := targetTotalComments - currentTotal
-		if remaining <= 0 {
-			color.Green("Reached target comment count of %d", currentTotal)
-			break
-		}
+		color.Blue(
+			"Currently at depth %d with %d total comments",
+			currentDepth,
+			currentTotal,
+		)
 
-		// Calculate reply distribution for this depth
+		// Calculate reply distribution for this depth (optimized for ~50k total comments)
 		var repliesPerComment int
 		switch currentDepth {
 		case 0:
-			repliesPerComment = 8 // Each top-level comment gets 8 replies
+			repliesPerComment = 6 // Each top-level comment gets 6 replies
 		case 1:
-			repliesPerComment = 6 // Each depth-1 comment gets 6 replies
+			repliesPerComment = 4 // Each depth-1 comment gets 4 replies
 		case 2:
-			repliesPerComment = 4 // Each depth-2 comment gets 4 replies
+			repliesPerComment = 3 // Each depth-2 comment gets 3 replies
 		case 3:
-			repliesPerComment = 3 // Each depth-3 comment gets 3 replies
+			repliesPerComment = 2 // Each depth-3 comment gets 2 replies
 		case 4:
-			repliesPerComment = 2 // Each depth-4 comment gets 2 replies
-		case 5:
-			repliesPerComment = 1 // Each depth-5 comment gets 1 reply
+			repliesPerComment = 1 // Each depth-4 comment gets 1 reply
 		}
 
 		targetReplies := len(commentsAtDepth) * repliesPerComment
-		if targetReplies > remaining {
-			targetReplies = remaining
-		}
 
 		color.Cyan(
 			"Creating %d replies at depth %d (from %d parent comments)",
@@ -1202,11 +1202,7 @@ func createMegaThreadReplies(initialComments []struct {
 			totalSoFar,
 		)
 
-		// Check if we've reached our target
-		if totalSoFar >= targetTotalComments {
-			color.Green("Reached target of %d comments!", targetTotalComments)
-			break
-		}
+		// Continue to next depth level
 	}
 
 	// Final statistics
@@ -1225,4 +1221,225 @@ func createMegaThreadReplies(initialComments []struct {
 		}
 	}
 	color.Green("Total comments in mega thread: %d", totalComments)
+
+	return allComments
+}
+
+// voteMegaThreadComments adds realistic voting patterns to the mega thread comments
+func voteMegaThreadComments(allComments []struct {
+	postID    string
+	commentID string
+	depth     int
+}) {
+	if len(allComments) == 0 {
+		color.Yellow("No comments to vote on")
+		return
+	}
+
+	color.Cyan(
+		"Adding realistic voting patterns to %d mega thread comments...",
+		len(allComments),
+	)
+
+	var wg sync.WaitGroup
+
+	// Create voting patterns:
+	// - 20% get significant upvotes (5-20 upvotes)
+	// - 5% get significant downvotes (5-15 downvotes)
+	// - 15% get mixed moderate voting (1-4 votes either way)
+	// - 60% get no votes (realistic - most comments don't get voted on)
+
+	popularComments := allComments[:int(float64(len(allComments))*0.20)]                                          // Top 20% get lots of upvotes
+	controversialComments := allComments[int(float64(len(allComments))*0.20):int(float64(len(allComments))*0.25)] // Next 5% get downvotes
+	moderateComments := allComments[int(float64(len(allComments))*0.25):int(float64(len(allComments))*0.40)]      // Next 15% get moderate voting
+	// Remaining 60% get no votes
+
+	// Vote on popular comments (lots of upvotes)
+	for i, comment := range popularComments {
+		if i%10 == 0 {
+			color.Green("Voting on popular comments batch %d", i/10)
+			wg.Wait()
+		}
+
+		// Each popular comment gets 5-20 upvotes from different users
+		numUpvotes := 5 + rand.Intn(16)
+		for j := 0; j < numUpvotes && j < len(hubUsers); j++ {
+			wg.Add(1)
+			go func(commentData struct {
+				postID    string
+				commentID string
+				depth     int
+			}, userIndex int) {
+				defer wg.Done()
+
+				user := hubUsers[userIndex]
+				tokenI, ok := hubSessionTokens.Load(user.Email)
+				if !ok {
+					return
+				}
+				authToken := tokenI.(string)
+
+				voteRequest := hub.UpvoteIncognitoPostCommentRequest{
+					IncognitoPostID: commentData.postID,
+					CommentID:       commentData.commentID,
+				}
+
+				var body bytes.Buffer
+				json.NewEncoder(&body).Encode(voteRequest)
+
+				req, _ := http.NewRequest(
+					http.MethodPost,
+					serverURL+"/hub/upvote-incognito-post-comment",
+					&body,
+				)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+authToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				if err == nil {
+					resp.Body.Close()
+				}
+			}(comment, (i*7+j)%len(hubUsers)) // Spread across different users
+		}
+	}
+
+	wg.Wait()
+	color.Green("Completed upvoting popular comments")
+
+	// Vote on controversial comments (lots of downvotes)
+	for i, comment := range controversialComments {
+		if i%5 == 0 {
+			color.Red("Voting on controversial comments batch %d", i/5)
+			wg.Wait()
+		}
+
+		// Each controversial comment gets 5-15 downvotes
+		numDownvotes := 5 + rand.Intn(11)
+		for j := 0; j < numDownvotes && j < len(hubUsers); j++ {
+			wg.Add(1)
+			go func(commentData struct {
+				postID    string
+				commentID string
+				depth     int
+			}, userIndex int) {
+				defer wg.Done()
+
+				user := hubUsers[userIndex]
+				tokenI, ok := hubSessionTokens.Load(user.Email)
+				if !ok {
+					return
+				}
+				authToken := tokenI.(string)
+
+				voteRequest := hub.DownvoteIncognitoPostCommentRequest{
+					IncognitoPostID: commentData.postID,
+					CommentID:       commentData.commentID,
+				}
+
+				var body bytes.Buffer
+				json.NewEncoder(&body).Encode(voteRequest)
+
+				req, _ := http.NewRequest(
+					http.MethodPost,
+					serverURL+"/hub/downvote-incognito-post-comment",
+					&body,
+				)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+authToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				if err == nil {
+					resp.Body.Close()
+				}
+			}(comment, (i*11+j)%len(hubUsers)) // Different user pattern
+		}
+	}
+
+	wg.Wait()
+	color.Green("Completed downvoting controversial comments")
+
+	// Vote on moderate comments (mixed low-level voting)
+	for i, comment := range moderateComments {
+		if i%15 == 0 {
+			color.Blue("Voting on moderate comments batch %d", i/15)
+			wg.Wait()
+		}
+
+		// Each moderate comment gets 1-4 votes (mix of up/down)
+		numVotes := 1 + rand.Intn(4)
+		for j := 0; j < numVotes && j < len(hubUsers); j++ {
+			wg.Add(1)
+			go func(commentData struct {
+				postID    string
+				commentID string
+				depth     int
+			}, userIndex int, isUpvote bool) {
+				defer wg.Done()
+
+				user := hubUsers[userIndex]
+				tokenI, ok := hubSessionTokens.Load(user.Email)
+				if !ok {
+					return
+				}
+				authToken := tokenI.(string)
+
+				var endpoint string
+				var voteRequest interface{}
+
+				if isUpvote {
+					endpoint = "/hub/upvote-incognito-post-comment"
+					voteRequest = hub.UpvoteIncognitoPostCommentRequest{
+						IncognitoPostID: commentData.postID,
+						CommentID:       commentData.commentID,
+					}
+				} else {
+					endpoint = "/hub/downvote-incognito-post-comment"
+					voteRequest = hub.DownvoteIncognitoPostCommentRequest{
+						IncognitoPostID: commentData.postID,
+						CommentID:       commentData.commentID,
+					}
+				}
+
+				var body bytes.Buffer
+				json.NewEncoder(&body).Encode(voteRequest)
+
+				req, _ := http.NewRequest(
+					http.MethodPost,
+					serverURL+endpoint,
+					&body,
+				)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+authToken)
+
+				resp, err := http.DefaultClient.Do(req)
+				if err == nil {
+					resp.Body.Close()
+				}
+			}(comment, (i*13+j)%len(hubUsers), rand.Float32() < 0.6) // 60% upvotes, 40% downvotes
+		}
+	}
+
+	wg.Wait()
+	color.Green("Completed voting on moderate comments")
+
+	// Final statistics
+	color.Green("Mega thread voting completed:")
+	color.Green("  Popular comments (high upvotes): %d", len(popularComments))
+	color.Green(
+		"  Controversial comments (downvotes): %d",
+		len(controversialComments),
+	)
+	color.Green("  Moderate comments (mixed votes): %d", len(moderateComments))
+	color.Green(
+		"  Unvoted comments (realistic): %d",
+		len(
+			allComments,
+		)-len(
+			popularComments,
+		)-len(
+			controversialComments,
+		)-len(
+			moderateComments,
+		),
+	)
 }
