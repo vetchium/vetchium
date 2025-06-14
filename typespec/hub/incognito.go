@@ -46,6 +46,7 @@ type IncognitoPostComment struct {
 	IsCreatedByMe  bool      `json:"is_created_by_me"`
 	IsDeleted      bool      `json:"is_deleted"`
 	Depth          int32     `json:"depth"`
+	RepliesCount   int32     `json:"replies_count"`
 }
 
 type AddIncognitoPostCommentRequest struct {
@@ -59,17 +60,54 @@ type AddIncognitoPostCommentResponse struct {
 	CommentID       string `json:"comment_id"`
 }
 
+type IncognitoPostCommentSortBy string
+
+const (
+	IncognitoPostCommentSortByTop IncognitoPostCommentSortBy = "top"
+	IncognitoPostCommentSortByNew IncognitoPostCommentSortBy = "new"
+	IncognitoPostCommentSortByOld IncognitoPostCommentSortBy = "old"
+)
+
 type GetIncognitoPostCommentsRequest struct {
-	IncognitoPostID    string  `json:"incognito_post_id"    validate:"required"`
-	PaginationKey      *string `json:"pagination_key"`
-	Limit              int32   `json:"limit"                validate:"min=1,max=100"`
-	ParentCommentID    *string `json:"parent_comment_id"`
-	IncludeNestedDepth *int32  `json:"include_nested_depth" validate:"omitempty,min=0,max=5"`
+	IncognitoPostID     string                     `json:"incognito_post_id"     validate:"required"`
+	SortBy              IncognitoPostCommentSortBy `json:"sort_by"`
+	PaginationKey       *string                    `json:"pagination_key"`
+	Limit               int32                      `json:"limit"                 validate:"min=1,max=50"`
+	RepliesPreviewCount int32                      `json:"replies_preview_count" validate:"min=0,max=20"`
 }
 
 type GetIncognitoPostCommentsResponse struct {
-	Comments      []IncognitoPostComment `json:"comments"`
-	PaginationKey string                 `json:"pagination_key"`
+	Comments           []IncognitoPostComment `json:"comments"`
+	PaginationKey      string                 `json:"pagination_key"`
+	TotalCommentsCount int32                  `json:"total_comments_count"`
+}
+
+type GetCommentRepliesRequest struct {
+	IncognitoPostID string  `json:"incognito_post_id" validate:"required"`
+	ParentCommentID string  `json:"parent_comment_id" validate:"required"`
+	PaginationKey   *string `json:"pagination_key"`
+	Limit           int32   `json:"limit"             validate:"min=1,max=100"`
+	MaxDepth        int32   `json:"max_depth"         validate:"min=1,max=3"`
+}
+
+type GetCommentRepliesResponse struct {
+	Replies           []IncognitoPostComment `json:"replies"`
+	PaginationKey     string                 `json:"pagination_key"`
+	TotalRepliesCount int32                  `json:"total_replies_count"`
+	ParentCommentID   string                 `json:"parent_comment_id"`
+}
+
+type GetIncognitoPostCommentPermalinkRequest struct {
+	IncognitoPostID      string `json:"incognito_post_id"      validate:"required"`
+	CommentID            string `json:"comment_id"             validate:"required"`
+	ContextSiblingsCount int32  `json:"context_siblings_count" validate:"min=0,max=10"`
+	ContextRepliesCount  int32  `json:"context_replies_count"  validate:"min=0,max=20"`
+}
+
+type GetIncognitoPostCommentPermalinkResponse struct {
+	Comments        []IncognitoPostComment `json:"comments"`
+	TargetCommentID string                 `json:"target_comment_id"`
+	BreadcrumbPath  []string               `json:"breadcrumb_path"`
 }
 
 type DeleteIncognitoPostCommentRequest struct {

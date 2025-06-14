@@ -49,6 +49,7 @@ export class IncognitoPostComment {
   is_created_by_me: boolean = false;
   is_deleted: boolean = false;
   depth: number = 0;
+  replies_count: number = 0;
 }
 
 export class AddIncognitoPostCommentRequest {
@@ -70,20 +71,26 @@ export class AddIncognitoPostCommentResponse {
   comment_id: string = "";
 }
 
+export enum IncognitoPostCommentSortBy {
+  Top = "top",
+  New = "new",
+  Old = "old",
+}
+
 export class GetIncognitoPostCommentsRequest {
   incognito_post_id: string = "";
+  sort_by: IncognitoPostCommentSortBy = IncognitoPostCommentSortBy.Top;
   pagination_key?: string = undefined;
   limit: number = 25;
-  parent_comment_id?: string = undefined;
-  include_nested_depth?: number = 0;
+  replies_preview_count: number = 5;
 
   IsValid(): boolean {
     return (
       this.incognito_post_id.length > 0 &&
       this.limit >= 1 &&
-      this.limit <= 100 &&
-      (this.include_nested_depth === undefined ||
-        (this.include_nested_depth >= 0 && this.include_nested_depth <= 5))
+      this.limit <= 50 &&
+      this.replies_preview_count >= 0 &&
+      this.replies_preview_count <= 20
     );
   }
 }
@@ -91,6 +98,57 @@ export class GetIncognitoPostCommentsRequest {
 export class GetIncognitoPostCommentsResponse {
   comments: IncognitoPostComment[] = [];
   pagination_key: string = "";
+  total_comments_count: number = 0;
+}
+
+export class GetCommentRepliesRequest {
+  incognito_post_id: string = "";
+  parent_comment_id: string = "";
+  pagination_key?: string = undefined;
+  limit: number = 50;
+  max_depth: number = 2;
+
+  IsValid(): boolean {
+    return (
+      this.incognito_post_id.length > 0 &&
+      this.parent_comment_id.length > 0 &&
+      this.limit >= 1 &&
+      this.limit <= 100 &&
+      this.max_depth >= 1 &&
+      this.max_depth <= 3
+    );
+  }
+}
+
+export class GetCommentRepliesResponse {
+  replies: IncognitoPostComment[] = [];
+  pagination_key: string = "";
+  total_replies_count: number = 0;
+  parent_comment_id: string = "";
+}
+
+export class GetIncognitoPostCommentPermalinkRequest {
+  incognito_post_id: string = "";
+  comment_id: string = "";
+  context_siblings_count: number = 3;
+  context_replies_count: number = 10;
+
+  IsValid(): boolean {
+    return (
+      this.incognito_post_id.length > 0 &&
+      this.comment_id.length > 0 &&
+      this.context_siblings_count >= 0 &&
+      this.context_siblings_count <= 10 &&
+      this.context_replies_count >= 0 &&
+      this.context_replies_count <= 20
+    );
+  }
+}
+
+export class GetIncognitoPostCommentPermalinkResponse {
+  comments: IncognitoPostComment[] = [];
+  target_comment_id: string = "";
+  breadcrumb_path: string[] = [];
 }
 
 export class DeleteIncognitoPostCommentRequest {
