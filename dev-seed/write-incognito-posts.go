@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/vetchium/vetchium/typespec/common"
@@ -747,4 +748,481 @@ func writeIncognitoVotes(postIDs []string) {
 
 	wg.Wait()
 	color.Green("Completed incognito post voting")
+}
+
+// createMegaIncognitoThread creates one massive incognito post with ~5000 comments
+// across multiple nested levels with time-staggered top-level comments
+func createMegaIncognitoThread() {
+	color.Cyan("Creating mega incognito thread with ~5000 comments...")
+
+	// Step 1: Create the main mega post using user0 as the author
+	if len(hubUsers) == 0 {
+		log.Fatalf("no hub users available for mega thread creation")
+	}
+	user := hubUsers[0] // Always use user0 as the mega thread author
+	tokenI, ok := hubSessionTokens.Load(user.Email)
+	if !ok {
+		log.Fatalf("no auth token found for user0 (%s)", user.Email)
+	}
+	authToken := tokenI.(string)
+
+	megaPostContent := `The future of remote work and career trajectories - let's discuss!
+
+Remote work has fundamentally changed how we build careers and navigate professional development. This shift seems permanent, but what are the long-term implications?
+
+Key areas to explore:
+• Career Development: Building mentorship relationships remotely vs. in-person
+• Company Culture: Can authentic culture exist in fully remote environments?
+• Skills: What becomes more important in a remote-first world?
+• Economics: Impact on salary negotiations and geographic pay equity
+• Future: Permanent hybrid model or return to office mandates?
+
+Whether you're early career or experienced, your perspective would be valuable. What has remote work taught you about your professional goals and development? How has it changed your approach to career growth?
+
+Looking forward to hearing diverse experiences and predictions about where we're headed!`
+
+	postRequest := hub.AddIncognitoPostRequest{
+		Content: megaPostContent,
+		TagIDs: []common.VTagID{
+			"careers",
+			"remote-work",
+			"leadership",
+		},
+	}
+
+	var body bytes.Buffer
+	err := json.NewEncoder(&body).Encode(postRequest)
+	if err != nil {
+		log.Fatalf("failed to encode mega post: %v", err)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		serverURL+"/hub/add-incognito-post",
+		&body,
+	)
+	if err != nil {
+		log.Fatalf("failed to create mega post request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	color.Cyan("Creating mega incognito post with user0 (%s)...", user.Email)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("failed to send mega post request: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalf("failed to read response body: %v", err)
+		}
+		log.Fatalf("failed to add mega post: %v", string(body))
+	}
+
+	var response hub.AddIncognitoPostResponse
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Fatalf("failed to decode mega post response: %v", err)
+	}
+	resp.Body.Close()
+
+	megaPostID := response.IncognitoPostID
+	color.Green("Created mega post with ID: %s", megaPostID)
+
+	// Step 2: Create top-level comments with time staggering
+	var topLevelComments []struct {
+		postID    string
+		commentID string
+		depth     int
+	}
+	var commentMutex sync.Mutex
+
+	// Create approximately 100 top-level comments with staggering
+	numTopLevelComments := 100
+	color.Cyan(
+		"Creating %d top-level comments with time staggering...",
+		numTopLevelComments,
+	)
+
+	topLevelContents := []string{
+		"This is such an important discussion. Remote work has completely changed my career trajectory.",
+		"I've been working remotely for 5 years and the learning curve was steep initially.",
+		"The mentorship aspect is crucial. I've found it much harder to build those relationships remotely.",
+		"Company culture remotely feels different, but not necessarily worse in my experience.",
+		"I think we're still in the experimental phase. The real impact won't be clear for another decade.",
+		"Geographic pay equity is fascinating. I'm earning Silicon Valley wages while living in a small town.",
+		"The skills that matter most now are written communication and self-motivation.",
+		"I disagree with the premise. Office work had its own set of problems we're conveniently forgetting.",
+		"Hybrid seems like the worst of both worlds to me. Either commit to remote or don't.",
+		"The economic implications are huge. Entire industries are being disrupted.",
+		"As someone early in their career, I worry about missing out on informal learning opportunities.",
+		"Remote work has made me more intentional about professional development.",
+		"The future is definitely hybrid, but the balance will vary by industry and role.",
+		"I've seen both successful and failed attempts at remote culture building.",
+		"The productivity gains are real, but so are the collaboration challenges.",
+	}
+
+	for i := 0; i < numTopLevelComments; i++ {
+		// Use a different user for each comment
+		user := hubUsers[i%len(hubUsers)]
+		tokenI, ok := hubSessionTokens.Load(user.Email)
+		if !ok {
+			log.Printf("no auth token found for %s", user.Email)
+			continue
+		}
+		authToken := tokenI.(string)
+
+		// Pick content (cycling through available ones and generating lorem for extras)
+		var content string
+		if i < len(topLevelContents) {
+			content = topLevelContents[i]
+		} else {
+			content = generateLoremReply()
+		}
+
+		commentRequest := hub.AddIncognitoPostCommentRequest{
+			IncognitoPostID: megaPostID,
+			Content:         content,
+		}
+
+		var body bytes.Buffer
+		err := json.NewEncoder(&body).Encode(commentRequest)
+		if err != nil {
+			log.Printf("failed to encode top-level comment %d: %v", i, err)
+			continue
+		}
+
+		req, err := http.NewRequest(
+			http.MethodPost,
+			serverURL+"/hub/add-incognito-post-comment",
+			&body,
+		)
+		if err != nil {
+			log.Printf(
+				"failed to create top-level comment request %d: %v",
+				i,
+				err,
+			)
+			continue
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		color.Blue("Creating top-level comment %d/%d", i+1, numTopLevelComments)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Printf(
+				"failed to send top-level comment request %d: %v",
+				i,
+				err,
+			)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				color.Red("failed to read comment error response: %v", err)
+			} else {
+				color.Red("failed to add top-level comment: %v", string(body))
+			}
+			resp.Body.Close()
+			continue
+		}
+
+		var response hub.AddIncognitoPostCommentResponse
+		err = json.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			log.Printf(
+				"failed to decode top-level comment response %d: %v",
+				i,
+				err,
+			)
+			resp.Body.Close()
+			continue
+		}
+
+		commentMutex.Lock()
+		topLevelComments = append(topLevelComments, struct {
+			postID    string
+			commentID string
+			depth     int
+		}{
+			postID:    response.IncognitoPostID,
+			commentID: response.CommentID,
+			depth:     0,
+		})
+		commentMutex.Unlock()
+
+		resp.Body.Close()
+
+		// Add time staggering - 1-3 seconds between some comments
+		if i%10 == 0 && i > 0 {
+			sleepTime := 1 + rand.Intn(3)
+			color.Yellow(
+				"Staggering comment creation - sleeping %d seconds",
+				sleepTime,
+			)
+			time.Sleep(time.Duration(sleepTime) * time.Second)
+		}
+
+		// Smaller delays between all comments to avoid overwhelming the server
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	color.Green("Created %d top-level comments", len(topLevelComments))
+
+	// Step 3: Create massive nested thread structure
+	createMegaThreadReplies(topLevelComments, megaPostID)
+}
+
+// createMegaThreadReplies creates the bulk of the ~5000 comments through nested replies
+func createMegaThreadReplies(initialComments []struct {
+	postID    string
+	commentID string
+	depth     int
+}, postID string) {
+	if len(initialComments) == 0 {
+		return
+	}
+
+	var allComments []struct {
+		postID    string
+		commentID string
+		depth     int
+	}
+
+	// Start with initial comments
+	allComments = append(allComments, initialComments...)
+	var commentMutex sync.Mutex
+
+	maxDepth := 6 // Allow up to 6 levels of nesting for deeper conversations
+	targetTotalComments := 5000
+
+	color.Cyan(
+		"Creating nested mega thread with target of %d total comments across %d depth levels",
+		targetTotalComments,
+		maxDepth,
+	)
+
+	// Generate replies for each depth level
+	for currentDepth := 0; currentDepth < maxDepth; currentDepth++ {
+		// Get comments at current depth to reply to
+		var commentsAtDepth []struct {
+			postID    string
+			commentID string
+			depth     int
+		}
+
+		commentMutex.Lock()
+		for _, comment := range allComments {
+			if comment.depth == currentDepth {
+				commentsAtDepth = append(commentsAtDepth, comment)
+			}
+		}
+		currentTotal := len(allComments)
+		commentMutex.Unlock()
+
+		if len(commentsAtDepth) == 0 {
+			color.Yellow("No comments at depth %d, stopping", currentDepth)
+			break
+		}
+
+		// Calculate how many more comments we need
+		remaining := targetTotalComments - currentTotal
+		if remaining <= 0 {
+			color.Green("Reached target comment count of %d", currentTotal)
+			break
+		}
+
+		// Calculate reply distribution for this depth
+		var repliesPerComment int
+		switch currentDepth {
+		case 0:
+			repliesPerComment = 8 // Each top-level comment gets 8 replies
+		case 1:
+			repliesPerComment = 6 // Each depth-1 comment gets 6 replies
+		case 2:
+			repliesPerComment = 4 // Each depth-2 comment gets 4 replies
+		case 3:
+			repliesPerComment = 3 // Each depth-3 comment gets 3 replies
+		case 4:
+			repliesPerComment = 2 // Each depth-4 comment gets 2 replies
+		case 5:
+			repliesPerComment = 1 // Each depth-5 comment gets 1 reply
+		}
+
+		targetReplies := len(commentsAtDepth) * repliesPerComment
+		if targetReplies > remaining {
+			targetReplies = remaining
+		}
+
+		color.Cyan(
+			"Creating %d replies at depth %d (from %d parent comments)",
+			targetReplies,
+			currentDepth+1,
+			len(commentsAtDepth),
+		)
+
+		// Create replies in batches to control server load
+		batchSize := 25
+		createdReplies := 0
+
+		for batch := 0; batch < targetReplies; batch += batchSize {
+			batchEnd := batch + batchSize
+			if batchEnd > targetReplies {
+				batchEnd = targetReplies
+			}
+
+			batchWg := sync.WaitGroup{}
+			for i := batch; i < batchEnd; i++ {
+				batchWg.Add(1)
+
+				go func(replyIndex int) {
+					defer batchWg.Done()
+
+					// Pick a random user
+					user := hubUsers[rand.Intn(len(hubUsers))]
+					tokenI, ok := hubSessionTokens.Load(user.Email)
+					if !ok {
+						log.Printf("no auth token found for %s", user.Email)
+						return
+					}
+					authToken := tokenI.(string)
+
+					// Pick a random parent comment at current depth
+					parentComment := commentsAtDepth[rand.Intn(len(commentsAtDepth))]
+
+					// Generate content for this reply
+					content := generateLoremReply()
+
+					replyRequest := hub.AddIncognitoPostCommentRequest{
+						IncognitoPostID: parentComment.postID,
+						Content:         content,
+						InReplyTo:       &parentComment.commentID,
+					}
+
+					var body bytes.Buffer
+					err := json.NewEncoder(&body).Encode(replyRequest)
+					if err != nil {
+						log.Printf("failed to encode mega reply: %v", err)
+						return
+					}
+
+					req, err := http.NewRequest(
+						http.MethodPost,
+						serverURL+"/hub/add-incognito-post-comment",
+						&body,
+					)
+					if err != nil {
+						log.Printf(
+							"failed to create mega reply request: %v",
+							err,
+						)
+						return
+					}
+
+					req.Header.Set("Content-Type", "application/json")
+					req.Header.Set("Authorization", "Bearer "+authToken)
+
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						log.Printf("failed to send mega reply request: %v", err)
+						return
+					}
+					defer resp.Body.Close()
+
+					if resp.StatusCode != http.StatusOK {
+						body, err := io.ReadAll(resp.Body)
+						if err != nil {
+							color.Red(
+								"failed to read mega reply error response: %v",
+								err,
+							)
+						} else {
+							color.Red("failed to add mega reply: %v", string(body))
+						}
+						return
+					}
+
+					var response hub.AddIncognitoPostCommentResponse
+					err = json.NewDecoder(resp.Body).Decode(&response)
+					if err != nil {
+						log.Printf(
+							"failed to decode mega reply response: %v",
+							err,
+						)
+						return
+					}
+
+					// Add the new reply to our tracking
+					commentMutex.Lock()
+					allComments = append(allComments, struct {
+						postID    string
+						commentID string
+						depth     int
+					}{
+						postID:    response.IncognitoPostID,
+						commentID: response.CommentID,
+						depth:     currentDepth + 1,
+					})
+					commentMutex.Unlock()
+				}(i)
+			}
+
+			// Wait for this batch to complete
+			batchWg.Wait()
+			createdReplies += (batchEnd - batch)
+
+			// Progress update
+			color.Blue(
+				"Completed batch: %d/%d replies at depth %d",
+				createdReplies,
+				targetReplies,
+				currentDepth+1,
+			)
+
+			// Small delay between batches
+			time.Sleep(200 * time.Millisecond)
+		}
+
+		commentMutex.Lock()
+		totalSoFar := len(allComments)
+		commentMutex.Unlock()
+
+		color.Green(
+			"Completed depth %d: created %d replies (total comments: %d)",
+			currentDepth+1,
+			createdReplies,
+			totalSoFar,
+		)
+
+		// Check if we've reached our target
+		if totalSoFar >= targetTotalComments {
+			color.Green("Reached target of %d comments!", targetTotalComments)
+			break
+		}
+	}
+
+	// Final statistics
+	depthCounts := make(map[int]int)
+	commentMutex.Lock()
+	for _, comment := range allComments {
+		depthCounts[comment.depth]++
+	}
+	totalComments := len(allComments)
+	commentMutex.Unlock()
+
+	color.Green("Mega thread completed! Final statistics:")
+	for depth := 0; depth <= maxDepth; depth++ {
+		if count, exists := depthCounts[depth]; exists {
+			color.Green("  Depth %d: %d comments", depth, count)
+		}
+	}
+	color.Green("Total comments in mega thread: %d", totalComments)
 }

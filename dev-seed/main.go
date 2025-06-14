@@ -127,4 +127,6 @@ func main() {
 	writeEmployerPosts()
 	color.Cyan("Write incognito posts")
 	writeIncognitoPosts()
+	color.Cyan("Create mega incognito thread with ~5000 comments")
+	createMegaIncognitoThread()
 }
