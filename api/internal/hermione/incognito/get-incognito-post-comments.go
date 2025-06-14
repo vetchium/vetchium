@@ -24,8 +24,15 @@ func GetIncognitoPostComments(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
+		// Set default values as per TypeSpec specification
 		if req.Limit == 0 {
 			req.Limit = 25
+		}
+		if req.SortBy == "" {
+			req.SortBy = hub.IncognitoPostCommentSortByTop
+		}
+		if req.RepliesPreviewCount == 0 {
+			req.RepliesPreviewCount = 5
 		}
 
 		h.Dbg("Validated", "req", req)
@@ -35,11 +42,8 @@ func GetIncognitoPostComments(h wand.Wand) http.HandlerFunc {
 			h.Dbg("getting incognito post comments failed", "error", err)
 			switch err {
 			case db.ErrNoIncognitoPost:
-				h.Dbg(
-					"incognito post not found",
-					"incognito_post_id",
-					req.IncognitoPostID,
-				)
+				h.Dbg("incognito post not found",
+					"incognito_post_id", req.IncognitoPostID)
 				http.Error(w, "Incognito post not found", http.StatusNotFound)
 			default:
 				h.Dbg("internal unhandled error")
@@ -56,12 +60,10 @@ func GetIncognitoPostComments(h wand.Wand) http.HandlerFunc {
 			return
 		}
 
-		h.Dbg(
-			"successfully retrieved incognito post comments",
-			"incognito_post_id",
-			req.IncognitoPostID,
-			"count",
-			len(response.Comments),
-		)
+		h.Dbg("successfully retrieved incognito post comments",
+			"incognito_post_id", req.IncognitoPostID,
+			"count", len(response.Comments),
+			"total_top_level_count", response.TotalCommentsCount,
+			"pagination_key", response.PaginationKey)
 	}
 }

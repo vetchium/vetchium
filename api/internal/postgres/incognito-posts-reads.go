@@ -143,7 +143,7 @@ func (pg *PG) GetIncognitoPostComments(
 
 	hubUserID, err := getHubUserID(ctx)
 	if err != nil {
-		pg.log.Err("failed to get hub user ID", "error", err)
+		pg.log.Dbg("failed to get hub user ID", "error", err)
 		return hub.GetIncognitoPostCommentsResponse{}, err
 	}
 
@@ -153,8 +153,78 @@ func (pg *PG) GetIncognitoPostComments(
 		return hub.GetIncognitoPostCommentsResponse{}, db.ErrNoIncognitoPost
 	}
 
-	// Single efficient query to get all comment data
-	query := `
+	// Get top-level comments with pagination and total count in one query
+	topLevelComments, nextPaginationKey, totalCount, err := pg.getTopLevelCommentsWithCount(
+		ctx,
+		req.IncognitoPostID,
+		hubUserID,
+		req.SortBy,
+		req.PaginationKey,
+		req.Limit,
+	)
+	if err != nil {
+		pg.log.Dbg("failed to get top-level comments", "error", err)
+		return hub.GetIncognitoPostCommentsResponse{}, err
+	}
+
+	allComments := make([]hub.IncognitoPostComment, 0)
+	allComments = append(allComments, topLevelComments...)
+
+	// Get preview replies for all top-level comments in one query
+	if req.RepliesPreviewCount > 0 && len(topLevelComments) > 0 {
+		replies, err := pg.getBulkCommentRepliesPreview(
+			ctx,
+			topLevelComments,
+			hubUserID,
+			req.RepliesPreviewCount,
+		)
+		if err != nil {
+			pg.log.Dbg("failed to get replies preview", "error", err)
+			return hub.GetIncognitoPostCommentsResponse{}, err
+		}
+		allComments = append(allComments, replies...)
+	}
+
+	pg.log.Dbg("fetched incognito post comments",
+		"incognito_post_id", req.IncognitoPostID,
+		"top_level_comments", len(topLevelComments),
+		"total_comments_returned", len(allComments),
+		"total_top_level_count", totalCount)
+
+	return hub.GetIncognitoPostCommentsResponse{
+		Comments:           allComments,
+		PaginationKey:      nextPaginationKey,
+		TotalCommentsCount: totalCount,
+	}, nil
+}
+
+// getTopLevelCommentsWithCount fetches top-level comments with pagination and total count
+func (pg *PG) getTopLevelCommentsWithCount(
+	ctx context.Context,
+	incognitoPostID string,
+	hubUserID string,
+	sortBy hub.IncognitoPostCommentSortBy,
+	paginationKey *string,
+	limit int32,
+) ([]hub.IncognitoPostComment, string, int32, error) {
+	// First get total count in a simple query
+	var totalCount int32
+	countQuery := `
+		SELECT COUNT(*)
+		FROM incognito_post_comments
+		WHERE incognito_post_id = $1 AND parent_comment_id IS NULL
+	`
+	err := pg.pool.QueryRow(ctx, countQuery, incognitoPostID).Scan(&totalCount)
+	if err != nil {
+		pg.log.Err("failed to get total top-level comments count", "error", err)
+		return nil, "", 0, db.ErrInternal
+	}
+
+	// Then get the paginated comments
+	var query string
+	var args []interface{}
+
+	baseQuery := `
 		SELECT
 			ipc.id,
 			ipc.content,
@@ -201,29 +271,134 @@ func (pg *PG) GetIncognitoPostComments(
 				ELSE TRUE
 			END as can_downvote,
 			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
-			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ipc.id), 0
+			) as replies_count
 		FROM incognito_post_comments ipc
-		WHERE ipc.incognito_post_id = $1
-		ORDER BY
-			CASE WHEN ipc.parent_comment_id IS NULL THEN ipc.score END DESC,
-			ipc.parent_comment_id ASC NULLS FIRST,
-			ipc.score DESC,
-			ipc.created_at ASC
+		WHERE ipc.incognito_post_id = $1 AND ipc.parent_comment_id IS NULL
 	`
 
-	rows, err := pg.pool.Query(ctx, query, req.IncognitoPostID, hubUserID,
-		db.UpvoteValue, db.DownvoteValue)
+	args = []interface{}{
+		incognitoPostID,
+		hubUserID,
+		db.UpvoteValue,
+		db.DownvoteValue,
+	}
+
+	// Add pagination logic
+	if paginationKey != nil && *paginationKey != "" {
+		switch sortBy {
+		case hub.IncognitoPostCommentSortByTop:
+			var lastScore sql.NullInt32
+			var lastCreatedAt sql.NullTime
+			err := pg.pool.QueryRow(
+				ctx,
+				`
+				SELECT COALESCE(score, 0), created_at
+				FROM incognito_post_comments
+				WHERE id = $1 AND incognito_post_id = $2`,
+				*paginationKey,
+				incognitoPostID,
+			).Scan(&lastScore, &lastCreatedAt)
+
+			if err != nil {
+				pg.log.Err("pagination cursor data for top sorting",
+					"error", err,
+					"pagination_key", *paginationKey,
+				)
+				return nil, "", 0, db.ErrInvalidPaginationKey
+			}
+
+			if lastScore.Valid && lastCreatedAt.Valid {
+				baseQuery += ` AND (
+					ipc.score < $5 OR
+					(ipc.score = $5 AND ipc.created_at < $6) OR
+					(ipc.score = $5 AND ipc.created_at = $6 AND ipc.id > $7)
+				)`
+				args = append(
+					args,
+					lastScore.Int32,
+					lastCreatedAt.Time,
+					*paginationKey,
+				)
+			}
+
+		case hub.IncognitoPostCommentSortByNew:
+			var lastCreatedAt sql.NullTime
+			err := pg.pool.QueryRow(ctx, `
+				SELECT created_at
+				FROM incognito_post_comments
+				WHERE id = $1 AND incognito_post_id = $2`,
+				*paginationKey, incognitoPostID).Scan(&lastCreatedAt)
+
+			if err != nil {
+				pg.log.Err("pagination cursor data for new sorting",
+					"error", err,
+					"pagination_key", *paginationKey)
+				return nil, "", 0, db.ErrInvalidPaginationKey
+			}
+
+			if lastCreatedAt.Valid {
+				baseQuery += ` AND (
+					ipc.created_at < $5 OR
+					(ipc.created_at = $5 AND ipc.id > $6)
+				)`
+				args = append(args, lastCreatedAt.Time, *paginationKey)
+			}
+
+		case hub.IncognitoPostCommentSortByOld:
+			var lastCreatedAt sql.NullTime
+			err := pg.pool.QueryRow(ctx, `
+				SELECT created_at
+				FROM incognito_post_comments
+				WHERE id = $1 AND incognito_post_id = $2`,
+				*paginationKey, incognitoPostID).Scan(&lastCreatedAt)
+
+			if err != nil {
+				pg.log.Err("pagination cursor data for old sorting",
+					"error", err,
+					"pagination_key", *paginationKey)
+				return nil, "", 0, db.ErrInvalidPaginationKey
+			}
+
+			if lastCreatedAt.Valid {
+				baseQuery += ` AND (
+					ipc.created_at > $5 OR
+					(ipc.created_at = $5 AND ipc.id > $6)
+				)`
+				args = append(args, lastCreatedAt.Time, *paginationKey)
+			}
+		}
+	}
+
+	// Add ordering based on sort_by
+	switch sortBy {
+	case hub.IncognitoPostCommentSortByTop:
+		baseQuery += ` ORDER BY ipc.score DESC, ipc.created_at DESC, ipc.id ASC`
+	case hub.IncognitoPostCommentSortByNew:
+		baseQuery += ` ORDER BY ipc.created_at DESC, ipc.id ASC`
+	case hub.IncognitoPostCommentSortByOld:
+		baseQuery += ` ORDER BY ipc.created_at ASC, ipc.id ASC`
+	default:
+		baseQuery += ` ORDER BY ipc.score DESC, ipc.created_at DESC, ipc.id ASC`
+	}
+
+	// Add limit
+	baseQuery += fmt.Sprintf(` LIMIT $%d`, len(args)+1)
+	args = append(args, limit)
+
+	query = baseQuery
+
+	rows, err := pg.pool.Query(ctx, query, args...)
 	if err != nil {
-		pg.log.Err("failed to query incognito post comments",
-			"error", err,
-			"incognito_post_id", req.IncognitoPostID)
-		return hub.GetIncognitoPostCommentsResponse{}, err
+		pg.log.Err("failed to query top-level comments", "error", err)
+		return nil, "", 0, db.ErrInternal
 	}
 	defer rows.Close()
 
 	comments := make([]hub.IncognitoPostComment, 0)
-	var deletedCount int
-
 	for rows.Next() {
 		var comment hub.IncognitoPostComment
 		var parentCommentID sql.NullString
@@ -244,40 +419,179 @@ func (pg *PG) GetIncognitoPostComments(
 			&comment.CanDownvote,
 			&comment.IsCreatedByMe,
 			&isDeleted,
+			&comment.RepliesCount,
 		)
 		if err != nil {
-			pg.log.Err("failed to scan comment row", "error", err)
-			return hub.GetIncognitoPostCommentsResponse{}, err
+			pg.log.Err("failed to scan top-level comment row", "error", err)
+			return nil, "", 0, db.ErrInternal
 		}
 
 		if parentCommentID.Valid {
 			comment.InReplyTo = &parentCommentID.String
 		}
 
-		// Vote fields are now directly scanned from the query
-
 		comment.IsDeleted = isDeleted
 		if isDeleted {
 			comment.Content = ""
-			deletedCount++
 		}
 
 		comments = append(comments, comment)
 	}
 
 	if err := rows.Err(); err != nil {
-		pg.log.Err("error iterating comment rows", "error", err)
-		return hub.GetIncognitoPostCommentsResponse{}, err
+		pg.log.Err("error iterating top-level comment rows", "error", err)
+		return nil, "", 0, db.ErrInternal
 	}
 
-	pg.log.Dbg("fetched incognito post comments",
-		"incognito_post_id", req.IncognitoPostID,
-		"total_comments", len(comments),
-		"deleted_comments", deletedCount)
+	var nextPaginationKey string
+	if len(comments) == int(limit) {
+		nextPaginationKey = comments[len(comments)-1].CommentID
+	}
 
-	return hub.GetIncognitoPostCommentsResponse{
-		Comments: comments,
-	}, nil
+	return comments, nextPaginationKey, totalCount, nil
+}
+
+// getBulkCommentRepliesPreview fetches preview replies for multiple comments in one query
+func (pg *PG) getBulkCommentRepliesPreview(
+	ctx context.Context,
+	parentComments []hub.IncognitoPostComment,
+	hubUserID string,
+	limitPerComment int32,
+) ([]hub.IncognitoPostComment, error) {
+	if len(parentComments) == 0 {
+		return []hub.IncognitoPostComment{}, nil
+	}
+
+	// Build array of parent comment IDs
+	parentIDs := make([]string, len(parentComments))
+	for i, comment := range parentComments {
+		parentIDs[i] = comment.CommentID
+	}
+
+	query := `
+		WITH ranked_replies AS (
+			SELECT
+				ipc.id,
+				ipc.content,
+				ipc.parent_comment_id,
+				ipc.depth,
+				ipc.created_at,
+				ipc.upvotes_count,
+				ipc.downvotes_count,
+				COALESCE(ipc.score, 0) as score,
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $2
+						AND ipcv.vote_value = $3
+					) THEN TRUE
+					ELSE FALSE
+				END as me_upvoted,
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $2
+						AND ipcv.vote_value = $4
+					) THEN TRUE
+					ELSE FALSE
+				END as me_downvoted,
+				CASE
+					WHEN ipc.author_id = $2 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $2
+					) THEN FALSE
+					ELSE TRUE
+				END as can_upvote,
+				CASE
+					WHEN ipc.author_id = $2 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $2
+					) THEN FALSE
+					ELSE TRUE
+				END as can_downvote,
+				CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+				CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+				COALESCE(
+					(SELECT COUNT(*) FROM incognito_post_comments child
+					 WHERE child.parent_comment_id = ipc.id), 0
+				) as replies_count,
+				ROW_NUMBER() OVER (
+					PARTITION BY ipc.parent_comment_id
+					ORDER BY ipc.score DESC, ipc.created_at ASC
+				) as rn
+			FROM incognito_post_comments ipc
+			WHERE ipc.parent_comment_id = ANY($1)
+		)
+		SELECT
+			id, content, parent_comment_id, depth, created_at,
+			upvotes_count, downvotes_count, score,
+			me_upvoted, me_downvoted, can_upvote, can_downvote,
+			is_created_by_me, is_deleted, replies_count
+		FROM ranked_replies
+		WHERE rn <= $5
+		ORDER BY parent_comment_id, rn
+	`
+
+	rows, err := pg.pool.Query(ctx, query, parentIDs, hubUserID,
+		db.UpvoteValue, db.DownvoteValue, limitPerComment)
+	if err != nil {
+		pg.log.Err("failed to query bulk comment replies preview", "error", err)
+		return nil, db.ErrInternal
+	}
+	defer rows.Close()
+
+	replies := make([]hub.IncognitoPostComment, 0)
+	for rows.Next() {
+		var comment hub.IncognitoPostComment
+		var parentCommentID sql.NullString
+		var isDeleted bool
+
+		err := rows.Scan(
+			&comment.CommentID,
+			&comment.Content,
+			&parentCommentID,
+			&comment.Depth,
+			&comment.CreatedAt,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
+			&comment.IsCreatedByMe,
+			&isDeleted,
+			&comment.RepliesCount,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan reply comment row", "error", err)
+			return nil, db.ErrInternal
+		}
+
+		if parentCommentID.Valid {
+			comment.InReplyTo = &parentCommentID.String
+		}
+
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+		}
+
+		replies = append(replies, comment)
+	}
+
+	if err := rows.Err(); err != nil {
+		pg.log.Err("error iterating reply comment rows", "error", err)
+		return nil, db.ErrInternal
+	}
+
+	return replies, nil
 }
 
 // Helper function to check if incognito post exists and is not deleted
@@ -293,7 +607,11 @@ func (pg *PG) incognitoPostExists(
 	`
 
 	err := pg.pool.QueryRow(ctx, query, incognitoPostID).Scan(&count)
-	return err == nil && count > 0
+	if err != nil {
+		pg.log.Err("failed to check if incognito post exists", "error", err)
+		return false
+	}
+	return count > 0
 }
 
 func (pg *PG) GetIncognitoPosts(
@@ -379,7 +697,8 @@ func (pg *PG) GetIncognitoPosts(
 		AND EXISTS (
 			SELECT 1 FROM incognito_post_tags ipt2
 			WHERE ipt2.incognito_post_id = ip.id AND ipt2.tag_id = $1
-		)`
+		)
+	`
 
 	args = []interface{}{req.TagID, hubUserID, db.UpvoteValue, db.DownvoteValue}
 
