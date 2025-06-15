@@ -566,7 +566,7 @@ function IncognitoPostDetailsContent() {
     const isCollapsed = isCommentCollapsed(comment.comment_id);
     const hasReplies = comment.children.length > 0;
     const hasMoreReplies = comment.replies_count > comment.children.length;
-    const showCollapseButton = hasReplies;
+    const showCollapseButton = hasReplies || hasMoreReplies; // Show if has children OR more to load
 
     // Use renderDepth for visual styling instead of database depth
     const depthPattern = getDepthPattern(renderDepth);
@@ -859,7 +859,7 @@ function IncognitoPostDetailsContent() {
           </Box>
         </Box>
 
-        {hasReplies && !isCollapsed && (
+        {(hasReplies || hasMoreReplies) && !isCollapsed && (
           <Box
             sx={{
               pl: 3,
@@ -867,7 +867,7 @@ function IncognitoPostDetailsContent() {
               borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
             }}
           >
-            {renderDepth < 3 ? (
+            {renderDepth < 4 ? (
               // Normal nested rendering for shallow depths
               <>
                 {comment.children.map((child: any) => (
