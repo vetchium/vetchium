@@ -493,4 +493,14 @@ func RegisterHubRoutes(h *Hermione) {
 		ic.GetMyIncognitoPostComments(h),
 		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
 	)
+	h.mw.Guard(
+		"/hub/get-comment-replies",
+		ic.GetCommentReplies(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
+	h.mw.Guard(
+		"/hub/get-incognito-post-comment-permalink",
+		ic.GetIncognitoPostCommentPermalink(h),
+		[]hub.HubUserTier{hub.FreeHubUserTier, hub.PaidHubUserTier},
+	)
 }

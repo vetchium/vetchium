@@ -1118,3 +1118,889 @@ func (pg *PG) GetMyIncognitoPostComments(
 		PaginationKey: paginationKey,
 	}, nil
 }
+
+func (pg *PG) GetCommentReplies(
+	ctx context.Context,
+	req hub.GetCommentRepliesRequest,
+) (hub.GetCommentRepliesResponse, error) {
+	pg.log.Dbg("entered GetCommentReplies",
+		"incognito_post_id", req.IncognitoPostID,
+		"parent_comment_id", req.ParentCommentID)
+
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return hub.GetCommentRepliesResponse{}, err
+	}
+
+	// First check if the incognito post exists and is not deleted
+	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
+		pg.log.Dbg("incognito post not found", "id", req.IncognitoPostID)
+		return hub.GetCommentRepliesResponse{}, db.ErrNoIncognitoPost
+	}
+
+	// Check if parent comment exists and belongs to this post
+	var parentDepth int32
+	var parentExists bool
+	checkParentQuery := `
+		SELECT depth
+		FROM incognito_post_comments
+		WHERE id = $1 AND incognito_post_id = $2
+	`
+	err = pg.pool.QueryRow(ctx, checkParentQuery,
+		req.ParentCommentID, req.IncognitoPostID).Scan(&parentDepth)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			pg.log.Dbg("parent comment not found",
+				"parent_comment_id", req.ParentCommentID)
+			return hub.GetCommentRepliesResponse{}, db.ErrNoIncognitoPostComment
+		}
+		pg.log.Err("failed to check parent comment", "error", err)
+		return hub.GetCommentRepliesResponse{}, err
+	}
+	parentExists = true
+
+	// Check if adding replies would exceed max depth (5 levels: 0-4)
+	if parentExists && (parentDepth+req.MaxDepth) > 4 {
+		pg.log.Dbg("max comment depth would be exceeded",
+			"parent_depth", parentDepth,
+			"max_depth", req.MaxDepth)
+		return hub.GetCommentRepliesResponse{}, db.ErrMaxCommentDepthReached
+	}
+
+	// Get total count of direct replies to the parent comment
+	var totalRepliesCount int32
+	countQuery := `
+		SELECT COUNT(*)
+		FROM incognito_post_comments
+		WHERE parent_comment_id = $1 AND incognito_post_id = $2
+	`
+	err = pg.pool.QueryRow(ctx, countQuery,
+		req.ParentCommentID, req.IncognitoPostID).Scan(&totalRepliesCount)
+	if err != nil {
+		pg.log.Err("failed to get total replies count", "error", err)
+		return hub.GetCommentRepliesResponse{}, err
+	}
+
+	// Build query for replies with pagination and depth control
+	var query string
+	var args []interface{}
+
+	baseQuery := `
+		WITH RECURSIVE comment_tree AS (
+			-- Direct replies to the parent comment
+			SELECT
+				ipc.id,
+				ipc.content,
+				ipc.parent_comment_id,
+				ipc.depth,
+				ipc.created_at,
+				ipc.upvotes_count,
+				ipc.downvotes_count,
+				COALESCE(ipc.score, 0) as score,
+				ipc.author_id,
+				ipc.is_deleted,
+				1 as tree_depth,
+				ARRAY[ipc.id] as path
+			FROM incognito_post_comments ipc
+			WHERE ipc.parent_comment_id = $1
+			AND ipc.incognito_post_id = $2
+
+			UNION ALL
+
+			-- Nested replies up to max_depth
+			SELECT
+				child.id,
+				child.content,
+				child.parent_comment_id,
+				child.depth,
+				child.created_at,
+				child.upvotes_count,
+				child.downvotes_count,
+				COALESCE(child.score, 0) as score,
+				child.author_id,
+				child.is_deleted,
+				ct.tree_depth + 1,
+				ct.path || child.id
+			FROM incognito_post_comments child
+			JOIN comment_tree ct ON child.parent_comment_id = ct.id
+			WHERE ct.tree_depth < $3
+			AND child.incognito_post_id = $2
+		)
+		SELECT
+			ct.id,
+			ct.content,
+			ct.parent_comment_id,
+			ct.depth,
+			ct.created_at,
+			ct.upvotes_count,
+			ct.downvotes_count,
+			ct.score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ct.id
+					AND ipcv.user_id = $4
+					AND ipcv.vote_value = $5
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ct.id
+					AND ipcv.user_id = $4
+					AND ipcv.vote_value = $6
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ct.author_id = $4 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ct.id
+					AND ipcv.user_id = $4
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ct.author_id = $4 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ct.id
+					AND ipcv.user_id = $4
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ct.author_id = $4 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ct.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ct.id), 0
+			) as replies_count
+		FROM comment_tree ct
+	`
+
+	args = []interface{}{
+		req.ParentCommentID,
+		req.IncognitoPostID,
+		req.MaxDepth,
+		hubUserID,
+		db.UpvoteValue,
+		db.DownvoteValue,
+	}
+
+	// Add pagination logic for direct replies only (tree_depth = 1)
+	if req.PaginationKey != nil && *req.PaginationKey != "" {
+		var lastScore sql.NullInt32
+		var lastCreatedAt sql.NullTime
+		err := pg.pool.QueryRow(
+			ctx,
+			`
+			SELECT COALESCE(score, 0), created_at
+			FROM incognito_post_comments
+			WHERE id = $1 AND incognito_post_id = $2`,
+			*req.PaginationKey,
+			req.IncognitoPostID,
+		).Scan(&lastScore, &lastCreatedAt)
+
+		if err != nil {
+			pg.log.Err("failed to get pagination cursor data", "error", err)
+			return hub.GetCommentRepliesResponse{}, db.ErrInvalidPaginationKey
+		}
+
+		if lastScore.Valid && lastCreatedAt.Valid {
+			baseQuery += ` WHERE (
+				ct.score < $7 OR
+				(ct.score = $7 AND ct.created_at < $8) OR
+				(ct.score = $7 AND ct.created_at = $8 AND ct.id > $9)
+			)`
+			args = append(
+				args,
+				lastScore.Int32,
+				lastCreatedAt.Time,
+				*req.PaginationKey,
+			)
+		}
+	}
+
+	// Order by score descending, then creation time as tiebreaker
+	baseQuery += ` ORDER BY ct.score DESC, ct.created_at ASC, array_length(ct.path, 1), ct.path`
+
+	// Add limit
+	baseQuery += fmt.Sprintf(` LIMIT $%d`, len(args)+1)
+	args = append(args, req.Limit)
+
+	query = baseQuery
+
+	rows, err := pg.pool.Query(ctx, query, args...)
+	if err != nil {
+		pg.log.Err("failed to query comment replies", "error", err)
+		return hub.GetCommentRepliesResponse{}, err
+	}
+	defer rows.Close()
+
+	replies := make([]hub.IncognitoPostComment, 0)
+	for rows.Next() {
+		var comment hub.IncognitoPostComment
+		var parentCommentID sql.NullString
+		var isDeleted bool
+
+		err := rows.Scan(
+			&comment.CommentID,
+			&comment.Content,
+			&parentCommentID,
+			&comment.Depth,
+			&comment.CreatedAt,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
+			&comment.IsCreatedByMe,
+			&isDeleted,
+			&comment.RepliesCount,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan reply comment row", "error", err)
+			return hub.GetCommentRepliesResponse{}, err
+		}
+
+		if parentCommentID.Valid {
+			comment.InReplyTo = &parentCommentID.String
+		}
+
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+		}
+
+		replies = append(replies, comment)
+	}
+
+	if err := rows.Err(); err != nil {
+		pg.log.Err("error iterating reply comment rows", "error", err)
+		return hub.GetCommentRepliesResponse{}, err
+	}
+
+	// Set pagination key if we have more data (only for direct replies)
+	var nextPaginationKey string
+	if len(replies) == int(req.Limit) {
+		// Find the last direct reply (depth = parentDepth + 1)
+		for i := len(replies) - 1; i >= 0; i-- {
+			if replies[i].Depth == parentDepth+1 {
+				nextPaginationKey = replies[i].CommentID
+				break
+			}
+		}
+	}
+
+	pg.log.Dbg("fetched comment replies",
+		"incognito_post_id", req.IncognitoPostID,
+		"parent_comment_id", req.ParentCommentID,
+		"replies_count", len(replies),
+		"total_replies_count", totalRepliesCount)
+
+	return hub.GetCommentRepliesResponse{
+		Replies:           replies,
+		PaginationKey:     nextPaginationKey,
+		TotalRepliesCount: totalRepliesCount,
+		ParentCommentID:   req.ParentCommentID,
+	}, nil
+}
+
+func (pg *PG) GetIncognitoPostCommentPermalink(
+	ctx context.Context,
+	req hub.GetIncognitoPostCommentPermalinkRequest,
+) (hub.GetIncognitoPostCommentPermalinkResponse, error) {
+	pg.log.Dbg("entered GetIncognitoPostCommentPermalink",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID)
+
+	hubUserID, err := getHubUserID(ctx)
+	if err != nil {
+		pg.log.Err("failed to get hub user ID", "error", err)
+		return hub.GetIncognitoPostCommentPermalinkResponse{}, err
+	}
+
+	// First check if the incognito post exists and is not deleted
+	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
+		pg.log.Dbg("incognito post not found", "id", req.IncognitoPostID)
+		return hub.GetIncognitoPostCommentPermalinkResponse{}, db.ErrNoIncognitoPost
+	}
+
+	// Check if target comment exists and belongs to this post
+	var targetComment hub.IncognitoPostComment
+	var targetExists bool
+	targetQuery := `
+		SELECT
+			ipc.id,
+			ipc.content,
+			ipc.parent_comment_id,
+			ipc.depth,
+			ipc.created_at,
+			ipc.upvotes_count,
+			ipc.downvotes_count,
+			COALESCE(ipc.score, 0) as score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+					AND ipcv.vote_value = $3
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+					AND ipcv.vote_value = $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ipc.id), 0
+			) as replies_count
+		FROM incognito_post_comments ipc
+		WHERE ipc.id = $1 AND ipc.incognito_post_id = $5
+	`
+
+	var parentCommentID sql.NullString
+	var isDeleted bool
+
+	err = pg.pool.QueryRow(ctx, targetQuery, req.CommentID, hubUserID,
+		db.UpvoteValue, db.DownvoteValue, req.IncognitoPostID).Scan(
+		&targetComment.CommentID,
+		&targetComment.Content,
+		&parentCommentID,
+		&targetComment.Depth,
+		&targetComment.CreatedAt,
+		&targetComment.UpvotesCount,
+		&targetComment.DownvotesCount,
+		&targetComment.Score,
+		&targetComment.MeUpvoted,
+		&targetComment.MeDownvoted,
+		&targetComment.CanUpvote,
+		&targetComment.CanDownvote,
+		&targetComment.IsCreatedByMe,
+		&isDeleted,
+		&targetComment.RepliesCount,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			pg.log.Dbg("target comment not found", "comment_id", req.CommentID)
+			return hub.GetIncognitoPostCommentPermalinkResponse{}, db.ErrNoIncognitoPostComment
+		}
+		pg.log.Err("failed to query target comment", "error", err)
+		return hub.GetIncognitoPostCommentPermalinkResponse{}, err
+	}
+
+	targetExists = true
+	if parentCommentID.Valid {
+		targetComment.InReplyTo = &parentCommentID.String
+	}
+	targetComment.IsDeleted = isDeleted
+	if isDeleted {
+		targetComment.Content = ""
+	}
+
+	allComments := make([]hub.IncognitoPostComment, 0)
+	var breadcrumbPath []string
+
+	// Build breadcrumb path by traversing up the parent chain
+	if targetExists {
+		breadcrumbPath = pg.buildCommentBreadcrumb(
+			ctx,
+			req.CommentID,
+			req.IncognitoPostID,
+		)
+
+		// Get ancestor comments (parent chain)
+		if len(breadcrumbPath) > 1 {
+			ancestors := pg.getCommentAncestors(
+				ctx,
+				breadcrumbPath[:len(breadcrumbPath)-1],
+				hubUserID,
+			)
+			allComments = append(allComments, ancestors...)
+		}
+
+		// Add the target comment
+		allComments = append(allComments, targetComment)
+
+		// Get sibling comments at the same level
+		if req.ContextSiblingsCount > 0 {
+			siblings := pg.getCommentSiblings(
+				ctx,
+				req.CommentID,
+				req.IncognitoPostID,
+				targetComment.InReplyTo,
+				hubUserID,
+				req.ContextSiblingsCount,
+			)
+			allComments = append(allComments, siblings...)
+		}
+
+		// Get reply context for the target comment
+		if req.ContextRepliesCount > 0 {
+			replies := pg.getCommentRepliesContext(
+				ctx,
+				req.CommentID,
+				req.IncognitoPostID,
+				hubUserID,
+				req.ContextRepliesCount,
+			)
+			allComments = append(allComments, replies...)
+		}
+	}
+
+	pg.log.Dbg("fetched comment permalink context",
+		"incognito_post_id", req.IncognitoPostID,
+		"comment_id", req.CommentID,
+		"context_comments_count", len(allComments),
+		"breadcrumb_depth", len(breadcrumbPath))
+
+	return hub.GetIncognitoPostCommentPermalinkResponse{
+		Comments:        allComments,
+		TargetCommentID: req.CommentID,
+		BreadcrumbPath:  breadcrumbPath,
+	}, nil
+}
+
+// Helper functions for permalink context
+
+func (pg *PG) buildCommentBreadcrumb(
+	ctx context.Context,
+	commentID string,
+	incognitoPostID string,
+) []string {
+	var breadcrumb []string
+
+	// Use recursive CTE to build the path from target comment to root
+	query := `
+		WITH RECURSIVE comment_path AS (
+			SELECT id, parent_comment_id, 0 as level
+			FROM incognito_post_comments
+			WHERE id = $1 AND incognito_post_id = $2
+
+			UNION ALL
+
+			SELECT ipc.id, ipc.parent_comment_id, cp.level + 1
+			FROM incognito_post_comments ipc
+			JOIN comment_path cp ON ipc.id = cp.parent_comment_id
+			WHERE ipc.incognito_post_id = $2
+		)
+		SELECT id FROM comment_path ORDER BY level DESC
+	`
+
+	rows, err := pg.pool.Query(ctx, query, commentID, incognitoPostID)
+	if err != nil {
+		pg.log.Err("failed to build comment breadcrumb", "error", err)
+		return []string{commentID}
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			pg.log.Err("failed to scan breadcrumb id", "error", err)
+			continue
+		}
+		breadcrumb = append(breadcrumb, id)
+	}
+
+	if len(breadcrumb) == 0 {
+		breadcrumb = []string{commentID}
+	}
+
+	return breadcrumb
+}
+
+func (pg *PG) getCommentAncestors(
+	ctx context.Context,
+	ancestorIDs []string,
+	hubUserID string,
+) []hub.IncognitoPostComment {
+	if len(ancestorIDs) == 0 {
+		return []hub.IncognitoPostComment{}
+	}
+
+	query := `
+		SELECT
+			ipc.id,
+			ipc.content,
+			ipc.parent_comment_id,
+			ipc.depth,
+			ipc.created_at,
+			ipc.upvotes_count,
+			ipc.downvotes_count,
+			COALESCE(ipc.score, 0) as score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+					AND ipcv.vote_value = $3
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+					AND ipcv.vote_value = $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ipc.author_id = $2 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $2
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ipc.author_id = $2 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ipc.id), 0
+			) as replies_count
+		FROM incognito_post_comments ipc
+		WHERE ipc.id = ANY($1)
+		ORDER BY ipc.depth ASC
+	`
+
+	rows, err := pg.pool.Query(
+		ctx,
+		query,
+		ancestorIDs,
+		hubUserID,
+		db.UpvoteValue,
+		db.DownvoteValue,
+	)
+	if err != nil {
+		pg.log.Err("failed to query comment ancestors", "error", err)
+		return []hub.IncognitoPostComment{}
+	}
+	defer rows.Close()
+
+	var ancestors []hub.IncognitoPostComment
+	for rows.Next() {
+		var comment hub.IncognitoPostComment
+		var parentCommentID sql.NullString
+		var isDeleted bool
+
+		err := rows.Scan(
+			&comment.CommentID,
+			&comment.Content,
+			&parentCommentID,
+			&comment.Depth,
+			&comment.CreatedAt,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
+			&comment.IsCreatedByMe,
+			&isDeleted,
+			&comment.RepliesCount,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan ancestor comment", "error", err)
+			continue
+		}
+
+		if parentCommentID.Valid {
+			comment.InReplyTo = &parentCommentID.String
+		}
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+		}
+
+		ancestors = append(ancestors, comment)
+	}
+
+	return ancestors
+}
+
+func (pg *PG) getCommentSiblings(
+	ctx context.Context,
+	targetCommentID string,
+	incognitoPostID string,
+	parentCommentID *string,
+	hubUserID string,
+	limit int32,
+) []hub.IncognitoPostComment {
+	query := `
+		SELECT
+			ipc.id,
+			ipc.content,
+			ipc.parent_comment_id,
+			ipc.depth,
+			ipc.created_at,
+			ipc.upvotes_count,
+			ipc.downvotes_count,
+			COALESCE(ipc.score, 0) as score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+					AND ipcv.vote_value = $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+					AND ipcv.vote_value = $5
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ipc.author_id = $3 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ipc.author_id = $3 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ipc.author_id = $3 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ipc.id), 0
+			) as replies_count
+		FROM incognito_post_comments ipc
+		WHERE ipc.incognito_post_id = $1
+		AND ipc.id != $2
+		AND (
+			($6::text IS NULL AND ipc.parent_comment_id IS NULL) OR
+			($6::text IS NOT NULL AND ipc.parent_comment_id = $6)
+		)
+		ORDER BY ipc.score DESC, ipc.created_at ASC
+		LIMIT $7
+	`
+
+	var parentID interface{}
+	if parentCommentID != nil {
+		parentID = *parentCommentID
+	}
+
+	rows, err := pg.pool.Query(ctx, query, incognitoPostID, targetCommentID,
+		hubUserID, db.UpvoteValue, db.DownvoteValue, parentID, limit)
+	if err != nil {
+		pg.log.Err("failed to query comment siblings", "error", err)
+		return []hub.IncognitoPostComment{}
+	}
+	defer rows.Close()
+
+	var siblings []hub.IncognitoPostComment
+	for rows.Next() {
+		var comment hub.IncognitoPostComment
+		var commentParentID sql.NullString
+		var isDeleted bool
+
+		err := rows.Scan(
+			&comment.CommentID,
+			&comment.Content,
+			&commentParentID,
+			&comment.Depth,
+			&comment.CreatedAt,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
+			&comment.IsCreatedByMe,
+			&isDeleted,
+			&comment.RepliesCount,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan sibling comment", "error", err)
+			continue
+		}
+
+		if commentParentID.Valid {
+			comment.InReplyTo = &commentParentID.String
+		}
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+		}
+
+		siblings = append(siblings, comment)
+	}
+
+	return siblings
+}
+
+func (pg *PG) getCommentRepliesContext(
+	ctx context.Context,
+	parentCommentID string,
+	incognitoPostID string,
+	hubUserID string,
+	limit int32,
+) []hub.IncognitoPostComment {
+	query := `
+		SELECT
+			ipc.id,
+			ipc.content,
+			ipc.parent_comment_id,
+			ipc.depth,
+			ipc.created_at,
+			ipc.upvotes_count,
+			ipc.downvotes_count,
+			COALESCE(ipc.score, 0) as score,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+					AND ipcv.vote_value = $4
+				) THEN TRUE
+				ELSE FALSE
+			END as me_upvoted,
+			CASE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+					AND ipcv.vote_value = $5
+				) THEN TRUE
+				ELSE FALSE
+			END as me_downvoted,
+			CASE
+				WHEN ipc.author_id = $3 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+				) THEN FALSE
+				ELSE TRUE
+			END as can_upvote,
+			CASE
+				WHEN ipc.author_id = $3 THEN FALSE
+				WHEN EXISTS(
+					SELECT 1 FROM incognito_post_comment_votes ipcv
+					WHERE ipcv.comment_id = ipc.id
+					AND ipcv.user_id = $3
+				) THEN FALSE
+				ELSE TRUE
+			END as can_downvote,
+			CASE WHEN ipc.author_id = $3 THEN TRUE ELSE FALSE END as is_created_by_me,
+			CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+			COALESCE(
+				(SELECT COUNT(*) FROM incognito_post_comments child
+				 WHERE child.parent_comment_id = ipc.id), 0
+			) as replies_count
+		FROM incognito_post_comments ipc
+		WHERE ipc.parent_comment_id = $1
+		AND ipc.incognito_post_id = $2
+		ORDER BY ipc.score DESC, ipc.created_at ASC
+		LIMIT $6
+	`
+
+	rows, err := pg.pool.Query(ctx, query, parentCommentID, incognitoPostID,
+		hubUserID, db.UpvoteValue, db.DownvoteValue, limit)
+	if err != nil {
+		pg.log.Err("failed to query comment replies context", "error", err)
+		return []hub.IncognitoPostComment{}
+	}
+	defer rows.Close()
+
+	var replies []hub.IncognitoPostComment
+	for rows.Next() {
+		var comment hub.IncognitoPostComment
+		var parentID sql.NullString
+		var isDeleted bool
+
+		err := rows.Scan(
+			&comment.CommentID,
+			&comment.Content,
+			&parentID,
+			&comment.Depth,
+			&comment.CreatedAt,
+			&comment.UpvotesCount,
+			&comment.DownvotesCount,
+			&comment.Score,
+			&comment.MeUpvoted,
+			&comment.MeDownvoted,
+			&comment.CanUpvote,
+			&comment.CanDownvote,
+			&comment.IsCreatedByMe,
+			&isDeleted,
+			&comment.RepliesCount,
+		)
+		if err != nil {
+			pg.log.Err("failed to scan reply context comment", "error", err)
+			continue
+		}
+
+		if parentID.Valid {
+			comment.InReplyTo = &parentID.String
+		}
+		comment.IsDeleted = isDeleted
+		if isDeleted {
+			comment.Content = ""
+		}
+
+		replies = append(replies, comment)
+	}
+
+	return replies
+}

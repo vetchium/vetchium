@@ -75,6 +75,7 @@ function IncognitoPostDetailsContent() {
   const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
     new Set()
   );
+  const [loadingReplies, setLoadingReplies] = useState<Set<string>>(new Set());
 
   // Handle case where postId is not available
   if (!postId) {
@@ -304,6 +305,66 @@ function IncognitoPostDetailsContent() {
     return collapsedComments.has(commentId);
   };
 
+  const loadMoreReplies = async (
+    commentId: string,
+    incognitoPostId: string
+  ) => {
+    setLoadingReplies((prev) => new Set(prev).add(commentId));
+    try {
+      const token = Cookies.get("session_token");
+      if (!token) {
+        throw new Error("User not authenticated");
+      }
+
+      const request = {
+        incognito_post_id: incognitoPostId,
+        parent_comment_id: commentId,
+        limit: 50,
+        max_depth: 2,
+      };
+
+      const response = await fetch(
+        `${config.API_SERVER_PREFIX}/hub/get-comment-replies`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(request),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load replies: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Update the sorted tree with the new replies
+      setSortedCommentTree((prevTree) => {
+        return updateCommentWithReplies(prevTree, commentId, data.replies);
+      });
+
+      // Also update the comments array
+      setComments((prevComments) => {
+        return [...prevComments, ...data.replies];
+      });
+
+      setSuccess("Loaded more replies");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to load more replies"
+      );
+    } finally {
+      setLoadingReplies((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(commentId);
+        return newSet;
+      });
+    }
+  };
+
   const buildCommentTree = (comments: IncognitoPostComment[]) => {
     type CommentNode = IncognitoPostComment & { children: CommentNode[] };
 
@@ -387,6 +448,41 @@ function IncognitoPostDetailsContent() {
             comment.children,
             targetCommentId,
             updatedComment
+          ),
+        };
+      }
+      return comment;
+    });
+  };
+
+  // Function to update comment with new replies
+  const updateCommentWithReplies = (
+    tree: any[],
+    targetCommentId: string,
+    newReplies: IncognitoPostComment[]
+  ): any[] => {
+    return tree.map((comment) => {
+      if (comment.comment_id === targetCommentId) {
+        // Add the new replies to existing children, avoiding duplicates
+        const existingIds = new Set(
+          comment.children.map((child: any) => child.comment_id)
+        );
+        const uniqueNewReplies = newReplies.filter(
+          (reply) => !existingIds.has(reply.comment_id)
+        );
+        const newChildren = [
+          ...comment.children,
+          ...uniqueNewReplies.map((reply) => ({ ...reply, children: [] })),
+        ];
+        return { ...comment, children: newChildren };
+      }
+      if (comment.children && comment.children.length > 0) {
+        return {
+          ...comment,
+          children: updateCommentWithReplies(
+            comment.children,
+            targetCommentId,
+            newReplies
           ),
         };
       }
@@ -744,13 +840,14 @@ function IncognitoPostDetailsContent() {
                     color: "primary.main",
                     fontSize: "0.8rem",
                   }}
-                  onClick={() => {
-                    // TODO: Implement load more replies when GetCommentReplies API is available
-                    setError("Load more replies feature coming soon");
-                  }}
+                  disabled={loadingReplies.has(comment.comment_id)}
+                  onClick={() => loadMoreReplies(comment.comment_id, postId)}
                 >
-                  Load {comment.replies_count - comment.children.length} more
-                  replies
+                  {loadingReplies.has(comment.comment_id)
+                    ? "Loading..."
+                    : `Load ${
+                        comment.replies_count - comment.children.length
+                      } more replies`}
                 </Button>
               </Box>
             )}
