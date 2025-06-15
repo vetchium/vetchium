@@ -179,6 +179,66 @@ function IncognitoPostDetailsContent() {
         setComments((prev) => [...prev, ...data.comments]);
       }
 
+      // For the initial load (refresh=true), also load deeper nested replies for top-level comments
+      // that have depth=1 children, to improve user experience
+      if (refresh && data.comments.length > 0) {
+        const topLevelComments = data.comments.filter((c) => c.depth === 0);
+        const depth1Comments = data.comments.filter((c) => c.depth === 1);
+
+        // Find depth=1 comments that have more replies
+        const commentsWithMoreReplies = depth1Comments.filter(
+          (c) => c.replies_count > 0
+        );
+
+        // Load deeper replies for the first few depth=1 comments to show threading
+        const commentsToExpand = commentsWithMoreReplies.slice(0, 3); // Expand first 3
+
+        if (commentsToExpand.length > 0) {
+          const additionalReplies: IncognitoPostComment[] = [];
+
+          for (const comment of commentsToExpand) {
+            try {
+              const repliesRequest = {
+                incognito_post_id: postId,
+                parent_comment_id: comment.comment_id,
+                limit: 10,
+                max_depth: 2,
+              };
+
+              const repliesResponse = await fetch(
+                `${config.API_SERVER_PREFIX}/hub/get-comment-replies`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify(repliesRequest),
+                }
+              );
+
+              if (repliesResponse.ok) {
+                const repliesData = await repliesResponse.json();
+                additionalReplies.push(...repliesData.replies);
+              }
+            } catch (error) {
+              // Don't fail the whole operation if one fails
+              console.warn(
+                "Failed to load additional replies for comment",
+                comment.comment_id,
+                error
+              );
+            }
+          }
+
+          // Add the additional replies to our comments
+          if (additionalReplies.length > 0) {
+            newComments = [...newComments, ...additionalReplies];
+            setComments(newComments);
+          }
+        }
+      }
+
       // Build and sort the comment tree only when loading from server
       const newSortedTree = buildCommentTree(newComments);
       setSortedCommentTree(newSortedTree);
@@ -463,18 +523,25 @@ function IncognitoPostDetailsContent() {
   ): any[] => {
     return tree.map((comment) => {
       if (comment.comment_id === targetCommentId) {
-        // Add the new replies to existing children, avoiding duplicates
-        const existingIds = new Set(
-          comment.children.map((child: any) => child.comment_id)
+        // Create a flat array of all comments (existing children + new replies)
+        const existingComments = flattenCommentTree(comment.children);
+        const allComments = [...existingComments, ...newReplies];
+
+        // Remove duplicates based on comment_id
+        const uniqueComments = allComments.filter(
+          (comment, index, self) =>
+            index === self.findIndex((c) => c.comment_id === comment.comment_id)
         );
-        const uniqueNewReplies = newReplies.filter(
-          (reply) => !existingIds.has(reply.comment_id)
+
+        // Build a proper nested tree from all comments
+        const newTree = buildCommentTree(uniqueComments);
+
+        // Find the direct children of this comment
+        const directChildren = newTree.filter(
+          (reply: any) => reply.in_reply_to === targetCommentId
         );
-        const newChildren = [
-          ...comment.children,
-          ...uniqueNewReplies.map((reply) => ({ ...reply, children: [] })),
-        ];
-        return { ...comment, children: newChildren };
+
+        return { ...comment, children: directChildren };
       }
       if (comment.children && comment.children.length > 0) {
         return {
@@ -488,6 +555,27 @@ function IncognitoPostDetailsContent() {
       }
       return comment;
     });
+  };
+
+  // Helper function to flatten a comment tree back to a flat array
+  const flattenCommentTree = (tree: any[]): IncognitoPostComment[] => {
+    const result: IncognitoPostComment[] = [];
+
+    const flatten = (comments: any[]) => {
+      comments.forEach((comment) => {
+        // Add the comment itself (without children to avoid circular references)
+        const { children, ...commentData } = comment;
+        result.push(commentData);
+
+        // Recursively flatten children
+        if (children && children.length > 0) {
+          flatten(children);
+        }
+      });
+    };
+
+    flatten(tree);
+    return result;
   };
 
   const getDepthPattern = (depth: number) => {
@@ -515,9 +603,11 @@ function IncognitoPostDetailsContent() {
   const CommentNode = ({
     comment,
     onDeleteComment,
+    renderDepth = 0,
   }: {
     comment: IncognitoPostComment & { children: any[] };
     onDeleteComment: (commentId: string) => void;
+    renderDepth?: number;
   }) => {
     const [isVoting, setIsVoting] = useState(false);
     const isCollapsed = isCommentCollapsed(comment.comment_id);
@@ -525,8 +615,9 @@ function IncognitoPostDetailsContent() {
     const hasMoreReplies = comment.replies_count > comment.children.length;
     const showCollapseButton = hasReplies;
 
-    const depthPattern = getDepthPattern(comment.depth);
-    const depthBackground = getDepthBackground(comment.depth);
+    // Use renderDepth for visual styling instead of database depth
+    const depthPattern = getDepthPattern(renderDepth);
+    const depthBackground = getDepthBackground(renderDepth);
 
     const handleVote = async (action: "upvote" | "downvote" | "unvote") => {
       if (isVoting) return;
@@ -828,6 +919,7 @@ function IncognitoPostDetailsContent() {
                 key={child.comment_id}
                 comment={child}
                 onDeleteComment={onDeleteComment}
+                renderDepth={renderDepth + 1}
               />
             ))}
             {hasMoreReplies && (
@@ -1057,6 +1149,7 @@ function IncognitoPostDetailsContent() {
                 key={comment.comment_id}
                 comment={comment}
                 onDeleteComment={handleDeleteComment}
+                renderDepth={0}
               />
             ))}
             {hasMoreComments && (
