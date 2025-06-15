@@ -28,6 +28,7 @@ func GetCommentReplies(h wand.Wand) http.HandlerFunc {
 		if req.Limit == 0 {
 			req.Limit = 50
 		}
+		// direct_only defaults to true in the struct definition
 		if req.MaxDepth == 0 {
 			req.MaxDepth = 2
 		}

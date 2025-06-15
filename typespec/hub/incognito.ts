@@ -82,15 +82,15 @@ export class GetIncognitoPostCommentsRequest {
   sort_by: IncognitoPostCommentSortBy = IncognitoPostCommentSortBy.Top;
   pagination_key?: string = undefined;
   limit: number = 25;
-  replies_preview_count: number = 5;
+  direct_replies_per_comment: number = 3;
 
   IsValid(): boolean {
     return (
       this.incognito_post_id.length > 0 &&
       this.limit >= 1 &&
       this.limit <= 50 &&
-      this.replies_preview_count >= 0 &&
-      this.replies_preview_count <= 20
+      this.direct_replies_per_comment >= 0 &&
+      this.direct_replies_per_comment <= 10
     );
   }
 }
@@ -106,6 +106,7 @@ export class GetCommentRepliesRequest {
   parent_comment_id: string = "";
   pagination_key?: string = undefined;
   limit: number = 50;
+  direct_only: boolean = true;
   max_depth: number = 2;
 
   IsValid(): boolean {

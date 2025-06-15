@@ -145,7 +145,7 @@ function IncognitoPostDetailsContent() {
       const request = new GetIncognitoPostCommentsRequest();
       request.incognito_post_id = postId;
       request.limit = 25;
-      request.replies_preview_count = 5;
+      request.direct_replies_per_comment = 3;
       request.sort_by = sortBy;
 
       if (!refresh && commentsPaginationKey) {
@@ -179,65 +179,8 @@ function IncognitoPostDetailsContent() {
         setComments((prev) => [...prev, ...data.comments]);
       }
 
-      // For the initial load (refresh=true), also load deeper nested replies for top-level comments
-      // that have depth=1 children, to improve user experience
-      if (refresh && data.comments.length > 0) {
-        const topLevelComments = data.comments.filter((c) => c.depth === 0);
-        const depth1Comments = data.comments.filter((c) => c.depth === 1);
-
-        // Find depth=1 comments that have more replies
-        const commentsWithMoreReplies = depth1Comments.filter(
-          (c) => c.replies_count > 0
-        );
-
-        // Load deeper replies for the first few depth=1 comments to show threading
-        const commentsToExpand = commentsWithMoreReplies.slice(0, 3); // Expand first 3
-
-        if (commentsToExpand.length > 0) {
-          const additionalReplies: IncognitoPostComment[] = [];
-
-          for (const comment of commentsToExpand) {
-            try {
-              const repliesRequest = {
-                incognito_post_id: postId,
-                parent_comment_id: comment.comment_id,
-                limit: 10,
-                max_depth: 2,
-              };
-
-              const repliesResponse = await fetch(
-                `${config.API_SERVER_PREFIX}/hub/get-comment-replies`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify(repliesRequest),
-                }
-              );
-
-              if (repliesResponse.ok) {
-                const repliesData = await repliesResponse.json();
-                additionalReplies.push(...repliesData.replies);
-              }
-            } catch (error) {
-              // Don't fail the whole operation if one fails
-              console.warn(
-                "Failed to load additional replies for comment",
-                comment.comment_id,
-                error
-              );
-            }
-          }
-
-          // Add the additional replies to our comments
-          if (additionalReplies.length > 0) {
-            newComments = [...newComments, ...additionalReplies];
-            setComments(newComments);
-          }
-        }
-      }
+      // The API now loads exactly direct_replies_per_comment direct replies per top-level comment
+      // No need for additional preview loading
 
       // Build and sort the comment tree only when loading from server
       const newSortedTree = buildCommentTree(newComments);
@@ -367,7 +310,8 @@ function IncognitoPostDetailsContent() {
 
   const loadMoreReplies = async (
     commentId: string,
-    incognitoPostId: string
+    incognitoPostId: string,
+    loadCount?: number
   ) => {
     setLoadingReplies((prev) => new Set(prev).add(commentId));
     try {
@@ -379,7 +323,8 @@ function IncognitoPostDetailsContent() {
       const request = {
         incognito_post_id: incognitoPostId,
         parent_comment_id: commentId,
-        limit: 50,
+        limit: loadCount || 50,
+        direct_only: true,
         max_depth: 2,
       };
 
@@ -515,7 +460,7 @@ function IncognitoPostDetailsContent() {
     });
   };
 
-  // Function to update comment with new replies
+  // Function to update comment with new direct replies (predictable loading)
   const updateCommentWithReplies = (
     tree: any[],
     targetCommentId: string,
@@ -523,25 +468,33 @@ function IncognitoPostDetailsContent() {
   ): any[] => {
     return tree.map((comment) => {
       if (comment.comment_id === targetCommentId) {
-        // Create a flat array of all comments (existing children + new replies)
-        const existingComments = flattenCommentTree(comment.children);
-        const allComments = [...existingComments, ...newReplies];
-
-        // Remove duplicates based on comment_id
-        const uniqueComments = allComments.filter(
-          (comment, index, self) =>
-            index === self.findIndex((c) => c.comment_id === comment.comment_id)
+        // For predictable loading, we only add direct replies (immediate children)
+        // Filter to only direct children of the target comment
+        const directReplies = newReplies.filter(
+          (reply) => reply.in_reply_to === targetCommentId
         );
 
-        // Build a proper nested tree from all comments
-        const newTree = buildCommentTree(uniqueComments);
-
-        // Find the direct children of this comment
-        const directChildren = newTree.filter(
-          (reply: any) => reply.in_reply_to === targetCommentId
+        // Combine existing children with new direct replies
+        const existingChildren = comment.children || [];
+        const existingChildIds = new Set(
+          existingChildren.map((c: any) => c.comment_id)
         );
 
-        return { ...comment, children: directChildren };
+        // Only add new replies that aren't already present
+        const newDirectReplies = directReplies.filter(
+          (reply) => !existingChildIds.has(reply.comment_id)
+        );
+
+        // Convert new replies to the tree format
+        const newChildren = newDirectReplies.map((reply) => ({
+          ...reply,
+          children: [], // Direct replies start with no children
+        }));
+
+        return {
+          ...comment,
+          children: [...existingChildren, ...newChildren],
+        };
       }
       if (comment.children && comment.children.length > 0) {
         return {
@@ -914,15 +867,47 @@ function IncognitoPostDetailsContent() {
               borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
             }}
           >
-            {comment.children.map((child: any) => (
-              <CommentNode
-                key={child.comment_id}
-                comment={child}
-                onDeleteComment={onDeleteComment}
-                renderDepth={renderDepth + 1}
-              />
-            ))}
-            {hasMoreReplies && (
+            {renderDepth < 3 ? (
+              // Normal nested rendering for shallow depths
+              <>
+                {comment.children.map((child: any) => (
+                  <CommentNode
+                    key={child.comment_id}
+                    comment={child}
+                    onDeleteComment={onDeleteComment}
+                    renderDepth={renderDepth + 1}
+                  />
+                ))}
+                {hasMoreReplies && (
+                  <Box sx={{ mt: 1, pl: 1 }}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      sx={{
+                        textTransform: "none",
+                        color: "primary.main",
+                        fontSize: "0.8rem",
+                      }}
+                      disabled={loadingReplies.has(comment.comment_id)}
+                      onClick={() => {
+                        const remainingReplies =
+                          comment.replies_count - comment.children.length;
+                        const loadCount = Math.min(remainingReplies, 10); // Load max 10 at a time
+                        loadMoreReplies(comment.comment_id, postId, loadCount);
+                      }}
+                    >
+                      {loadingReplies.has(comment.comment_id)
+                        ? "Loading..."
+                        : `Load ${Math.min(
+                            comment.replies_count - comment.children.length,
+                            10
+                          )} more replies`}
+                    </Button>
+                  </Box>
+                )}
+              </>
+            ) : (
+              // Show "continue this thread" for deep nesting
               <Box sx={{ mt: 1, pl: 1 }}>
                 <Button
                   size="small"
@@ -931,15 +916,19 @@ function IncognitoPostDetailsContent() {
                     textTransform: "none",
                     color: "primary.main",
                     fontSize: "0.8rem",
+                    fontStyle: "italic",
                   }}
-                  disabled={loadingReplies.has(comment.comment_id)}
-                  onClick={() => loadMoreReplies(comment.comment_id, postId)}
+                  onClick={() => {
+                    // For now, load replies normally but could open a focused view
+                    const remainingReplies =
+                      comment.replies_count - comment.children.length;
+                    const loadCount = Math.min(remainingReplies, 10);
+                    loadMoreReplies(comment.comment_id, postId, loadCount);
+                  }}
                 >
-                  {loadingReplies.has(comment.comment_id)
-                    ? "Loading..."
-                    : `Load ${
-                        comment.replies_count - comment.children.length
-                      } more replies`}
+                  Continue this thread →
+                  {comment.replies_count > 0 &&
+                    ` (${comment.replies_count} replies)`}
                 </Button>
               </Box>
             )}

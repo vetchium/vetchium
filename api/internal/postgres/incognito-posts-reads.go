@@ -171,15 +171,15 @@ func (pg *PG) GetIncognitoPostComments(
 	allComments = append(allComments, topLevelComments...)
 
 	// Get preview replies for all top-level comments in one query
-	if req.RepliesPreviewCount > 0 && len(topLevelComments) > 0 {
-		replies, err := pg.getBulkCommentRepliesPreview(
+	if req.DirectRepliesPerComment > 0 && len(topLevelComments) > 0 {
+		replies, err := pg.getBulkDirectRepliesPreview(
 			ctx,
 			topLevelComments,
 			hubUserID,
-			req.RepliesPreviewCount,
+			req.DirectRepliesPerComment,
 		)
 		if err != nil {
-			pg.log.Dbg("failed to get replies preview", "error", err)
+			pg.log.Dbg("failed to get direct replies preview", "error", err)
 			return hub.GetIncognitoPostCommentsResponse{}, err
 		}
 		allComments = append(allComments, replies...)
@@ -451,8 +451,8 @@ func (pg *PG) getTopLevelCommentsWithCount(
 	return comments, nextPaginationKey, totalCount, nil
 }
 
-// getBulkCommentRepliesPreview fetches preview replies for multiple comments in one query
-func (pg *PG) getBulkCommentRepliesPreview(
+// getBulkDirectRepliesPreview fetches direct replies (depth+1 only) for multiple comments in one query
+func (pg *PG) getBulkDirectRepliesPreview(
 	ctx context.Context,
 	parentComments []hub.IncognitoPostComment,
 	hubUserID string,
@@ -468,6 +468,7 @@ func (pg *PG) getBulkCommentRepliesPreview(
 		parentIDs[i] = comment.CommentID
 	}
 
+	// Only load direct replies (immediate children) for predictable loading
 	query := `
 		WITH ranked_replies AS (
 			SELECT
@@ -541,7 +542,7 @@ func (pg *PG) getBulkCommentRepliesPreview(
 	rows, err := pg.pool.Query(ctx, query, parentIDs, hubUserID,
 		db.UpvoteValue, db.DownvoteValue, limitPerComment)
 	if err != nil {
-		pg.log.Err("failed to query bulk comment replies preview", "error", err)
+		pg.log.Err("failed to query bulk direct replies preview", "error", err)
 		return nil, db.ErrInternal
 	}
 	defer rows.Close()
@@ -570,7 +571,7 @@ func (pg *PG) getBulkCommentRepliesPreview(
 			&comment.RepliesCount,
 		)
 		if err != nil {
-			pg.log.Err("failed to scan reply comment row", "error", err)
+			pg.log.Err("failed to scan direct reply comment row", "error", err)
 			return nil, db.ErrInternal
 		}
 
@@ -587,7 +588,7 @@ func (pg *PG) getBulkCommentRepliesPreview(
 	}
 
 	if err := rows.Err(); err != nil {
-		pg.log.Err("error iterating reply comment rows", "error", err)
+		pg.log.Err("error iterating direct reply comment rows", "error", err)
 		return nil, db.ErrInternal
 	}
 
@@ -1182,13 +1183,13 @@ func (pg *PG) GetCommentReplies(
 		return hub.GetCommentRepliesResponse{}, err
 	}
 
-	// Build query for replies with pagination and depth control
+	// Build query based on direct_only parameter
 	var query string
 	var args []interface{}
 
-	baseQuery := `
-		WITH RECURSIVE comment_tree AS (
-			-- Direct replies to the parent comment
+	if req.DirectOnly {
+		// Simple direct replies query - only immediate children
+		baseQuery := `
 			SELECT
 				ipc.id,
 				ipc.content,
@@ -1198,140 +1199,252 @@ func (pg *PG) GetCommentReplies(
 				ipc.upvotes_count,
 				ipc.downvotes_count,
 				COALESCE(ipc.score, 0) as score,
-				ipc.author_id,
-				ipc.is_deleted,
-				1 as tree_depth,
-				ARRAY[ipc.id] as path
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $3
+						AND ipcv.vote_value = $4
+					) THEN TRUE
+					ELSE FALSE
+				END as me_upvoted,
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $3
+						AND ipcv.vote_value = $5
+					) THEN TRUE
+					ELSE FALSE
+				END as me_downvoted,
+				CASE
+					WHEN ipc.author_id = $3 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $3
+					) THEN FALSE
+					ELSE TRUE
+				END as can_upvote,
+				CASE
+					WHEN ipc.author_id = $3 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ipc.id
+						AND ipcv.user_id = $3
+					) THEN FALSE
+					ELSE TRUE
+				END as can_downvote,
+				CASE WHEN ipc.author_id = $3 THEN TRUE ELSE FALSE END as is_created_by_me,
+				CASE WHEN ipc.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+				COALESCE(
+					(SELECT COUNT(*) FROM incognito_post_comments child
+					 WHERE child.parent_comment_id = ipc.id), 0
+				) as replies_count
 			FROM incognito_post_comments ipc
 			WHERE ipc.parent_comment_id = $1
 			AND ipc.incognito_post_id = $2
+		`
 
-			UNION ALL
-
-			-- Nested replies up to max_depth
-			SELECT
-				child.id,
-				child.content,
-				child.parent_comment_id,
-				child.depth,
-				child.created_at,
-				child.upvotes_count,
-				child.downvotes_count,
-				COALESCE(child.score, 0) as score,
-				child.author_id,
-				child.is_deleted,
-				ct.tree_depth + 1,
-				ct.path || child.id
-			FROM incognito_post_comments child
-			JOIN comment_tree ct ON child.parent_comment_id = ct.id
-			WHERE ct.tree_depth < $3
-			AND child.incognito_post_id = $2
-		)
-		SELECT
-			ct.id,
-			ct.content,
-			ct.parent_comment_id,
-			ct.depth,
-			ct.created_at,
-			ct.upvotes_count,
-			ct.downvotes_count,
-			ct.score,
-			CASE
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv
-					WHERE ipcv.comment_id = ct.id
-					AND ipcv.user_id = $4
-					AND ipcv.vote_value = $5
-				) THEN TRUE
-				ELSE FALSE
-			END as me_upvoted,
-			CASE
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv
-					WHERE ipcv.comment_id = ct.id
-					AND ipcv.user_id = $4
-					AND ipcv.vote_value = $6
-				) THEN TRUE
-				ELSE FALSE
-			END as me_downvoted,
-			CASE
-				WHEN ct.author_id = $4 THEN FALSE
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv
-					WHERE ipcv.comment_id = ct.id
-					AND ipcv.user_id = $4
-				) THEN FALSE
-				ELSE TRUE
-			END as can_upvote,
-			CASE
-				WHEN ct.author_id = $4 THEN FALSE
-				WHEN EXISTS(
-					SELECT 1 FROM incognito_post_comment_votes ipcv
-					WHERE ipcv.comment_id = ct.id
-					AND ipcv.user_id = $4
-				) THEN FALSE
-				ELSE TRUE
-			END as can_downvote,
-			CASE WHEN ct.author_id = $4 THEN TRUE ELSE FALSE END as is_created_by_me,
-			CASE WHEN ct.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
-			COALESCE(
-				(SELECT COUNT(*) FROM incognito_post_comments child
-				 WHERE child.parent_comment_id = ct.id), 0
-			) as replies_count
-		FROM comment_tree ct
-	`
-
-	args = []interface{}{
-		req.ParentCommentID,
-		req.IncognitoPostID,
-		req.MaxDepth,
-		hubUserID,
-		db.UpvoteValue,
-		db.DownvoteValue,
-	}
-
-	// Add pagination logic for direct replies only (tree_depth = 1)
-	if req.PaginationKey != nil && *req.PaginationKey != "" {
-		var lastScore sql.NullInt32
-		var lastCreatedAt sql.NullTime
-		err := pg.pool.QueryRow(
-			ctx,
-			`
-			SELECT COALESCE(score, 0), created_at
-			FROM incognito_post_comments
-			WHERE id = $1 AND incognito_post_id = $2`,
-			*req.PaginationKey,
+		args = []interface{}{
+			req.ParentCommentID,
 			req.IncognitoPostID,
-		).Scan(&lastScore, &lastCreatedAt)
-
-		if err != nil {
-			pg.log.Err("failed to get pagination cursor data", "error", err)
-			return hub.GetCommentRepliesResponse{}, db.ErrInvalidPaginationKey
+			hubUserID,
+			db.UpvoteValue,
+			db.DownvoteValue,
 		}
 
-		if lastScore.Valid && lastCreatedAt.Valid {
-			baseQuery += ` WHERE (
-				ct.score < $7 OR
-				(ct.score = $7 AND ct.created_at < $8) OR
-				(ct.score = $7 AND ct.created_at = $8 AND ct.id > $9)
-			)`
-			args = append(
-				args,
-				lastScore.Int32,
-				lastCreatedAt.Time,
+		// Add pagination logic for direct replies
+		if req.PaginationKey != nil && *req.PaginationKey != "" {
+			var lastScore sql.NullInt32
+			var lastCreatedAt sql.NullTime
+			err := pg.pool.QueryRow(
+				ctx,
+				`
+				SELECT COALESCE(score, 0), created_at
+				FROM incognito_post_comments
+				WHERE id = $1 AND incognito_post_id = $2`,
 				*req.PaginationKey,
-			)
+				req.IncognitoPostID,
+			).Scan(&lastScore, &lastCreatedAt)
+
+			if err != nil {
+				pg.log.Err("failed to get pagination cursor data", "error", err)
+				return hub.GetCommentRepliesResponse{}, db.ErrInvalidPaginationKey
+			}
+
+			if lastScore.Valid && lastCreatedAt.Valid {
+				baseQuery += ` AND (
+					ipc.score < $6 OR
+					(ipc.score = $6 AND ipc.created_at < $7) OR
+					(ipc.score = $6 AND ipc.created_at = $7 AND ipc.id > $8)
+				)`
+				args = append(
+					args,
+					lastScore.Int32,
+					lastCreatedAt.Time,
+					*req.PaginationKey,
+				)
+			}
 		}
+
+		// Order by score descending, then creation time as tiebreaker
+		baseQuery += ` ORDER BY ipc.score DESC, ipc.created_at ASC`
+
+		// Add limit
+		baseQuery += fmt.Sprintf(` LIMIT $%d`, len(args)+1)
+		args = append(args, req.Limit)
+
+		query = baseQuery
+	} else {
+		// Recursive query for nested replies (thread continuation)
+		baseQuery := `
+			WITH RECURSIVE comment_tree AS (
+				-- Direct replies to the parent comment
+				SELECT
+					ipc.id,
+					ipc.content,
+					ipc.parent_comment_id,
+					ipc.depth,
+					ipc.created_at,
+					ipc.upvotes_count,
+					ipc.downvotes_count,
+					COALESCE(ipc.score, 0) as score,
+					ipc.author_id,
+					ipc.is_deleted,
+					1 as tree_depth,
+					ARRAY[ipc.id] as path
+				FROM incognito_post_comments ipc
+				WHERE ipc.parent_comment_id = $1
+				AND ipc.incognito_post_id = $2
+
+				UNION ALL
+
+				-- Nested replies up to max_depth
+				SELECT
+					child.id,
+					child.content,
+					child.parent_comment_id,
+					child.depth,
+					child.created_at,
+					child.upvotes_count,
+					child.downvotes_count,
+					COALESCE(child.score, 0) as score,
+					child.author_id,
+					child.is_deleted,
+					ct.tree_depth + 1,
+					ct.path || child.id
+				FROM incognito_post_comments child
+				JOIN comment_tree ct ON child.parent_comment_id = ct.id
+				WHERE ct.tree_depth < $3
+				AND child.incognito_post_id = $2
+			)
+			SELECT
+				ct.id,
+				ct.content,
+				ct.parent_comment_id,
+				ct.depth,
+				ct.created_at,
+				ct.upvotes_count,
+				ct.downvotes_count,
+				ct.score,
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ct.id
+						AND ipcv.user_id = $4
+						AND ipcv.vote_value = $5
+					) THEN TRUE
+					ELSE FALSE
+				END as me_upvoted,
+				CASE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ct.id
+						AND ipcv.user_id = $4
+						AND ipcv.vote_value = $6
+					) THEN TRUE
+					ELSE FALSE
+				END as me_downvoted,
+				CASE
+					WHEN ct.author_id = $4 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ct.id
+						AND ipcv.user_id = $4
+					) THEN FALSE
+					ELSE TRUE
+				END as can_upvote,
+				CASE
+					WHEN ct.author_id = $4 THEN FALSE
+					WHEN EXISTS(
+						SELECT 1 FROM incognito_post_comment_votes ipcv
+						WHERE ipcv.comment_id = ct.id
+						AND ipcv.user_id = $4
+					) THEN FALSE
+					ELSE TRUE
+				END as can_downvote,
+				CASE WHEN ct.author_id = $4 THEN TRUE ELSE FALSE END as is_created_by_me,
+				CASE WHEN ct.is_deleted THEN TRUE ELSE FALSE END as is_deleted,
+				COALESCE(
+					(SELECT COUNT(*) FROM incognito_post_comments child
+					 WHERE child.parent_comment_id = ct.id), 0
+				) as replies_count
+			FROM comment_tree ct
+		`
+
+		args = []interface{}{
+			req.ParentCommentID,
+			req.IncognitoPostID,
+			req.MaxDepth,
+			hubUserID,
+			db.UpvoteValue,
+			db.DownvoteValue,
+		}
+
+		// Add pagination logic for nested replies (only for direct replies - tree_depth = 1)
+		if req.PaginationKey != nil && *req.PaginationKey != "" {
+			var lastScore sql.NullInt32
+			var lastCreatedAt sql.NullTime
+			err := pg.pool.QueryRow(
+				ctx,
+				`
+				SELECT COALESCE(score, 0), created_at
+				FROM incognito_post_comments
+				WHERE id = $1 AND incognito_post_id = $2`,
+				*req.PaginationKey,
+				req.IncognitoPostID,
+			).Scan(&lastScore, &lastCreatedAt)
+
+			if err != nil {
+				pg.log.Err("failed to get pagination cursor data", "error", err)
+				return hub.GetCommentRepliesResponse{}, db.ErrInvalidPaginationKey
+			}
+
+			if lastScore.Valid && lastCreatedAt.Valid {
+				baseQuery += ` WHERE (
+					ct.score < $7 OR
+					(ct.score = $7 AND ct.created_at < $8) OR
+					(ct.score = $7 AND ct.created_at = $8 AND ct.id > $9)
+				)`
+				args = append(
+					args,
+					lastScore.Int32,
+					lastCreatedAt.Time,
+					*req.PaginationKey,
+				)
+			}
+		}
+
+		// Order by score descending, then creation time as tiebreaker
+		baseQuery += ` ORDER BY ct.score DESC, ct.created_at ASC, array_length(ct.path, 1), ct.path`
+
+		// Add limit
+		baseQuery += fmt.Sprintf(` LIMIT $%d`, len(args)+1)
+		args = append(args, req.Limit)
+
+		query = baseQuery
 	}
-
-	// Order by score descending, then creation time as tiebreaker
-	baseQuery += ` ORDER BY ct.score DESC, ct.created_at ASC, array_length(ct.path, 1), ct.path`
-
-	// Add limit
-	baseQuery += fmt.Sprintf(` LIMIT $%d`, len(args)+1)
-	args = append(args, req.Limit)
-
-	query = baseQuery
 
 	rows, err := pg.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -1385,14 +1498,19 @@ func (pg *PG) GetCommentReplies(
 		return hub.GetCommentRepliesResponse{}, err
 	}
 
-	// Set pagination key if we have more data (only for direct replies)
+	// Set pagination key if we have more data
 	var nextPaginationKey string
 	if len(replies) == int(req.Limit) {
-		// Find the last direct reply (depth = parentDepth + 1)
-		for i := len(replies) - 1; i >= 0; i-- {
-			if replies[i].Depth == parentDepth+1 {
-				nextPaginationKey = replies[i].CommentID
-				break
+		if req.DirectOnly {
+			// For direct replies, use the last reply in the list
+			nextPaginationKey = replies[len(replies)-1].CommentID
+		} else {
+			// For nested replies, find the last direct reply (depth = parentDepth + 1)
+			for i := len(replies) - 1; i >= 0; i-- {
+				if replies[i].Depth == parentDepth+1 {
+					nextPaginationKey = replies[i].CommentID
+					break
+				}
 			}
 		}
 	}

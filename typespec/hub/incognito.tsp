@@ -122,21 +122,21 @@ model GetIncognitoPostCommentsRequest {
     @doc("The ID of the IncognitoPost to get comments for")
     incognito_post_id: string;
 
-    @doc("Sort order for top-level comments. 'top' sorts by score (upvotes - downvotes) in descending order, 'new' sorts by creation time with newest first, 'old' sorts by creation time with oldest first. This sorting only applies to top-level comments (depth=0). All replies within comment threads are always sorted by score descending to surface the most popular responses regardless of the main sort preference.")
+    @doc("Sort order for top-level comments. 'top' sorts by score (upvotes - downvotes) in descending order, 'new' sorts by creation time with newest first, 'old' sorts by creation time with oldest first. This sorting only applies to top-level comments (depth=0). All direct replies are sorted by score descending.")
     sort_by: IncognitoPostCommentSortBy = IncognitoPostCommentSortBy.Top;
 
-    @doc("Pagination key to fetch the next page of top-level comments. This API uses cursor-based pagination on top-level comments only. Each page contains a limited set of top-level comments plus a small preview of their immediate replies. The pagination_key encodes the position in the sorted list based on the sort criteria: for 'top' sorting it includes score and comment_id, for time-based sorting it includes creation_time and comment_id. This ensures stable pagination even when comment scores change due to ongoing voting.")
+    @doc("Pagination key to fetch the next page of top-level comments. This API uses cursor-based pagination on top-level comments only.")
     pagination_key?: string;
 
-    @doc("Number of top-level comments to fetch per page. This API loads top-level comments with preview replies to keep response sizes manageable. Each top-level comment includes up to 5 immediate replies by default, with reply count metadata to indicate if more replies exist. For posts with thousands of comments, users will need to paginate through multiple requests to see all top-level discussion threads.")
+    @doc("Number of top-level comments to fetch per page.")
     @minValue(1)
     @maxValue(50)
     limit: int32 = 25;
 
-    @doc("Number of immediate replies to include for each top-level comment. This provides a preview of the conversation under each main comment. Additional replies can be loaded using the GetCommentReplies API. Setting this to 0 loads only top-level comments without any replies, which is useful for getting an overview of all discussion threads.")
+    @doc("Number of direct replies to show for each top-level comment. This loads exactly this many immediate replies (depth+1 only) for each top-level comment, providing a predictable preview. Set to 0 to load only top-level comments without any replies.")
     @minValue(0)
-    @maxValue(20)
-    replies_preview_count: int32 = 5;
+    @maxValue(10)
+    direct_replies_per_comment: int32 = 3;
 }
 
 model GetIncognitoPostCommentsResponse {
@@ -151,21 +151,24 @@ model GetIncognitoPostCommentsResponse {
 }
 
 model GetCommentRepliesRequest {
-    @doc("The ID of the IncognitoPost containing the parent comment. This is required for security validation to ensure the comment belongs to the expected post.")
+    @doc("The ID of the IncognitoPost containing the parent comment.")
     incognito_post_id: string;
 
-    @doc("The ID of the parent comment whose replies should be loaded. This can be any comment at any depth level (0-4) within the 5-level limit. The API will return direct replies to this specific comment, allowing users to expand any part of a conversation tree on demand.")
+    @doc("The ID of the parent comment whose replies should be loaded.")
     parent_comment_id: string;
 
-    @doc("Pagination key for loading more replies to the specified parent comment. This enables handling parent comments that have hundreds or thousands of replies by breaking them into manageable chunks. The pagination is scoped to replies of the specific parent comment.")
+    @doc("Pagination key for loading more replies to the specified parent comment.")
     pagination_key?: string;
 
-    @doc("Number of replies to fetch for the parent comment. This limit helps prevent overwhelming responses when a comment has gone viral with thousands of replies. Users can load additional replies by making subsequent requests with pagination.")
+    @doc("Number of replies to fetch for the parent comment.")
     @minValue(1)
     @maxValue(100)
     limit: int32 = 50;
 
-    @doc("Maximum depth of nested replies to include in the response. Setting this to 1 loads only direct replies to the parent. Setting to 2 includes replies to those replies, etc. This allows progressive expansion of conversation threads. Maximum value is constrained by the overall 5-level comment depth limit.")
+    @doc("Whether to load only direct replies (depth+1) or allow nested replies. When true, loads only immediate children of the parent comment, making the 'Load X more replies' buttons predictable. When false, loads nested reply trees up to max_depth for 'continue this thread' functionality.")
+    direct_only: boolean = true;
+
+    @doc("Maximum depth of nested replies to include when direct_only=false. Only used for thread continuation. Ignored when direct_only=true.")
     @minValue(1)
     @maxValue(3)
     max_depth: int32 = 2;
@@ -531,7 +534,7 @@ interface AddIncognitoPostComment {
 
 @route("/hub/get-incognito-post-comments")
 interface GetIncognitoPostComments {
-    @doc("GetIncognitoPostComments retrieves the main comment view for an IncognitoPost with progressive loading support. This API is designed to handle posts with thousands of comments by loading only top-level discussion threads with preview replies, preventing performance issues that would occur from loading entire conversation trees. The system paginates at the top-level comment level (depth=0) and includes a configurable number of immediate reply previews for each main comment. This approach provides users with an overview of all discussion threads while keeping response sizes manageable. For posts that go viral with hundreds of thousands of comments, users can navigate through all main discussion threads via pagination, then expand specific conversations using the GetCommentReplies API. Backend implementation should: 1) Query top-level comments with the requested sort order, 2) For each top-level comment, fetch the specified number of highest-scored immediate replies, 3) Include reply count metadata for each comment to inform UI about expandable content. Frontend implementation should: 1) Render main comment threads with reply previews, 2) Show 'Load X more replies' buttons when reply counts exceed preview limits, 3) Use pagination controls for navigating through all discussion threads.")
+    @doc("GetIncognitoPostComments retrieves top-level comments with predictable direct reply previews. This API loads a specified number of top-level comments, and for each top-level comment, loads exactly the requested number of direct replies (immediate children only). This provides a Reddit-style experience where users can see the main discussion threads with a small preview of responses, then load more direct replies predictably using the GetCommentReplies API. The system ensures that 'Load X more replies' buttons load exactly X direct replies, never surprising users with nested content.")
     @tag("Posts")
     @get
     @useAuth(HubAuth)
@@ -539,7 +542,7 @@ interface GetIncognitoPostComments {
         @statusCode statusCode: 200;
         @body response: GetIncognitoPostCommentsResponse;
     } | {
-        @doc("Bad Request: Invalid request data (invalid limit values, invalid sort_by value, invalid replies_preview_count)")
+        @doc("Bad Request: Invalid request data")
         @statusCode
         statusCode: 400;
     } | {
@@ -551,7 +554,7 @@ interface GetIncognitoPostComments {
 
 @route("/hub/get-comment-replies")
 interface GetCommentReplies {
-    @doc("GetCommentReplies loads additional replies for any specific comment within an incognito post discussion. This API enables progressive expansion of conversation trees by allowing users to load more replies on-demand for any comment that has generated significant discussion. The system can handle viral comments with thousands of replies by paginating through them in manageable chunks. This API supports loading replies at any depth level within the 5-level comment hierarchy, allowing users to expand specific parts of deep conversations without loading entire trees. The API includes configurable depth loading to show nested reply chains, which is essential for following complex discussions. Backend implementation should: 1) Validate that the parent comment belongs to the specified post, 2) Query direct replies to the parent comment with score-based sorting, 3) Optionally fetch nested replies up to the requested depth to show conversation flow, 4) Include pagination metadata for handling large reply sets. Frontend implementation should: 1) Replace 'Load more replies' buttons with the fetched content, 2) Render nested reply structures with proper indentation, 3) Maintain conversation context when loading deep reply chains, 4) Handle multiple simultaneous reply loading requests for different comments.")
+    @doc("GetCommentReplies loads replies for a specific comment with two modes: predictable direct reply loading and thread continuation. When direct_only=true (default), it loads exactly the requested number of immediate replies to the parent comment, making 'Load X more replies' buttons work predictably. When direct_only=false, it loads nested reply trees for 'continue this thread' functionality. This dual approach enables both Reddit-style incremental loading and deep thread exploration.")
     @tag("Posts")
     @get
     @useAuth(HubAuth)
@@ -559,7 +562,7 @@ interface GetCommentReplies {
         @statusCode statusCode: 200;
         @body response: GetCommentRepliesResponse;
     } | {
-        @doc("Bad Request: Invalid request data (invalid limit values, invalid max_depth, parent comment depth would exceed 5-level limit)")
+        @doc("Bad Request: Invalid request data")
         @statusCode
         statusCode: 400;
     } | {

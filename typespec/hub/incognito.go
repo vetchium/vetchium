@@ -69,11 +69,11 @@ const (
 )
 
 type GetIncognitoPostCommentsRequest struct {
-	IncognitoPostID     string                     `json:"incognito_post_id"     validate:"required"`
-	SortBy              IncognitoPostCommentSortBy `json:"sort_by"`
-	PaginationKey       *string                    `json:"pagination_key"`
-	Limit               int32                      `json:"limit"                 validate:"min=1,max=50"`
-	RepliesPreviewCount int32                      `json:"replies_preview_count" validate:"min=0,max=20"`
+	IncognitoPostID         string                     `json:"incognito_post_id"          validate:"required"`
+	SortBy                  IncognitoPostCommentSortBy `json:"sort_by"`
+	PaginationKey           *string                    `json:"pagination_key"`
+	Limit                   int32                      `json:"limit"                      validate:"min=1,max=50"`
+	DirectRepliesPerComment int32                      `json:"direct_replies_per_comment" validate:"min=0,max=10"`
 }
 
 type GetIncognitoPostCommentsResponse struct {
@@ -87,6 +87,7 @@ type GetCommentRepliesRequest struct {
 	ParentCommentID string  `json:"parent_comment_id" validate:"required"`
 	PaginationKey   *string `json:"pagination_key"`
 	Limit           int32   `json:"limit"             validate:"min=1,max=100"`
+	DirectOnly      bool    `json:"direct_only"`
 	MaxDepth        int32   `json:"max_depth"         validate:"min=1,max=3"`
 }
 

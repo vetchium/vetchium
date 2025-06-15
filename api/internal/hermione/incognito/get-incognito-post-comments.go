@@ -31,8 +31,8 @@ func GetIncognitoPostComments(h wand.Wand) http.HandlerFunc {
 		if req.SortBy == "" {
 			req.SortBy = hub.IncognitoPostCommentSortByTop
 		}
-		if req.RepliesPreviewCount == 0 {
-			req.RepliesPreviewCount = 5
+		if req.DirectRepliesPerComment == 0 {
+			req.DirectRepliesPerComment = 3
 		}
 
 		h.Dbg("Validated", "req", req)
