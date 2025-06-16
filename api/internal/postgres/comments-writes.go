@@ -21,7 +21,7 @@ func (pg *PG) AddPostComment(
 	var postExists bool
 	var commentsEnabled bool
 	err = pg.pool.QueryRow(ctx, `
-		SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1), 
+		SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1),
 		       COALESCE((SELECT comments_enabled FROM posts WHERE id = $1), false)
 	`, req.PostID).Scan(&postExists, &commentsEnabled)
 	if err != nil {

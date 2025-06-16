@@ -74,8 +74,12 @@ export default function CommentVotingButtons({
       });
 
       if (!response.ok) {
-        if (response.status === 422) {
+        if (response.status === 404) {
+          throw new Error(t("incognitoPosts.errors.commentNotFound"));
+        } else if (response.status === 422) {
           throw new Error(t("incognitoPosts.voting.cannotVoteOwn"));
+        } else if (response.status === 401) {
+          throw new Error(t("incognitoPosts.errors.mustBeLoggedIn"));
         }
         throw new Error(`Failed to ${action}: ${response.statusText}`);
       }

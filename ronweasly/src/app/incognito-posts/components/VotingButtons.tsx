@@ -86,10 +86,25 @@ export default function VotingButtons({
       });
 
       if (!response.ok) {
-        if (response.status === 400) {
-          throw new Error(t("incognitoPosts.voting.cannotVoteOwn"));
+        if (response.status === 404) {
+          throw new Error(
+            "This post has been deleted and can no longer be voted on."
+          );
+        } else if (response.status === 422) {
+          if (action === "upvote" || action === "downvote") {
+            throw new Error(
+              "Cannot vote on this post. You may have already voted in the opposite direction or this is your own post."
+            );
+          } else {
+            throw new Error(
+              "Cannot remove vote from this post. This may be your own post."
+            );
+          }
+        } else if (response.status === 401) {
+          throw new Error("You must be logged in to vote.");
+        } else {
+          throw new Error(`Failed to ${action}. Please try again.`);
         }
-        throw new Error(`Failed to ${action}: ${response.statusText}`);
       }
 
       onVoteUpdated();

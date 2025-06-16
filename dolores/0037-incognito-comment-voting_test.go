@@ -222,6 +222,7 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 			// Verify vote was recorded
 			getReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: postResponse.IncognitoPostID,
+				Limit:           25,
 			}
 			getResp := testPOSTGetResp(
 				user0037Token3,
@@ -288,6 +289,7 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 			// Verify vote was recorded
 			getReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: postResponse.IncognitoPostID,
+				Limit:           25,
 			}
 			getResp := testPOSTGetResp(
 				user0037Token6,
@@ -366,6 +368,7 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 			// Verify vote was removed
 			getReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: postResponse.IncognitoPostID,
+				Limit:           25,
 			}
 			getResp := testPOSTGetResp(
 				user0037Token9,
@@ -560,6 +563,7 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 			// Verify vote count is still 1
 			getReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: postResponse.IncognitoPostID,
+				Limit:           25,
 			}
 			getResp := testPOSTGetResp(
 				user0037Token16,
@@ -577,7 +581,7 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 	})
 
 	Describe("Vote Non-Existent Comment", func() {
-		It("should return 404 when voting on non-existent comment", func() {
+		It("should return 422 when voting on non-existent comment", func() {
 			// User 17 creates a post
 			postReq := hub.AddIncognitoPostRequest{
 				Content: "Test post for non-existent comment voting",
@@ -622,6 +626,86 @@ var _ = FDescribe("Incognito Comment Voting API", Ordered, func() {
 			}
 			testPOST(
 				user0037Token17,
+				unvoteReq,
+				"/hub/unvote-incognito-post-comment",
+				http.StatusNotFound,
+			)
+		})
+	})
+
+	Describe("Vote Deleted Comment", func() {
+		It("should return 404 when voting on deleted comment", func() {
+			// User 18 creates a post
+			postReq := hub.AddIncognitoPostRequest{
+				Content: "Test post for deleted comment voting",
+				TagIDs:  []common.VTagID{"careers"},
+			}
+			postResp := testPOSTGetResp(
+				user0037Token18,
+				postReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var postResponse hub.AddIncognitoPostResponse
+			err := json.Unmarshal(postResp.([]byte), &postResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// User 19 adds a comment
+			commentReq := hub.AddIncognitoPostCommentRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+				Content:         "Test comment to be deleted",
+			}
+			commentResp := testPOSTGetResp(
+				user0037Token19,
+				commentReq,
+				"/hub/add-incognito-post-comment",
+				http.StatusOK,
+			)
+			var commentResponse hub.AddIncognitoPostCommentResponse
+			err = json.Unmarshal(commentResp.([]byte), &commentResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// User 19 deletes their own comment
+			deleteReq := hub.DeleteIncognitoPostCommentRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+				CommentID:       commentResponse.CommentID,
+			}
+			testPOST(
+				user0037Token19,
+				deleteReq,
+				"/hub/delete-incognito-post-comment",
+				http.StatusOK,
+			)
+
+			// User 20 tries to vote on the deleted comment (should return 404)
+			upvoteReq := hub.UpvoteIncognitoPostCommentRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+				CommentID:       commentResponse.CommentID,
+			}
+			testPOST(
+				user0037Token20,
+				upvoteReq,
+				"/hub/upvote-incognito-post-comment",
+				http.StatusNotFound,
+			)
+
+			downvoteReq := hub.DownvoteIncognitoPostCommentRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+				CommentID:       commentResponse.CommentID,
+			}
+			testPOST(
+				user0037Token20,
+				downvoteReq,
+				"/hub/downvote-incognito-post-comment",
+				http.StatusNotFound,
+			)
+
+			unvoteReq := hub.UnvoteIncognitoPostCommentRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+				CommentID:       commentResponse.CommentID,
+			}
+			testPOST(
+				user0037Token20,
 				unvoteReq,
 				"/hub/unvote-incognito-post-comment",
 				http.StatusNotFound,

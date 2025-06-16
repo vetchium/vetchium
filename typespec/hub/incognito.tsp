@@ -631,19 +631,27 @@ interface UpvoteIncognitoPostComment {
     @useAuth(HubAuth)
     upvoteIncognitoPostComment(
         @body request: UpvoteIncognitoPostCommentRequest,
-    ): {
-        @doc("Comment upvote registered. 200 will be returned even if the user has already upvoted.")
-        @statusCode
-        statusCode: 200;
-    } | {
-        @doc("Bad Request: Invalid request data")
-        @statusCode
-        statusCode: 400;
-    } | {
-        @doc("This code will be returned in any of the following scenarios: 1) User has already downvoted the comment 2) The comment ID is invalid 3) User is attempting to upvote their own comment")
-        @statusCode
-        statusCode: 422;
-    };
+    ):
+        | {
+              @doc("Comment upvote registered. 200 will be returned even if the user has already upvoted.")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post or comment does not exist or has been deleted")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User has already downvoted the comment 2) User is attempting to upvote their own comment")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/hub/downvote-incognito-post-comment")
@@ -654,19 +662,27 @@ interface DownvoteIncognitoPostComment {
     @useAuth(HubAuth)
     downvoteIncognitoPostComment(
         @body request: DownvoteIncognitoPostCommentRequest,
-    ): {
-        @doc("Comment downvote registered. 200 will be returned even if the user has already downvoted.")
-        @statusCode
-        statusCode: 200;
-    } | {
-        @doc("Bad Request: Invalid request data")
-        @statusCode
-        statusCode: 400;
-    } | {
-        @doc("This code will be returned in any of the following scenarios: 1) User has already upvoted the comment 2) The comment ID is invalid 3) User is attempting to downvote their own comment")
-        @statusCode
-        statusCode: 422;
-    };
+    ):
+        | {
+              @doc("Comment downvote registered. 200 will be returned even if the user has already downvoted.")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post or comment does not exist or has been deleted")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User has already upvoted the comment 2) User is attempting to downvote their own comment")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/hub/unvote-incognito-post-comment")
@@ -677,19 +693,27 @@ interface UnvoteIncognitoPostComment {
     @useAuth(HubAuth)
     unvoteIncognitoPostComment(
         @body request: UnvoteIncognitoPostCommentRequest,
-    ): {
-        @doc("Whatever upvote or downvote registered by the logged in user for the comment is removed. No error is returned even if the user has already unvoted or has never voted for the comment")
-        @statusCode
-        statusCode: 200;
-    } | {
-        @doc("Bad Request: Invalid request data")
-        @statusCode
-        statusCode: 400;
-    } | {
-        @doc("This code will be returned in any of the following scenarios: 1) The comment ID is invalid 2) User is attempting to unvote their own comment")
-        @statusCode
-        statusCode: 422;
-    };
+    ):
+        | {
+              @doc("Whatever upvote or downvote registered by the logged in user for the comment is removed. No error is returned even if the user has already unvoted or has never voted for the comment")
+              @statusCode
+              statusCode: 200;
+          }
+        | {
+              @doc("Bad Request: Invalid request data")
+              @statusCode
+              statusCode: 400;
+          }
+        | {
+              @doc("Not Found: The specified incognito post or comment does not exist or has been deleted")
+              @statusCode
+              statusCode: 404;
+          }
+        | {
+              @doc("This code will be returned in any of the following scenarios: 1) User is attempting to unvote their own comment")
+              @statusCode
+              statusCode: 422;
+          };
 }
 
 @route("/hub/upvote-incognito-post")
@@ -710,7 +734,7 @@ interface UpvoteIncognitoPost {
               statusCode: 400;
           }
         | {
-              @doc("Not Found: The specified incognito post does not exist")
+              @doc("Not Found: The specified incognito post does not exist or has been deleted")
               @statusCode
               statusCode: 404;
           }
@@ -739,7 +763,7 @@ interface DownvoteIncognitoPost {
               statusCode: 400;
           }
         | {
-              @doc("Not Found: The specified incognito post does not exist")
+              @doc("Not Found: The specified incognito post does not exist or has been deleted")
               @statusCode
               statusCode: 404;
           }
@@ -768,7 +792,7 @@ interface UnvoteIncognitoPost {
               statusCode: 400;
           }
         | {
-              @doc("Not Found: The specified incognito post does not exist")
+              @doc("Not Found: The specified incognito post does not exist or has been deleted")
               @statusCode
               statusCode: 404;
           }

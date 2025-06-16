@@ -444,6 +444,65 @@ var _ = FDescribe("Incognito Voting API", Ordered, func() {
 				http.StatusNotFound,
 			)
 		})
+
+		It("should return 404 when voting on deleted post", func() {
+			// User 1 creates a post
+			postReq := hub.AddIncognitoPostRequest{
+				Content: "Test post to be deleted",
+				TagIDs:  []common.VTagID{"technology"},
+			}
+			postResp := testPOSTGetResp(
+				user0036Token1,
+				postReq,
+				"/hub/add-incognito-post",
+				http.StatusOK,
+			)
+			var postResponse hub.AddIncognitoPostResponse
+			err := json.Unmarshal(postResp.([]byte), &postResponse)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// User 1 deletes their own post
+			deleteReq := hub.DeleteIncognitoPostRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+			}
+			testPOST(
+				user0036Token1,
+				deleteReq,
+				"/hub/delete-incognito-post",
+				http.StatusOK,
+			)
+
+			// User 2 tries to vote on the deleted post (should return 404)
+			upvoteReq := hub.UpvoteIncognitoPostRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+			}
+			testPOST(
+				user0036Token2,
+				upvoteReq,
+				"/hub/upvote-incognito-post",
+				http.StatusNotFound,
+			)
+
+			downvoteReq := hub.DownvoteIncognitoPostRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+			}
+			testPOST(
+				user0036Token2,
+				downvoteReq,
+				"/hub/downvote-incognito-post",
+				http.StatusNotFound,
+			)
+
+			unvoteReq := hub.UnvoteIncognitoPostRequest{
+				IncognitoPostID: postResponse.IncognitoPostID,
+			}
+			testPOST(
+				user0036Token2,
+				unvoteReq,
+				"/hub/unvote-incognito-post",
+				http.StatusNotFound,
+			)
+		})
 	})
 
 	Describe("Incognito Comment Voting", func() {

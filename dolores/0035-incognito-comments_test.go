@@ -325,6 +325,7 @@ var _ = FDescribe("Incognito Comments API", Ordered, func() {
 
 			getCommentsReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: postResponse.IncognitoPostID,
+				Limit:           25,
 			}
 
 			getCommentsResp := testPOSTGetResp(
@@ -429,6 +430,7 @@ var _ = FDescribe("Incognito Comments API", Ordered, func() {
 				getCommentsReq := hub.GetIncognitoPostCommentsRequest{
 					IncognitoPostID: postResponse.IncognitoPostID,
 					SortBy:          sortBy,
+					Limit:           25,
 				}
 
 				getCommentsResp := testPOSTGetResp(
@@ -496,6 +498,7 @@ var _ = FDescribe("Incognito Comments API", Ordered, func() {
 			getCommentsReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID:         postResponse.IncognitoPostID,
 				DirectRepliesPerComment: 2,
+				Limit:                   25,
 			}
 
 			getCommentsResp := testPOSTGetResp(
@@ -516,6 +519,7 @@ var _ = FDescribe("Incognito Comments API", Ordered, func() {
 		It("should fail for non-existent post", func() {
 			getCommentsReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: "nonexistent-post-id",
+				Limit:           25,
 			}
 
 			testPOST(
@@ -529,6 +533,7 @@ var _ = FDescribe("Incognito Comments API", Ordered, func() {
 		It("should fail without authentication", func() {
 			getCommentsReq := hub.GetIncognitoPostCommentsRequest{
 				IncognitoPostID: "some-post-id",
+				Limit:           25,
 			}
 
 			testPOST(

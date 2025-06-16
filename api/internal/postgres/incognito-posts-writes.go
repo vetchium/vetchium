@@ -276,8 +276,7 @@ func (pg *PG) DeleteIncognitoPostComment(
 	// Check if incognito post exists
 	if !pg.incognitoPostExists(ctx, req.IncognitoPostID) {
 		pg.log.Dbg("incognito post not found",
-			"incognito_post_id", req.IncognitoPostID,
-		)
+			"incognito_post_id", req.IncognitoPostID)
 		return db.ErrNoIncognitoPost
 	}
 
@@ -447,8 +446,7 @@ func (pg *PG) UnvoteIncognitoPostComment(
 			req.IncognitoPostID,
 		) {
 			pg.log.Dbg("incognito post comment not found",
-				"comment_id", req.CommentID,
-			)
+				"comment_id", req.CommentID)
 			return db.ErrNoIncognitoPostComment
 		}
 		if !pg.canVoteOnComment(ctx, req.CommentID, hubUserID) {

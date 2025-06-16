@@ -81,7 +81,9 @@ function IncognitoPostDetailsContent() {
   if (!postId) {
     return (
       <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Alert severity="error">Invalid post ID</Alert>
+        <Alert severity="error">
+          {t("incognitoPosts.errors.invalidPostId")}
+        </Alert>
       </Container>
     );
   }
@@ -116,7 +118,7 @@ function IncognitoPostDetailsContent() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("Post not found");
+          throw new Error(t("incognitoPosts.errors.postNotFound"));
         }
         throw new Error(`Failed to fetch post: ${response.statusText}`);
       }
@@ -614,7 +616,19 @@ function IncognitoPostDetailsContent() {
         });
 
         if (!res.ok) {
-          throw new Error("Vote failed");
+          if (res.status === 404) {
+            throw new Error(t("incognitoPosts.errors.commentNotFound"));
+          } else if (res.status === 422) {
+            if (action === "upvote" || action === "downvote") {
+              throw new Error(t("incognitoPosts.errors.cannotVoteComment"));
+            } else {
+              throw new Error(t("incognitoPosts.errors.cannotUnvoteComment"));
+            }
+          } else if (res.status === 401) {
+            throw new Error(t("incognitoPosts.errors.mustBeLoggedIn"));
+          } else {
+            throw new Error(t("incognitoPosts.errors.voteFailedGeneric"));
+          }
         }
 
         // Update the comment's vote counts and states locally
@@ -675,7 +689,11 @@ function IncognitoPostDetailsContent() {
           );
         });
       } catch (e) {
-        handleError(e instanceof Error ? e.message : "Vote failed");
+        handleError(
+          e instanceof Error
+            ? e.message
+            : t("incognitoPosts.errors.voteFailedShort")
+        );
       } finally {
         setIsVoting(false);
       }
@@ -822,7 +840,7 @@ function IncognitoPostDetailsContent() {
                           }}
                           onClick={() => setReplyToComment(comment.comment_id)}
                         >
-                          Reply
+                          {t("incognitoPosts.post.reply")}
                         </Button>
                       )}
                     {comment.is_created_by_me && !comment.is_deleted && (
@@ -834,7 +852,7 @@ function IncognitoPostDetailsContent() {
                         }}
                         onClick={() => onDeleteComment(comment.comment_id)}
                       >
-                        Delete
+                        {t("incognitoPosts.post.delete")}
                       </Button>
                     )}
                     <Typography
@@ -848,7 +866,8 @@ function IncognitoPostDetailsContent() {
                         hour: "2-digit",
                         minute: "2-digit",
                       }).format(new Date(comment.created_at))}
-                      {comment.is_created_by_me && " • (you)"}
+                      {comment.is_created_by_me &&
+                        ` • ${t("incognitoPosts.post.you")}`}
                     </Typography>
                   </Box>
                 </>
@@ -963,11 +982,13 @@ function IncognitoPostDetailsContent() {
                         <CircularProgress size={12} />
                       )}
                       {loadingReplies.has(comment.comment_id)
-                        ? "Loading..."
-                        : `Load ${Math.min(
-                            comment.replies_count - comment.children.length,
-                            10
-                          )} more replies`}
+                        ? t("incognitoPosts.post.loadingReplies")
+                        : t("incognitoPosts.post.loadMoreReplies", {
+                            count: Math.min(
+                              comment.replies_count - comment.children.length,
+                              10
+                            ),
+                          })}
                     </Button>
                   </Box>
                 )}
@@ -1018,9 +1039,11 @@ function IncognitoPostDetailsContent() {
                     loadMoreReplies(comment.comment_id, postId, loadCount);
                   }}
                 >
-                  Continue this thread →
+                  {t("incognitoPosts.post.continueThread")}
                   {comment.replies_count > 0 &&
-                    ` (${comment.replies_count} replies)`}
+                    ` ${t("incognitoPosts.post.repliesCount", {
+                      count: comment.replies_count,
+                    })}`}
                 </Button>
               </Box>
             ) : null}
@@ -1044,7 +1067,7 @@ function IncognitoPostDetailsContent() {
         >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5">Incognito Post</Typography>
+        <Typography variant="h5">{t("incognitoPosts.post.title")}</Typography>
       </Box>
 
       {isLoadingPost ? (
@@ -1133,19 +1156,21 @@ function IncognitoPostDetailsContent() {
                   fontSize: "0.875rem",
                 }}
               >
-                Add Comment
+                {t("incognitoPosts.post.addComment")}
               </Button>
             </Box>
           </CardContent>
         </Card>
       ) : (
-        <Alert severity="error">Post not found</Alert>
+        <Alert severity="error">
+          {t("incognitoPosts.errors.postNotFound")}
+        </Alert>
       )}
 
       <Box sx={{ mt: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
-            Comments ({totalCommentsCount})
+            {t("incognitoPosts.post.comments")} ({totalCommentsCount})
           </Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
             {Object.values(IncognitoPostCommentSortBy).map((sort) => (
@@ -1175,10 +1200,10 @@ function IncognitoPostDetailsContent() {
           >
             <Alert severity="info" sx={{ mb: 2 }}>
               {replyToComment === "new"
-                ? "Adding new comment..."
-                : "Replying to comment..."}{" "}
+                ? t("incognitoPosts.post.addingComment")
+                : t("incognitoPosts.post.replyingToComment")}{" "}
               <Button size="small" onClick={() => setReplyToComment(null)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             </Alert>
             <TextField
@@ -1188,7 +1213,7 @@ function IncognitoPostDetailsContent() {
               placeholder={
                 replyToComment === "new"
                   ? t("incognitoPosts.post.commentPlaceholder")
-                  : "Write your reply..."
+                  : t("incognitoPosts.post.replyPlaceholder")
               }
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
@@ -1203,12 +1228,14 @@ function IncognitoPostDetailsContent() {
                 disabled={!newComment.trim() || isSubmittingComment}
               >
                 {isSubmittingComment
-                  ? "Posting..."
+                  ? t("incognitoPosts.post.posting")
                   : replyToComment === "new"
-                  ? "Post Comment"
-                  : "Post Reply"}
+                  ? t("incognitoPosts.post.postComment")
+                  : t("incognitoPosts.post.postReply")}
               </Button>
-              <Button onClick={() => setReplyToComment(null)}>Cancel</Button>
+              <Button onClick={() => setReplyToComment(null)}>
+                {t("common.cancel")}
+              </Button>
             </Box>
           </Box>
         )}
@@ -1220,7 +1247,7 @@ function IncognitoPostDetailsContent() {
         ) : comments.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 4 }}>
             <Typography variant="body2" color="text.secondary">
-              No comments yet. Be the first to comment!
+              {t("incognitoPosts.post.noCommentsYet")}
             </Typography>
           </Box>
         ) : (
@@ -1240,7 +1267,9 @@ function IncognitoPostDetailsContent() {
                   onClick={() => loadComments(false)}
                   disabled={isLoadingComments}
                 >
-                  {isLoadingComments ? "Loading..." : "Load More Comments"}
+                  {isLoadingComments
+                    ? t("incognitoPosts.post.loading")
+                    : t("incognitoPosts.post.loadMoreComments")}
                 </Button>
               </Box>
             )}

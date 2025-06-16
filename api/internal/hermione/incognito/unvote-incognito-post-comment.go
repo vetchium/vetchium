@@ -30,6 +30,13 @@ func UnvoteIncognitoPostComment(h wand.Wand) http.HandlerFunc {
 
 		err = h.DB().UnvoteIncognitoPostComment(r.Context(), req)
 		if err != nil {
+			if errors.Is(err, db.ErrNoIncognitoPostComment) {
+				h.Dbg("incognito post comment not found",
+					"comment_id", req.CommentID)
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+
 			if errors.Is(err, db.ErrNonVoteableIncognitoPostComment) {
 				h.Dbg("Cannot unvote the incognito post comment")
 				http.Error(w, "", http.StatusUnprocessableEntity)
