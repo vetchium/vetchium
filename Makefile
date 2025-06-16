@@ -34,6 +34,39 @@ lib: ## Build TypeSpec and install dependencies
 	cd ../harrypotter && npm install ../typespec && \
 	cd ../ronweasly && npm install ../typespec
 
+docker: ## Build multi-platform Docker images
+	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use
+	docker buildx build -f harrypotter/Dockerfile-optimized \
+		-t ghcr.io/vetchium/harrypotter:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--build-arg API_ENDPOINT="http://hermione:8080" \
+		.
+	docker buildx build -f ronweasly/Dockerfile-optimized \
+		-t ghcr.io/vetchium/ronweasly:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		--build-arg API_ENDPOINT="http://hermione:8080" \
+		.
+	docker buildx build -f api/Dockerfile-hermione \
+		-t ghcr.io/vetchium/hermione:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		.
+	docker buildx build -f api/Dockerfile-granger \
+		-t ghcr.io/vetchium/granger:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		.
+	docker buildx build -f sqitch/Dockerfile \
+		-t ghcr.io/vetchium/sqitch:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		sqitch
+	docker buildx build -f sortinghat/Dockerfile \
+		-t ghcr.io/vetchium/sortinghat:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		.
+	docker buildx build -f dev-seed/Dockerfile \
+		-t ghcr.io/vetchium/dev-seed:$(GIT_SHA) \
+		--platform=linux/amd64,linux/arm64 \
+		.
+
 publish: ## Build multi-platform Docker images and publish them to the container registry
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "Error: There are uncommitted changes. Please commit them before publishing docker images."; \
