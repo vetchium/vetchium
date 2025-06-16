@@ -465,7 +465,7 @@ func writeMultiLevelReplies(initialComments []struct {
 	allComments = append(allComments, initialComments...)
 
 	var commentMutex sync.Mutex
-	maxDepth := 4 // Allow up to 4 levels of nesting
+	maxDepth := 4 // Allow up to 4 levels of nesting (depths 0-3)
 
 	// Generate replies for each depth level
 	for currentDepth := 0; currentDepth < maxDepth; currentDepth++ {
@@ -1009,7 +1009,7 @@ func createMegaThreadReplies(initialComments []struct {
 	allComments = append(allComments, initialComments...)
 	var commentMutex sync.Mutex
 
-	maxDepth := 5 // Maximum depth is 5 levels (0-5) as per API specification
+	maxDepth := 4 // Maximum depth is 4 levels (depths 0-3) as per API specification
 
 	color.Cyan(
 		"Creating nested mega thread to maximum depth %d (natural comment distribution)",
@@ -1055,9 +1055,7 @@ func createMegaThreadReplies(initialComments []struct {
 		case 2:
 			repliesPerComment = 3 // Each depth-2 comment gets 3 replies
 		case 3:
-			repliesPerComment = 2 // Each depth-3 comment gets 2 replies
-		case 4:
-			repliesPerComment = 1 // Each depth-4 comment gets 1 reply
+			repliesPerComment = 1 // Each depth-3 comment gets 1 reply (final level)
 		}
 
 		targetReplies := len(commentsAtDepth) * repliesPerComment

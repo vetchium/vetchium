@@ -71,5 +71,5 @@ const (
 )
 
 const (
-	MaxCommentDepth = 5
+	MaxCommentDepth = 4
 )

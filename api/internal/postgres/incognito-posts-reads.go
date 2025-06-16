@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vetchium/vetchium/api/internal/db"
+	"github.com/vetchium/vetchium/api/pkg/vetchi"
 	"github.com/vetchium/vetchium/typespec/common"
 	"github.com/vetchium/vetchium/typespec/hub"
 )
@@ -1162,10 +1163,18 @@ func (pg *PG) GetCommentReplies(
 	parentExists = true
 
 	// Check if adding replies would exceed max depth (5 levels: 0-4)
-	if parentExists && (parentDepth+req.MaxDepth) > 4 {
+	// When direct_only is true, we only add 1 level, otherwise we add max_depth levels
+	depthToAdd := int32(1)
+	if !req.DirectOnly {
+		depthToAdd = req.MaxDepth
+	}
+
+	if parentExists &&
+		(parentDepth+depthToAdd) > int32(vetchi.MaxCommentDepth) {
 		pg.log.Dbg("max comment depth would be exceeded",
 			"parent_depth", parentDepth,
-			"max_depth", req.MaxDepth)
+			"depth_to_add", depthToAdd,
+			"direct_only", req.DirectOnly)
 		return hub.GetCommentRepliesResponse{}, db.ErrMaxCommentDepthReached
 	}
 

@@ -325,7 +325,7 @@ function IncognitoPostDetailsContent() {
         parent_comment_id: commentId,
         limit: loadCount || 50,
         direct_only: true,
-        max_depth: 2,
+        max_depth: 1, // Only load direct children when direct_only is true
       };
 
       const response = await fetch(
@@ -813,7 +813,7 @@ function IncognitoPostDetailsContent() {
                       </Typography>
                     </Box>
                     {!comment.is_deleted &&
-                      comment.depth < (config.MAX_COMMENT_DEPTH || 4) && (
+                      comment.depth < config.MAX_COMMENT_DEPTH && (
                         <Button
                           size="small"
                           sx={{
@@ -912,7 +912,7 @@ function IncognitoPostDetailsContent() {
                     </Box>
                   );
                 })}
-                {hasMoreReplies && (
+                {hasMoreReplies && comment.depth < config.MAX_COMMENT_DEPTH && (
                   <Box sx={{ position: "relative", pl: 3, mt: 1 }}>
                     {/* Vertical line for load more button */}
                     <Box
@@ -972,7 +972,7 @@ function IncognitoPostDetailsContent() {
                   </Box>
                 )}
               </>
-            ) : (
+            ) : comment.depth < config.MAX_COMMENT_DEPTH ? (
               // Show "continue this thread" for deep nesting
               <Box sx={{ position: "relative", pl: 3, mt: 1 }}>
                 {/* Vertical line for continue thread */}
@@ -1023,7 +1023,7 @@ function IncognitoPostDetailsContent() {
                     ` (${comment.replies_count} replies)`}
                 </Button>
               </Box>
-            )}
+            ) : null}
           </Box>
         )}
       </Box>
