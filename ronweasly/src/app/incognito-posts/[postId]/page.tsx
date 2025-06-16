@@ -862,24 +862,84 @@ function IncognitoPostDetailsContent() {
         {(hasReplies || hasMoreReplies) && !isCollapsed && (
           <Box
             sx={{
-              pl: 3,
+              position: "relative",
               ml: 3,
-              borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
             }}
           >
             {renderDepth < 4 ? (
               // Normal nested rendering for shallow depths
               <>
-                {comment.children.map((child: any) => (
-                  <CommentNode
-                    key={child.comment_id}
-                    comment={child}
-                    onDeleteComment={onDeleteComment}
-                    renderDepth={renderDepth + 1}
-                  />
-                ))}
+                {comment.children.map((child: any, index: number) => {
+                  const isLastChild =
+                    index === comment.children.length - 1 && !hasMoreReplies;
+
+                  return (
+                    <Box
+                      key={child.comment_id}
+                      sx={{ position: "relative", pl: 3 }}
+                    >
+                      {/* Vertical line */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: 0,
+                          top: index === 0 ? 0 : "-12px",
+                          height: isLastChild
+                            ? index === 0
+                              ? "26px"
+                              : "38px" // 26px for first child, 38px for others (to reach horizontal line)
+                            : "calc(100% + 12px)",
+                          width: "2px",
+                          borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                          zIndex: 0,
+                        }}
+                      />
+                      {/* Horizontal connector */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: 0,
+                          top: "24px", // Align with comment content
+                          width: "24px",
+                          height: "2px",
+                          borderTop: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                          zIndex: 0,
+                        }}
+                      />
+                      <CommentNode
+                        comment={child}
+                        onDeleteComment={onDeleteComment}
+                        renderDepth={renderDepth + 1}
+                      />
+                    </Box>
+                  );
+                })}
                 {hasMoreReplies && (
-                  <Box sx={{ mt: 1, pl: 1 }}>
+                  <Box sx={{ position: "relative", pl: 3, mt: 1 }}>
+                    {/* Vertical line for load more button */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 0,
+                        top: "-12px",
+                        height: "24px", // Fixed height - ends at horizontal line
+                        width: "2px",
+                        borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                        zIndex: 0,
+                      }}
+                    />
+                    {/* Horizontal connector for load more */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 0,
+                        top: "12px", // Center with button
+                        width: "24px",
+                        height: "2px",
+                        borderTop: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                        zIndex: 0,
+                      }}
+                    />
                     <Button
                       size="small"
                       variant="text"
@@ -887,6 +947,8 @@ function IncognitoPostDetailsContent() {
                         textTransform: "none",
                         color: "primary.main",
                         fontSize: "0.8rem",
+                        position: "relative",
+                        zIndex: 1,
                       }}
                       disabled={loadingReplies.has(comment.comment_id)}
                       onClick={() => {
@@ -908,7 +970,31 @@ function IncognitoPostDetailsContent() {
               </>
             ) : (
               // Show "continue this thread" for deep nesting
-              <Box sx={{ mt: 1, pl: 1 }}>
+              <Box sx={{ position: "relative", pl: 3, mt: 1 }}>
+                {/* Vertical line for continue thread */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: 0,
+                    top: "-12px",
+                    height: "24px", // Fixed height - ends at horizontal line
+                    width: "2px",
+                    borderLeft: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                    zIndex: 0,
+                  }}
+                />
+                {/* Horizontal connector for continue thread */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    left: 0,
+                    top: "12px",
+                    width: "24px",
+                    height: "2px",
+                    borderTop: `2px ${depthPattern.borderStyle} ${depthPattern.color}`,
+                    zIndex: 0,
+                  }}
+                />
                 <Button
                   size="small"
                   variant="text"
@@ -917,6 +1003,8 @@ function IncognitoPostDetailsContent() {
                     color: "primary.main",
                     fontSize: "0.8rem",
                     fontStyle: "italic",
+                    position: "relative",
+                    zIndex: 1,
                   }}
                   onClick={() => {
                     // For now, load replies normally but could open a focused view
