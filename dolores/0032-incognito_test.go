@@ -22,7 +22,6 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 		aliceToken   string
 		bobToken     string
 		charlieToken string
-		dianaToken   string
 		eveToken     string
 		frankToken   string
 	)
@@ -235,7 +234,7 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 			}
 
 			testPOST(
-				dianaToken,
+				"", // Empty token since disabled users can't sign in
 				reqBody,
 				"/hub/add-incognito-post",
 				http.StatusUnauthorized,
@@ -687,9 +686,9 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 
 			// Get comments
 			reqBody := hub.GetIncognitoPostCommentsRequest{
-				IncognitoPostID:    postResponse.IncognitoPostID,
-				Limit:              10,
-				IncludeNestedDepth: int32ptr(3),
+				IncognitoPostID:         postResponse.IncognitoPostID,
+				Limit:                   10,
+				DirectRepliesPerComment: 3,
 			}
 
 			respData := testPOSTGetResp(
@@ -707,9 +706,9 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 
 		It("should fail without authentication", func() {
 			reqBody := hub.GetIncognitoPostCommentsRequest{
-				IncognitoPostID:    "any-post-id",
-				Limit:              10,
-				IncludeNestedDepth: int32ptr(3),
+				IncognitoPostID:         "any-post-id",
+				Limit:                   10,
+				DirectRepliesPerComment: 3,
 			}
 
 			testPOST(
@@ -722,9 +721,9 @@ var _ = Describe("Incognito Posts API", Ordered, func() {
 
 		It("should fail for non-existent post", func() {
 			reqBody := hub.GetIncognitoPostCommentsRequest{
-				IncognitoPostID:    "nonexistent",
-				Limit:              10,
-				IncludeNestedDepth: int32ptr(3),
+				IncognitoPostID:         "nonexistent",
+				Limit:                   10,
+				DirectRepliesPerComment: 3,
 			}
 
 			testPOST(
