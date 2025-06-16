@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Incognito Posts API", Ordered, func() {
+var _ = Describe("Incognito Posts API", Ordered, func() {
 	var (
 		pool *pgxpool.Pool
 

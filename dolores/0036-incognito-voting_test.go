@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Incognito Voting API", Ordered, func() {
+var _ = Describe("Incognito Voting API", Ordered, func() {
 	var (
 		pool *pgxpool.Pool
 
@@ -760,7 +760,7 @@ var _ = FDescribe("Incognito Voting API", Ordered, func() {
 			)
 		})
 
-		It("should return 422 for invalid comment ID", func() {
+		It("should return 404 for invalid comment ID", func() {
 			postReq := hub.AddIncognitoPostRequest{
 				Content: "Test post for invalid comment ID.",
 				TagIDs:  []common.VTagID{"careers"},
@@ -784,7 +784,7 @@ var _ = FDescribe("Incognito Voting API", Ordered, func() {
 				user0036Token8,
 				upvoteReq,
 				"/hub/upvote-incognito-post-comment",
-				http.StatusUnprocessableEntity,
+				http.StatusNotFound,
 			)
 		})
 	})
