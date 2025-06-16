@@ -22,8 +22,12 @@ alwaysApply: false
 - All test code exist under dolores directory. There will be a *-up.pgsql and a *-down.pgsql file which will contain the SQL scripts needed to run before and after the test case execution. *_test.go will contain the actual test cases.
 - When generating test code, try to create table driven tests. Try to use functions in [tests-helpers_test.go](mdc:dolores/tests-helpers_test.go) when creating tests under dolores directory
 - When generating test code, generate positive cases, negative cases, border conditions, invalid conditions, etc. Do not ignore any obvious failures.
-- When generating test code, for every It() function in the test case, create a new dedicated user and use that. Do not reuse user accounts across multiple It test cases which may cause problems.
+- When generating test code, for every It() function in the test case, create a new dedicated user and use that. Do not reuse user accounts across multiple It() test cases.
 - When generating code avoid adding comments after the statement on each line. Comments should be done only on the start of a section. Imports should not have any comments.
+- When generating tests under the dolores directory, there would be three sets of files that make up a single test case. A XXXX-something_test.go XXXX-something-up.pgsql and XXXX-something-down.pgsql
+- The XXXX-something-up.pgsql file contains the seed data that must be executed prior to the tests on XXXX-something_test.go are executed. The XXXX-something-down.pgsql file cleans up the data that was insert on the seeding and during the test run
+- All the records that we seed via these XXXX-something-up.pgsql must use an UUID of prefix 12345678-XXXX-XXXX-XXXX- for all the primary fields which rely on a UUID.
+- Hardcoding these UUIDs with the four numeric digits on the filename, mentioned as XXXX above help us understand from where data is originated
 - In .go code, always compare errors using, errors.Is(), for example:
 ```go
 if errors.Is(err, pgx.ErrNoRows)
