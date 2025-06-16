@@ -686,7 +686,7 @@ function IncognitoPostDetailsContent() {
         <Box
           sx={{
             backgroundColor: depthBackground,
-            borderRadius: 1,
+            borderRadius: 3,
             p: 1.5,
             mt: 2,
             position: "relative",
