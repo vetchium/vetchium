@@ -28,6 +28,8 @@ alwaysApply: false
 - The XXXX-something-up.pgsql file contains the seed data that must be executed prior to the tests on XXXX-something_test.go are executed. The XXXX-something-down.pgsql file cleans up the data that was insert on the seeding and during the test run
 - All the records that we seed via these XXXX-something-up.pgsql must use an UUID of prefix 12345678-XXXX-XXXX-XXXX- for all the primary fields which rely on a UUID.
 - Hardcoding these UUIDs with the four numeric digits on the filename, mentioned as XXXX above help us understand from where data is originated
+- In the test data for each test, use the XXXX in the domain or email address or such data, so that we will understand which testcase uses that data
+- On the -down.pgsql file, cleanup all the tables by following the schema on [1-initdb.sql](mdc:sqitch/deploy/1-initdb.sql) and remember to delete records in the right order based on the dependencies between the tables.
 - In .go code, always compare errors using, errors.Is(), for example:
 ```go
 if errors.Is(err, pgx.ErrNoRows)
