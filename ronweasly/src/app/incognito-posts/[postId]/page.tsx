@@ -355,8 +355,6 @@ function IncognitoPostDetailsContent() {
       setComments((prevComments) => {
         return [...prevComments, ...data.replies];
       });
-
-      setSuccess("Loaded more replies");
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Failed to load more replies"
@@ -949,6 +947,9 @@ function IncognitoPostDetailsContent() {
                         fontSize: "0.8rem",
                         position: "relative",
                         zIndex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
                       }}
                       disabled={loadingReplies.has(comment.comment_id)}
                       onClick={() => {
@@ -958,6 +959,9 @@ function IncognitoPostDetailsContent() {
                         loadMoreReplies(comment.comment_id, postId, loadCount);
                       }}
                     >
+                      {loadingReplies.has(comment.comment_id) && (
+                        <CircularProgress size={12} />
+                      )}
                       {loadingReplies.has(comment.comment_id)
                         ? "Loading..."
                         : `Load ${Math.min(
