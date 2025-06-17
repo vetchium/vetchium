@@ -83,9 +83,106 @@ const downvoteTrend = new Trend("hub_downvote_duration", true);
 const unvoteTrend = new Trend("hub_unvote_duration", true);
 const followStatusTrend = new Trend("hub_follow_status_duration", true);
 
+// --- IncognitoPosts Metrics ---
+const createIncognitoPostTrend = new Trend(
+  "hub_create_incognito_post_duration",
+  true
+);
+const getIncognitoPostTrend = new Trend(
+  "hub_get_incognito_post_duration",
+  true
+);
+const getIncognitoPostsTrend = new Trend(
+  "hub_get_incognito_posts_duration",
+  true
+);
+const getMyIncognitoPostsTrend = new Trend(
+  "hub_get_my_incognito_posts_duration",
+  true
+);
+const deleteIncognitoPostTrend = new Trend(
+  "hub_delete_incognito_post_duration",
+  true
+);
+const addIncognitoCommentTrend = new Trend(
+  "hub_add_incognito_comment_duration",
+  true
+);
+const getIncognitoCommentsTrend = new Trend(
+  "hub_get_incognito_comments_duration",
+  true
+);
+const upvoteIncognitoPostTrend = new Trend(
+  "hub_upvote_incognito_post_duration",
+  true
+);
+const downvoteIncognitoPostTrend = new Trend(
+  "hub_downvote_incognito_post_duration",
+  true
+);
+const unvoteIncognitoPostTrend = new Trend(
+  "hub_unvote_incognito_post_duration",
+  true
+);
+const upvoteIncognitoCommentTrend = new Trend(
+  "hub_upvote_incognito_comment_duration",
+  true
+);
+const downvoteIncognitoCommentTrend = new Trend(
+  "hub_downvote_incognito_comment_duration",
+  true
+);
+const unvoteIncognitoCommentTrend = new Trend(
+  "hub_unvote_incognito_comment_duration",
+  true
+);
+
 // --- Constants for authentication ---
 const MAX_LOGIN_ATTEMPTS = 5;
 const MAX_TFA_FETCH_ATTEMPTS = 10;
+
+// --- Common tag IDs for incognito posts (from vetchium-tags.json) ---
+const AVAILABLE_TAG_IDS = [
+  "technology",
+  "artificial-intelligence",
+  "machine-learning",
+  "data-science",
+  "software-engineering",
+  "web-development",
+  "mobile-development",
+  "devops",
+  "cybersecurity",
+  "blockchain",
+  "cryptocurrency",
+  "cloud-computing",
+  "careers",
+  "leadership",
+  "management",
+  "human-resources",
+  "entrepreneurship",
+  "startups",
+  "business-development",
+  "marketing",
+  "sales",
+  "productivity",
+  "work-life-balance",
+  "remote-work",
+  "networking",
+  "mentorship",
+  "coaching",
+  "personal-development",
+  "creativity",
+  "motivation",
+  "writing",
+  "content-creation",
+  "photography",
+  "music",
+  "sports",
+  "travel",
+  "health",
+  "finance",
+  "real-estate",
+];
 
 // --- TFA Synchronization ---
 let tfaLock = false;
@@ -575,11 +672,24 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
     "upvote",
     "downvote",
     "unvote",
+    "create_incognito_post",
+    "browse_incognito_posts",
+    "view_incognito_post_details",
+    "my_incognito_posts",
+    "add_incognito_comment",
+    "upvote_incognito_post",
+    "downvote_incognito_post",
+    "unvote_incognito_post",
+    "upvote_incognito_comment",
+    "downvote_incognito_comment",
+    "unvote_incognito_comment",
   ];
 
   // Weight the actions to create a realistic distribution
   // Reading timeline and viewing posts should be more common than posting
-  const actionWeights = [15, 5, 10, 30, 20, 10, 5, 5]; // Percentages
+  const actionWeights = [
+    10, 3, 8, 25, 15, 7, 3, 3, 5, 10, 5, 3, 3, 2, 1, 1, 1, 1, 1,
+  ]; // Percentages
 
   // Calculate cumulative weights
   const cumulativeWeights = [];
@@ -1026,6 +1136,568 @@ function socialActivity(authToken, userHandle, allUserHandles, vuState) {
           sleep(randomIntBetween(1, 4));
           break;
         }
+
+        case "create_incognito_post": {
+          // Generate random incognito post content
+          const incognitoContent = `Anonymous thought from ${new Date()
+            .toISOString()
+            .slice(0, 10)} - ${randomString(30)}`;
+
+          // Select 1-3 random tags
+          const numTags = randomIntBetween(1, 3);
+          const selectedTags = [];
+          for (let i = 0; i < numTags; i++) {
+            const tag = randomItem(AVAILABLE_TAG_IDS);
+            if (!selectedTags.includes(tag)) {
+              selectedTags.push(tag);
+            }
+          }
+
+          const incognitoPostPayload = JSON.stringify({
+            content: incognitoContent,
+            tag_ids: selectedTags,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Creating incognito post with tags ${selectedTags.join(
+              ", "
+            )}`
+          );
+
+          const createIncognitoPostRes = http.post(
+            `${API_BASE_URL}/hub/add-incognito-post`,
+            incognitoPostPayload,
+            {
+              ...authParams,
+              tags: { name: "HubCreateIncognitoPostAPI" },
+            }
+          );
+
+          createIncognitoPostTrend.add(createIncognitoPostRes.timings.duration);
+
+          // Check for success
+          check(createIncognitoPostRes, {
+            "Create incognito post request successful": (r) => r.status === 200,
+          });
+
+          // If successful, extract incognito post ID and add to created posts
+          if (createIncognitoPostRes.status === 200) {
+            try {
+              const incognitoPostData = JSON.parse(createIncognitoPostRes.body);
+              if (incognitoPostData.incognito_post_id) {
+                vuState.createdIncognitoPostIds.push(
+                  incognitoPostData.incognito_post_id
+                );
+                console.debug(
+                  `VU ${__VU} (${userHandle}): Created incognito post with ID ${incognitoPostData.incognito_post_id}`
+                );
+              }
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing create incognito post response: ${e}`
+              );
+            }
+          }
+
+          // Log unexpected errors
+          if (createIncognitoPostRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Create Incognito Post API Error! Status: ${createIncognitoPostRes.status}, Body: ${createIncognitoPostRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
+          break;
+        }
+
+        case "browse_incognito_posts": {
+          // Select a random tag for browsing
+          const browseTag = randomItem(AVAILABLE_TAG_IDS);
+
+          const browseIncognitoPayload = JSON.stringify({
+            tag_id: browseTag,
+            time_filter: "past_24_hours",
+            limit: 25,
+            pagination_key: vuState.incognitoPostsCursor || undefined,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Browsing incognito posts with tag ${browseTag}${
+              vuState.incognitoPostsCursor ? " with cursor" : ""
+            }`
+          );
+
+          const browseIncognitoRes = http.get(
+            `${API_BASE_URL}/hub/get-incognito-posts`,
+            {
+              body: browseIncognitoPayload,
+              ...authParams,
+              tags: { name: "HubBrowseIncognitoPostsAPI" },
+            }
+          );
+
+          getIncognitoPostsTrend.add(browseIncognitoRes.timings.duration);
+
+          // Check for success
+          check(browseIncognitoRes, {
+            "Browse incognito posts successful": (r) => r.status === 200,
+          });
+
+          // Process browse response
+          if (browseIncognitoRes.status === 200) {
+            try {
+              const browseData = JSON.parse(browseIncognitoRes.body);
+
+              // Update cursor for next pagination
+              if (browseData.pagination_key) {
+                vuState.incognitoPostsCursor = browseData.pagination_key;
+              }
+
+              // Store incognito post IDs for potential interactions
+              if (browseData.posts && browseData.posts.length > 0) {
+                browseData.posts.forEach((post) => {
+                  if (
+                    !vuState.browseIncognitoPostIds.includes(
+                      post.incognito_post_id
+                    )
+                  ) {
+                    vuState.browseIncognitoPostIds.push(post.incognito_post_id);
+                  }
+                });
+
+                console.debug(
+                  `VU ${__VU} (${userHandle}): Retrieved ${browseData.posts.length} incognito posts, total in memory: ${vuState.browseIncognitoPostIds.length}`
+                );
+              } else {
+                console.debug(
+                  `VU ${__VU} (${userHandle}): No incognito posts in browse response`
+                );
+              }
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing browse incognito posts response: ${e}`
+              );
+            }
+          }
+
+          // Log unexpected errors
+          if (browseIncognitoRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Browse Incognito Posts API Error! Status: ${browseIncognitoRes.status}, Body: ${browseIncognitoRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
+          break;
+        }
+
+        case "view_incognito_post_details": {
+          // Combine browsed incognito posts and created incognito posts for selection
+          const availableIncognitoPosts = [
+            ...vuState.browseIncognitoPostIds,
+            ...vuState.createdIncognitoPostIds,
+          ];
+
+          if (availableIncognitoPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No incognito posts available to view details.`
+            );
+            break;
+          }
+
+          const incognitoPostIdToView = randomItem(availableIncognitoPosts);
+          const incognitoPostDetailsPayload = JSON.stringify({
+            incognito_post_id: incognitoPostIdToView,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Viewing details for incognito post ${incognitoPostIdToView}`
+          );
+
+          const incognitoPostDetailsRes = http.get(
+            `${API_BASE_URL}/hub/get-incognito-post`,
+            {
+              body: incognitoPostDetailsPayload,
+              ...authParams,
+              tags: { name: "HubIncognitoPostDetailsAPI" },
+            }
+          );
+
+          getIncognitoPostTrend.add(incognitoPostDetailsRes.timings.duration);
+
+          // Check for success
+          check(incognitoPostDetailsRes, {
+            "Incognito post details request successful": (r) =>
+              r.status === 200,
+          });
+
+          // Log unexpected errors
+          if (incognitoPostDetailsRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Incognito Post Details API Error! PostID: ${incognitoPostIdToView}, Status: ${incognitoPostDetailsRes.status}, Body: ${incognitoPostDetailsRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "my_incognito_posts": {
+          // Prepare request payload for my incognito posts
+          const myIncognitoPostsPayload = JSON.stringify({
+            limit: 25,
+            pagination_key: vuState.myIncognitoPostsCursor || undefined,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Viewing my incognito posts${
+              vuState.myIncognitoPostsCursor ? " with cursor" : ""
+            }`
+          );
+
+          const myIncognitoPostsRes = http.get(
+            `${API_BASE_URL}/hub/get-my-incognito-posts`,
+            {
+              body: myIncognitoPostsPayload,
+              ...authParams,
+              tags: { name: "HubMyIncognitoPostsAPI" },
+            }
+          );
+
+          getMyIncognitoPostsTrend.add(myIncognitoPostsRes.timings.duration);
+
+          // Check for success
+          check(myIncognitoPostsRes, {
+            "My incognito posts read successful": (r) => r.status === 200,
+          });
+
+          // Process my incognito posts response
+          if (myIncognitoPostsRes.status === 200) {
+            try {
+              const myIncognitoPostsData = JSON.parse(myIncognitoPostsRes.body);
+
+              // Update cursor for next pagination
+              if (myIncognitoPostsData.pagination_key) {
+                vuState.myIncognitoPostsCursor =
+                  myIncognitoPostsData.pagination_key;
+              }
+
+              console.debug(
+                `VU ${__VU} (${userHandle}): Retrieved ${
+                  myIncognitoPostsData.posts
+                    ? myIncognitoPostsData.posts.length
+                    : 0
+                } of my incognito posts`
+              );
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing my incognito posts response: ${e}`
+              );
+            }
+          }
+
+          // Log unexpected errors
+          if (myIncognitoPostsRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): My Incognito Posts API Error! Status: ${myIncognitoPostsRes.status}, Body: ${myIncognitoPostsRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
+          break;
+        }
+
+        case "add_incognito_comment": {
+          // Combine browsed incognito posts for commenting
+          const availableIncognitoPosts = [
+            ...vuState.browseIncognitoPostIds,
+            ...vuState.createdIncognitoPostIds,
+          ];
+
+          if (availableIncognitoPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No incognito posts available to comment on.`
+            );
+            break;
+          }
+
+          const incognitoPostIdToComment = randomItem(availableIncognitoPosts);
+
+          // Generate random comment content
+          const commentContent = `Anonymous comment ${randomString(
+            20
+          )} on ${new Date().toISOString().slice(0, 10)}`;
+
+          const addIncognitoCommentPayload = JSON.stringify({
+            incognito_post_id: incognitoPostIdToComment,
+            content: commentContent,
+            // in_reply_to can be added later for nested comments
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Adding comment to incognito post ${incognitoPostIdToComment}`
+          );
+
+          const addIncognitoCommentRes = http.post(
+            `${API_BASE_URL}/hub/add-incognito-post-comment`,
+            addIncognitoCommentPayload,
+            {
+              ...authParams,
+              tags: { name: "HubAddIncognitoCommentAPI" },
+            }
+          );
+
+          addIncognitoCommentTrend.add(addIncognitoCommentRes.timings.duration);
+
+          // Check for success
+          check(addIncognitoCommentRes, {
+            "Add incognito comment request successful": (r) => r.status === 200,
+          });
+
+          // If successful, extract comment ID and add to created comments
+          if (addIncognitoCommentRes.status === 200) {
+            try {
+              const commentData = JSON.parse(addIncognitoCommentRes.body);
+              if (commentData.comment_id) {
+                vuState.incognitoCommentsIds.push(commentData.comment_id);
+                console.debug(
+                  `VU ${__VU} (${userHandle}): Created incognito comment with ID ${commentData.comment_id}`
+                );
+              }
+            } catch (e) {
+              console.error(
+                `VU ${__VU} (${userHandle}): Error parsing add incognito comment response: ${e}`
+              );
+            }
+          }
+
+          // Log unexpected errors
+          if (addIncognitoCommentRes.status !== 200) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Add Incognito Comment API Error! PostID: ${incognitoPostIdToComment}, Status: ${addIncognitoCommentRes.status}, Body: ${addIncognitoCommentRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(2, 5));
+          break;
+        }
+
+        case "upvote_incognito_post": {
+          // Combine browsed incognito posts for voting (exclude own posts)
+          const availableIncognitoPosts = vuState.browseIncognitoPostIds.filter(
+            (id) => !vuState.createdIncognitoPostIds.includes(id)
+          );
+
+          // Also exclude posts we've already voted on
+          const votableIncognitoPosts = availableIncognitoPosts.filter(
+            (id) =>
+              !vuState.upvotedIncognitoPostIds.includes(id) &&
+              !vuState.downvotedIncognitoPostIds.includes(id)
+          );
+
+          if (votableIncognitoPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No incognito posts available to upvote.`
+            );
+            break;
+          }
+
+          const incognitoPostIdToUpvote = randomItem(votableIncognitoPosts);
+          const upvoteIncognitoPayload = JSON.stringify({
+            incognito_post_id: incognitoPostIdToUpvote,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to upvote incognito post ${incognitoPostIdToUpvote}`
+          );
+
+          const upvoteIncognitoRes = http.post(
+            `${API_BASE_URL}/hub/upvote-incognito-post`,
+            upvoteIncognitoPayload,
+            {
+              ...authParams,
+              tags: { name: "HubUpvoteIncognitoPostAPI" },
+            }
+          );
+
+          upvoteIncognitoPostTrend.add(upvoteIncognitoRes.timings.duration);
+
+          // Check for success or expected error
+          check(upvoteIncognitoRes, {
+            "Upvote incognito post request successful or expected error": (r) =>
+              r.status === 200 || r.status === 422,
+          });
+
+          // If successful, track the voted post
+          if (upvoteIncognitoRes.status === 200) {
+            vuState.upvotedIncognitoPostIds.push(incognitoPostIdToUpvote);
+          }
+
+          // Log unexpected errors
+          if (
+            upvoteIncognitoRes.status !== 200 &&
+            upvoteIncognitoRes.status !== 422
+          ) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Upvote Incognito Post API Error! PostID: ${incognitoPostIdToUpvote}, Status: ${upvoteIncognitoRes.status}, Body: ${upvoteIncognitoRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "downvote_incognito_post": {
+          // Similar logic to upvote but for downvoting
+          const availableIncognitoPosts = vuState.browseIncognitoPostIds.filter(
+            (id) => !vuState.createdIncognitoPostIds.includes(id)
+          );
+
+          const votableIncognitoPosts = availableIncognitoPosts.filter(
+            (id) =>
+              !vuState.upvotedIncognitoPostIds.includes(id) &&
+              !vuState.downvotedIncognitoPostIds.includes(id)
+          );
+
+          if (votableIncognitoPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No incognito posts available to downvote.`
+            );
+            break;
+          }
+
+          const incognitoPostIdToDownvote = randomItem(votableIncognitoPosts);
+          const downvoteIncognitoPayload = JSON.stringify({
+            incognito_post_id: incognitoPostIdToDownvote,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to downvote incognito post ${incognitoPostIdToDownvote}`
+          );
+
+          const downvoteIncognitoRes = http.post(
+            `${API_BASE_URL}/hub/downvote-incognito-post`,
+            downvoteIncognitoPayload,
+            {
+              ...authParams,
+              tags: { name: "HubDownvoteIncognitoPostAPI" },
+            }
+          );
+
+          downvoteIncognitoPostTrend.add(downvoteIncognitoRes.timings.duration);
+
+          check(downvoteIncognitoRes, {
+            "Downvote incognito post request successful or expected error": (
+              r
+            ) => r.status === 200 || r.status === 422,
+          });
+
+          if (downvoteIncognitoRes.status === 200) {
+            vuState.downvotedIncognitoPostIds.push(incognitoPostIdToDownvote);
+          }
+
+          if (
+            downvoteIncognitoRes.status !== 200 &&
+            downvoteIncognitoRes.status !== 422
+          ) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Downvote Incognito Post API Error! PostID: ${incognitoPostIdToDownvote}, Status: ${downvoteIncognitoRes.status}, Body: ${downvoteIncognitoRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "unvote_incognito_post": {
+          // Combine upvoted and downvoted incognito posts to pick from
+          const votedIncognitoPosts = [
+            ...vuState.upvotedIncognitoPostIds,
+            ...vuState.downvotedIncognitoPostIds,
+          ];
+
+          if (votedIncognitoPosts.length === 0) {
+            console.debug(
+              `VU ${__VU} (${userHandle}): No voted incognito posts available to unvote.`
+            );
+            break;
+          }
+
+          const incognitoPostIdToUnvote = randomItem(votedIncognitoPosts);
+          const unvoteIncognitoPayload = JSON.stringify({
+            incognito_post_id: incognitoPostIdToUnvote,
+          });
+
+          console.debug(
+            `VU ${__VU} (${userHandle}): Attempting to unvote incognito post ${incognitoPostIdToUnvote}`
+          );
+
+          const unvoteIncognitoRes = http.post(
+            `${API_BASE_URL}/hub/unvote-incognito-post`,
+            unvoteIncognitoPayload,
+            {
+              ...authParams,
+              tags: { name: "HubUnvoteIncognitoPostAPI" },
+            }
+          );
+
+          unvoteIncognitoPostTrend.add(unvoteIncognitoRes.timings.duration);
+
+          check(unvoteIncognitoRes, {
+            "Unvote incognito post request successful or expected error": (r) =>
+              r.status === 200 || r.status === 422,
+          });
+
+          if (unvoteIncognitoRes.status === 200) {
+            vuState.upvotedIncognitoPostIds =
+              vuState.upvotedIncognitoPostIds.filter(
+                (id) => id !== incognitoPostIdToUnvote
+              );
+            vuState.downvotedIncognitoPostIds =
+              vuState.downvotedIncognitoPostIds.filter(
+                (id) => id !== incognitoPostIdToUnvote
+              );
+          }
+
+          if (
+            unvoteIncognitoRes.status !== 200 &&
+            unvoteIncognitoRes.status !== 422
+          ) {
+            console.error(
+              `VU ${__VU} (${userHandle}): Unvote Incognito Post API Error! PostID: ${incognitoPostIdToUnvote}, Status: ${unvoteIncognitoRes.status}, Body: ${unvoteIncognitoRes.body}`
+            );
+          }
+
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "upvote_incognito_comment": {
+          // Simplified comment voting - would need comment IDs from get-comments API in practice
+          console.debug(
+            `VU ${__VU} (${userHandle}): Simulating upvote incognito comment (placeholder)`
+          );
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "downvote_incognito_comment": {
+          // Simplified comment voting - would need comment IDs from get-comments API in practice
+          console.debug(
+            `VU ${__VU} (${userHandle}): Simulating downvote incognito comment (placeholder)`
+          );
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
+
+        case "unvote_incognito_comment": {
+          // Simplified comment voting - would need comment IDs from get-comments API in practice
+          console.debug(
+            `VU ${__VU} (${userHandle}): Simulating unvote incognito comment (placeholder)`
+          );
+          sleep(randomIntBetween(1, 4));
+          break;
+        }
       }
 
       // Think time between actions
@@ -1064,6 +1736,17 @@ export default function (data) {
 
     // Social graph tracking - limit array size
     followedUsers: [],
+
+    // Incognito posts tracking
+    incognitoPostsCursor: null,
+    myIncognitoPostsCursor: null,
+    createdIncognitoPostIds: [],
+    browseIncognitoPostIds: [],
+    upvotedIncognitoPostIds: [],
+    downvotedIncognitoPostIds: [],
+    incognitoCommentsIds: [],
+    upvotedIncognitoCommentIds: [],
+    downvotedIncognitoCommentIds: [],
   };
 
   // Limit array sizes to prevent memory growth
@@ -1087,6 +1770,39 @@ export default function (data) {
     }
     if (vuState.followedUsers.length > MAX_ARRAY_SIZE) {
       vuState.followedUsers = vuState.followedUsers.slice(-MAX_ARRAY_SIZE);
+    }
+    // Trim incognito posts arrays
+    if (vuState.createdIncognitoPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.createdIncognitoPostIds = vuState.createdIncognitoPostIds.slice(
+        -MAX_ARRAY_SIZE
+      );
+    }
+    if (vuState.browseIncognitoPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.browseIncognitoPostIds = vuState.browseIncognitoPostIds.slice(
+        -MAX_ARRAY_SIZE
+      );
+    }
+    if (vuState.upvotedIncognitoPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.upvotedIncognitoPostIds = vuState.upvotedIncognitoPostIds.slice(
+        -MAX_ARRAY_SIZE
+      );
+    }
+    if (vuState.downvotedIncognitoPostIds.length > MAX_ARRAY_SIZE) {
+      vuState.downvotedIncognitoPostIds =
+        vuState.downvotedIncognitoPostIds.slice(-MAX_ARRAY_SIZE);
+    }
+    if (vuState.incognitoCommentsIds.length > MAX_ARRAY_SIZE) {
+      vuState.incognitoCommentsIds = vuState.incognitoCommentsIds.slice(
+        -MAX_ARRAY_SIZE
+      );
+    }
+    if (vuState.upvotedIncognitoCommentIds.length > MAX_ARRAY_SIZE) {
+      vuState.upvotedIncognitoCommentIds =
+        vuState.upvotedIncognitoCommentIds.slice(-MAX_ARRAY_SIZE);
+    }
+    if (vuState.downvotedIncognitoCommentIds.length > MAX_ARRAY_SIZE) {
+      vuState.downvotedIncognitoCommentIds =
+        vuState.downvotedIncognitoCommentIds.slice(-MAX_ARRAY_SIZE);
     }
   }
 
@@ -1192,5 +1908,19 @@ export const options = {
     hub_downvote_duration: ["p(95)<1000"],
     hub_unvote_duration: ["p(95)<1000"],
     hub_follow_status_duration: ["p(95)<1000"],
+    // Incognito posts thresholds
+    hub_create_incognito_post_duration: ["p(95)<1000"],
+    hub_get_incognito_post_duration: ["p(95)<1000"],
+    hub_get_incognito_posts_duration: ["p(95)<1000"],
+    hub_get_my_incognito_posts_duration: ["p(95)<1000"],
+    hub_delete_incognito_post_duration: ["p(95)<1000"],
+    hub_add_incognito_comment_duration: ["p(95)<1000"],
+    hub_get_incognito_comments_duration: ["p(95)<1000"],
+    hub_upvote_incognito_post_duration: ["p(95)<1000"],
+    hub_downvote_incognito_post_duration: ["p(95)<1000"],
+    hub_unvote_incognito_post_duration: ["p(95)<1000"],
+    hub_upvote_incognito_comment_duration: ["p(95)<1000"],
+    hub_downvote_incognito_comment_duration: ["p(95)<1000"],
+    hub_unvote_incognito_comment_duration: ["p(95)<1000"],
   },
 };
