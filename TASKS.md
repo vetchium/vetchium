@@ -45,6 +45,7 @@
 - [] Bookmark posts/comments
 - [] Search posts/comments
 - [] Some kind of upvote tracking for every user for every tag
+- [] Company page for hub users
 
 # Code cleanups
 
