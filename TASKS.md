@@ -53,6 +53,7 @@
 - The default values are not properly set in some .tsp files using the = operator. Instead we mentioned them in the @doc tag. This should be fixed.
 - [] LoadTests should test for EmployerPosts and IncognitoPosts also
 - Errors handling on various forms are not complete. 400 ValidationErrors are not parsed correctly and appropriate input fields are not red-highlighted.
+- We are too dependent on Docker that if Docker is broken, development stalls. We need a fallback way.
 
 # Future Features
 
