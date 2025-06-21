@@ -211,6 +211,8 @@ k6: ## Run distributed load tests with k6 using Kubernetes
 		exit 1; \
 	}
 
+	kubectl create namespace monitoring
+
 	@echo "--- Helm Installing Prometheus+Grafana stack --- "
 	helm upgrade --install kube-prometheus-stack \
 		-f neville/kube-prometheus-stack-values.yaml \
