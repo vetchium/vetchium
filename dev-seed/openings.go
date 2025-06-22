@@ -59,6 +59,12 @@ func createOpenings() {
 	}
 	slytherinToken := slytherinVal.(string)
 
+	nithraVal, ok := employerSessionTokens.Load("admin@nithra.example")
+	if !ok {
+		log.Fatal("failed to get nithra token")
+	}
+	nithraToken := nithraVal.(string)
+
 	openings := []struct {
 		domain string
 		token  string
@@ -429,6 +435,24 @@ func createOpenings() {
 				MinEducationLevel: common.DoctorateEducation,
 				LocationTitles:    []string{"Chennai Ollivanders"},
 				TagIDs:            []common.VTagID{"devops"},
+			},
+		},
+		{
+			domain: "nithra.example",
+			token:  nithraToken,
+			req: employer.CreateOpeningRequest{
+				Title:             "ICU Doctor",
+				Positions:         1,
+				JD:                `ICU Doctor needed for our Nithra hospital to provide critical care to patients in the intensive care unit. Requires 10-15 years of experience in critical care medicine with a strong focus on critical care nursing. Strong understanding of critical care principles, protocols, and equipment. Experience with managing high-risk patients, including those with multiple comorbidities. Proficiency in administering medications, monitoring vital signs, and interpreting diagnostic tests. Experience with advanced life support techniques and resuscitation protocols. The ideal candidate has a proven track record of providing high-quality care to critically ill patients. Must possess excellent communication skills and the ability to work in a fast-paced, high-stress environment. Understanding of the Nithra hospital's mission and values is essential. Fluency in English required, proficiency in Tamil is highly desirable.`,
+				Recruiter:         "hr@nithra.example",
+				HiringManager:     "doctor@nithra.example",
+				CostCenterName:    "Apollo",
+				OpeningType:       common.FullTimeOpening,
+				YoeMin:            10,
+				YoeMax:            15,
+				MinEducationLevel: common.DoctorateEducation,
+				LocationTitles:    []string{"Apollo"},
+				TagIDs:            []common.VTagID{"healthcare"},
 			},
 		},
 	}

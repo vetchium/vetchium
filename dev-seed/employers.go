@@ -40,6 +40,12 @@ func initEmployersAndDomains(db *pgxpool.Pool) {
 			domain:      "slytherin.example",
 			shortDomain: "s.ex",
 		},
+		{
+			displayName: "Nithra",
+			email:       "admin@nithra.example",
+			domain:      "nithra.example",
+			shortDomain: "n.ex",
+		},
 
 		// Old employer options below
 		{

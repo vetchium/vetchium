@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -814,6 +815,10 @@ func generateHubSeedUsers(num int) []HubSeedUser {
 		pic := fmt.Sprintf("avatar%d.jpg", rand.Intn(17)+1)
 
 		career := careerPaths[rand.Intn(len(careerPaths))]
+		if career.BroadArea == "Medical" {
+			log.Printf("Medical career path: user%d", i)
+			tier = hub.PaidHubUserTier
+		}
 		levels := rand.Intn(len(career.Steps)) + 1
 
 		jobs := make([]Job, levels)

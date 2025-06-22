@@ -36,6 +36,12 @@ func createLocations() {
 	}
 	slytherinToken := slytherinVal.(string)
 
+	nithraVal, ok := employerSessionTokens.Load("admin@nithra.example")
+	if !ok {
+		log.Fatal("failed to get nithra token")
+	}
+	nithraToken := nithraVal.(string)
+
 	locations := []struct {
 		token string
 		req   employer.AddLocationRequest
@@ -307,6 +313,41 @@ func createLocations() {
 				PostalCode:       "1010",
 				OpenStreetMapURL: "https://www.openstreetmap.org/way/0123456",
 				CityAka:          []string{"Wien"},
+			},
+		},
+
+		// Nithra locations
+		{
+			nithraToken,
+			employer.AddLocationRequest{
+				Title:            "Apollo",
+				CountryCode:      "IND",
+				PostalAddress:    "Rajabaadhar Street, T Nagar, Chennai",
+				PostalCode:       "600001",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/1234567",
+				CityAka:          []string{"Madras"},
+			},
+		},
+		{
+			nithraToken,
+			employer.AddLocationRequest{
+				Title:            "Chettinad",
+				CountryCode:      "IND",
+				PostalAddress:    "Chettinad Street, T Nagar, Chennai",
+				PostalCode:       "600002",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/1234567",
+				CityAka:          []string{"Madras"},
+			},
+		},
+		{
+			nithraToken,
+			employer.AddLocationRequest{
+				Title:            "Cauvery",
+				CountryCode:      "IND",
+				PostalAddress:    "OMR, Chennai",
+				PostalCode:       "600003",
+				OpenStreetMapURL: "https://www.openstreetmap.org/way/1234567",
+				CityAka:          []string{"Madras"},
 			},
 		},
 	}

@@ -31,6 +31,10 @@ func signinAdmins() {
 			email:    "admin@slytherin.example",
 			clientID: "slytherin.example",
 		},
+		{
+			email:    "admin@nithra.example",
+			clientID: "nithra.example",
+		},
 	}
 
 	for _, admin := range admins {
@@ -124,6 +128,18 @@ func initOrgUsers(db *pgxpool.Pool) {
 				{name: "Salazar Slytherin", email: "salazar@slytherin.example"},
 				{name: "Severus Snape", email: "severus@slytherin.example"},
 				{name: "Horace Slughorn", email: "horace@slytherin.example"},
+			},
+		},
+		{
+			employerID:   "12345678-0000-0000-0000-000000000205",
+			employerName: "nithra.example",
+			adminEmail:   "admin@nithra.example",
+			orgUsers: []struct {
+				name  string
+				email string
+			}{
+				{name: "HR", email: "hr@nithra.example"},
+				{name: "Doctor", email: "doctor@nithra.example"},
 			},
 		},
 	}

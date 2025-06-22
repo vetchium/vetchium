@@ -42,6 +42,12 @@ func createCostCenters() {
 	}
 	slytherinToken := slytherinVal.(string)
 
+	nithraVal, ok := employerSessionTokens.Load("admin@nithra.example")
+	if !ok {
+		log.Fatal("failed to get nithra token")
+	}
+	nithraToken := nithraVal.(string)
+
 	costCenters := []struct {
 		token string
 		name  string
@@ -106,6 +112,11 @@ func createCostCenters() {
 			"Continental R&D",
 			"European research and development",
 		},
+
+		// Nithra cost centers
+		{nithraToken, "Apollo", "Apollo"},
+		{nithraToken, "Cauvery", "Cauvery"},
+		{nithraToken, "Chettinad", "Chettinad"},
 	}
 
 	for _, cc := range costCenters {
