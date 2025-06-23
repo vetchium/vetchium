@@ -1,41 +1,46 @@
+# Optimized Dockerfile for amd64 (Linux x86) and arm64 (Apple Silicon)
+# Uses pre-built wheels for maximum speed on these common architectures
 FROM python:3.10-slim
+
+# Set environment variables for optimal pip behavior and model caching
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HOME=/root/.cache/huggingface
 
 WORKDIR /app
 
-# Update pip
-RUN pip install --no-cache-dir --upgrade pip
-
-# Install build dependencies needed for PyMuPDF and other packages with native extensions
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    g++ \
+# Install minimal runtime dependencies in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Update pip to latest version for better wheel support
+RUN pip install --upgrade pip
+
+# Copy requirements first for optimal layer caching
 COPY sortinghat/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Remove build dependencies to reduce image size
-RUN apt-get update && apt-get remove -y \
-    build-essential \
-    gcc \
-    g++ \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install packages with aggressive wheel preference for amd64/arm64
+# These architectures have excellent pre-built wheel support
+RUN pip install \
+    --prefer-binary \
+    --only-binary=torch,torchvision,torchaudio,scikit-learn,numpy,scipy \
+    -r requirements.txt
 
-# Pre-download sentence-transformers model
-# This step caches the model to avoid downloading at runtime
+# Pre-download sentence-transformers model in separate cached layer
+# This ensures model is available at runtime without download delays
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy TypeSpec-generated Python models
 COPY typespec/sortinghat/ ./sortinghat/
 
-# Copy application code
+# Copy application code last to maximize cache hits during development
 COPY sortinghat/main.py .
 
-# Set environment variables
+# Set runtime configuration
 ENV PORT=8080
 
 # Expose the application port
