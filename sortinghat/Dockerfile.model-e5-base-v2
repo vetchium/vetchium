@@ -1,0 +1,24 @@
+# Microsoft E5-Base-v2 Model Image
+FROM python:3.10-slim as model-downloader
+
+# Set environment variables for model caching
+ENV HF_HOME=/models/huggingface \
+    TRANSFORMERS_CACHE=/models/huggingface \
+    SENTENCE_TRANSFORMERS_HOME=/models/sentence-transformers
+
+# Install minimal dependencies for downloading model
+RUN pip install --no-cache-dir sentence-transformers>=2.2.0
+
+# Create model directories
+RUN mkdir -p /models/huggingface /models/sentence-transformers
+
+# Download Microsoft E5-Base-v2 model
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/e5-base-v2')"
+
+# Final stage - E5-Base-v2 model with minimal shell for copying
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates
+COPY --from=model-downloader /models /models
+# Set working directory and ensure permissions
+WORKDIR /models
+RUN chmod -R 755 /models 

@@ -19,7 +19,10 @@ k8s_yaml('tilt-env/sortinghat.yaml')
 docker_build('vetchium/granger', '.', dockerfile='api/Dockerfile-granger')
 docker_build('vetchium/hermione', '.', dockerfile='api/Dockerfile-hermione')
 docker_build('vetchium/sqitch', 'sqitch', dockerfile='sqitch/Dockerfile')
-docker_build('vetchium/sortinghat', '.', dockerfile='sortinghat/Dockerfile')
+docker_build('vetchium/sortinghat-model-e5-base-v2', '.', dockerfile='sortinghat/Dockerfile.model-e5-base-v2')
+docker_build('vetchium/sortinghat-model-bge-base-v1.5', '.', dockerfile='sortinghat/Dockerfile.model-bge-base-v1.5')
+docker_build('vetchium/sortinghat-model-contriever-msmarco', '.', dockerfile='sortinghat/Dockerfile.model-contriever-msmarco')
+docker_build('vetchium/sortinghat', '.', dockerfile='sortinghat/Dockerfile.runtime')
 
 # Development builds for Next.js apps with live reload
 docker_build(

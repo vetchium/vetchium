@@ -12,6 +12,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sortinghat
+  labels:
+    app: sortinghat
+    version: {{ .Values.global.imageTag | default .Chart.AppVersion }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    # Model versions for tracking and debugging
+    model-name/e5-base-v2: "intfloat/e5-base-v2"
+    model-name/bge-base-v1.5: "BAAI/bge-base-en-v1.5"
+    model-name/contriever-msmarco: "facebook/contriever-msmarco"
+    # Image information with tags
+    image-name/e5-base-v2: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-e5-base-v2:{{ .Values.global.imageTag }}"
+    image-name/bge-base-v1.5: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-bge-base-v1.5:{{ .Values.global.imageTag }}"
+    image-name/contriever-msmarco: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-contriever-msmarco:{{ .Values.global.imageTag }}"
+    image-name/runtime: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat:{{ .Values.global.imageTag }}"
+    # Deployment metadata
+    deployment/model-count: "3"
+    deployment/created-by: "helm"
+    deployment/chart-version: {{ .Chart.Version | quote }}
+    deployment/release-name: {{ .Release.Name | quote }}
+    deployment/deployment-time: {{ now | date "2006-01-02T15:04:05Z" | quote }}
 spec:
   replicas: {{ .Values.sortinghat.replicaCount }}
   selector:
@@ -24,11 +46,59 @@ spec:
         version: {{ .Values.sortinghat.image.tag | default .Values.global.imageTag }}
     spec:
       serviceAccountName: sortinghat-sa
+      # Init container to download and prepare models
+      initContainers:
+        - name: e5-base-v2-model-downloader
+          image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-e5-base-v2:{{ .Values.global.imageTag }}"
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+        - name: bge-base-v1-5-model-downloader
+          image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-bge-base-v1.5:{{ .Values.global.imageTag }}"
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+        - name: contriever-msmarco-model-downloader
+          image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-contriever-msmarco:{{ .Values.global.imageTag }}"
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
       containers:
         - name: sortinghat
-          image: "{{ .Values.sortinghat.image.repository }}:{{ .Values.sortinghat.image.tag | default .Values.global.imageTag }}"
+          image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat:{{ .Values.global.imageTag }}"
           ports:
             - containerPort: {{ .Values.sortinghat.config.port | int }}
+          # Mount the shared model volumes
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+              readOnly: true
+            - name: config-volume
+              mountPath: /etc/sortinghat-config
           env:
             - name: S3_ENDPOINT
               valueFrom:
@@ -55,16 +125,20 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.sortinghat.secrets.s3 }}
                   key: bucket
+            # Model cache environment variables
+            - name: HF_HOME
+              value: "/models/huggingface"
+            - name: TRANSFORMERS_CACHE
+              value: "/models/huggingface"
+            - name: SENTENCE_TRANSFORMERS_HOME
+              value: "/models/sentence-transformers"
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "200m"
+              memory: {{ .Values.sortinghat.resources.requests.memory | quote }}
+              cpu: {{ .Values.sortinghat.resources.requests.cpu | quote }}
             limits:
-              memory: "3Gi"
-              cpu: "3"
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/sortinghat-config
+              memory: {{ .Values.sortinghat.resources.limits.memory | quote }}
+              cpu: {{ .Values.sortinghat.resources.limits.cpu | quote }}
           livenessProbe:
             httpGet:
               path: /health
@@ -75,9 +149,13 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.sortinghat.config.port | int }}
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
+      # Shared volumes for model storage
       volumes:
+        - name: model-storage
+          emptyDir:
+            sizeLimit: 12Gi  # Three models: ~9.6GB actual total + copy buffer
         - name: config-volume
           configMap:
             name: sortinghat-config
@@ -87,12 +165,13 @@ kind: Service
 metadata:
   name: sortinghat
 spec:
+  type: {{ .Values.sortinghat.service.type }}
   selector:
     app: sortinghat
   ports:
     - protocol: TCP
       port: {{ .Values.sortinghat.service.port }}
-      targetPort: {{ .Values.sortinghat.config.port | int }}
+      targetPort: {{ .Values.sortinghat.config.port }}
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -1,0 +1,38 @@
+# Ultra-minimal runtime image (no models included)
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/models/huggingface \
+    TRANSFORMERS_CACHE=/models/huggingface \
+    SENTENCE_TRANSFORMERS_HOME=/models/sentence-transformers
+
+WORKDIR /app
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Update pip and install Python packages
+RUN pip install --upgrade pip
+COPY sortinghat/requirements.txt .
+RUN pip install \
+    --prefer-binary \
+    --only-binary=torch,torchvision,torchaudio,scikit-learn,numpy,scipy \
+    -r requirements.txt
+
+# Copy TypeSpec-generated Python models
+COPY typespec/sortinghat/ ./sortinghat/
+
+# Copy application code
+COPY sortinghat/main.py .
+
+# Set runtime configuration
+ENV PORT=8080
+EXPOSE 8080
+
+# Run the application (models expected to be mounted at /models)
+CMD ["python", "main.py"] 

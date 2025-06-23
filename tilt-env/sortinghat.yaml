@@ -14,6 +14,22 @@ kind: Deployment
 metadata:
   name: sortinghat
   namespace: vetchium-dev
+  labels:
+    app: sortinghat
+    version: latest
+  annotations:
+    # Model versions for tracking and debugging
+    model-name/e5-base-v2: "intfloat/e5-base-v2"
+    model-name/bge-base-v1.5: "BAAI/bge-base-en-v1.5"
+    model-name/contriever-msmarco: "facebook/contriever-msmarco"
+    # Image information
+    image-name/e5-base-v2: "vetchium/sortinghat-model-e5-base-v2:latest"
+    image-name/bge-base-v1.5: "vetchium/sortinghat-model-bge-base-v1.5:latest"
+    image-name/contriever-msmarco: "vetchium/sortinghat-model-contriever-msmarco:latest"
+    image-name/runtime: "vetchium/sortinghat:latest"
+    # Deployment metadata
+    deployment/model-count: "3"
+    deployment/created-by: "tilt-dev"
 spec:
   replicas: 1
   selector:
@@ -25,18 +41,64 @@ spec:
         app: sortinghat
     spec:
       serviceAccountName: sortinghat-sa
+      initContainers:
+        - name: e5-base-v2-model-downloader
+          image: vetchium/sortinghat-model-e5-base-v2
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+        - name: bge-base-v1-5-model-downloader
+          image: vetchium/sortinghat-model-bge-base-v1.5
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+        - name: contriever-msmarco-model-downloader
+          image: vetchium/sortinghat-model-contriever-msmarco
+          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
+          volumeMounts:
+            - name: model-storage
+              mountPath: /shared-models
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
       containers:
         - name: sortinghat
           image: vetchium/sortinghat
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+              readOnly: true
+            - name: config-volume
+              mountPath: /etc/sortinghat-config
           resources:
             requests:
-              memory: "512Mi"
+              memory: "4Gi"
               cpu: "200m"
             limits:
-              memory: "3Gi"
-              cpu: "3"
+              memory: "12Gi"
+              cpu: "2"
           env:
             - name: S3_ENDPOINT
               valueFrom:
@@ -63,9 +125,12 @@ spec:
                 secretKeyRef:
                   name: s3-credentials
                   key: bucket
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/sortinghat-config
+            - name: HF_HOME
+              value: "/models/huggingface"
+            - name: TRANSFORMERS_CACHE
+              value: "/models/huggingface"
+            - name: SENTENCE_TRANSFORMERS_HOME
+              value: "/models/sentence-transformers"
           livenessProbe:
             httpGet:
               path: /health
@@ -76,9 +141,12 @@ spec:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
+        - name: model-storage
+          emptyDir:
+            sizeLimit: 12Gi
         - name: config-volume
           configMap:
             name: sortinghat-config
