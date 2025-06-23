@@ -22,14 +22,12 @@ metadata:
     # Model versions for tracking and debugging
     model-name/e5-base-v2: "intfloat/e5-base-v2"
     model-name/bge-base-v1.5: "BAAI/bge-base-en-v1.5"
-    model-name/contriever-msmarco: "facebook/contriever-msmarco"
     # Image information with tags
     image-name/e5-base-v2: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-e5-base-v2:{{ .Values.global.imageTag }}"
     image-name/bge-base-v1.5: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-bge-base-v1.5:{{ .Values.global.imageTag }}"
-    image-name/contriever-msmarco: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-contriever-msmarco:{{ .Values.global.imageTag }}"
     image-name/runtime: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat:{{ .Values.global.imageTag }}"
     # Deployment metadata
-    deployment/model-count: "3"
+    deployment/model-count: "2"
     deployment/created-by: "helm"
     deployment/chart-version: {{ .Chart.Version | quote }}
     deployment/release-name: {{ .Release.Name | quote }}
@@ -74,19 +72,7 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-        - name: contriever-msmarco-model-downloader
-          image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat-model-contriever-msmarco:{{ .Values.global.imageTag }}"
-          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
-          volumeMounts:
-            - name: model-storage
-              mountPath: /shared-models
-          resources:
-            requests:
-              memory: "1Gi"
-              cpu: "100m"
-            limits:
-              memory: "2Gi"
-              cpu: "500m"
+
       containers:
         - name: sortinghat
           image: "{{ .Values.global.registry | default "ghcr.io/vetchium" }}/sortinghat:{{ .Values.global.imageTag }}"
@@ -155,7 +141,7 @@ spec:
       volumes:
         - name: model-storage
           emptyDir:
-            sizeLimit: 12Gi  # Three models: ~9.6GB actual total + copy buffer
+            sizeLimit: 4Gi
         - name: config-volume
           configMap:
             name: sortinghat-config

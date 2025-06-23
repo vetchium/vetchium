@@ -73,10 +73,6 @@ docker: ## Build multi-platform Docker images
 		-t ghcr.io/vetchium/sortinghat-model-bge-base-v1.5:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		.
-	docker buildx build -f sortinghat/Dockerfile.model-contriever-msmarco \
-		-t ghcr.io/vetchium/sortinghat-model-contriever-msmarco:$(GIT_SHA) \
-		--platform=linux/amd64,linux/arm64 \
-		.
 	docker buildx build -f sortinghat/Dockerfile.runtime \
 		-t ghcr.io/vetchium/sortinghat:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
@@ -120,10 +116,6 @@ publish: ## Build multi-platform Docker images and publish them to the container
 		--push .
 	docker buildx build -f sortinghat/Dockerfile.model-bge-base-v1.5 \
 		-t ghcr.io/vetchium/sortinghat-model-bge-base-v1.5:$(GIT_SHA) \
-		--platform=linux/amd64,linux/arm64 \
-		--push .
-	docker buildx build -f sortinghat/Dockerfile.model-contriever-msmarco \
-		-t ghcr.io/vetchium/sortinghat-model-contriever-msmarco:$(GIT_SHA) \
 		--platform=linux/amd64,linux/arm64 \
 		--push .
 	docker buildx build -f sortinghat/Dockerfile.runtime \

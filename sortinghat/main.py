@@ -30,11 +30,10 @@ logger = logging.getLogger("sortinghat")
 
 app = FastAPI(title="Sorting Hat", description="AI Resume Scoring Service")
 
-# Three different vendors for comprehensive scoring approaches
+# Two different vendors for comprehensive scoring approaches
 logger.info("Loading AI models...")
 microsoft_model = SentenceTransformer('intfloat/e5-base-v2')          # Microsoft Research
 beijing_model = SentenceTransformer('BAAI/bge-base-en-v1.5')         # Beijing Academy of AI
-meta_model = SentenceTransformer('facebook/contriever-msmarco')       # Meta AI Research
 logger.info("Models loaded successfully")
 
 # S3 client setup
@@ -72,32 +71,26 @@ def download_resume(fileurl: str) -> str:
         raise HTTPException(404, f"Could not process resume: {str(e)}")
 
 def score_resume(resume_text: str, job_description: str) -> List[ModelScore]:
-    """Score resume using three AI models from different vendors"""
+    """Score resume using two AI models from different vendors"""
     try:
-        # Generate embeddings using three different vendor approaches
+        # Generate embeddings using two different vendor approaches
         resume_microsoft = microsoft_model.encode(resume_text)
         job_microsoft = microsoft_model.encode(job_description)
         
         resume_beijing = beijing_model.encode(resume_text)
         job_beijing = beijing_model.encode(job_description)
         
-        resume_meta = meta_model.encode(resume_text)
-        job_meta = meta_model.encode(job_description)
-        
         # Calculate similarities with different vendor models
         microsoft_similarity = cosine_similarity([resume_microsoft], [job_microsoft])[0][0]
         beijing_similarity = cosine_similarity([resume_beijing], [job_beijing])[0][0]
-        meta_similarity = cosine_similarity([resume_meta], [job_meta])[0][0]
         
         # Convert to 0-100 scale
         microsoft_score = max(0, min(100, (microsoft_similarity + 1) * 50))
         beijing_score = max(0, min(100, (beijing_similarity + 1) * 50))
-        meta_score = max(0, min(100, (meta_similarity + 1) * 50))
         
         return [
             ModelScore(model_name="Microsoft-E5-Research", score=round(microsoft_score)),
-            ModelScore(model_name="Beijing-Academy-BGE", score=round(beijing_score)),
-            ModelScore(model_name="Meta-AI-Contriever", score=round(meta_score))
+            ModelScore(model_name="Beijing-Academy-BGE", score=round(beijing_score))
         ]
     
     except Exception as e:
@@ -135,7 +128,7 @@ async def score_batch(request: SortingHatRequest = Body(...)):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "models": 3}
+    return {"status": "healthy", "models": 2}
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

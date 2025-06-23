@@ -21,14 +21,12 @@ metadata:
     # Model versions for tracking and debugging
     model-name/e5-base-v2: "intfloat/e5-base-v2"
     model-name/bge-base-v1.5: "BAAI/bge-base-en-v1.5"
-    model-name/contriever-msmarco: "facebook/contriever-msmarco"
     # Image information
     image-name/e5-base-v2: "vetchium/sortinghat-model-e5-base-v2:latest"
     image-name/bge-base-v1.5: "vetchium/sortinghat-model-bge-base-v1.5:latest"
-    image-name/contriever-msmarco: "vetchium/sortinghat-model-contriever-msmarco:latest"
     image-name/runtime: "vetchium/sortinghat:latest"
     # Deployment metadata
-    deployment/model-count: "3"
+    deployment/model-count: "2"
     deployment/created-by: "tilt-dev"
 spec:
   replicas: 1
@@ -68,19 +66,7 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-        - name: contriever-msmarco-model-downloader
-          image: vetchium/sortinghat-model-contriever-msmarco
-          command: ['sh', '-c', 'cp -r /models/* /shared-models/']
-          volumeMounts:
-            - name: model-storage
-              mountPath: /shared-models
-          resources:
-            requests:
-              memory: "1Gi"
-              cpu: "100m"
-            limits:
-              memory: "2Gi"
-              cpu: "500m"
+
       containers:
         - name: sortinghat
           image: vetchium/sortinghat
@@ -94,10 +80,10 @@ spec:
               mountPath: /etc/sortinghat-config
           resources:
             requests:
-              memory: "4Gi"
+              memory: "2Gi"
               cpu: "200m"
             limits:
-              memory: "12Gi"
+              memory: "4Gi"
               cpu: "2"
           env:
             - name: S3_ENDPOINT
@@ -146,7 +132,7 @@ spec:
       volumes:
         - name: model-storage
           emptyDir:
-            sizeLimit: 12Gi
+            sizeLimit: 4Gi
         - name: config-volume
           configMap:
             name: sortinghat-config
