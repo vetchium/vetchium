@@ -3,10 +3,10 @@
 import os
 import json
 import logging
+import sys
 from typing import Dict, List, Any
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Body
-from pydantic import BaseModel
 import boto3
 from botocore.client import Config
 import fitz  # PyMuPDF
@@ -14,6 +14,26 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+
+# Import TypeSpec-generated models
+# Add the typespec directory to Python path - look for it relative to current file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+typespec_path = os.path.join(os.path.dirname(current_dir), 'typespec')
+if os.path.exists(typespec_path) and typespec_path not in sys.path:
+    sys.path.insert(0, typespec_path)
+
+try:
+    from sortinghat import (
+        ApplicationSortRequest,
+        SortingHatRequest,
+        ModelScore,
+        SortingHatScore,
+        SortingHatResponse,
+    )
+except ImportError as e:
+    logger.error(f"Failed to import TypeSpec models: {e}")
+    logger.error(f"Looked for typespec package at: {typespec_path}")
+    raise
 
 # Configure logging
 logging.basicConfig(
@@ -93,27 +113,7 @@ def score_with_tfidf(resume_text: str, job_description: str) -> float:
     logger.debug(f"TF-IDF raw similarity: {similarity}, scaled score: {score}")
     return score
 
-# Pydantic models below should match the ones in api/pkg/vetchi/resume-scoring.go
-class ModelScore(BaseModel):
-    model_name: str
-    score: int
-
-class SortingHatScore(BaseModel):
-    application_id: str
-    model_scores: List[ModelScore]
-
-class ApplicationSortRequest(BaseModel):
-    application_id: str
-    resume_path: str
-
-class SortingHatRequest(BaseModel):
-    job_description: str
-    application_sort_requests: List[ApplicationSortRequest]
-
-class SortingHatResponse(BaseModel):
-    scores: List[SortingHatScore]
-
-def score_single_resume(application_id: str, fileurl: str, job_description: str) -> Dict[str, Any]:
+def score_single_resume(application_id: str, fileurl: str, job_description: str) -> SortingHatScore:
     """Score a single resume against a job description"""
     logger.info(f"Processing resume: {fileurl} for application {application_id}")
     
@@ -156,16 +156,16 @@ def score_single_resume(application_id: str, fileurl: str, job_description: str)
         tfidf_score = score_with_tfidf(resume_text, job_description)
         logger.info(f"Scoring complete - Sentence Transformer: {sbert_score:.2f}, TF-IDF: {tfidf_score:.2f}")
 
-        # Prepare model scores
+        # Prepare model scores using TypeSpec models
         model_scores = [
             ModelScore(model_name="sentence-transformers-all-MiniLM-L6-v2", score=round(sbert_score)),
             ModelScore(model_name="tfidf-1.0", score=round(tfidf_score))
         ]
         
-        return {
-            "application_id": application_id,
-            "model_scores": model_scores
-        }
+        return SortingHatScore(
+            application_id=application_id,
+            model_scores=model_scores
+        )
         
     except HTTPException:
         raise
@@ -189,7 +189,7 @@ async def score_batch(request: SortingHatRequest = Body(...)):
                 app_request.resume_path, 
                 request.job_description
             )
-            scores.append(SortingHatScore(**score_result))
+            scores.append(score_result)
         except HTTPException as e:
             logger.error(f"Error processing resume {app_request.resume_path}: {e.detail}")
             # Continue with other resumes even if one fails

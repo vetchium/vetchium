@@ -38,7 +38,8 @@ seed: ## Seed the development database
 lib: ## Build TypeSpec and install dependencies
 	cd typespec && tsp compile . && npm run build && \
 	cd ../harrypotter && npm install ../typespec && \
-	cd ../ronweasly && npm install ../typespec
+	cd ../ronweasly && npm install ../typespec && \
+	echo "TypeSpec Python models available at: typespec/sortinghat/"
 
 docker: ## Build multi-platform Docker images
 	docker buildx inspect multi-platform-builder >/dev/null 2>&1 || docker buildx create --name multi-platform-builder --platform=linux/amd64,linux/arm64 --use

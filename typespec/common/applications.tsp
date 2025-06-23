@@ -16,3 +16,14 @@ union ApplicationState {
     Withdrawn: "WITHDRAWN",
     Expired: "EXPIRED",
 }
+
+@doc("Score from a specific model")
+model ModelScore {
+    @doc("Name of the model that generated the score")
+    model_name: string;
+
+    @doc("Score value from 0 to 100")
+    @minValue(0)
+    @maxValue(100)
+    score: int32;
+}

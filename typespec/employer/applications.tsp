@@ -44,11 +44,6 @@ model Endorser {
     current_company_domains?: string[];
 }
 
-model ModelScore {
-    model_name: string;
-    score: numeric;
-}
-
 model Application {
     id: string;
     cover_letter?: string;

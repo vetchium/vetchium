@@ -29,6 +29,9 @@ RUN apt-get update && apt-get remove -y \
 # This step caches the model to avoid downloading at runtime
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
+# Copy TypeSpec-generated Python models
+COPY typespec/sortinghat/ ./sortinghat/
+
 # Copy application code
 COPY sortinghat/main.py .
 

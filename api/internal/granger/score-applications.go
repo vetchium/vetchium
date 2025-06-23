@@ -11,6 +11,7 @@ import (
 
 	"github.com/vetchium/vetchium/api/internal/db"
 	"github.com/vetchium/vetchium/api/pkg/vetchi"
+	"github.com/vetchium/vetchium/typespec/sortinghat"
 )
 
 func (g *Granger) scoreApplications(quit <-chan struct{}) {
@@ -83,7 +84,7 @@ func (g *Granger) scoreApplicationBatch(
 
 	// Prepare batch request
 	appSortRequests := make(
-		[]vetchi.ApplicationSortRequest,
+		[]sortinghat.ApplicationSortRequest,
 		0,
 		len(applications),
 	)
@@ -92,17 +93,20 @@ func (g *Granger) scoreApplicationBatch(
 	for _, app := range applications {
 		// Format fileurl as expected by sortinghat: s3://bucket/key
 		fileurl := fmt.Sprintf("s3://%s/%s", bucket, app.ResumeSHA)
-		appSortRequests = append(appSortRequests, vetchi.ApplicationSortRequest{
-			ApplicationID: app.ApplicationID,
-			ResumePath:    fileurl,
-		})
+		appSortRequests = append(
+			appSortRequests,
+			sortinghat.ApplicationSortRequest{
+				ApplicationID: app.ApplicationID,
+				ResumePath:    fileurl,
+			},
+		)
 		appIDMap[fileurl] = app.ApplicationID
 	}
 
 	g.log.Dbg("Scoring batch of resumes", "count", len(appSortRequests))
 
 	// Create request payload
-	request := vetchi.SortingHatRequest{
+	request := sortinghat.SortingHatRequest{
 		JobDescription:          jd,
 		ApplicationSortRequests: appSortRequests,
 	}
@@ -146,7 +150,7 @@ func (g *Granger) scoreApplicationBatch(
 	}
 
 	// Parse response
-	var response vetchi.SortingHatResponse
+	var response sortinghat.SortingHatResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		g.log.Err("failed to decode sortinghat response", "err", err)
 		return fmt.Errorf("failed to decode sortinghat response: %w", err)
@@ -166,7 +170,7 @@ func (g *Granger) scoreApplicationBatch(
 			allScores = append(allScores, db.ApplicationScore{
 				ApplicationID: appID,
 				ModelName:     modelScore.ModelName,
-				Score:         modelScore.Score,
+				Score:         int(modelScore.Score),
 			})
 		}
 	}

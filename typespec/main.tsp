@@ -43,6 +43,8 @@ import "./hub/workhistory.tsp";
 
 import "./libgranger/employers.tsp";
 
+import "./sortinghat/sortinghat.tsp";
+
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
