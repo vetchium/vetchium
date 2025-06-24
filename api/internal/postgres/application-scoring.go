@@ -21,8 +21,14 @@ WITH candidate_openings AS (
 	JOIN applications a ON o.employer_id = a.employer_id AND o.id = a.opening_id
 	WHERE a.application_state = $1
 	AND (o.state = $2 OR o.state = $3)
-	AND NOT EXISTS (
-		SELECT 1 FROM application_scores s
+	-- Find applications that don't have scores from all active models
+	AND (
+		SELECT COUNT(DISTINCT m.model_name)
+		FROM application_scoring_models m
+		WHERE m.is_active = true
+	) > (
+		SELECT COUNT(DISTINCT s.model_name)
+		FROM application_scores s
 		JOIN application_scoring_models m ON s.model_name = m.model_name
 		WHERE s.application_id = a.id AND m.is_active = true
 	)
@@ -34,8 +40,14 @@ SELECT co.employer_id, co.id, co.jd,
 FROM candidate_openings co
 JOIN applications a ON co.employer_id = a.employer_id AND co.id = a.opening_id
 WHERE a.application_state = $1
-AND NOT EXISTS (
-	SELECT 1 FROM application_scores s
+-- Find applications that don't have scores from all active models
+AND (
+	SELECT COUNT(DISTINCT m.model_name)
+	FROM application_scoring_models m
+	WHERE m.is_active = true
+) > (
+	SELECT COUNT(DISTINCT s.model_name)
+	FROM application_scores s
 	JOIN application_scoring_models m ON s.model_name = m.model_name
 	WHERE s.application_id = a.id AND m.is_active = true
 )

@@ -914,8 +914,8 @@ CREATE TABLE application_scores (
 -- Insert default models from sortinghat
 INSERT INTO application_scoring_models (model_name, description, is_active)
 VALUES
-    ('sentence-transformers-all-MiniLM-L6-v2', 'Sentence Transformer model (all-MiniLM-L6-v2)', TRUE),
-    ('tfidf-1.0', 'TF-IDF vectorizer model', TRUE);
+    ('Microsoft-E5-Research', 'Microsoft E5-base-v2 model for research-grade embeddings', TRUE),
+    ('Beijing-Academy-BGE', 'Beijing Academy BGE-base-en-v1.5 model for general embeddings', TRUE);
 
 -- Function: can_apply
 --
