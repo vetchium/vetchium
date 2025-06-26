@@ -47,6 +47,7 @@
 - [] Some kind of upvote tracking for every user for every tag
 - [] Company page for hub users
 - [] Container registry settings for the new model images
+- [] MCP
 
 # Code cleanups
 
