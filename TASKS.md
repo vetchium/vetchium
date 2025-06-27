@@ -48,6 +48,7 @@
 - [] Company page for hub users
 - [] Container registry settings for the new model images
 - [] MCP
+- [] Investigate bluesky integration possibilities
 
 # Code cleanups
 
